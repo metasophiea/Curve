@@ -1,0 +1,409 @@
+// utility functions
+    __globals.mouseInteraction = {};
+    __globals.mouseInteraction.currentPosition = [];
+    __globals.mouseInteraction.wheelInterpreter = function(y){
+        return y/100;
+        // return y > 0 ? 1 : -1;
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// grapple functions
+    __globals.mouseInteraction.objectGrapple_functionList = {};
+    __globals.mouseInteraction.objectGrapple_functionList.onmousedown = [];
+    __globals.mouseInteraction.objectGrapple_functionList.onmouseup = [];
+    __globals.mouseInteraction.declareObjectGrapple = function(grapple, target, creatorMethod){
+        if(!creatorMethod){console.error('"declareObjectGrapple" requires a creatorMethod');return;}
+
+        grapple.target = target ? target : grapple;
+        grapple.target.creatorMethod = creatorMethod;
+        grapple.target.grapple = grapple;
+        grapple.target.style.transform = grapple.target.style.transform ? grapple.target.style.transform : 'translate(0px,0px) scale(1) rotate(0rad)';
+
+        grapple.onmousedown = function(event){
+            if(event.button != 0){return;}
+            __globals.svgElement.temp_onmousedown_originalObject = this.target;
+
+            for(var a = 0; a < __globals.mouseInteraction.objectGrapple_functionList.onmousedown.length; a++){
+                var shouldRun = true;
+                for(var b = 0; b < __globals.mouseInteraction.objectGrapple_functionList.onmousedown[a].specialKeys.length; b++){
+                    shouldRun = shouldRun && event[__globals.mouseInteraction.objectGrapple_functionList.onmousedown[a].specialKeys[b]];
+                    if(!shouldRun){break;}
+                }
+                if(shouldRun){ __globals.mouseInteraction.objectGrapple_functionList.onmousedown[a].function(event); break; }
+            }
+        };
+        grapple.onmouseup = function(event){
+            __globals.svgElement.temp_onmouseup_originalObject = this.target;
+
+            for(var a = 0; a < __globals.mouseInteraction.objectGrapple_functionList.onmouseup.length; a++){
+                var shouldRun = true;
+                for(var b = 0; b < __globals.mouseInteraction.objectGrapple_functionList.onmouseup[a].specialKeys.length; b++){
+                    shouldRun = shouldRun && event[__globals.mouseInteraction.objectGrapple_functionList.onmouseup[a].specialKeys[b]];
+                    if(!shouldRun){break;}
+                }
+                if(shouldRun){ __globals.mouseInteraction.objectGrapple_functionList.onmouseup[a].function(event); break; }
+            }
+        };
+    };
+
+    //duplication
+    __globals.mouseInteraction.objectGrapple_functionList.onmousedown.push(
+        {
+            'specialKeys':['altKey'],
+            'function':function(event){
+                // if mousedown occurs over an object that isn't selected; select it
+                if( !__globals.selection.selectedObjects.includes(__globals.svgElement.temp_onmousedown_originalObject) ){
+                    __globals.selection.selectObject(__globals.svgElement.temp_onmousedown_originalObject);
+                }
+
+                //perform duplication
+                __globals.selection.duplicate();
+
+                //start moving the first object in the object list
+                // (the movement code will handle moving the rest)
+                __globals.selection.selectedObjects[0].grapple.onmousedown(
+                    {
+                        'x':event.x, 'y':event.y,
+                        'button':0
+                    }
+                );
+
+            }
+        }
+    );
+    //general moving
+    __globals.mouseInteraction.objectGrapple_functionList.onmousedown.push(
+        {
+            'specialKeys':[],
+            'function':function(event){
+                // if mousedown occurs over an object that isn't selected
+                //  and if the shift key is not pressed
+                //   deselect everything
+                //  now, select the object we're working on is not selected
+                if( !__globals.selection.selectedObjects.includes(__globals.svgElement.temp_onmousedown_originalObject) ){
+                    if(!event.shiftKey){ __globals.selection.deselectEverything(); }
+                    __globals.selection.selectObject(__globals.svgElement.temp_onmousedown_originalObject);
+                }
+
+                // collect together information on the click position and the selected object's positions
+                __globals.svgElement.temp_oldClickPosition = [event.x,event.y];
+                __globals.svgElement.temp_oldObjectPositions = [];
+                for(var a = 0; a < __globals.selection.selectedObjects.length; a++){
+                    __globals.svgElement.temp_oldObjectPositions.push( __globals.utility.getTransform(__globals.selection.selectedObjects[a]) );
+                }
+
+                // perform the move for all selected objects
+                __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                __globals.svgElement.onmousemove = function(event){
+                    for(var a = 0; a < __globals.selection.selectedObjects.length; a++){
+                        var clickPosition = __globals.svgElement.temp_oldClickPosition;
+                        var position = __globals.svgElement.temp_oldObjectPositions[a].slice();;
+                        var globalScale = __globals.utility.getTransform(__globals.panes.global)[2];
+
+                        position[0] = (position[0]-(clickPosition[0]-event.x)/globalScale);
+                        position[1] = (position[1]-(clickPosition[1]-event.y)/globalScale);
+
+                        __globals.utility.setTransform(__globals.selection.selectedObjects[a], position);
+
+                        //perform all redraws and updates for object
+                        if( __globals.selection.selectedObjects[a].onMove ){__globals.selection.selectedObjects[a].onMove();}
+                        if( __globals.selection.selectedObjects[a].updateSelectionArea ){__globals.selection.selectedObjects[a].updateSelectionArea();}
+                        if( __globals.selection.selectedObjects[a].io ){
+                            var keys = Object.keys( __globals.selection.selectedObjects[a].io );
+                            for(var b = 0; b < keys.length; b++){ 
+                                //account for node arrays
+                                if( Array.isArray(__globals.selection.selectedObjects[a].io[keys[b]]) ){
+                                    for(var c = 0; c < __globals.selection.selectedObjects[a].io[keys[b]].length; c++){
+                                        __globals.selection.selectedObjects[a].io[keys[b]][c].redraw();
+                                    }
+                                }else{ __globals.selection.selectedObjects[a].io[keys[b]].redraw(); }
+                            }
+                        }
+                    }
+                };
+
+                // clean-up code
+                __globals.svgElement.onmouseup = function(){
+                    this.onmousemove = null;
+                    delete __globals.svgElement.tempElements;
+                    this.onmousemove = __globals.svgElement.onmousemove_old;
+                    delete this.temp_onmousedown_originalObject;
+                    delete this.temp_oldClickPosition;
+                    delete this.temp_oldObjectPositions;
+                    delete this.onmouseleave;
+                    delete this.onmouseup;
+                };
+            
+                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+
+                __globals.svgElement.onmousemove(event);
+            }
+        }
+    );
+    //selection
+    __globals.mouseInteraction.objectGrapple_functionList.onmouseup.push(
+        {
+            'specialKeys':[],
+            'function':function(event){
+
+                //if mouse-up occurs over an object that is selected
+                // and if the shift key is pressed
+                // and if the object we're working on is not the most recently selected
+                //  deselect the object we're working on
+                // now set the most recently selected reference to null
+                if( __globals.selection.selectedObjects.includes(__globals.svgElement.temp_onmouseup_originalObject) ){
+                    if( event.shiftKey && (__globals.selection.lastSelectedObject != __globals.svgElement.temp_onmouseup_originalObject) ){
+                        __globals.selection.deselectObject(__globals.svgElement.temp_onmouseup_originalObject);
+                    }
+                    __globals.selection.lastSelectedObject = null;
+                }
+
+            }
+        }
+    );
+
+
+
+
+
+
+
+
+
+
+// onmousemove functions
+    __globals.mouseInteraction.onmousemove_functionList = [];
+    __globals.svgElement.onmousemove = function(event){
+        if(!__globals.utility.requestInteraction(event.x,event.y,'onmousemove') && event.button == 0){return;}
+        for(var a = 0; a < __globals.mouseInteraction.onmousemove_functionList.length; a++){
+            var shouldRun = true;
+            for(var b = 0; b < __globals.mouseInteraction.onmousemove_functionList[a].specialKeys.length; b++){
+                shouldRun = shouldRun && event[__globals.mouseInteraction.onmousemove_functionList[a].specialKeys[b]];
+                if(!shouldRun){break;}
+            }
+            if(shouldRun){ __globals.mouseInteraction.onmousemove_functionList[a].function(event); break; }
+        }
+    };
+
+    // register position
+    __globals.mouseInteraction.onmousemove_functionList.push(
+        {
+            'specialKeys':[],
+            'function':function(event){
+                __globals.mouseInteraction.currentPosition = [event.x, event.y];
+            }
+        }
+    );
+
+
+
+
+
+
+
+
+// onmousedown functions
+    __globals.mouseInteraction.onmousedown_functionList = [];
+    __globals.svgElement.onmousedown = function(event){
+        if(!__globals.utility.requestInteraction(event.x,event.y,'onmousedown') || event.button != 0){return;}
+        for(var a = 0; a < __globals.mouseInteraction.onmousedown_functionList.length; a++){
+            var shouldRun = true;
+            for(var b = 0; b < __globals.mouseInteraction.onmousedown_functionList[a].specialKeys.length; b++){
+                shouldRun = shouldRun && event[__globals.mouseInteraction.onmousedown_functionList[a].specialKeys[b]];
+                if(!shouldRun){break;}
+            }
+            if(shouldRun){ __globals.mouseInteraction.onmousedown_functionList[a].function(event); break; }
+        }
+    };
+
+    //group selection
+    __globals.mouseInteraction.onmousedown_functionList.push(
+        {
+            'specialKeys':['shiftKey'],
+            'function':function(event){
+                    //setup
+                    __globals.svgElement.tempData = {};
+                    __globals.svgElement.tempElements = [];
+                    __globals.svgElement.tempData.start = {'x':event.x, 'y':event.y};
+
+                    //create 'selection box' graphic and add it to the menu pane
+                    __globals.svgElement.tempElements.push(
+                        parts.basic.path(
+                            null, 
+                            [
+                                [__globals.svgElement.tempData.start.x, __globals.svgElement.tempData.start.y],
+                                [__globals.svgElement.tempData.start.x, __globals.svgElement.tempData.start.y],
+                                [__globals.svgElement.tempData.start.x, __globals.svgElement.tempData.start.y],
+                                [__globals.svgElement.tempData.start.x, __globals.svgElement.tempData.start.y]
+                            ], 
+                            'L', 'fill:rgba(120,120,255,0.25)'
+                        )
+                    );
+                    for(var a = 0; a < __globals.svgElement.tempElements.length; a++){ __globals.panes.menu.append(__globals.svgElement.tempElements[a]); }
+
+                    //adjust selection box when the mouse moves
+                    __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                    __globals.svgElement.onmousemove = function(event){
+                        __globals.svgElement.tempData.end = {'x':event.x, 'y':event.y};
+
+                        __globals.svgElement.tempElements[0].path(
+                            [
+                                [__globals.svgElement.tempData.start.x, __globals.svgElement.tempData.start.y],
+                                [__globals.svgElement.tempData.end.x,   __globals.svgElement.tempData.start.y],
+                                [__globals.svgElement.tempData.end.x,   __globals.svgElement.tempData.end.y],
+                                [__globals.svgElement.tempData.start.x, __globals.svgElement.tempData.end.y]
+                            ]
+                        );
+                        
+                    };
+
+                    //when the mouse is raised; 
+                    //  find the objects that are selected
+                    //  tell them they are selected (tell the rest they aren't)
+                    //  add the selected to the 'selected objects list'
+                    __globals.svgElement.onmouseup = function(){
+                        //set up
+                            __globals.selection.deselectEverything();
+                            var start = __globals.utility.pointconverter_browserWorkspace(__globals.svgElement.tempData.start.x,__globals.svgElement.tempData.start.y);
+                            var end = __globals.utility.pointconverter_browserWorkspace(__globals.svgElement.tempData.end.x,__globals.svgElement.tempData.end.y);
+                            var selectionArea = {};
+                        
+                        //create selection box (correcting negative values along the way)
+                            selectionArea.box = [[],[]];
+                            if(start.x > end.x){ selectionArea.box[0][0] = start.x; selectionArea.box[1][0] = end.x; }
+                            else{ selectionArea.box[0][0] = end.x; selectionArea.box[1][0] = start.x; }
+                            if(start.y > end.y){ selectionArea.box[0][1] = start.y; selectionArea.box[1][1] = end.y; }
+                            else{ selectionArea.box[0][1] = end.y; selectionArea.box[1][1] = start.y; }
+                            //create poly of this box with clockwise wind
+                            if( Math.sign(start.x-end.x) != Math.sign(start.y-end.y) ){
+                                selectionArea.points = [[start.x, start.y], [start.x, end.y], [end.x, end.y], [end.x, start.y]];
+                            }else{ 
+                                selectionArea.points = [[start.x, start.y], [end.x, start.y], [end.x, end.y], [start.x, end.y]];
+                            }
+                            
+                        //run though all middleground objects to see if they are selected in this box
+                        //  tell them they are selected (or not) and add the selected to the selected list
+                            var objects = __globals.panes.middleground.children;
+                            for(var a = 0; a < objects.length; a++){
+                                if(objects[a].selectionArea){
+                                    if(__globals.utility.detectOverlap(selectionArea.points, objects[a].selectionArea.points, selectionArea.box, objects[a].selectionArea.box)){
+                                        __globals.selection.selectObject(objects[a]);
+                                    }
+                                }
+                            }
+
+                        //delete all temporary elements and attributes
+                            delete __globals.svgElement.tempData;
+                            for(var a = 0; a < __globals.svgElement.tempElements.length; a++){
+                                __globals.panes.menu.removeChild( __globals.svgElement.tempElements[a] ); 
+                                __globals.svgElement.tempElements[a] = null;
+                            }
+                            delete __globals.svgElement.tempElements;
+                            this.onmousemove = __globals.svgElement.onmousemove_old;
+                            delete __globals.svgElement.onmousemove_old;
+                            this.onmouseleave = null;
+                            __globals.panes.global.removeAttribute('oldPosition');
+                            __globals.panes.global.removeAttribute('clickPosition');
+                            this.onmouseleave = null;
+                            this.onmouseup = null;
+                    };
+
+                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+
+                __globals.svgElement.onmousemove(event);
+            }
+        }
+    );
+
+    //panning 
+    __globals.mouseInteraction.onmousedown_functionList.push(
+        {
+            'specialKeys':[],
+            'function':function(event){
+                __globals.selection.deselectEverything();
+                __globals.panes.global.setAttribute('oldPosition','['+__globals.utility.getTransform(__globals.panes.global)+']');
+                __globals.panes.global.setAttribute('clickPosition','['+event.x +','+ event.y+']');
+
+                __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                __globals.svgElement.onmousemove = function(event){
+                    var position = JSON.parse(__globals.panes.global.getAttribute('oldPosition'));
+                    var clickPosition = JSON.parse(__globals.panes.global.getAttribute('clickPosition'));
+                    position[0] = position[0]-(clickPosition[0]-event.x);
+                    position[1] = position[1]-(clickPosition[1]-event.y);
+                    __globals.utility.setTransform(__globals.panes.global, position);
+                };
+
+                __globals.svgElement.onmouseup = function(){
+                    this.onmousemove = __globals.svgElement.onmousemove_old;
+                    delete __globals.svgElement.onmousemove_old;
+                    __globals.panes.global.removeAttribute('oldPosition');
+                    __globals.panes.global.removeAttribute('clickPosition');
+                    this.onmouseleave = null;
+                    this.onmouseup = null;
+                };
+
+                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+
+                __globals.svgElement.onmousemove(event);
+
+            }
+        }
+    );
+
+
+
+
+
+
+
+// onwheel functions
+    __globals.svgElement.onwheel_functionList = [];
+    __globals.svgElement.onwheel = function(event){
+        if(!__globals.utility.requestInteraction(event.x,event.y,'onwheel')){return;}
+        for(var a = 0; a < __globals.svgElement.onwheel_functionList.length; a++){
+            var shouldRun = true;
+            for(var b = 0; b < __globals.svgElement.onwheel_functionList[a].specialKeys.length; b++){
+                shouldRun = shouldRun && event[__globals.svgElement.onwheel_functionList[a].specialKeys[b]];
+                if(!shouldRun){break;}
+            }
+            if(shouldRun){ __globals.svgElement.onwheel_functionList[a].function(event); break; }
+        }
+    };
+
+    __globals.svgElement.onwheel_functionList.push(
+        {
+            'specialKeys':[],
+            'function':function(event){
+                var zoomLimits = {'max':10, 'min':0.1};
+                var position = __globals.utility.getTransform(__globals.panes.global);
+
+                var XPosition = (event.x - position[0])/position[2];
+                var YPosition = (event.y - position[1])/position[2];
+                    var oldPixX = position[2] * ( XPosition + position[0]/position[2]);
+                    var oldPixY = position[2] * ( YPosition + position[1]/position[2]);
+                        // var mux = 1.25; position[2] = position[2] * ( event.deltaY < 0 ? 1*mux : 1/mux );
+                        position[2] -= position[2]*__globals.mouseInteraction.wheelInterpreter(event.deltaY);
+                        if( position[2] > zoomLimits.max ){position[2] = zoomLimits.max;}
+                        if( position[2] < zoomLimits.min ){position[2] = zoomLimits.min;}
+                    var newPixX = position[2] * ( XPosition + position[0]/position[2]);
+                    var newPixY = position[2] * ( YPosition + position[1]/position[2]);
+                position[0] = position[0] - ( newPixX - oldPixX );
+                position[1] = position[1] - ( newPixY - oldPixY );
+
+                __globals.utility.setTransform(__globals.panes.global, position);
+            }
+        }
+    );

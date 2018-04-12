@@ -1,0 +1,130 @@
+arrangements        a collection of tracks that are performed together, along with some performance information and commands
+    tracks          an array of commands
+        commands    an action object with a 'tick' timestamp
+
+
+
+
+
+
+
+
+-- command --
+    tick            : number
+    commandName     : string
+    data            : object
+
+    eg:
+        {
+            'tick':0,
+            'commandName':'the text',
+            'data':'some text'
+        }
+
+
+
+
+
+
+
+
+-- track --
+    changeable values with their defaults
+        trackName            : ''
+        channel              : 0
+        instrumentNumber     : 0
+        instrumentName       : ''
+        instrumentFamily     : ''
+        isPercussion         : false
+    
+    commands, and their data loads
+        note                 : noteNumber, velocity      (velocity is between 0 and 1)
+        text                 : text
+
+    eg:
+        [
+            {
+                'tick':0,
+                'commandName':'trackName',
+                'data':'the real track, the best track'
+            },
+            {
+                'tick':0,
+                'commandName':'note',
+                'data':{'noteNumber':40,'velocity':1}
+            },
+            {
+                'tick':50,
+                'commandName':'text',
+                'data':'the track text'
+            },
+            {
+                'tick':100,
+                'commandName':'note',
+                'data':{'noteNumber':40,'velocity':0}
+            }
+        ]
+
+
+
+
+
+
+
+
+-- arrangement --
+    performance commands
+        changeable values with their defaults
+            arrangementName  : ''
+            ticksPerMeasure  : 128
+            timeSignature    : [4,4]     (beatsPerMeasure/howLongABeatIs(this is kind of an irrelevant value))
+            beatsPerSecond   : 2         (secondsPerBeat = 1/beatsPerSecond)
+            ticksPerSecond*  : 64        (should be calculated automatically when other values change)
+                                         (ticksPerMeasure*beatsPerSecond)/timeSignature[0] (secondsPerTick = 1/ticksPerSecond)
+                                         
+
+    an array of tracks
+        []
+
+    eg:
+        {
+            'arrangementName': 'the arrangement',
+            'control':[
+                {'tick':0, 'commandName':'ticksPerMeasure', 'data':256},
+                {'tick':0, 'commandName':'timeSignature',   'data':[4,4]},
+                {'tick':0, 'commandName':'beatsPerSecond',  'data':2},
+            ]
+            'tracks':[
+                [
+                    {'tick':0,   'commandName':'trackName',    'data':'the real track, the best track'  },
+                    {'tick':0,   'commandName':'note',         'data':{'noteNumber':40,'velocity':1}    },
+                    {'tick':50,  'commandName':'text',         'data':'the track text                   },
+                    {'tick':100, 'commandName':'note',         'data':{'noteNumber':40,'velocity':0}    }
+                ],
+                [
+                    { 'tick':0,   'commandName':'trackName',    'data':'the second track'               },
+                    { 'tick':0,   'commandName':'note',         'data':{'noteNumber':45,'velocity':1}   },
+                    { 'tick':25,  'commandName':'text',         'data':'the seond track text'           },
+                    { 'tick':100, 'commandName':'note',         'data':{'noteNumber':45,'velocity':0}   }
+                ]
+            ]
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+potential compressed format possible if you just agree on the layout, and switch everything to arrays..not sure how useful
+that could be considering what I know about the JS engine, and besides; this is a young format that would probably be better
+being flexible, with evertything being named

@@ -1,0 +1,9 @@
+/*
+    this was an attempt to incorperate midi files
+    into the system. Some/most elements work; once
+    the file is parsed correctly, the sender is
+    capable of sending midi-style signals at the 
+    correct times, and the synth is able to read
+    these. However, it seems the 'midiLoader' code
+    is broken, and unable to deal with all midi files
+*/
