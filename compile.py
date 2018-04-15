@@ -12,27 +12,30 @@ def includer(location, parentFile, inputfileName, outputObject, spacer=''):
             if parentFile != item:
                 includer(location, parentFile, item, outputObject, spacer)
     else:
-        inputFile = open(location+'/'+inputfileName)
-        for line in inputFile:
-            start = line.find('{{')
-            end = line.find('}}')
-            if( start != -1 and end != -1 ):
+        if os.path.isdir(location+'/'+inputfileName):
+            includer( location+'/'+inputfileName+'/', '', '*', outputObject, spacer)
+        else:
+            inputFile = open(location+'/'+inputfileName)
+            for line in inputFile:
+                start = line.find('{{')
+                end = line.find('}}')
+                if( start != -1 and end != -1 ):
 
-                line = line.strip()
-                if line[:2] == '//': continue
-                line = line.split('{{')[1].split('}}')[0].split(':')
+                    line = line.strip()
+                    if line[:2] == '//': continue
+                    line = line.split('{{')[1].split('}}')[0].split(':')
 
-                if 'include' in line[0]:
-                    newSpacer = line[0].replace('include','')
-                    newLocation = '/'.join((location+'/'+line[1]).split('/')[:-1])
-                    newFile = line[1].split('/')[-1]
-                    includer( newLocation, inputfileName, newFile, outputObject, spacer+newSpacer)
+                    if 'include' in line[0]:
+                        newSpacer = line[0].replace('include','')
+                        newLocation = '/'.join((location+'/'+line[1]).split('/')[:-1])
+                        newFile = line[1].split('/')[-1]
+                        includer( newLocation, inputfileName, newFile, outputObject, spacer+newSpacer)
 
-            else:
-                outputObject.write(spacer+line)
+                else:
+                    outputObject.write(spacer+line)
 
-        outputObject.write('\n')
-        inputFile.close()
+            outputObject.write('\n')
+            inputFile.close()
 
 
 

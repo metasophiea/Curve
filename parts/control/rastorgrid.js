@@ -43,6 +43,13 @@ this.rastorgrid = function(
             }
         }
     };
+    object.clear = function(){
+        for(var y = 0; y < ycount; y++){
+            for(var x = 0; x < xcount; x++){
+                object.box(x,y).set(false,false);
+            }
+        }
+    };
     object.light = function(x,y,state){
         object.box(x,y).light(state);
     };

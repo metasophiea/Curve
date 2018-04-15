@@ -1,0 +1,13 @@
+/*
+synthesizer 1
+    waveType
+    gain
+    note
+    octave
+    detune
+
+    attack
+    release
+
+    pitchBend
+*/

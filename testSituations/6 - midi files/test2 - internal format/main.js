@@ -7,7 +7,7 @@ __globals.data.midiTracks = [];
 __globals.data.midiTracks.push(internalizeMidi_v1_MidiConvert(midi_10014));
 __globals.data.midiTracks.push(internalizeMidi_v1_MidiConvert(midi_starshipgroove));
 
-var internalizedMidi = __globals.data.midiTracks[1];
+var internalizedMidi = __globals.data.midiTracks[0];
 
 // {{include:basicPlayback_1.js}}
 // {{include:basicPlayback_2.js}}

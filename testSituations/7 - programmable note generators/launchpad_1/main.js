@@ -1,6 +1,7 @@
 __globals.objects = {};
-{{include:selectionAreaGenerator.js}}
-{{include:objects/*}}/**/
+{{include:../selectionAreaGenerator.js}}
+{{include:../commonObjects/*}}/**/
+{{include:*}}
 
 
 
@@ -25,3 +26,7 @@ __globals.panes.middleground.append( pulseClock_1 );
 pulseClock_1.io.out.connectTo(launchpad_1.io.pulseIn);
 launchpad_1.io.out.connectTo(basicSynth_1.io.dataIn_midiNote);
 basicSynth_1.io.audioOut.connectTo(audioSink_1.io.audio_in);
+
+
+
+// __globals.utility.gotoPosition(-2503.07, -57.455, 3.94055, 0);

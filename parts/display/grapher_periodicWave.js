@@ -17,7 +17,7 @@ this.grapher_periodicWave = function(
 
 
     //methods
-    object.wave = function(a=null){
+    object.wave = function(a=null,type=null){
         if(a==null){
             while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
             while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
@@ -27,7 +27,15 @@ this.grapher_periodicWave = function(
             }
             return this._data.wave;
         }
-        this._data.wave = a;
+
+        if(type==null){
+            this._data.wave = a;
+        }
+        switch(type){
+            case 'sin': this._data.wave.sin = a; break;
+            case 'cos': this._data.wave.cos = a; break;
+            default: break;
+        }
     }
     object.waveElement = function(type, mux, a){
         if(a==null){return this._data.wave[type][mux];}

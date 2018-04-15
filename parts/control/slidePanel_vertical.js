@@ -2,7 +2,7 @@ this.slidePanel_vertical = function(
     id='slidePanel_vertical', 
     x, y, width, height,
     count,
-    handleStyle = 'fill:rgba(200,200,200,1)',
+    handleStyle = 'fill:rgba(180,180,180,1)',
     backingStyle = 'fill:rgba(150,150,150,1)',
     slotStyle = 'fill:rgba(50,50,50,1)'
 ){
@@ -27,11 +27,19 @@ this.slidePanel_vertical = function(
         return outputArray;
     };
     object.set = function(a, update=true){
-        for(var b = 0; b < count; b++){
+        for(var b = 0; b < a.length; b++){
             this.slide(b).set(a[b],false);
+        }
+        for(var b = a.length; b < count; b++){
+            this.slide(b).set(1/2,false);
         }
 
         if(update&&this.onChange){ this.onChange(a); }
+    };
+    object.setAll = function(a){
+        for(var b = 0; b < count; b++){
+            this.slide(b).set(a,false);
+        }
     };
     object.onChange = function(){};
 

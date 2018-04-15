@@ -185,6 +185,44 @@ __globals.utility = new function(){
 
 
 
+
+    this.generateSelectionArea = function(points, _mainObject){
+        _mainObject.selectionArea = {};
+        _mainObject.selectionArea.box = [];
+        _mainObject.selectionArea.points = [];
+        _mainObject.updateSelectionArea = function(){
+            //the main shape we want to use
+            _mainObject.selectionArea.points = [];
+            points.forEach(function(item){ _mainObject.selectionArea.points.push(item.slice()); });
+            _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
+
+            //adjusting it for the object's position in space
+            temp = __globals.utility.getTransform(_mainObject);
+            _mainObject.selectionArea.box.forEach(function(element) {
+                element[0] += temp[0];
+                element[1] += temp[1];
+            });
+            _mainObject.selectionArea.points.forEach(function(element) {
+                element[0] += temp[0];
+                element[1] += temp[1];
+            });
+        };
+
+        _mainObject.updateSelectionArea();
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
     this.detectOverlap = function(a_poly, b_poly, a_box=null, b_box=null){
         // Quick Judgement with bounding boxes
         // (when bounding boxes are provided)
@@ -1176,7 +1214,7 @@ this.path = function(id=null, path=[], lineType='L', style='fill:none; stroke:rg
     // Z = closepath
     var element = document.createElementNS('http://www.w3.org/2000/svg','path');
     element.id = id;
-    element.style = style;
+    element.style = 'transform: translate('+0+'px,'+0+'px) scale(1) rotate('+0+'rad);' + style;
 
     element._installPath = function(path){
         var d = 'M ' + path[0][0] + ' ' + path[0][1] + ' ' + lineType;
@@ -1295,6 +1333,207 @@ this.rastorDisplay = function(
             this.setAll([1,1,1]);
             render();
         };
+
+    return object;
+};
+this.segmentDisplay = function(
+    id='segmentDisplay',
+    x, y, width, height,
+    backgroundStyle='fill:rgb(0,0,0)',
+    glowStyle='fill:rgb(200,200,200)',
+    dimStyle='fill:rgb(20,20,20)'
+){
+    var margin = width/8;
+    var division = width/8;
+    var shapes = {
+        segments:{
+            points: {
+                top:{
+                    left:[
+                        {x:division*1.0+margin,         y:division*1.0+margin},
+                        {x:division*0.5+margin,         y:division*0.5+margin},
+                        {x:division*1.0+margin,         y:division*0.0+margin},
+                        {x:division*0.0+margin,         y:division*1.0+margin},
+                    ],
+                    right:[
+                        {x:width-division*1.0-margin,   y:division*0.0+margin},
+                        {x:width-division*0.5-margin,   y:division*0.5+margin},
+                        {x:width-division*1.0-margin,   y:division*1.0+margin},
+                        {x:width-division*0.0-margin,   y:division*1.0+margin}
+                    ]
+                },
+                middle: {
+                    left:[
+                        {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                        {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
+                        {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                        {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                        {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                    ],
+                    right:[
+                        {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
+                        {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
+                        {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                        {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                        {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
+                    ]
+                },
+                bottom: {
+                    left:[
+                        {x:division*1.0+margin,         y:height-division*1.0-margin},
+                        {x:division*0.5+margin,         y:height-division*0.5-margin},
+                        {x:division*1.0+margin,         y:height-division*0.0-margin},
+                        {x:division*0.0+margin,         y:height-division*1.0-margin},
+                    ],
+                    right:[
+                        {x:width-division*1.0-margin,   y:height-division*0.0-margin},
+                        {x:width-division*0.5-margin,   y:height-division*0.5-margin},
+                        {x:width-division*1.0-margin,   y:height-division*1.0-margin},
+                        {x:width-division*0.0-margin,   y:height-division*1.0-margin}
+                    ]
+                }
+            }
+        }
+    };
+
+    //elements
+        //main
+        var object = parts.basic.g(id, x, y);
+
+        //backing
+        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backgroundStyle);
+            object.appendChild(rect);
+
+        //segments
+            var segments = [];
+            var points = [
+                [
+                    [shapes.segments.points.top.left[0].x,  shapes.segments.points.top.left[0].y],
+                    [shapes.segments.points.top.right[2].x, shapes.segments.points.top.right[2].y],
+                    [shapes.segments.points.top.right[1].x, shapes.segments.points.top.right[1].y],
+                    [shapes.segments.points.top.right[0].x, shapes.segments.points.top.right[0].y],
+                    [shapes.segments.points.top.left[2].x,  shapes.segments.points.top.left[2].y],
+                    [shapes.segments.points.top.left[1].x,  shapes.segments.points.top.left[1].y],
+                ],
+                [
+                    [shapes.segments.points.top.left[1].x,    shapes.segments.points.top.left[1].y],
+                    [shapes.segments.points.top.left[3].x,    shapes.segments.points.top.left[3].y],
+                    [shapes.segments.points.middle.left[3].x, shapes.segments.points.middle.left[3].y],
+                    [shapes.segments.points.middle.left[1].x, shapes.segments.points.middle.left[1].y],
+                    [shapes.segments.points.middle.left[0].x, shapes.segments.points.middle.left[0].y],
+                    [shapes.segments.points.top.left[0].x,    shapes.segments.points.top.left[0].y],
+                ],
+                [
+                    [shapes.segments.points.top.right[1].x,    shapes.segments.points.top.right[1].y],
+                    [shapes.segments.points.top.right[3].x,    shapes.segments.points.top.right[3].y],
+                    [shapes.segments.points.middle.right[3].x, shapes.segments.points.middle.right[3].y],
+                    [shapes.segments.points.middle.right[1].x, shapes.segments.points.middle.right[1].y],
+                    [shapes.segments.points.middle.right[2].x, shapes.segments.points.middle.right[2].y],
+                    [shapes.segments.points.top.right[2].x,    shapes.segments.points.top.right[2].y],
+                ],
+                [
+                    [shapes.segments.points.middle.left[0].x,  shapes.segments.points.middle.left[0].y],
+                    [shapes.segments.points.middle.right[2].x, shapes.segments.points.middle.right[2].y],
+                    [shapes.segments.points.middle.right[1].x, shapes.segments.points.middle.right[1].y],
+                    [shapes.segments.points.middle.right[0].x, shapes.segments.points.middle.right[0].y],
+                    [shapes.segments.points.middle.left[2].x,  shapes.segments.points.middle.left[2].y],
+                    [shapes.segments.points.middle.left[1].x,  shapes.segments.points.middle.left[1].y],
+                ],
+                [
+                    [shapes.segments.points.middle.left[1].x, shapes.segments.points.middle.left[1].y],
+                    [shapes.segments.points.middle.left[4].x, shapes.segments.points.middle.left[4].y],
+                    [shapes.segments.points.bottom.left[3].x, shapes.segments.points.bottom.left[3].y],
+                    [shapes.segments.points.bottom.left[1].x, shapes.segments.points.bottom.left[1].y],
+                    [shapes.segments.points.bottom.left[0].x, shapes.segments.points.bottom.left[0].y],
+                    [shapes.segments.points.middle.left[2].x, shapes.segments.points.middle.left[2].y],
+                ],
+                [
+                    [shapes.segments.points.middle.right[1].x, shapes.segments.points.middle.right[1].y],
+                    [shapes.segments.points.middle.right[4].x, shapes.segments.points.middle.right[4].y],
+                    [shapes.segments.points.bottom.right[3].x, shapes.segments.points.bottom.right[3].y],
+                    [shapes.segments.points.bottom.right[1].x, shapes.segments.points.bottom.right[1].y],
+                    [shapes.segments.points.bottom.right[2].x, shapes.segments.points.bottom.right[2].y],
+                    [shapes.segments.points.middle.right[0].x, shapes.segments.points.middle.right[0].y],
+                ],
+                [
+                    [shapes.segments.points.bottom.left[0].x,  shapes.segments.points.bottom.left[0].y],
+                    [shapes.segments.points.bottom.right[2].x, shapes.segments.points.bottom.right[2].y],
+                    [shapes.segments.points.bottom.right[1].x, shapes.segments.points.bottom.right[1].y],
+                    [shapes.segments.points.bottom.right[0].x, shapes.segments.points.bottom.right[0].y],
+                    [shapes.segments.points.bottom.left[2].x,  shapes.segments.points.bottom.left[2].y],
+                    [shapes.segments.points.bottom.left[1].x,  shapes.segments.points.bottom.left[1].y],
+                ]
+            ];
+            for(var a = 0; a < points.length; a++){
+                var temp = {
+                    segment: parts.basic.path(null, points[a], 'L', dimStyle),
+                    state: false
+                };
+                segments.push( temp );
+                object.append( temp.segment );
+            }
+
+
+    //methods
+        object.set = function(segment,state){
+            segments[segment].state = state;
+            if(state){ __globals.utility.setStyle(segments[segment].segment,glowStyle); }
+            else{ __globals.utility.setStyle(segments[segment].segment,dimStyle); }
+        };
+        object.get = function(segment){ return segments[segment].state; };
+        object.clear = function(){
+            for(var a = 0; a < segments.length; a++){
+                this.set(a,false);
+            }
+        };
+
+        object.enterCharacter = function(char){
+            var stamp = [];
+            switch(char){
+                case '0': stamp = [1,1,1,0,1,1,1]; break;
+                case '1': stamp = [0,0,1,0,0,1,0]; break;
+                case '2': stamp = [1,0,1,1,1,0,1]; break;
+                case '3': stamp = [1,0,1,1,0,1,1]; break;
+                case '4': stamp = [0,1,1,1,0,1,0]; break;
+                case '5': stamp = [1,1,0,1,0,1,1]; break;
+                case '6': stamp = [1,1,0,1,1,1,1]; break;
+                case '7': stamp = [1,0,1,0,0,1,0]; break;
+                case '8': stamp = [1,1,1,1,1,1,1]; break;
+                case '9': stamp = [1,1,1,1,0,1,1]; break;
+                default:  stamp = [0,0,0,0,0,0,0]; break;
+            }
+
+            for(var a = 0; a < stamp.length; a++){
+                this.set(a, stamp[a]==1);
+            }
+        };
+
+        object.test = function(){
+            this.clear();
+            this.enterCharacter('9');
+        };
+
+    return object;
+};
+this.glowbox_rect = function(
+    id='glowbox_rect',
+    x, y, width, height, angle=0,
+    glowStyle = 'fill:rgba(240,240,240,1)',
+    dimStyle = 'fill:rgba(80,80,80,1)'
+){
+
+    // elements 
+    var object = parts.basic.g(id, x, y);
+    var rect = parts.basic.rect(null, 0, 0, width, height, angle, dimStyle);
+        object.appendChild(rect);
+
+    //methods
+    object.on = function(){
+        __globals.utility.setStyle(rect,glowStyle);
+    };
+    object.off = function(){
+        __globals.utility.setStyle(rect,dimStyle);
+    };
 
     return object;
 };
@@ -1472,7 +1711,7 @@ this.grapher_periodicWave = function(
 
 
     //methods
-    object.wave = function(a=null){
+    object.wave = function(a=null,type=null){
         if(a==null){
             while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
             while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
@@ -1482,7 +1721,15 @@ this.grapher_periodicWave = function(
             }
             return this._data.wave;
         }
-        this._data.wave = a;
+
+        if(type==null){
+            this._data.wave = a;
+        }
+        switch(type){
+            case 'sin': this._data.wave.sin = a; break;
+            case 'cos': this._data.wave.cos = a; break;
+            default: break;
+        }
     }
     object.waveElement = function(type, mux, a){
         if(a==null){return this._data.wave[type][mux];}
@@ -1547,74 +1794,6 @@ this.label = function(
 
     return object;
 };
-this.rastorReadout = function(
-    id='rastorReadout',
-    x, y, width, height,
-    characterCount,
-    xGappage=1, yGappage=1
-){
-    //values
-        var values = {
-            width: 5, height: 5,
-            chars: {
-                a: {
-                    size:{x:5,y:5},
-                    stamp:[
-                        [0,0,0,0,0],
-                        [0,1,1,0,0],
-                        [1,0,0,1,0],
-                        [1,0,0,1,0],
-                        [0,1,1,0,1]
-                    ]
-                },
-                s:{
-                    size:{x:3,y:4},
-                    stamp:[
-                        [0,1,1],
-                        [1,1,0],					 
-                        [0,0,1],					 
-                        [1,1,0]
-                    ]
-                }
-            }
-        };
-
-    //elements
-        //main
-        var object = parts.basic.g(id, x, y);
-
-        //displays
-        var displays = [];
-        var widthPerDisplay = width/characterCount;
-        for(var a = 0; a < characterCount; a++){
-            var temp = {};
-            temp.display = parts.display.rastorDisplay(null, a*widthPerDisplay, y, widthPerDisplay, height, values.width, values.height);
-                object.appendChild(temp.display);
-            temp.char = '';
-            displays.push(temp);
-        }
-
-    
-    //methods
-        object.set = function(display,char){
-            displays[display].char = char;
-
-            var temp = values.chars[char].stamp;
-            for(var y = 0; y < temp.length; y++){
-                for(var x = 0; x < temp[y].length; x++){
-                    temp[y][x] =  temp[y][x] == 1 ? [1,1,1] : [0,0,0];
-                }
-            }
-
-            displays[display].display.reverseLoad(temp);
-        }
-        object.test = function(){
-            console.log( displays );
-            this.set(0,'a');
-        };
-
-    return object;
-}
     }
     this.control = new function(){
 this.rastorgrid = function(
@@ -1659,6 +1838,13 @@ this.rastorgrid = function(
         for(var y = 0; y < ycount; y++){
             for(var x = 0; x < xcount; x++){
                 object.box(x,y).set(value[y][x],false);
+            }
+        }
+    };
+    object.clear = function(){
+        for(var y = 0; y < ycount; y++){
+            for(var x = 0; x < xcount; x++){
+                object.box(x,y).set(false,false);
             }
         }
     };
@@ -2125,7 +2311,7 @@ this.slidePanel_vertical = function(
     id='slidePanel_vertical', 
     x, y, width, height,
     count,
-    handleStyle = 'fill:rgba(200,200,200,1)',
+    handleStyle = 'fill:rgba(180,180,180,1)',
     backingStyle = 'fill:rgba(150,150,150,1)',
     slotStyle = 'fill:rgba(50,50,50,1)'
 ){
@@ -2150,11 +2336,19 @@ this.slidePanel_vertical = function(
         return outputArray;
     };
     object.set = function(a, update=true){
-        for(var b = 0; b < count; b++){
+        for(var b = 0; b < a.length; b++){
             this.slide(b).set(a[b],false);
+        }
+        for(var b = a.length; b < count; b++){
+            this.slide(b).set(1/2,false);
         }
 
         if(update&&this.onChange){ this.onChange(a); }
+    };
+    object.setAll = function(a){
+        for(var b = 0; b < count; b++){
+            this.slide(b).set(a,false);
+        }
     };
     object.onChange = function(){};
 
@@ -2745,508 +2939,73 @@ this.connectionNode_data = function(
             // }
             // console.log(' ');
 
-function uploadData(callback){
-	var i = document.createElement('input');
-	i.type = 'file'; i.id = '_global_metasophiea.com/code/js/liveEdit/loadsave.js';
-	i.setAttribute('onchange',''+
-		'var f = new FileReader();'+
-		'f.readAsBinaryString(this.files[0]);'+
-		'f.onloadend = function(){'+callback.name+'(f.result); document.body.removeChild(document.getElementById("'+i.id+'"));}'+
-	'');
-
-	document.body.appendChild(i);
-	i.click();
-}
-
-function downloadData(name,type,data){
-	if(!name || !type || !data){console.error('cannot save with missing information'); return;}
-
-	var a = document.createElement('a');
-	var file = new Blob([data]);
-	a.href = URL.createObjectURL(file);
-	a.download = name+'.'+type;
-	document.body.appendChild(a);
-	a.click();
-	document.body.removeChild(a);
-}
-
-// https://github.com/Tonejs/MidiConvert
-// https://tonejs.github.io/MidiConvert/build/MidiConvert.js
-//      MidiConvert.parse(t){return(new s.a).decode(t)}
-//          MidiConvert.parse(rawFileData)
-//      MidiConvert.load(t,e){var n=(new s.a).load(t);return e&&n.then(e),n}
-//          MidiConvert.load('path/to/midi.mid',callback)
-//      MidiConvert.create(){return new s.a}
-//          creates a blank MidiConvert midi data structure which one can populate
-//      MidiConvert.fromJSON(t,e){var n=(new s.a).load(t);return e&&n.then(e),n}
-
-
-
-!function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define([],e):"object"==typeof exports?exports.MidiConvert=e():t.MidiConvert=e()}(this,function(){return function(t){function e(r){if(n[r])return n[r].exports;var i=n[r]={i:r,l:!1,exports:{}};return t[r].call(i.exports,i,i.exports,e),i.l=!0,i.exports}var n={};return e.m=t,e.c=n,e.i=function(t){return t},e.d=function(t,n,r){e.o(t,n)||Object.defineProperty(t,n,{configurable:!1,enumerable:!0,get:r})},e.n=function(t){var n=t&&t.__esModule?function(){return t.default}:function(){return t};return e.d(n,"a",n),n},e.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},e.p="",e(e.s=7)}([function(t,e,n){"use strict";n.d(e,"a",function(){return r}),n.d(e,"b",function(){return i}),n.d(e,"c",function(){return a});var r=["acoustic grand piano","bright acoustic piano","electric grand piano","honky-tonk piano","electric piano 1","electric piano 2","harpsichord","clavi","celesta","glockenspiel","music box","vibraphone","marimba","xylophone","tubular bells","dulcimer","drawbar organ","percussive organ","rock organ","church organ","reed organ","accordion","harmonica","tango accordion","acoustic guitar (nylon)","acoustic guitar (steel)","electric guitar (jazz)","electric guitar (clean)","electric guitar (muted)","overdriven guitar","distortion guitar","guitar harmonics","acoustic bass","electric bass (finger)","electric bass (pick)","fretless bass","slap bass 1","slap bass 2","synth bass 1","synth bass 2","violin","viola","cello","contrabass","tremolo strings","pizzicato strings","orchestral harp","timpani","string ensemble 1","string ensemble 2","synthstrings 1","synthstrings 2","choir aahs","voice oohs","synth voice","orchestra hit","trumpet","trombone","tuba","muted trumpet","french horn","brass section","synthbrass 1","synthbrass 2","soprano sax","alto sax","tenor sax","baritone sax","oboe","english horn","bassoon","clarinet","piccolo","flute","recorder","pan flute","blown bottle","shakuhachi","whistle","ocarina","lead 1 (square)","lead 2 (sawtooth)","lead 3 (calliope)","lead 4 (chiff)","lead 5 (charang)","lead 6 (voice)","lead 7 (fifths)","lead 8 (bass + lead)","pad 1 (new age)","pad 2 (warm)","pad 3 (polysynth)","pad 4 (choir)","pad 5 (bowed)","pad 6 (metallic)","pad 7 (halo)","pad 8 (sweep)","fx 1 (rain)","fx 2 (soundtrack)","fx 3 (crystal)","fx 4 (atmosphere)","fx 5 (brightness)","fx 6 (goblins)","fx 7 (echoes)","fx 8 (sci-fi)","sitar","banjo","shamisen","koto","kalimba","bag pipe","fiddle","shanai","tinkle bell","agogo","steel drums","woodblock","taiko drum","melodic tom","synth drum","reverse cymbal","guitar fret noise","breath noise","seashore","bird tweet","telephone ring","helicopter","applause","gunshot"],i=["piano","chromatic percussion","organ","guitar","bass","strings","ensemble","brass","reed","pipe","synth lead","synth pad","synth effects","ethnic","percussive","sound effects"],a={0:"standard kit",8:"room kit",16:"power kit",24:"electronic kit",25:"tr-808 kit",32:"jazz kit",40:"brush kit",48:"orchestra kit",56:"sound fx kit"}},function(t,e,n){"use strict";function r(t){return t.replace(/\u0000/g,"")}function i(t,e){return 60/e.bpm*(t/e.PPQ)}function a(t){return"number"==typeof t}function o(t){return"string"==typeof t}function s(t){return["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"][t%12]+(Math.floor(t/12)-1)}e.b=r,e.a=i,e.c=a,n.d(e,"d",function(){return u}),e.e=s,n.d(e,"f",function(){return c});var u=function(){var t=/^([a-g]{1}(?:b|#|x|bb)?)(-?[0-9]+)/i;return function(e){return o(e)&&t.test(e)}}(),c=function(){var t=/^([a-g]{1}(?:b|#|x|bb)?)(-?[0-9]+)/i,e={cbb:-2,cb:-1,c:0,"c#":1,cx:2,dbb:0,db:1,d:2,"d#":3,dx:4,ebb:2,eb:3,e:4,"e#":5,ex:6,fbb:3,fb:4,f:5,"f#":6,fx:7,gbb:5,gb:6,g:7,"g#":8,gx:9,abb:7,ab:8,a:9,"a#":10,ax:11,bbb:9,bb:10,b:11,"b#":12,bx:13};return function(n){var r=t.exec(n),i=r[1],a=r[2];return e[i.toLowerCase()]+12*(parseInt(a)+1)}}()},function(t,e,n){"use strict";function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}n.d(e,"a",function(){return h});var i=n(11),a=(n.n(i),n(10)),o=(n.n(a),n(1)),s=n(9),u=n(5),c=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),h=function(){function t(){r(this,t),this.header={bpm:120,timeSignature:[4,4],PPQ:480},this.tracks=[]}return c(t,null,[{key:"fromJSON",value:function(e){var n=new t;return n.header=e.header,e.tracks.forEach(function(t){var e=s.a.fromJSON(t);n.tracks.push(e)}),n}}]),c(t,[{key:"load",value:function(t){var e=this,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:null,r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:"GET";return new Promise(function(i,a){var o=new XMLHttpRequest;o.open(r,t),o.responseType="arraybuffer",o.addEventListener("load",function(){4===o.readyState&&200===o.status?i(e.decode(o.response)):a(o.status)}),o.addEventListener("error",a),o.send(n)}).catch(function(t){console.log(t)})}},{key:"decode",value:function(t){var e=this;if(t instanceof ArrayBuffer){var r=new Uint8Array(t);t=String.fromCharCode.apply(null,r)}var a=i(t);return this.header=n.i(u.a)(a),this.tracks=[],a.tracks.forEach(function(t,n){var r=new s.a;r.id=n,e.tracks.push(r);var i=0;t.forEach(function(t){i+=o.a(t.deltaTime,e.header),"meta"===t.type&&"trackName"===t.subtype?r.name=o.b(t.text):"noteOn"===t.subtype?(r.noteOn(t.noteNumber,i,t.velocity/127),-1===r.channelNumber&&(r.channelNumber=t.channel)):"noteOff"===t.subtype?r.noteOff(t.noteNumber,i):"controller"===t.subtype&&t.controllerType?r.cc(t.controllerType,i,t.value/127):"meta"===t.type&&"instrumentName"===t.subtype?r.instrument=t.text:"channel"===t.type&&"programChange"===t.subtype&&(r.patch(t.programNumber),r.channelNumber=t.channel)}),e.header.name||r.length||!r.name||(e.header.name=r.name)}),this}},{key:"encode",value:function(){var t=this,e=new a.File({ticks:this.header.PPQ}),n=this.tracks.filter(function(t){return!t.length})[0];if(this.header.name&&(!n||n.name!==this.header.name)){e.addTrack().addEvent(new a.MetaEvent({time:0,type:a.MetaEvent.TRACK_NAME,data:this.header.name}))}return this.tracks.forEach(function(n){var r=e.addTrack();r.setTempo(t.bpm),n.name&&r.addEvent(new a.MetaEvent({time:0,type:a.MetaEvent.TRACK_NAME,data:n.name})),n.encode(r,t.header)}),e.toBytes()}},{key:"toArray",value:function(){for(var t=this.encode(),e=new Array(t.length),n=0;n<t.length;n++)e[n]=t.charCodeAt(n);return e}},{key:"toJSON",value:function(){var t={header:this.header,startTime:this.startTime,duration:this.duration,tracks:(this.tracks||[]).map(function(t){return t.toJSON()})};return t.header.name||(t.header.name=""),t}},{key:"track",value:function(t){var e=new s.a(t);return this.tracks.push(e),e}},{key:"get",value:function(t){return o.c(t)?this.tracks[t]:this.tracks.find(function(e){return e.name===t})}},{key:"slice",value:function(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:0,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:this.duration,r=new t;return r.header=this.header,r.tracks=this.tracks.map(function(t){return t.slice(e,n)}),r}},{key:"startTime",get:function(){var t=this.tracks.map(function(t){return t.startTime});return t.length?Math.min.apply(Math,t)||0:0}},{key:"bpm",get:function(){return this.header.bpm},set:function(t){var e=this.header.bpm;this.header.bpm=t;var n=e/t;this.tracks.forEach(function(t){return t.scale(n)})}},{key:"timeSignature",get:function(){return this.header.timeSignature},set:function(t){this.header.timeSignature=t}},{key:"duration",get:function(){var t=this.tracks.map(function(t){return t.duration});return t.length?Math.max.apply(Math,t)||0:0}}]),t}()},function(t,e,n){"use strict";function r(t,e){var n=0,r=t.length,i=r;if(r>0&&t[r-1].time<=e)return r-1;for(;n<i;){var a=Math.floor(n+(i-n)/2),o=t[a],s=t[a+1];if(o.time===e){for(var u=a;u<t.length;u++){t[u].time===e&&(a=u)}return a}if(o.time<e&&s.time>e)return a;o.time>e?i=a:o.time<e&&(n=a+1)}return-1}function i(t,e){if(t.length){var n=r(t,e.time);t.splice(n+1,0,e)}else t.push(e)}n.d(e,"a",function(){return i})},function(t,e,n){"use strict";function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}n.d(e,"a",function(){return o});var i=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),a={1:"modulationWheel",2:"breath",4:"footController",5:"portamentoTime",7:"volume",8:"balance",10:"pan",64:"sustain",65:"portamentoTime",66:"sostenuto",67:"softPedal",68:"legatoFootswitch",84:"portamentoContro"},o=function(){function t(e,n,i){r(this,t),this.number=e,this.time=n,this.value=i}return i(t,[{key:"name",get:function(){if(a.hasOwnProperty(this.number))return a[this.number]}}]),t}()},function(t,e,n){"use strict";function r(t){for(var e={PPQ:t.header.ticksPerBeat},n=0;n<t.tracks.length;n++)for(var r=t.tracks[n],i=0;i<r.length;i++){var a=r[i];"meta"===a.type&&("timeSignature"===a.subtype?e.timeSignature=[a.numerator,a.denominator]:"setTempo"===a.subtype&&(e.bpm||(e.bpm=6e7/a.microsecondsPerBeat)))}return e.bpm=e.bpm||120,e}n.d(e,"a",function(){return r})},function(t,e,n){"use strict";function r(t,e){for(var n=0;n<t.length;n++){var r=t[n],i=e[n];if(r.length>i)return!0}return!1}function i(t,e,n){for(var r=0,i=1/0,a=0;a<t.length;a++){var o=t[a],s=e[a];o[s]&&o[s].time<i&&(r=a,i=o[s].time)}n[r](t[r][e[r]]),e[r]+=1}function a(){for(var t=arguments.length,e=Array(t),n=0;n<t;n++)e[n]=arguments[n];for(var a=e.filter(function(t,e){return e%2==0}),o=new Uint32Array(a.length),s=e.filter(function(t,e){return e%2==1});r(a,o);)i(a,o,s)}n.d(e,"a",function(){return a})},function(t,e,n){"use strict";function r(t){return(new s.a).decode(t)}function i(t,e){var n=(new s.a).load(t);return e&&n.then(e),n}function a(){return new s.a}function o(t){return s.a.fromJSON(t)}Object.defineProperty(e,"__esModule",{value:!0}),e.parse=r,e.load=i,e.create=a,e.fromJSON=o;var s=n(2),u=n(0);n.d(e,"instrumentByPatchID",function(){return u.a}),n.d(e,"instrumentFamilyByID",function(){return u.b}),n.d(e,"drumKitByPatchID",function(){return u.c})},function(t,e,n){"use strict";function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}n.d(e,"a",function(){return o});var i=n(1),a=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),o=function(){function t(e,n){var a=arguments.length>2&&void 0!==arguments[2]?arguments[2]:0,o=arguments.length>3&&void 0!==arguments[3]?arguments[3]:1;if(r(this,t),i.c(e))this.midi=e;else{if(!i.d(e))throw new Error("the midi value must either be in Pitch Notation (e.g. C#4) or a midi value");this.name=e}this.time=n,this.duration=a,this.velocity=o}return a(t,null,[{key:"fromJSON",value:function(e){return new t(e.midi,e.time,e.duration,e.velocity)}}]),a(t,[{key:"match",value:function(t){return i.c(t)?this.midi===t:i.d(t)?this.name.toLowerCase()===t.toLowerCase():void 0}},{key:"toJSON",value:function(){return{name:this.name,midi:this.midi,time:this.time,velocity:this.velocity,duration:this.duration}}},{key:"name",get:function(){return i.e(this.midi)},set:function(t){this.midi=i.f(t)}},{key:"noteOn",get:function(){return this.time},set:function(t){this.time=t}},{key:"noteOff",get:function(){return this.time+this.duration},set:function(t){this.duration=t-this.time}}]),t}()},function(t,e,n){"use strict";function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}n.d(e,"a",function(){return h});var i=n(3),a=n(4),o=n(6),s=n(8),u=n(0),c=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),h=function(){function t(e){var n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:-1,i=arguments.length>2&&void 0!==arguments[2]?arguments[2]:-1;r(this,t),this.name=e,this.channelNumber=i,this.notes=[],this.controlChanges={},this.instrumentNumber=n}return c(t,null,[{key:"fromJSON",value:function(e){var n=new t(e.name,e.instrumentNumber,e.channelNumber);return n.id=e.id,e.notes&&e.notes.forEach(function(t){var e=s.a.fromJSON(t);n.notes.push(e)}),e.controlChanges&&(n.controlChanges=e.controlChanges),n}}]),c(t,[{key:"note",value:function(t,e){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:0,a=arguments.length>3&&void 0!==arguments[3]?arguments[3]:1,o=new s.a(t,e,r,a);return n.i(i.a)(this.notes,o),this}},{key:"noteOn",value:function(t,e){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:1,a=new s.a(t,e,0,r);return n.i(i.a)(this.notes,a),this}},{key:"noteOff",value:function(t,e){for(var n=0;n<this.notes.length;n++){var r=this.notes[n];if(r.match(t)&&0===r.duration){r.noteOff=e;break}}return this}},{key:"cc",value:function(t,e,r){this.controlChanges.hasOwnProperty(t)||(this.controlChanges[t]=[]);var o=new a.a(t,e,r);return n.i(i.a)(this.controlChanges[t],o),this}},{key:"patch",value:function(t){return this.instrumentNumber=t,this}},{key:"channel",value:function(t){return this.channelNumber=t,this}},{key:"scale",value:function(t){return this.notes.forEach(function(e){e.time*=t,e.duration*=t}),this}},{key:"slice",value:function(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:0,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:this.duration,r=Math.max(this.notes.findIndex(function(t){return t.time>=e}),0),i=this.notes.findIndex(function(t){return t.noteOff>=n})+1,a=new t(this.name);return a.notes=this.notes.slice(r,i),a.notes.forEach(function(t){return t.time=t.time-e}),a}},{key:"encode",value:function(t,e){function r(t){var e=Math.floor(i*t),n=Math.max(e-a,0);return a=e,n}var i=e.PPQ/(60/e.bpm),a=0,s=Math.max(0,this.channelNumber);-1!==this.instrumentNumber&&t.instrument(s,this.instrumentNumber),n.i(o.a)(this.noteOns,function(e){t.addNoteOn(s,e.name,r(e.time),Math.floor(127*e.velocity))},this.noteOffs,function(e){t.addNoteOff(s,e.name,r(e.time))})}},{key:"toJSON",value:function(){var t={startTime:this.startTime,duration:this.duration,length:this.length,notes:[],controlChanges:{}};return void 0!==this.id&&(t.id=this.id),t.name=this.name,-1!==this.instrumentNumber&&(t.instrumentNumber=this.instrumentNumber,t.instrument=this.instrument,t.instrumentFamily=this.instrumentFamily),-1!==this.channelNumber&&(t.channelNumber=this.channelNumber,t.isPercussion=this.isPercussion),this.notes.length&&(t.notes=this.notes.map(function(t){return t.toJSON()})),Object.keys(this.controlChanges).length&&(t.controlChanges=this.controlChanges),t}},{key:"noteOns",get:function(){var t=[];return this.notes.forEach(function(e){t.push({time:e.noteOn,midi:e.midi,name:e.name,velocity:e.velocity})}),t}},{key:"noteOffs",get:function(){var t=[];return this.notes.forEach(function(e){t.push({time:e.noteOff,midi:e.midi,name:e.name})}),t}},{key:"length",get:function(){return this.notes.length}},{key:"startTime",get:function(){if(this.notes.length){return this.notes[0].noteOn}return 0}},{key:"duration",get:function(){if(this.notes.length){return this.notes[this.notes.length-1].noteOff}return 0}},{key:"instrument",get:function(){return this.isPercussion?u.c[this.instrumentNumber]:u.a[this.instrumentNumber]},set:function(t){var e=u.a.indexOf(t);-1!==e&&(this.instrumentNumber=e)}},{key:"isPercussion",get:function(){return[9,10].includes(this.channelNumber)}},{key:"instrumentFamily",get:function(){return this.isPercussion?"drums":u.b[Math.floor(this.instrumentNumber/8)]}}]),t}()},function(t,e,n){(function(t){var n={};!function(t){var e=t.DEFAULT_VOLUME=90,n=(t.DEFAULT_DURATION=128,t.DEFAULT_CHANNEL=0,{midi_letter_pitches:{a:21,b:23,c:12,d:14,e:16,f:17,g:19},midiPitchFromNote:function(t){var e=/([a-g])(#+|b+)?([0-9]+)$/i.exec(t),r=e[1].toLowerCase(),i=e[2]||"";return 12*parseInt(e[3],10)+n.midi_letter_pitches[r]+("#"==i.substr(0,1)?1:-1)*i.length},ensureMidiPitch:function(t){return"number"!=typeof t&&/[^0-9]/.test(t)?n.midiPitchFromNote(t):parseInt(t,10)},midi_pitches_letter:{12:"c",13:"c#",14:"d",15:"d#",16:"e",17:"f",18:"f#",19:"g",20:"g#",21:"a",22:"a#",23:"b"},midi_flattened_notes:{"a#":"bb","c#":"db","d#":"eb","f#":"gb","g#":"ab"},noteFromMidiPitch:function(t,e){var r,i=0,a=t,e=e||!1;return t>23&&(i=Math.floor(t/12)-1,a=t-12*i),r=n.midi_pitches_letter[a],e&&r.indexOf("#")>0&&(r=n.midi_flattened_notes[r]),r+i},mpqnFromBpm:function(t){var e=Math.floor(6e7/t),n=[];do{n.unshift(255&e),e>>=8}while(e);for(;n.length<3;)n.push(0);return n},bpmFromMpqn:function(t){var e=t;if(void 0!==t[0]){e=0;for(var n=0,r=t.length-1;r>=0;++n,--r)e|=t[n]<<r}return Math.floor(6e7/t)},codes2Str:function(t){return String.fromCharCode.apply(null,t)},str2Bytes:function(t,e){if(e)for(;t.length/2<e;)t="0"+t;for(var n=[],r=t.length-1;r>=0;r-=2){var i=0===r?t[r]:t[r-1]+t[r];n.unshift(parseInt(i,16))}return n},translateTickTime:function(t){for(var e=127&t;t>>=7;)e<<=8,e|=127&t|128;for(var n=[];;){if(n.push(255&e),!(128&e))break;e>>=8}return n}}),r=function(t){if(!this)return new r(t);!t||null===t.type&&void 0===t.type||null===t.channel&&void 0===t.channel||null===t.param1&&void 0===t.param1||(this.setTime(t.time),this.setType(t.type),this.setChannel(t.channel),this.setParam1(t.param1),this.setParam2(t.param2))};r.NOTE_OFF=128,r.NOTE_ON=144,r.AFTER_TOUCH=160,r.CONTROLLER=176,r.PROGRAM_CHANGE=192,r.CHANNEL_AFTERTOUCH=208,r.PITCH_BEND=224,r.prototype.setTime=function(t){this.time=n.translateTickTime(t||0)},r.prototype.setType=function(t){if(t<r.NOTE_OFF||t>r.PITCH_BEND)throw new Error("Trying to set an unknown event: "+t);this.type=t},r.prototype.setChannel=function(t){if(t<0||t>15)throw new Error("Channel is out of bounds.");this.channel=t},r.prototype.setParam1=function(t){this.param1=t},r.prototype.setParam2=function(t){this.param2=t},r.prototype.toBytes=function(){var t=[],e=this.type|15&this.channel;return t.push.apply(t,this.time),t.push(e),t.push(this.param1),void 0!==this.param2&&null!==this.param2&&t.push(this.param2),t};var i=function(t){if(!this)return new i(t);this.setTime(t.time),this.setType(t.type),this.setData(t.data)};i.SEQUENCE=0,i.TEXT=1,i.COPYRIGHT=2,i.TRACK_NAME=3,i.INSTRUMENT=4,i.LYRIC=5,i.MARKER=6,i.CUE_POINT=7,i.CHANNEL_PREFIX=32,i.END_OF_TRACK=47,i.TEMPO=81,i.SMPTE=84,i.TIME_SIG=88,i.KEY_SIG=89,i.SEQ_EVENT=127,i.prototype.setTime=function(t){this.time=n.translateTickTime(t||0)},i.prototype.setType=function(t){this.type=t},i.prototype.setData=function(t){this.data=t},i.prototype.toBytes=function(){if(!this.type)throw new Error("Type for meta-event not specified.");var t=[];if(t.push.apply(t,this.time),t.push(255,this.type),Array.isArray(this.data))t.push(this.data.length),t.push.apply(t,this.data);else if("number"==typeof this.data)t.push(1,this.data);else if(null!==this.data&&void 0!==this.data){t.push(this.data.length);var e=this.data.split("").map(function(t){return t.charCodeAt(0)});t.push.apply(t,e)}else t.push(0);return t};var a=function(t){if(!this)return new a(t);var e=t||{};this.events=e.events||[]};a.START_BYTES=[77,84,114,107],a.END_BYTES=[0,255,47,0],a.prototype.addEvent=function(t){return this.events.push(t),this},a.prototype.addNoteOn=a.prototype.noteOn=function(t,i,a,o){return this.events.push(new r({type:r.NOTE_ON,channel:t,param1:n.ensureMidiPitch(i),param2:o||e,time:a||0})),this},a.prototype.addNoteOff=a.prototype.noteOff=function(t,i,a,o){return this.events.push(new r({type:r.NOTE_OFF,channel:t,param1:n.ensureMidiPitch(i),param2:o||e,time:a||0})),this},a.prototype.addNote=a.prototype.note=function(t,e,n,r,i){return this.noteOn(t,e,r,i),n&&this.noteOff(t,e,n,i),this},a.prototype.addChord=a.prototype.chord=function(t,e,n,r){if(!Array.isArray(e)&&!e.length)throw new Error("Chord must be an array of pitches");return e.forEach(function(e){this.noteOn(t,e,0,r)},this),e.forEach(function(e,r){0===r?this.noteOff(t,e,n):this.noteOff(t,e)},this),this},a.prototype.setInstrument=a.prototype.instrument=function(t,e,n){return this.events.push(new r({type:r.PROGRAM_CHANGE,channel:t,param1:e,time:n||0})),this},a.prototype.setTempo=a.prototype.tempo=function(t,e){return this.events.push(new i({type:i.TEMPO,data:n.mpqnFromBpm(t),time:e||0})),this},a.prototype.toBytes=function(){var t=0,e=[],r=a.START_BYTES,i=a.END_BYTES,o=function(n){var r=n.toBytes();t+=r.length,e.push.apply(e,r)};this.events.forEach(o),t+=i.length;var s=n.str2Bytes(t.toString(16),4);return r.concat(s,e,i)};var o=function(t){if(!this)return new o(t);var e=t||{};if(e.ticks){if("number"!=typeof e.ticks)throw new Error("Ticks per beat must be a number!");if(e.ticks<=0||e.ticks>=32768||e.ticks%1!=0)throw new Error("Ticks per beat must be an integer between 1 and 32767!")}this.ticks=e.ticks||128,this.tracks=e.tracks||[]};o.HDR_CHUNKID="MThd",o.HDR_CHUNK_SIZE="\0\0\0",o.HDR_TYPE0="\0\0",o.HDR_TYPE1="\0",o.prototype.addTrack=function(t){return t?(this.tracks.push(t),this):(t=new a,this.tracks.push(t),t)},o.prototype.toBytes=function(){var t=this.tracks.length.toString(16),e=o.HDR_CHUNKID+o.HDR_CHUNK_SIZE;return parseInt(t,16)>1?e+=o.HDR_TYPE1:e+=o.HDR_TYPE0,e+=n.codes2Str(n.str2Bytes(t,2)),e+=String.fromCharCode(this.ticks/256,this.ticks%256),this.tracks.forEach(function(t){e+=n.codes2Str(t.toBytes())}),e},t.Util=n,t.File=o,t.Track=a,t.Event=r,t.MetaEvent=i}(n),void 0!==t&&null!==t?t.exports=n:void 0!==e&&null!==e?e=n:this.Midi=n}).call(e,n(12)(t))},function(t,e){function n(t){function e(t){var e=t.read(4),n=t.readInt32();return{id:e,length:n,data:t.read(n)}}var n;stream=r(t);var i=e(stream);if("MThd"!=i.id||6!=i.length)throw"Bad .mid file - header not found";var a=r(i.data),o=a.readInt16(),s=a.readInt16(),u=a.readInt16();if(32768&u)throw"Expressing time division in SMTPE frames is not supported yet";ticksPerBeat=u;for(var c={formatType:o,trackCount:s,ticksPerBeat:ticksPerBeat},h=[],f=0;f<c.trackCount;f++){h[f]=[];var d=e(stream);if("MTrk"!=d.id)throw"Unexpected chunk - expected MTrk, got "+d.id;for(var l=r(d.data);!l.eof();){var p=function(t){var e={};e.deltaTime=t.readVarInt();var r=t.readInt8();if(240==(240&r)){if(255==r){e.type="meta";var i=t.readInt8(),a=t.readVarInt();switch(i){case 0:if(e.subtype="sequenceNumber",2!=a)throw"Expected length for sequenceNumber event is 2, got "+a;return e.number=t.readInt16(),e;case 1:return e.subtype="text",e.text=t.read(a),e;case 2:return e.subtype="copyrightNotice",e.text=t.read(a),e;case 3:return e.subtype="trackName",e.text=t.read(a),e;case 4:return e.subtype="instrumentName",e.text=t.read(a),e;case 5:return e.subtype="lyrics",e.text=t.read(a),e;case 6:return e.subtype="marker",e.text=t.read(a),e;case 7:return e.subtype="cuePoint",e.text=t.read(a),e;case 32:if(e.subtype="midiChannelPrefix",1!=a)throw"Expected length for midiChannelPrefix event is 1, got "+a;return e.channel=t.readInt8(),e;case 47:if(e.subtype="endOfTrack",0!=a)throw"Expected length for endOfTrack event is 0, got "+a;return e;case 81:if(e.subtype="setTempo",3!=a)throw"Expected length for setTempo event is 3, got "+a;return e.microsecondsPerBeat=(t.readInt8()<<16)+(t.readInt8()<<8)+t.readInt8(),e;case 84:if(e.subtype="smpteOffset",5!=a)throw"Expected length for smpteOffset event is 5, got "+a;var o=t.readInt8();return e.frameRate={0:24,32:25,64:29,96:30}[96&o],e.hour=31&o,e.min=t.readInt8(),e.sec=t.readInt8(),e.frame=t.readInt8(),e.subframe=t.readInt8(),e;case 88:if(e.subtype="timeSignature",4!=a)throw"Expected length for timeSignature event is 4, got "+a;return e.numerator=t.readInt8(),e.denominator=Math.pow(2,t.readInt8()),e.metronome=t.readInt8(),e.thirtyseconds=t.readInt8(),e;case 89:if(e.subtype="keySignature",2!=a)throw"Expected length for keySignature event is 2, got "+a;return e.key=t.readInt8(!0),e.scale=t.readInt8(),e;case 127:return e.subtype="sequencerSpecific",e.data=t.read(a),e;default:return e.subtype="unknown",e.data=t.read(a),e}return e.data=t.read(a),e}if(240==r){e.type="sysEx";var a=t.readVarInt();return e.data=t.read(a),e}if(247==r){e.type="dividedSysEx";var a=t.readVarInt();return e.data=t.read(a),e}throw"Unrecognised MIDI event type byte: "+r}var s;0==(128&r)?(s=r,r=n):(s=t.readInt8(),n=r);var u=r>>4;switch(e.channel=15&r,e.type="channel",u){case 8:return e.subtype="noteOff",e.noteNumber=s,e.velocity=t.readInt8(),e;case 9:return e.noteNumber=s,e.velocity=t.readInt8(),0==e.velocity?e.subtype="noteOff":e.subtype="noteOn",e;case 10:return e.subtype="noteAftertouch",e.noteNumber=s,e.amount=t.readInt8(),e;case 11:return e.subtype="controller",e.controllerType=s,e.value=t.readInt8(),e;case 12:return e.subtype="programChange",e.programNumber=s,e;case 13:return e.subtype="channelAftertouch",e.amount=s,e;case 14:return e.subtype="pitchBend",e.value=s+(t.readInt8()<<7),e;default:throw"Unrecognised MIDI event type: "+u}}(l);h[f].push(p)}}return{header:c,tracks:h}}function r(t){function e(e){var n=t.substr(s,e);return s+=e,n}function n(){var e=(t.charCodeAt(s)<<24)+(t.charCodeAt(s+1)<<16)+(t.charCodeAt(s+2)<<8)+t.charCodeAt(s+3);return s+=4,e}function r(){var e=(t.charCodeAt(s)<<8)+t.charCodeAt(s+1);return s+=2,e}function i(e){var n=t.charCodeAt(s);return e&&n>127&&(n-=256),s+=1,n}function a(){return s>=t.length}function o(){for(var t=0;;){var e=i();if(!(128&e))return t+e;t+=127&e,t<<=7}}var s=0;return{eof:a,read:e,readInt32:n,readInt16:r,readInt8:i,readVarInt:o}}t.exports=function(t){return n(t)}},function(t,e){t.exports=function(t){return t.webpackPolyfill||(t.deprecate=function(){},t.paths=[],t.children||(t.children=[]),Object.defineProperty(t,"loaded",{enumerable:!0,get:function(){return t.l}}),Object.defineProperty(t,"id",{enumerable:!0,get:function(){return t.i}}),t.webpackPolyfill=1),t}}])});
-
-function internalizeMidi_v1_MidiConvert(filedata){
-    function calculateTicksPerSecond(ticksPerMeasure, beatsPerSecond, timeSignature){
-        return (ticksPerMeasure*beatsPerSecond)/timeSignature[0];
-    }
-
-    function sortedInsert(array,key,item){
-        //figure out which half of the array it's going to be in
-        if( array[Math.round(array.length/2)][key] > item[key] ){
-            //check/insert from front
-            var a = 0;
-            while( array[a][key] <= item[key] ){ a++; }
-            array.splice(a, 0, item);
-        }else{
-            //check/insert from back
-            var a = array.length-1;
-            while( array[a][key] > item[key] ){ a--; }
-            array.splice(a+1, 0, item);
-        }
-    }
-
-    function makeCommand(tick,commandName,data){
-        return {'tick':tick, 'commandName':commandName, 'data':data};
-    }
-
-    function internalizeMidiTrack_v1_MidiConvert(track,ticksPerSecond){
-        var output = [];
-        
-            output.push( makeCommand(0,'trackName',track.name==undefined?'':track.name) );
-            output.push( makeCommand(0,'channel',track.channelNumber) );
-            output.push( makeCommand(0,'instrumentNumber',track.instrumentNumber) );
-            output.push( makeCommand(0,'instrumentName',track.instrument==undefined?'':track.instrument) );
-            output.push( makeCommand(0,'instrumentFamily',track.instrumentFamily==undefined?'':track.instrumentFamily) );
-            output.push( makeCommand(0,'isPercussion',track.isPercussion) );
-
-            for(var a = 0; a < track.notes.length; a++){
-                sortedInsert( output, 'tick', 
-                    makeCommand(
-                        ticksPerSecond*track.notes[a].time,
-                        'note',
-                        {'noteNumber':track.notes[a].midi,'velocity':track.notes[a].velocity}
-                    )
-                );
-                sortedInsert( output, 'tick', 
-                    makeCommand(
-                        ticksPerSecond*track.notes[a].time+ticksPerSecond*track.notes[a].duration,
-                        'note',
-                        {'noteNumber':track.notes[a].midi,'velocity':0}
-                    )
-                );
-            }
-
-        return output;
-    }
-
-    function internalizeMidiArrangement_v1_MidiConvert(MidiConvert_arrangement){
-        var output = {};
-            output.arrangementName = '';
-            output.control = [];
-                output.control.push(makeCommand(0,'ticksPerMeasure',MidiConvert_arrangement.header.PPQ*4));
-                output.control.push(makeCommand(0,'timeSignature',MidiConvert_arrangement.header.timeSignature));
-                output.control.push(makeCommand(0,'beatsPerSecond',MidiConvert_arrangement.header.bpm/60));      
-                output.control.push(makeCommand(0,'ticksPerSecond',calculateTicksPerSecond(MidiConvert_arrangement.header.PPQ*4, MidiConvert_arrangement.header.bpm/60, MidiConvert_arrangement.header.timeSignature)));
-            output.tracks = [];
-                for(var a = 0; a < MidiConvert_arrangement.tracks.length; a++){
-                    output.tracks.push(internalizeMidiTrack_v1_MidiConvert(
-                        MidiConvert_arrangement.tracks[a],
-                        (MidiConvert_arrangement.header.PPQ*MidiConvert_arrangement.header.bpm)/(15*MidiConvert_arrangement.header.timeSignature[0])
-                    ));
-                }
-
-        return output;
-    }
-
-    return internalizeMidiArrangement_v1_MidiConvert(MidiConvert.parse(filedata));
-}
-var midi_10014 = new Uint8Array([77,84,104,100,0,0,0,6,0,1,0,5,1,195,160,77,84,114,107,0,0,0,32,0,195,191,127,3,0,0,65,0,195,191,88,4,4,2,24,8,0,195,191,89,2,0,0,0,195,191,81,3,15,66,64,0,195,191,47,0,77,84,114,107,0,0,1,194,175,0,195,191,33,1,0,0,195,191,3,9,83,73,77,79,49,46,77,73,68,0,195,129,99,0,194,177,7,127,0,194,177,10,96,194,173,0,194,145,48,102,194,129,52,48,0,60,55,102,194,129,52,55,0,60,48,103,194,129,52,48,0,60,55,103,194,129,52,55,0,60,48,104,90,48,0,30,48,104,90,48,0,30,55,104,90,55,0,30,55,105,90,55,0,30,48,105,194,129,52,48,0,60,55,105,194,129,52,55,0,60,48,106,194,129,52,48,0,60,55,106,194,129,52,55,0,60,48,107,194,129,52,48,0,60,55,107,194,129,52,55,0,60,48,108,90,48,0,30,48,108,90,48,0,30,55,109,90,55,0,30,55,109,90,55,0,30,48,109,194,129,52,48,0,60,55,110,194,129,52,55,0,60,48,110,194,129,52,48,0,60,55,111,194,129,52,55,0,60,48,111,194,129,52,48,0,60,55,112,194,129,52,55,0,60,48,112,90,48,0,30,48,112,90,48,0,30,55,113,90,55,0,30,55,113,90,55,0,30,48,113,194,129,52,48,0,60,55,114,194,129,52,55,0,60,48,114,194,129,52,48,0,60,55,115,194,129,52,55,0,60,48,115,194,129,52,48,0,60,55,116,194,129,52,55,0,60,48,116,90,48,0,30,48,116,90,48,0,30,55,117,90,55,0,30,55,117,90,55,0,30,48,117,194,129,52,48,0,60,55,118,194,129,52,55,0,60,48,118,194,129,52,48,0,60,55,119,194,129,52,55,0,60,48,119,194,129,52,48,0,60,55,120,194,129,52,55,0,60,48,120,90,48,0,30,48,121,90,48,0,30,55,121,90,55,0,30,55,121,90,55,0,30,48,121,194,129,52,48,0,60,55,122,194,129,52,55,0,60,48,122,194,129,52,48,0,60,55,123,194,129,52,55,0,60,48,123,194,129,52,48,0,60,55,124,194,129,52,55,0,60,48,124,90,48,0,30,48,125,90,48,0,30,55,125,90,55,0,30,55,125,90,55,0,30,48,125,194,129,52,48,0,60,55,126,194,129,52,55,0,0,195,191,47,0,77,84,114,107,0,0,4,98,0,195,191,33,1,0,0,195,191,3,9,83,73,77,79,49,46,77,73,68,0,195,130,99,0,194,178,7,127,0,194,178,10,32,0,194,146,60,90,90,60,0,30,72,90,90,72,0,30,60,90,90,60,0,194,129,22,64,91,90,64,0,30,69,91,90,69,0,30,65,91,90,65,0,194,129,22,65,92,90,65,0,30,67,92,90,67,0,30,60,92,90,60,0,194,129,22,57,93,90,57,0,194,130,14,62,93,90,62,0,30,64,94,90,64,0,194,129,22,60,94,90,60,0,194,129,22,57,95,90,57,0,194,129,22,60,95,90,60,0,194,129,22,67,96,90,67,0,194,129,22,69,96,90,69,0,194,129,22,67,97,90,67,0,194,129,22,64,97,90,64,0,194,129,22,65,98,90,65,0,194,129,22,69,98,90,69,0,194,129,22,72,99,90,72,0,194,129,22,64,99,90,64,0,30,67,100,90,67,0,194,130,14,72,100,90,72,0,194,129,22,62,101,90,62,0,30,64,101,90,64,0,30,62,101,90,62,0,30,60,102,90,60,0,30,60,102,90,60,0,30,76,102,0,72,102,90,72,0,0,76,0,30,79,102,0,60,102,90,60,0,0,79,0,30,76,103,90,76,0,30,81,103,0,64,103,90,64,0,0,81,0,30,76,103,0,69,103,90,69,0,0,76,0,30,84,103,0,65,103,90,65,0,0,84,0,30,76,104,90,76,0,30,81,104,0,65,104,90,65,0,0,81,0,30,76,104,0,67,104,90,67,0,0,76,0,30,79,104,0,60,104,90,60,0,0,79,0,30,76,105,90,76,0,30,81,105,0,57,105,90,57,0,0,81,0,30,76,105,90,76,0,30,84,105,90,84,0,30,76,106,0,62,106,90,62,0,0,76,0,30,81,106,0,64,106,90,64,0,0,81,0,30,76,106,90,76,0,30,79,106,0,60,106,90,60,0,0,79,0,30,76,107,90,76,0,30,81,107,0,57,107,90,57,0,0,81,0,30,76,107,90,76,0,30,84,107,0,60,107,90,60,0,0,84,0,30,72,108,90,72,0,30,76,108,0,67,108,90,67,0,0,76,0,30,72,108,90,72,0,30,79,109,0,69,109,90,69,0,0,79,0,30,72,109,90,72,0,30,76,109,0,67,109,90,67,0,0,76,0,30,72,109,90,72,0,30,76,110,0,64,110,90,64,0,0,76,0,30,69,110,90,69,0,30,72,110,0,65,110,90,65,0,0,72,0,30,69,110,90,69,0,30,76,111,0,69,111,90,69,0,0,76,0,30,67,111,90,67,0,30,72,111,0,72,111,90,72,0,0,72,0,30,67,111,90,67,0,30,69,112,0,64,112,90,64,0,0,69,0,30,67,112,0,67,112,90,67,0,0,67,0,30,72,112,90,72,0,30,67,112,90,67,0,30,69,113,0,72,113,90,72,0,0,69,0,30,67,113,90,67,0,30,72,113,0,62,113,90,62,0,0,72,0,30,67,113,0,64,113,90,64,0,0,67,0,30,69,114,0,62,114,90,62,0,0,69,0,30,64,114,0,67,114,0,60,114,58,64,0,32,60,0,0,67,0,30,67,114,0,60,114,53,67,0,37,60,0,30,64,114,0,72,114,68,64,0,22,72,0,30,69,115,0,60,115,60,69,0,30,60,0,30,64,115,60,64,0,60,67,115,0,64,115,55,67,0,35,64,0,30,60,115,0,69,115,60,60,0,30,69,0,30,64,116,0,65,116,55,64,0,35,65,0,30,60,116,58,60,0,62,67,116,0,65,116,58,67,0,32,65,0,30,60,116,0,67,116,68,60,0,22,67,0,30,64,117,0,60,117,65,64,0,25,60,0,30,60,117,58,60,0,62,64,117,0,57,117,58,64,0,32,57,0,30,57,118,68,57,0,52,60,118,60,60,0,60,57,118,0,62,118,70,57,0,20,62,0,30,64,118,0,64,118,60,64,0,0,64,0,60,57,119,70,57,0,50,60,119,0,60,119,58,60,0,0,60,0,62,55,119,65,55,0,55,57,119,0,57,119,53,57,0,0,57,0,67,55,120,75,55,0,45,60,120,0,60,120,60,60,0,0,60,0,60,55,120,65,55,0,55,57,120,0,67,120,60,57,0,30,67,0,30,52,121,58,52,0,62,55,121,0,69,121,63,55,0,27,69,0,30,52,121,83,52,0,37,57,121,0,67,121,68,57,0,22,67,0,30,52,122,73,52,0,47,55,122,0,64,122,60,55,0,30,64,0,30,48,122,70,48,0,50,52,122,0,65,122,90,65,0,0,52,0,30,48,123,90,48,0,30,55,123,0,69,123,90,69,0,0,55,0,30,48,123,90,48,0,30,48,123,0,72,123,90,72,0,0,48,0,30,55,124,90,55,0,30,48,124,0,64,124,90,64,0,0,48,0,30,52,124,0,67,124,90,67,0,0,52,0,30,45,124,90,45,0,194,129,22,48,125,0,72,125,90,72,0,0,48,0,194,129,22,62,125,90,62,0,30,64,126,90,64,0,30,62,126,90,62,0,30,60,126,90,60,0,30,60,127,194,139,32,60,0,0,195,191,47,0,77,84,114,107,0,0,1,194,175,0,195,191,33,1,1,0,195,191,3,9,83,73,77,79,49,46,77,73,68,0,195,140,99,0,194,188,7,127,0,194,188,10,96,194,173,0,194,156,48,102,194,129,52,48,0,60,55,102,194,129,52,55,0,60,48,103,194,129,52,48,0,60,55,103,194,129,52,55,0,60,48,104,90,48,0,30,48,104,90,48,0,30,55,104,90,55,0,30,55,105,90,55,0,30,48,105,194,129,52,48,0,60,55,105,194,129,52,55,0,60,48,106,194,129,52,48,0,60,55,106,194,129,52,55,0,60,48,107,194,129,52,48,0,60,55,107,194,129,52,55,0,60,48,108,90,48,0,30,48,108,90,48,0,30,55,109,90,55,0,30,55,109,90,55,0,30,48,109,194,129,52,48,0,60,55,110,194,129,52,55,0,60,48,110,194,129,52,48,0,60,55,111,194,129,52,55,0,60,48,111,194,129,52,48,0,60,55,112,194,129,52,55,0,60,48,112,90,48,0,30,48,112,90,48,0,30,55,113,90,55,0,30,55,113,90,55,0,30,48,113,194,129,52,48,0,60,55,114,194,129,52,55,0,60,48,114,194,129,52,48,0,60,55,115,194,129,52,55,0,60,48,115,194,129,52,48,0,60,55,116,194,129,52,55,0,60,48,116,90,48,0,30,48,116,90,48,0,30,55,117,90,55,0,30,55,117,90,55,0,30,48,117,194,129,52,48,0,60,55,118,194,129,52,55,0,60,48,118,194,129,52,48,0,60,55,119,194,129,52,55,0,60,48,119,194,129,52,48,0,60,55,120,194,129,52,55,0,60,48,120,90,48,0,30,48,121,90,48,0,30,55,121,90,55,0,30,55,121,90,55,0,30,48,121,194,129,52,48,0,60,55,122,194,129,52,55,0,60,48,122,194,129,52,48,0,60,55,123,194,129,52,55,0,60,48,123,194,129,52,48,0,60,55,124,194,129,52,55,0,60,48,124,90,48,0,30,48,125,90,48,0,30,55,125,90,55,0,30,55,125,90,55,0,30,48,125,194,129,52,48,0,60,55,126,194,129,52,55,0,0,195,191,47,0,77,84,114,107,0,0,4,98,0,195,191,33,1,1,0,195,191,3,9,83,73,77,79,49,46,77,73,68,0,195,141,99,0,194,189,7,127,0,194,189,10,32,0,194,157,60,90,90,60,0,30,72,90,90,72,0,30,60,90,90,60,0,194,129,22,64,91,90,64,0,30,69,91,90,69,0,30,65,91,90,65,0,194,129,22,65,92,90,65,0,30,67,92,90,67,0,30,60,92,90,60,0,194,129,22,57,93,90,57,0,194,130,14,62,93,90,62,0,30,64,94,90,64,0,194,129,22,60,94,90,60,0,194,129,22,57,95,90,57,0,194,129,22,60,95,90,60,0,194,129,22,67,96,90,67,0,194,129,22,69,96,90,69,0,194,129,22,67,97,90,67,0,194,129,22,64,97,90,64,0,194,129,22,65,98,90,65,0,194,129,22,69,98,90,69,0,194,129,22,72,99,90,72,0,194,129,22,64,99,90,64,0,30,67,100,90,67,0,194,130,14,72,100,90,72,0,194,129,22,62,101,90,62,0,30,64,101,90,64,0,30,62,101,90,62,0,30,60,102,90,60,0,30,60,102,90,60,0,30,76,102,0,72,102,90,72,0,0,76,0,30,79,102,0,60,102,90,60,0,0,79,0,30,76,103,90,76,0,30,81,103,0,64,103,90,64,0,0,81,0,30,76,103,0,69,103,90,69,0,0,76,0,30,84,103,0,65,103,90,65,0,0,84,0,30,76,104,90,76,0,30,81,104,0,65,104,90,65,0,0,81,0,30,76,104,0,67,104,90,67,0,0,76,0,30,79,104,0,60,104,90,60,0,0,79,0,30,76,105,90,76,0,30,81,105,0,57,105,90,57,0,0,81,0,30,76,105,90,76,0,30,84,105,90,84,0,30,76,106,0,62,106,90,62,0,0,76,0,30,81,106,0,64,106,90,64,0,0,81,0,30,76,106,90,76,0,30,79,106,0,60,106,90,60,0,0,79,0,30,76,107,90,76,0,30,81,107,0,57,107,90,57,0,0,81,0,30,76,107,90,76,0,30,84,107,0,60,107,90,60,0,0,84,0,30,72,108,90,72,0,30,76,108,0,67,108,90,67,0,0,76,0,30,72,108,90,72,0,30,79,109,0,69,109,90,69,0,0,79,0,30,72,109,90,72,0,30,76,109,0,67,109,90,67,0,0,76,0,30,72,109,90,72,0,30,76,110,0,64,110,90,64,0,0,76,0,30,69,110,90,69,0,30,72,110,0,65,110,90,65,0,0,72,0,30,69,110,90,69,0,30,76,111,0,69,111,90,69,0,0,76,0,30,67,111,90,67,0,30,72,111,0,72,111,90,72,0,0,72,0,30,67,111,90,67,0,30,69,112,0,64,112,90,64,0,0,69,0,30,67,112,0,67,112,90,67,0,0,67,0,30,72,112,90,72,0,30,67,112,90,67,0,30,69,113,0,72,113,90,72,0,0,69,0,30,67,113,90,67,0,30,72,113,0,62,113,90,62,0,0,72,0,30,67,113,0,64,113,90,64,0,0,67,0,30,69,114,0,62,114,90,62,0,0,69,0,30,64,114,0,67,114,0,60,114,58,64,0,32,60,0,0,67,0,30,67,114,0,60,114,53,67,0,37,60,0,30,64,114,0,72,114,68,64,0,22,72,0,30,69,115,0,60,115,60,69,0,30,60,0,30,64,115,60,64,0,60,67,115,0,64,115,55,67,0,35,64,0,30,60,115,0,69,115,60,60,0,30,69,0,30,64,116,0,65,116,55,64,0,35,65,0,30,60,116,58,60,0,62,67,116,0,65,116,58,67,0,32,65,0,30,60,116,0,67,116,68,60,0,22,67,0,30,64,117,0,60,117,65,64,0,25,60,0,30,60,117,58,60,0,62,64,117,0,57,117,58,64,0,32,57,0,30,57,118,68,57,0,52,60,118,60,60,0,60,57,118,0,62,118,70,57,0,20,62,0,30,64,118,0,64,118,60,64,0,0,64,0,60,57,119,70,57,0,50,60,119,0,60,119,58,60,0,0,60,0,62,55,119,65,55,0,55,57,119,0,57,119,53,57,0,0,57,0,67,55,120,75,55,0,45,60,120,0,60,120,60,60,0,0,60,0,60,55,120,65,55,0,55,57,120,0,67,120,60,57,0,30,67,0,30,52,121,58,52,0,62,55,121,0,69,121,63,55,0,27,69,0,30,52,121,83,52,0,37,57,121,0,67,121,68,57,0,22,67,0,30,52,122,73,52,0,47,55,122,0,64,122,60,55,0,30,64,0,30,48,122,70,48,0,50,52,122,0,65,122,90,65,0,0,52,0,30,48,123,90,48,0,30,55,123,0,69,123,90,69,0,0,55,0,30,48,123,90,48,0,30,48,123,0,72,123,90,72,0,0,48,0,30,55,124,90,55,0,30,48,124,0,64,124,90,64,0,0,48,0,30,52,124,0,67,124,90,67,0,0,52,0,30,45,124,90,45,0,194,129,22,48,125,0,72,125,90,72,0,0,48,0,194,129,22,62,125,90,62,0,30,64,126,90,64,0,30,62,126,90,62,0,30,60,126,90,60,0,30,60,127,194,139,32,60,0,0,195,191,47,0]);
-
-midi_10014.td = new TextDecoder("utf-8");
-var midi_10014 = midi_10014.td.decode(midi_10014);
-var midi_starshipgroove = new Uint8Array([77,84,104,100,0,0,0,6,0,1,0,6,3,195,128,77,84,114,107,0,0,0,45,0,195,191,88,4,4,2,24,8,0,195,191,89,2,0,0,0,195,191,81,3,8,63,125,0,195,191,33,1,0,194,158,0,195,191,88,4,4,2,24,8,0,195,191,89,2,0,0,0,195,191,47,0,77,84,114,107,0,0,53,195,167,0,195,128,81,0,194,176,7,100,0,195,191,3,10,77,73,68,73,32,67,104,110,32,49,0,195,191,33,1,1,194,158,0,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,194,180,65,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,45,64,194,129,111,194,128,45,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,45,64,194,129,111,194,128,45,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,45,64,194,129,111,194,128,45,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,45,64,194,129,111,194,128,45,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,131,95,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,131,95,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,131,95,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,194,129,113,194,144,40,64,194,131,95,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,194,129,113,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,45,64,194,129,111,194,128,45,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,131,95,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,131,95,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,131,95,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,194,129,113,194,144,40,64,194,131,95,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,194,129,113,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,194,131,97,194,144,45,64,194,129,111,194,128,45,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,44,64,194,129,111,194,128,44,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,46,64,194,129,111,194,128,46,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,56,64,194,129,111,194,128,56,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,45,64,194,129,111,194,128,45,0,1,194,144,47,64,194,129,111,194,128,47,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,52,64,194,129,111,194,128,52,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,50,64,194,129,111,194,128,50,0,194,129,113,194,144,40,64,194,129,111,194,128,40,0,1,194,144,49,64,194,129,111,194,128,49,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,40,64,194,129,111,194,128,40,0,1,194,144,47,64,194,129,111,194,128,47,0,0,195,191,47,0,77,84,114,107,0,0,47,36,0,195,137,0,0,194,185,7,127,0,78,64,0,195,191,3,11,77,73,68,73,32,67,104,110,32,49,48,0,195,191,33,1,1,194,158,0,194,185,7,127,195,176,64,194,153,56,64,194,129,111,194,137,56,0,194,141,17,194,153,56,64,194,129,111,194,137,56,0,194,141,17,194,153,56,64,194,129,111,194,137,56,0,194,141,17,194,153,56,64,194,129,111,194,137,56,0,194,141,17,194,153,56,64,194,129,111,194,137,56,0,194,141,17,194,153,56,64,194,129,111,194,137,56,0,194,139,33,194,153,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,77,0,194,129,113,194,153,35,64,0,49,64,194,129,111,194,137,35,0,0,49,0,194,129,113,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,131,95,194,137,40,0,0,42,0,1,194,153,42,64,194,129,112,35,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,112,35,64,194,129,111,194,137,35,0,0,40,0,0,42,0,1,194,153,42,64,194,131,95,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,112,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,131,95,194,137,40,0,0,42,0,1,194,153,42,64,194,129,112,35,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,112,35,64,194,129,111,194,137,35,0,0,40,0,0,42,0,1,194,153,42,64,194,131,95,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,112,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,35,0,0,42,0,0,77,0,1,194,153,77,64,194,129,111,194,137,77,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,35,0,0,42,0,0,77,0,1,194,153,40,64,0,42,64,194,131,95,194,137,40,0,0,42,0,1,194,153,42,64,0,55,64,194,129,111,194,137,55,0,1,194,153,35,64,0,55,64,194,129,111,194,137,42,0,0,55,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,0,45,64,0,47,64,194,129,111,194,137,45,0,0,47,0,1,194,153,35,64,194,129,111,194,137,35,0,0,40,0,0,42,0,1,194,153,42,64,194,131,95,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,35,0,0,77,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,0,77,64,194,129,111,194,137,35,0,0,42,0,0,77,0,1,194,153,42,64,194,129,112,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,35,0,0,77,0,1,194,153,77,64,194,129,111,194,137,42,0,0,77,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,35,0,0,42,0,0,77,0,1,194,153,40,64,0,42,64,194,131,95,194,137,40,0,0,42,0,1,194,153,42,64,0,55,64,194,129,111,194,137,55,0,1,194,153,35,64,0,55,64,194,129,111,194,137,42,0,0,55,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,0,45,64,0,47,64,194,129,111,194,137,45,0,0,47,0,1,194,153,35,64,194,129,111,194,137,35,0,0,40,0,0,42,0,1,194,153,42,64,194,131,95,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,35,0,0,77,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,0,77,64,194,129,111,194,137,35,0,0,42,0,0,77,0,1,194,153,42,64,194,129,112,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,0,43,64,0,45,64,194,129,111,194,137,35,0,0,43,0,0,45,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,133,81,194,153,35,64,0,56,64,194,129,111,194,137,35,0,0,56,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,133,81,194,153,35,64,0,56,64,194,129,111,194,137,35,0,0,56,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,133,81,194,153,35,64,0,56,64,194,129,111,194,137,35,0,0,56,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,0,56,64,119,194,137,40,0,120,56,0,194,133,81,194,153,35,64,0,56,64,194,129,111,194,137,35,0,194,129,112,56,0,1,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,0,56,64,194,129,111,194,137,40,0,194,129,112,56,0,194,131,97,194,153,35,64,0,56,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,112,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,194,133,80,56,0,1,194,153,35,64,0,56,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,112,56,0,1,194,153,40,64,0,56,64,0,66,64,194,129,111,194,137,40,0,0,66,0,1,194,153,40,64,0,46,64,0,66,64,194,129,111,194,137,40,0,0,46,0,0,66,0,194,129,113,194,153,40,64,0,44,64,0,66,64,194,129,111,194,137,40,0,0,44,0,0,56,0,0,66,0,1,194,153,35,64,0,56,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,112,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,194,133,80,56,0,1,194,153,35,64,0,56,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,112,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,194,133,80,56,0,1,194,153,35,64,0,56,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,112,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,194,133,80,56,0,1,194,153,35,64,0,56,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,112,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,194,133,80,56,0,1,194,153,35,64,0,56,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,112,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,194,133,80,56,0,1,194,153,35,64,0,56,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,112,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,194,133,80,56,0,1,194,153,35,64,0,56,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,112,56,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,194,129,113,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,41,64,0,43,64,194,129,111,194,137,41,0,0,43,0,194,133,81,194,153,42,64,194,129,111,194,137,42,0,194,141,17,194,153,42,64,194,129,111,194,137,42,0,194,141,17,194,153,42,64,194,129,111,194,137,42,0,194,141,17,194,153,42,64,0,46,64,194,129,111,194,137,42,0,0,46,0,121,194,153,44,64,194,129,111,194,137,44,0,194,138,41,194,153,42,64,194,129,111,194,137,42,0,194,141,17,194,153,42,64,194,129,111,194,137,42,0,194,139,33,194,153,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,77,0,194,129,113,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,194,133,81,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,194,133,81,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,194,133,81,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,194,133,81,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,194,133,81,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,194,133,81,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,194,129,113,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,46,64,119,194,137,46,0,194,130,105,194,153,44,64,119,194,137,44,0,195,171,105,194,185,7,127,194,137,48,194,153,40,3,194,129,111,194,137,40,0,1,194,153,40,6,194,129,111,194,137,40,0,1,194,153,40,9,194,129,111,194,137,40,0,1,194,153,40,12,194,129,111,194,137,40,0,1,194,153,40,15,194,129,111,194,137,40,0,1,194,153,40,18,194,129,111,194,137,40,0,1,194,153,40,21,194,129,111,194,137,40,0,1,194,153,40,24,194,129,111,194,137,40,0,1,194,153,40,27,194,129,111,194,137,40,0,1,194,153,40,30,194,129,111,194,137,40,0,1,194,153,40,33,194,129,111,194,137,40,0,1,194,153,40,36,194,129,111,194,137,40,0,1,194,153,40,39,194,129,111,194,137,40,0,1,194,153,40,42,194,129,111,194,137,40,0,1,194,153,40,45,194,129,111,194,137,40,0,1,194,153,40,48,194,129,111,194,137,40,0,1,194,153,40,51,194,129,111,194,137,40,0,1,194,153,40,54,194,129,111,194,137,40,0,1,194,153,40,57,194,129,111,194,137,40,0,1,194,153,46,64,0,49,64,20,194,185,7,127,194,129,91,194,137,49,0,194,129,113,194,153,44,64,194,129,111,194,137,44,0,194,129,112,46,0,194,137,49,194,153,40,3,194,129,111,194,137,40,0,1,194,153,40,6,194,129,111,194,137,40,0,1,194,153,40,9,194,129,111,194,137,40,0,1,194,153,40,12,194,129,111,194,137,40,0,1,194,153,40,15,194,129,111,194,137,40,0,1,194,153,40,18,194,129,111,194,137,40,0,1,194,153,40,21,194,129,111,194,137,40,0,1,194,153,40,24,194,129,111,194,137,40,0,1,194,153,40,27,194,129,111,194,137,40,0,1,194,153,40,30,194,129,111,194,137,40,0,1,194,153,40,33,194,129,111,194,137,40,0,1,194,153,40,36,194,129,111,194,137,40,0,1,194,153,40,39,194,129,111,194,137,40,0,1,194,153,40,42,194,129,111,194,137,40,0,1,194,153,40,45,194,129,111,194,137,40,0,1,194,153,40,48,0,65,48,194,129,111,194,137,40,0,0,65,0,1,194,153,40,51,0,65,51,194,129,111,194,137,40,0,0,65,0,1,194,153,40,54,0,65,54,194,129,111,194,137,40,0,0,65,0,1,194,153,40,57,0,65,57,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,49,64,194,129,111,194,137,35,0,0,49,0,194,129,113,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,131,95,194,137,40,0,0,42,0,1,194,153,42,64,194,129,112,35,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,112,35,64,194,129,111,194,137,35,0,0,40,0,0,42,0,1,194,153,42,64,194,131,95,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,112,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,131,95,194,137,40,0,0,42,0,1,194,153,42,64,194,129,112,35,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,112,35,64,194,129,111,194,137,35,0,0,40,0,0,42,0,1,194,153,42,64,194,131,95,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,112,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,35,0,0,42,0,0,77,0,1,194,153,77,64,194,129,111,194,137,77,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,35,0,0,42,0,0,77,0,1,194,153,40,64,0,42,64,194,131,95,194,137,40,0,0,42,0,1,194,153,42,64,0,55,64,194,129,111,194,137,55,0,1,194,153,35,64,0,55,64,194,129,111,194,137,42,0,0,55,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,0,45,64,0,47,64,194,129,111,194,137,45,0,0,47,0,1,194,153,35,64,194,129,111,194,137,35,0,0,40,0,0,42,0,1,194,153,42,64,194,131,95,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,35,0,0,77,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,0,77,64,194,129,111,194,137,35,0,0,42,0,0,77,0,1,194,153,42,64,194,129,112,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,35,0,0,77,0,1,194,153,77,64,194,129,111,194,137,42,0,0,77,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,35,0,0,42,0,0,77,0,1,194,153,40,64,0,42,64,194,131,95,194,137,40,0,0,42,0,1,194,153,42,64,0,55,64,194,129,111,194,137,55,0,1,194,153,35,64,0,55,64,194,129,111,194,137,42,0,0,55,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,131,95,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,0,45,64,0,47,64,194,129,111,194,137,45,0,0,47,0,1,194,153,35,64,194,129,111,194,137,35,0,0,40,0,0,42,0,1,194,153,42,64,194,131,95,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,42,0,1,194,153,40,64,0,42,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,35,64,0,42,64,0,77,64,194,129,111,194,137,35,0,0,77,0,194,129,112,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,1,194,153,35,64,0,77,64,194,129,111,194,137,35,0,0,42,0,0,77,0,1,194,153,42,64,194,129,112,40,64,194,129,111,194,137,40,0,0,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,0,46,64,194,129,111,194,137,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,0,44,0,1,194,153,40,64,194,129,111,194,137,40,0,194,131,97,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,35,64,0,40,64,0,46,64,194,129,111,194,137,35,0,0,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,44,64,0,77,64,194,129,111,194,137,44,0,0,77,0,1,194,153,77,64,194,129,111,194,137,77,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,0,46,64,194,129,111,194,137,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,0,44,0,1,194,153,40,64,194,129,111,194,137,40,0,194,131,97,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,35,64,0,40,64,0,46,64,194,129,111,194,137,35,0,0,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,44,64,194,129,111,194,137,44,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,0,46,64,194,129,111,194,137,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,0,44,0,1,194,153,40,64,194,129,111,194,137,40,0,194,131,97,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,35,64,0,40,64,0,46,64,194,129,111,194,137,35,0,0,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,44,64,194,129,111,194,137,44,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,0,46,64,194,129,111,194,137,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,0,44,0,1,194,153,40,64,194,129,111,194,137,40,0,194,131,97,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,35,64,0,40,64,0,46,64,194,129,111,194,137,35,0,0,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,44,64,194,129,111,194,137,44,0,194,129,113,194,153,40,64,0,77,64,194,129,111,194,137,40,0,0,77,0,1,194,153,40,64,0,77,64,194,129,111,194,137,40,0,0,77,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,129,113,194,153,56,64,194,129,111,194,137,56,0,194,129,113,194,153,35,64,0,40,64,0,55,64,0,65,64,194,129,111,194,137,35,0,0,40,0,0,55,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,194,131,97,194,153,35,64,0,56,64,194,129,111,194,137,35,0,0,56,0,194,129,113,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,56,64,194,129,111,194,137,56,0,194,129,113,194,153,35,64,0,40,64,0,55,64,0,65,64,194,129,111,194,137,35,0,0,40,0,0,55,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,194,129,113,194,153,55,64,194,129,111,194,137,55,0,1,194,153,35,64,0,55,64,194,129,111,194,137,35,0,0,55,0,194,129,113,194,153,56,64,194,129,111,194,137,56,0,194,129,113,194,153,35,64,0,67,64,194,129,111,194,137,35,0,0,67,0,1,194,153,55,64,194,129,111,194,137,55,0,1,194,153,67,64,194,129,111,194,137,67,0,194,129,113,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,0,46,64,194,129,111,194,137,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,0,44,0,1,194,153,40,64,194,129,111,194,137,40,0,194,131,97,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,35,64,0,40,64,0,46,64,194,129,111,194,137,35,0,0,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,44,64,194,129,111,194,137,44,0,194,129,113,194,153,40,64,0,77,64,194,129,111,194,137,40,0,0,77,0,1,194,153,40,64,0,77,64,194,129,111,194,137,40,0,0,77,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,129,113,194,153,56,64,194,129,111,194,137,56,0,194,129,113,194,153,35,64,0,40,64,0,55,64,0,65,64,194,129,111,194,137,35,0,0,40,0,0,55,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,194,131,97,194,153,35,64,0,56,64,194,129,111,194,137,35,0,0,56,0,194,129,113,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,56,64,194,129,111,194,137,56,0,194,129,113,194,153,35,64,0,40,64,0,55,64,0,65,64,194,129,111,194,137,35,0,0,40,0,0,55,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,194,129,113,194,153,55,64,194,129,111,194,137,55,0,1,194,153,35,64,0,55,64,194,129,111,194,137,35,0,0,55,0,194,129,113,194,153,56,64,194,129,111,194,137,56,0,194,129,113,194,153,35,64,0,67,64,194,129,111,194,137,35,0,0,67,0,1,194,153,55,64,194,129,111,194,137,55,0,1,194,153,67,64,194,129,111,194,137,67,0,194,129,113,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,0,46,64,194,129,111,194,137,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,0,44,0,1,194,153,40,64,194,129,111,194,137,40,0,194,131,97,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,55,64,194,129,111,194,137,55,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,35,64,0,40,64,0,46,64,194,129,111,194,137,35,0,0,40,0,0,46,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,44,64,0,77,64,194,129,111,194,137,44,0,0,77,0,1,194,153,77,64,194,129,111,194,137,77,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,43,64,0,45,64,194,129,111,194,137,43,0,0,45,0,194,178,81,194,153,43,64,0,45,64,194,129,111,194,137,43,0,0,45,0,194,141,17,194,153,43,64,0,45,64,194,129,111,194,137,43,0,0,45,0,194,141,17,194,153,43,64,0,45,64,194,129,111,194,137,43,0,0,45,0,194,141,17,194,153,77,64,194,129,111,194,137,77,0,1,194,153,77,64,194,129,111,194,137,77,0,1,194,153,67,64,194,129,111,194,137,67,0,194,129,113,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,37,64,0,40,64,194,129,111,194,137,37,0,0,40,0,194,129,113,194,153,42,64,194,131,95,194,137,42,0,1,194,153,37,64,194,129,111,194,137,37,0,194,129,113,194,153,42,64,194,131,95,194,137,42,0,1,194,153,37,64,0,40,64,194,129,111,194,137,37,0,0,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,37,64,194,129,111,194,137,37,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,37,64,0,40,64,194,129,111,194,137,37,0,0,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,37,64,194,129,111,194,137,37,0,194,129,113,194,153,56,64,194,129,111,194,137,56,0,194,129,113,194,153,37,64,0,40,64,194,129,111,194,137,37,0,0,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,37,64,194,129,111,194,137,37,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,37,64,0,40,64,194,129,111,194,137,37,0,0,40,0,1,194,153,40,3,194,129,111,194,137,40,0,1,194,153,40,6,0,42,64,194,129,111,194,137,40,0,0,42,0,1,194,153,40,9,0,42,64,194,129,111,194,137,40,0,0,42,0,1,194,153,37,64,0,40,12,194,129,111,194,137,37,0,0,40,0,1,194,153,40,15,194,129,111,194,137,40,0,1,194,153,40,18,0,42,64,194,129,111,194,137,40,0,0,42,0,1,194,153,40,21,194,129,111,194,137,40,0,1,194,153,37,64,0,40,24,0,40,64,194,129,111,194,137,37,0,0,40,0,0,40,0,1,194,153,40,27,194,129,111,194,137,40,0,1,194,153,40,30,0,42,64,194,129,111,194,137,40,0,0,42,0,1,194,153,40,33,194,129,111,194,137,40,0,1,194,153,37,64,0,40,36,194,129,111,194,137,37,0,0,40,0,1,194,153,40,39,194,129,111,194,137,40,0,1,194,153,40,42,194,129,111,194,137,40,0,1,194,153,40,45,194,129,111,194,137,40,0,1,194,153,37,64,0,40,48,194,129,111,194,137,37,0,0,40,0,1,194,153,40,51,194,129,111,194,137,40,0,1,194,153,40,54,194,129,111,194,137,40,0,1,194,153,40,57,194,129,111,194,137,40,0,1,194,153,35,64,0,44,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,129,112,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,194,129,112,44,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,194,129,112,44,0,1,194,153,44,64,194,129,112,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,35,64,0,44,64,194,131,95,194,137,35,0,0,44,0,1,194,153,35,64,0,44,64,194,131,95,194,137,35,0,0,44,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,1,194,153,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,44,64,194,131,95,194,137,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,194,129,112,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,194,129,112,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,44,64,194,129,112,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,194,129,112,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,194,129,112,44,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,194,129,112,44,0,1,194,153,44,64,194,129,112,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,35,64,0,44,64,194,131,95,194,137,35,0,0,44,0,1,194,153,35,64,0,44,64,194,131,95,194,137,35,0,0,44,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,1,194,153,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,44,64,194,131,95,194,137,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,194,129,112,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,194,129,112,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,44,64,194,129,112,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,35,64,0,44,64,0,77,64,194,129,111,194,137,35,0,1,194,153,77,64,194,129,111,194,137,44,0,0,77,0,0,77,0,1,194,153,35,64,0,44,64,0,77,64,194,129,111,194,137,35,0,0,77,0,1,194,153,77,64,194,129,111,194,137,44,0,0,77,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,194,129,112,44,0,1,194,153,44,64,0,55,64,194,129,111,194,137,55,0,1,194,153,35,64,0,55,64,194,129,111,194,137,35,0,0,44,0,0,55,0,1,194,153,35,64,0,44,64,194,131,95,194,137,35,0,0,44,0,1,194,153,35,64,0,44,64,194,131,95,194,137,35,0,0,44,0,1,194,153,40,64,0,43,64,0,44,64,0,45,64,194,129,111,194,137,40,0,0,43,0,0,45,0,1,194,153,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,44,64,194,131,95,194,137,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,194,129,112,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,44,0,1,194,153,35,64,0,44,64,0,77,64,194,129,111,194,137,35,0,0,77,0,194,129,112,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,1,194,153,35,64,0,77,64,194,129,111,194,137,35,0,0,44,0,0,77,0,1,194,153,44,64,194,129,112,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,35,64,0,44,64,0,77,64,194,129,111,194,137,35,0,0,77,0,1,194,153,77,64,194,129,111,194,137,44,0,0,77,0,1,194,153,35,64,0,44,64,0,77,64,194,129,111,194,137,35,0,0,77,0,1,194,153,77,64,194,129,111,194,137,44,0,0,77,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,194,129,112,44,0,1,194,153,44,64,0,55,64,194,129,111,194,137,55,0,1,194,153,35,64,0,55,64,194,129,111,194,137,35,0,0,44,0,0,55,0,1,194,153,35,64,0,44,64,194,131,95,194,137,35,0,0,44,0,1,194,153,35,64,0,44,64,194,131,95,194,137,35,0,0,44,0,1,194,153,40,64,0,43,64,0,44,64,0,45,64,194,129,111,194,137,40,0,0,43,0,0,45,0,1,194,153,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,44,64,194,131,95,194,137,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,194,129,112,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,1,194,153,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,40,64,0,44,64,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,44,0,1,194,153,35,64,0,44,64,0,77,64,194,129,111,194,137,35,0,0,77,0,194,129,112,44,0,1,194,153,35,64,0,44,64,194,129,111,194,137,35,0,1,194,153,35,64,0,77,64,194,129,111,194,137,35,0,0,44,0,0,77,0,1,194,153,44,64,194,129,112,35,64,194,129,111,194,137,35,0,0,44,0,1,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,35,64,194,129,111,194,137,35,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,56,64,194,129,111,194,137,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,131,97,194,153,35,64,0,42,64,194,129,111,194,137,35,0,0,42,0,1,194,153,42,64,194,129,111,194,137,42,0,1,194,153,42,64,194,129,111,194,137,42,0,194,129,113,194,153,40,64,0,49,64,194,129,111,194,137,40,0,0,49,0,194,131,97,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,40,64,0,65,64,194,129,111,194,137,40,0,0,65,0,1,194,153,35,64,0,57,64,194,129,111,194,137,35,0,0,57,0,194,131,97,194,153,43,64,0,45,64,194,129,111,194,137,43,0,0,45,0,194,133,81,194,153,35,64,0,56,64,194,129,111,194,137,35,0,0,56,0,194,129,113,194,153,67,64,194,129,111,194,137,67,0,194,129,113,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,133,81,194,153,35,64,0,56,64,194,129,111,194,137,35,0,0,56,0,194,129,113,194,153,35,64,194,131,95,194,137,35,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,133,81,194,153,35,64,0,56,64,194,129,111,194,137,56,0,194,129,112,35,0,1,194,153,35,64,0,46,64,194,129,111,194,137,46,0,194,129,112,35,0,1,194,153,40,64,0,44,64,0,56,64,194,129,111,194,137,40,0,0,44,0,0,56,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,1,194,153,35,64,0,56,64,194,129,111,194,137,56,0,194,129,112,35,0,1,194,153,35,64,194,131,95,194,137,35,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,129,113,194,153,67,64,194,129,111,194,137,67,0,194,129,113,194,153,35,64,0,56,64,194,129,111,194,137,56,0,194,129,112,35,0,1,194,153,35,64,194,131,95,194,137,35,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,133,81,194,153,35,64,0,56,64,194,129,111,194,137,56,0,194,129,112,35,0,1,194,153,35,64,194,131,95,194,137,35,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,129,113,194,153,57,64,194,129,111,194,137,57,0,194,129,113,194,153,35,64,0,56,64,194,129,111,194,137,56,0,194,129,112,35,0,1,194,153,35,64,194,131,95,194,137,35,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,133,81,194,153,35,64,0,56,64,194,129,111,194,137,56,0,194,129,112,35,0,1,194,153,67,64,194,129,111,194,137,67,0,194,129,113,194,153,40,64,0,56,64,194,129,111,194,137,40,0,0,56,0,194,133,81,194,153,35,64,0,56,64,194,131,95,194,137,35,0,194,131,96,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,194,133,80,56,0,1,194,153,35,64,0,56,64,194,131,95,194,137,35,0,1,194,153,46,64,194,129,111,194,137,46,0,194,129,112,56,0,1,194,153,40,64,0,44,64,0,56,64,194,129,111,194,137,40,0,0,44,0,1,194,153,40,64,194,129,111,194,137,40,0,194,129,113,194,153,40,64,194,129,111,194,137,40,0,0,56,0,1,194,153,35,64,0,56,64,194,131,95,194,137,35,0,194,131,96,56,0,1,194,153,40,64,0,56,64,194,129,111,194,137,40,0,194,129,113,194,153,67,64,194,129,111,194,137,67,0,1,194,153,67,64,194,129,111,194,137,56,0,0,67,0,1,194,153,35,64,0,40,3,0,56,64,194,129,111,194,137,40,0,1,194,153,40,6,194,129,111,194,137,35,0,0,40,0,1,194,153,40,9,194,129,111,194,137,40,0,1,194,153,40,12,194,129,111,194,137,40,0,0,56,0,1,194,153,40,15,0,56,64,194,129,111,194,137,40,0,1,194,153,40,18,194,129,111,194,137,40,0,1,194,153,40,21,194,129,111,194,137,40,0,1,194,153,40,24,194,129,111,194,137,40,0,0,56,0,1,194,153,35,64,0,40,27,0,56,64,194,129,111,194,137,40,0,1,194,153,40,30,194,129,111,194,137,35,0,0,40,0,1,194,153,40,33,194,129,111,194,137,40,0,1,194,153,40,36,194,129,111,194,137,40,0,0,56,0,1,194,153,40,39,0,56,64,194,129,111,194,137,40,0,1,194,153,40,42,194,129,111,194,137,40,0,1,194,153,40,45,194,129,111,194,137,40,0,1,194,153,40,48,194,129,111,194,137,40,0,0,56,0,1,194,153,40,51,0,56,64,194,129,111,194,137,40,0,1,194,153,40,54,194,129,111,194,137,40,0,1,194,153,40,57,194,129,111,194,137,40,0,1,194,153,40,64,194,129,111,194,137,40,0,0,56,0,1,194,153,35,64,0,57,64,194,131,95,194,137,35,0,0,57,0,0,195,191,47,0,77,84,114,107,0,0,38,54,0,195,129,90,0,194,177,7,100,0,195,191,3,10,77,73,68,73,32,67,104,110,32,50,0,195,191,33,1,1,194,131,195,130,0,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,52,64,194,129,195,146,0,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,52,64,194,129,194,157,64,52,64,194,129,111,194,129,52,0,0,52,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,194,129,113,194,145,52,64,194,129,111,194,129,52,0,194,129,195,147,113,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,60,64,0,60,64,194,129,111,194,129,60,0,0,60,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,60,64,0,60,64,194,129,111,194,129,60,0,0,60,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,60,64,0,60,64,194,129,111,194,129,60,0,0,60,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,60,64,0,60,64,194,129,111,194,129,60,0,0,60,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,194,131,194,164,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,52,64,195,169,0,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,68,64,194,129,111,194,129,68,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,66,64,194,129,111,194,129,66,0,1,194,145,62,64,194,129,111,194,129,62,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,57,64,194,129,111,194,129,57,0,1,194,145,61,64,194,129,111,194,129,61,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,56,64,194,129,111,194,129,56,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,60,64,0,60,64,194,129,111,194,129,60,0,0,60,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,60,64,0,60,64,194,129,111,194,129,60,0,0,60,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,60,64,0,60,64,194,129,111,194,129,60,0,0,60,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,60,64,0,60,64,194,129,111,194,129,60,0,0,60,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,52,64,194,129,111,194,129,52,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,59,64,194,129,111,194,129,59,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,60,64,0,60,64,194,129,111,194,129,60,0,0,60,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,0,59,0,1,194,145,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,0,52,0,1,194,145,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,60,64,0,60,64,194,129,111,194,129,60,0,0,60,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,59,64,0,59,64,194,129,111,194,129,59,0,0,59,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,58,64,0,58,64,194,129,111,194,129,58,0,0,58,0,1,194,145,52,64,0,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,194,129,112,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,0,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,139,33,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,194,131,97,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,1,194,145,64,64,194,129,111,194,129,64,0,194,131,97,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,1,194,145,52,64,194,129,111,194,129,52,0,0,195,191,47,0,77,84,114,107,0,0,17,194,170,0,195,130,87,0,194,178,7,73,0,195,191,3,10,77,73,68,73,32,67,104,110,32,51,0,195,191,33,1,1,194,135,194,143,32,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,194,161,97,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,62,56,194,129,111,194,130,62,0,194,129,113,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,62,56,194,129,111,194,130,62,0,1,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,194,131,97,194,146,55,56,194,129,111,194,130,55,0,1,194,146,52,56,194,129,111,194,130,52,0,194,154,33,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,194,129,194,150,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,68,56,194,129,111,194,130,68,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,66,56,194,129,111,194,130,66,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,57,56,194,129,111,194,130,57,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,56,56,194,129,111,194,130,56,0,1,194,146,57,56,194,129,111,194,130,57,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,68,56,194,129,111,194,130,68,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,66,56,194,129,111,194,130,66,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,57,56,194,129,111,194,130,57,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,56,56,194,129,111,194,130,56,0,194,129,113,194,146,68,56,194,129,111,194,130,68,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,66,56,194,129,111,194,130,66,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,57,56,194,129,111,194,130,57,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,56,56,194,129,111,194,130,56,0,1,194,146,57,56,194,129,111,194,130,57,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,68,56,194,129,111,194,130,68,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,66,56,194,129,111,194,130,66,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,57,56,194,129,111,194,130,57,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,56,56,194,129,111,194,130,56,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,194,131,97,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,62,56,194,129,111,194,130,62,0,194,129,113,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,62,56,194,129,111,194,130,62,0,1,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,68,56,194,129,111,194,130,68,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,66,56,194,129,111,194,130,66,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,57,56,194,129,111,194,130,57,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,56,56,194,129,111,194,130,56,0,1,194,146,57,56,194,129,111,194,130,57,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,68,56,194,129,111,194,130,68,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,66,56,194,129,111,194,130,66,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,57,56,194,129,111,194,130,57,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,59,56,194,129,111,194,130,59,0,1,194,146,56,56,194,129,111,194,130,56,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,182,49,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,171,17,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,194,161,97,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,62,56,194,129,111,194,130,62,0,194,129,113,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,62,56,194,129,111,194,130,62,0,1,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,194,131,97,194,146,55,56,194,129,111,194,130,55,0,1,194,146,52,56,194,129,111,194,130,52,0,194,154,33,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,194,129,194,191,33,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,194,173,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,131,97,194,146,64,56,194,129,111,194,130,64,0,1,194,146,59,56,194,129,111,194,130,59,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,194,131,97,194,146,64,56,194,129,111,194,130,64,0,1,194,146,59,56,194,129,111,194,130,59,0,194,131,97,194,146,64,56,194,129,111,194,130,64,0,1,194,146,59,56,194,129,111,194,130,59,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,194,131,97,194,146,64,56,194,129,111,194,130,64,0,1,194,146,76,56,194,129,111,194,130,76,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,1,194,146,76,56,194,129,111,194,130,76,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,76,56,194,129,111,194,130,76,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,1,194,146,76,56,194,129,111,194,130,76,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,76,56,194,129,111,194,130,76,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,1,194,146,76,56,194,129,111,194,130,76,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,76,56,194,129,111,194,130,76,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,1,194,146,76,56,194,129,111,194,130,76,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,1,194,146,76,56,194,129,111,194,130,76,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,1,194,146,76,56,194,129,111,194,130,76,0,194,167,49,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,194,161,97,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,62,56,194,129,111,194,130,62,0,194,129,113,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,62,56,194,129,111,194,130,62,0,1,194,146,61,56,194,129,111,194,130,61,0,194,129,113,194,146,59,56,194,129,111,194,130,59,0,194,131,97,194,146,55,56,194,129,111,194,130,55,0,1,194,146,52,56,194,129,111,194,130,52,0,194,154,33,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,61,56,194,129,111,194,130,61,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,62,56,194,129,111,194,130,62,0,1,194,146,64,56,194,129,111,194,130,64,0,1,194,146,52,56,194,129,111,194,130,52,0,1,194,146,64,56,194,129,111,194,130,64,0,195,150,33,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,68,56,194,129,111,194,130,68,0,194,129,113,194,146,71,56,194,129,111,194,130,71,0,194,129,113,194,146,74,56,194,129,111,194,130,74,0,194,129,113,194,146,75,56,194,129,111,194,130,75,0,1,194,146,76,56,194,129,111,194,130,76,0,194,161,97,194,146,71,56,194,129,111,194,130,71,0,194,129,113,194,146,74,56,194,129,111,194,130,74,0,194,129,113,194,146,75,56,194,129,111,194,130,75,0,194,129,113,194,146,77,56,194,129,111,194,130,77,0,194,129,113,194,146,78,56,194,129,111,194,130,78,0,1,194,146,79,56,194,129,111,194,130,79,0,194,161,97,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,68,56,194,129,111,194,130,68,0,194,129,113,194,146,71,56,194,129,111,194,130,71,0,194,129,113,194,146,74,56,194,129,111,194,130,74,0,194,129,113,194,146,75,56,194,129,111,194,130,75,0,1,194,146,76,56,194,129,111,194,130,76,0,194,161,97,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,64,56,194,129,111,194,130,64,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,194,129,113,194,146,52,56,194,129,111,194,130,52,0,0,195,191,47,0,77,84,114,107,0,0,1,97,0,195,131,81,0,194,179,7,100,0,195,191,3,10,77,73,68,73,32,67,104,110,32,52,0,195,191,33,1,1,194,133,194,148,0,194,147,28,64,0,40,64,194,131,95,194,131,28,0,0,40,0,194,129,195,142,33,194,147,28,64,0,40,64,194,131,95,194,131,28,0,0,40,0,194,129,195,142,33,194,147,28,64,0,40,64,194,131,95,194,131,28,0,0,40,0,194,176,97,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,194,134,195,184,97,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,194,129,113,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,194,129,113,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,194,129,113,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,194,129,113,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,194,129,113,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,194,129,113,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,194,129,113,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,1,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,1,194,147,40,64,0,52,64,194,131,95,194,131,40,0,0,52,0,194,129,113,194,147,28,64,0,40,64,194,131,95,194,131,28,0,0,40,0,194,135,65,194,147,28,64,0,40,64,194,131,95,194,131,28,0,0,40,0,194,135,65,194,147,28,64,0,40,64,194,131,95,194,131,28,0,0,40,0,194,135,65,194,147,28,64,0,40,64,194,131,95,194,131,28,0,0,40,0,194,135,65,194,147,28,64,0,40,64,194,131,95,194,131,28,0,0,40,0,194,136,194,157,97,194,147,28,64,0,40,64,194,131,95,194,131,28,0,0,40,0,0,195,191,47,0]);
-
-midi_starshipgroove.td = new TextDecoder("utf-8");
-var midi_starshipgroove = midi_starshipgroove.td.decode(midi_starshipgroove);
-
-__globals.data = {};
-__globals.data.midiTracks = [];
-__globals.data.midiTracks.push(internalizeMidi_v1_MidiConvert(midi_10014));
-__globals.data.midiTracks.push(internalizeMidi_v1_MidiConvert(midi_starshipgroove));
-
-var internalizedMidi = __globals.data.midiTracks[1];
-
-parts.audio.midiPerformer_basic = function(){
-    var midiSequence = null;
-    var settings = {
-        'arrangementName' : '',
-        'ticksPerMeasure' : 128,
-        'timeSignature'   : [4,4],
-        'beatsPerSecond'  : 2,
-        'ticksPerSecond'  : 64
-    };
-    var interval = null;
-    var self = this;
-
-    //internal functionality
-        function calculateTicksPerSecond(ticksPerMeasure, beatsPerSecond, timeSignature){
-            return (ticksPerMeasure*beatsPerSecond)/timeSignature[0];
-        }
-        function recalculateTiming(){
-            settings.ticksPerSecond = calculateTicksPerSecond(settings.ticksPerMeasure,settings.beatsPerSecond,settings.timeSignature);
-            settings.secondsPerTick = 1/settings.ticksPerSecond;
-
-            var mux = 1; while(1000*settings.secondsPerTick*mux < 10){ mux++; }
-
-            settings.intervalTime = settings.secondsPerTick*mux;
-            settings.tickStep = mux;
-
-            if(interval){startInterval(settings.intervalTime);}
-        }
-
-        function iterator(){
-            var commandLists = [];
-                commandLists = commandLists.concat( [midiSequence.control] );
-                commandLists = commandLists.concat( midiSequence.tracks );
-
-            for(var a = 0; a < commandLists.length; a++){
-                while(commandLists[a].length > settings.trackIndex[a] && commandLists[a][settings.trackIndex[a]].tick <= settings.tick){
-                    perform(a,commandLists[a][settings.trackIndex[a]++]);
-                }
-            }
-            settings.tick+=settings.tickStep;
-        }
-        function perform(list,command){
-            function calculateTicksPerSecond(ticksPerMeasure, beatsPerSecond, timeSignature){
-                return (ticksPerMeasure*beatsPerSecond)/timeSignature[0];
-            }
-
-            if(list == 0){ //control list
-                switch(command.commandName){
-                    case 'arrangementName': 
-                        settings.arrangementName = command.data;
-                    break;
-                    case 'ticksPerMeasure': 
-                        settings.ticksPerMeasure = command.data;
-                        recalculateTiming();
-                    break;
-                    case 'timeSignature': 
-                        settings.timeSignature = command.data;
-                        recalculateTiming();
-                    break;
-                    case 'beatsPerSecond': 
-                        settings.beatsPerSecond = command.data;
-                        recalculateTiming();
-                    break;
-                }
-            }
-            else{ //other lists
-                self.command(list-1, command.commandName, command.data);
-            }
-        }
-        function startInterval(intervalTime){
-            clearInterval(interval);
-            interval = setInterval(iterator, 1000*intervalTime);
-        }
-
-    // callbacks
-        this.command = function(channel, commandType, commandData){};
-
-    // methods
-        this.loadMidi = function(midi){
-            midiSequence = midi;
-
-            //load main settings
-            for(var a = 0; a < midi.control.length; a++){
-                if( midi.control[a].tick == 0 ){
-                    settings[midi.control[a].commandName] = midi.control[a].data;
-                }
-            }
-
-            //compute additional playback settings
-            recalculateTiming();
-            settings.tick = 0;
-            settings.trackIndex = [0];
-                for(var a = 0; a < midi.tracks.length; a++){
-                    settings.trackIndex.push(0);
-                }
-        };
-
-        this.play = function(){ startInterval(settings.intervalTime); };
-        this.stop = function(){ clearInterval(interval); };
-        this.step = function(){ iterator(); };
-};
-
-
-
-
-
-
-function makeMidiPlayer(x,y){
-    var width = 75;
-    var height = 370;
-    var nodeSize = 20;
-    
-    var _mainObject = parts.basic.g('midiPlayer', x, y);
-
-    var backing = parts.basic.rect(null, 0, 0, width, height, 0, 'fill:rgba(200,200,200,1)');
-        _mainObject.append(backing);
-        __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, makeMidiPlayer);
-
-    //generate selection area        
-        _mainObject.selectionArea = {};
-        _mainObject.selectionArea.box = [];
+__globals.objects = {};
+__globals.utility.generateSelectionArea = function(points, _mainObject){
+    _mainObject.selectionArea = {};
+    _mainObject.selectionArea.box = [];
+    _mainObject.selectionArea.points = [];
+    _mainObject.updateSelectionArea = function(){
+        //the main shape we want to use
         _mainObject.selectionArea.points = [];
-        _mainObject.updateSelectionArea = function(){
-            //the main shape we want to use
-            var temp = __globals.utility.getBoundingBox(backing);
-            _mainObject.selectionArea.points = [
-                [temp.x,temp.y],
-                [temp.x+temp.width,temp.y],
-                [temp.x+temp.width,temp.y+temp.height],
-                [temp.x,temp.y+temp.height]
-            ];
-            _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
+        points.forEach(function(item){ _mainObject.selectionArea.points.push(item.slice()); });
+        _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
 
-            //adjusting it for the object's position in space
-            temp = __globals.utility.getTransform(_mainObject);
-            _mainObject.selectionArea.box.forEach(function(element) {
-                element[0] += temp[0];
-                element[1] += temp[1];
-            });
-            _mainObject.selectionArea.points.forEach(function(element) {
-                element[0] += temp[0];
-                element[1] += temp[1];
-            });
-
-        };
-        _mainObject.updateSelectionArea();
-        
-
-
-        
-    _mainObject.onSelect = function(){
-        console.log('I\'ve been selected!');
-        __globals.utility.setStyle(backing, 'fill:rgba(220,220,220,1)');
-    };
-    _mainObject.onDeselect = function(){
-        console.log('I\'ve been deselected!');
-        __globals.utility.setStyle(backing, 'fill:rgba(200,200,200,1)');
-    };
-    _mainObject.onDelete = function(){
-        console.log('I\'ve been deleted!');
-    };
-    _mainObject.onCopy = function(original=false){
-        console.log('I\'ve been copied!', original?'- original object ':'- new object');
+        //adjusting it for the object's position in space
+        temp = __globals.utility.getTransform(_mainObject);
+        _mainObject.selectionArea.box.forEach(function(element) {
+            element[0] += temp[0];
+            element[1] += temp[1];
+        });
+        _mainObject.selectionArea.points.forEach(function(element) {
+            element[0] += temp[0];
+            element[1] += temp[1];
+        });
     };
 
-    _mainObject.importData = function(data){
-        console.log('importing data', data);
-    };
-    _mainObject.exportData = function(){
-        console.log('exporting data');
-        return {'like settings and stuff':'settin\'s' };
-    };
-
-
-
-    _mainObject.io = {};
-    _mainObject.io.out = [];
-    for(var a = 0; a < 16; a++){
-        _mainObject.io.out.push( parts.dynamic.connectionNode_data('io.out_'+a,-nodeSize/2,nodeSize*1.1*a + nodeSize/2,nodeSize,nodeSize) );
-        _mainObject.append( _mainObject.io.out[a] );
-    }
-
-    var perf = new parts.audio.midiPerformer_basic();
-    perf.loadMidi(internalizedMidi);
-    perf.command = function(channel, commandType, commandData){
-        if(commandType == 'note'){
-            _mainObject.io.out[channel].send('midiNumber', {'num': commandData.noteNumber, 'velocity': commandData.velocity} );
-        }
-    };
-    perf.play();
-    // perf.step();
-
-    _mainObject.play = perf.play;
-    _mainObject.step = perf.step;
-    _mainObject.stop = perf.stop;
-
-    return _mainObject;
-}
-
-
-//hacking
-// internalizedMidi.control[2].data = 3/4;
-
-
-function makeUniversalReadout(x,y){
-
-    //elements
-        //main
-            var _mainObject = parts.basic.g('universalReadout', x, y);
-
-            var backing = parts.basic.rect(null, 0, 0, 75, 55, 0, 'fill:rgba(200,200,200,1)');
-                _mainObject.append(backing);
-                __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, makeUniversalReadout);
-
-            _mainObject.append(parts.display.label(null, 10, 30, 'universal','fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;'));
-            _mainObject.append(parts.display.label(null, 10, 40, 'readout','fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;'));
-
-        // connection ports
-            _mainObject.io = {};
-            _mainObject.io.in = parts.dynamic.connectionNode_data('io.in',75/2-30/2,-30/2,30,30);
-                _mainObject.append(_mainObject.io.in);
-                _mainObject.io.in.receive = function(address,data){
-                    console.log(address,data);
-                };
-
-        //generate selection area        
-            _mainObject.selectionArea = {};
-            _mainObject.selectionArea.box = [];
-            _mainObject.selectionArea.points = [];
-            _mainObject.updateSelectionArea = function(){
-                //the main shape we want to use
-                var temp = __globals.utility.getBoundingBox(backing);
-                _mainObject.selectionArea.points = [
-                    [temp.x,temp.y],
-                    [temp.x+temp.width,temp.y],
-                    [temp.x+temp.width,temp.y+temp.height],
-                    [temp.x,temp.y+temp.height]
-                ];
-                _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
-
-                //adjusting it for the object's position in space
-                temp = __globals.utility.getTransform(_mainObject);
-                _mainObject.selectionArea.box.forEach(function(element) {
-                    element[0] += temp[0];
-                    element[1] += temp[1];
-                });
-                _mainObject.selectionArea.points.forEach(function(element) {
-                    element[0] += temp[0];
-                    element[1] += temp[1];
-                });
-
-            };
-            _mainObject.updateSelectionArea();
-        
-    return _mainObject;
-}
-parts.audio.synthesizer = function(
-    context,
-    type='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
-    gain=1, attack=0.01, release=0.1, detune=0, octave=0
-){
-    //components
-    var mainOut = context.createGain();
-        mainOut.gain.value = gain;
-
-    //live oscillators
-    var liveOscillators = {};
-
-    //options
-    this.type = function(a){if(a==null){return type;}type=a;};
-    this.periodicWave = function(a){if(a==null){return periodicWave;}periodicWave=a;};
-    this.gain = function(a){if(a==null){return mainOut.gain.value;}mainOut.gain.value=a;};
-    this.attack = function(a){if(a==null){return attack;}attack=a;};
-    this.release = function(a){if(a==null){return release;}release=a;};
-    this.detune = function(a){if(a==null){return detune;}detune=a;};
-    this.octave = function(a){if(a==null){return octave;}octave=a;};
-
-    //output node
-    this.out = function(){return mainOut;}
-
-    //oscillator generator
-    function makeOSC(
-        context, connection, midiNumber,
-        type='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
-        gain=1, attack=0.01, release=0.1, detune=0, octave=0
-    ){
-        return new function(){
-            this.generator = context.createOscillator();
-                if(type == 'custom'){ 
-                    this.generator.setPeriodicWave( 
-                        context.createPeriodicWave(new Float32Array(periodicWave.sin),new Float32Array(periodicWave.cos))
-                    ); 
-                }else{ this.generator.type = type; }
-                this.generator.frequency.value = __globals.audio.midiNumber_frequency(midiNumber,octave);
-                this.generator.detune.value = detune;
-                this.generator.start(0);
-
-            this.gain = context.createGain();
-                this.generator.connect(this.gain);
-                this.gain.gain.value = 0;
-                this.gain.gain.setTargetAtTime(gain, context.currentTime, attack/10);
-                this.gain.connect(connection);
-
-            this.changeVelocity = function(a){
-                this.gain.gain.setTargetAtTime(a, context.currentTime, attack/10);
-            };
-            this.stop = function(){
-                this.gain.gain.setTargetAtTime(0, context.currentTime, release/10);
-                setTimeout(function(that){
-                    that.gain.disconnect(); 
-                    that.generator.stop(); 
-                    that.generator.disconnect(); 
-                    that.gain=null; 
-                    that.generator=null; 
-                }, release*1000, this);
-            };
-        };
-    }
-
-    //functions
-    this.perform = function(note){
-        if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
-        else if( !liveOscillators[note.num] ){ 
-            //create new tone
-            liveOscillators[note.num] = makeOSC(context, mainOut, note.num, type, periodicWave, note.velocity, attack, release, detune, octave); 
-        }
-        else if( note.velocity == 0 ){ 
-            //stop and destroy tone
-            liveOscillators[note.num].stop();
-            delete liveOscillators[note.num];
-        }
-        else{
-            //adjust tone
-            liveOscillators[note.num].changeVelocity(note.velocity);
-        }
-    };
-    this.panic = function(){
-        var OSCs = Object.keys(liveOscillators);
-        for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
-    };
+    _mainObject.updateSelectionArea();
 };
-function makeSimpleSynthesizer(x,y){
-    //styling
-    var style = {
-        'backing':'fill:rgba(200,200,200,1); stroke:none;',
-        'h1':'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
-        'h2':'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+__globals.objects.make_basicSynth = function(x,y){
+    //set numbers
+        var type = 'basicSynth';
+        var shape = {
+            base: [[0,0],[240,0],[240,40],[200,80],[0,80]],
+            connector: { width: 30, height: 30 }
+        };
+        var style = {
+            background: 'fill:rgba(200,200,200,1); stroke:none;',
+            h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+            h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
+    
+            markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+    
+            handle: 'fill:rgba(220,220,220,1)',
+            slot: 'fill:rgba(50,50,50,1)',
+            needle: 'fill:rgba(250,150,150,1)'
+        };
 
-        'markings':'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-
-        'handle':'fill:rgba(220,220,220,1)',
-        'slot':'fill:rgba(50,50,50,1)',
-        'needle':'fill:rgba(250,150,150,1)'
-    };
 
 
+    //main
+    var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
+
+    //circuitry
+        _mainObject.__synthesizer = new parts.audio.synthesizer(__globals.audio.context);
 
     //elements
-        //main
-            var _mainObject = parts.basic.g('simpleSynthesizer', x, y);
+        //backing
+        var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
 
-            var path = [[0,0],[240,0],[240,40],[200,80],[0,80]];
-            var backing = parts.basic.path(null, path, 'L', style.backing);
-                _mainObject.append(backing);
-                __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, makeSimpleSynthesizer);
-
-        //circuitry
-            var synthesizer = new parts.audio.synthesizer(__globals.audio.context);
+        //generate selection area
+        __globals.utility.generateSelectionArea(shape.base, _mainObject);
 
         //panic button
             var panicButton = parts.control.button_rect('panicButton', 197.5, 47.5, 20, 20, Math.PI/4, 'fill:rgba(175,175,175,1)', 'fill:rgba(220,220,220,1)', 'fill:rgba(150,150,150,1)');
                 _mainObject.append(panicButton);
-                panicButton.onclick = function(){ synthesizer.panic(); }
+                panicButton.onclick = function(){ _mainObject.__synthesizer.panic(); }
 
         //dials
             var x = 0;
@@ -3333,7 +3092,7 @@ function makeSimpleSynthesizer(x,y){
             _mainObject.append(parts.display.label(null, x+0,  y+18, 'tri',  style.h2));
             _mainObject.append(parts.display.label(null, x+10, y+6,  'squ',  style.h2));
             _mainObject.append(parts.display.label(null, x+27, y+7,  'saw',  style.h2));
-            _mainObject.append(parts.basic.rect(null, x+35, y+19, 5, 2, 0, 'fill:rgba(50,50,50,1)'));
+            _mainObject.append(parts.basic.rect(null, x+35, y+19, 5, 2, 0, style.slot));
             var dial_type = parts.control.dial_discrete(
                 'dial_type', x+20, y+20, 12,
                 5, (3*Math.PI)/4, (5*Math.PI)/4,
@@ -3350,72 +3109,50 @@ function makeSimpleSynthesizer(x,y){
             _mainObject.prepend(_mainObject.io.audioOut);
 
             //gain data in
-            var s = 15;
+            s = 15;
             _mainObject.io.dataIn_gain = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_gain', 20-s/2, -s/2, s, s);
             _mainObject.prepend(_mainObject.io.dataIn_gain);
 
             //attack data in
-            var s = 15;
             _mainObject.io.dataIn_attack = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_attack', 20+spacing-s/2, -s/2, s, s);
             _mainObject.prepend(_mainObject.io.dataIn_attack);
 
             //release data in
-            var s = 15;
             _mainObject.io.dataIn_release = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_release', 20+2*spacing-s/2, -s/2, s, s);
             _mainObject.prepend(_mainObject.io.dataIn_release);
 
             //detune data in
-            var s = 15;
             _mainObject.io.dataIn_detune = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_detune', 20+3*spacing-s/2, -s/2, s, s);
             _mainObject.prepend(_mainObject.io.dataIn_detune);
 
             //octave data in
-            var s = 15;
             _mainObject.io.dataIn_octave = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_octave', 20+4*spacing-s/2, -s/2, s, s);
             _mainObject.prepend(_mainObject.io.dataIn_octave);
 
             //type data in
-            var s = 15;
             _mainObject.io.dataIn_type = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_type', 20+5*spacing-s/2, -s/2, s, s);
             _mainObject.prepend(_mainObject.io.dataIn_type);
 
             //periodicWave data in
-            var s = 15;
             _mainObject.io.dataIn_periodicWave = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_periodicWave', 240-s/2, 20-s/2, s, s);
             _mainObject.prepend(_mainObject.io.dataIn_periodicWave);
 
             //midiNote data in
-            var s = 30;
+            s = 30;
             var rotation = Math.PI/4;
             var temp = __globals.utility.getCartesian(rotation, -s);
             _mainObject.io.dataIn_midiNote = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_midiNote', 240+temp.x, 60+temp.y, s, s, rotation);
             _mainObject.prepend(_mainObject.io.dataIn_midiNote);
 
-
-            //movement redraw
-            _mainObject.movementRedraw = function(){
-                _mainObject.io.audioOut.redraw();
-                _mainObject.io.dataIn_gain.redraw();
-                _mainObject.io.dataIn_attack.redraw();
-                _mainObject.io.dataIn_release.redraw();
-                _mainObject.io.dataIn_detune.redraw();
-                _mainObject.io.dataIn_octave.redraw();
-                _mainObject.io.dataIn_type.redraw();
-                _mainObject.io.dataIn_periodicWave.redraw();
-                _mainObject.io.dataIn_midiNote.redraw();
-            };
-
-
-
     //wiring
-        synthesizer.out().connect( _mainObject.io.audioOut.in() );
+    _mainObject.__synthesizer.out().connect( _mainObject.io.audioOut.in() );
 
-        dial_gain.onChange = function(value){ synthesizer.gain( value ); };
-        dial_attack.onChange = function(value){ synthesizer.attack( value*10 ); };
-        dial_release.onChange = function(value){ synthesizer.release( value*10 ); };
-        dial_detune.onChange = function(value){ synthesizer.detune( value*200 - 100 ); };
-        dial_octave.onChange = function(value){ synthesizer.octave(value-3); };
-        dial_type.onChange = function(value){synthesizer.type(['sine','triangle','square','sawtooth','custom'][value]);};
+        dial_gain.onChange = function(value){ _mainObject.__synthesizer.gain( value ); };
+        dial_attack.onChange = function(value){ _mainObject.__synthesizer.attack( value*10 ); };
+        dial_release.onChange = function(value){ _mainObject.__synthesizer.release( value*10 ); };
+        dial_detune.onChange = function(value){ _mainObject.__synthesizer.detune( value*200 - 100 ); };
+        dial_octave.onChange = function(value){ _mainObject.__synthesizer.octave(value-3); };
+        dial_type.onChange = function(value){_mainObject.__synthesizer.type(['sine','triangle','square','sawtooth','custom'][value]);};
 
         _mainObject.io.dataIn_gain.receive =    function(address,data){ if(address != '%'){return;} dial_gain.set(data); };
         _mainObject.io.dataIn_attack.receive =  function(address,data){ if(address != '%'){return;} dial_attack.set(data); }; 
@@ -3423,7 +3160,7 @@ function makeSimpleSynthesizer(x,y){
         _mainObject.io.dataIn_detune.receive =  function(address,data){ if(address != '%'){return;} dial_detune.set(data); };
         _mainObject.io.dataIn_octave.receive =  function(address,data){ if(address != 'discrete'){return;} dial_octave.select(data); };
         _mainObject.io.dataIn_type.receive =    function(address,data){ if(address != 'discrete'){return;} dial_type.select(data); };
-        _mainObject.io.dataIn_midiNote.receive = function(address,data){ if(address != 'midiNumber'){return;} synthesizer.perform(data); };
+        _mainObject.io.dataIn_midiNote.receive = function(address,data){ if(address != 'midiNumber'){return;} _mainObject.__synthesizer.perform(data); };
 
     //setup
         dial_gain.set(0);
@@ -3431,243 +3168,649 @@ function makeSimpleSynthesizer(x,y){
         dial_octave.select(3);
 
     return _mainObject;
-}
-function makeAudioSink(x,y){
-    var _mainObject = parts.basic.g('audioSink', x, y);
-        _mainObject._destination = __globals.audio.context;
+};
+__globals.objects.make_selectorSender = function(x,y){
+    //set numbers
+    var type = 'selectorSender';
+    var attributes = {
+        value: 0,
+        valueLimit: 9
+    };
+    var shape = {
+        base: [[10,0],[55,0],[65,32.5],[45,55],[20,55],[0,32.5]],
+        littleConnector: { width: 20, height: 20 },
+        connectionNodes:{
+            inc: {x:38.75, y:41.25, width:20, height:20, angle:-Math.PI/4},
+            dec: {x:12.5, y:27.5, width:20, height:20, angle:Math.PI/4},
+            send:{x:22.5, y:40, width:20, height:20, angle:0},
+            out:{x:22.5, y:-5, width:20, height:20, angle:0}
+        },
+        readouts: [
+            {x: 26.25,   y: 7.5, width: 12.5, height: 25},
+        ],
+        incButton: {x: 40, y: 10, width: 10, height: 20},
+        decButton: {x: 15, y: 10, width: 10, height: 20},
+    };
+    var style = {        
+        background: 'fill:rgba(200,200,200,1); stroke:none;',
+        readout: 'fill:rgba(0,0,0,1); font-size:12px; font-family:Courier New;',
+        readoutBacking: 'fill:rgba(0,0,0,1);',
+        button: {
+            up: 'fill:rgba(175,175,175,1)',
+            hover: 'fill:rgba(220,220,220,1)',
+            down: 'fill:rgba(150,150,150,1)'
+        },
+    };
 
-    var width = 100;
-    var height = 50;
-    var backing = parts.basic.rect(null, 0, 0, width, height, 0, 'fill:rgba(200,200,200,0.75)');
-        _mainObject.append(backing);
-        __globals.mouseInteraction.declareObjectGrapple(backing, backing.parentElement, makeAudioSink);
 
-    var audioConnection_width = 35;
-    var audioConnection_height = 35;
-    var connectionNode_audio = parts.dynamic.connectionNode_audio('connectionNode_audio', 0, width/2 - audioConnection_width/2, 30, audioConnection_width, audioConnection_height, __globals.audio.context);
-        connectionNode_audio.out().connect(__globals.audio.context.destination);
-        _mainObject.append(connectionNode_audio);
-        _mainObject.movementRedraw = function(){ connectionNode_audio.redraw(); };
+    //main
+    var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
 
-    _mainObject.io = {};
-    _mainObject.io.in = connectionNode_audio;
-    
+    //elements
+        //backing
+        var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+
+
+        //buttons
+            //inc
+            var incButton = parts.control.button_rect('incButton', shape.incButton.x, shape.incButton.y, shape.incButton.width, shape.incButton.height, 0, style.button.up, style.button.hover, style.button.down);
+                _mainObject.append(incButton);
+                incButton.onclick = function(){ incValue(); }
+
+            //dec
+            var decButton = parts.control.button_rect('resetButton', shape.decButton.x, shape.decButton.y, shape.decButton.width, shape.decButton.height, 0, style.button.up, style.button.hover, style.button.down);
+                _mainObject.append(decButton);
+                decButton.onclick = function(){ decValue(); }
+
+        //readout
+            var segmentDisplays = [];
+            for(var a = 0; a < shape.readouts.length; a++){
+                var temp = parts.display.segmentDisplay(null, shape.readouts[a].x, shape.readouts[a].y, shape.readouts[a].width, shape.readouts[a].height);
+                    _mainObject.append(temp);
+                    segmentDisplays.push(temp);
+            }
+
+    //connection nodes
+        _mainObject.io = {};
+
+        _mainObject.io.in_inc = parts.dynamic.connectionNode_data('_mainObject.io.in_inc', shape.connectionNodes.inc.x, shape.connectionNodes.inc.y, shape.connectionNodes.inc.width, shape.connectionNodes.inc.height, shape.connectionNodes.inc.angle);
+            _mainObject.prepend(_mainObject.io.in_inc);
+            _mainObject.io.in_inc.receive = function(address,data){if(address!='pulse'){return;}incValue();};
+        _mainObject.io.in_dec = parts.dynamic.connectionNode_data('_mainObject.io.in_dec', shape.connectionNodes.dec.x, shape.connectionNodes.dec.y, shape.connectionNodes.dec.width, shape.connectionNodes.dec.height, shape.connectionNodes.dec.angle);
+            _mainObject.prepend(_mainObject.io.in_dec);
+            _mainObject.io.in_dec.receive = function(address,data){if(address!='pulse'){return;}decValue();};
+        _mainObject.io.in_send = parts.dynamic.connectionNode_data('_mainObject.io.in_send', shape.connectionNodes.send.x, shape.connectionNodes.send.y, shape.connectionNodes.send.width, shape.connectionNodes.send.height, shape.connectionNodes.send.angle);
+            _mainObject.prepend(_mainObject.io.in_send);    
+            _mainObject.io.in_send.receive = function(address,data){if(address!='pulse'){return;}sendValue();};
+        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', shape.connectionNodes.out.x, shape.connectionNodes.out.y, shape.connectionNodes.out.width, shape.connectionNodes.out.height, shape.connectionNodes.out.angle);
+            _mainObject.prepend(_mainObject.io.out);     
+            
+    //internal workings
+        function render(){
+            segmentDisplays[0].enterCharacter(''+attributes.value);
+        }
+        function incValue(){
+            attributes.value = attributes.value >= attributes.valueLimit ? 0 : attributes.value+1;
+            render();
+        }
+        function decValue(){
+            attributes.value = attributes.value <= 0 ? attributes.valueLimit : attributes.value-1;
+            render();
+        }
+        function sendValue(){ _mainObject.io.out.send('discrete',attributes.value); }
+            
+    //setup
+        render();
+
     return _mainObject;
-}
-function makeDataDuplicator(x,y){
-
-    var _mainObject = parts.basic.g('dataDuplicator', x, y);
-
-    var backing = parts.basic.rect(null, 0, 0, 75, 55, 0, 'fill:rgba(200,200,200,1)');
-        _mainObject.append(backing);
-        __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, makeDataDuplicator);
-
-    //generate selection area        
-        _mainObject.selectionArea = {};
-        _mainObject.selectionArea.box = [];
-        _mainObject.selectionArea.points = [];
-        _mainObject.updateSelectionArea = function(){
-            //the main shape we want to use
-            var temp = __globals.utility.getBoundingBox(backing);
-            _mainObject.selectionArea.points = [
-                [temp.x,temp.y],
-                [temp.x+temp.width,temp.y],
-                [temp.x+temp.width,temp.y+temp.height],
-                [temp.x,temp.y+temp.height]
-            ];
-            _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
-
-            //adjusting it for the object's position in space
-            temp = __globals.utility.getTransform(_mainObject);
-            _mainObject.selectionArea.box.forEach(function(element) {
-                element[0] += temp[0];
-                element[1] += temp[1];
-            });
-            _mainObject.selectionArea.points.forEach(function(element) {
-                element[0] += temp[0];
-                element[1] += temp[1];
-            });
-
-            // //print points to foreground
-            // for(var a = 0; a < _mainObject.selectionArea.box.length; a++){
-            //     __globals.utility.dotMaker(
-            //         _mainObject.selectionArea.box[a][0],
-            //         _mainObject.selectionArea.box[a][1],
-            //         '['+_mainObject.selectionArea.box[a][0]+','+_mainObject.selectionArea.box[a][1]+']',
-            //         2.5,
-            //         'fill:rgba(255,100,100,0.75); font-size:3; font-family:Helvetica;'
-            //     );
-            // }
-            // for(var a = 0; a < _mainObject.selectionArea.points.length; a++){
-            //     __globals.utility.dotMaker(
-            //         _mainObject.selectionArea.points[a][0],
-            //         _mainObject.selectionArea.points[a][1],
-            //         '['+_mainObject.selectionArea.points[a][0]+','+_mainObject.selectionArea.points[a][1]+']',
-            //         2,
-            //         'fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;'
-            //     );
-            // }
-
+};
+__globals.objects.make_pulseClock = function(x,y){
+    //set numbers
+        var type = 'pulseClock';
+        var attributes = {
+            tempoLimits: {low:60, high:240},
+            interval: null
         };
-        _mainObject.updateSelectionArea();
-        
+        var shape = {
+            base: [[0,0],[90,0],[90,40],[0,40]],
+            connector: { width: 20, height: 20 },
+            readoutBacking :{x:45, y: 7.5, width: 12.5*3, height: 25},
+            readouts: [
+                {x: 45,   y: 7.5, width: 12.5, height: 25},
+                {x: 57.5, y: 7.5, width: 12.5, height: 25},
+                {x: 70,   y: 7.5, width: 12.5, height: 25},
+            ],
+            dial: {x: 0, y: 2}
+        };
+        var style = {
+            background: 'fill:rgba(200,200,200,1); stroke:none;',
+            text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+            dial: {
+                handle: 'fill:rgba(220,220,220,1)',
+                slot: 'fill:rgba(50,50,50,1)',
+                needle: 'fill:rgba(150,150,250,1)',
+                markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
+            },
+            readout: 'fill:rgba(0,0,0,1); font-size:12px; font-family:Courier New;',
+            readoutBacking: 'fill:rgba(0,0,0,1);'
+        };
 
+    //main
+        var _mainObject = parts.basic.g(type, x, y);
+            _mainObject._type = type;
 
-        
-    _mainObject.onSelect = function(){
-        console.log('I\'ve been selected!');
-        __globals.utility.setStyle(backing, 'fill:rgba(220,220,220,1)');
+    //elements
+        //backing
+        var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+
+        //generate selection area
+        __globals.utility.generateSelectionArea(shape.base, _mainObject);
+
+        //tempo dial
+            _mainObject.append(parts.display.label(null, shape.dial.x+7,    shape.dial.y+34, '60',        style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+16.5, shape.dial.y+4,  '150',       style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+30,   shape.dial.y+34, '240',       style.text));
+            var dial_tempo = parts.control.dial_continuous(
+                'dial_tempo', shape.dial.x+20, shape.dial.y+20, 12,
+                (3*Math.PI)/4, 1.5*Math.PI,
+                style.dial.handle, style.dial.slot, style.dial.needle, 1.2, style.dial.markings
+            );
+            _mainObject.append(dial_tempo);
+            dial_tempo.ondblclick = function(){ this.set(1/3); };
+            dial_tempo.onChange = function(data){
+                data = attributes.tempoLimits.low + (attributes.tempoLimits.high-attributes.tempoLimits.low)*data;
+                data = Math.round(data);
+                setReadout(data);
+            };
+            dial_tempo.onRelease = function(data){
+                data = attributes.tempoLimits.low + (attributes.tempoLimits.high-attributes.tempoLimits.low)*data;
+                data = Math.round(data);
+                setReadout(data);
+                startClock(data);
+            };
+
+        //tempo readout
+            _mainObject.append( parts.basic.rect(null, shape.readoutBacking.x, shape.readoutBacking.y, shape.readoutBacking.width, shape.readoutBacking.height, 0, style.readoutBacking) );
+
+            var segmentDisplays = [];
+            for(var a = 0; a < shape.readouts.length; a++){
+                var temp = parts.display.segmentDisplay(null, shape.readouts[a].x, shape.readouts[a].y, shape.readouts[a].width, shape.readouts[a].height);
+                    _mainObject.append(temp);
+                    segmentDisplays.push(temp);
+            }
+
+    //connection nodes
+        _mainObject.io = {};
+
+        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2][1]-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
+            _mainObject.prepend(_mainObject.io.out);
+
+    //internal workings
+        function setReadout(num){
+            num = ''+num;
+            while(num.length < 3){ num = '0'+num;}
+            for(var a = 0; a < num.length; a++){ segmentDisplays[a].enterCharacter(num[a]); }
+        }
+    
+        function startClock(tempo){
+            if(attributes.interval){
+                clearInterval(attributes.interval);
+            }
+
+            attributes.interval = setInterval(function(){
+                _mainObject.io.out.send('pulse');
+            },1000*(60/tempo));
+        }
+
+    //setup
+        dial_tempo.set(1/3);
+            
+    return _mainObject;
+};
+__globals.objects.make_dataDuplicator = function(x,y){
+    //set numbers
+    var type = 'dataDuplicator';
+    var shape = {
+        base: [[0,0],[55,0],[55,55],[0,55]],
+        littleConnector: { width: 20, height: 20 },
+        markings:{
+            rect:[
+                //flow lines
+                {x:(20/4), y:(20*0.25 + 20/2), width:45, height:2, angle:0}, //top horizontal
+                {x:(55*0.5), y:(20*0.25 + 20/2), width:2, height:25, angle:0}, //vertical
+                {x:(55*0.5), y:(20*1.5  + 20/2), width:22.5, height:2, angle:0} //bottom horizontal
+            ],
+            path:[
+                [[(55-10),(20*0 + 20/2)+1],[(55-2.5),(20*0.25 + 20/2)+1],[(55-10),(20*0.5 + 20/2)+1]], //upper arrow
+                [[(55-10),(20*1.25 + 20/2)+1],[(55-2.5),(20*1.5 + 20/2)+1],[(55-10),(20*1.75 + 20/2)+1]] //lower arrow
+            ]
+        }
     };
-    _mainObject.onDeselect = function(){
-        console.log('I\'ve been deselected!');
-        __globals.utility.setStyle(backing, 'fill:rgba(200,200,200,1)');
-    };
-    _mainObject.onDelete = function(){
-        console.log('I\'ve been deleted!');
-    };
-    _mainObject.onCopy = function(original=false){
-        console.log('I\'ve been copied!', original?'- original object ':'- new object');
-    };
-
-    _mainObject.importData = function(data){
-        console.log('importing data', data);
-    };
-    _mainObject.exportData = function(){
-        console.log('exporting data');
-        return {'like settings and stuff':'settin\'s' };
+    var style = {        
+        background: 'fill:rgba(200,200,200,1); stroke:none;',
+        markings: 'fill:rgba(150,150,150,1)',
     };
 
 
+    //main
+    var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
 
+    //elements
+        //backing
+        var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
 
-    _mainObject.io = {};
-    _mainObject.io.in = parts.dynamic.connectionNode_data('io.in',75/2-30/2,-30/2,30,30);
-        _mainObject.append(_mainObject.io.in);
-    _mainObject.io.out_1 = parts.dynamic.connectionNode_data('io.out_1',5,55-30/2,30,30);
-        _mainObject.append(_mainObject.io.out_1);
-    _mainObject.io.out_2 = parts.dynamic.connectionNode_data('io.out_2',75-30-5,55-30/2,30,30);
-        _mainObject.append(_mainObject.io.out_2);
+        //generate selection area
+        __globals.utility.generateSelectionArea(shape.base, _mainObject);
 
-    _mainObject.io.in.receive = function(address,data){
-        _mainObject.io.out_1.send(address,data);
-        _mainObject.io.out_2.send(address,data);
+        //markings
+            for(var a = 0; a < shape.markings.rect.length; a++){
+                _mainObject.append(parts.basic.rect(null, shape.markings.rect[a].x,shape.markings.rect[a].y,shape.markings.rect[a].width,shape.markings.rect[a].height,shape.markings.rect[a].angle, style.markings));
+            }
+            for(var a = 0; a < shape.markings.path.length; a++){
+                _mainObject.append(parts.basic.path(null, shape.markings.path[a], 'L', style.markings));
+            }
+
+    //connection nodes
+        _mainObject.io = {};
+
+        _mainObject.io.in = parts.dynamic.connectionNode_data('_mainObject.io.in', -shape.littleConnector.width/2, shape.littleConnector.height*0.25, shape.littleConnector.width, shape.littleConnector.height);
+            _mainObject.prepend(_mainObject.io.in);
+            _mainObject.io.in.receive = function(address,data){
+                _mainObject.io.out_1.send(address,data);
+                _mainObject.io.out_2.send(address,data);
+            };
+        _mainObject.io.out_1 = parts.dynamic.connectionNode_data('_mainObject.io.out_1', shape.base[2][0]-shape.littleConnector.width/2, shape.littleConnector.height*0.25, shape.littleConnector.width, shape.littleConnector.height);
+            _mainObject.prepend(_mainObject.io.out_1);
+        _mainObject.io.out_2 = parts.dynamic.connectionNode_data('_mainObject.io.out_2', shape.base[2][0]-shape.littleConnector.width/2, shape.littleConnector.height*1.5, shape.littleConnector.width, shape.littleConnector.height);
+            _mainObject.prepend(_mainObject.io.out_2);
+    
+
+    return _mainObject;
+};
+
+//Operation Instructions
+//  Data signals that are sent into the in port, are duplicated and sent out the two out ports
+//  Note: they are not sent out at the same time; signals are produced from the 1st out port
+//        first and then the 2nd port. 
+__globals.objects.make_accumulator = function(x,y){
+    //set numbers
+    var type = 'accumulator';
+    var attributes = {
+        levels: 8,
+        currentLevel: 0
     };
+    var shape = {
+        base: [[0,0],[40,0],[65,25],[65,55],[0,55]],
+        littleConnector: { width: 20, height: 20 },
+        glowboxArea: {x:5, y:2.5, width:30, height:50, gappage:1},
+        resetButton: {x: 45, y: 10, width: 20, height: 10},
+        markings:{
+            rect:[
+                {x:(65*0.575), y:(20*1.5  + 20/2)-1, width:22.5, height:2, angle:0}
+            ],
+            path:[
+                [[(65-10),(20*1.25 + 20/2)],[(65-2.5),(20*1.5 + 20/2)],[(65-10),(20*1.75 + 20/2)]]
+            ]
+        }
+    };
+    var style = {        
+        background: 'fill:rgba(200,200,200,1); stroke:none;',
+        markings: 'fill:rgba(150,150,150,1)',
+        button: {
+            up: 'fill:rgba(175,175,175,1)',
+            hover: 'fill:rgba(220,220,220,1)',
+            down: 'fill:rgba(150,150,150,1)'
+        },
+    };
+
+
+    //main
+    var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
+
+    //elements
+        //backing
+        var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+
+        //markings
+            for(var a = 0; a < shape.markings.rect.length; a++){
+                _mainObject.append(parts.basic.rect(null, shape.markings.rect[a].x,shape.markings.rect[a].y,shape.markings.rect[a].width,shape.markings.rect[a].height,shape.markings.rect[a].angle, style.markings));
+            }
+            for(var a = 0; a < shape.markings.path.length; a++){
+                _mainObject.append(parts.basic.path(null, shape.markings.path[a], 'L', style.markings));
+            }
+
+        //glowboxes
+        var glowboxeBacking = parts.basic.rect(null, shape.glowboxArea.x, shape.glowboxArea.y, shape.glowboxArea.width, shape.glowboxArea.height, 0, 'fill:rgb(20,20,20)');
+            _mainObject.append(glowboxeBacking);
+
+        var glowboxes = [];
+        var height = (2*shape.glowboxArea.height - 1)/(2*attributes.levels);
+        for(var a = 0; a < attributes.levels; a++){
+            var temp = parts.display.glowbox_rect(
+                null, 
+                shape.glowboxArea.x+shape.glowboxArea.gappage/2,
+                shape.glowboxArea.y+a*height+(shape.glowboxArea.gappage/2),
+                shape.glowboxArea.width-shape.glowboxArea.gappage,
+                height-(shape.glowboxArea.gappage/2),
+                0
+            );
+                _mainObject.append(temp);
+                glowboxes.push(temp);
+        }
+
+        //reset
+            var resetButton = parts.control.button_rect('resetButton', shape.resetButton.x, shape.resetButton.y, shape.resetButton.width, shape.resetButton.height, Math.PI/4, style.button.up, style.button.hover, style.button.down);
+                _mainObject.append(resetButton);
+                resetButton.onclick = function(){ reset(); }
+
+
+    //connection nodes
+        _mainObject.io = {};
+
+        _mainObject.io.in = parts.dynamic.connectionNode_data('_mainObject.io.in', shape.littleConnector.width*0.5, -shape.littleConnector.height*0.5, shape.littleConnector.width, shape.littleConnector.height);
+            _mainObject.prepend(_mainObject.io.in);
+            _mainObject.io.in.receive = function(address,data){if(address!='pulse'){return;}accumulate();};
+        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', shape.base[3][0]-shape.littleConnector.width*0.5, shape.base[3][1]-shape.littleConnector.height*1.25, shape.littleConnector.width, shape.littleConnector.height);
+            _mainObject.prepend(_mainObject.io.out);
+
+
+    //internal workings
+        function accumulate(){
+            attributes.currentLevel++;
+            if(attributes.currentLevel == attributes.levels){ reset(); }
+            else{ glowboxes[attributes.levels-attributes.currentLevel-1].on(); }
+        }
+        function reset(){ 
+            attributes.currentLevel = 0;
+            _mainObject.io.out.send('pulse');
+            for(var a = 0; a < attributes.levels; a++){
+                glowboxes[a].off();
+            }
+            glowboxes[attributes.levels-1].on();
+        }
+
+    //setup
+        reset();
+
+    return _mainObject;
+};
+__globals.objects.make_audioSink = function(x,y){
+    //set numbers
+        var type = 'audioSink';
+        var size = {
+            base: { width: 100, height: 50 },
+            connector: { width: 30, height: 30 }
+        };
+        var style = {
+            background: 'fill:rgba(200,200,200,1)',
+            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;'
+        };
+
+
+
+    //main
+    var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
+
+    //circuitry
+    _mainObject._destination = __globals.audio.context;
+
+    //elements
+        //backing
+        var backing = parts.basic.rect(null, 0, 0, size.base.width, size.base.height, 0, style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+
+        _mainObject.append(parts.display.label(null, 20, 22.5, 'audio sink',style.text));
+            
+        //generate selection area
+            _mainObject.selectionArea = {};
+            _mainObject.selectionArea.box = [];
+            _mainObject.selectionArea.points = [];
+            _mainObject.updateSelectionArea = function(){
+                //the main shape we want to use
+                var temp = __globals.utility.getBoundingBox(backing);
+                _mainObject.selectionArea.points = [
+                    [temp.x,temp.y],
+                    [temp.x+temp.width,temp.y],
+                    [temp.x+temp.width,temp.y+temp.height],
+                    [temp.x,temp.y+temp.height]
+                ];
+                _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
+    
+                //adjusting it for the object's position in space
+                temp = __globals.utility.getTransform(_mainObject);
+                _mainObject.selectionArea.box.forEach(function(element) {
+                    element[0] += temp[0];
+                    element[1] += temp[1];
+                });
+                _mainObject.selectionArea.points.forEach(function(element) {
+                    element[0] += temp[0];
+                    element[1] += temp[1];
+                });
+            };
+            _mainObject.updateSelectionArea();
+
+
+    //connection nodes
+        _mainObject.io = {};
+        _mainObject.io.audio_in = parts.dynamic.connectionNode_audio('connectionNode_audio', 0, size.base.width/2 - size.connector.width/2, size.base.height-size.connector.height/2, size.connector.width, size.connector.height, __globals.audio.context);
+            _mainObject.io.audio_in.out().connect(__globals.audio.context.destination);
+            _mainObject.append(_mainObject.io.audio_in);
 
     return _mainObject;
 }
-function makeAudioCombiner(x,y){
+__globals.objects.make_launchpad = function(x,y){
+    //set numbers
+        var type = 'launchpad';
+        var variables = {
+            pageCount: 10,
+            currentPage: 0,
+            pages: [],
+        };
+        var attributes = {
+            notes: ['5C', '4B', '4A', '4G', '4F', '4E', '4D', '4C'],
+            stage: 0,
+            prevStage: 0
+        };
+        var shape = {
+            base: [[0,0],[150,0],[150,120],[0,120]],
+            connector: { width: 30, height: 30 },
+            littleConnector: { width: 20, height: 20 },
+            grid: {x: 10, y: 10, width: 100, height: 100, xCount: 8, yCount: 8},
+            manualPulse: {x: 115, y: 10, width: 30, height: 20},
+            nextPage: {x: 115, y: 35, width: 15, height: 10},
+            prevPage: {x: 115, y: 45, width: 15, height: 10},
+            dial: {x: 110, y: 70},
+            pageNumberReadout: {x: 131, y: 35, width: 14, height: 20}
+        };
+        var style = {        
+            background: 'fill:rgba(200,200,200,1); stroke:none;',
+            text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+            grid: {
+                backingStyle: 'fill:rgba(200,175,200,1)',
+                checkStyle: 'fill:rgba(150,125,150,1)',
+                backingGlowStyle: 'fill:rgba(225,175,225,1)',
+                checkGlowStyle:'fill:rgba(200,125,200,1)'
+            },
+            button: {
+                up: 'fill:rgba(175,175,175,1)',
+                hover: 'fill:rgba(220,220,220,1)',
+                down: 'fill:rgba(150,150,150,1)'
+            },
+            dial: {
+                handle: 'fill:rgba(220,220,220,1)',
+                slot: 'fill:rgba(50,50,50,1)',
+                needle: 'fill:rgba(250,150,250,1)',
+                markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
+            }
+        };
+    
+    //main
+    var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
 
-    var _mainObject = parts.basic.g('dataDuplicator', x, y);
+    var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(_mainObject);
+        keycaptureObj.keyPress = function(key){
+            switch(key){
+                case ' ': manualPulse.onclick(); break;
+                case 'ArrowUp': nextPage.onclick(); break;
+                case 'ArrowDown': prevPage.onclick(); break;
+            }
+        };
 
-    var backing = parts.basic.rect(null, 0, 0, 75, 55, 0, 'fill:rgba(200,200,200,1)');
-        _mainObject.append(backing);
-        __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, makeAudioCombiner);
+    //elements
+        //backing
+        var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
 
+        //generate selection area
+        __globals.utility.generateSelectionArea(shape.base, _mainObject);
 
-    var connectionNode_audio_in_1 = parts.dynamic.connectionNode_audio('connectionNode_audio_in_1',0,5,55-30/2,30,30,__globals.audio.context);
-        _mainObject.append(connectionNode_audio_in_1);
-    var connectionNode_audio_in_2 = parts.dynamic.connectionNode_audio('connectionNode_audio_in_2',0,75-30-5,55-30/2,30,30,__globals.audio.context);
-        _mainObject.append(connectionNode_audio_in_2);
+        //grid
+        var rastorgrid = parts.control.rastorgrid('rastorgrid', shape.grid.x, shape.grid.y, shape.grid.width, shape.grid.height, shape.grid.xCount, shape.grid.yCount, style.grid.backingStyle, style.grid.checkStyle, style.grid.backingGlowStyle, style.grid.checkGlowStyle);
+            _mainObject.append(rastorgrid);
 
-    var connectionNode_audio_out_1 = parts.dynamic.connectionNode_audio('connectionNode_audio_out_1',1,75/2-30/2,-30/2,30,30,__globals.audio.context);
-        _mainObject.append(connectionNode_audio_out_1);
+        //velocity dial
+            _mainObject.append(parts.display.label(null, shape.dial.x+10,   shape.dial.y+40, 'velocity',  style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+7,    shape.dial.y+34, '0',         style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+16.5, shape.dial.y+4,  '1/2',       style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+30,   shape.dial.y+34, '1',         style.text));
+            var dial_velocity = parts.control.dial_continuous(
+                'dial_velocity', shape.dial.x+20, shape.dial.y+20, 12,
+                (3*Math.PI)/4, 1.5*Math.PI,
+                style.dial.handle, style.dial.slot, style.dial.needle, 1.2, style.dial.markings
+            );
+            _mainObject.append(dial_velocity);
 
+        //manual pulse
+            var manualPulse = parts.control.button_rect('manualPulse', shape.manualPulse.x, shape.manualPulse.y, shape.manualPulse.width, shape.manualPulse.height, 0, style.button.up, style.button.hover, style.button.down);
+            _mainObject.append(manualPulse);
+            manualPulse.onclick = function(){ progress(); }
 
-    connectionNode_audio_in_1.out().connect(connectionNode_audio_out_1.in());
-    connectionNode_audio_in_2.out().connect(connectionNode_audio_out_1.in());
+        //page turners
+            var nextPage = parts.control.button_rect('nextPage', shape.nextPage.x, shape.nextPage.y, shape.nextPage.width, shape.nextPage.height, 0, style.button.up, style.button.hover, style.button.down);
+                _mainObject.append(nextPage);
+                nextPage.onclick = function(){ setPage(variables.currentPage+1); }
+            var prevPage = parts.control.button_rect('prevPage', shape.prevPage.x, shape.prevPage.y, shape.prevPage.width, shape.prevPage.height, 0, style.button.up, style.button.hover, style.button.down);
+                _mainObject.append(prevPage);
+                prevPage.onclick = function(){ setPage(variables.currentPage-1); }
+            var pageNumberReadout = parts.display.segmentDisplay(null, shape.pageNumberReadout.x, shape.pageNumberReadout.y, shape.pageNumberReadout.width, shape.pageNumberReadout.height);
+                _mainObject.append(pageNumberReadout);
 
+    //connection nodes
+        _mainObject.io = {};
 
-    _mainObject.movementRedraw = function(){
-        connectionNode_audio_in_1.redraw();
-        connectionNode_audio_in_2.redraw();
-        connectionNode_audio_out_1.redraw();
-    };
+        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2][1]-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
+            _mainObject.prepend(_mainObject.io.out);
+        _mainObject.io.pulseIn = parts.dynamic.connectionNode_data('_mainObject.io.pulseIn', shape.base[2][0]-shape.littleConnector.width/2, shape.littleConnector.height*0.5, shape.littleConnector.width, shape.littleConnector.height);
+            _mainObject.prepend(_mainObject.io.pulseIn);
+            _mainObject.io.pulseIn.receive = function(address,data){if(address!='pulse'){return;} progress(); };
+        _mainObject.io.pageSelect = parts.dynamic.connectionNode_data('_mainObject.io.pageSelect', shape.base[2][0]-shape.littleConnector.width/2, shape.littleConnector.height*1.75, shape.littleConnector.width, shape.littleConnector.height);
+            _mainObject.prepend(_mainObject.io.pageSelect);
+            _mainObject.io.pageSelect.receive = function(address,data){if(address!='discrete'){return;}setPage(data);};
+    
+    //internal workings
+        function setPage(pageNumber){
+            pageNumber = pageNumber<0 ? variables.pageCount-1 : pageNumber;
+            pageNumber = pageNumber>variables.pageCount-1 ? 0 : pageNumber;
 
-    _mainObject.io = {};
-    _mainObject.io.in_1 = connectionNode_audio_in_1;
-    _mainObject.io.in_2 = connectionNode_audio_in_2;
-    _mainObject.io.out = connectionNode_audio_out_1;
+            //save the current page to memory only if we're not switching to the same page
+            if(pageNumber != variables.currentPage){ variables.pages[variables.currentPage] = rastorgrid.get(); }
+
+            if( variables.pages[pageNumber] ){ rastorgrid.set(variables.pages[pageNumber]); }
+            else{ rastorgrid.clear();  }
+
+            pageNumberReadout.enterCharacter(''+pageNumber);
+
+            variables.currentPage = pageNumber;
+        }
+        function progress(){
+            for(var a = 0; a < shape.grid.yCount; a++){
+                rastorgrid.light(attributes.prevStage,a,false);
+                _mainObject.io.out.send('midiNumber',{'num':__globals.audio.names_midinumbers[attributes.notes[a]], 'velocity':0});
+            }
+
+            for(var a = 0; a < shape.grid.yCount; a++){
+                rastorgrid.light(attributes.stage,a,true);
+                if( rastorgrid.box(attributes.stage,a).get() ){ _mainObject.io.out.send('midiNumber',{'num':__globals.audio.names_midinumbers[attributes.notes[a]], 'velocity':dial_velocity.get()}); }
+            }
+
+            attributes.prevStage = attributes.stage; 
+            attributes.stage++;
+            if(attributes.stage>=attributes.notes.length){attributes.stage=0;}
+        }
+
+    //import/export
+        _mainObject.importData = function(data){
+            variables.pages = data.pages;
+            variables.currentPage = data.currentPage;
+            dial_velocity.set(data.velocityDial);
+            setPage(variables.currentPage);
+        };
+        _mainObject.exportData = function(){
+            //push current page
+            variables.pages[variables.currentPage] = rastorgrid.get();
+
+            return {
+                pages: variables.pages,
+                currentPage: variables.currentPage,
+                velocityDial: dial_velocity.get()
+            };
+        };
+
+    //setup
+        dial_velocity.set(0.5)
+        setPage(0);
 
     return _mainObject;
-}
+};
 
 
 
-var universalReadout_1 = makeUniversalReadout(700,300);
-__globals.panes.middleground.append( universalReadout_1 );
-
-var midiPlayer_1 = makeMidiPlayer(500,50);
-__globals.panes.middleground.append( midiPlayer_1 );
-
-var dataDuplicator_1 = makeDataDuplicator(800,100);
-__globals.panes.middleground.append( dataDuplicator_1 );
 
 
-var simpleSynthesizer_1 = makeSimpleSynthesizer(200,80);
-__globals.panes.middleground.append( simpleSynthesizer_1 );
-var simpleSynthesizer_2 = makeSimpleSynthesizer(200,180);
-__globals.panes.middleground.append( simpleSynthesizer_2 );
-var simpleSynthesizer_3 = makeSimpleSynthesizer(200,280);
-__globals.panes.middleground.append( simpleSynthesizer_3 );
-var simpleSynthesizer_4 = makeSimpleSynthesizer(200,380);
-__globals.panes.middleground.append( simpleSynthesizer_4 );
 
-var audioCombiner_1 = makeAudioCombiner(50,150);
-__globals.panes.middleground.append( audioCombiner_1 );
-var audioCombiner_2 = makeAudioCombiner(20,250);
-__globals.panes.middleground.append( audioCombiner_2 );
-var audioCombiner_3 = makeAudioCombiner(90,350);
-__globals.panes.middleground.append( audioCombiner_3 );
-
-var audioSink_1 = makeAudioSink(25,25);
+var audioSink_1 = __globals.objects.make_audioSink(25,25);
 __globals.panes.middleground.append( audioSink_1 );
 
+var basicSynth_1 = __globals.objects.make_basicSynth(200,25);
+__globals.panes.middleground.append( basicSynth_1 );
+
+var launchpad_1 = __globals.objects.make_launchpad(500,25);
+__globals.panes.middleground.append( launchpad_1 );
+
+var pulseClock_1 = __globals.objects.make_pulseClock(700,25);
+__globals.panes.middleground.append( pulseClock_1 );
+
+var dataDuplicator_1 = __globals.objects.make_dataDuplicator(200,250);
+__globals.panes.middleground.append( dataDuplicator_1 );
+
+var accumulator_1 = __globals.objects.make_accumulator(300,250);
+__globals.panes.middleground.append( accumulator_1 );
+
+var selectorSender_1 = __globals.objects.make_selectorSender(100,250);
+__globals.panes.middleground.append( selectorSender_1 );
+
+pulseClock_1.io.out.connectTo(launchpad_1.io.pulseIn);
+launchpad_1.io.out.connectTo(basicSynth_1.io.dataIn_midiNote);
+basicSynth_1.io.audioOut.connectTo(audioSink_1.io.audio_in);
 
 
 
-
-
-simpleSynthesizer_1.io.dataIn_gain.receive('%',0.24);
-
-simpleSynthesizer_2.io.dataIn_gain.receive('%',0.24);
-simpleSynthesizer_2.io.dataIn_release.receive('%',0.1);
-simpleSynthesizer_2.io.dataIn_type.receive('discrete',1);
-simpleSynthesizer_2.io.dataIn_octave.receive('discrete',4);
-
-simpleSynthesizer_3.io.dataIn_gain.receive('%',0.4);
-simpleSynthesizer_3.io.dataIn_attack.receive('%',0.1);
-simpleSynthesizer_3.io.dataIn_release.receive('%',0.1);
-simpleSynthesizer_3.io.dataIn_type.receive('discrete',1);
-simpleSynthesizer_3.io.dataIn_octave.receive('discrete',4);
-
-simpleSynthesizer_4.io.dataIn_gain.receive('%',0.24);
-simpleSynthesizer_4.io.dataIn_attack.receive('%',0.1);
-simpleSynthesizer_4.io.dataIn_release.receive('%',0.1);
-simpleSynthesizer_4.io.dataIn_type.receive('discrete',1);
-simpleSynthesizer_4.io.dataIn_octave.receive('discrete',5);
-
-
-
-
-
-
-midiPlayer_1.io.out[1].connectTo(simpleSynthesizer_1.io.dataIn_midiNote);
-midiPlayer_1.io.out[2].connectTo(simpleSynthesizer_2.io.dataIn_midiNote);
-midiPlayer_1.io.out[3].connectTo(simpleSynthesizer_3.io.dataIn_midiNote);
-    // midiPlayer_1.io.out[3].connectTo(dataDuplicator_1.io.in);
-    // dataDuplicator_1.io.out_1.connectTo(simpleSynthesizer_3.io.dataIn_midiNote);
-    // dataDuplicator_1.io.out_2.connectTo(universalReadout_1.io.in);
-midiPlayer_1.io.out[4].connectTo(simpleSynthesizer_4.io.dataIn_midiNote);
-
-simpleSynthesizer_1.io.audioOut.connectTo(audioCombiner_2.io.in_1);
-simpleSynthesizer_2.io.audioOut.connectTo(audioCombiner_2.io.in_2);
-simpleSynthesizer_3.io.audioOut.connectTo(audioCombiner_3.io.in_1);
-simpleSynthesizer_4.io.audioOut.connectTo(audioCombiner_3.io.in_2);
-
-audioCombiner_2.io.out.connectTo(audioCombiner_1.io.in_1);
-audioCombiner_3.io.out.connectTo(audioCombiner_1.io.in_2);
-
-audioCombiner_1.io.out.connectTo(audioSink_1.io.in);
+// __globals.utility.gotoPosition(-1631.06, -1044.94, 4.59435, 0);
 
         }
     }

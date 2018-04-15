@@ -6,9 +6,15 @@ __globals.objects.make_pulseClock = function(x,y){
             interval: null
         };
         var shape = {
-            base: [[0,0],[80,0],[80,40],[0,40]],
+            base: [[0,0],[90,0],[90,40],[0,40]],
             connector: { width: 20, height: 20 },
-            readout: {x: 45, y: 25}
+            readoutBacking :{x:45, y: 7.5, width: 12.5*3, height: 25},
+            readouts: [
+                {x: 45,   y: 7.5, width: 12.5, height: 25},
+                {x: 57.5, y: 7.5, width: 12.5, height: 25},
+                {x: 70,   y: 7.5, width: 12.5, height: 25},
+            ],
+            dial: {x: 0, y: 2}
         };
         var style = {
             background: 'fill:rgba(200,200,200,1); stroke:none;',
@@ -19,10 +25,11 @@ __globals.objects.make_pulseClock = function(x,y){
                 needle: 'fill:rgba(150,150,250,1)',
                 markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
             },
-            readout: 'fill:rgba(0,0,0,1); font-size:12px; font-family:Courier New;'
+            readout: 'fill:rgba(0,0,0,1); font-size:12px; font-family:Courier New;',
+            readoutBacking: 'fill:rgba(0,0,0,1);'
         };
 
-        //main
+    //main
         var _mainObject = parts.basic.g(type, x, y);
             _mainObject._type = type;
 
@@ -36,14 +43,11 @@ __globals.objects.make_pulseClock = function(x,y){
         __globals.utility.generateSelectionArea(shape.base, _mainObject);
 
         //tempo dial
-            var x = 0;
-            var y = 2;
-
-            _mainObject.append(parts.display.label(null, x+7,    y+34, '60',        style.text));
-            _mainObject.append(parts.display.label(null, x+16.5, y+4,  '150',       style.text));
-            _mainObject.append(parts.display.label(null, x+30,   y+34, '240',       style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+7,    shape.dial.y+34, '60',        style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+16.5, shape.dial.y+4,  '150',       style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+30,   shape.dial.y+34, '240',       style.text));
             var dial_tempo = parts.control.dial_continuous(
-                'dial_tempo', x+20, y+20, 12,
+                'dial_tempo', shape.dial.x+20, shape.dial.y+20, 12,
                 (3*Math.PI)/4, 1.5*Math.PI,
                 style.dial.handle, style.dial.slot, style.dial.needle, 1.2, style.dial.markings
             );
@@ -52,21 +56,24 @@ __globals.objects.make_pulseClock = function(x,y){
             dial_tempo.onChange = function(data){
                 data = attributes.tempoLimits.low + (attributes.tempoLimits.high-attributes.tempoLimits.low)*data;
                 data = Math.round(data);
-                tempoReadout.text(data);
+                setReadout(data);
             };
             dial_tempo.onRelease = function(data){
                 data = attributes.tempoLimits.low + (attributes.tempoLimits.high-attributes.tempoLimits.low)*data;
                 data = Math.round(data);
-                tempoReadout.text(data);
+                setReadout(data);
                 startClock(data);
             };
 
         //tempo readout
-            var tempoReadout = parts.display.label(null, shape.readout.x, shape.readout.y, 'null', style.readout);
-                _mainObject.append(tempoReadout);
-            var rastorReadout = parts.display.rastorReadout(null, 0, 100, 320, 80, 4);
-                _mainObject.append(rastorReadout);
-                rastorReadout.test();
+            _mainObject.append( parts.basic.rect(null, shape.readoutBacking.x, shape.readoutBacking.y, shape.readoutBacking.width, shape.readoutBacking.height, 0, style.readoutBacking) );
+
+            var segmentDisplays = [];
+            for(var a = 0; a < shape.readouts.length; a++){
+                var temp = parts.display.segmentDisplay(null, shape.readouts[a].x, shape.readouts[a].y, shape.readouts[a].width, shape.readouts[a].height);
+                    _mainObject.append(temp);
+                    segmentDisplays.push(temp);
+            }
 
     //connection nodes
         _mainObject.io = {};
@@ -75,6 +82,12 @@ __globals.objects.make_pulseClock = function(x,y){
             _mainObject.prepend(_mainObject.io.out);
 
     //internal workings
+        function setReadout(num){
+            num = ''+num;
+            while(num.length < 3){ num = '0'+num;}
+            for(var a = 0; a < num.length; a++){ segmentDisplays[a].enterCharacter(num[a]); }
+        }
+    
         function startClock(tempo){
             if(attributes.interval){
                 clearInterval(attributes.interval);
