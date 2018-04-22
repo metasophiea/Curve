@@ -2,18 +2,37 @@ __globals.keyboardInteraction = {};
 __globals.keyboardInteraction.pressedKeys = {};
 
 // keycapture
-__globals.keyboardInteraction.declareKeycaptureObject = function(object){
+__globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredKeys={none:[],shift:[],control:[],meta:[],alt:[]}){
     var connectionObject = new function(){
-        this.keyPress = function(key){};
-        this.keyRelease = function(key){};
+        this.keyPress = function(key,modifiers={}){};
+        this.keyRelease = function(key,modifiers={}){};
     };
 
-    object.onkeydown = function(event){
-        if(connectionObject.keyPress){connectionObject.keyPress(event.key);}
-    };
-    object.onkeyup = function(event){
-        if(connectionObject.keyPress){connectionObject.keyRelease(event.key);}
-    };
+    //connectionObject function runners
+    //if for any reason the object using the connectionObject isn't interested in the
+    //key, return 'false' otherwise return 'true'
+    function keyProcessor(type,event){
+        if(!connectionObject[type]){return false;}
+
+        modifiers = {
+            shift:event.shiftKey,
+            control:event.ctrlKey,
+            meta:event.metaKey,
+            alt:event.altKey
+        };
+    
+        if(event.ctrlKey  && ( !desiredKeys.control || !desiredKeys.control.includes(event.key) ) ){return false;}
+        if(event.metaKey  && ( !desiredKeys.meta    || !desiredKeys.meta.includes(event.key)    ) ){return false;}
+        if(event.shiftKey && ( !desiredKeys.shift   || !desiredKeys.shift.includes(event.key)   ) ){return false;}
+        if(event.altKey   && ( !desiredKeys.alt     || !desiredKeys.alt.includes(event.key)     ) ){return false;}
+        if(!desiredKeys.none.includes(event.key)){return false;}
+
+        connectionObject[type](event.key,modifiers);
+        return true;
+    }
+    object.onkeydown = function(event){ return keyProcessor('keyPress',event); };
+    object.onkeyup = function(event){ return keyProcessor('keyRelease',event); };
+
     return connectionObject;
 };
 
@@ -27,13 +46,13 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object){
         __globals.keyboardInteraction.pressedKeys[event.code] = true;
 
         //discover what the mouse is pointing at; if it's pointing at something that can accept
-        //keyboard input, direct the keyboard input to it, otherwise use the global functions
+        //keyboard input, direct the keyboard input to it. If the object doesn't care about this
+        //key or if input is not accepted; use the global functions
         var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
         if(!__globals.utility.requestInteraction(temp[0],temp[1],'onkeydown')){
-            __globals.utility.getObjectUnderPoint(temp[0],temp[1]).onkeydown(event);
-            return;
+            if(__globals.utility.getObjectUnderPoint(temp[0],temp[1]).onkeydown(event)){ return; }
         }
-                            
+
         //global function
         if( __globals.keyboardInteraction.onkeydown_functionList[event.key] ){
             __globals.keyboardInteraction.onkeydown_functionList[event.key](event);
@@ -79,11 +98,11 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object){
         delete __globals.keyboardInteraction.pressedKeys[event.code];
 
         //discover what the mouse is pointing at; if it's pointing at something that can accept
-        //keyboard input, direct the keyboard input to it, otherwise use the global functions
+        //keyboard input, direct the keyboard input to it. If the object doesn't care about this
+        //key or if input is not accepted; use the global functions
         var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
         if(!__globals.utility.requestInteraction(temp[0],temp[1],'onkeyup')){
-            __globals.utility.getObjectUnderPoint(temp[0],temp[1]).onkeyup(event);
-            return;
+            if(__globals.utility.getObjectUnderPoint(temp[0],temp[1]).onkeyup(event)){ return; }
         }
                             
         //global function

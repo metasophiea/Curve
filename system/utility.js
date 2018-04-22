@@ -265,7 +265,7 @@ __globals.utility = new function(){
                     var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
                         if(dis==0){/*console.log('oh hay, collision - AinB');*/return true; }
                         //get distance from point to line segment
-                        //if zero, it's a collisiion and we can end early
+                        //if zero, it's a collision and we can end early
 
                     if( tempSmallestDistance.dis > dis ){ 
                         //if this distance is the smallest found in this round, save the distance and side
@@ -323,6 +323,118 @@ __globals.utility = new function(){
 
         return false;
     };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    this.curve = new function(){
+        this.linear = function(stepCount){
+            stepCount = Math.abs(stepCount)-1; var outputArray = [0];
+            for(var a = 1; a < stepCount; a++){ outputArray.push(a/stepCount); }
+            outputArray.push(1); return outputArray;
+        };
+    
+        this.reverse_linear = function(stepCount){
+            stepCount = Math.abs(stepCount) - 1; var outputArray = [1];
+            for(var a = stepCount-1; a > 0; a--){ outputArray.push(a/stepCount); }
+            outputArray.push(0); return outputArray;
+        };
+    
+        this.sin = function(stepCount,start=0,distance=1){
+            stepCount = Math.abs(stepCount) -1;
+            var outputArray = [];
+            var progressPercentage = 0;
+            var useablePeriod = 2*Math.PI*distance; 
+            
+            for(var a = 0; a <= stepCount; a++){
+                progressPercentage = a/stepCount;
+                outputArray.push(Math.sin(progressPercentage*useablePeriod + 2*Math.PI*start));
+            }
+            return outputArray;		
+        };
+    
+        this.cos = function(stepCount,start=0,distance=1){
+            stepCount = Math.abs(stepCount) -1;
+            var outputArray = [];
+            var progressPercentage = 0;
+            var useablePeriod = 2*Math.PI*distance; 
+            
+            for(var a = 0; a <= stepCount; a++){
+                progressPercentage = a/stepCount;
+                outputArray.push(Math.cos(progressPercentage*useablePeriod + 2*Math.PI*start));
+            }
+            return outputArray;		
+        };   
+        this.s = function(stepCount,sharpness){
+            var curve = [];
+            for(var a = 0; a < stepCount; a++){
+                curve.push(
+                    1/( 1 + Math.exp(-sharpness*((a/stepCount)-0.5)) )
+                );
+            }
+
+            //normalize curve
+            function normalizeStretchArray(array){
+                var biggestIndex = 0;
+                for(var a = 1; a < array.length; a++){
+                    if( Math.abs(array[a]) > Math.abs(array[biggestIndex]) ){
+                        biggestIndex = a;
+                    }
+                }
+    
+                var mux = Math.abs(1/array[biggestIndex]);
+    
+                for(var a = 0; a < array.length; a++){
+                    array[a] = array[a]*mux;
+                }
+
+                //stretching
+                if(array[0] == 0 && array[array.length-1] == 1){return array;}
+                else if( array[0] != 0 ){
+                    var pertinentValue = array[0];
+                    for(var a = 0; a < array.length; a++){
+                        array[a] = array[a] - pertinentValue*(1-a/(array.length-1));
+                    }
+                }
+                else{
+                    var pertinentValue = array[array.length-1];
+                    for(var a = 0; a < array.length; a++){
+                        array[a] = array[a] - pertinentValue*(a/(array.length-1));
+                    }
+                }
+
+                return array;
+            }
+
+            return normalizeStretchArray(curve);
+        };
+        this.exponential = function(stepCount){
+            var stepCount = stepCount-1;
+            var curve = [];
+            
+            for(var a = 0; a <= stepCount; a++){
+                curve.push( (Math.exp(a/stepCount)-1)/(Math.E-1) ); // Math.E == Math.exp(1)
+            }
+
+            return curve;
+        };
+    };
+
+
+
+
+
+
 
 
 

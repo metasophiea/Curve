@@ -22,18 +22,42 @@ this.slide_vertical = function(
 
     //methods
     object.get = function(){ return this._value; };
-    object.set = function(value, update=true){
+    object.set = function(value, live=false, update=true){
         value = (value>1 ? 1 : value);
         value = (value<0 ? 0 : value);
 
         this._value = value;
         if(update&&this.onChange){ this.onChange(value); }
+        if(update&&!live&&this.onRelease){ this.onRelease(value); }
         this.children['handle'].y.baseVal.valueInSpecifiedUnits = value*this._data.h*this._data.handleSize;
     };
+    object.smoothSet = function(target,time,curve,update=true){
+        var start = this.get();
+        var mux = target-start;
+        var stepsPerSecond = Math.round(Math.abs(mux)*100);
+        var totalSteps = stepsPerSecond*time;
 
+        var steps = [1];
+        switch(curve){
+            case 'linear': steps = __globals.utility.curve.linear(totalSteps); break;
+            case 'exponential': steps = __globals.utility.curve.exponential(totalSteps); break;
+            case 's': steps = __globals.utility.curve.s(totalSteps,8); break;
+            case 'instant': default: break;
+        }
 
+        if(steps.length == 0){return;}
+
+        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+        object.smoothSet.interval = setInterval(function(){
+            object.set( (start+(steps.shift()*mux)),true,update );
+            if(steps.length == 0){clearInterval(object.smoothSet.interval);}
+        },1000/stepsPerSecond);
+    };
+
+    
     //callback
     object.onChange = function(){};
+    object.onRelease = function(){};
     
 
     //mouse interaction

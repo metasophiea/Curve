@@ -18,7 +18,9 @@ function makeMusicalKeyboard(x,y){
                 _mainObject.append(backing);
                 __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, makeMusicalKeyboard);
 
-            var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(_mainObject);
+            var desiredKeys = {};
+                desiredKeys.none = ['\\','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/','1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','['];
+            var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(_mainObject,desiredKeys);
                 keycaptureObj.keyPress = function(key){ if(keys[key]){ keys[key].press(); } };
                 keycaptureObj.keyRelease = function(key){ if(keys[key]){ keys[key].release(); } };
 

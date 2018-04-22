@@ -272,7 +272,7 @@ __globals.utility = new function(){
                     var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
                         if(dis==0){/*console.log('oh hay, collision - AinB');*/return true; }
                         //get distance from point to line segment
-                        //if zero, it's a collisiion and we can end early
+                        //if zero, it's a collision and we can end early
 
                     if( tempSmallestDistance.dis > dis ){ 
                         //if this distance is the smallest found in this round, save the distance and side
@@ -330,6 +330,118 @@ __globals.utility = new function(){
 
         return false;
     };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    this.curve = new function(){
+        this.linear = function(stepCount){
+            stepCount = Math.abs(stepCount)-1; var outputArray = [0];
+            for(var a = 1; a < stepCount; a++){ outputArray.push(a/stepCount); }
+            outputArray.push(1); return outputArray;
+        };
+    
+        this.reverse_linear = function(stepCount){
+            stepCount = Math.abs(stepCount) - 1; var outputArray = [1];
+            for(var a = stepCount-1; a > 0; a--){ outputArray.push(a/stepCount); }
+            outputArray.push(0); return outputArray;
+        };
+    
+        this.sin = function(stepCount,start=0,distance=1){
+            stepCount = Math.abs(stepCount) -1;
+            var outputArray = [];
+            var progressPercentage = 0;
+            var useablePeriod = 2*Math.PI*distance; 
+            
+            for(var a = 0; a <= stepCount; a++){
+                progressPercentage = a/stepCount;
+                outputArray.push(Math.sin(progressPercentage*useablePeriod + 2*Math.PI*start));
+            }
+            return outputArray;		
+        };
+    
+        this.cos = function(stepCount,start=0,distance=1){
+            stepCount = Math.abs(stepCount) -1;
+            var outputArray = [];
+            var progressPercentage = 0;
+            var useablePeriod = 2*Math.PI*distance; 
+            
+            for(var a = 0; a <= stepCount; a++){
+                progressPercentage = a/stepCount;
+                outputArray.push(Math.cos(progressPercentage*useablePeriod + 2*Math.PI*start));
+            }
+            return outputArray;		
+        };   
+        this.s = function(stepCount,sharpness){
+            var curve = [];
+            for(var a = 0; a < stepCount; a++){
+                curve.push(
+                    1/( 1 + Math.exp(-sharpness*((a/stepCount)-0.5)) )
+                );
+            }
+
+            //normalize curve
+            function normalizeStretchArray(array){
+                var biggestIndex = 0;
+                for(var a = 1; a < array.length; a++){
+                    if( Math.abs(array[a]) > Math.abs(array[biggestIndex]) ){
+                        biggestIndex = a;
+                    }
+                }
+    
+                var mux = Math.abs(1/array[biggestIndex]);
+    
+                for(var a = 0; a < array.length; a++){
+                    array[a] = array[a]*mux;
+                }
+
+                //stretching
+                if(array[0] == 0 && array[array.length-1] == 1){return array;}
+                else if( array[0] != 0 ){
+                    var pertinentValue = array[0];
+                    for(var a = 0; a < array.length; a++){
+                        array[a] = array[a] - pertinentValue*(1-a/(array.length-1));
+                    }
+                }
+                else{
+                    var pertinentValue = array[array.length-1];
+                    for(var a = 0; a < array.length; a++){
+                        array[a] = array[a] - pertinentValue*(a/(array.length-1));
+                    }
+                }
+
+                return array;
+            }
+
+            return normalizeStretchArray(curve);
+        };
+        this.exponential = function(stepCount){
+            var stepCount = stepCount-1;
+            var curve = [];
+            
+            for(var a = 0; a <= stepCount; a++){
+                curve.push( (Math.exp(a/stepCount)-1)/(Math.E-1) ); // Math.E == Math.exp(1)
+            }
+
+            return curve;
+        };
+    };
+
+
+
+
+
+
 
 
 
@@ -1007,18 +1119,37 @@ __globals.keyboardInteraction = {};
 __globals.keyboardInteraction.pressedKeys = {};
 
 // keycapture
-__globals.keyboardInteraction.declareKeycaptureObject = function(object){
+__globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredKeys={none:[],shift:[],control:[],meta:[],alt:[]}){
     var connectionObject = new function(){
-        this.keyPress = function(key){};
-        this.keyRelease = function(key){};
+        this.keyPress = function(key,modifiers={}){};
+        this.keyRelease = function(key,modifiers={}){};
     };
 
-    object.onkeydown = function(event){
-        if(connectionObject.keyPress){connectionObject.keyPress(event.key);}
-    };
-    object.onkeyup = function(event){
-        if(connectionObject.keyPress){connectionObject.keyRelease(event.key);}
-    };
+    //connectionObject function runners
+    //if for any reason the object using the connectionObject isn't interested in the
+    //key, return 'false' otherwise return 'true'
+    function keyProcessor(type,event){
+        if(!connectionObject[type]){return false;}
+
+        modifiers = {
+            shift:event.shiftKey,
+            control:event.ctrlKey,
+            meta:event.metaKey,
+            alt:event.altKey
+        };
+    
+        if(event.ctrlKey  && ( !desiredKeys.control || !desiredKeys.control.includes(event.key) ) ){return false;}
+        if(event.metaKey  && ( !desiredKeys.meta    || !desiredKeys.meta.includes(event.key)    ) ){return false;}
+        if(event.shiftKey && ( !desiredKeys.shift   || !desiredKeys.shift.includes(event.key)   ) ){return false;}
+        if(event.altKey   && ( !desiredKeys.alt     || !desiredKeys.alt.includes(event.key)     ) ){return false;}
+        if(!desiredKeys.none.includes(event.key)){return false;}
+
+        connectionObject[type](event.key,modifiers);
+        return true;
+    }
+    object.onkeydown = function(event){ return keyProcessor('keyPress',event); };
+    object.onkeyup = function(event){ return keyProcessor('keyRelease',event); };
+
     return connectionObject;
 };
 
@@ -1032,13 +1163,13 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object){
         __globals.keyboardInteraction.pressedKeys[event.code] = true;
 
         //discover what the mouse is pointing at; if it's pointing at something that can accept
-        //keyboard input, direct the keyboard input to it, otherwise use the global functions
+        //keyboard input, direct the keyboard input to it. If the object doesn't care about this
+        //key or if input is not accepted; use the global functions
         var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
         if(!__globals.utility.requestInteraction(temp[0],temp[1],'onkeydown')){
-            __globals.utility.getObjectUnderPoint(temp[0],temp[1]).onkeydown(event);
-            return;
+            if(__globals.utility.getObjectUnderPoint(temp[0],temp[1]).onkeydown(event)){ return; }
         }
-                            
+
         //global function
         if( __globals.keyboardInteraction.onkeydown_functionList[event.key] ){
             __globals.keyboardInteraction.onkeydown_functionList[event.key](event);
@@ -1084,11 +1215,11 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object){
         delete __globals.keyboardInteraction.pressedKeys[event.code];
 
         //discover what the mouse is pointing at; if it's pointing at something that can accept
-        //keyboard input, direct the keyboard input to it, otherwise use the global functions
+        //keyboard input, direct the keyboard input to it. If the object doesn't care about this
+        //key or if input is not accepted; use the global functions
         var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
         if(!__globals.utility.requestInteraction(temp[0],temp[1],'onkeyup')){
-            __globals.utility.getObjectUnderPoint(temp[0],temp[1]).onkeyup(event);
-            return;
+            if(__globals.utility.getObjectUnderPoint(temp[0],temp[1]).onkeyup(event)){ return; }
         }
                             
         //global function
@@ -1260,6 +1391,89 @@ this.text = function(id=null, x=0, y=0, text='', angle=0, style='fill:rgba(0,0,0
 // };
     }
     this.display = new function(){
+this.grapher_audioScope = function(
+    id='grapher_audioScope',
+    x, y, width, height,
+    middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+    backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+    backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+    backingStyle = 'fill:rgba(50,50,50,1)',
+){
+    //attributes
+        var attributes = {
+            analyser:{
+                analyserNode: __globals.audio.context.createAnalyser(),
+                timeDomainDataArray: null,
+                frequencyData: null,
+                refreshRate: 30,
+                scopeRefreshInterval: null,
+                returnedValueLimits: {min:0, max: 256, halfdiff:128},
+            },
+            graph:{
+                resolution: 256
+            }
+        };
+        attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
+        attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+        attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+
+    //elements 
+        var object = parts.basic.g(id, x, y);
+            object._data = {};
+            object._data.wave = {'sin':[],'cos':[]};
+            object._data.resolution = 500;
+
+        //scope
+        var grapher = parts.display.grapher(null, 0, 0, width, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
+            object.append(grapher);
+            
+    //methods
+        object.start = function(){
+            if(attributes.analyser.scopeRefreshInterval == null){
+                attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
+            }
+        };
+        object.stop = function(){
+            clearInterval(attributes.analyser.scopeRefreshInterval);
+            attributes.analyser.scopeRefreshInterval = null;
+        };
+        object.getNode = function(){return attributes.analyser.analyserNode;};
+        object.resolution = function(res=null){
+            if(res==null){return attributes.graph.resolution;}
+            attributes.graph.resolution = res;
+            this.stop();
+            this.start();
+        };
+        object.refreshRate = function(a){
+            if(a==null){return attributes.analyser.refreshRate;}
+            attributes.analyser.refreshRate = a;
+            this.stop();
+            this.start();
+        };
+
+    //internal functions
+        function render(){
+            var numbers = [];
+            attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
+            for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
+                numbers.push(
+                    attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
+                );
+            }
+            grapher.draw(numbers);
+        }
+        function setBackground(){
+            grapher.viewbox( {'l':-1.1,'h':1.1} );
+            grapher.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
+            grapher.verticalMarkings([0,0.25,0.5,0.75]);
+            grapher.drawBackground();
+        };
+
+    //setup
+        setBackground();
+
+    return object;
+};
 this.rastorDisplay = function(
     id='rastorDisplay',
     x, y, width, height,
@@ -1537,6 +1751,15 @@ this.glowbox_rect = function(
 
     return object;
 };
+// var grapher2 = parts.display.grapher(null, width/2, 0, width/2, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
+//     object.append(grapher2);
+
+// function setBackground(){
+//     // grapher2.viewbox( {'l':-1.1,'h':1.1} );
+//     // grapher2.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
+//     // grapher2.verticalMarkings([0,0.25,0.5,0.75]);
+//     // grapher2.drawBackground();
+// }
 this.grapher = function(
     id='grapher',
     x, y, width, height,
@@ -2039,18 +2262,42 @@ this.slide_vertical = function(
 
     //methods
     object.get = function(){ return this._value; };
-    object.set = function(value, update=true){
+    object.set = function(value, live=false, update=true){
         value = (value>1 ? 1 : value);
         value = (value<0 ? 0 : value);
 
         this._value = value;
         if(update&&this.onChange){ this.onChange(value); }
+        if(update&&!live&&this.onRelease){ this.onRelease(value); }
         this.children['handle'].y.baseVal.valueInSpecifiedUnits = value*this._data.h*this._data.handleSize;
     };
+    object.smoothSet = function(target,time,curve,update=true){
+        var start = this.get();
+        var mux = target-start;
+        var stepsPerSecond = Math.round(Math.abs(mux)*100);
+        var totalSteps = stepsPerSecond*time;
 
+        var steps = [1];
+        switch(curve){
+            case 'linear': steps = __globals.utility.curve.linear(totalSteps); break;
+            case 'exponential': steps = __globals.utility.curve.exponential(totalSteps); break;
+            case 's': steps = __globals.utility.curve.s(totalSteps,8); break;
+            case 'instant': default: break;
+        }
 
+        if(steps.length == 0){return;}
+
+        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+        object.smoothSet.interval = setInterval(function(){
+            object.set( (start+(steps.shift()*mux)),true,update );
+            if(steps.length == 0){clearInterval(object.smoothSet.interval);}
+        },1000/stepsPerSecond);
+    };
+
+    
     //callback
     object.onChange = function(){};
+    object.onRelease = function(){};
     
 
     //mouse interaction
@@ -2110,18 +2357,42 @@ this.slide_horizontal = function(
 
     //methods
     object.get = function(){ return this._value; };
-    object.set = function(value, update=true){
+    object.set = function(value, live=false, update=true){
         value = (value>1 ? 1 : value);
         value = (value<0 ? 0 : value);
 
         this._value = value;
         if(update&&this.onChange){ this.onChange(value); }
+        if(update&&!live&&this.onRelease){ this.onRelease(value); }
         this.children['handle'].x.baseVal.valueInSpecifiedUnits = value*this._data.w*this._data.handleSize;
+    };
+    object.smoothSet = function(target,time,curve,update=true){
+        var start = this.get();
+        var mux = target-start;
+        var stepsPerSecond = Math.round(Math.abs(mux)*100);
+        var totalSteps = stepsPerSecond*time;
+
+        var steps = [1];
+        switch(curve){
+            case 'linear': steps = __globals.utility.curve.linear(totalSteps); break;
+            case 'exponential': steps = __globals.utility.curve.exponential(totalSteps); break;
+            case 's': steps = __globals.utility.curve.s(totalSteps,8); break;
+            case 'instant': default: break;
+        }
+
+        if(steps.length == 0){return;}
+
+        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+        object.smoothSet.interval = setInterval(function(){
+            object.set( (start+(steps.shift()*mux)),true,update );
+            if(steps.length == 0){clearInterval(object.smoothSet.interval);}
+        },1000/stepsPerSecond);
     };
 
 
     //callback
     object.onChange = function(){};
+    object.onRelease = function(){};
 
     
     //mouse interaction
@@ -2168,102 +2439,124 @@ this.dial_continuous = function(
     outerArcStyle='fill:none; stroke:none;',
 ){
     // elements
-    var object = parts.basic.g(id, x, y);
-        object._value = 0;
-        object._data = {
-            'mux':r*4
-        };
+        var object = parts.basic.g(id, x, y);
+            object._value = 0;
+            object._data = {
+                'mux':r*4
+            };
 
         //arc
-        var points = 5;
-        var pushDistance = 1.11;
-        var arcPath = [];
-        for(var a = 0; a < points; a++){
-            var temp = __globals.utility.getCartesian(startAngle+a*(maxAngle/points),r*arcDistance);
+            var points = 5;
+            var pushDistance = 1.11;
+            var arcPath = [];
+            for(var a = 0; a < points; a++){
+                var temp = __globals.utility.getCartesian(startAngle+a*(maxAngle/points),r*arcDistance);
+                arcPath.push( [temp.x,temp.y] );
+                var temp = __globals.utility.getCartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
+                arcPath.push( [temp.x,temp.y] );
+            }
+            var temp = __globals.utility.getCartesian(startAngle+maxAngle,r*arcDistance);
             arcPath.push( [temp.x,temp.y] );
-            var temp = __globals.utility.getCartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
-            arcPath.push( [temp.x,temp.y] );
-        }
-        var temp = __globals.utility.getCartesian(startAngle+maxAngle,r*arcDistance);
-        arcPath.push( [temp.x,temp.y] );
-        var outerArc = parts.basic.path(id=null, path=arcPath, 'Q', outerArcStyle);
-        object.appendChild(outerArc);
+            var outerArc = parts.basic.path(id=null, path=arcPath, 'Q', outerArcStyle);
+            object.appendChild(outerArc);
 
         //slot
-        var slot = parts.basic.circle(null, 0, 0, r*1.1, 0, slotStyle);
-            object.appendChild(slot);
+            var slot = parts.basic.circle(null, 0, 0, r*1.1, 0, slotStyle);
+                object.appendChild(slot);
 
         //handle
-        var handle = parts.basic.circle(null, 0, 0, r, 0, handleStyle);
-            object.appendChild(handle);
+            var handle = parts.basic.circle(null, 0, 0, r, 0, handleStyle);
+                object.appendChild(handle);
 
         //needle
-        var needleWidth = r/5;
-        var needleLength = r;
-        var needle = parts.basic.rect('needle', 0, 0, needleLength, needleWidth, 0, needleStyle);
-            needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
-            needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
-            object.appendChild(needle);
+            var needleWidth = r/5;
+            var needleLength = r;
+            var needle = parts.basic.rect('needle', 0, 0, needleLength, needleWidth, 0, needleStyle);
+                needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
+                needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
+                object.appendChild(needle);
 
 
     // methods
-    object.get = function(){ return this._value; };
-    object.set = function(value, live=false){
-        value = (value>1 ? 1 : value);
-        value = (value<0 ? 0 : value);
+        object.get = function(){ return this._value; };
+        object.set = function(value, live=false, update=true){
+            value = (value>1 ? 1 : value);
+            value = (value<0 ? 0 : value);
 
-        this._value = value;
-        if(this.onChange){ this.onChange(value); }
-        if(!live&&this.onRelease){ this.onRelease(value); }
-        this.children['needle'].rotation(startAngle + maxAngle*value);
-    };object.set(0);
-    
+            this._value = value;
+            if(update&&this.onChange){ this.onChange(value); }
+            if(update&&!live&&this.onRelease){ this.onRelease(value); }
+            this.children['needle'].rotation(startAngle + maxAngle*value);
+        };object.set(0);
+        object.smoothSet = function(target,time,curve,update=true){
+            var start = this.get();
+            var mux = target-start;
+            var stepsPerSecond = Math.round(Math.abs(mux)*100);
+            var totalSteps = stepsPerSecond*time;
+
+            var steps = [1];
+            switch(curve){
+                case 'linear': steps = __globals.utility.curve.linear(totalSteps); break;
+                case 'exponential': steps = __globals.utility.curve.exponential(totalSteps); break;
+                case 's': steps = __globals.utility.curve.s(totalSteps,8); break;
+                case 'instant': default: break;
+            }
+
+            if(steps.length == 0){return;}
+
+            if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+            object.smoothSet.interval = setInterval(function(){
+                object.set( (start+(steps.shift()*mux)),true,update );
+                if(steps.length == 0){clearInterval(object.smoothSet.interval);}
+            },1000/stepsPerSecond);
+        };
+        
 
     //callback
-    object.onChange = function(){};
-    object.onRelease = function(){};
+        object.onChange = function(){};
+        object.onRelease = function(){};
 
 
     //mouse interaction
-    object.ondblclick = function(){ this.set(0.5); };
-    object.onwheel = function(event){
-        var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-        var globalScale = __globals.utility.getTransform(__globals.panes.global)[2];
+        object.ondblclick = function(){ this.set(0.5); };
+        object.onwheel = function(event){
+            var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+            var globalScale = __globals.utility.getTransform(__globals.panes.global)[2];
 
-        this.set( this.get() - move/(10*globalScale) );
-    };
-    object.onmousedown = function(event){
-        __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
-        __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
-        __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
-
-        __globals.svgElement.tempRef = this;
-        __globals.svgElement.tempRef._data.initialValue = this.get();
-        __globals.svgElement.tempRef._data.initialY = event.y;
-        __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
-        __globals.svgElement.onmousemove = function(event){
-            var mux = __globals.svgElement.tempRef._data.mux;
-            var value = __globals.svgElement.tempRef._data.initialValue;
-            var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
-            var divider = __globals.utility.getTransform(__globals.panes.global)[2];
-
-            __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
+            this.set( this.get() - move/(10*globalScale) );
         };
-        __globals.svgElement.onmouseup = function(){
-            this.tempRef.set(this.tempRef.get());
-            this.tempRef = null;
+        object.onmousedown = function(event){
+            __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+            __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
+            __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
 
-            __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
-            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
-            __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+            __globals.svgElement.tempRef = this;
+            __globals.svgElement.tempRef._data.initialValue = this.get();
+            __globals.svgElement.tempRef._data.initialY = event.y;
+            __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
+            __globals.svgElement.onmousemove = function(event){
+                var mux = __globals.svgElement.tempRef._data.mux;
+                var value = __globals.svgElement.tempRef._data.initialValue;
+                var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
+                var divider = __globals.utility.getTransform(__globals.panes.global)[2];
 
-            __globals.svgElement.onmousemove_old = null;
-            __globals.svgElement.onmouseleave_old = null;
-            __globals.svgElement.onmouseup_old = null;
+                __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
+            };
+            __globals.svgElement.onmouseup = function(){
+                this.tempRef.set(this.tempRef.get());
+                this.tempRef = null;
+
+                __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+
+                __globals.svgElement.onmousemove_old = null;
+                __globals.svgElement.onmouseleave_old = null;
+                __globals.svgElement.onmouseup_old = null;
+            };
+            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+            __globals.svgElement.onmousemove(event);
         };
-        __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-        __globals.svgElement.onmousemove(event);
-    };
 
 
     return object;
@@ -2272,7 +2565,7 @@ this.slidePanel_horizontal = function(
     id='slidePanel_horizontal', 
     x, y, width, height,
     count,
-    handleStyle = 'fill:rgba(200,200,200,1)',
+    handleStyle = 'fill:rgba(180,180,180,1)',
     backingStyle = 'fill:rgba(150,150,150,1)',
     slotStyle = 'fill:rgba(50,50,50,1)'
 ){
@@ -2288,22 +2581,43 @@ this.slidePanel_horizontal = function(
 
 
     //methods
-    object.slide = function(index){ return object.children[object.id+'_'+index]; };
-    object.get = function(){
-        var outputArray = [];
-        for(var b = 0; b < count; b++){
-            outputArray.push(this.slide(b).get());
-        }
-        return outputArray;
-    };
-    object.set = function(a, update=true){
-        for(var b = 0; b < count; b++){
-            this.slide(b).set(a[b],false);
-        }
+        object.slide = function(index){ return object.children[object.id+'_'+index]; };
+        object.get = function(){
+            var outputArray = [];
+            for(var b = 0; b < count; b++){
+                outputArray.push(this.slide(b).get());
+            }
+            return outputArray;
+        };
+        object.set = function(a, live=false, update=true){
+            for(var b = 0; b < count; b++){
+                this.slide(b).set(a[b],false);
+            }
 
-        if(update&&this.onChange){ this.onChange(a); }
-    };
-    object.onChange = function(){};
+            if(update&&this.onChange){ this.onChange(a); }
+        };
+        object.smoothSet = function(a,time,curve,update=true){
+            for(var b = 0; b < a.length; b++){
+                this.slide(b).smoothSet(a[b],time,curve,update);
+            }
+            for(var b = a.length; b < count; b++){
+                this.slide(b).smoothSet(1/2,time,curve,update);
+            }
+        };
+        object.setAll = function(a, live=false, update=true){
+            for(var b = 0; b < count; b++){
+                this.slide(b).set(a,live,update);
+            }
+        };
+        object.smoothSetAll = function(a, time, curve, update=true){
+            for(var b = 0; b < count; b++){
+                this.slide(b).smoothSet(a,time,curve,update);
+            }
+        };
+    
+    //callback
+        object.onChange = function(){};
+        object.onRelease = function(){};
 
     return object;
 };
@@ -2327,30 +2641,47 @@ this.slidePanel_vertical = function(
 
 
     //methods
-    object.slide = function(index){ return object.children[object.id+'_'+index]; };
-    object.get = function(){
-        var outputArray = [];
-        for(var b = 0; b < count; b++){
-            outputArray.push(this.slide(b).get());
-        }
-        return outputArray;
-    };
-    object.set = function(a, update=true){
-        for(var b = 0; b < a.length; b++){
-            this.slide(b).set(a[b],false);
-        }
-        for(var b = a.length; b < count; b++){
-            this.slide(b).set(1/2,false);
-        }
+        object.slide = function(index){ return object.children[object.id+'_'+index]; };
+        object.get = function(){
+            var outputArray = [];
+            for(var b = 0; b < count; b++){
+                outputArray.push(this.slide(b).get());
+            }
+            return outputArray;
+        };
+        object.set = function(a, live=false, update=true){
+            for(var b = 0; b < a.length; b++){
+                this.slide(b).set(a[b],live,false);
+            }
+            for(var b = a.length; b < count; b++){
+                this.slide(b).set(1/2,live,false);
+            }
 
-        if(update&&this.onChange){ this.onChange(a); }
-    };
-    object.setAll = function(a){
-        for(var b = 0; b < count; b++){
-            this.slide(b).set(a,false);
-        }
-    };
-    object.onChange = function(){};
+            if(update&&this.onChange){ this.onChange(a); }
+            if(update&&!live&&this.onRelease){ this.onRelease(a); }
+        };
+        object.smoothSet = function(a,time,curve,update=true){
+            for(var b = 0; b < a.length; b++){
+                this.slide(b).smoothSet(a[b],time,curve,update);
+            }
+            for(var b = a.length; b < count; b++){
+                this.slide(b).smoothSet(1/2,time,curve,update);
+            }
+        };
+        object.setAll = function(a, live=false, update=true){
+            for(var b = 0; b < count; b++){
+                this.slide(b).set(a,live,update);
+            }
+        };
+        object.smoothSetAll = function(a, time, curve, update=true){
+            for(var b = 0; b < count; b++){
+                this.slide(b).smoothSet(a,time,curve,update);
+            }
+        };
+
+    //callback
+        object.onChange = function(){};
+        object.onRelease = function(){};
 
     return object;
 };
@@ -2940,362 +3271,29 @@ this.connectionNode_data = function(
             // console.log(' ');
 
 __globals.objects = {};
-__globals.utility.generateSelectionArea = function(points, _mainObject){
-    _mainObject.selectionArea = {};
-    _mainObject.selectionArea.box = [];
-    _mainObject.selectionArea.points = [];
-    _mainObject.updateSelectionArea = function(){
-        //the main shape we want to use
-        _mainObject.selectionArea.points = [];
-        points.forEach(function(item){ _mainObject.selectionArea.points.push(item.slice()); });
-        _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
-
-        //adjusting it for the object's position in space
-        temp = __globals.utility.getTransform(_mainObject);
-        _mainObject.selectionArea.box.forEach(function(element) {
-            element[0] += temp[0];
-            element[1] += temp[1];
-        });
-        _mainObject.selectionArea.points.forEach(function(element) {
-            element[0] += temp[0];
-            element[1] += temp[1];
-        });
-    };
-
-    _mainObject.updateSelectionArea();
-};
-__globals.objects.make_basicSynth = function(x,y){
+__globals.objects.make_periodicWaveMaker = function(x,y){
     //set numbers
-        var type = 'basicSynth';
-        var shape = {
-            base: [[0,0],[240,0],[240,40],[200,80],[0,80]],
-            connector: { width: 30, height: 30 }
-        };
-        var style = {
-            background: 'fill:rgba(200,200,200,1); stroke:none;',
-            h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
-            h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
-            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
-    
-            markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-    
-            handle: 'fill:rgba(220,220,220,1)',
-            slot: 'fill:rgba(50,50,50,1)',
-            needle: 'fill:rgba(250,150,150,1)'
-        };
-
-
-
-    //main
-    var _mainObject = parts.basic.g(type, x, y);
-        _mainObject._type = type;
-
-    //circuitry
-        _mainObject.__synthesizer = new parts.audio.synthesizer(__globals.audio.context);
-
-    //elements
-        //backing
-        var backing = parts.basic.path(null, shape.base, 'L', style.background);
-            _mainObject.append(backing);
-            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
-
-        //generate selection area
-        __globals.utility.generateSelectionArea(shape.base, _mainObject);
-
-        //panic button
-            var panicButton = parts.control.button_rect('panicButton', 197.5, 47.5, 20, 20, Math.PI/4, 'fill:rgba(175,175,175,1)', 'fill:rgba(220,220,220,1)', 'fill:rgba(150,150,150,1)');
-                _mainObject.append(panicButton);
-                panicButton.onclick = function(){ _mainObject.__synthesizer.panic(); }
-
-        //dials
-            var x = 0;
-            var y = 3;
-            var spacing = 40;
-
-            //gain
-            _mainObject.append(parts.display.label(null, x+11,   y+40, 'gain', style.h1));
-            _mainObject.append(parts.display.label(null, x+7,    y+34, '0',    style.h2));
-            _mainObject.append(parts.display.label(null, x+16.5, y+5,  '1/2',  style.h2));
-            _mainObject.append(parts.display.label(null, x+30,   y+34, '1',    style.h2));
-            var dial_gain = parts.control.dial_continuous(
-                'dial_gain', x+20, y+20, 12,
-                (3*Math.PI)/4, 1.5*Math.PI,
-                style.handle, style.slot, style.needle, 1.2, style.markings
-            );
-            _mainObject.append(dial_gain);
-
-            x += spacing;
-
-            //attack
-            _mainObject.append(parts.display.label(null, x+7,    y+40, 'attack', style.h1));
-            _mainObject.append(parts.display.label(null, x+7,    y+34, '0',      style.h2));
-            _mainObject.append(parts.display.label(null, x+18.5, y+4,  '5',      style.h2));
-            _mainObject.append(parts.display.label(null, x+30,   y+34, '10',     style.h2));
-            var dial_attack = parts.control.dial_continuous(
-                'dial_attack', x+20, y+20, 12,
-                (3*Math.PI)/4, 1.5*Math.PI,
-                style.handle, style.slot, style.needle, 1.2, style.markings
-            );
-            _mainObject.append(dial_attack);
-
-            x += spacing;
-
-            //release
-            _mainObject.append(parts.display.label(null, x+5,    y+40, 'release', style.h1));
-            _mainObject.append(parts.display.label(null, x+7,    y+34, '0',       style.h2));
-            _mainObject.append(parts.display.label(null, x+18.5, y+4,  '5',       style.h2));
-            _mainObject.append(parts.display.label(null, x+30,   y+34, '10',      style.h2));
-            var dial_release = parts.control.dial_continuous(
-                'dial_release', x+20, y+20, 12,
-                (3*Math.PI)/4, 1.5*Math.PI,
-                style.handle, style.slot, style.needle, 1.2, style.markings
-            );
-            _mainObject.append(dial_release);
-
-            x += spacing;
-
-            //detune
-            _mainObject.append(parts.display.label(null, x+7,     y+40, 'detune', style.h1));
-            _mainObject.append(parts.display.label(null, x+2,     y+34, '-100',   style.h2));
-            _mainObject.append(parts.display.label(null, x+18.75, y+4,  '0',      style.h2));
-            _mainObject.append(parts.display.label(null, x+28,    y+34, '+100',   style.h2));
-            var dial_detune = parts.control.dial_continuous(
-                'dial_detune', x+20, y+20, 12,
-                (3*Math.PI)/4, 1.5*Math.PI,
-                style.handle, style.slot, style.needle, 1.2, style.markings
-            );
-            _mainObject.append(dial_detune);
-
-            x += spacing;
-
-            //octave
-            _mainObject.append(parts.display.label(null, x+7,     y+40, 'octave', style.h1));
-            _mainObject.append(parts.display.label(null, x+4,     y+32, '-3',     style.h2));
-            _mainObject.append(parts.display.label(null, x+0,     y+21, '-2',     style.h2));
-            _mainObject.append(parts.display.label(null, x+4,     y+10, '-1',     style.h2));
-            _mainObject.append(parts.display.label(null, x+18.75, y+5,  '0',      style.h2));
-            _mainObject.append(parts.display.label(null, x+30,    y+10, '+1',     style.h2));
-            _mainObject.append(parts.display.label(null, x+35,    y+21, '+2',     style.h2));
-            _mainObject.append(parts.display.label(null, x+30,    y+32, '+3',     style.h2));
-            var dial_octave = parts.control.dial_discrete(
-                'dial_octave', x+20, y+20, 12,
-                7, (3*Math.PI)/4, 1.5*Math.PI,
-                style.handle, style.slot, style.needle
-            );
-            _mainObject.append(dial_octave);
-
-            x += spacing;
-
-            //type
-            _mainObject.append(parts.display.label(null, x+11, y+40, 'type', style.h1));
-            _mainObject.append(parts.display.label(null, x+0,  y+32, 'sine', style.h2));
-            _mainObject.append(parts.display.label(null, x+0,  y+18, 'tri',  style.h2));
-            _mainObject.append(parts.display.label(null, x+10, y+6,  'squ',  style.h2));
-            _mainObject.append(parts.display.label(null, x+27, y+7,  'saw',  style.h2));
-            _mainObject.append(parts.basic.rect(null, x+35, y+19, 5, 2, 0, style.slot));
-            var dial_type = parts.control.dial_discrete(
-                'dial_type', x+20, y+20, 12,
-                5, (3*Math.PI)/4, (5*Math.PI)/4,
-                style.handle, style.slot, style.needle
-            );
-            _mainObject.append(dial_type);
-
-        //connection nodes
-            _mainObject.io = {};
-
-            //audio out
-            var s = 30;
-            _mainObject.io.audioOut = parts.dynamic.connectionNode_audio('_mainObject.io.audioOut', 1, -s/2, 20-s/2, s, s, __globals.audio.context);
-            _mainObject.prepend(_mainObject.io.audioOut);
-
-            //gain data in
-            s = 15;
-            _mainObject.io.dataIn_gain = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_gain', 20-s/2, -s/2, s, s);
-            _mainObject.prepend(_mainObject.io.dataIn_gain);
-
-            //attack data in
-            _mainObject.io.dataIn_attack = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_attack', 20+spacing-s/2, -s/2, s, s);
-            _mainObject.prepend(_mainObject.io.dataIn_attack);
-
-            //release data in
-            _mainObject.io.dataIn_release = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_release', 20+2*spacing-s/2, -s/2, s, s);
-            _mainObject.prepend(_mainObject.io.dataIn_release);
-
-            //detune data in
-            _mainObject.io.dataIn_detune = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_detune', 20+3*spacing-s/2, -s/2, s, s);
-            _mainObject.prepend(_mainObject.io.dataIn_detune);
-
-            //octave data in
-            _mainObject.io.dataIn_octave = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_octave', 20+4*spacing-s/2, -s/2, s, s);
-            _mainObject.prepend(_mainObject.io.dataIn_octave);
-
-            //type data in
-            _mainObject.io.dataIn_type = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_type', 20+5*spacing-s/2, -s/2, s, s);
-            _mainObject.prepend(_mainObject.io.dataIn_type);
-
-            //periodicWave data in
-            _mainObject.io.dataIn_periodicWave = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_periodicWave', 240-s/2, 20-s/2, s, s);
-            _mainObject.prepend(_mainObject.io.dataIn_periodicWave);
-
-            //midiNote data in
-            s = 30;
-            var rotation = Math.PI/4;
-            var temp = __globals.utility.getCartesian(rotation, -s);
-            _mainObject.io.dataIn_midiNote = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_midiNote', 240+temp.x, 60+temp.y, s, s, rotation);
-            _mainObject.prepend(_mainObject.io.dataIn_midiNote);
-
-    //wiring
-    _mainObject.__synthesizer.out().connect( _mainObject.io.audioOut.in() );
-
-        dial_gain.onChange = function(value){ _mainObject.__synthesizer.gain( value ); };
-        dial_attack.onChange = function(value){ _mainObject.__synthesizer.attack( value*10 ); };
-        dial_release.onChange = function(value){ _mainObject.__synthesizer.release( value*10 ); };
-        dial_detune.onChange = function(value){ _mainObject.__synthesizer.detune( value*200 - 100 ); };
-        dial_octave.onChange = function(value){ _mainObject.__synthesizer.octave(value-3); };
-        dial_type.onChange = function(value){_mainObject.__synthesizer.type(['sine','triangle','square','sawtooth','custom'][value]);};
-
-        _mainObject.io.dataIn_gain.receive =    function(address,data){ if(address != '%'){return;} dial_gain.set(data); };
-        _mainObject.io.dataIn_attack.receive =  function(address,data){ if(address != '%'){return;} dial_attack.set(data); }; 
-        _mainObject.io.dataIn_release.receive = function(address,data){ if(address != '%'){return;} dial_release.set(data); };    
-        _mainObject.io.dataIn_detune.receive =  function(address,data){ if(address != '%'){return;} dial_detune.set(data); };
-        _mainObject.io.dataIn_octave.receive =  function(address,data){ if(address != 'discrete'){return;} dial_octave.select(data); };
-        _mainObject.io.dataIn_type.receive =    function(address,data){ if(address != 'discrete'){return;} dial_type.select(data); };
-        _mainObject.io.dataIn_midiNote.receive = function(address,data){ if(address != 'midiNumber'){return;} _mainObject.__synthesizer.perform(data); };
-
-    //setup
-        dial_gain.set(0);
-        dial_detune.set(0.5);
-        dial_octave.select(3);
-
-    return _mainObject;
-};
-__globals.objects.make_selectorSender = function(x,y){
-    //set numbers
-    var type = 'selectorSender';
-    var attributes = {
-        value: 0,
-        valueLimit: 9
-    };
-    var shape = {
-        base: [[10,0],[55,0],[65,32.5],[45,55],[20,55],[0,32.5]],
-        littleConnector: { width: 20, height: 20 },
-        connectionNodes:{
-            inc: {x:38.75, y:41.25, width:20, height:20, angle:-Math.PI/4},
-            dec: {x:12.5, y:27.5, width:20, height:20, angle:Math.PI/4},
-            send:{x:22.5, y:40, width:20, height:20, angle:0},
-            out:{x:22.5, y:-5, width:20, height:20, angle:0}
-        },
-        readouts: [
-            {x: 26.25,   y: 7.5, width: 12.5, height: 25},
-        ],
-        incButton: {x: 40, y: 10, width: 10, height: 20},
-        decButton: {x: 15, y: 10, width: 10, height: 20},
-    };
-    var style = {        
-        background: 'fill:rgba(200,200,200,1); stroke:none;',
-        readout: 'fill:rgba(0,0,0,1); font-size:12px; font-family:Courier New;',
-        readoutBacking: 'fill:rgba(0,0,0,1);',
-        button: {
-            up: 'fill:rgba(175,175,175,1)',
-            hover: 'fill:rgba(220,220,220,1)',
-            down: 'fill:rgba(150,150,150,1)'
-        },
-    };
-
-
-    //main
-    var _mainObject = parts.basic.g(type, x, y);
-        _mainObject._type = type;
-
-    //elements
-        //backing
-        var backing = parts.basic.path(null, shape.base, 'L', style.background);
-            _mainObject.append(backing);
-            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
-
-
-        //buttons
-            //inc
-            var incButton = parts.control.button_rect('incButton', shape.incButton.x, shape.incButton.y, shape.incButton.width, shape.incButton.height, 0, style.button.up, style.button.hover, style.button.down);
-                _mainObject.append(incButton);
-                incButton.onclick = function(){ incValue(); }
-
-            //dec
-            var decButton = parts.control.button_rect('resetButton', shape.decButton.x, shape.decButton.y, shape.decButton.width, shape.decButton.height, 0, style.button.up, style.button.hover, style.button.down);
-                _mainObject.append(decButton);
-                decButton.onclick = function(){ decValue(); }
-
-        //readout
-            var segmentDisplays = [];
-            for(var a = 0; a < shape.readouts.length; a++){
-                var temp = parts.display.segmentDisplay(null, shape.readouts[a].x, shape.readouts[a].y, shape.readouts[a].width, shape.readouts[a].height);
-                    _mainObject.append(temp);
-                    segmentDisplays.push(temp);
-            }
-
-    //connection nodes
-        _mainObject.io = {};
-
-        _mainObject.io.in_inc = parts.dynamic.connectionNode_data('_mainObject.io.in_inc', shape.connectionNodes.inc.x, shape.connectionNodes.inc.y, shape.connectionNodes.inc.width, shape.connectionNodes.inc.height, shape.connectionNodes.inc.angle);
-            _mainObject.prepend(_mainObject.io.in_inc);
-            _mainObject.io.in_inc.receive = function(address,data){if(address!='pulse'){return;}incValue();};
-        _mainObject.io.in_dec = parts.dynamic.connectionNode_data('_mainObject.io.in_dec', shape.connectionNodes.dec.x, shape.connectionNodes.dec.y, shape.connectionNodes.dec.width, shape.connectionNodes.dec.height, shape.connectionNodes.dec.angle);
-            _mainObject.prepend(_mainObject.io.in_dec);
-            _mainObject.io.in_dec.receive = function(address,data){if(address!='pulse'){return;}decValue();};
-        _mainObject.io.in_send = parts.dynamic.connectionNode_data('_mainObject.io.in_send', shape.connectionNodes.send.x, shape.connectionNodes.send.y, shape.connectionNodes.send.width, shape.connectionNodes.send.height, shape.connectionNodes.send.angle);
-            _mainObject.prepend(_mainObject.io.in_send);    
-            _mainObject.io.in_send.receive = function(address,data){if(address!='pulse'){return;}sendValue();};
-        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', shape.connectionNodes.out.x, shape.connectionNodes.out.y, shape.connectionNodes.out.width, shape.connectionNodes.out.height, shape.connectionNodes.out.angle);
-            _mainObject.prepend(_mainObject.io.out);     
-            
-    //internal workings
-        function render(){
-            segmentDisplays[0].enterCharacter(''+attributes.value);
-        }
-        function incValue(){
-            attributes.value = attributes.value >= attributes.valueLimit ? 0 : attributes.value+1;
-            render();
-        }
-        function decValue(){
-            attributes.value = attributes.value <= 0 ? attributes.valueLimit : attributes.value-1;
-            render();
-        }
-        function sendValue(){ _mainObject.io.out.send('discrete',attributes.value); }
-            
-    //setup
-        render();
-
-    return _mainObject;
-};
-__globals.objects.make_pulseClock = function(x,y){
-    //set numbers
-        var type = 'pulseClock';
+        var type = 'periodicWaveMaker';
         var attributes = {
-            tempoLimits: {low:60, high:240},
-            interval: null
+            factors: 16
         };
         var shape = {
-            base: [[0,0],[90,0],[90,40],[0,40]],
+            base: [[0,0],[250,0],[250,110],[0,110]],
             connector: { width: 20, height: 20 },
-            readoutBacking :{x:45, y: 7.5, width: 12.5*3, height: 25},
-            readouts: [
-                {x: 45,   y: 7.5, width: 12.5, height: 25},
-                {x: 57.5, y: 7.5, width: 12.5, height: 25},
-                {x: 70,   y: 7.5, width: 12.5, height: 25},
-            ],
-            dial: {x: 0, y: 2}
+            graph: {x:5, y:5, width:100, height:100},
+            slidePanel_sin: {x:110, y:5, width: 100, height:47.5, count: attributes.factors},
+            slidePanel_cos: {x:110, y:57.5, width: 100, height:47.5, count: attributes.factors},
+            resetButton: {x: 215, y: 5, width: 30, height: 20},
+            randomButton: {x: 215, y: 30, width: 30, height: 20},
         };
         var style = {
             background: 'fill:rgba(200,200,200,1); stroke:none;',
             text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
-            dial: {
-                handle: 'fill:rgba(220,220,220,1)',
-                slot: 'fill:rgba(50,50,50,1)',
-                needle: 'fill:rgba(150,150,250,1)',
-                markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
+            button: {
+                up: 'fill:rgba(175,175,175,1)',
+                hover: 'fill:rgba(220,220,220,1)',
+                down: 'fill:rgba(150,150,150,1)'
             },
-            readout: 'fill:rgba(0,0,0,1); font-size:12px; font-family:Courier New;',
-            readoutBacking: 'fill:rgba(0,0,0,1);'
         };
 
     //main
@@ -3311,306 +3309,340 @@ __globals.objects.make_pulseClock = function(x,y){
         //generate selection area
         __globals.utility.generateSelectionArea(shape.base, _mainObject);
 
-        //tempo dial
-            _mainObject.append(parts.display.label(null, shape.dial.x+7,    shape.dial.y+34, '60',        style.text));
-            _mainObject.append(parts.display.label(null, shape.dial.x+16.5, shape.dial.y+4,  '150',       style.text));
-            _mainObject.append(parts.display.label(null, shape.dial.x+30,   shape.dial.y+34, '240',       style.text));
-            var dial_tempo = parts.control.dial_continuous(
-                'dial_tempo', shape.dial.x+20, shape.dial.y+20, 12,
-                (3*Math.PI)/4, 1.5*Math.PI,
-                style.dial.handle, style.dial.slot, style.dial.needle, 1.2, style.dial.markings
-            );
-            _mainObject.append(dial_tempo);
-            dial_tempo.ondblclick = function(){ this.set(1/3); };
-            dial_tempo.onChange = function(data){
-                data = attributes.tempoLimits.low + (attributes.tempoLimits.high-attributes.tempoLimits.low)*data;
-                data = Math.round(data);
-                setReadout(data);
-            };
-            dial_tempo.onRelease = function(data){
-                data = attributes.tempoLimits.low + (attributes.tempoLimits.high-attributes.tempoLimits.low)*data;
-                data = Math.round(data);
-                setReadout(data);
-                startClock(data);
-            };
+        //waveport
+        var graph = parts.display.grapher_periodicWave(null, shape.graph.x, shape.graph.y, shape.graph.width, shape.graph.height);
+            _mainObject.append(graph);
 
-        //tempo readout
-            _mainObject.append( parts.basic.rect(null, shape.readoutBacking.x, shape.readoutBacking.y, shape.readoutBacking.width, shape.readoutBacking.height, 0, style.readoutBacking) );
+        //sliders
+        var slidePanel_sin = parts.control.slidePanel_vertical(null, shape.slidePanel_sin.x, shape.slidePanel_sin.y, shape.slidePanel_sin.width, shape.slidePanel_sin.height, shape.slidePanel_sin.count);
+            _mainObject.append(slidePanel_sin);
+        var slidePanel_cos = parts.control.slidePanel_vertical(null, shape.slidePanel_cos.x, shape.slidePanel_cos.y, shape.slidePanel_cos.width, shape.slidePanel_cos.height, shape.slidePanel_cos.count);
+            _mainObject.append(slidePanel_cos);
 
-            var segmentDisplays = [];
-            for(var a = 0; a < shape.readouts.length; a++){
-                var temp = parts.display.segmentDisplay(null, shape.readouts[a].x, shape.readouts[a].y, shape.readouts[a].width, shape.readouts[a].height);
-                    _mainObject.append(temp);
-                    segmentDisplays.push(temp);
-            }
+        //resetButton
+        var resetButton = parts.control.button_rect('resetButton', shape.resetButton.x, shape.resetButton.y, shape.resetButton.width, shape.resetButton.height, 0, style.button.up, style.button.hover, style.button.down);
+            _mainObject.append(resetButton);
+            resetButton.onclick = function(){ reset(); sendWave(); }
+
+        //randomButton
+        var randomButton = parts.control.button_rect('randomButton', shape.randomButton.x, shape.randomButton.y, shape.randomButton.width, shape.randomButton.height, 0, style.button.up, style.button.hover, style.button.down);
+            _mainObject.append(randomButton);
+            randomButton.onclick = function(){ randomSettings(4); }
 
     //connection nodes
-        _mainObject.io = {};
+    _mainObject.io = {};
 
-        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2][1]-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
-            _mainObject.prepend(_mainObject.io.out);
+    _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2][1]-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
+        _mainObject.prepend(_mainObject.io.out);
 
     //internal workings
-        function setReadout(num){
-            num = ''+num;
-            while(num.length < 3){ num = '0'+num;}
-            for(var a = 0; a < num.length; a++){ segmentDisplays[a].enterCharacter(num[a]); }
+        function sendWave(){
+            _mainObject.io.out.send('periodicWave', graph.wave());
         }
-    
-        function startClock(tempo){
-            if(attributes.interval){
-                clearInterval(attributes.interval);
+        function reset(){
+            graph.wave({'sin':[],'cos':[]});
+            graph.draw();
+
+            slidePanel_sin.setAll(0.5);
+            slidePanel_cos.setAll(0.5);
+        }
+
+        slidePanel_sin.onChange = function(wave){
+            //adjust values
+            var newWave = []
+            for(var a = 0; a < wave.length; a++){
+                newWave[a] = 1 - wave[a]*2;
             }
 
-            attributes.interval = setInterval(function(){
-                _mainObject.io.out.send('pulse');
-            },1000*(60/tempo));
-        }
+            //prepend that pesky leading value
+            newWave.unshift(0);
 
-    //setup
-        dial_tempo.set(1/3);
-            
-    return _mainObject;
-};
-__globals.objects.make_dataDuplicator = function(x,y){
-    //set numbers
-    var type = 'dataDuplicator';
-    var shape = {
-        base: [[0,0],[55,0],[55,55],[0,55]],
-        littleConnector: { width: 20, height: 20 },
-        markings:{
-            rect:[
-                //flow lines
-                {x:(20/4), y:(20*0.25 + 20/2), width:45, height:2, angle:0}, //top horizontal
-                {x:(55*0.5), y:(20*0.25 + 20/2), width:2, height:25, angle:0}, //vertical
-                {x:(55*0.5), y:(20*1.5  + 20/2), width:22.5, height:2, angle:0} //bottom horizontal
-            ],
-            path:[
-                [[(55-10),(20*0 + 20/2)+1],[(55-2.5),(20*0.25 + 20/2)+1],[(55-10),(20*0.5 + 20/2)+1]], //upper arrow
-                [[(55-10),(20*1.25 + 20/2)+1],[(55-2.5),(20*1.5 + 20/2)+1],[(55-10),(20*1.75 + 20/2)+1]] //lower arrow
-            ]
-        }
-    };
-    var style = {        
-        background: 'fill:rgba(200,200,200,1); stroke:none;',
-        markings: 'fill:rgba(150,150,150,1)',
-    };
+            //push the wave to the graph
+            graph.wave(newWave,'sin');
+            graph.draw();
 
+            //send the wave data out
+            sendWave();
+        };
 
-    //main
-    var _mainObject = parts.basic.g(type, x, y);
-        _mainObject._type = type;
-
-    //elements
-        //backing
-        var backing = parts.basic.path(null, shape.base, 'L', style.background);
-            _mainObject.append(backing);
-            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
-
-        //generate selection area
-        __globals.utility.generateSelectionArea(shape.base, _mainObject);
-
-        //markings
-            for(var a = 0; a < shape.markings.rect.length; a++){
-                _mainObject.append(parts.basic.rect(null, shape.markings.rect[a].x,shape.markings.rect[a].y,shape.markings.rect[a].width,shape.markings.rect[a].height,shape.markings.rect[a].angle, style.markings));
-            }
-            for(var a = 0; a < shape.markings.path.length; a++){
-                _mainObject.append(parts.basic.path(null, shape.markings.path[a], 'L', style.markings));
+        slidePanel_cos.onChange = function(wave){
+            //adjust values
+            var newWave = [];
+            for(var a = 0; a < wave.length; a++){
+                newWave[a] = 1 - wave[a]*2;
             }
 
-    //connection nodes
-        _mainObject.io = {};
+            //prepend that pesky leading value
+            newWave.unshift(0);
 
-        _mainObject.io.in = parts.dynamic.connectionNode_data('_mainObject.io.in', -shape.littleConnector.width/2, shape.littleConnector.height*0.25, shape.littleConnector.width, shape.littleConnector.height);
-            _mainObject.prepend(_mainObject.io.in);
-            _mainObject.io.in.receive = function(address,data){
-                _mainObject.io.out_1.send(address,data);
-                _mainObject.io.out_2.send(address,data);
-            };
-        _mainObject.io.out_1 = parts.dynamic.connectionNode_data('_mainObject.io.out_1', shape.base[2][0]-shape.littleConnector.width/2, shape.littleConnector.height*0.25, shape.littleConnector.width, shape.littleConnector.height);
-            _mainObject.prepend(_mainObject.io.out_1);
-        _mainObject.io.out_2 = parts.dynamic.connectionNode_data('_mainObject.io.out_2', shape.base[2][0]-shape.littleConnector.width/2, shape.littleConnector.height*1.5, shape.littleConnector.width, shape.littleConnector.height);
-            _mainObject.prepend(_mainObject.io.out_2);
-    
+            //push the wave to the graph
+            graph.wave(newWave,'cos');
+            graph.draw();
 
-    return _mainObject;
-};
+            //send the wave data out
+            sendWave();
+        };
 
-//Operation Instructions
-//  Data signals that are sent into the in port, are duplicated and sent out the two out ports
-//  Note: they are not sent out at the same time; signals are produced from the 1st out port
-//        first and then the 2nd port. 
-__globals.objects.make_accumulator = function(x,y){
-    //set numbers
-    var type = 'accumulator';
-    var attributes = {
-        levels: 8,
-        currentLevel: 0
-    };
-    var shape = {
-        base: [[0,0],[40,0],[65,25],[65,55],[0,55]],
-        littleConnector: { width: 20, height: 20 },
-        glowboxArea: {x:5, y:2.5, width:30, height:50, gappage:1},
-        resetButton: {x: 45, y: 10, width: 20, height: 10},
-        markings:{
-            rect:[
-                {x:(65*0.575), y:(20*1.5  + 20/2)-1, width:22.5, height:2, angle:0}
-            ],
-            path:[
-                [[(65-10),(20*1.25 + 20/2)],[(65-2.5),(20*1.5 + 20/2)],[(65-10),(20*1.75 + 20/2)]]
-            ]
-        }
-    };
-    var style = {        
-        background: 'fill:rgba(200,200,200,1); stroke:none;',
-        markings: 'fill:rgba(150,150,150,1)',
-        button: {
-            up: 'fill:rgba(175,175,175,1)',
-            hover: 'fill:rgba(220,220,220,1)',
-            down: 'fill:rgba(150,150,150,1)'
-        },
-    };
-
-
-    //main
-    var _mainObject = parts.basic.g(type, x, y);
-        _mainObject._type = type;
-
-    //elements
-        //backing
-        var backing = parts.basic.path(null, shape.base, 'L', style.background);
-            _mainObject.append(backing);
-            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
-
-        //markings
-            for(var a = 0; a < shape.markings.rect.length; a++){
-                _mainObject.append(parts.basic.rect(null, shape.markings.rect[a].x,shape.markings.rect[a].y,shape.markings.rect[a].width,shape.markings.rect[a].height,shape.markings.rect[a].angle, style.markings));
-            }
-            for(var a = 0; a < shape.markings.path.length; a++){
-                _mainObject.append(parts.basic.path(null, shape.markings.path[a], 'L', style.markings));
+        function normalizeArray(array){
+            var biggestIndex = 0;
+            for(var a = 1; a < array.length; a++){
+                if( Math.abs(array[a]) > Math.abs(array[biggestIndex]) ){
+                    biggestIndex = a;
+                }
             }
 
-        //glowboxes
-        var glowboxeBacking = parts.basic.rect(null, shape.glowboxArea.x, shape.glowboxArea.y, shape.glowboxArea.width, shape.glowboxArea.height, 0, 'fill:rgb(20,20,20)');
-            _mainObject.append(glowboxeBacking);
+            var mux = Math.abs(1/array[biggestIndex]);
 
-        var glowboxes = [];
-        var height = (2*shape.glowboxArea.height - 1)/(2*attributes.levels);
-        for(var a = 0; a < attributes.levels; a++){
-            var temp = parts.display.glowbox_rect(
-                null, 
-                shape.glowboxArea.x+shape.glowboxArea.gappage/2,
-                shape.glowboxArea.y+a*height+(shape.glowboxArea.gappage/2),
-                shape.glowboxArea.width-shape.glowboxArea.gappage,
-                height-(shape.glowboxArea.gappage/2),
-                0
-            );
-                _mainObject.append(temp);
-                glowboxes.push(temp);
+            for(var a = 0; a < array.length; a++){
+                array[a] = array[a]*mux;
+            } 
+
+            return array;
         }
+        function randomSettings(depth){
+            //input checking
+            depth = depth > attributes.factors? attributes.factors : depth;
 
-        //reset
-            var resetButton = parts.control.button_rect('resetButton', shape.resetButton.x, shape.resetButton.y, shape.resetButton.width, shape.resetButton.height, Math.PI/4, style.button.up, style.button.hover, style.button.down);
-                _mainObject.append(resetButton);
-                resetButton.onclick = function(){ reset(); }
-
-
-    //connection nodes
-        _mainObject.io = {};
-
-        _mainObject.io.in = parts.dynamic.connectionNode_data('_mainObject.io.in', shape.littleConnector.width*0.5, -shape.littleConnector.height*0.5, shape.littleConnector.width, shape.littleConnector.height);
-            _mainObject.prepend(_mainObject.io.in);
-            _mainObject.io.in.receive = function(address,data){if(address!='pulse'){return;}accumulate();};
-        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', shape.base[3][0]-shape.littleConnector.width*0.5, shape.base[3][1]-shape.littleConnector.height*1.25, shape.littleConnector.width, shape.littleConnector.height);
-            _mainObject.prepend(_mainObject.io.out);
-
-
-    //internal workings
-        function accumulate(){
-            attributes.currentLevel++;
-            if(attributes.currentLevel == attributes.levels){ reset(); }
-            else{ glowboxes[attributes.levels-attributes.currentLevel-1].on(); }
-        }
-        function reset(){ 
-            attributes.currentLevel = 0;
-            _mainObject.io.out.send('pulse');
-            for(var a = 0; a < attributes.levels; a++){
-                glowboxes[a].off();
+            //generate random value arrays
+            var sinArray = [];
+            var cosArray = [];
+            for(var a = 0; a < depth; a++){
+                sinArray.push(Math.random()*2-1);
+                cosArray.push(Math.random()*2-1);
             }
-            glowboxes[attributes.levels-1].on();
-        }
 
+            //normalize arrays
+            sinArray = normalizeArray(sinArray);
+            cosArray = normalizeArray(cosArray);
+
+            for(var a = 0; a < depth; a++){ 
+                //attempt to keep the waves within the viewport
+                sinArray[a] = sinArray[a]/depth;
+                cosArray[a] = cosArray[a]/depth;
+
+                //push these setting to the sliders
+                sinArray[a] = sinArray[a]/2 + 0.5;
+                cosArray[a] = cosArray[a]/2 + 0.5;
+            }
+
+            //push to sliders (which will push to the graph)
+            slidePanel_sin.set(sinArray);
+            slidePanel_cos.set(cosArray);
+        }
+        _mainObject.random = function(depth){
+            randomSettings(depth);
+        };
+        
     //setup
         reset();
-
+            
     return _mainObject;
 };
-__globals.objects.make_audioSink = function(x,y){
-    //set numbers
-        var type = 'audioSink';
-        var size = {
-            base: { width: 100, height: 50 },
-            connector: { width: 30, height: 30 }
-        };
-        var style = {
-            background: 'fill:rgba(200,200,200,1)',
-            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;'
-        };
-
-
-
-    //main
-    var _mainObject = parts.basic.g(type, x, y);
-        _mainObject._type = type;
-
-    //circuitry
-    _mainObject._destination = __globals.audio.context;
-
-    //elements
-        //backing
-        var backing = parts.basic.rect(null, 0, 0, size.base.width, size.base.height, 0, style.background);
-            _mainObject.append(backing);
-            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
-
-        _mainObject.append(parts.display.label(null, 20, 22.5, 'audio sink',style.text));
-            
-        //generate selection area
-            _mainObject.selectionArea = {};
-            _mainObject.selectionArea.box = [];
-            _mainObject.selectionArea.points = [];
-            _mainObject.updateSelectionArea = function(){
-                //the main shape we want to use
-                var temp = __globals.utility.getBoundingBox(backing);
-                _mainObject.selectionArea.points = [
-                    [temp.x,temp.y],
-                    [temp.x+temp.width,temp.y],
-                    [temp.x+temp.width,temp.y+temp.height],
-                    [temp.x,temp.y+temp.height]
-                ];
-                _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
+// __globals.objects.make_basicSynth = function(x,y){
+//     //set numbers
+//         var type = 'basicSynth';
+//         var shape = {
+//             base: [[0,0],[240,0],[240,40],[200,80],[0,80]],
+//             connector: { width: 30, height: 30 }
+//         };
+//         var style = {
+//             background: 'fill:rgba(200,200,200,1); stroke:none;',
+//             h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+//             h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+//             text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
     
-                //adjusting it for the object's position in space
-                temp = __globals.utility.getTransform(_mainObject);
-                _mainObject.selectionArea.box.forEach(function(element) {
-                    element[0] += temp[0];
-                    element[1] += temp[1];
-                });
-                _mainObject.selectionArea.points.forEach(function(element) {
-                    element[0] += temp[0];
-                    element[1] += temp[1];
-                });
-            };
-            _mainObject.updateSelectionArea();
+//             markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+    
+//             handle: 'fill:rgba(220,220,220,1)',
+//             slot: 'fill:rgba(50,50,50,1)',
+//             needle: 'fill:rgba(250,150,150,1)'
+//         };
 
 
-    //connection nodes
-        _mainObject.io = {};
-        _mainObject.io.audio_in = parts.dynamic.connectionNode_audio('connectionNode_audio', 0, size.base.width/2 - size.connector.width/2, size.base.height-size.connector.height/2, size.connector.width, size.connector.height, __globals.audio.context);
-            _mainObject.io.audio_in.out().connect(__globals.audio.context.destination);
-            _mainObject.append(_mainObject.io.audio_in);
 
-    return _mainObject;
-}
+//     //main
+//     var _mainObject = parts.basic.g(type, x, y);
+//         _mainObject._type = type;
+
+//     //circuitry
+//         _mainObject.__synthesizer = new parts.audio.synthesizer(__globals.audio.context);
+
+//     //elements
+//         //backing
+//         var backing = parts.basic.path(null, shape.base, 'L', style.background);
+//             _mainObject.append(backing);
+//             __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+
+//         //generate selection area
+//         __globals.utility.generateSelectionArea(shape.base, _mainObject);
+
+//         //panic button
+//             var panicButton = parts.control.button_rect('panicButton', 197.5, 47.5, 20, 20, Math.PI/4, 'fill:rgba(175,175,175,1)', 'fill:rgba(220,220,220,1)', 'fill:rgba(150,150,150,1)');
+//                 _mainObject.append(panicButton);
+//                 panicButton.onclick = function(){ _mainObject.__synthesizer.panic(); }
+
+//         //dials
+//             var x = 0;
+//             var y = 3;
+//             var spacing = 40;
+
+//             //gain
+//             _mainObject.append(parts.display.label(null, x+11,   y+40, 'gain', style.h1));
+//             _mainObject.append(parts.display.label(null, x+7,    y+34, '0',    style.h2));
+//             _mainObject.append(parts.display.label(null, x+16.5, y+5,  '1/2',  style.h2));
+//             _mainObject.append(parts.display.label(null, x+30,   y+34, '1',    style.h2));
+//             var dial_gain = parts.control.dial_continuous(
+//                 'dial_gain', x+20, y+20, 12,
+//                 (3*Math.PI)/4, 1.5*Math.PI,
+//                 style.handle, style.slot, style.needle, 1.2, style.markings
+//             );
+//             _mainObject.append(dial_gain);
+
+//             x += spacing;
+
+//             //attack
+//             _mainObject.append(parts.display.label(null, x+7,    y+40, 'attack', style.h1));
+//             _mainObject.append(parts.display.label(null, x+7,    y+34, '0',      style.h2));
+//             _mainObject.append(parts.display.label(null, x+18.5, y+4,  '5',      style.h2));
+//             _mainObject.append(parts.display.label(null, x+30,   y+34, '10',     style.h2));
+//             var dial_attack = parts.control.dial_continuous(
+//                 'dial_attack', x+20, y+20, 12,
+//                 (3*Math.PI)/4, 1.5*Math.PI,
+//                 style.handle, style.slot, style.needle, 1.2, style.markings
+//             );
+//             _mainObject.append(dial_attack);
+
+//             x += spacing;
+
+//             //release
+//             _mainObject.append(parts.display.label(null, x+5,    y+40, 'release', style.h1));
+//             _mainObject.append(parts.display.label(null, x+7,    y+34, '0',       style.h2));
+//             _mainObject.append(parts.display.label(null, x+18.5, y+4,  '5',       style.h2));
+//             _mainObject.append(parts.display.label(null, x+30,   y+34, '10',      style.h2));
+//             var dial_release = parts.control.dial_continuous(
+//                 'dial_release', x+20, y+20, 12,
+//                 (3*Math.PI)/4, 1.5*Math.PI,
+//                 style.handle, style.slot, style.needle, 1.2, style.markings
+//             );
+//             _mainObject.append(dial_release);
+
+//             x += spacing;
+
+//             //detune
+//             _mainObject.append(parts.display.label(null, x+7,     y+40, 'detune', style.h1));
+//             _mainObject.append(parts.display.label(null, x+2,     y+34, '-100',   style.h2));
+//             _mainObject.append(parts.display.label(null, x+18.75, y+4,  '0',      style.h2));
+//             _mainObject.append(parts.display.label(null, x+28,    y+34, '+100',   style.h2));
+//             var dial_detune = parts.control.dial_continuous(
+//                 'dial_detune', x+20, y+20, 12,
+//                 (3*Math.PI)/4, 1.5*Math.PI,
+//                 style.handle, style.slot, style.needle, 1.2, style.markings
+//             );
+//             _mainObject.append(dial_detune);
+
+//             x += spacing;
+
+//             //octave
+//             _mainObject.append(parts.display.label(null, x+7,     y+40, 'octave', style.h1));
+//             _mainObject.append(parts.display.label(null, x+4,     y+32, '-3',     style.h2));
+//             _mainObject.append(parts.display.label(null, x+0,     y+21, '-2',     style.h2));
+//             _mainObject.append(parts.display.label(null, x+4,     y+10, '-1',     style.h2));
+//             _mainObject.append(parts.display.label(null, x+18.75, y+5,  '0',      style.h2));
+//             _mainObject.append(parts.display.label(null, x+30,    y+10, '+1',     style.h2));
+//             _mainObject.append(parts.display.label(null, x+35,    y+21, '+2',     style.h2));
+//             _mainObject.append(parts.display.label(null, x+30,    y+32, '+3',     style.h2));
+//             var dial_octave = parts.control.dial_discrete(
+//                 'dial_octave', x+20, y+20, 12,
+//                 7, (3*Math.PI)/4, 1.5*Math.PI,
+//                 style.handle, style.slot, style.needle
+//             );
+//             _mainObject.append(dial_octave);
+
+//             x += spacing;
+
+//             //type
+//             _mainObject.append(parts.display.label(null, x+11, y+40, 'type', style.h1));
+//             _mainObject.append(parts.display.label(null, x+0,  y+32, 'sine', style.h2));
+//             _mainObject.append(parts.display.label(null, x+0,  y+18, 'tri',  style.h2));
+//             _mainObject.append(parts.display.label(null, x+10, y+6,  'squ',  style.h2));
+//             _mainObject.append(parts.display.label(null, x+27, y+7,  'saw',  style.h2));
+//             _mainObject.append(parts.basic.rect(null, x+35, y+19, 5, 2, 0, style.slot));
+//             var dial_type = parts.control.dial_discrete(
+//                 'dial_type', x+20, y+20, 12,
+//                 5, (3*Math.PI)/4, (5*Math.PI)/4,
+//                 style.handle, style.slot, style.needle
+//             );
+//             _mainObject.append(dial_type);
+
+//         //connection nodes
+//             _mainObject.io = {};
+
+//             //audio out
+//             var s = 30;
+//             _mainObject.io.audioOut = parts.dynamic.connectionNode_audio('_mainObject.io.audioOut', 1, -s/2, 20-s/2, s, s, __globals.audio.context);
+//             _mainObject.prepend(_mainObject.io.audioOut);
+
+//             //gain data in
+//             s = 15;
+//             _mainObject.io.dataIn_gain = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_gain', 20-s/2, -s/2, s, s);
+//             _mainObject.prepend(_mainObject.io.dataIn_gain);
+
+//             //attack data in
+//             _mainObject.io.dataIn_attack = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_attack', 20+spacing-s/2, -s/2, s, s);
+//             _mainObject.prepend(_mainObject.io.dataIn_attack);
+
+//             //release data in
+//             _mainObject.io.dataIn_release = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_release', 20+2*spacing-s/2, -s/2, s, s);
+//             _mainObject.prepend(_mainObject.io.dataIn_release);
+
+//             //detune data in
+//             _mainObject.io.dataIn_detune = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_detune', 20+3*spacing-s/2, -s/2, s, s);
+//             _mainObject.prepend(_mainObject.io.dataIn_detune);
+
+//             //octave data in
+//             _mainObject.io.dataIn_octave = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_octave', 20+4*spacing-s/2, -s/2, s, s);
+//             _mainObject.prepend(_mainObject.io.dataIn_octave);
+
+//             //type data in
+//             _mainObject.io.dataIn_type = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_type', 20+5*spacing-s/2, -s/2, s, s);
+//             _mainObject.prepend(_mainObject.io.dataIn_type);
+
+//             //periodicWave data in
+//             _mainObject.io.dataIn_periodicWave = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_periodicWave', 240-s/2, 20-s/2, s, s);
+//             _mainObject.prepend(_mainObject.io.dataIn_periodicWave);
+
+//             //midiNote data in
+//             s = 30;
+//             var rotation = Math.PI/4;
+//             var temp = __globals.utility.getCartesian(rotation, -s);
+//             _mainObject.io.dataIn_midiNote = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_midiNote', 240+temp.x, 60+temp.y, s, s, rotation);
+//             _mainObject.prepend(_mainObject.io.dataIn_midiNote);
+
+//     //wiring
+//     _mainObject.__synthesizer.out().connect( _mainObject.io.audioOut.in() );
+
+//         dial_gain.onChange = function(value){ _mainObject.__synthesizer.gain( value ); };
+//         dial_attack.onChange = function(value){ _mainObject.__synthesizer.attack( value*10 ); };
+//         dial_release.onChange = function(value){ _mainObject.__synthesizer.release( value*10 ); };
+//         dial_detune.onChange = function(value){ _mainObject.__synthesizer.detune( value*200 - 100 ); };
+//         dial_octave.onChange = function(value){ _mainObject.__synthesizer.octave(value-3); };
+//         dial_type.onChange = function(value){_mainObject.__synthesizer.type(['sine','triangle','square','sawtooth','custom'][value]);};
+
+//         _mainObject.io.dataIn_gain.receive =    function(address,data){ if(address != '%'){return;} dial_gain.set(data); };
+//         _mainObject.io.dataIn_attack.receive =  function(address,data){ if(address != '%'){return;} dial_attack.set(data); }; 
+//         _mainObject.io.dataIn_release.receive = function(address,data){ if(address != '%'){return;} dial_release.set(data); };    
+//         _mainObject.io.dataIn_detune.receive =  function(address,data){ if(address != '%'){return;} dial_detune.set(data); };
+//         _mainObject.io.dataIn_octave.receive =  function(address,data){ if(address != 'discrete'){return;} dial_octave.select(data); };
+//         _mainObject.io.dataIn_type.receive =    function(address,data){ if(address != 'discrete'){return;} dial_type.select(data); };
+//         _mainObject.io.dataIn_midiNote.receive = function(address,data){ if(address != 'midiNumber'){return;} _mainObject.__synthesizer.perform(data); };
+
+//     //setup
+//         dial_gain.set(0);
+//         dial_detune.set(0.5);
+//         dial_octave.select(3);
+
+//     return _mainObject;
+// };
 __globals.objects.make_launchpad = function(x,y){
     //set numbers
         var type = 'launchpad';
@@ -3777,14 +3809,734 @@ __globals.objects.make_launchpad = function(x,y){
 
     return _mainObject;
 };
+__globals.objects.make_audioScope = function(x,y){
+    //set numbers
+        var type = 'audioScope';
+        var attributes = {
+            framerateLimits: {min:1, max:30}
+        };
+        var shape = {
+            base: [[0,0],[195,0],[195,110],[0,110]],
+            connector: { width: 20, height: 20 },
+            graph: {x:5, y:5, width:150, height:100},
+            holdKey: {x: 160, y: 5, width: 30, height: 20},
+            dial: {x: 155, y: 30},
+        };
+        var style = {
+            background: 'fill:rgba(200,200,200,1); stroke:none;',
+            text: 'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;',
+            button: {
+                up: 'fill:rgba(175,175,175,1)',
+                hover: 'fill:rgba(220,220,220,1)',
+                down: 'fill:rgba(150,150,150,1)'
+            },
+            dial: {
+                handle: 'fill:rgba(220,220,220,1)',
+                slot: 'fill:rgba(50,50,50,1)',
+                needle: 'fill:rgba(250,150,250,1)',
+                markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
+            }
+        };
+
+    //main
+        var _mainObject = parts.basic.g(type, x, y);
+            _mainObject._type = type;
+
+    //elements
+        //backing
+        var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+        //generate selection area
+        __globals.utility.generateSelectionArea(shape.base, _mainObject);
+
+        //waveport
+        var graph = parts.display.grapher_audioScope(null, shape.graph.x, shape.graph.y, shape.graph.width, shape.graph.height);
+            _mainObject.append(graph);
+            graph.start();
+
+        //hold key
+        var holdKey = parts.control.key_rect(null, shape.holdKey.x, shape.holdKey.y, shape.holdKey.width, shape.holdKey.height, 0, style.button.up, style.button.hover, style.button.down);
+            _mainObject.append(holdKey);
+            holdKey.onkeydown = function(){graph.stop();};
+            holdKey.onkeyup =   function(){graph.start();};
+
+        //framerate dial
+            _mainObject.append(parts.display.label(null, shape.dial.x+6.5,  shape.dial.y+40, 'framerate', style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+6,    shape.dial.y+34, '1',        style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+16.5, shape.dial.y+4,  '15',       style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+30,   shape.dial.y+34, '30',       style.text));
+            var dial_framerate = parts.control.dial_continuous(
+                'dial_framerate', shape.dial.x+20, shape.dial.y+20, 12,
+                (3*Math.PI)/4, 1.5*Math.PI,
+                style.dial.handle, style.dial.slot, style.dial.needle, 1.2, style.dial.markings
+            );
+            _mainObject.append(dial_framerate);
+            dial_framerate.onChange = function(a){
+                graph.refreshRate(
+                    attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a)
+                );
+            };
+            dial_framerate.set(1);
+
+    //connection nodes
+        _mainObject.io = {};
+        _mainObject.io.audioIn = parts.dynamic.connectionNode_audio('_mainObject.io.audioIn', 0, -shape.connector.width*0.5, shape.connector.height*0.5, shape.connector.width, shape.connector.height, __globals.audio.context);
+            _mainObject.prepend(_mainObject.io.audioIn);
+            _mainObject.io.audioIn.out().connect(graph.getNode());
+            
+    return _mainObject;
+}
+__globals.objects.make_pulseClock = function(x,y){
+    //set numbers
+        var type = 'pulseClock';
+        var attributes = {
+            tempoLimits: {low:60, high:240},
+            interval: null
+        };
+        var shape = {
+            base: [[0,0],[90,0],[90,40],[0,40]],
+            connector: { width: 20, height: 20 },
+            readoutBacking :{x:45, y: 7.5, width: 12.5*3, height: 25},
+            readouts: [
+                {x: 45,   y: 7.5, width: 12.5, height: 25},
+                {x: 57.5, y: 7.5, width: 12.5, height: 25},
+                {x: 70,   y: 7.5, width: 12.5, height: 25},
+            ],
+            dial: {x: 0, y: 2}
+        };
+        var style = {
+            background: 'fill:rgba(200,200,200,1); stroke:none;',
+            text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+            dial: {
+                handle: 'fill:rgba(220,220,220,1)',
+                slot: 'fill:rgba(50,50,50,1)',
+                needle: 'fill:rgba(150,150,250,1)',
+                markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
+            },
+            readout: 'fill:rgba(0,0,0,1); font-size:12px; font-family:Courier New;',
+            readoutBacking: 'fill:rgba(0,0,0,1);'
+        };
+
+    //main
+        var _mainObject = parts.basic.g(type, x, y);
+            _mainObject._type = type;
+
+    //elements
+        //backing
+        var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+
+        //generate selection area
+        __globals.utility.generateSelectionArea(shape.base, _mainObject);
+
+        //tempo dial
+            _mainObject.append(parts.display.label(null, shape.dial.x+7,    shape.dial.y+34, '60',        style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+16.5, shape.dial.y+4,  '150',       style.text));
+            _mainObject.append(parts.display.label(null, shape.dial.x+30,   shape.dial.y+34, '240',       style.text));
+            var dial_tempo = parts.control.dial_continuous(
+                'dial_tempo', shape.dial.x+20, shape.dial.y+20, 12,
+                (3*Math.PI)/4, 1.5*Math.PI,
+                style.dial.handle, style.dial.slot, style.dial.needle, 1.2, style.dial.markings
+            );
+            _mainObject.append(dial_tempo);
+            dial_tempo.ondblclick = function(){ this.set(1/3); };
+            dial_tempo.onChange = function(data){
+                data = attributes.tempoLimits.low + (attributes.tempoLimits.high-attributes.tempoLimits.low)*data;
+                data = Math.round(data);
+                setReadout(data);
+            };
+            dial_tempo.onRelease = function(data){
+                data = attributes.tempoLimits.low + (attributes.tempoLimits.high-attributes.tempoLimits.low)*data;
+                data = Math.round(data);
+                setReadout(data);
+                startClock(data);
+            };
+
+        //tempo readout
+            _mainObject.append( parts.basic.rect(null, shape.readoutBacking.x, shape.readoutBacking.y, shape.readoutBacking.width, shape.readoutBacking.height, 0, style.readoutBacking) );
+
+            var segmentDisplays = [];
+            for(var a = 0; a < shape.readouts.length; a++){
+                var temp = parts.display.segmentDisplay(null, shape.readouts[a].x, shape.readouts[a].y, shape.readouts[a].width, shape.readouts[a].height);
+                    _mainObject.append(temp);
+                    segmentDisplays.push(temp);
+            }
+
+    //connection nodes
+        _mainObject.io = {};
+
+        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2][1]-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
+            _mainObject.prepend(_mainObject.io.out);
+
+    //internal workings
+        function setReadout(num){
+            num = ''+num;
+            while(num.length < 3){ num = '0'+num;}
+            for(var a = 0; a < num.length; a++){ segmentDisplays[a].enterCharacter(num[a]); }
+        }
+    
+        function startClock(tempo){
+            if(attributes.interval){
+                clearInterval(attributes.interval);
+            }
+
+            attributes.interval = setInterval(function(){
+                _mainObject.io.out.send('pulse');
+            },1000*(60/tempo));
+        }
+
+    //setup
+        dial_tempo.set(1/3);
+            
+    return _mainObject;
+};
+__globals.objects.make_audioSink = function(x,y){
+    //set numbers
+        var type = 'audioSink';
+        var size = {
+            base: { width: 100, height: 50 },
+            connector: { width: 30, height: 30 }
+        };
+        var style = {
+            background: 'fill:rgba(200,200,200,1)',
+            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;'
+        };
+
+
+
+    //main
+    var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
+
+    //circuitry
+    _mainObject._destination = __globals.audio.context;
+
+    //elements
+        //backing
+        var backing = parts.basic.rect(null, 0, 0, size.base.width, size.base.height, 0, style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+
+        _mainObject.append(parts.display.label(null, 20, 22.5, 'audio sink',style.text));
+            
+        //generate selection area
+            _mainObject.selectionArea = {};
+            _mainObject.selectionArea.box = [];
+            _mainObject.selectionArea.points = [];
+            _mainObject.updateSelectionArea = function(){
+                //the main shape we want to use
+                var temp = __globals.utility.getBoundingBox(backing);
+                _mainObject.selectionArea.points = [
+                    [temp.x,temp.y],
+                    [temp.x+temp.width,temp.y],
+                    [temp.x+temp.width,temp.y+temp.height],
+                    [temp.x,temp.y+temp.height]
+                ];
+                _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
+    
+                //adjusting it for the object's position in space
+                temp = __globals.utility.getTransform(_mainObject);
+                _mainObject.selectionArea.box.forEach(function(element) {
+                    element[0] += temp[0];
+                    element[1] += temp[1];
+                });
+                _mainObject.selectionArea.points.forEach(function(element) {
+                    element[0] += temp[0];
+                    element[1] += temp[1];
+                });
+            };
+            _mainObject.updateSelectionArea();
+
+
+    //connection nodes
+        _mainObject.io = {};
+        _mainObject.io.audio_in = parts.dynamic.connectionNode_audio('connectionNode_audio', 0, size.base.width/2 - size.connector.width/2, size.base.height-size.connector.height/2, size.connector.width, size.connector.height, __globals.audio.context);
+            _mainObject.io.audio_in.out().connect(__globals.audio.context.destination);
+            _mainObject.append(_mainObject.io.audio_in);
+
+    return _mainObject;
+}
+__globals.objects.make_audioDuplicator = function(x,y){
+    //set numbers
+    var type = 'audioDuplicator';
+    var shape = {
+        base: [[0,0],[55,0],[55,55],[0,55]],
+        littleConnector: { width: 20, height: 20 },
+        markings:{
+            rect:[
+                //flow lines
+                {x:(20/4), y:(20*0.25 + 20/2), width:45, height:2, angle:0}, //top horizontal
+                {x:(55*0.5), y:(20*0.25 + 20/2), width:2, height:25, angle:0}, //vertical
+                {x:(55*0.5), y:(20*1.5  + 20/2), width:22.5, height:2, angle:0} //bottom horizontal
+            ],
+            path:[
+                [[(55-10),(20*0 + 20/2)+1],[(55-2.5),(20*0.25 + 20/2)+1],[(55-10),(20*0.5 + 20/2)+1]], //upper arrow
+                [[(55-10),(20*1.25 + 20/2)+1],[(55-2.5),(20*1.5 + 20/2)+1],[(55-10),(20*1.75 + 20/2)+1]] //lower arrow
+            ]
+        }
+    };
+    var style = {        
+        background: 'fill:rgba(200,200,200,1); stroke:none;',
+        markings: 'fill:rgba(150,150,150,1)',
+    };
+
+
+    //main
+    var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
+
+    //elements
+        //backing
+        var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+
+        //generate selection area
+        __globals.utility.generateSelectionArea(shape.base, _mainObject);
+
+        //markings
+            for(var a = 0; a < shape.markings.rect.length; a++){
+                _mainObject.append(parts.basic.rect(null, shape.markings.rect[a].x,shape.markings.rect[a].y,shape.markings.rect[a].width,shape.markings.rect[a].height,shape.markings.rect[a].angle, style.markings));
+            }
+            for(var a = 0; a < shape.markings.path.length; a++){
+                _mainObject.append(parts.basic.path(null, shape.markings.path[a], 'L', style.markings));
+            }
+
+    //connection nodes
+        _mainObject.io = {};
+
+        _mainObject.io.in = parts.dynamic.connectionNode_audio('_mainObject.io.in', 0, -shape.littleConnector.width/2, shape.littleConnector.height*0.25, shape.littleConnector.width, shape.littleConnector.height, __globals.audio.context);
+            _mainObject.prepend(_mainObject.io.in);
+        _mainObject.io.out_1 = parts.dynamic.connectionNode_audio('_mainObject.io.out_1', 1, shape.base[2][0]-shape.littleConnector.width/2, shape.littleConnector.height*0.25, shape.littleConnector.width, shape.littleConnector.height, __globals.audio.context);
+            _mainObject.prepend(_mainObject.io.out_1);
+        _mainObject.io.out_2 = parts.dynamic.connectionNode_audio('_mainObject.io.out_2', 1, shape.base[2][0]-shape.littleConnector.width/2, shape.littleConnector.height*1.5, shape.littleConnector.width, shape.littleConnector.height, __globals.audio.context);
+            _mainObject.prepend(_mainObject.io.out_2);
+    
+        _mainObject.io.in.out().connect(_mainObject.io.out_1.in());
+        _mainObject.io.in.out().connect(_mainObject.io.out_2.in());
+
+    return _mainObject;
+};
+__globals.objects.make_basicSynth = function(x,y){
+    //set numbers
+        var type = 'basicSynth';
+        var attributes = {
+            detuneLimits: {min:-100, max:100}
+        };
+        var shape = {
+            base: [[0,0],[240,0],[240,40],[200,80],[0,80]],
+            connector: { width: 30, height: 30 }
+        };
+        var style = {
+            background: 'fill:rgba(200,200,200,1); stroke:none;',
+            h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+            h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
+    
+            markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+    
+            handle: 'fill:rgba(220,220,220,1)',
+            slot: 'fill:rgba(50,50,50,1)',
+            needle: 'fill:rgba(250,150,150,1)'
+        };
+
+
+
+    //main
+    var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
+
+    //circuitry
+        _mainObject.__synthesizer = new parts.audio.synthesizer(__globals.audio.context);
+
+    //elements
+        //backing
+        var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+
+        //generate selection area
+        __globals.utility.generateSelectionArea(shape.base, _mainObject);
+
+        //panic button
+            var panicButton = parts.control.button_rect('panicButton', 197.5, 47.5, 20, 20, Math.PI/4, 'fill:rgba(175,175,175,1)', 'fill:rgba(220,220,220,1)', 'fill:rgba(150,150,150,1)');
+                _mainObject.append(panicButton);
+                panicButton.onclick = function(){ _mainObject.__synthesizer.panic(); }
+
+        //dials
+            var x = 0;
+            var y = 3;
+            var spacing = 40;
+
+            //gain
+            _mainObject.append(parts.display.label(null, x+11,   y+40, 'gain', style.h1));
+            _mainObject.append(parts.display.label(null, x+7,    y+34, '0',    style.h2));
+            _mainObject.append(parts.display.label(null, x+16.5, y+5,  '1/2',  style.h2));
+            _mainObject.append(parts.display.label(null, x+30,   y+34, '1',    style.h2));
+            var dial_gain = parts.control.dial_continuous(
+                'dial_gain', x+20, y+20, 12,
+                (3*Math.PI)/4, 1.5*Math.PI,
+                style.handle, style.slot, style.needle, 1.2, style.markings
+            );
+            _mainObject.append(dial_gain);
+
+            x += spacing;
+
+            //attack
+            _mainObject.append(parts.display.label(null, x+7,    y+40, 'attack', style.h1));
+            _mainObject.append(parts.display.label(null, x+7,    y+34, '0',      style.h2));
+            _mainObject.append(parts.display.label(null, x+18.5, y+4,  '5',      style.h2));
+            _mainObject.append(parts.display.label(null, x+30,   y+34, '10',     style.h2));
+            var dial_attack = parts.control.dial_continuous(
+                'dial_attack', x+20, y+20, 12,
+                (3*Math.PI)/4, 1.5*Math.PI,
+                style.handle, style.slot, style.needle, 1.2, style.markings
+            );
+            _mainObject.append(dial_attack);
+
+            x += spacing;
+
+            //release
+            _mainObject.append(parts.display.label(null, x+5,    y+40, 'release', style.h1));
+            _mainObject.append(parts.display.label(null, x+7,    y+34, '0',       style.h2));
+            _mainObject.append(parts.display.label(null, x+18.5, y+4,  '5',       style.h2));
+            _mainObject.append(parts.display.label(null, x+30,   y+34, '10',      style.h2));
+            var dial_release = parts.control.dial_continuous(
+                'dial_release', x+20, y+20, 12,
+                (3*Math.PI)/4, 1.5*Math.PI,
+                style.handle, style.slot, style.needle, 1.2, style.markings
+            );
+            _mainObject.append(dial_release);
+
+            x += spacing;
+
+            //detune
+            _mainObject.append(parts.display.label(null, x+7,     y+40, 'detune', style.h1));
+            _mainObject.append(parts.display.label(null, x+2,     y+34, ''+attributes.detuneLimits.min,   style.h2));
+            _mainObject.append(parts.display.label(null, x+18.75, y+4,  '0',      style.h2));
+            _mainObject.append(parts.display.label(null, x+28,    y+34, ''+attributes.detuneLimits.max,   style.h2));
+            var dial_detune = parts.control.dial_continuous(
+                'dial_detune', x+20, y+20, 12,
+                (3*Math.PI)/4, 1.5*Math.PI,
+                style.handle, style.slot, style.needle, 1.2, style.markings
+            );
+            _mainObject.append(dial_detune);
+
+            x += spacing;
+
+            //octave
+            _mainObject.append(parts.display.label(null, x+7,     y+40, 'octave', style.h1));
+            _mainObject.append(parts.display.label(null, x+4,     y+32, '-3',     style.h2));
+            _mainObject.append(parts.display.label(null, x+0,     y+21, '-2',     style.h2));
+            _mainObject.append(parts.display.label(null, x+4,     y+10, '-1',     style.h2));
+            _mainObject.append(parts.display.label(null, x+18.75, y+5,  '0',      style.h2));
+            _mainObject.append(parts.display.label(null, x+30,    y+10, '+1',     style.h2));
+            _mainObject.append(parts.display.label(null, x+35,    y+21, '+2',     style.h2));
+            _mainObject.append(parts.display.label(null, x+30,    y+32, '+3',     style.h2));
+            var dial_octave = parts.control.dial_discrete(
+                'dial_octave', x+20, y+20, 12,
+                7, (3*Math.PI)/4, 1.5*Math.PI,
+                style.handle, style.slot, style.needle
+            );
+            _mainObject.append(dial_octave);
+
+            x += spacing;
+
+            //waveType
+            _mainObject.append(parts.display.label(null, x+11, y+40, 'wave', style.h1));
+            _mainObject.append(parts.display.label(null, x+0,  y+32, 'sine', style.h2));
+            _mainObject.append(parts.display.label(null, x+0,  y+18, 'tri',  style.h2));
+            _mainObject.append(parts.display.label(null, x+10, y+6,  'squ',  style.h2));
+            _mainObject.append(parts.display.label(null, x+27, y+7,  'saw',  style.h2));
+            _mainObject.append(parts.basic.rect(null, x+35, y+19, 5, 2, 0, style.slot));
+            var dial_waveType = parts.control.dial_discrete(
+                'dial_waveType', x+20, y+20, 12,
+                5, (3*Math.PI)/4, (5*Math.PI)/4,
+                style.handle, style.slot, style.needle
+            );
+            _mainObject.append(dial_waveType);
+
+        //connection nodes
+            _mainObject.io = {};
+
+            //audio out
+            var s = 30;
+            _mainObject.io.audioOut = parts.dynamic.connectionNode_audio('_mainObject.io.audioOut', 1, -s/2, 20-s/2, s, s, __globals.audio.context);
+            _mainObject.prepend(_mainObject.io.audioOut);
+
+            //gain data in
+            s = 15;
+            _mainObject.io.dataIn_gain = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_gain', 20-s/2, -s/2, s, s);
+            _mainObject.prepend(_mainObject.io.dataIn_gain);
+
+            //attack data in
+            _mainObject.io.dataIn_attack = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_attack', 20+spacing-s/2, -s/2, s, s);
+            _mainObject.prepend(_mainObject.io.dataIn_attack);
+
+            //release data in
+            _mainObject.io.dataIn_release = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_release', 20+2*spacing-s/2, -s/2, s, s);
+            _mainObject.prepend(_mainObject.io.dataIn_release);
+
+            //detune data in
+            _mainObject.io.dataIn_detune = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_detune', 20+3*spacing-s/2, -s/2, s, s);
+            _mainObject.prepend(_mainObject.io.dataIn_detune);
+
+            //octave data in
+            _mainObject.io.dataIn_octave = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_octave', 20+4*spacing-s/2, -s/2, s, s);
+            _mainObject.prepend(_mainObject.io.dataIn_octave);
+
+            //waveType data in
+            _mainObject.io.dataIn_waveType = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_waveType', 20+5*spacing-s/2, -s/2, s, s);
+            _mainObject.prepend(_mainObject.io.dataIn_waveType);
+
+            //periodicWave data in
+            _mainObject.io.dataIn_periodicWave = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_periodicWave', 240-s/2, 20-s/2, s, s);
+            _mainObject.prepend(_mainObject.io.dataIn_periodicWave);
+
+            //midiNote data in
+            s = 30;
+            var rotation = Math.PI/4;
+            var temp = __globals.utility.getCartesian(rotation, -s);
+            _mainObject.io.dataIn_midiNote = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_midiNote', 240+temp.x, 60+temp.y, s, s, rotation);
+            _mainObject.prepend(_mainObject.io.dataIn_midiNote);
+
+    //wiring
+    _mainObject.__synthesizer.out().connect( _mainObject.io.audioOut.in() );
+
+        dial_gain.onChange = function(value){ _mainObject.__synthesizer.gain( value ); };
+        dial_attack.onChange = function(value){ _mainObject.__synthesizer.attack( value ); };
+        dial_release.onChange = function(value){ _mainObject.__synthesizer.release( value ); };
+        dial_detune.onChange = function(value){ _mainObject.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); };
+        dial_octave.onChange = function(value){ _mainObject.__synthesizer.octave(value-3); };
+        dial_waveType.onChange = function(value){_mainObject.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]);};
+
+        _mainObject.io.dataIn_gain.receive = function(address,data){ 
+            switch(address){
+                case '%': dial_gain.set(data); break;
+                case '%t': 
+                    _mainObject.__synthesizer.gain(data.target,data.time,data.curve);
+                    dial_gain.smoothSet(data.target,data.time,data.curve,false);
+                break;
+                default: break;
+            }
+        };
+        _mainObject.io.dataIn_detune.receive = function(address,data){
+            switch(address){
+                case '%': dial_detune.set(data); break;
+                case '%t': 
+                    _mainObject.__synthesizer.detune((data.target*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min),data.time,data.curve);
+                    dial_detune.smoothSet(data.target,data.time,data.curve,false);
+                break;
+                default: break;
+            }
+        };
+        _mainObject.io.dataIn_attack.receive =          function(address,data){ if(address != '%'){return;} dial_attack.set(data); }; 
+        _mainObject.io.dataIn_release.receive =         function(address,data){ if(address != '%'){return;} dial_release.set(data); };    
+        _mainObject.io.dataIn_octave.receive =          function(address,data){ if(address != 'discrete'){return;} dial_octave.select(data); };
+        _mainObject.io.dataIn_waveType.receive =            function(address,data){ if(address != 'discrete'){return;} dial_waveType.select(data); };
+        _mainObject.io.dataIn_periodicWave.receive =    function(address,data){ if(address != 'periodicWave'){return;} _mainObject.__synthesizer.periodicWave(data); };
+        _mainObject.io.dataIn_midiNote.receive =        function(address,data){ if(address != 'midiNumber'){return;} _mainObject.__synthesizer.perform(data); };
+
+    //setup
+        dial_gain.set(0);
+        dial_detune.set(0.5);
+        dial_octave.select(3);
+
+    return _mainObject;
+};
+/*
+synthesizer 1
+    waveType
+    gain
+    note
+    octave
+    detune
+
+    attack
+    release
+
+    pitchBend
+*/
+parts.audio.synthesizer = function(
+    context,
+    waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
+    gain=1, 
+    attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+    detune=0, octave=0
+){
+    //components
+        var mainOut = context.createGain();
+            mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
+
+    //live oscillators
+        var liveOscillators = {};
+
+    //options
+        this.waveType = function(a){if(a==null){return waveType;}waveType=a;};
+        this.periodicWave = function(a){if(a==null){return periodicWave;}periodicWave=a;};
+        this.gain = function(target,time,curve){
+            return changeAudioParam(mainOut.gain,target,time,curve);
+        };
+        this.attack = function(time,curve){
+            if(time==null&&curve==null){return attack;}
+            attack.time = time ? time : attack.time;
+            attack.curve = curve ? curve : attack.curve;
+        };
+        this.release = function(time,curve){
+            if(time==null&&curve==null){return release;}
+            release.time = time ? time : release.time;
+            release.curve = curve ? curve : release.curve;
+        };
+        this.octave = function(a){if(a==null){return octave;}octave=a;};
+        this.detune = function(target,time,curve){
+            if(a==null){return detune;}
+
+            //change stored value for any new oscillators that are made
+                var start = detune;
+                var mux = target-start;
+                var stepsPerSecond = Math.round(Math.abs(mux));
+                var totalSteps = stepsPerSecond*time;
+
+                var steps = [1];
+                switch(curve){
+                    case 'linear': steps = __globals.utility.curve.linear(totalSteps); break;
+                    case 'exponential': steps = __globals.utility.curve.exponential(totalSteps); break;
+                    case 's': steps = __globals.utility.curve.s(totalSteps,8); break;
+                    case 'instant': default: break;
+                }
+                
+                if(steps.length != 0){
+                    var interval = setInterval(function(){
+                        detune = start+(steps.shift()*mux);
+                        if(steps.length == 0){clearInterval(interval);}
+                    },1000/stepsPerSecond);
+                }
+
+            //instruct liveOscillators to adjust their values
+                var OSCs = Object.keys(liveOscillators);
+                for(var b = 0; b < OSCs.length; b++){ 
+                    liveOscillators[OSCs[b]].detune(target,time,curve);
+                }
+        };
+
+    //output node
+        this.out = function(){return mainOut;}
+
+    //oscillator generator
+        function makeOSC(
+            context, connection, midiNumber,
+            type, periodicWave, 
+            gain, attack, release,
+            detune, octave
+        ){
+            return new function(){
+                this.generator = context.createOscillator();
+                    if(type == 'custom'){ 
+                        this.generator.setPeriodicWave( 
+                            // context.createPeriodicWave(new Float32Array(periodicWave.sin),new Float32Array(periodicWave.cos))
+                            context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                        ); 
+                    }else{ this.generator.type = type; }
+                    this.generator.frequency.setTargetAtTime(__globals.audio.midiNumber_frequency(midiNumber,octave), context.currentTime, 0);
+                    this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                    this.generator.start(0);
+
+                this.gain = context.createGain();
+                    this.generator.connect(this.gain);
+                    this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                    changeAudioParam(this.gain.gain, gain, attack.time, attack.curve, false);
+                    this.gain.connect(connection);
+
+                this.detune = function(target,time,curve){
+                    changeAudioParam(this.generator.detune,target,time,curve);
+                };
+                this.changeVelocity = function(a){
+                    changeAudioParam(this.gain.gain,a,attack.time,attack.curve);
+                };
+                this.stop = function(){
+                    changeAudioParam(this.gain.gain,0,release.time,release.curve, false);
+                    setTimeout(function(that){
+                        that.gain.disconnect(); 
+                        that.generator.stop(); 
+                        that.generator.disconnect(); 
+                        that.gain=null; 
+                        that.generator=null; 
+                    }, release.time*1000, this);
+                };
+            };
+        }
+
+    //methods
+        this.perform = function(note){
+            if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
+            else if( !liveOscillators[note.num] ){ 
+                //create new tone
+                liveOscillators[note.num] = makeOSC(context, mainOut, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave); 
+            }
+            else if( note.velocity == 0 ){ 
+                //stop and destroy tone
+                liveOscillators[note.num].stop();
+                delete liveOscillators[note.num];
+            }
+            else{
+                //adjust tone
+                liveOscillators[note.num].changeVelocity(note.velocity);
+            }
+        };
+        this.panic = function(){
+            var OSCs = Object.keys(liveOscillators);
+            for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+        };
+
+    //functions
+        function changeAudioParam(audioParam,target,time,curve,cancelScheduledValues=true){
+            if(target==null){return audioParam.value;}
+
+            if(cancelScheduledValues){
+                audioParam.cancelScheduledValues(context.currentTime);
+            }
+            
+            switch(curve){
+                case 'linear': 
+                    audioParam.linearRampToValueAtTime(target, context.currentTime+time);
+                break;
+                case 'exponential':
+                    console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
+                    if(target == 0){target = 1/10000;}
+                    audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
+                break;
+                case 's':
+                    var mux = target - audioParam.value;
+                    var array = __globals.utility.curve.s(10,8);
+                    for(var a = 0; a < array.length; a++){
+                        array[a] = audioParam.value + array[a]*mux;
+                    }
+                    audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
+                break;
+                case 'instant': default:
+                    audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                break;
+            }
+        }
+};
 
 
 
 
+// var synth = new parts.audio.synthesizer( __globals.audio.context );
+
+// synth.out().connect(__globals.audio.context.destination);
+// synth.gain(1);
+// synth.perform({'num':80,'velocity':0.9});
 
 
 var audioSink_1 = __globals.objects.make_audioSink(25,25);
 __globals.panes.middleground.append( audioSink_1 );
+
+var audioDuplicator_1 = __globals.objects.make_audioDuplicator(150,200);
+__globals.panes.middleground.append( audioDuplicator_1 );
 
 var basicSynth_1 = __globals.objects.make_basicSynth(200,25);
 __globals.panes.middleground.append( basicSynth_1 );
@@ -3795,23 +4547,67 @@ __globals.panes.middleground.append( launchpad_1 );
 var pulseClock_1 = __globals.objects.make_pulseClock(700,25);
 __globals.panes.middleground.append( pulseClock_1 );
 
-var dataDuplicator_1 = __globals.objects.make_dataDuplicator(200,250);
-__globals.panes.middleground.append( dataDuplicator_1 );
 
-var accumulator_1 = __globals.objects.make_accumulator(300,250);
-__globals.panes.middleground.append( accumulator_1 );
 
-var selectorSender_1 = __globals.objects.make_selectorSender(100,250);
-__globals.panes.middleground.append( selectorSender_1 );
+basicSynth_1.io.dataIn_gain.receive('%',1/2);
+
+launchpad_1.importData({
+    pages: 
+    [
+        [
+            [false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, true,  false],
+            [false, false, true,  false, false, false, false, false],
+            [false, false, false, false, false, true,  false, true ],
+            [false, true,  false, true,  false, false, false, false],
+            [false, false, false, false, true,  false, false, false],
+            [true, false,  false, false, false, false, false, false]
+        ]
+    ],
+    currentPage: 0,
+    velocityDial: 1/2
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var periodicWaveMaker_1 = __globals.objects.make_periodicWaveMaker(700,125);
+__globals.panes.middleground.append( periodicWaveMaker_1 );
+
+var audioScope_1 = __globals.objects.make_audioScope(400,200);
+__globals.panes.middleground.append( audioScope_1 );
+
+
+
+
+
+
+
+
+
+
+
+
+periodicWaveMaker_1.io.out.connectTo(basicSynth_1.io.dataIn_periodicWave);
 
 pulseClock_1.io.out.connectTo(launchpad_1.io.pulseIn);
 launchpad_1.io.out.connectTo(basicSynth_1.io.dataIn_midiNote);
-basicSynth_1.io.audioOut.connectTo(audioSink_1.io.audio_in);
 
-
-
-// __globals.utility.gotoPosition(-1631.06, -1044.94, 4.59435, 0);
-
+basicSynth_1.io.audioOut.connectTo(audioDuplicator_1.io.in);
+audioDuplicator_1.io.out_1.connectTo(audioScope_1.io.audioIn);
+audioDuplicator_1.io.out_2.connectTo(audioSink_1.io.audio_in);
         }
     }
 

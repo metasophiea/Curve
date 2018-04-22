@@ -78,7 +78,7 @@ __globals.objects.make_periodicWaveMaker = function(x,y){
             //adjust values
             var newWave = []
             for(var a = 0; a < wave.length; a++){
-                newWave[a] = wave[a]*2 - 1;
+                newWave[a] = 1 - wave[a]*2;
             }
 
             //prepend that pesky leading value
@@ -96,7 +96,7 @@ __globals.objects.make_periodicWaveMaker = function(x,y){
             //adjust values
             var newWave = [];
             for(var a = 0; a < wave.length; a++){
-                newWave[a] = wave[a]*2 - 1;
+                newWave[a] = 1 - wave[a]*2;
             }
 
             //prepend that pesky leading value

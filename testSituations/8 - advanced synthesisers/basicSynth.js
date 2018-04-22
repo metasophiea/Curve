@@ -1,6 +1,9 @@
 __globals.objects.make_basicSynth = function(x,y){
     //set numbers
         var type = 'basicSynth';
+        var attributes = {
+            detuneLimits: {min:-100, max:100}
+        };
         var shape = {
             base: [[0,0],[240,0],[240,40],[200,80],[0,80]],
             connector: { width: 30, height: 30 }
@@ -90,9 +93,9 @@ __globals.objects.make_basicSynth = function(x,y){
 
             //detune
             _mainObject.append(parts.display.label(null, x+7,     y+40, 'detune', style.h1));
-            _mainObject.append(parts.display.label(null, x+2,     y+34, '-100',   style.h2));
+            _mainObject.append(parts.display.label(null, x+2,     y+34, ''+attributes.detuneLimits.min,   style.h2));
             _mainObject.append(parts.display.label(null, x+18.75, y+4,  '0',      style.h2));
-            _mainObject.append(parts.display.label(null, x+28,    y+34, '+100',   style.h2));
+            _mainObject.append(parts.display.label(null, x+28,    y+34, ''+attributes.detuneLimits.max,   style.h2));
             var dial_detune = parts.control.dial_continuous(
                 'dial_detune', x+20, y+20, 12,
                 (3*Math.PI)/4, 1.5*Math.PI,
@@ -120,19 +123,19 @@ __globals.objects.make_basicSynth = function(x,y){
 
             x += spacing;
 
-            //type
-            _mainObject.append(parts.display.label(null, x+11, y+40, 'type', style.h1));
+            //waveType
+            _mainObject.append(parts.display.label(null, x+11, y+40, 'wave', style.h1));
             _mainObject.append(parts.display.label(null, x+0,  y+32, 'sine', style.h2));
             _mainObject.append(parts.display.label(null, x+0,  y+18, 'tri',  style.h2));
             _mainObject.append(parts.display.label(null, x+10, y+6,  'squ',  style.h2));
             _mainObject.append(parts.display.label(null, x+27, y+7,  'saw',  style.h2));
             _mainObject.append(parts.basic.rect(null, x+35, y+19, 5, 2, 0, style.slot));
-            var dial_type = parts.control.dial_discrete(
-                'dial_type', x+20, y+20, 12,
+            var dial_waveType = parts.control.dial_discrete(
+                'dial_waveType', x+20, y+20, 12,
                 5, (3*Math.PI)/4, (5*Math.PI)/4,
                 style.handle, style.slot, style.needle
             );
-            _mainObject.append(dial_type);
+            _mainObject.append(dial_waveType);
 
         //connection nodes
             _mainObject.io = {};
@@ -163,9 +166,9 @@ __globals.objects.make_basicSynth = function(x,y){
             _mainObject.io.dataIn_octave = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_octave', 20+4*spacing-s/2, -s/2, s, s);
             _mainObject.prepend(_mainObject.io.dataIn_octave);
 
-            //type data in
-            _mainObject.io.dataIn_type = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_type', 20+5*spacing-s/2, -s/2, s, s);
-            _mainObject.prepend(_mainObject.io.dataIn_type);
+            //waveType data in
+            _mainObject.io.dataIn_waveType = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_waveType', 20+5*spacing-s/2, -s/2, s, s);
+            _mainObject.prepend(_mainObject.io.dataIn_waveType);
 
             //periodicWave data in
             _mainObject.io.dataIn_periodicWave = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_periodicWave', 240-s/2, 20-s/2, s, s);
@@ -182,18 +185,36 @@ __globals.objects.make_basicSynth = function(x,y){
     _mainObject.__synthesizer.out().connect( _mainObject.io.audioOut.in() );
 
         dial_gain.onChange = function(value){ _mainObject.__synthesizer.gain( value ); };
-        dial_attack.onChange = function(value){ _mainObject.__synthesizer.attack( value*10 ); };
-        dial_release.onChange = function(value){ _mainObject.__synthesizer.release( value*10 ); };
-        dial_detune.onChange = function(value){ _mainObject.__synthesizer.detune( value*200 - 100 ); };
+        dial_attack.onChange = function(value){ _mainObject.__synthesizer.attack( value ); };
+        dial_release.onChange = function(value){ _mainObject.__synthesizer.release( value ); };
+        dial_detune.onChange = function(value){ _mainObject.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); };
         dial_octave.onChange = function(value){ _mainObject.__synthesizer.octave(value-3); };
-        dial_type.onChange = function(value){_mainObject.__synthesizer.type(['sine','triangle','square','sawtooth','custom'][value]);};
+        dial_waveType.onChange = function(value){_mainObject.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]);};
 
-        _mainObject.io.dataIn_gain.receive =            function(address,data){ if(address != '%'){return;} dial_gain.set(data); };
+        _mainObject.io.dataIn_gain.receive = function(address,data){ 
+            switch(address){
+                case '%': dial_gain.set(data); break;
+                case '%t': 
+                    _mainObject.__synthesizer.gain(data.target,data.time,data.curve);
+                    dial_gain.smoothSet(data.target,data.time,data.curve,false);
+                break;
+                default: break;
+            }
+        };
+        _mainObject.io.dataIn_detune.receive = function(address,data){
+            switch(address){
+                case '%': dial_detune.set(data); break;
+                case '%t': 
+                    _mainObject.__synthesizer.detune((data.target*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min),data.time,data.curve);
+                    dial_detune.smoothSet(data.target,data.time,data.curve,false);
+                break;
+                default: break;
+            }
+        };
         _mainObject.io.dataIn_attack.receive =          function(address,data){ if(address != '%'){return;} dial_attack.set(data); }; 
         _mainObject.io.dataIn_release.receive =         function(address,data){ if(address != '%'){return;} dial_release.set(data); };    
-        _mainObject.io.dataIn_detune.receive =          function(address,data){ if(address != '%'){return;} dial_detune.set(data); };
         _mainObject.io.dataIn_octave.receive =          function(address,data){ if(address != 'discrete'){return;} dial_octave.select(data); };
-        _mainObject.io.dataIn_type.receive =            function(address,data){ if(address != 'discrete'){return;} dial_type.select(data); };
+        _mainObject.io.dataIn_waveType.receive =            function(address,data){ if(address != 'discrete'){return;} dial_waveType.select(data); };
         _mainObject.io.dataIn_periodicWave.receive =    function(address,data){ if(address != 'periodicWave'){return;} _mainObject.__synthesizer.periodicWave(data); };
         _mainObject.io.dataIn_midiNote.receive =        function(address,data){ if(address != 'midiNumber'){return;} _mainObject.__synthesizer.perform(data); };
 

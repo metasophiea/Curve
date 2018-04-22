@@ -18,30 +18,47 @@ this.slidePanel_vertical = function(
 
 
     //methods
-    object.slide = function(index){ return object.children[object.id+'_'+index]; };
-    object.get = function(){
-        var outputArray = [];
-        for(var b = 0; b < count; b++){
-            outputArray.push(this.slide(b).get());
-        }
-        return outputArray;
-    };
-    object.set = function(a, update=true){
-        for(var b = 0; b < a.length; b++){
-            this.slide(b).set(a[b],false);
-        }
-        for(var b = a.length; b < count; b++){
-            this.slide(b).set(1/2,false);
-        }
+        object.slide = function(index){ return object.children[object.id+'_'+index]; };
+        object.get = function(){
+            var outputArray = [];
+            for(var b = 0; b < count; b++){
+                outputArray.push(this.slide(b).get());
+            }
+            return outputArray;
+        };
+        object.set = function(a, live=false, update=true){
+            for(var b = 0; b < a.length; b++){
+                this.slide(b).set(a[b],live,false);
+            }
+            for(var b = a.length; b < count; b++){
+                this.slide(b).set(1/2,live,false);
+            }
 
-        if(update&&this.onChange){ this.onChange(a); }
-    };
-    object.setAll = function(a){
-        for(var b = 0; b < count; b++){
-            this.slide(b).set(a,false);
-        }
-    };
-    object.onChange = function(){};
+            if(update&&this.onChange){ this.onChange(a); }
+            if(update&&!live&&this.onRelease){ this.onRelease(a); }
+        };
+        object.smoothSet = function(a,time,curve,update=true){
+            for(var b = 0; b < a.length; b++){
+                this.slide(b).smoothSet(a[b],time,curve,update);
+            }
+            for(var b = a.length; b < count; b++){
+                this.slide(b).smoothSet(1/2,time,curve,update);
+            }
+        };
+        object.setAll = function(a, live=false, update=true){
+            for(var b = 0; b < count; b++){
+                this.slide(b).set(a,live,update);
+            }
+        };
+        object.smoothSetAll = function(a, time, curve, update=true){
+            for(var b = 0; b < count; b++){
+                this.slide(b).smoothSet(a,time,curve,update);
+            }
+        };
+
+    //callback
+        object.onChange = function(){};
+        object.onRelease = function(){};
 
     return object;
 };

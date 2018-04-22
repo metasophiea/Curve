@@ -1,0 +1,66 @@
+ ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-04-20
+  - updated keyboard interaction, so now objects have to declare what keys they
+    want to use, and what modifiers will go with them (none, meta, control, alt
+    and shift) The system behind handles everything else, and knows to run the
+    global functions if nothing matches. Objects will also be told about 
+    modifier keys that accompany a key.
+  - wrote up an audio duplicator and added it to test situation 8
+
+  future ideas
+  - onmouseleave for objects?
+
+
+2018-04-19
+  - periodicWaveMaker's slides were entering values upside-down, so, fixed that
+  - renamed 'compiler.py' to 'gravity' on Dylan's suggestion as it sounds cooler
+
+  future ideas
+  - make the audio connection nodes and cables flicker with the audio that they
+    are carrying
+  - redo keyboard capture, so object don't capture the entire thing when they
+    only want one key. Have the objects declare what keys they want.
+
+
+2018-04-18
+  - fixed a problem with the dial_continuous, slide_horizontal and 
+    slidePanel_vertical where applying overlapping smoothSets caused confusion
+    in the animation. Now, the previous one is just cancelled and the new one
+    takes over from where the old one left off
+  - updated the synthesizer to incorporate different transition curves in attack
+    and release (exponential still doesn't work though)
+  - had to reverse sin/cos periodic wave input in the synthesizer..curious
+  - began work on an audio scope, it can accept audio data and visualize it,
+    there's also a 'hold' key and a dial for adjusting the refresh rate
+
+  future ideas
+  - audio duplicator
+  - audio combiner
+
+
+2018-04-17
+  - fixed key_rect in test situation 1 test object (remember not to on
+    onmouse-anything. It's all onkey-something)
+  - added curve maker into utilities (linear, reverse_linear, sin, cos, s,
+    exponential)
+  - added smoothSet to dial_continuous, slide_vertical, slide_horizontal,
+    slidePanel_vertical and slidePanel_horizontal
+  - in test situation one, the rect_button now causes some new functions
+  - updated the synthesizer to have smooth transition options when setting gain
+    and detune (exponential doesn't seem to work though; but user-defined does
+    ..curious)
+  - updated basicSynth to accept smooth changing values for gain and detune, and
+    adjust the dials and synthesizer accordingly along with the stored value for
+    any new oscillators that are created during the time of transition
+
+  future ideas
+  - change attack and release in basicSynth and the synthesizer to incorporate
+    different transition curves
+
+
+2018-04-16
+  - added glowbox to test object in test situation one
+  - deleted unneeded files
+  - fixed up the first test situation a little to use the latest writings
+  - looked into adding curve-based movement to the synth and continuous dials
+    dials

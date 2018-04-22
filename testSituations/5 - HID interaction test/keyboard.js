@@ -14,7 +14,9 @@ function makeKeyboard(x,y){
                 _mainObject.append(backing);
                 __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, makeKeyboard);
 
-            var keyboardObj = __globals.keyboardInteraction.declareKeycaptureObject(_mainObject);
+            var desiredKeys = {};
+                desiredKeys.none = ['1','2','3','4','5','6','7','8','9','0','q','w','e','r','t','y','u','i','o','p','a','s','d','f','g','h','j','k','l','z','x','c','v','b','n','m'];
+            var keyboardObj = __globals.keyboardInteraction.declareKeycaptureObject(_mainObject,desiredKeys);
                 keyboardObj.keyPress = function(key){
                     if(keys[key]){ keys[key].press(); }
                 };

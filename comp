@@ -1,1 +1,1 @@
-python3 compile.py main.js workspace.js
+./gravity main.js workspace.js

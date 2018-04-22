@@ -48,7 +48,10 @@ __globals.objects.make_launchpad = function(x,y){
     var _mainObject = parts.basic.g(type, x, y);
         _mainObject._type = type;
 
-    var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(_mainObject);
+    
+    var desiredKeys = {};
+        desiredKeys.none = [' ','ArrowUp','ArrowDown'];
+    var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(_mainObject,desiredKeys);
         keycaptureObj.keyPress = function(key){
             switch(key){
                 case ' ': manualPulse.onclick(); break;

@@ -32,10 +32,10 @@
             // {{include:testSituations/2 - synth test/main.js}}
             // {{include:testSituations/3 - a midi mess/main.js}}
             // {{include:testSituations/4 - synth test 2/main.js}}
-            // {{include:testSituations/5 - HID interaction test/ma~in.js}}
+            // {{include:testSituations/5 - HID interaction test/main.js}}
             // {{include:testSituations/6 - midi files/main.js}}
-            {{include:testSituations/7 - programmable note generators/main.js}}
-            // {{include:testSituations/8 - advanced synthesisers/main.js}}
+            // {{include:testSituations/7 - programmable note generators/main.js}}
+            {{include:testSituations/8 - advanced synthesisers/main.js}}
         }
     }
 
