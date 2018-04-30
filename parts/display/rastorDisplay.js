@@ -34,7 +34,7 @@ this.rastorDisplay = function(
         function render(){
             for(var x = 0; x < xCount; x++){
                 for(var y = 0; y < yCount; y++){
-                    __globals.utility.setStyle(pixels[x][y], 'fill:rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')' );
+                    __globals.utility.element.setStyle(pixels[x][y], 'fill:rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')' );
                 }
             }
         }

@@ -87,14 +87,14 @@ this.connectionNode_audio = function(
     object._add_cable = function(){
         this._cable = parts.dynamic.cable(null, 0, 0, 0, 0, this._cableStyle, this._cableActiveStyle);
         this.foreignNode._receive_cable(this._cable);
-        __globals.utility.getPane(this).appendChild(this._cable); // <-- should probably make prepend
+        __globals.utility.workspace.getPane(this).appendChild(this._cable); // <-- should probably make prepend
         this.draw();
     };
     object._receive_cable = function(_cable){
         this._cable = _cable;
     };
     object._remove_cable = function(){
-        __globals.utility.getPane(this).removeChild(this._cable);
+        __globals.utility.workspace.getPane(this).removeChild(this._cable);
         this.foreignNode._lose_cable();
         this._cable = null;
     };
@@ -104,27 +104,27 @@ this.connectionNode_audio = function(
     object.draw = function(){
         if( !object._cable ){return;}
         
-        var t1 = __globals.utility.getCumulativeTransform(this);
-        var t2 = __globals.utility.getCumulativeTransform(this.foreignNode);
+        var t1 = __globals.utility.element.getCumulativeTransform(this);
+        var t2 = __globals.utility.element.getCumulativeTransform(this.foreignNode);
 
         this._cable.draw( 
-            t1[0] + this._boundary.width/2, 
-            t1[1] + this._boundary.height/2, 
-            t2[0] + this.foreignNode._boundary.width/2, 
-            t2[1] + this.foreignNode._boundary.height/2
+            t1.x + this._boundary.width/2, 
+            t1.y + this._boundary.height/2, 
+            t2.x + this.foreignNode._boundary.width/2, 
+            t2.y + this.foreignNode._boundary.height/2
         );
     };
     object.redraw = function(){
         if( !object._cable ){return;}
 
-        var t1 = __globals.utility.getCumulativeTransform(this);
-        var t2 = __globals.utility.getCumulativeTransform(this.foreignNode);
+        var t1 = __globals.utility.element.getCumulativeTransform(this);
+        var t2 = __globals.utility.element.getCumulativeTransform(this.foreignNode);
 
         this._cable.redraw( 
-            t1[0] + this._boundary.width/2, 
-            t1[1] + this._boundary.height/2, 
-            t2[0] + this.foreignNode._boundary.width/2, 
-            t2[1] + this.foreignNode._boundary.height/2
+            t1.x + this._boundary.width/2, 
+            t1.y + this._boundary.height/2, 
+            t2.x + this.foreignNode._boundary.width/2, 
+            t2.y + this.foreignNode._boundary.height/2
         );
     };
 

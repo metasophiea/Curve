@@ -35,9 +35,9 @@ if( __globals.svgElement.children ){
 }
 
 //make panes unselectable
-__globals.utility.makeUnselectable(__globals.panes.background );
-__globals.utility.makeUnselectable(__globals.panes.middleground );
-__globals.utility.makeUnselectable(__globals.panes.foreground );
+__globals.utility.element.makeUnselectable(__globals.panes.background );
+__globals.utility.element.makeUnselectable(__globals.panes.middleground );
+__globals.utility.element.makeUnselectable(__globals.panes.foreground );
 
 
 //setup global

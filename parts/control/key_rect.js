@@ -20,10 +20,10 @@ this.key_rect = function(
         // 2 - glowing
         // 3 - pressed and glowing
         switch(state){
-            case 0: __globals.utility.setStyle(rect, style_off); break;
-            case 1: __globals.utility.setStyle(rect, style_press); break;
-            case 2: __globals.utility.setStyle(rect, style_glow); break;
-            case 3: __globals.utility.setStyle(rect, style_pressAndGlow); break;
+            case 0: __globals.utility.element.setStyle(rect, style_off); break;
+            case 1: __globals.utility.element.setStyle(rect, style_press); break;
+            case 2: __globals.utility.element.setStyle(rect, style_glow); break;
+            case 3: __globals.utility.element.setStyle(rect, style_pressAndGlow); break;
             default: /*console.error('Unknown state reached:', state);*/ return; break;
         }
         object.state = state;

@@ -6,7 +6,7 @@ __globals.objects.make_selectorSender = function(x,y){
         valueLimit: 9
     };
     var shape = {
-        base: [[10,0],[55,0],[65,32.5],[45,55],[20,55],[0,32.5]],
+        base: [{x:10,y:0},{x:55,y:0},{x:65,y:32.5},{x:45,y:55},{x:20,y:55},{x:0,y:32.5}],
         littleConnector: { width: 20, height: 20 },
         connectionNodes:{
             inc: {x:38.75, y:41.25, width:20, height:20, angle:-Math.PI/4},

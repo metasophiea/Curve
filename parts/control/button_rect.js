@@ -13,11 +13,11 @@ this.button_rect = function(
         object.appendChild(rect);
 
     //interactivity
-    rect.onmouseenter = function(){ __globals.utility.setStyle(this, hoverStyle); };
-    rect.onmouseleave = function(){ __globals.utility.setStyle(this, upStyle);    };
-    rect.onmousedown =  function(){ __globals.utility.setStyle(this, downStyle);  };
+    rect.onmouseenter = function(){ __globals.utility.element.setStyle(this, hoverStyle); };
+    rect.onmouseleave = function(){ __globals.utility.element.setStyle(this, upStyle);    };
+    rect.onmousedown =  function(){ __globals.utility.element.setStyle(this, downStyle);  };
     rect.onmouseup =    function(){ this.onmouseleave();                          };
-    rect.glow =         function(){ __globals.utility.setStyle(this, glowStyle) };
+    rect.glow =         function(){ __globals.utility.element.setStyle(this, glowStyle) };
 
     //callbacks
     object.onmouseup =    function(){ /*console.log('mouseup');    */ };

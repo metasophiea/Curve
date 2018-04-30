@@ -49,7 +49,7 @@ __globals.selection = new function(){
             var newEntry = [];   
 
             //pane
-                newEntry.push( __globals.utility.getPane(this.selectedObjects[a]) );
+                newEntry.push( __globals.utility.workspace.getPane(this.selectedObjects[a]) );
 
             //objectConstructor
                 //if the object doesn't have a constructor, don't bother with any of this
@@ -61,8 +61,7 @@ __globals.selection = new function(){
                 newEntry.push( this.selectedObjects[a].creatorMethod );
 
             //originalsPosition
-                var position = __globals.utility.getTransform(this.selectedObjects[a]);
-                newEntry.push( [position[0],position[1]] );
+                newEntry.push( __globals.utility.element.getTransform(this.selectedObjects[a]) );
 
             //data
                 if( this.selectedObjects[a].exportData ){
@@ -109,25 +108,25 @@ __globals.selection = new function(){
         //position manipulation
         // if position is not set to 'duplicate', calculate new positions for the objects
             if(position != 'duplicate'){
-                // colelct all positions
+                // collect all positions
                     var points = [];
                     this.clipboard.forEach( element => points.push(element[2]) );
                 //get the bounding box of this selection, and then the top left point of that
-                    var topLeft = __globals.utility.getBoundingBoxFromPoints(points)[0];
+                    var topLeft = __globals.utility.math.boundingBoxFromPoints(points)[0];
                 //subtract this point from each position
                 // then add on the mouses's position, or the provided position
                     if(!position){
-                        //use viewport for position
-                            // var position = __globals.utility.getTransform(__globals.panes.global);
-                            // position = [-position[0]/position[2], -position[1]/position[2]];
+                        // //use viewport for position (functional, but unused)
+                        //     var position = __globals.utility.element.getTransform(__globals.panes.global);
+                        //     position = {x:-position.x/position.s, y:-position.y/position.s};
 
                         //use mouse position
-                            var temp = __globals.utility.pointconverter_browserWorkspace(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
-                            var position = [temp.x, temp.y];
+                            var position = __globals.utility.workspace.pointConverter.browser2workspace(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
                     }
                     this.clipboard.forEach( function(element){
-                        element[2][0] += position[0] - topLeft[0];
-                        element[2][1] += position[1] - topLeft[1];
+                        console.log(element)
+                        element[2].x += position.x - topLeft.x;
+                        element[2].y += position.y - topLeft.y;
                     } );
             }
 
@@ -140,7 +139,7 @@ __globals.selection = new function(){
             // connections       = item[4]
 
             //create the object with its new position
-                var obj = item[1](item[2][0],item[2][1]);
+                var obj = item[1](item[2].x,item[2].y);
                 if(obj.importData){obj.importData(item[3]);}
 
             //add the object to the pane and select it
@@ -183,7 +182,7 @@ __globals.selection = new function(){
                 }
 
             //remove the object from the pane it's in and then from the selected objects list
-                __globals.utility.getPane(this.selectedObjects[0]).removeChild(this.selectedObjects[0]);
+                __globals.utility.workspace.getPane(this.selectedObjects[0]).removeChild(this.selectedObjects[0]);
                 this.selectedObjects.shift();
         }
         this.lastSelectedObject = null;

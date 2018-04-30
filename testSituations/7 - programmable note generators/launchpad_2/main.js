@@ -30,9 +30,9 @@ var selectorSender_1 = __globals.objects.make_selectorSender(100,250);
 __globals.panes.middleground.append( selectorSender_1 );
 
 pulseClock_1.io.out.connectTo(launchpad_1.io.pulseIn);
-launchpad_1.io.out.connectTo(basicSynth_1.io.dataIn_midiNote);
+launchpad_1.io.out.connectTo(basicSynth_1.io.midiNote);
 basicSynth_1.io.audioOut.connectTo(audioSink_1.io.audio_in);
 
 
 
-// __globals.utility.gotoPosition(-1631.06, -1044.94, 4.59435, 0);
+// __globals.utility.workspace.gotoPosition(-1631.06, -1044.94, 4.59435, 0);

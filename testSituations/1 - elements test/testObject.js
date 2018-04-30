@@ -116,7 +116,7 @@ function makeTestObject(x,y,debug=false){
                     case 'HslidePanel': HslidePanel.set(data,false); break;
                     case 'Cdial': Cdial.set(data,false,false); break;
                     case 'Ddial': Ddial.select(data,false,false); break;
-                    case 'button_rect': grapher_periodicWave.reset(); Cdial.smoothSet(1,1,'s',false); Vslide.smoothSet(1,1,'s',false); Hslide.smoothSet(1,1,'s',false); VslidePanel.smoothSetAll(1,1,'s',false); HslidePanel.smoothSetAll(1,1,'s',false); break;
+                    case 'button_rect': grapher_periodicWave.reset(); Cdial.smoothSet(1,1,'s',false); Vslide.smoothSet(1,1,'linear',false); Hslide.smoothSet(1,1,'sin',false); VslidePanel.smoothSetAll(1,1,'cos',false); HslidePanel.smoothSetAll(1,1,'exponential',false); break;
                     case 'checkbox_rect': checkbox_rect.set(data,false); break;
                     case 'key_rect': if(data){key_rect.glow();glowbox.on();} else{key_rect.dim();glowbox.off();} break;
                     case 'rastorgrid': rastorgrid.set(data,false); break;

@@ -23,13 +23,13 @@ this.dial_discrete = function(
         var pushDistance = 1.11;
         var arcPath = [];
         for(var a = 0; a < points; a++){
-            var temp = __globals.utility.getCartesian(startAngle+a*(maxAngle/points),r*arcDistance);
-            arcPath.push( [temp.x,temp.y] );
-            var temp = __globals.utility.getCartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
-            arcPath.push( [temp.x,temp.y] );
+            var temp = __globals.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
+            arcPath.push( temp );
+            var temp = __globals.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
+            arcPath.push( temp );
         }
-        var temp = __globals.utility.getCartesian(startAngle+maxAngle,r*arcDistance);
-        arcPath.push( [temp.x,temp.y] );
+        var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
+        arcPath.push( temp );
         var outerArc = parts.basic.path(id=null, path=arcPath, 'Q', outerArcStyle);
         object.appendChild(outerArc);
 
@@ -79,7 +79,7 @@ this.dial_discrete = function(
     object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
     object.onwheel = function(event){
         var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-        var globalScale = __globals.utility.getTransform(__globals.panes.global)[2];
+        var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
 
         if(!object.onwheel.acc){object.onwheel.acc=0;}
         object.onwheel.acc += move/globalScale;
@@ -101,7 +101,7 @@ this.dial_discrete = function(
             var mux = __globals.svgElement.tempRef._data.mux;
             var value = __globals.svgElement.tempRef._data.initialValue;
             var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
-            var divider = __globals.utility.getTransform(__globals.panes.global)[2];
+            var divider = __globals.utility.element.getTransform(__globals.panes.global).s;
 
             __globals.svgElement.tempRef.select(
                 Math.round(

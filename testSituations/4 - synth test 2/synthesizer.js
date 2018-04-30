@@ -1,4 +1,4 @@
-parts.audio.synthesizer = function(
+parts.audio.synthesizer_basic = function(
     context,
     type='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
     gain=1, attack=0.01, release=0.1, detune=0, octave=0

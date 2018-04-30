@@ -6,7 +6,7 @@ __globals.objects.make_pulseClock = function(x,y){
             interval: null
         };
         var shape = {
-            base: [[0,0],[90,0],[90,40],[0,40]],
+            base: [{x:0,y:0},{x:90,y:0},{x:90,y:40},{x:0,y:40}],
             connector: { width: 20, height: 20 },
             readoutBacking :{x:45, y: 7.5, width: 12.5*3, height: 25},
             readouts: [
@@ -40,7 +40,7 @@ __globals.objects.make_pulseClock = function(x,y){
             __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
 
         //generate selection area
-        __globals.utility.generateSelectionArea(shape.base, _mainObject);
+        __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
 
         //tempo dial
             _mainObject.append(parts.display.label(null, shape.dial.x+7,    shape.dial.y+34, '60',        style.text));
@@ -78,7 +78,7 @@ __globals.objects.make_pulseClock = function(x,y){
     //connection nodes
         _mainObject.io = {};
 
-        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2][1]-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
+        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2].y-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
             _mainObject.prepend(_mainObject.io.out);
 
     //internal workings

@@ -12,10 +12,10 @@ this.glowbox_rect = function(
 
     //methods
     object.on = function(){
-        __globals.utility.setStyle(rect,glowStyle);
+        __globals.utility.element.setStyle(rect,glowStyle);
     };
     object.off = function(){
-        __globals.utility.setStyle(rect,dimStyle);
+        __globals.utility.element.setStyle(rect,dimStyle);
     };
 
     return object;

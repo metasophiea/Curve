@@ -1,4 +1,4 @@
-parts.audio.synthesizer = function(
+parts.audio.synthesizer_gainWobble = function(
     context,
     waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
     gain=1, 
@@ -8,6 +8,13 @@ parts.audio.synthesizer = function(
     //components
         var mainOut = context.createGain();
             mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
+        var wobbleGain = context.createGain();
+            wobbleGain.gain.setTargetAtTime(1, context.currentTime, 0);
+        var oscAggregator = context.createGain();
+            oscAggregator.gain.setTargetAtTime(1, context.currentTime, 0);
+
+        oscAggregator.connect(wobbleGain);
+        wobbleGain.connect(mainOut);
 
     //live oscillators
         var liveOscillators = {};
@@ -40,9 +47,9 @@ parts.audio.synthesizer = function(
 
                 var steps = [1];
                 switch(curve){
-                    case 'linear': steps = __globals.utility.curve.linear(totalSteps); break;
-                    case 'exponential': steps = __globals.utility.curve.exponential(totalSteps); break;
-                    case 's': steps = __globals.utility.curve.s(totalSteps,8); break;
+                    case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                    case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                    case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps,8); break;
                     case 'instant': default: break;
                 }
                 
@@ -56,8 +63,23 @@ parts.audio.synthesizer = function(
             //instruct liveOscillators to adjust their values
                 var OSCs = Object.keys(liveOscillators);
                 for(var b = 0; b < OSCs.length; b++){ 
-                    liveOscillators[OSCs[b]].detune(target,time,curve);
+                    liveOscillators[OSCs[b]].osc.detune(target,time,curve);
                 }
+        };
+        this.wobbleDepth = function(value){
+            if(value==null){return wobble.high-wobble.low; }
+            wobble.high = 1;
+            wobble.low = 1 - value;
+            this.stopWobble();
+            this.startWobble();
+        };
+        this.wobblePeriod = function(value){
+            if(value==null){return wobble.period; }
+
+            wobble.period = value;
+
+            this.stopWobble();
+            this.startWobble();
         };
 
     //output node
@@ -73,8 +95,7 @@ parts.audio.synthesizer = function(
             return new function(){
                 this.generator = context.createOscillator();
                     if(type == 'custom'){ 
-                        this.generator.setPeriodicWave( 
-                            // context.createPeriodicWave(new Float32Array(periodicWave.sin),new Float32Array(periodicWave.cos))
+                        this.generator.setPeriodicWave(
                             context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
                         ); 
                     }else{ this.generator.type = type; }
@@ -91,9 +112,6 @@ parts.audio.synthesizer = function(
                 this.detune = function(target,time,curve){
                     changeAudioParam(this.generator.detune,target,time,curve);
                 };
-                this.changeVelocity = function(a){
-                    changeAudioParam(this.gain.gain,a,attack.time,attack.curve);
-                };
                 this.stop = function(){
                     changeAudioParam(this.gain.gain,0,release.time,release.curve, false);
                     setTimeout(function(that){
@@ -107,12 +125,30 @@ parts.audio.synthesizer = function(
             };
         }
 
+    //wobbling gain
+        var wobble = {
+            phase: true,
+            high: 1,
+            low: 0.5,
+            period: 0.05,
+            wave: 's',
+            interval : null
+        };
+        this.startWobble = function(){
+            wobble.interval = setInterval(function(){
+                if(wobble.phase){ changeAudioParam( wobbleGain.gain, wobble.high, 0.9*wobble.period, wobble.wave ); }
+                else{             changeAudioParam( wobbleGain.gain, wobble.low,  0.9*wobble.period, wobble.wave ); }
+                wobble.phase = !wobble.phase;
+            }, 1000*wobble.period);
+        };this.startWobble();
+        this.stopWobble = function(){ clearInterval(wobble.interval); };
+
     //methods
         this.perform = function(note){
             if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
             else if( !liveOscillators[note.num] ){ 
                 //create new tone
-                liveOscillators[note.num] = makeOSC(context, mainOut, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave); 
+                liveOscillators[note.num] = makeOSC(context, oscAggregator, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave);
             }
             else if( note.velocity == 0 ){ 
                 //stop and destroy tone
@@ -121,7 +157,7 @@ parts.audio.synthesizer = function(
             }
             else{
                 //adjust tone
-                liveOscillators[note.num].changeVelocity(note.velocity);
+                liveOscillators[note.num].osc.changeVelocity(note.velocity);
             }
         };
         this.panic = function(){
@@ -148,7 +184,7 @@ parts.audio.synthesizer = function(
                 break;
                 case 's':
                     var mux = target - audioParam.value;
-                    var array = __globals.utility.curve.s(10,8);
+                    var array = __globals.utility.math.curveGenerator.s(10);
                     for(var a = 0; a < array.length; a++){
                         array[a] = audioParam.value + array[a]*mux;
                     }

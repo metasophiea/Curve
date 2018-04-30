@@ -12,7 +12,7 @@ __globals.objects.make_launchpad = function(x,y){
             prevStage: 0
         };
         var shape = {
-            base: [[0,0],[150,0],[150,120],[0,120]],
+            base: [{x:0,y:0},{x:150,y:0},{x:150,y:120},{x:0,y:120}],
             connector: { width: 30, height: 30 },
             littleConnector: { width: 20, height: 20 },
             grid: {x: 10, y: 10, width: 100, height: 100, xCount: 8, yCount: 8},
@@ -48,7 +48,9 @@ __globals.objects.make_launchpad = function(x,y){
     var _mainObject = parts.basic.g(type, x, y);
         _mainObject._type = type;
 
-    var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(_mainObject);
+    var desiredKeys = {};
+        desiredKeys.none = [' '];
+    var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(_mainObject,desiredKeys);
         keycaptureObj.keyPress = function(key){
             switch(key){
                 case ' ': manualPulse.onclick(); break;
@@ -64,7 +66,7 @@ __globals.objects.make_launchpad = function(x,y){
             __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
 
         //generate selection area
-        __globals.utility.generateSelectionArea(shape.base, _mainObject);
+        __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
 
         //grid
         var rastorgrid = parts.control.rastorgrid('rastorgrid', shape.grid.x, shape.grid.y, shape.grid.width, shape.grid.height, shape.grid.xCount, shape.grid.yCount, style.grid.backingStyle, style.grid.checkStyle, style.grid.backingGlowStyle, style.grid.checkGlowStyle);
@@ -100,12 +102,12 @@ __globals.objects.make_launchpad = function(x,y){
     //connection nodes
         _mainObject.io = {};
 
-        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2][1]-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
+        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2].y-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
             _mainObject.prepend(_mainObject.io.out);
-        _mainObject.io.pulseIn = parts.dynamic.connectionNode_data('_mainObject.io.pulseIn', shape.base[2][0]-shape.littleConnector.width/2, shape.littleConnector.height*0.5, shape.littleConnector.width, shape.littleConnector.height);
+        _mainObject.io.pulseIn = parts.dynamic.connectionNode_data('_mainObject.io.pulseIn', shape.base[2].x-shape.littleConnector.width/2, shape.littleConnector.height*0.5, shape.littleConnector.width, shape.littleConnector.height);
             _mainObject.prepend(_mainObject.io.pulseIn);
             _mainObject.io.pulseIn.receive = function(address,data){if(address!='pulse'){return;} progress(); };
-        _mainObject.io.pageSelect = parts.dynamic.connectionNode_data('_mainObject.io.pageSelect', shape.base[2][0]-shape.littleConnector.width/2, shape.littleConnector.height*1.75, shape.littleConnector.width, shape.littleConnector.height);
+        _mainObject.io.pageSelect = parts.dynamic.connectionNode_data('_mainObject.io.pageSelect', shape.base[2].x-shape.littleConnector.width/2, shape.littleConnector.height*1.75, shape.littleConnector.width, shape.littleConnector.height);
             _mainObject.prepend(_mainObject.io.pageSelect);
             _mainObject.io.pageSelect.receive = function(address,data){if(address!='discrete'){return;}setPage(data);};
     

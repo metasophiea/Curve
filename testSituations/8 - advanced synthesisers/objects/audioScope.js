@@ -5,7 +5,7 @@ __globals.objects.make_audioScope = function(x,y){
             framerateLimits: {min:1, max:30}
         };
         var shape = {
-            base: [[0,0],[195,0],[195,110],[0,110]],
+            base: [{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
             connector: { width: 20, height: 20 },
             graph: {x:5, y:5, width:150, height:100},
             holdKey: {x: 160, y: 5, width: 30, height: 20},
@@ -37,7 +37,7 @@ __globals.objects.make_audioScope = function(x,y){
             _mainObject.append(backing);
             __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
         //generate selection area
-        __globals.utility.generateSelectionArea(shape.base, _mainObject);
+        __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
 
         //waveport
         var graph = parts.display.grapher_audioScope(null, shape.graph.x, shape.graph.y, shape.graph.width, shape.graph.height);
@@ -70,7 +70,7 @@ __globals.objects.make_audioScope = function(x,y){
 
     //connection nodes
         _mainObject.io = {};
-        _mainObject.io.audioIn = parts.dynamic.connectionNode_audio('_mainObject.io.audioIn', 0, -shape.connector.width*0.5, shape.connector.height*0.5, shape.connector.width, shape.connector.height, __globals.audio.context);
+        _mainObject.io.audioIn = parts.dynamic.connectionNode_audio('_mainObject.io.audioIn', 0, shape.base[2].x-shape.connector.width*0.5, shape.connector.height*0.5, shape.connector.width, shape.connector.height, __globals.audio.context);
             _mainObject.prepend(_mainObject.io.audioIn);
             _mainObject.io.audioIn.out().connect(graph.getNode());
             

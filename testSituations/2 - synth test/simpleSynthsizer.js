@@ -17,15 +17,15 @@ function makeSimpleSynthsizer(x,y){
     //elements
         //main
             var _mainObject = parts.basic.g('simpleSynthsizer2', x, y);
-                parts.modifier.makeUnselectable(_mainObject);
+            __globals.utility.element.makeUnselectable(_mainObject);
 
-            var path = [[0,0],[240,0],[240,40],[200,80],[0,80]];
+            var path = [{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:200,y:80},{x:0,y:80}];
             var backing = parts.basic.path(null, path, 'L', style.backing);
                 _mainObject.append(backing);
                 parts.modifier.bestowMovement(backing, backing.parentElement);
 
         //circuitry
-            var synthesizer = new parts.audio.synthesizer(__globals.audio.context);
+            var synthesizer = new parts.audio.synthesizer_basic(__globals.audio.context);
 
         //dials
             var x = 0;
@@ -166,7 +166,7 @@ function makeSimpleSynthsizer(x,y){
             //musicalNote data in
             var s = 30;
             var rotation = Math.PI/4;
-            var temp = __globals.utility.getCartesian(rotation, -s);
+            var temp = __globals.utility.math.polar2cartesian(rotation, -s);
             _mainObject.io.dataIn_musicalNote = parts.dynamic.connectionNode_data('_mainObject.io.dataIn_musicalNote', 240+temp.x, 60+temp.y, s, s, rotation);
             _mainObject.prepend(_mainObject.io.dataIn_musicalNote);
 

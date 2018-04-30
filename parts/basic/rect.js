@@ -6,8 +6,8 @@ this.rect = function(id=null, x=0, y=0, width=0, height=0, angle=0, style='fill:
     element.setAttribute('width',width);
 
     element.rotation = function(a){
-        if(a==null){return __globals.utility.getTransform(this)[3];}
-        __globals.utility.setRotation(this, a);
+        if(a==null){return __globals.utility.element.getTransform(this).r;}
+        __globals.utility.element.setRotation(this, a);
     };
 
     return element;

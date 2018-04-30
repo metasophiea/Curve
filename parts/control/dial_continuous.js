@@ -20,13 +20,13 @@ this.dial_continuous = function(
             var pushDistance = 1.11;
             var arcPath = [];
             for(var a = 0; a < points; a++){
-                var temp = __globals.utility.getCartesian(startAngle+a*(maxAngle/points),r*arcDistance);
-                arcPath.push( [temp.x,temp.y] );
-                var temp = __globals.utility.getCartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
-                arcPath.push( [temp.x,temp.y] );
+                var temp = __globals.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
+                arcPath.push( temp );
+                var temp = __globals.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
+                arcPath.push( temp );
             }
-            var temp = __globals.utility.getCartesian(startAngle+maxAngle,r*arcDistance);
-            arcPath.push( [temp.x,temp.y] );
+            var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
+            arcPath.push( temp );
             var outerArc = parts.basic.path(id=null, path=arcPath, 'Q', outerArcStyle);
             object.appendChild(outerArc);
 
@@ -66,9 +66,11 @@ this.dial_continuous = function(
 
             var steps = [1];
             switch(curve){
-                case 'linear': steps = __globals.utility.curve.linear(totalSteps); break;
-                case 'exponential': steps = __globals.utility.curve.exponential(totalSteps); break;
-                case 's': steps = __globals.utility.curve.s(totalSteps,8); break;
+                case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
+                case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
+                case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
                 case 'instant': default: break;
             }
 
@@ -91,7 +93,7 @@ this.dial_continuous = function(
         object.ondblclick = function(){ this.set(0.5); };
         object.onwheel = function(event){
             var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-            var globalScale = __globals.utility.getTransform(__globals.panes.global)[2];
+            var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
 
             this.set( this.get() - move/(10*globalScale) );
         };
@@ -108,13 +110,13 @@ this.dial_continuous = function(
                 var mux = __globals.svgElement.tempRef._data.mux;
                 var value = __globals.svgElement.tempRef._data.initialValue;
                 var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
-                var divider = __globals.utility.getTransform(__globals.panes.global)[2];
+                var divider = __globals.utility.element.getTransform(__globals.panes.global).s;
 
                 __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
             };
             __globals.svgElement.onmouseup = function(){
                 this.tempRef.set(this.tempRef.get());
-                this.tempRef = null;
+                delete this.tempRef;
 
                 __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
                 __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;

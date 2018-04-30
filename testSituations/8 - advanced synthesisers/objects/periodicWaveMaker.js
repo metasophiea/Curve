@@ -5,7 +5,7 @@ __globals.objects.make_periodicWaveMaker = function(x,y){
             factors: 16
         };
         var shape = {
-            base: [[0,0],[250,0],[250,110],[0,110]],
+            base: [{x:0,y:0},{x:250,y:0},{x:250,y:110},{x:0,y:110}],
             connector: { width: 20, height: 20 },
             graph: {x:5, y:5, width:100, height:100},
             slidePanel_sin: {x:110, y:5, width: 100, height:47.5, count: attributes.factors},
@@ -34,7 +34,7 @@ __globals.objects.make_periodicWaveMaker = function(x,y){
             __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
 
         //generate selection area
-        __globals.utility.generateSelectionArea(shape.base, _mainObject);
+        __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
 
         //waveport
         var graph = parts.display.grapher_periodicWave(null, shape.graph.x, shape.graph.y, shape.graph.width, shape.graph.height);
@@ -59,17 +59,15 @@ __globals.objects.make_periodicWaveMaker = function(x,y){
     //connection nodes
     _mainObject.io = {};
 
-    _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2][1]-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
+    _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', -shape.connector.width/2, shape.base[2].y-shape.connector.height*1.5, shape.connector.width, shape.connector.height);
         _mainObject.prepend(_mainObject.io.out);
+        _mainObject.io.out.onConnect = function(){sendWave();};
 
     //internal workings
         function sendWave(){
             _mainObject.io.out.send('periodicWave', graph.wave());
         }
         function reset(){
-            graph.wave({'sin':[],'cos':[]});
-            graph.draw();
-
             slidePanel_sin.setAll(0.5);
             slidePanel_cos.setAll(0.5);
         }

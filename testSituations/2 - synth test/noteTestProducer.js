@@ -1,6 +1,7 @@
 function makeNoteTestProducer(x,y){
     var _mainObject = parts.basic.g('noteTestProducer', x, y);
-        parts.modifier.makeUnselectable(_mainObject);
+        __globals.utility.element.makeUnselectable(_mainObject);
+
 
     var backing = parts.basic.rect(null, 0, 0, 100, 100, 0, 'fill:rgba(200,200,200,1)');
         _mainObject.append(backing);

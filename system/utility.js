@@ -1,454 +1,407 @@
 __globals.utility = new function(){
-
-    this.getTransform = function(element){
-        var pattern = /[-+]?[0-9]*\.?[0-9]+/g;
-        var result = element.style.transform.match( pattern ).map(Number);
-
-        if(result.length < 4){ result[3] = 0; }
-
-        return result;
-    }
-    this.getCumulativeTransform = function(element){
-        data = __globals.utility.getTransform(element);
-        while( !element.parentElement.getAttribute('pane') ){
-            element = element.parentElement;
-            var newData = __globals.utility.getTransform(element);
-            data[0] += newData[0];
-            data[1] += newData[1];
-        }
-        return data;
-    }
-    this.setTransform = function(element, transformData){
-        element.style.transform = 'translate('+transformData[0]+'px, '+transformData[1]+'px) scale('+transformData[2]+') rotate(' +transformData[3]+ 'rad)';
-    }    
-    this.updateTransform_XY = function(element, x, y){
-        var transformData = __globals.utility.getTransform(element);
-        transformData[0] = x;
-        transformData[1] = y;
-        __globals.utility.setTransform( element, transformData );
-    }
-    this.setRotation = function(element, rotation){
-        var pattern = /rotate\(([-+]?[0-9]*\.?[0-9]+)/;
-        element.style.transform = element.style.transform.replace( pattern, 'rotate('+rotation );
-    }
-    this.setStyle = function(element, style){
-        var transform = this.getTransform(element); 
-        element.style = style;
-        this.setTransform(element, transform);
-    }
-    this.disconnectEverything = function(object){
-        var keys = Object.keys(object.io);
-        for(var a = 0; a < keys.length; a++){
-            object.io[keys[a]].disconnect();
-        }
-    };
-    this.getPosition = function(){
-        return __globals.utility.getTransform(__globals.panes.global);
-    };
-    this.gotoPosition = function(x, y, z, r=0){
-        __globals.utility.setTransform(__globals.panes.global, [x,y,z,r]);
-    };
-
-    this.getObjectUnderPoint = function(x,y){
-        var temp = document.elementFromPoint(x,y);
-        if(temp.hasAttribute('workspace')){return null;}
-
-        while(!temp.parentElement.hasAttribute('pane')){ 
-            temp = temp.parentElement;
-        }
-
-        return temp;
-    };
-    this.requestInteraction = function(x,y,type){
-        if(!x || !y){return true;}
-        var temp = document.elementFromPoint(x,y);
-
-        if(temp.hasAttribute('workspace')){return true;}
-        while(!temp.hasAttribute('pane')){ 
-            if(temp[type] || temp.hasAttribute(type)){return false;}
-            temp = temp.parentElement;
-        }
-        
-        return true;
-    };
-
-    this.getPane = function(element){
-        while( !element.getAttribute('pane') ){ element = element.parentElement; }
-        return element;
-    }
-
-    this.getCartesian = function(ang,dis){
-        return {'x':(dis*Math.cos(ang)), 'y':(dis*Math.sin(ang))};
-    }
-    this.getPolar = function(x,y){
-		var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
-
-		if(x === 0 ){
-			if(y === 0){ang = 0;}
-			else if(y > 0){ang = 0.5*Math.PI;}
-			else{ang = 1.5*Math.PI;}
-		}
-		else if(y === 0 ){
-			if(x >= 0){ang = 0;}else{ang = Math.PI;}
-		}
-		else if(x >= 0){ ang = Math.atan(y/x); }
-		else{ /*if(x < 0)*/ ang = Math.atan(y/x) + Math.PI; }
-
-		return {'dis':dis,'ang':ang};
-    }
-
-    this.getBoundingBox = function(SVG){
-        var tempG = document.createElementNS('http://www.w3.org/2000/svg','g');
-        __globals.panes.global.append(tempG);
-
-        SVG = SVG.cloneNode(true);
-        tempG.append(SVG);
-        var temp = SVG.getBBox();
-        tempG.remove();
-        
-        return temp;
-    }
-
-    this.pointconverter_browserWorkspace = function(x,y){
-        var globalTransform = __globals.utility.getTransform(__globals.panes.global);
-        return {'x':(x-globalTransform[0])/globalTransform[2], 'y':(y-globalTransform[1])/globalTransform[2]};
-    };
-    this.pointconverter_workspaceBrowser = function(x,y){
-        var globalTransform = __globals.utility.getTransform(__globals.panes.global);
-        return {'x':(x*globalTransform[2])+globalTransform[0], 'y':(y*globalTransform[2])+globalTransform[1]};
-    };
-    this.dotMaker = function(x,y,text,r=2,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;'){
-        var dot = parts.basic.circle(null, x, y, r, 0, style);
-        var textElement = parts.basic.text(null, x+r, y, text, 0, style);
-        __globals.panes.foreground.appendChild(dot);
-        __globals.panes.foreground.appendChild(textElement);
-    };
-
-    this.getIntersectionOfTwoLineSegments = function(
-        segment1_point1_x, segment1_point1_y,
-        segment1_point2_x, segment1_point2_y,
-        segment2_point1_x, segment2_point1_y,
-        segment2_point2_x, segment2_point2_y
-    ){
-        var denominator = (segment2_point2_y-segment2_point1_y)*(segment1_point2_x-segment1_point1_x) - (segment2_point2_x-segment2_point1_x)*(segment1_point2_y-segment1_point1_y);
-        if(denominator == 0){return null;}
-
-        var u1 = ((segment2_point2_x-segment2_point1_x)*(segment1_point1_y-segment2_point1_y) - (segment2_point2_y-segment2_point1_y)*(segment1_point1_x-segment2_point1_x))/denominator;
-        var u2 = ((segment1_point2_x-segment1_point1_x)*(segment1_point1_y-segment2_point1_y) - (segment1_point2_y-segment1_point1_y)*(segment1_point1_x-segment2_point1_x))/denominator;;
-        return {
-            'x':      (segment1_point1_x + u1*(segment1_point2_x-segment1_point1_x)),
-            'y':      (segment1_point1_y + u1*(segment1_point2_y-segment1_point1_y)),
-            'inSeg1': (u1 >= 0 && u1 <= 1),
-            'inSeg2': (u2 >= 0 && u2 <= 1)
+    this.workspace = new function(){
+        this.currentPosition = function(){
+            return __globals.utility.element.getTransform(__globals.panes.global);
         };
-    };
-
-    this.getBoundingBoxFromPoints = function(points){
-        var left = points[0][0]; var right = points[0][0];
-        var top = points[0][1];  var bottom = points[0][1];
-
-        for(var a = 1; a < points.length; a++){
-            if( points[a][0] < left ){ left = points[a][0]; }
-            else if(points[a][0] > right){ right = points[a][0]; }
-
-            if( points[a][1] < top ){ top = points[a][1]; }
-            else if(points[a][1] > bottom){ bottom = points[a][1]; }
-        }
-
-        return [[left,top],[right,bottom]];
-    };
+        this.gotoPosition = function(x,y,z,r){
+            __globals.utility.element.setTransform(__globals.panes.global, {x:x,y:y,s:z,r:r});
+        };
+        this.getPane = function(element){
+            while( !element.getAttribute('pane') ){ element = element.parentElement; }
+            return element;
+        };
+        this.objectUnderPoint = function(x,y){
+            var temp = document.elementFromPoint(x,y);
+            if(temp.hasAttribute('workspace')){return null;}
     
-    this.makeUnselectable = function(element){
-        element.style['-webkit-user-select'] = 'none';
-        element.style['-moz-user-select'] = 'none';
-        element.style['-ms-user-select'] = 'none';
-        element.style['user-select'] = 'none';
-    };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    this.generateSelectionArea = function(points, _mainObject){
-        _mainObject.selectionArea = {};
-        _mainObject.selectionArea.box = [];
-        _mainObject.selectionArea.points = [];
-        _mainObject.updateSelectionArea = function(){
-            //the main shape we want to use
-            _mainObject.selectionArea.points = [];
-            points.forEach(function(item){ _mainObject.selectionArea.points.push(item.slice()); });
-            _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
-
-            //adjusting it for the object's position in space
-            temp = __globals.utility.getTransform(_mainObject);
-            _mainObject.selectionArea.box.forEach(function(element) {
-                element[0] += temp[0];
-                element[1] += temp[1];
-            });
-            _mainObject.selectionArea.points.forEach(function(element) {
-                element[0] += temp[0];
-                element[1] += temp[1];
-            });
+            while(!temp.parentElement.hasAttribute('pane')){ 
+                temp = temp.parentElement;
+            }
+    
+            return temp;
         };
-
-        _mainObject.updateSelectionArea();
+        this.pointConverter = new function(){
+            this.browser2workspace = function(x,y){
+                var globalTransform = __globals.utility.element.getTransform(__globals.panes.global);
+                return {'x':(x-globalTransform.x)/globalTransform.s, 'y':(y-globalTransform.y)/globalTransform.s};
+            };
+            this.workspace2browser = function(x,y){
+                var globalTransform = __globals.utility.element.getTransform(__globals.panes.global);
+                return {'x':(x*globalTransform.s)+globalTransform.x, 'y':(y*globalTransform.s)+globalTransform.y};
+            };
+        };
+        this.dotMaker = function(x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;'){
+            var dot = parts.basic.circle(null, x, y, r, 0, style);
+            var textElement = parts.basic.text(null, x+r, y, text, 0, style);
+            __globals.panes.foreground.appendChild(dot);
+            __globals.panes.foreground.appendChild(textElement);
+        };
     };
+    this.element = new function(){
+        this.getTransform = function(element){
+            var pattern = /[-+]?[0-9]*\.?[0-9]+/g;
+            var result = element.style.transform.match( pattern ).map(Number);
+    
+            if(result.length < 4){ result[3] = 0; }
 
+            return {x:result[0],y:result[1],s:result[2],r:result[3]};
+        };
+        this.getCumulativeTransform = function(element){
+            data = this.getTransform(element);
+            while( !element.parentElement.getAttribute('pane') ){
+                element = element.parentElement;
+                var newData = this.getTransform(element);
+                data.x += newData.x;
+                data.y += newData.y;
+            }
+            return data;
+        };
+        this.setTransform = function(element, transform){
+            element.style.transform = 'translate('+transform.x+'px, '+transform.y+'px) scale('+transform.s+') rotate(' +transform.r+ 'rad)';
+        };
+        this.setTransform_XYonly = function(element, x, y){
+            var transformData = this.getTransform(element);
+            if(x!=null){transformData.x = x;}
+            if(y!=null){transformData.y = y;}
+            this.setTransform( element, transformData );
+        };
+        this.setStyle = function(element, style){
+            var transform = this.getTransform(element); 
+            element.style = style;
+            this.setTransform(element, transform);
+        };
+        this.setRotation = function(element, rotation){
+            var pattern = /rotate\(([-+]?[0-9]*\.?[0-9]+)/;
+            element.style.transform = element.style.transform.replace( pattern, 'rotate('+rotation );
+        };
+        this.getBoundingBox = function(element){
+            var tempG = document.createElementNS('http://www.w3.org/2000/svg','g');
+            __globals.panes.global.append(tempG);
+    
+            element = element.cloneNode(true);
+            tempG.append(element);
+            var temp = element.getBBox();
+            tempG.remove();
+            
+            return temp;
+        };
+        this.makeUnselectable = function(element){
+            element.style['-webkit-user-select'] = 'none';
+            element.style['-moz-user-select'] = 'none';
+            element.style['-ms-user-select'] = 'none';
+            element.style['user-select'] = 'none';
+        };
+    };
+    this.object = new function(){
+        this.requestInteraction = function(x,y,type){
+            if(!x || !y){return true;}
+            var temp = document.elementFromPoint(x,y);
+    
+            if(temp.hasAttribute('workspace')){return true;}
+            while(!temp.hasAttribute('pane')){ 
+                if(temp[type] || temp.hasAttribute(type)){return false;}
+                temp = temp.parentElement;
+            }
+            
+            return true;
+        };
+        this.disconnectEverything = function(object){
+            console.warn('you\'re using this?');
+            // var keys = Object.keys(object.io);
+            // for(var a = 0; a < keys.length; a++){
+            //     object.io[keys[a]].disconnect();
+            // }
+        };
+        this.generateSelectionArea = function(points, object){
+            object.selectionArea = {};
+            object.selectionArea.box = [];
+            object.selectionArea.points = [];
+            object.updateSelectionArea = function(){
+                //the main shape we want to use
+                object.selectionArea.points = [];
+                points.forEach(function(item){
+                    object.selectionArea.points.push( {x:item.x, y:item.y} );
+                });
+                object.selectionArea.box = __globals.utility.math.boundingBoxFromPoints(object.selectionArea.points);
 
+                //adjusting it for the object's position in space
+                temp = __globals.utility.element.getTransform(object);
+                object.selectionArea.box.forEach(function(element) {
+                    element.x += temp.x;
+                    element.y += temp.y;
+                });
+                object.selectionArea.points.forEach(function(element) {
+                    element.x += temp.x;
+                    element.y += temp.y;
+                });
+            };
 
+            object.updateSelectionArea();
+        };
+    };
+    this.math = new function(){
+        this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
+        this.polar2cartesian = function(angle,distance){
+            return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
+        };
+        this.cartesian2polar = function(x,y){
+            var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
+    
+            if(x === 0 ){
+                if(y === 0){ang = 0;}
+                else if(y > 0){ang = 0.5*Math.PI;}
+                else{ang = 1.5*Math.PI;}
+            }
+            else if(y === 0 ){
+                if(x >= 0){ang = 0;}else{ang = Math.PI;}
+            }
+            else if(x >= 0){ ang = Math.atan(y/x); }
+            else{ /*if(x < 0)*/ ang = Math.atan(y/x) + Math.PI; }
+    
+            return {'dis':dis,'ang':ang};
+        };
+        this.boundingBoxFromPoints = function(points){
+            var left = points[0].x; var right = points[0].x;
+            var top = points[0].y;  var bottom = points[0].y;
+    
+            for(var a = 1; a < points.length; a++){
+                if( points[a].x < left ){ left = points[a].x; }
+                else if(points[a].x > right){ right = points[a].x; }
+    
+                if( points[a].y < top ){ top = points[a].y; }
+                else if(points[a].y > bottom){ bottom = points[a].y; }
+            }
+    
+            return [{x:left,y:top},{x:right,y:bottom}];
+        };
+        this.intersectionOfTwoLineSegments = function(segment1, segment2){
+            var denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
+            if(denominator == 0){return null;}
+    
+            var u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+            var u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;;
+            return {
+                'x':      (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
+                'y':      (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
+                'inSeg1': (u1 >= 0 && u1 <= 1),
+                'inSeg2': (u2 >= 0 && u2 <= 1)
+            };
+        };
+        this.detectOverlap = function(poly_a, poly_b, box_a, box_b){
+            // Quick Judgement with bounding boxes
+            // (when bounding boxes are provided)
+            if(box_a && box_b){
+                // clearly separate shapes
+                if(
+                    (
+                        (box_a[0].x < box_b[0].x && box_a[0].x < box_b[1].x) ||
+                        (box_a[1].x > box_b[0].x && box_a[1].x > box_b[1].x) ||
+                        (box_a[0].y < box_b[0].y && box_a[0].y < box_b[1].y) ||
+                        (box_a[1].y > box_b[0].y && box_a[1].y > box_b[1].y) 
+                    )
+                ){console.log('clearly separate shapes');return false;}
+            }
+    
+            // Detailed Judgement
+                function distToSegmentSquared(p, a, b){
+                    function distanceBetweenTwoPoints(a, b){ return Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2) }
+    
+                    var lineLength = distanceBetweenTwoPoints(a, b);               //get length of line segment
+                    if (lineLength == 0){return distanceBetweenTwoPoints(p, a);}   //if line segment length is zero, just return the distance between a line point and the point
+                    
+                    var t = ((p.x-a.x) * (b.x-a.x) + (p.y-a.y) * (b.y-a.y)) / lineLength;
+                    t = Math.max(0, Math.min(1, t));
+                    return distanceBetweenTwoPoints(p, { 'x': a.x + t*(b.x-a.x), 'y': a.y + t*(b.y-a.y) });
+                }
+                function sideOfLineSegment(p, a, b){
+                    //get side that the point is on ('true' is 'inside')
+                    return ((b.x-a.x)*(p.y-a.y) - (p.x-a.x)*(b.y-a.y))>0;
+                }
+    
+    
+                //a point from A is in B
+                // run through each point of poly 'A' and each side of poly 'B'
+                // for each point in A, find the closest side of B and determine what side that point is on
+                // if any point of A is inside B, declare an overlap
+                var poly_b_clone = Object.assign([], poly_b); //because of referencing 
+                poly_b_clone.push(poly_b[0]);
+                for(var b = 0; b < poly_a.length; b++){
+                    var tempSmallestDistance = {'dis':Number.MAX_SAFE_INTEGER,'side':false};
+                    for(var a = 0; a < poly_b_clone.length-1; a++){
+                        var linePoint_1 = {'x':poly_b_clone[a].x,'y':poly_b_clone[a].y};
+                        var linePoint_2 = {'x':poly_b_clone[a+1].x,'y':poly_b_clone[a+1].y};
+                        var point = {'x':poly_a[b].x,'y':poly_a[b].y};
+                            //reformat data into line-segment points and the point of interest
+    
+                        var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
+                            if(dis==0){console.log('oh hay, collision - AinB');return true; }
+                            //get distance from point to line segment
+                            //if zero, it's a collision and we can end early
+    
+                        if( tempSmallestDistance.dis > dis ){ 
+                            //if this distance is the smallest found in this round, save the distance and side
+                            tempSmallestDistance.dis = dis; 
+                            tempSmallestDistance.side = sideOfLineSegment(point, linePoint_1, linePoint_2);
+                        }
+                    }
+                    if( tempSmallestDistance.side ){console.log('a point from A is in B');return true;}
+                }
+                //a point from B is in A
+                // same as above, but the other way around
+                var poly_a_clone = Object.assign([], poly_a); //because of referencing 
+                poly_a_clone.push(poly_a[0]);
+                for(var b = 0; b < poly_b.length; b++){
+                    var tempSmallestDistance = {'dis':Number.MAX_SAFE_INTEGER,'side':false};
+                    for(var a = 0; a < poly_a_clone.length-1; a++){
+                        var linePoint_1 = {'x':poly_a_clone[a].x,'y':poly_a_clone[a].y};
+                        var linePoint_2 = {'x':poly_a_clone[a+1].x,'y':poly_a_clone[a+1].y};
+                        var point = {'x':poly_a[b].x,'y':poly_a[b].y};
+                            //reformat data into line-segment points and the point of interest
+    
+                        var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
+                            if(dis==0){console.log('oh hay, collision - BinA');return true; }
+                            //get distance from point to line segment
+                            //if zero, it's a collision and we can end early
+    
+                        if( tempSmallestDistance.dis > dis ){ 
+                            //if this distance is the smallest found in this round, save the distance and side
+                            tempSmallestDistance.dis = dis; 
+                            tempSmallestDistance.side = sideOfLineSegment(point, linePoint_1, linePoint_2);
+                            testTemp = point;
+                            testTempA = linePoint_1;
+                            testTempB = linePoint_2;
+                        }
+                    }
+                    if( tempSmallestDistance.side ){console.log('a point from B is in A');return true;}
+                }
+    
+                //side intersection
+                // compare each side of each poly to every other side, looking for lines that
+                // cross each other. If a crossing is found at any point; return true
+                    for(var a = 0; a < poly_a_clone.length-1; a++){
+                        for(var b = 0; b < poly_b_clone.length-1; b++){
+                            var data = this.intersectionOfTwoLineSegments(poly_a_clone, poly_b_clone);
+                            if(!data){continue;}
+                            if(data.inSeg1 && data.inSeg2){console.log('point intersection at ' + data.x + ' ' + data.y);return true;}
+                        }
+                    }
+    
+            return false;
+        };
+        this.curveGenerator = new function(){
+            this.linear = function(stepCount=2, start=0, end=1){
+                stepCount = Math.abs(stepCount)-1; var outputArray = [0];
+                for(var a = 1; a < stepCount; a++){ 
+                    outputArray.push(a/stepCount);
+                }
+                outputArray.push(1); 
 
+                var mux = end-start;
+                for(var a = 0 ; a < outputArray.length; a++){
+                    outputArray[a] = outputArray[a]*mux + start;
+                }
 
+                return outputArray;
+            };
+            this.sin = function(stepCount=2, start=0, end=1){
+                stepCount = Math.abs(stepCount) -1;
+                var outputArray = [0];
+                for(var a = 1; a < stepCount; a++){ 
+                    outputArray.push(
+                        Math.sin( Math.PI/2*(a/stepCount) )
+                    );
+                }
+                outputArray.push(1); 
 
+                var mux = end-start;
+                for(var a = 0 ; a < outputArray.length; a++){
+                    outputArray[a] = outputArray[a]*mux + start;
+                }
 
+                return outputArray;		
+            };
+            this.cos = function(stepCount=2, start=0, end=1){
+                stepCount = Math.abs(stepCount) -1;
+                var outputArray = [0];
+                for(var a = 1; a < stepCount; a++){ 
+                    outputArray.push(
+                        1 - Math.cos( Math.PI/2*(a/stepCount) )
+                    );
+                }
+                outputArray.push(1); 
 
+                var mux = end-start;
+                for(var a = 0 ; a < outputArray.length; a++){
+                    outputArray[a] = outputArray[a]*mux + start;
+                }
 
+                return outputArray;	
+            };
+            this.s = function(stepCount=2, start=0, end=1, sharpness=8){
+                var curve = [];
+                for(var a = 0; a < stepCount; a++){
+                    curve.push(
+                        1/( 1 + Math.exp(-sharpness*((a/stepCount)-0.5)) )
+                    );
+                }
+    
+                //normalize curve
+                function normalizeStretchArray(array){
+                    var biggestIndex = 0;
+                    for(var a = 1; a < array.length; a++){
+                        if( Math.abs(array[a]) > Math.abs(array[biggestIndex]) ){
+                            biggestIndex = a;
+                        }
+                    }
+        
+                    var mux = Math.abs(1/array[biggestIndex]);
+        
+                    for(var a = 0; a < array.length; a++){
+                        array[a] = array[a]*mux;
+                    }
+    
+                    //stretching
+                    if(array[0] == 0 && array[array.length-1] == 1){return array;}
+                    else if( array[0] != 0 ){
+                        var pertinentValue = array[0];
+                        for(var a = 0; a < array.length; a++){
+                            array[a] = array[a] - pertinentValue*(1-a/(array.length-1));
+                        }
+                    }
+                    else{
+                        var pertinentValue = array[array.length-1];
+                        for(var a = 0; a < array.length; a++){
+                            array[a] = array[a] - pertinentValue*(a/(array.length-1));
+                        }
+                    }
+    
+                    return array;
+                }
 
+                var outputArray = normalizeStretchArray(curve);
+    
+                var mux = end-start;
+                for(var a = 0 ; a < outputArray.length; a++){
+                    outputArray[a] = outputArray[a]*mux + start;
+                }
 
-
-
-    this.detectOverlap = function(a_poly, b_poly, a_box=null, b_box=null){
-        // Quick Judgement with bounding boxes
-        // (when bounding boxes are provided)
-        if(a_box && b_box){
-            // clearly separate shapes
-            if(
-                ( 
-                    (a_box[0][0] < b_box[0][0] && a_box[0][0] < b_box[1][0]) ||
-                    (a_box[1][0] > b_box[0][0] && a_box[1][0] > b_box[1][0]) ||
-                    (a_box[0][1] < b_box[0][1] && a_box[0][1] < b_box[1][1]) ||
-                    (a_box[1][1] > b_box[0][1] && a_box[1][1] > b_box[1][1]) 
-                )
-            ){/*console.log('clearly separate shapes');*/return false;}
-        }
-
-        // Detailed Judgement
-            function distToSegmentSquared(p, a, b){
-                function distanceBetweenTwoPoints(a, b){ return Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2) }
-
-                var lineLength = distanceBetweenTwoPoints(a, b);               //get length of line segment
-                if (lineLength == 0){return distanceBetweenTwoPoints(p, a);}   //if line segment length is zero, just return the distance between a line point and the point
+                return outputArray;
+            };
+            this.exponential = function(stepCount=2, start=0, end=1){
+                var stepCount = stepCount-1;
+                var outputArray = [];
                 
-                var t = ((p.x-a.x) * (b.x-a.x) + (p.y-a.y) * (b.y-a.y)) / lineLength;
-                t = Math.max(0, Math.min(1, t));
-                return distanceBetweenTwoPoints(p, { 'x': a.x + t*(b.x-a.x), 'y': a.y + t*(b.y-a.y) });
-            }
-            function sideOfLineSegment(p, a, b){
-                //get side that the point is on ('true' is 'inside')
-                return ((b.x-a.x)*(p.y-a.y) - (p.x-a.x)*(b.y-a.y))>0;
-            }
-
-
-            //a point from A is in B
-            // run through each point of poly 'A' and each side of poly 'B'
-            // for each point in A, find the closest side of B and determine what side that point is on
-            // if any point of A is inside B, declare an overlap
-            var b_poly_clone = Object.assign([], b_poly); //because of referencing 
-            b_poly_clone.push(b_poly[0]);
-            for(var b = 0; b < a_poly.length; b++){
-                var tempSmallestDistance = {'dis':Number.MAX_SAFE_INTEGER,'side':false};
-                for(var a = 0; a < b_poly_clone.length-1; a++){
-                    var linePoint_1 = {'x':b_poly_clone[a][0],'y':b_poly_clone[a][1]};
-                    var linePoint_2 = {'x':b_poly_clone[a+1][0],'y':b_poly_clone[a+1][1]};
-                    var point = {'x':a_poly[b][0],'y':a_poly[b][1]};
-                        //reformat data into line-segment points and the point of interest
-
-                    var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
-                        if(dis==0){/*console.log('oh hay, collision - AinB');*/return true; }
-                        //get distance from point to line segment
-                        //if zero, it's a collision and we can end early
-
-                    if( tempSmallestDistance.dis > dis ){ 
-                        //if this distance is the smallest found in this round, save the distance and side
-                        tempSmallestDistance.dis = dis; 
-                        tempSmallestDistance.side = sideOfLineSegment(point, linePoint_1, linePoint_2);
-                    }
-                }
-                if( tempSmallestDistance.side ){/*console.log('a point from A is in B');*/return true;}
-            }
-            //a point from B is in A
-            // same as above, but the other way around
-            var a_poly_clone = Object.assign([], a_poly); //because of referencing 
-            a_poly_clone.push(a_poly[0]);
-            for(var b = 0; b < b_poly.length; b++){
-                var tempSmallestDistance = {'dis':Number.MAX_SAFE_INTEGER,'side':false};
-                for(var a = 0; a < a_poly_clone.length-1; a++){
-                    var linePoint_1 = {'x':a_poly_clone[a][0],'y':a_poly_clone[a][1]};
-                    var linePoint_2 = {'x':a_poly_clone[a+1][0],'y':a_poly_clone[a+1][1]};
-                    var point = {'x':b_poly[b][0],'y':b_poly[b][1]};
-                        //reformat data into line-segment points and the point of interest
-
-                    var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
-                        if(dis==0){/*console.log('oh hay, collision - BinA');*/return true; }
-                        //get distance from point to line segment
-                        //if zero, it's a collision and we can end early
-
-                    if( tempSmallestDistance.dis > dis ){ 
-                        //if this distance is the smallest found in this round, save the distance and side
-                        tempSmallestDistance.dis = dis; 
-                        tempSmallestDistance.side = sideOfLineSegment(point, linePoint_1, linePoint_2);
-                        testTemp = point;
-                        testTempA = linePoint_1;
-                        testTempB = linePoint_2;
-                    }
-                }
-                if( tempSmallestDistance.side ){/*console.log('a point from B is in A');*/return true;}
-            }
-
-            //side intersection
-            // compare each side of each poly to every other side, looking for lines that
-            // cross each other. If a crossing is found at any point; return true
-                for(var a = 0; a < a_poly_clone.length-1; a++){
-                    for(var b = 0; b < b_poly_clone.length-1; b++){
-                        var data = __globals.utility.getIntersectionOfTwoLineSegments(
-                            a_poly_clone[a][0],  a_poly_clone[a][1],
-                            a_poly_clone[a+1][0],a_poly_clone[a+1][1],
-                            b_poly_clone[b][0],  b_poly_clone[b][1],
-                            b_poly_clone[b+1][0],b_poly_clone[b+1][1]
-                        );
-                        
-                        if(!data){continue;}
-                        if(data.inSeg1 && data.inSeg2){/*console.log('point intersection at ' + data.x + ' ' + data.y);*/return true;}
-                    }
+                for(var a = 0; a <= stepCount; a++){
+                    outputArray.push( (Math.exp(a/stepCount)-1)/(Math.E-1) ); // Math.E == Math.exp(1)
                 }
 
-        return false;
-    };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    this.curve = new function(){
-        this.linear = function(stepCount){
-            stepCount = Math.abs(stepCount)-1; var outputArray = [0];
-            for(var a = 1; a < stepCount; a++){ outputArray.push(a/stepCount); }
-            outputArray.push(1); return outputArray;
-        };
-    
-        this.reverse_linear = function(stepCount){
-            stepCount = Math.abs(stepCount) - 1; var outputArray = [1];
-            for(var a = stepCount-1; a > 0; a--){ outputArray.push(a/stepCount); }
-            outputArray.push(0); return outputArray;
-        };
-    
-        this.sin = function(stepCount,start=0,distance=1){
-            stepCount = Math.abs(stepCount) -1;
-            var outputArray = [];
-            var progressPercentage = 0;
-            var useablePeriod = 2*Math.PI*distance; 
-            
-            for(var a = 0; a <= stepCount; a++){
-                progressPercentage = a/stepCount;
-                outputArray.push(Math.sin(progressPercentage*useablePeriod + 2*Math.PI*start));
-            }
-            return outputArray;		
-        };
-    
-        this.cos = function(stepCount,start=0,distance=1){
-            stepCount = Math.abs(stepCount) -1;
-            var outputArray = [];
-            var progressPercentage = 0;
-            var useablePeriod = 2*Math.PI*distance; 
-            
-            for(var a = 0; a <= stepCount; a++){
-                progressPercentage = a/stepCount;
-                outputArray.push(Math.cos(progressPercentage*useablePeriod + 2*Math.PI*start));
-            }
-            return outputArray;		
-        };   
-        this.s = function(stepCount,sharpness){
-            var curve = [];
-            for(var a = 0; a < stepCount; a++){
-                curve.push(
-                    1/( 1 + Math.exp(-sharpness*((a/stepCount)-0.5)) )
-                );
-            }
-
-            //normalize curve
-            function normalizeStretchArray(array){
-                var biggestIndex = 0;
-                for(var a = 1; a < array.length; a++){
-                    if( Math.abs(array[a]) > Math.abs(array[biggestIndex]) ){
-                        biggestIndex = a;
-                    }
+                var mux = end-start;
+                for(var a = 0 ; a < outputArray.length; a++){
+                    outputArray[a] = outputArray[a]*mux + start;
                 }
     
-                var mux = Math.abs(1/array[biggestIndex]);
-    
-                for(var a = 0; a < array.length; a++){
-                    array[a] = array[a]*mux;
-                }
-
-                //stretching
-                if(array[0] == 0 && array[array.length-1] == 1){return array;}
-                else if( array[0] != 0 ){
-                    var pertinentValue = array[0];
-                    for(var a = 0; a < array.length; a++){
-                        array[a] = array[a] - pertinentValue*(1-a/(array.length-1));
-                    }
-                }
-                else{
-                    var pertinentValue = array[array.length-1];
-                    for(var a = 0; a < array.length; a++){
-                        array[a] = array[a] - pertinentValue*(a/(array.length-1));
-                    }
-                }
-
-                return array;
-            }
-
-            return normalizeStretchArray(curve);
-        };
-        this.exponential = function(stepCount){
-            var stepCount = stepCount-1;
-            var curve = [];
-            
-            for(var a = 0; a <= stepCount; a++){
-                curve.push( (Math.exp(a/stepCount)-1)/(Math.E-1) ); // Math.E == Math.exp(1)
-            }
-
-            return curve;
+                return outputArray;
+            };
         };
     };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
+};

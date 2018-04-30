@@ -1,7 +1,7 @@
 function makeDataDuplicator(x,y){
 
     var _mainObject = parts.basic.g('dataDuplicator', x, y);
-        parts.modifier.makeUnselectable(_mainObject);
+        __globals.utility.element.makeUnselectable(_mainObject);
 
     var backing = parts.basic.rect(null, 0, 0, 75, 55, 0, 'fill:rgba(200,200,200,1)');
         _mainObject.append(backing);
@@ -13,7 +13,7 @@ function makeDataDuplicator(x,y){
         _mainObject.selectionArea.points = [];
         function updateSelectionArea(){
             //the main shape we want to use
-            var temp = __globals.utility.getBoundingBox(backing);
+            var temp = __globals.utility.element.getBoundingBox(backing);
             _mainObject.selectionArea.box = [
                 [temp.x,temp.y],
                 [temp.x+temp.width,temp.y+temp.height]
@@ -26,14 +26,14 @@ function makeDataDuplicator(x,y){
             ];
 
             //adjusting it for the object's position in space
-            temp = __globals.utility.getTransform(_mainObject);
+            temp = __globals.utility.element.getTransform(_mainObject);
             for(var a = 0; a < _mainObject.selectionArea.box.length; a++){
-                _mainObject.selectionArea.box[a][0] += temp[0];
-                _mainObject.selectionArea.box[a][1] += temp[1];
+                _mainObject.selectionArea.box[a][0] += temp.x;
+                _mainObject.selectionArea.box[a][1] += temp.y;
             }
             for(var a = 0; a < _mainObject.selectionArea.points.length; a++){
-                _mainObject.selectionArea.points[a][0] += temp[0];
-                _mainObject.selectionArea.points[a][1] += temp[1];
+                _mainObject.selectionArea.points[a][0] += temp.x;
+                _mainObject.selectionArea.points[a][1] += temp.y;
             }
         }
         updateSelectionArea();
@@ -43,11 +43,11 @@ function makeDataDuplicator(x,y){
         
         _mainObject.select = function(){
             console.log('I\'ve been selected!');
-            __globals.utility.setStyle(backing, 'fill:rgba(220,220,220,1)');
+            __globals.utility.element.setStyle(backing, 'fill:rgba(220,220,220,1)');
         };
         _mainObject.deselect = function(){
             console.log('I\'ve been deselected!');
-            __globals.utility.setStyle(backing, 'fill:rgba(200,200,200,1)');
+            __globals.utility.element.setStyle(backing, 'fill:rgba(200,200,200,1)');
         };
         _mainObject.delete = function(){
             console.log('I\'ve been deleted!');

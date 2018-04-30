@@ -10,12 +10,12 @@ parts.modifier.onmousedownFunctions = function(grapple, target, creatorMethod){
         if(event.button != 0){return;}
 
         __globals.svgElement.tempRef = object;
-        __globals.svgElement.tempRef.setAttribute('oldPosition','['+__globals.utility.getTransform(__globals.svgElement.tempRef)+']');
+        __globals.svgElement.tempRef.setAttribute('oldPosition','['+__globals.utility.element.getTransform(__globals.svgElement.tempRef)+']');
         __globals.svgElement.tempRef.setAttribute('clickPosition','['+event.x +','+ event.y+']');
         __globals.svgElement.onmousemove = function(event){
             var position = JSON.parse(__globals.svgElement.tempRef.getAttribute('oldPosition'));
             var clickPosition = JSON.parse(__globals.svgElement.tempRef.getAttribute('clickPosition'));
-            var globalScale = __globals.utility.getTransform(__globals.panes.global)[2];
+            var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
             position[0] = (position[0]-(clickPosition[0]-event.x)/globalScale);
             position[1] = position[1]-(clickPosition[1]-event.y)/globalScale;
             __globals.utility.setTransform(__globals.svgElement.tempRef, position);
@@ -59,10 +59,10 @@ parts.modifier.onmousedownFunctions = function(grapple, target, creatorMethod){
     grapple.onmousedown_functionList.copy = function(event){
         if(!event.shiftKey || !grapple.target.creatorMethod){return false;}
 
-        var position = __globals.utility.getTransform(grapple.target);
+        var position = __globals.utility.element.getTransform(grapple.target);
         var newObject = grapple.target.creatorMethod(position[0],position[1]);
 
-        __globals.utility.getPane(grapple.target).appendChild(newObject);
+        __globals.utility.workspace.getPane(grapple.target).appendChild(newObject);
 
         if(newObject.copy){newObject.copy();}
 

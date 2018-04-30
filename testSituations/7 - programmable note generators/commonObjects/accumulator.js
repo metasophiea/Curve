@@ -6,7 +6,7 @@ __globals.objects.make_accumulator = function(x,y){
         currentLevel: 0
     };
     var shape = {
-        base: [[0,0],[40,0],[65,25],[65,55],[0,55]],
+        base: [{x:0,y:0},{x:40,y:0},{x:65,y:25},{x:65,y:55},{x:0,y:55}],
         littleConnector: { width: 20, height: 20 },
         glowboxArea: {x:5, y:2.5, width:30, height:50, gappage:1},
         resetButton: {x: 45, y: 10, width: 20, height: 10},
@@ -14,8 +14,7 @@ __globals.objects.make_accumulator = function(x,y){
             rect:[
                 {x:(65*0.575), y:(20*1.5  + 20/2)-1, width:22.5, height:2, angle:0}
             ],
-            path:[
-                [[(65-10),(20*1.25 + 20/2)],[(65-2.5),(20*1.5 + 20/2)],[(65-10),(20*1.75 + 20/2)]]
+            path:[[{x:(65-10),y:(20*1.25 + 20/2)},{x:(65-2.5),y:(20*1.5 + 20/2)},{x:(65-10),y:(20*1.75 + 20/2)}]
             ]
         }
     };
@@ -79,7 +78,7 @@ __globals.objects.make_accumulator = function(x,y){
         _mainObject.io.in = parts.dynamic.connectionNode_data('_mainObject.io.in', shape.littleConnector.width*0.5, -shape.littleConnector.height*0.5, shape.littleConnector.width, shape.littleConnector.height);
             _mainObject.prepend(_mainObject.io.in);
             _mainObject.io.in.receive = function(address,data){if(address!='pulse'){return;}accumulate();};
-        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', shape.base[3][0]-shape.littleConnector.width*0.5, shape.base[3][1]-shape.littleConnector.height*1.25, shape.littleConnector.width, shape.littleConnector.height);
+        _mainObject.io.out = parts.dynamic.connectionNode_data('_mainObject.io.out', shape.base[3].x-shape.littleConnector.width*0.5, shape.base[3].y-shape.littleConnector.height*1.25, shape.littleConnector.width, shape.littleConnector.height);
             _mainObject.prepend(_mainObject.io.out);
 
 

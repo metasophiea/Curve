@@ -121,17 +121,17 @@ function makeMidiPlayer(x,y){
         _mainObject.selectionArea.points = [];
         _mainObject.updateSelectionArea = function(){
             //the main shape we want to use
-            var temp = __globals.utility.getBoundingBox(backing);
+            var temp = __globals.utility.element.getBoundingBox(backing);
             _mainObject.selectionArea.points = [
                 [temp.x,temp.y],
                 [temp.x+temp.width,temp.y],
                 [temp.x+temp.width,temp.y+temp.height],
                 [temp.x,temp.y+temp.height]
             ];
-            _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
+            _mainObject.selectionArea.box = __globals.utility.math.boundingBoxFromPoints(_mainObject.selectionArea.points);
 
             //adjusting it for the object's position in space
-            temp = __globals.utility.getTransform(_mainObject);
+            temp = __globals.utility.element.getTransform(_mainObject);
             _mainObject.selectionArea.box.forEach(function(element) {
                 element[0] += temp[0];
                 element[1] += temp[1];
@@ -149,11 +149,11 @@ function makeMidiPlayer(x,y){
         
     _mainObject.onSelect = function(){
         console.log('I\'ve been selected!');
-        __globals.utility.setStyle(backing, 'fill:rgba(220,220,220,1)');
+        __globals.utility.element.setStyle(backing, 'fill:rgba(220,220,220,1)');
     };
     _mainObject.onDeselect = function(){
         console.log('I\'ve been deselected!');
-        __globals.utility.setStyle(backing, 'fill:rgba(200,200,200,1)');
+        __globals.utility.element.setStyle(backing, 'fill:rgba(200,200,200,1)');
     };
     _mainObject.onDelete = function(){
         console.log('I\'ve been deleted!');

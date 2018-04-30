@@ -10,9 +10,18 @@ if len(sys.argv) < 3:
 
 def includer(location, parentFile, inputfileName, outputObject, spacer=''):
     if(inputfileName == '*'):
-        for item in os.listdir(location):
-            if parentFile != item:
-                includer(location, parentFile, item, outputObject, spacer)
+        try:
+            for item in os.listdir(location):
+                if parentFile != item:
+                    includer(location, parentFile, item, outputObject, spacer)
+        except FileNotFoundError:
+            print('Could not find file')
+            print('\tlocation:', location)
+            print('\tparentFile:', parentFile)
+            print('\tinputfileName:', inputfileName)
+            print()
+            print('\terror:', sys.exc_info())
+            exit()
     else:
         if os.path.isdir(location+'/'+inputfileName):
             includer( location+'/'+inputfileName+'/', '', '*', outputObject, spacer)

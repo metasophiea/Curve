@@ -15,9 +15,9 @@ this.path = function(id=null, path=[], lineType='L', style='fill:none; stroke:rg
     element.style = 'transform: translate('+0+'px,'+0+'px) scale(1) rotate('+0+'rad);' + style;
 
     element._installPath = function(path){
-        var d = 'M ' + path[0][0] + ' ' + path[0][1] + ' ' + lineType;
+        var d = 'M ' + path[0].x + ' ' + path[0].y + ' ' + lineType;
         for(var a = 1; a < path.length; a++){
-            d += ' ' + path[a][0] + ' ' + path[a][1]
+            d += ' ' + path[a].x + ' ' + path[a].y
         }
         this.setAttribute('d',d);
     };

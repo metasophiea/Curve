@@ -4,13 +4,13 @@ parts.modifier.bestowMovement = function(grapple, target){
 
     grapple.onmousedown = function(event){
         __globals.svgElement.tempRef = this.movementTarget;
-        __globals.svgElement.tempRef.setAttribute('oldPosition','['+__globals.utility.getTransform(__globals.svgElement.tempRef)+']');
+        __globals.svgElement.tempRef.setAttribute('oldPosition','['+__globals.utility.element.getTransform(__globals.svgElement.tempRef)+']');
         __globals.svgElement.tempRef.setAttribute('clickPosition','['+event.x +','+ event.y+']');
 
         __globals.svgElement.onmousemove = function(event){
             var position = JSON.parse(__globals.svgElement.tempRef.getAttribute('oldPosition'));
             var clickPosition = JSON.parse(__globals.svgElement.tempRef.getAttribute('clickPosition'));
-            var globalScale = __globals.utility.getTransform(__globals.panes.global)[2];
+            var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
             position[0] = (position[0]-(clickPosition[0]-event.x)/globalScale);
             position[1] = position[1]-(clickPosition[1]-event.y)/globalScale;
             __globals.utility.setTransform(__globals.svgElement.tempRef, position);

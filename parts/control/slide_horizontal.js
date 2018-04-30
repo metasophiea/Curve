@@ -39,9 +39,11 @@ this.slide_horizontal = function(
 
         var steps = [1];
         switch(curve){
-            case 'linear': steps = __globals.utility.curve.linear(totalSteps); break;
-            case 'exponential': steps = __globals.utility.curve.exponential(totalSteps); break;
-            case 's': steps = __globals.utility.curve.s(totalSteps,8); break;
+            case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+            case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
+            case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
+            case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+            case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
             case 'instant': default: break;
         }
 
@@ -64,7 +66,7 @@ this.slide_horizontal = function(
     object.ondblclick = function(){ this.set(0.5); };
     object.onwheel = function(event){
         var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-        var globalScale = __globals.utility.getTransform(__globals.panes.global)[2];
+        var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
 
         this.set( this.get() + move/(10*globalScale) );
     }; 
@@ -77,7 +79,7 @@ this.slide_horizontal = function(
             var mux = __globals.svgElement.tempRef._data.mux;
             var value = __globals.svgElement.tempRef._data.initialValue;
             var numerator = __globals.svgElement.tempRef._data.initialX-event.x;
-            var divider = __globals.utility.getTransform(__globals.panes.global)[2];
+            var divider = __globals.utility.element.getTransform(__globals.panes.global).s;
 
             __globals.svgElement.tempRef.set( value - numerator/(divider*mux) );
         };

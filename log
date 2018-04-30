@@ -1,4 +1,59 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-04-30
+  - rewrote basicSynth into new style (it's actually longer than the original)
+  - pushed the new synthesizer into main place (should probably rename it)
+  - renamed synthesizer to synthesizer_basic
+  - wrote up prototype versions of a synthesizer with gain and detune wobble
+    (much better efficiency) and a prototype synthesizer object with gain wobble
+
+  future ideas
+  - we're going to have to make more self-contained synthesizers instead of this
+    multi-unit idea, as things are pretty heavy on the processor, and there seems
+    to be a lot of time spent on fixing things that aren't that necessary (like
+    the warbler sending the correct gain adjust signals fast enough, and the dial
+    being able to keep up..slow moves are pretty much fine)
+      It goes slightly against my desire to do everything in atomic parts (or at
+    least, have the option to) but here we are. Audiotool is contained like that.
+    Logic, Acid, etc. all the same. I suppose its a battle between wanting to make
+    things as open as possible, which led me to this everything-atomic way, but I 
+    think I can provide the same level of control with a more integrated (and
+    efficient) units.
+
+
+2018-04-27
+  - new audio sink now has left and right audio channel input and a meter for 
+    each
+  - fixed a problem with cable redrawing which I hadn't noticed before
+  - fixed slow duplication on the periodicWaveMaker, which had to do with
+    calling update loops with the slidepanels. Slidepanels now use their own
+    code more and don't rely on the individual sliders for panel-wide updates
+  - audio meter part; complete with level; slow-moving background level and 
+    markings (looks pretty pro too)
+  - tried making a 'warbler' which changes the gain of a synthesizer a lot. Seems
+    to break manual control though, and if you go fast enough the dial doesn't
+    move 
+  
+
+2018-04-26
+  - finished redoing utility (that was bigger than I expected)
+  - rearranged test situation 8 and some of the objects to look nicer
+  - periodicWaveMaker now sends its settings on connecting
+  - worked on redoing the audio sink to have an audio meter (working on an audio
+    meter while I'm there)
+
+
+2018-04-25
+  - redoing utility
+
+
+2018-04-24
+  - redoing utility
+
+
+2018-04-23
+  - redoing utility
+
+
 2018-04-20
   - updated keyboard interaction, so now objects have to declare what keys they
     want to use, and what modifiers will go with them (none, meta, control, alt

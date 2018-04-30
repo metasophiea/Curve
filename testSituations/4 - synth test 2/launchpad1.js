@@ -1,6 +1,6 @@
 function makeLaunchpad1(x,y){
     var _mainObject = parts.basic.g('launchpad1', x, y);
-        parts.modifier.makeUnselectable(_mainObject);
+        __globals.utility.element.makeUnselectable(_mainObject);
 
     var connectionNode_data = parts.dynamic.connectionNode_data('connectionNode_data',50-30/2,100-30/2,30,30);
         _mainObject.append(connectionNode_data);

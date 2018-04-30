@@ -70,60 +70,60 @@ this.segmentDisplay = function(
             var segments = [];
             var points = [
                 [
-                    [shapes.segments.points.top.left[0].x,  shapes.segments.points.top.left[0].y],
-                    [shapes.segments.points.top.right[2].x, shapes.segments.points.top.right[2].y],
-                    [shapes.segments.points.top.right[1].x, shapes.segments.points.top.right[1].y],
-                    [shapes.segments.points.top.right[0].x, shapes.segments.points.top.right[0].y],
-                    [shapes.segments.points.top.left[2].x,  shapes.segments.points.top.left[2].y],
-                    [shapes.segments.points.top.left[1].x,  shapes.segments.points.top.left[1].y],
+                    shapes.segments.points.top.left[0],
+                    shapes.segments.points.top.right[2],
+                    shapes.segments.points.top.right[1],
+                    shapes.segments.points.top.right[0],
+                    shapes.segments.points.top.left[2],
+                    shapes.segments.points.top.left[1],
                 ],
                 [
-                    [shapes.segments.points.top.left[1].x,    shapes.segments.points.top.left[1].y],
-                    [shapes.segments.points.top.left[3].x,    shapes.segments.points.top.left[3].y],
-                    [shapes.segments.points.middle.left[3].x, shapes.segments.points.middle.left[3].y],
-                    [shapes.segments.points.middle.left[1].x, shapes.segments.points.middle.left[1].y],
-                    [shapes.segments.points.middle.left[0].x, shapes.segments.points.middle.left[0].y],
-                    [shapes.segments.points.top.left[0].x,    shapes.segments.points.top.left[0].y],
+                    shapes.segments.points.top.left[1],
+                    shapes.segments.points.top.left[3],
+                    shapes.segments.points.middle.left[3],
+                    shapes.segments.points.middle.left[1],
+                    shapes.segments.points.middle.left[0],
+                    shapes.segments.points.top.left[0],  
                 ],
                 [
-                    [shapes.segments.points.top.right[1].x,    shapes.segments.points.top.right[1].y],
-                    [shapes.segments.points.top.right[3].x,    shapes.segments.points.top.right[3].y],
-                    [shapes.segments.points.middle.right[3].x, shapes.segments.points.middle.right[3].y],
-                    [shapes.segments.points.middle.right[1].x, shapes.segments.points.middle.right[1].y],
-                    [shapes.segments.points.middle.right[2].x, shapes.segments.points.middle.right[2].y],
-                    [shapes.segments.points.top.right[2].x,    shapes.segments.points.top.right[2].y],
+                    shapes.segments.points.top.right[1],  
+                    shapes.segments.points.top.right[3],  
+                    shapes.segments.points.middle.right[3],
+                    shapes.segments.points.middle.right[1],
+                    shapes.segments.points.middle.right[2],
+                    shapes.segments.points.top.right[2],  
                 ],
                 [
-                    [shapes.segments.points.middle.left[0].x,  shapes.segments.points.middle.left[0].y],
-                    [shapes.segments.points.middle.right[2].x, shapes.segments.points.middle.right[2].y],
-                    [shapes.segments.points.middle.right[1].x, shapes.segments.points.middle.right[1].y],
-                    [shapes.segments.points.middle.right[0].x, shapes.segments.points.middle.right[0].y],
-                    [shapes.segments.points.middle.left[2].x,  shapes.segments.points.middle.left[2].y],
-                    [shapes.segments.points.middle.left[1].x,  shapes.segments.points.middle.left[1].y],
+                    shapes.segments.points.middle.left[0], 
+                    shapes.segments.points.middle.right[2],
+                    shapes.segments.points.middle.right[1],
+                    shapes.segments.points.middle.right[0],
+                    shapes.segments.points.middle.left[2], 
+                    shapes.segments.points.middle.left[1], 
                 ],
                 [
-                    [shapes.segments.points.middle.left[1].x, shapes.segments.points.middle.left[1].y],
-                    [shapes.segments.points.middle.left[4].x, shapes.segments.points.middle.left[4].y],
-                    [shapes.segments.points.bottom.left[3].x, shapes.segments.points.bottom.left[3].y],
-                    [shapes.segments.points.bottom.left[1].x, shapes.segments.points.bottom.left[1].y],
-                    [shapes.segments.points.bottom.left[0].x, shapes.segments.points.bottom.left[0].y],
-                    [shapes.segments.points.middle.left[2].x, shapes.segments.points.middle.left[2].y],
+                    shapes.segments.points.middle.left[1],
+                    shapes.segments.points.middle.left[4],
+                    shapes.segments.points.bottom.left[3],
+                    shapes.segments.points.bottom.left[1],
+                    shapes.segments.points.bottom.left[0],
+                    shapes.segments.points.middle.left[2],
                 ],
                 [
-                    [shapes.segments.points.middle.right[1].x, shapes.segments.points.middle.right[1].y],
-                    [shapes.segments.points.middle.right[4].x, shapes.segments.points.middle.right[4].y],
-                    [shapes.segments.points.bottom.right[3].x, shapes.segments.points.bottom.right[3].y],
-                    [shapes.segments.points.bottom.right[1].x, shapes.segments.points.bottom.right[1].y],
-                    [shapes.segments.points.bottom.right[2].x, shapes.segments.points.bottom.right[2].y],
-                    [shapes.segments.points.middle.right[0].x, shapes.segments.points.middle.right[0].y],
+                    shapes.segments.points.middle.right[1],
+                    shapes.segments.points.middle.right[4],
+                    shapes.segments.points.bottom.right[3],
+                    shapes.segments.points.bottom.right[1],
+                    shapes.segments.points.bottom.right[2],
+                    shapes.segments.points.middle.right[0],
                 ],
                 [
-                    [shapes.segments.points.bottom.left[0].x,  shapes.segments.points.bottom.left[0].y],
-                    [shapes.segments.points.bottom.right[2].x, shapes.segments.points.bottom.right[2].y],
-                    [shapes.segments.points.bottom.right[1].x, shapes.segments.points.bottom.right[1].y],
-                    [shapes.segments.points.bottom.right[0].x, shapes.segments.points.bottom.right[0].y],
-                    [shapes.segments.points.bottom.left[2].x,  shapes.segments.points.bottom.left[2].y],
-                    [shapes.segments.points.bottom.left[1].x,  shapes.segments.points.bottom.left[1].y],
+                    shapes.segments.points.bottom.left[0],
+                    shapes.segments.points.bottom.right[2],
+                    shapes.segments.points.bottom.right[1],
+                    shapes.segments.points.bottom.right[0],
+                    shapes.segments.points.bottom.left[2],
+                    shapes.segments.points.bottom.left[1],
                 ]
             ];
             for(var a = 0; a < points.length; a++){
@@ -139,8 +139,8 @@ this.segmentDisplay = function(
     //methods
         object.set = function(segment,state){
             segments[segment].state = state;
-            if(state){ __globals.utility.setStyle(segments[segment].segment,glowStyle); }
-            else{ __globals.utility.setStyle(segments[segment].segment,dimStyle); }
+            if(state){ __globals.utility.element.setStyle(segments[segment].segment,glowStyle); }
+            else{ __globals.utility.element.setStyle(segments[segment].segment,dimStyle); }
         };
         object.get = function(segment){ return segments[segment].state; };
         object.clear = function(){

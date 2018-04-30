@@ -1,6 +1,6 @@
 // {{include:../midiparsers/MidiConvert-testMidiData1.js}}
 // {{include:../midiparsers/MidiConvert-testMidiData2.js}}
-{{include:../midiparsers/MidiConvert-testMidiData3.js}}
+{{include:../midiparsers/preparsed-MidiConvert-testMidiData3.js}}
 
 
 

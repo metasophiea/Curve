@@ -35,21 +35,20 @@ this.slidePanel_horizontal = function(
         };
         object.smoothSet = function(a,time,curve,update=true){
             for(var b = 0; b < a.length; b++){
-                this.slide(b).smoothSet(a[b],time,curve,update);
+                this.slide(b).smoothSet(a[b],time,curve,false);
             }
             for(var b = a.length; b < count; b++){
-                this.slide(b).smoothSet(1/2,time,curve,update);
+                this.slide(b).smoothSet(1/2,time,curve,false);
             }
+
+            if(update&&this.onChange){ setTimeout(function(){this.onChange(a);},time); }
+            if(update&&!live&&this.onRelease){ setTimeout(function(){this.onRelease(a);},time); }
         };
         object.setAll = function(a, live=false, update=true){
-            for(var b = 0; b < count; b++){
-                this.slide(b).set(a,live,update);
-            }
+            this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a) );
         };
         object.smoothSetAll = function(a, time, curve, update=true){
-            for(var b = 0; b < count; b++){
-                this.slide(b).smoothSet(a,time,curve,update);
-            }
+            this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a), time, curve, update );
         };
     
     //callback

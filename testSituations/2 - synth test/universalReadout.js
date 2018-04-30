@@ -1,6 +1,6 @@
 function makeUniversalReadout(x,y){
     var _mainObject = parts.basic.g('universalReadout', x, y);
-        parts.modifier.makeUnselectable(_mainObject);
+    __globals.utility.element.makeUnselectable(_mainObject);
 
     var connectionNode_data = parts.dynamic.connectionNode_data('connectionNode_data',-30/2,25-30/2,30,30);
         _mainObject.append(connectionNode_data);

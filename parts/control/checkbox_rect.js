@@ -22,9 +22,9 @@ this.checkbox_rect = function(
 
 
     function updateGraphics(){
-        if(object._checked){ __globals.utility.setStyle(checkrect,object.styles.check); }
-        else{ __globals.utility.setStyle(checkrect,object.styles.uncheck); }
-        __globals.utility.setStyle(rect,object.styles.backing);
+        if(object._checked){ __globals.utility.element.setStyle(checkrect,object.styles.check); }
+        else{ __globals.utility.element.setStyle(checkrect,object.styles.uncheck); }
+        __globals.utility.element.setStyle(rect,object.styles.backing);
     }
 
     //methods

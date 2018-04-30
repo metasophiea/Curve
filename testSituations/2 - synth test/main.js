@@ -50,7 +50,7 @@
 
 
 
-    __globals.utility.gotoPosition(-125.755, -566.773, 1.5625, 0);
+    __globals.utility.workspace.gotoPosition(-125.755, -566.773, 1.5625, 0);
 
 
 

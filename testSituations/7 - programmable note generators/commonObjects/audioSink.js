@@ -33,17 +33,17 @@ __globals.objects.make_audioSink = function(x,y){
             _mainObject.selectionArea.points = [];
             _mainObject.updateSelectionArea = function(){
                 //the main shape we want to use
-                var temp = __globals.utility.getBoundingBox(backing);
+                var temp = __globals.utility.element.getBoundingBox(backing);
                 _mainObject.selectionArea.points = [
                     [temp.x,temp.y],
                     [temp.x+temp.width,temp.y],
                     [temp.x+temp.width,temp.y+temp.height],
                     [temp.x,temp.y+temp.height]
                 ];
-                _mainObject.selectionArea.box = __globals.utility.getBoundingBoxFromPoints(_mainObject.selectionArea.points);
+                _mainObject.selectionArea.box = __globals.utility.math.boundingBoxFromPoints(_mainObject.selectionArea.points);
     
                 //adjusting it for the object's position in space
-                temp = __globals.utility.getTransform(_mainObject);
+                temp = __globals.utility.element.getTransform(_mainObject);
                 _mainObject.selectionArea.box.forEach(function(element) {
                     element[0] += temp[0];
                     element[1] += temp[1];
