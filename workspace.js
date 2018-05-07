@@ -5,6 +5,48 @@
             var __globals = {};
             __globals.svgElement = __svgElements[__svgElements_count];
 
+// utility
+// workspace
+//     currentPosition                 ()
+//     gotoPosition                    (x,y,z,r)
+//     getPane                         (element)
+//     objectUnderPoint                (x,y) (browser position)
+//     pointConverter
+//         browser2workspace           (x,y)
+//         workspace2browser           (x,y)
+//     dotMaker                        (x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;')
+//
+// element
+//     getTransform                    (element)
+//     getCumulativeTransform          (element)
+//     setTransform                    (element, transform:{x:0, y:0, s:1, r:0})
+//     setTransform_XYonly             (element, x, y)
+//     setStyle                        (element, style)
+//     setRotation                     (element, rotation)
+//     getBoundingBox                  (element)
+//     makeUnselectable                (element)
+//
+// object
+//     requestInteraction              (x,y,type) (browser position)
+//     disconnectEverything            (object)
+//     generateSelectionArea           (points:[{x:0,y:0},...], object)
+//
+// audio
+//     changeAudioParam                (audioParam,target,time,curve,cancelScheduledValues=true)
+//
+// math
+//     averageArray                    (array)
+//     polar2cartesian                 (angle,distance)
+//     cartesian2polar                 (x,y)
+//     boundingBoxFromPoints           (points:[{x:0,y:0},...])
+//     detectOverlap                   (poly_a:[{x:0,y:0},...], poly_b:[{x:0,y:0},...], box_a:[{x:0,y:0},{x:0,y:0}]=null, box_b:[{x:0,y:0},{x:0,y:0}]=null)
+//     curveGenerator
+//         linear                      (stepCount, start=0, end=1)
+//         sin                         (stepCount, start=0, end=1)
+//         cos                         (stepCount, start=0, end=1)
+//         s                           (stepCount, start=0, end=1, sharpness=8)
+//         exponential                 (stepCount, start=0, end=1)
+
 __globals.utility = new function(){
     this.workspace = new function(){
         this.currentPosition = function(){
@@ -144,6 +186,37 @@ __globals.utility = new function(){
             };
 
             object.updateSelectionArea();
+        };
+    };
+    this.audio = new function(){
+        this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
+            if(target==null){return audioParam.value;}
+
+            if(cancelScheduledValues){ audioParam.cancelScheduledValues(context.currentTime); }
+
+            try{
+                switch(curve){
+                    case 'linear': 
+                        audioParam.linearRampToValueAtTime(target, context.currentTime+time);
+                    break;
+                    case 'exponential':
+                        console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
+                        if(target == 0){target = 1/10000;}
+                        audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
+                    break;
+                    case 's':
+                        var mux = target - audioParam.value;
+                        var array = __globals.utility.math.curveGenerator.s(10);
+                        for(var a = 0; a < array.length; a++){
+                            array[a] = audioParam.value + array[a]*mux;
+                        }
+                        audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
+                    break;
+                    case 'instant': default:
+                        audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                    break;
+                }
+            }catch(e){console.log('could not change param (probably due to an overlap)');console.log(e);}
         };
     };
     this.math = new function(){
@@ -2330,7 +2403,7 @@ this.dial_continuous = function(
                 __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
             };
             __globals.svgElement.onmouseup = function(){
-                this.tempRef.set(this.tempRef.get());
+                this.tempRef.set(this.tempRef.get(),false);
                 delete this.tempRef;
 
                 __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
@@ -2401,15 +2474,18 @@ this.dial_discrete = function(
 
 
     //methods
-    object.select = function(a=null, update=true){
+    object.select = function(a=null, live=true, update=true){
         if(a==null){return this._selection;}
 
         a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
         a = (a<0 ? 0 : a);
 
+        if(this._selection == a){/*nothings changed*/return;}
+
         this._selection = a;
         this._set( a/(this._data.optionCount-1) );
         if(update&&this.onChange){ this.onChange(a); }
+        if(update&&!live&&this.onRelease){ this.onRelease(value); }
     };
     object._get = function(){ return this._value; };
     object._set = function(value){
@@ -2423,8 +2499,9 @@ this.dial_discrete = function(
 
     //callback
     object.onChange = function(){};
+    object.onRelease = function(){};
 
-
+    
     //mouse interaction
     object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
     object.onwheel = function(event){
@@ -2460,6 +2537,7 @@ this.dial_discrete = function(
             );
         };
         __globals.svgElement.onmouseup = function(){
+            this.tempRef.select(this.tempRef.select(),false);
             this.tempRef = null;
             
             __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
@@ -3473,91 +3551,6 @@ this.connectionNode_data = function(
 };
             
 __globals.objects = {};
-__globals.objects.make_audioToPercentage = function(x,y){
-    //set numbers
-        var type = 'audioToPercentage';
-        var shape = {};
-            shape.base = [{x:0,y:0},{x:50,y:0},{x:50,y:50},{x:0,y:50}];
-            shape.connector = { width: 20, height: 20 };
-            shape.connections = {};
-                shape.connections.audio = [];
-                    shape.connections.audio.push(
-                        {
-                            name: 'io.audio.in:sourceWave',
-                            type: 0,
-                            x:shape.base[2].x-shape.connector.width/2, 
-                            y:shape.connector.height*0.25, 
-                            width:shape.connector.width, 
-                            height:shape.connector.height
-                        }
-                    );
-                shape.connections.data = [];
-                    shape.connections.data.push(
-                        {
-                            name: 'io.data.out:%',
-                            x:-shape.connector.width/2, 
-                            y:shape.base[2].y-shape.connector.height*1.25, 
-                            width:shape.connector.width, 
-                            height:shape.connector.height
-                        }
-                    );
-        
-        var style = {
-            background: 'fill:rgba(200,200,200,1)',
-            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;'
-        };
-
-    //main
-    var _mainObject = parts.basic.g(type, x, y);
-        _mainObject._type = type;
-
-    //circuitry
-        var converter = parts.audio.audio2percentage()
-            converter.newValue = function(val){_mainObject.io['io.data.out:%'].send('%',val);};
-            converter.start();
-
-    //elements
-        //backing
-        var backing = parts.basic.path(null, shape.base, 'L', style.background);
-        _mainObject.append(backing);
-        __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
-
-        //level
-        var audioMeter = parts.display.audio_meter_level('audioMeter', 30, 5, 0, 15, 40);
-        _mainObject.append(audioMeter);
-        audioMeter.start();
-
-    //connection nodes
-    _mainObject.io = {};
-        //audio
-        shape.connections.audio.forEach(function(data){
-            _mainObject.io[data.name] = parts.dynamic.connectionNode_audio(data.name, data.type, data.x, data.y, data.width, data.height, __globals.audio.context);
-            _mainObject.prepend(_mainObject.io[data.name]);
-        });
-        //data
-        shape.connections.data.forEach(function(data){
-            _mainObject.io[data.name] = parts.dynamic.connectionNode_data(data.name, data.x, data.y, data.width, data.height);
-            _mainObject.prepend(_mainObject.io[data.name]);
-        });
-
-        _mainObject.io['io.audio.in:sourceWave'].out().connect(audioMeter.audioIn());
-        _mainObject.io['io.audio.in:sourceWave'].out().connect(converter.audioIn());
-
-    return _mainObject;
-};
-/*
-synthesizer 1
-    waveType
-    gain
-    note
-    octave
-    detune
-
-    attack
-    release
-
-    pitchBend
-*/
 __globals.objects.make_audioDuplicator = function(x,y){
     //set numbers
     var type = 'audioDuplicator';
@@ -3780,9 +3773,9 @@ __globals.objects.make_audioSink = function(x,y){
 
     return _mainObject;
 };
-__globals.objects.make_basicSynth = function(x,y){
+__globals.objects.make_basicSynth2 = function(x,y){
     //set numbers
-    var type = 'basicSynth';
+    var type = 'basicSynth2';
     var attributes = {
         detuneLimits: {min:-100, max:100}
     };
@@ -3799,7 +3792,28 @@ __globals.objects.make_basicSynth = function(x,y){
         needle: 'fill:rgba(250,150,150,1)'
     };
     var shape = {
-        base: [{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:200,y:80},{x:0,y:80}],
+        base: [{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90}],
+        markings:{
+            rect:{
+                periodicWaveType: {
+                    x: 230, y: 21.75, angle: 0,
+                    width: 10, height: 2.5,
+                    style: style.slot
+                }
+            },
+            text:{
+                gainWobble: {
+                    x: 10, y: 70, angle: -Math.PI/2,
+                    text: 'gain',
+                    style: style.h2
+                },
+                detuneWobble: {
+                    x: 95, y: 70, angle: -Math.PI/2,
+                    text: 'detune',
+                    style: style.h2
+                }
+            },
+        },
         connector: {
             audio:{
                 audioOut:{ type: 1, x: -15, y: 5, width: 30, height: 30 },
@@ -3831,6 +3845,10 @@ __globals.objects.make_basicSynth = function(x,y){
                 waveType:{ x: 12.5+(40*5), y: -7.5, width: 15, height: 15, receive: function(address,data){ if(address != 'discrete'){return;} _mainObject.dial.discrete.waveType.select(data); } },
                 periodicWave:{ x: 232.5, y: 12.5, width: 15, height: 15, receive: function(address,data){ if(address != 'periodicWave'){return;} _mainObject.__synthesizer.periodicWave(data); } },
                 midiNote:{ x: 217.5, y: 37.5, width: 30, height: 30, angle: Math.PI/4, receive: function(address,data){  if(address != 'midiNumber'){return;} _mainObject.__synthesizer.perform(data); } },
+                gainWobblePeriod:{ x: 12.5+(40*0), y: 90-7.5, width: 15, height: 15, receive: function(address,data){ if(address != '%'){return;} _mainObject.dial.continuous.gainWobblePeriod.set(data); } },
+                gainWobbleDepth:{ x: 12.5+(40*1), y: 90-7.5, width: 15, height: 15, receive: function(address,data){ if(address != '%'){return;} _mainObject.dial.continuous.gainWobbleDepth.set(data); } },
+                detuneWobblePeriod:{ x: 12.5+(40*2), y: 90-7.5, width: 15, height: 15, receive: function(address,data){ if(address != '%'){return;} _mainObject.dial.continuous.detuneWobblePeriod.set(data); } },
+                detuneWobbleDepth:{ x: 12.5+(40*3), y: 90-7.5, width: 15, height: 15, receive: function(address,data){ if(address != '%'){return;} _mainObject.dial.continuous.detuneWobbleDepth.set(data); } },
             }
         },
         button:{
@@ -3908,9 +3926,9 @@ __globals.objects.make_basicSynth = function(x,y){
                 outerArcStyle: style.markings,
                 labels:[
                     { name: null, x: (40*3)+7,     y: (3)+40, text: 'detune', style: style.h1 },
-                    { name: null, x: (40*3)+2,     y: (3)+34, text: '0',      style: style.h2 },
-                    { name: null, x: (40*3)+18.75, y: (3)+4,  text: '5',      style: style.h2 },
-                    { name: null, x: (40*3)+28,    y: (3)+34, text: '10',     style: style.h2 },
+                    { name: null, x: (40*3)+2,     y: (3)+34, text: '-100',   style: style.h2 },
+                    { name: null, x: (40*3)+18.75, y: (3)+4,  text: '0',      style: style.h2 },
+                    { name: null, x: (40*3)+28,    y: (3)+34, text: '100',    style: style.h2 },
                 ],
                 onChange: function(value){ _mainObject.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); },
             },
@@ -3949,11 +3967,79 @@ __globals.objects.make_basicSynth = function(x,y){
                 labels:[
                     { name: null, x: (40*5)+11, y: (3)+40, text: 'wave', style: style.h1 },
                     { name: null, x: (40*5)+0,  y: (3)+32, text: 'sine', style: style.h2 },
-                    { name: null, x: (40*5)+0,  y: (3)+18, text: 'tri',  style: style.h2 },
+                    { name: null, x: (40*5)-1,  y: (3)+18, text: 'tri',  style: style.h2 },
                     { name: null, x: (40*5)+10, y: (3)+6,  text: 'squ',  style: style.h2 },
                     { name: null, x: (40*5)+27, y: (3)+7,  text: 'saw',  style: style.h2 },
                 ],
                 onChange: function(value){ _mainObject.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); },
+            },
+            gainWobblePeriod: {
+                type: 'continuous',
+                x: 10+(40*0)+20, y: 3+62, r: 12,
+                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                handleStyle: style.handle,
+                slotStyle: style.slot,
+                needleStyle: style.needle,
+                arcDistance: 1.2,
+                outerArcStyle: style.markings,
+                labels:[
+                    { name: null, x: 10+(40*0)+11, y: (3+42)+40, text: 'rate', style: style.h1 },
+                    { name: null, x: 10+(40*0)+6,  y: (3+42)+34, text: '0',    style: style.h2 },
+                    { name: null, x: 10+(40*0)+18, y: (3+42)+4,  text: '50',   style: style.h2 },
+                    { name: null, x: 10+(40*0)+30, y: (3+42)+34, text: '100',  style: style.h2 },
+                ],
+                onChange: function(value){ _mainObject.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); },
+            },
+            gainWobbleDepth: {
+                type: 'continuous',
+                x: 5+(40*1)+20, y: 3+62, r: 12,
+                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                handleStyle: style.handle,
+                slotStyle: style.slot,
+                needleStyle: style.needle,
+                arcDistance: 1.2,
+                outerArcStyle: style.markings,
+                labels:[
+                    { name: null, x: 5+(40*1)+9,  y: (3+42)+40, text: 'depth', style: style.h1 },
+                    { name: null, x: 5+(40*1)+5,  y: (3+42)+34, text: '0',     style: style.h2 },
+                    { name: null, x: 5+(40*1)+16, y: (3+42)+4,  text: '1/2',   style: style.h2 },
+                    { name: null, x: 5+(40*1)+32, y: (3+42)+34, text: '1',     style: style.h2 },
+                ],
+                onChange: function(value){_mainObject.__synthesizer.gainWobbleDepth(value);},
+            },
+            detuneWobblePeriod: {
+                type: 'continuous',
+                x: 14+(40*2)+20, y: 3+62, r: 12,
+                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                handleStyle: style.handle,
+                slotStyle: style.slot,
+                needleStyle: style.needle,
+                arcDistance: 1.2,
+                outerArcStyle: style.markings,
+                labels:[
+                    { name: null, x: 14+(40*2)+11, y: (3+42)+40, text: 'rate', style: style.h1 },
+                    { name: null, x: 14+(40*2)+6,  y: (3+42)+34, text: '0',    style: style.h2 },
+                    { name: null, x: 14+(40*2)+18, y: (3+42)+4,  text: '50',   style: style.h2 },
+                    { name: null, x: 14+(40*2)+30, y: (3+42)+34, text: '100',  style: style.h2 },
+                ],
+                onChange: function(value){ _mainObject.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); },
+            },
+            detuneWobbleDepth: {
+                type: 'continuous',
+                x: 9+(40*3)+20, y: 3+62, r: 12,
+                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                handleStyle: style.handle,
+                slotStyle: style.slot,
+                needleStyle: style.needle,
+                arcDistance: 1.2,
+                outerArcStyle: style.markings,
+                labels:[
+                    { name: null, x: 9+(40*3)+9,  y: (3+42)+40, text: 'depth', style: style.h1 },
+                    { name: null, x: 9+(40*3)+5,  y: (3+42)+34, text: '0',     style: style.h2 },
+                    { name: null, x: 9+(40*3)+16, y: (3+42)+4,  text: '1/2',   style: style.h2 },
+                    { name: null, x: 9+(40*3)+32, y: (3+42)+34, text: '1',     style: style.h2 },
+                ],
+                onChange: function(value){_mainObject.__synthesizer.detuneWobbleDepth(value*100);},
             }
         }
     };
@@ -3970,6 +4056,20 @@ __globals.objects.make_basicSynth = function(x,y){
 
         //generate selection area
             __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
+
+        //markings
+            //text
+                var keys = Object.keys( shape.markings.text );
+                for(var a = 0; a < keys.length; a++){
+                    var data = shape.markings.text[keys[a]];
+                    _mainObject.append(parts.display.label(keys[a], data.x, data.y, data.text, data.style, data.angle));
+                }
+            //rect
+                var keys = Object.keys( shape.markings.rect );
+                for(var a = 0; a < keys.length; a++){
+                    var data = shape.markings.rect[keys[a]];
+                    _mainObject.append(parts.basic.rect(keys[a], data.x, data.y, data.width, data.height, data.angle, data.style));
+                }
 
         //buttons
             _mainObject.button = {};
@@ -4024,6 +4124,7 @@ __globals.objects.make_basicSynth = function(x,y){
                 }else{console.error('unknow dial type: "'+ data.type + '"'); var dial = null;}
 
                 dial.onChange = data.onChange;
+                dial.onRelease = data.onRelease;
                 _mainObject.append(dial);
             }
 
@@ -4047,11 +4148,11 @@ __globals.objects.make_basicSynth = function(x,y){
             }
 
     //circuitry
-        _mainObject.__synthesizer = new parts.audio.synthesizer_basic(__globals.audio.context);
+        _mainObject.__synthesizer = new parts.audio.synthesizer2(__globals.audio.context);
         _mainObject.__synthesizer.out().connect( _mainObject.io.audioOut.in() );
 
     //setup
-        _mainObject.dial.continuous.gain.set(0);
+        _mainObject.dial.continuous.gain.set(0.5);
         _mainObject.dial.continuous.detune.set(0.5);
         _mainObject.dial.discrete.octave.select(3);
 
@@ -4615,63 +4716,6 @@ function makeUniversalReadout(x,y){
         
     return _mainObject;
 }
-__globals.objects.make_warbler = function(x,y){
-    //set numbers
-        var type = 'warbler';
-        var shape = {};
-            shape.base = [{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}];
-            shape.connector = { width: 20, height: 20 };
-            shape.connections = {};
-                shape.connections.data = [];
-                    shape.connections.data.push(
-                        {
-                            name: 'io.data.out:%',
-                            x:-shape.connector.width/2, 
-                            y:shape.base[2].y-shape.connector.height*1.25, 
-                            width:shape.connector.width, 
-                            height:shape.connector.height
-                        }
-                    );
-        
-        var style = {
-            background: 'fill:rgba(200,200,200,1)',
-            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;'
-        };
-
-    //main
-    var _mainObject = parts.basic.g(type, x, y);
-        _mainObject._type = type;
-
-    //circuitry
-        var index = 0;
-        var values = [0.1, 0.9];
-        var time = 1000;
-        setInterval(function(){
-            _mainObject.io['io.data.out:%'].send('%t',{target:values[index],time:(time)/1000,curve:'s'});
-            index = index+1 < values.length ? index+1 : 0;
-        },time);
-        
-    //elements
-        //backing
-            var backing = parts.basic.path(null, shape.base, 'L', style.background);
-            _mainObject.append(backing);
-            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
-   
-        //generate selection area
-            __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
-
-     
-    //connection nodes
-        _mainObject.io = {};
-
-        //data
-            shape.connections.data.forEach(function(data){
-                _mainObject.io[data.name] = parts.dynamic.connectionNode_data(data.name, data.x, data.y, data.width, data.height);
-                _mainObject.prepend(_mainObject.io[data.name]);
-            });
-
-    return _mainObject;
-};
 __globals.objects.make_synthTester = function(x,y, synth){
     //set numbers
     var type = 'synthTester';
@@ -4728,200 +4772,803 @@ __globals.objects.make_synthTester = function(x,y, synth){
 
     return _mainObject;
 };
-__globals.objects.make_basicWobbleSynth = function(x,y){
-    //set numbers
-    var type = 'basicWobbleSynth';
-    var attributes = {
-        detuneLimits: {min:-100, max:100}
+parts.audio.distortionUnit = function(
+    context,
+){
+    //flow chain
+    var flow = {
+        inAggregator: {},
+        distortionNode: {},
+        outAggregator: {},
     };
-    var style = {
-        background: 'fill:rgba(200,200,200,1); stroke:none;',
-        h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
-        h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
-        text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
 
-        markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+    //inAggregator
+        flow.inAggregator.gain = 0;
+        flow.inAggregator.node = context.createGain();
+        __globals.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
 
-        handle: 'fill:rgba(220,220,220,1)',
-        slot: 'fill:rgba(50,50,50,1)',
-        needle: 'fill:rgba(250,150,150,1)'
-    };
-    var shape = {
-        base: [{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:200,y:80},{x:0,y:80}],
-        connector: {
-            audio:{
-                audioOut:{ type: 1, x: -15, y: 5, width: 30, height: 30 },
-            },
-            data:{
-                gain:    { x: 12.5+(40*0), y: -7.5, width: 15, height: 15, receive: function(address,data){
-                    switch(address){
-                        case '%': _mainObject.dial.continuous.gain.set(data); break;
-                        case '%t': 
-                            _mainObject.__synthesizer.gain(data.target,data.time,data.curve);
-                            _mainObject.dial.continuous.gain.smoothSet(data.target,data.time,data.curve,false);
-                        break;
-                        default: break;
-                    }
-                }},
-                attack:  { x: 12.5+(40*1), y: -7.5, width: 15, height: 15, receive: function(address,data){ if(address != '%'){return;} _mainObject.dial.continuous.attack.set(data); } },
-                release: { x: 12.5+(40*2), y: -7.5, width: 15, height: 15, receive: function(address,data){ if(address != '%'){return;} _mainObject.dial.continuous.release.set(data); } },
-                detune:  { x: 12.5+(40*3), y: -7.5, width: 15, height: 15, receive: function(address,data){ 
-                    switch(address){
-                        case '%': _mainObject.dial.continuous.detune.set(data); break;
-                        case '%t': 
-                            _mainObject.__synthesizer.detune((data.target*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min),data.time,data.curve);
-                            _mainObject.dial.continuous.detune.smoothSet(data.target,data.time,data.curve,false);
-                        break;
-                        default: break;
-                    }
-                }},
-                octave:  { x: 12.5+(40*4), y: -7.5, width: 15, height: 15, receive: function(address,data){ if(address != 'discrete'){return;} _mainObject.dial.discrete.octave.select(data); } },
-                waveType:{ x: 12.5+(40*5), y: -7.5, width: 15, height: 15, receive: function(address,data){ if(address != 'discrete'){return;} _mainObject.dial.discrete.waveType.select(data); } },
-                periodicWave:{ x: 232.5, y: 12.5, width: 15, height: 15, receive: function(address,data){ if(address != 'periodicWave'){return;} _mainObject.__synthesizer.periodicWave(data); } },
-                midiNote:{ x: 217.5, y: 37.5, width: 30, height: 30, angle: Math.PI/4, receive: function(address,data){  if(address != 'midiNumber'){return;} _mainObject.__synthesizer.perform(data); } },
-            }
-        },
-        button:{
-            panicButton:{
-                x: 197.5, y: 47.5,
-                width: 20, height: 20,
-                angle: Math.PI/4,
-                upStyle: 'fill:rgba(175,175,175,1)',
-                hoverStyle: 'fill:rgba(220,220,220,1)',
-                downStyle: 'fill:rgba(150,150,150,1)',
-                glowStyle: 'fill:rgba(220,200,220,1)',
-                onclick: function(){_mainObject.__synthesizer.panic();}
-            }
-        },
-        dial:{
-            gain:{
-                type: 'continuous',
-                x: (40*0)+20, y: (3)+20, r: 12,
-                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                handleStyle: style.handle,
-                slotStyle: style.slot,
-                needleStyle: style.needle,
-                arcDistance: 1.2,
-                outerArcStyle: style.markings,
-                labels:[
-                    { name: null, x: (40*0)+11,   y: (3)+40, text: 'gain', style: style.h1 },
-                    { name: null, x: (40*0)+7,    y: (3)+34, text: '0',    style: style.h2 },
-                    { name: null, x: (40*0)+16.5, y: (3)+5,  text: '1/2',  style: style.h2 },
-                    { name: null, x: (40*0)+30,   y: (3)+34, text: '1',    style: style.h2 },
-                ],
-                onChange: function(value){ _mainObject.__synthesizer.gain( value ); },
-            },
-            attack:{
-                type: 'continuous',
-                x: (40*1)+20, y: 3+20, r: 12,
-                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                handleStyle: style.handle,
-                slotStyle: style.slot,
-                needleStyle: style.needle,
-                arcDistance: 1.2,
-                outerArcStyle: style.markings,
-                labels:[
-                    { name: null, x: (40*1)+7,    y: (3)+40, text: 'attack', style: style.h1 },
-                    { name: null, x: (40*1)+7,    y: (3)+34, text: '0',      style: style.h2 },
-                    { name: null, x: (40*1)+18.5, y: (3)+4,  text: '5',      style: style.h2 },
-                    { name: null, x: (40*1)+30,   y: (3)+34, text: '10',     style: style.h2 },
-                ],
-                onChange: function(value){ _mainObject.__synthesizer.attack( value ); },
-            },
-            release:{
-                type: 'continuous',
-                x: (40*2)+20, y: 3+20, r: 12,
-                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                handleStyle: style.handle,
-                slotStyle: style.slot,
-                needleStyle: style.needle,
-                arcDistance: 1.2,
-                outerArcStyle: style.markings,
-                labels:[
-                    { name: null, x: (40*2)+5,    y: (3)+40, text: 'release', style: style.h1 },
-                    { name: null, x: (40*2)+5,    y: (3)+34, text: '0',       style: style.h2 },
-                    { name: null, x: (40*2)+18.5, y: (3)+4,  text: '5',       style: style.h2 },
-                    { name: null, x: (40*2)+30,   y: (3)+34, text: '10',      style: style.h2 },
-                ],
-                onChange: function(value){ _mainObject.__synthesizer.release( value ); },
-            },
-            detune:{
-                type: 'continuous',
-                x: (40*3)+20, y: 3+20, r: 12,
-                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                handleStyle: style.handle,
-                slotStyle: style.slot,
-                needleStyle: style.needle,
-                arcDistance: 1.2,
-                outerArcStyle: style.markings,
-                labels:[
-                    { name: null, x: (40*3)+7,     y: (3)+40, text: 'detune', style: style.h1 },
-                    { name: null, x: (40*3)+2,     y: (3)+34, text: '0',      style: style.h2 },
-                    { name: null, x: (40*3)+18.75, y: (3)+4,  text: '5',      style: style.h2 },
-                    { name: null, x: (40*3)+28,    y: (3)+34, text: '10',     style: style.h2 },
-                ],
-                onChange: function(value){ _mainObject.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); },
-            },
-            octave:{
-                type: 'discrete',
-                x: (40*4)+20, y: 3+20, r: 12,
-                optionCount: 7,
-                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                handleStyle: style.handle,
-                slotStyle: style.slot,
-                needleStyle: style.needle,
-                arcDistance: 1.2,
-                outerArcStyle: undefined,
-                labels:[
-                    { name: null, x: (40*4)+7,     y: (3)+40, text: 'octave', style: style.h1 },
-                    { name: null, x: (40*4)+4,     y: (3)+32, text: '-3',     style: style.h2 },
-                    { name: null, x: (40*4)+0,     y: (3)+21, text: '-2',     style: style.h2 },
-                    { name: null, x: (40*4)+4,     y: (3)+10, text: '-1',     style: style.h2 },
-                    { name: null, x: (40*4)+18.75, y: (3)+5,  text: '0',      style: style.h2 },
-                    { name: null, x: (40*4)+30,    y: (3)+10, text: '1',      style: style.h2 },
-                    { name: null, x: (40*4)+35,    y: (3)+21, text: '2',      style: style.h2 },
-                    { name: null, x: (40*4)+30,    y: (3)+32, text: '3',      style: style.h2 },
-                ],
-                onChange: function(value){ _mainObject.__synthesizer.octave(value-3); },
-            },
-            waveType:{
-                type: 'discrete',
-                x: (40*5)+20, y: 3+20, r: 12,
-                optionCount: 5,
-                startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4,
-                handleStyle: style.handle,
-                slotStyle: style.slot,
-                needleStyle: style.needle,
-                arcDistance: 1.2,
-                outerArcStyle: undefined,
-                labels:[
-                    { name: null, x: (40*5)+11, y: (3)+40, text: 'wave', style: style.h1 },
-                    { name: null, x: (40*5)+0,  y: (3)+32, text: 'sine', style: style.h2 },
-                    { name: null, x: (40*5)+0,  y: (3)+18, text: 'tri',  style: style.h2 },
-                    { name: null, x: (40*5)+10, y: (3)+6,  text: 'squ',  style: style.h2 },
-                    { name: null, x: (40*5)+27, y: (3)+7,  text: 'saw',  style: style.h2 },
-                ],
-                onChange: function(value){ _mainObject.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); },
-            }
+    //distortionNode
+        flow.distortionNode.distortionAmount = 0;
+        flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
+        flow.distortionNode.resolution = 100;
+        function makeDistortionNode(){
+            flow.inAggregator.node.disconnect();
+            if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
+            
+            flow.distortionNode.node = context.createWaveShaper();
+                flow.distortionNode.curve = new Float32Array(__globals.utility.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
+                flow.distortionNode.node.curve = flow.distortionNode.curve;
+                flow.distortionNode.node.oversample = flow.distortionNode.oversample;
+                
+            flow.inAggregator.node.connect(flow.distortionNode.node);
+            flow.distortionNode.node.connect(flow.outAggregator.node);
         }
-    };
+
+    //outAggregator
+        flow.outAggregator.gain = 0;
+        flow.outAggregator.node = context.createGain();    
+        __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+
+
+    //input/output node
+        this.in = function(){return flow.inAggregator.node;}
+        this.out = function(){return flow.outAggregator.node;}
+
+    //controls
+        this.inGain = function(a){
+            if(a==null){return flow.inAggregator.gain;}
+            flow.inAggregator.gain=a;
+            __globals.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
+        };
+        this.outGain = function(a){
+            if(a==null){return flow.outAggregator.gain;}
+            flow.outAggregator.gain=a;
+            __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+        };
+        this.distortionAmount = function(a){
+            if(a==null){return flow.distortionNode.distortionAmount;}
+            flow.distortionNode.distortionAmount=a;
+            makeDistortionNode();
+        };
+        this.oversample = function(a){
+            if(a==null){return flow.distortionNode.oversample;}
+            flow.distortionNode.oversample=a;
+            makeDistortionNode();
+        };
+        this.resolution = function(a){
+            if(a==null){return flow.distortionNode.resolution;}
+            flow.distortionNode.resolution = a>=2?a:2;
+            makeDistortionNode();
+        };
+
+    //setup
+        makeDistortionNode();
+};
+parts.audio.reverbUnit = function(
+    context,
+){
+    //flow chain
+        var flow = {
+            inAggregator: {},
+            reverbGain: {}, bypassGain: {},
+            reverbNode: {},
+            outAggregator: {},
+        };
+
+    //inAggregator
+        flow.inAggregator.gain = 1;
+        flow.inAggregator.node = context.createGain();
+        __globals.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+
+    //reverbGain / bypassGain
+        flow.reverbGain.gain = 0.5;
+        flow.bypassGain.gain = 0.5;
+        flow.reverbGain.node = context.createGain();
+        flow.bypassGain.node = context.createGain();
+        __globals.utility.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+        __globals.utility.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+
+    //reverbNode
+        flow.reverbNode.impulseResponseRepoURL = 'http://metasophiea.com/lib/audio/impulseResponse/';
+        flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
+        flow.reverbNode.node = context.createConvolver();
+
+        function setReverbType(repoURL,type,callback){
+            var ajaxRequest = new XMLHttpRequest();
+            ajaxRequest.open('GET', repoURL+type, true);
+            ajaxRequest.responseType = 'arraybuffer';
+            ajaxRequest.onload = function(){
+                context.decodeAudioData(ajaxRequest.response, function(buffer) {flow.reverbNode.node.buffer = buffer;}, function(e){"Error with decoding audio data" + e.err});
+                if(callback){callback();}  
+            };
+            ajaxRequest.send();
+        }
+        function getReverbTypeList(repoURL,callback=null){
+            var ajaxRequest = new XMLHttpRequest();
+            ajaxRequest.open('GET', repoURL+'available2.list', true);
+            ajaxRequest.onload = function() {
+                var list = ajaxRequest.response.split('\n'); var temp = '';
+                
+                list[list.length-1] = list[list.length-1].split(''); 
+                list[list.length-1].pop();
+                list[list.length-1] = list[list.length-1].join('');		
+
+                list.splice(-1,1);
+                
+                if(callback == null){console.log(list);}
+                else{callback(list);}
+            }
+            ajaxRequest.send();
+        }	
+
+    //outAggregator
+        flow.outAggregator.gain = 1;
+        flow.outAggregator.node = context.createGain();    
+        __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+
+    //do connections
+        flow.inAggregator.node.connect(flow.reverbGain.node);
+        flow.inAggregator.node.connect(flow.bypassGain.node);
+        flow.reverbGain.node.connect(flow.reverbNode.node);
+        flow.bypassGain.node.connect(flow.outAggregator.node);
+        flow.reverbNode.node.connect(flow.outAggregator.node);
+
+    //input/output node
+        this.in = function(){return flow.inAggregator.node;}
+        this.out = function(){return flow.outAggregator.node;}
+    
+    //controls
+        this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
+        this.type = function(name,callback){
+            if(name==null){return flow.reverbNode.selectedReverbType;}
+            flow.reverbNode.selectedReverbType = name;
+            setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
+        };
+        this.outGain = function(a){
+            if(a==null){return flow.outAggregator.gain;}
+            flow.outAggregator.gain=a;
+            __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+        };
+        this.wetdry = function(a){
+            if(a==null){return flow.reverbGain.gain;}
+            flow.reverbGain.gain=a;
+            flow.bypassGain.gain=1-a;
+            __globals.utility.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+            __globals.utility.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+        };
+
+    //setup
+        setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
+        
+};
+parts.audio.synthesizer2 = function(
+    context,
+    waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
+    gain=1, gainWobbleDepth=0, gainWobblePeriod=0, gainWobbleMin=0.01, gainWobbleMax=1,
+    attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+    octave=0,
+    detune=0, detuneWobbleDepth=0, detuneWobblePeriod=0, detuneWobbleMin=0.01, detuneWobbleMax=1
+){
+    //flow chain
+        var flow = {
+            OSCmaker:{},
+            liveOscillators: {},
+            wobbler_detune: {},
+            aggregator: {},
+            wobbler_gain: {},
+            mainOut: {}
+        };
+
+
+        flow.OSCmaker.waveType = waveType;
+        flow.OSCmaker.periodicWave = periodicWave;
+        flow.OSCmaker.attack = attack;
+        flow.OSCmaker.release = release;
+        flow.OSCmaker.octave  = octave;
+        flow.OSCmaker.detune  = detune;
+        flow.OSCmaker.func = function(
+            context, connection, midiNumber,
+            type, periodicWave, 
+            gain, attack, release,
+            detune, octave
+        ){
+            return new function(){
+                this.generator = context.createOscillator();
+                    if(type == 'custom'){ 
+                        this.generator.setPeriodicWave(
+                            context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                        ); 
+                    }else{ this.generator.type = type; }
+                    this.generator.frequency.setTargetAtTime(__globals.audio.midiNumber_frequency(midiNumber,octave), context.currentTime, 0);
+                    this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                    this.generator.start(0);
+
+                this.gain = context.createGain();
+                    this.generator.connect(this.gain);
+                    this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                    __globals.utility.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
+                    this.gain.connect(connection);
+
+                this.detune = function(target,time,curve){
+                    __globals.utility.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
+                };
+                this.stop = function(){
+                    __globals.utility.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve, false);
+                    setTimeout(function(that){
+                        that.gain.disconnect(); 
+                        that.generator.stop(); 
+                        that.generator.disconnect(); 
+                        that.gain=null; 
+                        that.generator=null; 
+                    }, release.time*1000, this);
+                };
+            };
+        };
+
+
+        flow.wobbler_detune.depth = detuneWobbleDepth;
+        flow.wobbler_detune.period = detuneWobblePeriod;
+        flow.wobbler_detune.phase = true;
+        flow.wobbler_detune.wave = 's';
+        flow.wobbler_detune.interval = null;
+        flow.wobbler_detune.start = function(){
+            if(flow.wobbler_detune.period < detuneWobbleMin || flow.wobbler_detune.period >= detuneWobbleMax){ return; }
+            flow.wobbler_detune.interval = setInterval(function(){
+                var OSCs = Object.keys(flow.liveOscillators);
+                if(flow.wobbler_detune.phase){
+                    for(var b = 0; b < OSCs.length; b++){ 
+                        flow.liveOscillators[OSCs[b]].detune(flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                    }
+                }else{
+                    for(var b = 0; b < OSCs.length; b++){ 
+                        flow.liveOscillators[OSCs[b]].detune(-flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                    }
+                }
+                flow.wobbler_detune.phase = !flow.wobbler_detune.phase;
+            }, 1000*flow.wobbler_detune.period);
+        };
+        flow.wobbler_detune.stop = function(){clearInterval(flow.wobbler_detune.interval);};
+
+
+        flow.aggregator.node = context.createGain();    
+        flow.aggregator.node.gain.setTargetAtTime(1, context.currentTime, 0);
+
+
+        flow.wobbler_gain.depth = gainWobbleDepth;
+        flow.wobbler_gain.period = gainWobblePeriod;
+        flow.wobbler_gain.phase = true;
+        flow.wobbler_gain.wave = 's';
+        flow.wobbler_gain.interval = null;
+        flow.wobbler_gain.start = function(){
+            if(flow.wobbler_gain.period < gainWobbleMin || flow.wobbler_gain.period >= gainWobbleMax){
+                __globals.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.01, flow.wobbler_gain.wave );
+                return;
+            }
+            flow.wobbler_gain.interval = setInterval(function(){
+                if(flow.wobbler_gain.phase){ __globals.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                else{                        __globals.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1-flow.wobbler_gain.depth,  0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                flow.wobbler_gain.phase = !flow.wobbler_gain.phase;
+            }, 1000*flow.wobbler_gain.period);
+        };
+        flow.wobbler_gain.stop = function(){clearInterval(flow.wobbler_gain.interval);};
+        flow.wobbler_gain.node = context.createGain();
+        flow.wobbler_gain.node.gain.setTargetAtTime(1, context.currentTime, 0);
+        flow.aggregator.node.connect(flow.wobbler_gain.node);
+
+        
+        flow.mainOut.gain = gain;
+        flow.mainOut.node = context.createGain();
+        flow.mainOut.node.gain.setTargetAtTime(gain, context.currentTime, 0);
+        flow.wobbler_gain.node.connect(flow.mainOut.node);
+
+    //output node
+        this.out = function(){return flow.mainOut.node;}
+
+    //controls
+        this.perform = function(note){
+            if( !flow.liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
+            else if( !flow.liveOscillators[note.num] ){ 
+                //create new tone
+                flow.liveOscillators[note.num] = flow.OSCmaker.func(
+                    context, 
+                    flow.aggregator.node, 
+                    note.num, 
+                    flow.OSCmaker.waveType, 
+                    flow.OSCmaker.periodicWave, 
+                    note.velocity, 
+                    flow.OSCmaker.attack, 
+                    flow.OSCmaker.release, 
+                    flow.OSCmaker.detune, 
+                    flow.OSCmaker.octave
+                );
+            }
+            else if( note.velocity == 0 ){ 
+                //stop and destroy tone
+                flow.liveOscillators[note.num].stop();
+                delete flow.liveOscillators[note.num];
+            }
+            else{
+                //adjust tone
+                flow.liveOscillators[note.num].osc.changeVelocity(note.velocity);
+            }
+        };
+        this.panic = function(){
+            var OSCs = Object.keys(flow.liveOscillators);
+            for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+        };
+        this.waveType = function(a){if(a==null){return flow.OSCmaker.waveType;}flow.OSCmaker.waveType=a;};
+        this.periodicWave = function(a){if(a==null){return flow.OSCmaker.periodicWave;}flow.OSCmaker.periodicWave=a;};
+        this.gain = function(target,time,curve){ return __globals.utility.audio.changeAudioParam(context,flow.mainOut.node.gain,target,time,curve); };
+        this.attack = function(time,curve){
+            if(time==null&&curve==null){return flow.OSCmaker.attack;}
+            flow.OSCmaker.attack.time = time ? time : flow.OSCmaker.attack.time;
+            flow.OSCmaker.attack.curve = curve ? curve : flow.OSCmaker.attack.curve;
+        };
+        this.release = function(time,curve){
+            if(time==null&&curve==null){return flow.OSCmaker.release;}
+            flow.OSCmaker.release.time = time ? time : flow.OSCmaker.release.time;
+            flow.OSCmaker.release.curve = curve ? curve : flow.OSCmaker.release.curve;
+        };
+        this.octave = function(a){if(a==null){return flow.OSCmaker.octave;}flow.OSCmaker.octave=a;};
+        this.detune = function(target,time,curve){
+            if(a==null){return flow.OSCmaker.detune;}
+
+            //change stored value for any new oscillators that are made
+                var start = flow.OSCmaker.detune;
+                var mux = target-start;
+                var stepsPerSecond = Math.round(Math.abs(mux));
+                var totalSteps = stepsPerSecond*time;
+
+                var steps = [1];
+                switch(curve){
+                    case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                    case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                    case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps,8); break;
+                    case 'instant': default: break;
+                }
+                
+                if(steps.length != 0){
+                    var interval = setInterval(function(){
+                        flow.OSCmaker.detune = start+(steps.shift()*mux);
+                        if(steps.length == 0){clearInterval(interval);}
+                    },1000/stepsPerSecond);
+                }
+
+            //instruct liveOscillators to adjust their values
+                var OSCs = Object.keys(flow.liveOscillators);
+                for(var b = 0; b < OSCs.length; b++){ 
+                    flow.liveOscillators[OSCs[b]].detune(target,time,curve);
+                }
+        };
+        this.gainWobbleDepth = function(value){
+            if(value==null){return flow.wobbler_gain.depth; }
+            flow.wobbler_gain.depth = value;
+            flow.wobbler_gain.stop();
+            flow.wobbler_gain.start();
+        };
+        this.gainWobblePeriod = function(value){
+            if(value==null){return flow.wobbler_gain.period; }
+            flow.wobbler_gain.period = value;
+            flow.wobbler_gain.stop();
+            flow.wobbler_gain.start();
+        };
+        this.detuneWobbleDepth = function(value){
+            if(value==null){return flow.wobbler_detune.depth; }
+            flow.wobbler_detune.depth = value;
+            flow.wobbler_detune.stop();
+            flow.wobbler_detune.start();
+        };
+        this.detuneWobblePeriod = function(value){
+            if(value==null){return flow.wobbler_detune.period; }
+            flow.wobbler_detune.period = value;
+            flow.wobbler_detune.stop();
+            flow.wobbler_detune.start();
+        };
+};
+parts.audio.filterUnit = function(
+    context
+){
+    //flow chain
+        var flow = {
+            inAggregator: {},
+            filterNode: {},
+            outAggregator: {},
+        };
+
+    //inAggregator
+        flow.inAggregator.gain = 1;
+        flow.inAggregator.node = context.createGain();
+        __globals.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+
+    //filterNode
+        flow.filterNode.node = context.createBiquadFilter();
+	    flow.filterNode.node.type = "highpass";
+        flow.filterNode.node.frequency.value = 1000;
+        flow.filterNode.node.gain.value = 0.1;
+        flow.filterNode.node.Q.value = 10000;
+
+
+    //outAggregator
+        flow.outAggregator.gain = 1;
+        flow.outAggregator.node = context.createGain();    
+        __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+
+
+    //do connections
+        flow.inAggregator.node.connect(flow.filterNode.node);
+        flow.filterNode.node.connect(flow.outAggregator.node);
+
+    //input/output node
+        this.in = function(){return flow.inAggregator.node;}
+        this.out = function(){return flow.outAggregator.node;}
+};
+__globals.objects.make_distortionUnit = function(x,y){
+    //set numbers
+        var type = 'distortionUnit';
+        var style = {
+            background: 'fill:rgba(200,200,200,1); stroke:none;',
+            h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+            h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
+    
+            markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+    
+            handle: 'fill:rgba(220,220,220,1)',
+            slot: 'fill:rgba(50,50,50,1)',
+            needle: 'fill:rgba(250,150,150,1)'
+        };
+        var shape = {};
+            shape.width = 102.5;
+            shape.height = 95;
+            shape.base = [
+                {x:0,y:0+10},
+                {x:0+10,y:0},
+
+                {x:shape.width/3,y:0},
+                {x:shape.width*0.45,y:10},
+                {x:shape.width*0.55,y:10},
+                {x:2*(shape.width/3),y:0},
+
+                {x:shape.width-10,y:0},
+                {x:shape.width,y:0+10},
+
+                {x:shape.width,y:shape.height-10},
+                {x:shape.width-10,y:shape.height},
+
+                {x:2*(shape.width/3),y:shape.height},
+                {x:shape.width*0.55,y:shape.height-10},
+                {x:shape.width*0.45,y:shape.height-10},
+                {x:shape.width/3,y:shape.height},
+
+                {x:0+10,y:shape.height},
+                {x:0,y:shape.height-10}
+            ];
+            shape.connector = {
+                audio: {
+                    audioIn: { type: 0, x: 105-10, y: 95*0.7-5, width: 20, height: 20 },
+                    audioOut: { type: 1, x: -10, y: 95*0.7-5, width: 20, height: 20 },
+                },
+                data: {}
+            };
+            shape.dial = {
+                outGain:{
+                    type: 'continuous',
+                    x: (40*0)+20, y: (50)+20, r: 12,
+                    startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                    handleStyle: style.handle,
+                    slotStyle: style.slot,
+                    needleStyle: style.needle,
+                    arcDistance: 1.2,
+                    outerArcStyle: style.markings,
+                    labels:[
+                        { name: null, x: (40*0)+13,   y: (50)+40, text: 'out', style: style.h1 },
+                        { name: null, x: (40*0)+7,    y: (50)+34, text: '0',   style: style.h2 },
+                        { name: null, x: (40*0)+16.5, y: (50)+4,  text: '1/2', style: style.h2 },
+                        { name: null, x: (40*0)+30,   y: (50)+34, text: '1',   style: style.h2 },
+                    ],
+                    onChange: function(value){ _mainObject.__unit.outGain( value ); },
+                },
+                distortionAmount:{
+                    type: 'continuous',
+                    x: (40*0)+20, y: (3)+20, r: 12,
+                    startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                    handleStyle: style.handle,
+                    slotStyle: style.slot,
+                    needleStyle: style.needle,
+                    arcDistance: 1.2,
+                    outerArcStyle: style.markings,
+                    labels:[
+                        { name: null, x: (40*0)+11,   y: (3)+40, text: 'dist', style: style.h1 },
+                        { name: null, x: (40*0)+7,    y: (3)+34, text: '0',    style: style.h2 },
+                        { name: null, x: (40*0)+17.5, y: (3)+4,  text: '50',   style: style.h2 },
+                        { name: null, x: (40*0)+30,   y: (3)+34, text: '100',  style: style.h2 },
+                    ],
+                    onChange: function(value){ _mainObject.__unit.distortionAmount(value*100); },
+                },
+                resolution:{
+                    type: 'continuous',
+                    x: (40*1)-10+20, y: (30)+20, r: 12,
+                    startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                    handleStyle: style.handle,
+                    slotStyle: style.slot,
+                    needleStyle: style.needle,
+                    arcDistance: 1.2,
+                    outerArcStyle: style.markings,
+                    labels:[
+                        { name: null, x: (40*1)-10+13,   y: (30)+40, text: 'res', style: style.h1 },
+                        { name: null, x: (40*1)-10+7,    y: (30)+34, text: '2',   style: style.h2 },
+                        { name: null, x: (40*1)-10+16.5, y: (30)+4,  text: '500', style: style.h2 },
+                        { name: null, x: (40*1)-10+29,   y: (30)+34, text: '1000',style: style.h2 },
+                    ],
+                    onChange: function(value){ _mainObject.__unit.resolution( Math.round(value*1000) ); },
+                },
+                overSample:{
+                    type: 'discrete',
+                    x: (40*2)-18+20, y: 3+20, r: 12,
+                    optionCount: 3,
+                    startAngle: (1.25*Math.PI), maxAngle: 0.5*Math.PI,
+                    handleStyle: style.handle,
+                    slotStyle: style.slot,
+                    needleStyle: style.needle,
+                    arcDistance: 1.2,
+                    outerArcStyle: undefined,
+                    labels:[
+                        { name: null, x: (40*2)-18+3,     y: (3)+40, text: 'overSamp', style: style.h1 },
+                        { name: null, x: (40*2)-18+2,     y: (3)+10, text: 'none',     style: style.h2 },
+                        { name: null, x: (40*2)-18+17.75, y: (3)+5,  text: '2x',       style: style.h2 },
+                        { name: null, x: (40*2)-18+30,    y: (3)+10, text: '4x',       style: style.h2 },
+                    ],
+                    onChange: function(value){ _mainObject.__unit.oversample( ['none','2x','4x'][value] ); },
+                },
+                inGain:{
+                    type: 'continuous',
+                    x: (40*2)-18+20, y: (50)+20, r: 12,
+                    startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                    handleStyle: style.handle,
+                    slotStyle: style.slot,
+                    needleStyle: style.needle,
+                    arcDistance: 1.2,
+                    outerArcStyle: style.markings,
+                    labels:[
+                        { name: null, x: (40*2)-18+15,    y: (50)+40, text: 'in', style: style.h1 },
+                        { name: null, x: (40*2)-18+7,     y: (50)+34, text: '0',  style: style.h2 },
+                        { name: null, x: (40*2)-18+18.75, y: (50)+4,  text: '1',  style: style.h2 },
+                        { name: null, x: (40*2)-18+30,    y: (50)+34, text: '2',  style: style.h2 },
+                    ],
+                    onChange: function(value){ _mainObject.__unit.inGain( 2*value ); },
+                },
+            };
 
     //main
-        var _mainObject = parts.basic.g(type, x, y);
-            _mainObject._type = type;
+    var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
 
     //elements
         //backing
             var backing = parts.basic.path(null, shape.base, 'L', style.background);
-                _mainObject.append(backing);
-                __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+   
+        //generate selection area
+            __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
+
+        //dials
+            _mainObject.dial = {continuous:{}, discrete:{}};
+
+            var keys = Object.keys(shape.dial);
+            for(var a = 0; a < keys.length; a++){
+                var data = shape.dial[keys[a]];
+                var labelKeys = Object.keys(data.labels);
+                for(var b = 0; b < labelKeys.length; b++){
+                    var label = data.labels[labelKeys[b]];
+                    _mainObject.append(parts.display.label(labelKeys[b], label.x, label.y, label.text, label.style));
+                }
+
+                if(data.type == 'continuous'){
+                    var dial = parts.control.dial_continuous(
+                        keys[a],
+                        data.x, data.y, data.r,
+                        data.startAngle, data.maxAngle,
+                        data.handleStyle, data.slotStyle, data.needleStyle,
+                        data.arcDistance, data.outerArcStyle
+                    );
+                    _mainObject.dial.continuous[keys[a]] = dial;
+                }
+                else if(data.type == 'discrete'){
+                    var dial = parts.control.dial_discrete(
+                        keys[a],
+                        data.x, data.y, data.r,
+                        data.optionCount,
+                        data.startAngle, data.maxAngle,
+                        data.handleStyle, data.slotStyle, data.needleStyle,
+                        data.arcDistance, data.outerArcStyle
+                    );
+                    _mainObject.dial.discrete[keys[a]] = dial;
+                }else{console.error('unknow dial type: "'+ data.type + '"'); var dial = null;}
+
+                dial.onChange = data.onChange;
+                dial.onRelease = data.onRelease;
+                _mainObject.append(dial);
+            }
+
+        //connection nodes
+            _mainObject.io = {};
+
+            var keys = Object.keys(shape.connector.audio);
+            for(var a = 0; a < keys.length; a++){
+                var data = shape.connector.audio[keys[a]];
+                _mainObject.io[keys[a]] = parts.dynamic.connectionNode_audio( keys[a], data.type, data.x, data.y, data.width, data.height, __globals.audio.context );
+                _mainObject.prepend(_mainObject.io[keys[a]]);
+            }
+
+            var keys = Object.keys(shape.connector.data);
+            for(var a = 0; a < keys.length; a++){
+                var data = shape.connector.data[keys[a]];
+                _mainObject.io[keys[a]] = parts.dynamic.connectionNode_data( keys[a], data.x, data.y, data.width, data.height, data.angle);
+                _mainObject.io[keys[a]].receive = data.receive;
+                _mainObject.prepend(_mainObject.io[keys[a]]);
+            }
+
+    //circuitry
+        _mainObject.__unit = new parts.audio.distortionUnit(__globals.audio.context);
+        _mainObject.io.audioIn.out().connect( _mainObject.__unit.in() );
+        _mainObject.__unit.out().connect( _mainObject.io.audioOut.in() );
+
+    //setup
+        _mainObject.dial.continuous.resolution.set(0.5);
+        _mainObject.dial.continuous.inGain.set(0.5);
+        _mainObject.dial.continuous.outGain.set(1);
+
+    return _mainObject;
+};
+__globals.objects.make_reverbUnit = function(x,y){
+    //set numbers
+        var type = 'reverbUnit';
+        var attributes = {
+            reverbType: 0,
+            availableTypes: []
+        };
+        var style = {
+            background: 'fill:rgba(200,200,200,1); stroke:none;',
+            h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+            h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
+    
+            markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+    
+            handle: 'fill:rgba(220,220,220,1)',
+            slot: 'fill:rgba(50,50,50,1)',
+            needle: 'fill:rgba(250,150,150,1)'
+        };
+        var shape = {};
+            shape.width = 102.5;
+            shape.height = 50;
+            shape.base = [
+                {x:0,y:0+10},
+                {x:shape.width/2,y:0},
+                {x:shape.width,y:0+10},
+
+                {x:shape.width,y:shape.height-10},
+                {x:shape.width/2,y:shape.height},
+                {x:0,y:shape.height-10},
+            ];
+            shape.readouts = {
+                ones: {
+                    x: 50,   y: 12.5, 
+                    width: 12.5, height: 25,
+                    element: null
+                },
+                tens:{
+                    x: 37.5,   y: 12.5, 
+                    width: 12.5, height: 25,
+                    element: null
+                }
+            };
+            shape.button = {
+                raiseByOne:{
+                    x: 51, y: 6,
+                    width: 10.25, height: 5,
+                    angle: 0,
+                    upStyle: 'fill:rgba(175,175,175,1)',
+                    hoverStyle: 'fill:rgba(220,220,220,1)',
+                    downStyle: 'fill:rgba(150,150,150,1)',
+                    glowStyle: 'fill:rgba(220,200,220,1)',
+                    onclick: function(){ incReverbType(); }
+                },
+                raiseByTen:{
+                    x: 38.75, y: 6,
+                    width: 10.25, height: 5,
+                    angle: 0,
+                    upStyle: 'fill:rgba(175,175,175,1)',
+                    hoverStyle: 'fill:rgba(220,220,220,1)',
+                    downStyle: 'fill:rgba(150,150,150,1)',
+                    glowStyle: 'fill:rgba(220,200,220,1)',
+                    onclick: function(){ inc10ReverbType(); }
+                },
+                lowerByOne:{
+                    x: 51, y: 39,
+                    width: 10.25, height: 5,
+                    angle: 0,
+                    upStyle: 'fill:rgba(175,175,175,1)',
+                    hoverStyle: 'fill:rgba(220,220,220,1)',
+                    downStyle: 'fill:rgba(150,150,150,1)',
+                    glowStyle: 'fill:rgba(220,200,220,1)',
+                    onclick: function(){ decReverbType(); }
+                },
+                lowerByTen:{
+                    x: 38.75, y: 39,
+                    width: 10.25, height: 5,
+                    angle: 0,
+                    upStyle: 'fill:rgba(175,175,175,1)',
+                    hoverStyle: 'fill:rgba(220,220,220,1)',
+                    downStyle: 'fill:rgba(150,150,150,1)',
+                    glowStyle: 'fill:rgba(220,200,220,1)',
+                    onclick: function(){ dec10ReverbType(); }
+                },
+            };
+            shape.connector = {
+                audio: {
+                    audioIn: { type: 0, x: 105-10, y: 30*0.7-5, width: 20, height: 20 },
+                    audioOut: { type: 1, x: -10, y: 30*0.7-5, width: 20, height: 20 },
+                },
+                data: {}
+            };
+            shape.dial = {
+                outGain:{
+                    type: 'continuous',
+                    x: 20, y: (5)+20, r: 12,
+                    startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                    handleStyle: style.handle,
+                    slotStyle: style.slot,
+                    needleStyle: style.needle,
+                    arcDistance: 1.2,
+                    outerArcStyle: style.markings,
+                    labels:[
+                        { name: null, x: 7,    y: (5)+34, text: '0',   style: style.h2 },
+                        { name: null, x: 16.5, y: (5)+5,  text: '1/2', style: style.h2 },
+                        { name: null, x: 30,   y: (5)+34, text: '1',   style: style.h2 },
+                    ],
+                    onChange: function(value){ _mainObject.__unit.outGain( value ); },
+                },
+                wetdry:{
+                    type: 'continuous',
+                    x: (62.5)+20, y: (5)+20, r: 12,
+                    startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                    handleStyle: style.handle,
+                    slotStyle: style.slot,
+                    needleStyle: style.needle,
+                    arcDistance: 1.2,
+                    outerArcStyle: style.markings,
+                    labels:[
+                        { name: null, x: (62.5)+4,    y: (5)+34, text: 'dry',   style: style.h2 },
+                        { name: null, x: (62.5)+30,   y: (5)+34, text: 'wet',   style: style.h2 },
+                    ],
+                    onChange: function(value){ _mainObject.__unit.wetdry( value ); },
+                }
+            };
+
+    //main
+        var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
+
+    //elements
+        //backing
+            var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
 
         //generate selection area
             __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
 
-        //buttons
-            _mainObject.button = {};
+        //readout
+            var keys = Object.keys(shape.readouts);
+            for(var a = 0; a < keys.length; a++){
+                data = shape.readouts[keys[a]];
+                data.element = parts.display.segmentDisplay(keys[a], data.x, data.y, data.width, data.height);
+                _mainObject.append(data.element);
+            }
 
+        //buttons
             var keys = Object.keys( shape.button );
             for(var a = 0; a < keys.length; a++){
                 var data = shape.button[keys[a]];
@@ -4933,7 +5580,6 @@ __globals.objects.make_basicWobbleSynth = function(x,y){
                     data.upStyle, data.hoverStyle, data.downStyle, data.glowStyle
                 );
                 temp.onclick = data.onclick;
-                _mainObject.button[keys[a]] = temp;
                 _mainObject.append(temp);
             }
 
@@ -4972,9 +5618,9 @@ __globals.objects.make_basicWobbleSynth = function(x,y){
                 }else{console.error('unknow dial type: "'+ data.type + '"'); var dial = null;}
 
                 dial.onChange = data.onChange;
+                dial.onRelease = data.onRelease;
                 _mainObject.append(dial);
             }
-
 
         //connection nodes
             _mainObject.io = {};
@@ -4995,384 +5641,225 @@ __globals.objects.make_basicWobbleSynth = function(x,y){
             }
 
     //circuitry
-        _mainObject.__synthesizer = new parts.audio.synthesizer_gainWobble(__globals.audio.context);
-        _mainObject.__synthesizer.out().connect( _mainObject.io.audioOut.in() );
+        _mainObject.__unit = new parts.audio.reverbUnit(__globals.audio.context);
+        _mainObject.io.audioIn.out().connect( _mainObject.__unit.in() );
+        _mainObject.__unit.out().connect( _mainObject.io.audioOut.in() );
+        _mainObject.__unit.getTypes( function(a){attributes.availableTypes = a;} );
+
+        function setReadout(num){
+            num = ("0" + num).slice(-2);
+
+            shape.readouts.ones.element.enterCharacter(num[1]);
+            shape.readouts.tens.element.enterCharacter(num[0]);
+        }
+        function setReverbType(a){
+            if( attributes.availableTypes.length == 0 ){ console.log('broken or not yet'); return;}
+
+            if( a >= attributes.availableTypes.length ){a = attributes.availableTypes.length-1;}
+            else if( a < 0 ){a = 0;}
+
+            attributes.reverbType = a;
+            _mainObject.__unit.type( attributes.availableTypes[a], function(){setReadout(attributes.reverbType);});
+        }
+        function incReverbType(){ setReverbType(attributes.reverbType+1); }
+        function decReverbType(){ setReverbType(attributes.reverbType-1); }
+        function inc10ReverbType(){ setReverbType(attributes.reverbType+10); }
+        function dec10ReverbType(){ setReverbType(attributes.reverbType-10); }
 
     //setup
-        _mainObject.dial.continuous.gain.set(0.25);
-        _mainObject.dial.continuous.detune.set(0.5);
-        _mainObject.dial.discrete.octave.select(3);
+        _mainObject.dial.continuous.outGain.set(1/2);
+        _mainObject.dial.continuous.wetdry.set(1/2);
+        setTimeout(function(){setReverbType(0);},1000);
 
     return _mainObject;
 };
-parts.audio.synthesizer_gainWobble = function(
-    context,
-    waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
-    gain=1, 
-    attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
-    detune=0, octave=0
-){
-    //components
-        var mainOut = context.createGain();
-            mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
-        var wobbleGain = context.createGain();
-            wobbleGain.gain.setTargetAtTime(1, context.currentTime, 0);
-        var oscAggregator = context.createGain();
-            oscAggregator.gain.setTargetAtTime(1, context.currentTime, 0);
-
-        oscAggregator.connect(wobbleGain);
-        wobbleGain.connect(mainOut);
-
-    //live oscillators
-        var liveOscillators = {};
-
-    //options
-        this.waveType = function(a){if(a==null){return waveType;}waveType=a;};
-        this.periodicWave = function(a){if(a==null){return periodicWave;}periodicWave=a;};
-        this.gain = function(target,time,curve){
-            return changeAudioParam(mainOut.gain,target,time,curve);
+__globals.objects.make_filterUnit = function(x,y){
+    //set numbers
+        var type = 'filterUnit';
+        var attributes = {};
+        var style = {
+            background: 'fill:rgba(200,200,200,1); stroke:none;',
+            h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+            h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
+    
+            markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+    
+            handle: 'fill:rgba(220,220,220,1)',
+            slot: 'fill:rgba(50,50,50,1)',
+            needle: 'fill:rgba(250,150,150,1)'
         };
-        this.attack = function(time,curve){
-            if(time==null&&curve==null){return attack;}
-            attack.time = time ? time : attack.time;
-            attack.curve = curve ? curve : attack.curve;
-        };
-        this.release = function(time,curve){
-            if(time==null&&curve==null){return release;}
-            release.time = time ? time : release.time;
-            release.curve = curve ? curve : release.curve;
-        };
-        this.octave = function(a){if(a==null){return octave;}octave=a;};
-        this.detune = function(target,time,curve){
-            if(a==null){return detune;}
+        var shape = {};
+            shape.width = 102.5;
+            shape.height = 50;
+            shape.base = [
+                {x:0,y:0+10},
+                {x:shape.width/2,y:0},
+                {x:shape.width,y:0+10},
 
-            //change stored value for any new oscillators that are made
-                var start = detune;
-                var mux = target-start;
-                var stepsPerSecond = Math.round(Math.abs(mux));
-                var totalSteps = stepsPerSecond*time;
-
-                var steps = [1];
-                switch(curve){
-                    case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-                    case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-                    case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps,8); break;
-                    case 'instant': default: break;
-                }
-                
-                if(steps.length != 0){
-                    var interval = setInterval(function(){
-                        detune = start+(steps.shift()*mux);
-                        if(steps.length == 0){clearInterval(interval);}
-                    },1000/stepsPerSecond);
-                }
-
-            //instruct liveOscillators to adjust their values
-                var OSCs = Object.keys(liveOscillators);
-                for(var b = 0; b < OSCs.length; b++){ 
-                    liveOscillators[OSCs[b]].osc.detune(target,time,curve);
-                }
-        };
-        this.wobbleDepth = function(value){
-            if(value==null){return wobble.high-wobble.low; }
-            wobble.high = 1;
-            wobble.low = 1 - value;
-            this.stopWobble();
-            this.startWobble();
-        };
-        this.wobblePeriod = function(value){
-            if(value==null){return wobble.period; }
-
-            wobble.period = value;
-
-            this.stopWobble();
-            this.startWobble();
-        };
-
-    //output node
-        this.out = function(){return mainOut;}
-
-    //oscillator generator
-        function makeOSC(
-            context, connection, midiNumber,
-            type, periodicWave, 
-            gain, attack, release,
-            detune, octave
-        ){
-            return new function(){
-                this.generator = context.createOscillator();
-                    if(type == 'custom'){ 
-                        this.generator.setPeriodicWave(
-                            context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
-                        ); 
-                    }else{ this.generator.type = type; }
-                    this.generator.frequency.setTargetAtTime(__globals.audio.midiNumber_frequency(midiNumber,octave), context.currentTime, 0);
-                    this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
-                    this.generator.start(0);
-
-                this.gain = context.createGain();
-                    this.generator.connect(this.gain);
-                    this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                    changeAudioParam(this.gain.gain, gain, attack.time, attack.curve, false);
-                    this.gain.connect(connection);
-
-                this.detune = function(target,time,curve){
-                    changeAudioParam(this.generator.detune,target,time,curve);
-                };
-                this.stop = function(){
-                    changeAudioParam(this.gain.gain,0,release.time,release.curve, false);
-                    setTimeout(function(that){
-                        that.gain.disconnect(); 
-                        that.generator.stop(); 
-                        that.generator.disconnect(); 
-                        that.gain=null; 
-                        that.generator=null; 
-                    }, release.time*1000, this);
-                };
+                {x:shape.width,y:shape.height-10},
+                {x:shape.width/2,y:shape.height},
+                {x:0,y:shape.height-10},
+            ];
+            shape.readouts = {};
+            shape.button = {};
+            shape.connector = {
+                audio: {
+                    audioIn: { type: 0, x: 105-10, y: 30*0.7-5, width: 20, height: 20 },
+                    audioOut: { type: 1, x: -10, y: 30*0.7-5, width: 20, height: 20 },
+                },
+                data: {}
             };
-        }
+            shape.dial = {};
 
-    //wobbling gain
-        var wobble = {
-            phase: true,
-            high: 1,
-            low: 0.5,
-            period: 0.05,
-            wave: 's',
-            interval : null
-        };
-        this.startWobble = function(){
-            wobble.interval = setInterval(function(){
-                if(wobble.phase){ changeAudioParam( wobbleGain.gain, wobble.high, 0.9*wobble.period, wobble.wave ); }
-                else{             changeAudioParam( wobbleGain.gain, wobble.low,  0.9*wobble.period, wobble.wave ); }
-                wobble.phase = !wobble.phase;
-            }, 1000*wobble.period);
-        };this.startWobble();
-        this.stopWobble = function(){ clearInterval(wobble.interval); };
+    //main
+        var _mainObject = parts.basic.g(type, x, y);
+        _mainObject._type = type;
 
-    //methods
-        this.perform = function(note){
-            if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
-            else if( !liveOscillators[note.num] ){ 
-                //create new tone
-                liveOscillators[note.num] = makeOSC(context, oscAggregator, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave);
+    //elements
+        //backing
+            var backing = parts.basic.path(null, shape.base, 'L', style.background);
+            _mainObject.append(backing);
+            __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
+
+        //generate selection area
+            __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
+
+        //readout
+            var keys = Object.keys(shape.readouts);
+            for(var a = 0; a < keys.length; a++){
+                data = shape.readouts[keys[a]];
+                data.element = parts.display.segmentDisplay(keys[a], data.x, data.y, data.width, data.height);
+                _mainObject.append(data.element);
             }
-            else if( note.velocity == 0 ){ 
-                //stop and destroy tone
-                liveOscillators[note.num].stop();
-                delete liveOscillators[note.num];
+
+        //buttons
+            var keys = Object.keys( shape.button );
+            for(var a = 0; a < keys.length; a++){
+                var data = shape.button[keys[a]];
+                var temp = parts.control.button_rect(
+                    keys[a], 
+                    data.x, data.y, 
+                    data.width, data.height, 
+                    data.angle, 
+                    data.upStyle, data.hoverStyle, data.downStyle, data.glowStyle
+                );
+                temp.onclick = data.onclick;
+                _mainObject.append(temp);
             }
-            else{
-                //adjust tone
-                liveOscillators[note.num].osc.changeVelocity(note.velocity);
-            }
-        };
-        this.panic = function(){
-            var OSCs = Object.keys(liveOscillators);
-            for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
-        };
 
-    //functions
-        function changeAudioParam(audioParam,target,time,curve,cancelScheduledValues=true){
-            if(target==null){return audioParam.value;}
+        //dials
+            _mainObject.dial = {continuous:{}, discrete:{}};
 
-            if(cancelScheduledValues){
-                audioParam.cancelScheduledValues(context.currentTime);
-            }
-            
-            switch(curve){
-                case 'linear': 
-                    audioParam.linearRampToValueAtTime(target, context.currentTime+time);
-                break;
-                case 'exponential':
-                    console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
-                    if(target == 0){target = 1/10000;}
-                    audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
-                break;
-                case 's':
-                    var mux = target - audioParam.value;
-                    var array = __globals.utility.math.curveGenerator.s(10);
-                    for(var a = 0; a < array.length; a++){
-                        array[a] = audioParam.value + array[a]*mux;
-                    }
-                    audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
-                break;
-                case 'instant': default:
-                    audioParam.setTargetAtTime(target, context.currentTime, 0.001);
-                break;
-            }
-        }
-};
-parts.audio.synthesizer_detuneWobble = function(
-    context,
-    waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
-    gain=1, 
-    attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
-    detune=0, octave=0
-){
-    //components
-        var mainOut = context.createGain();
-            mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
-
-    //live oscillators
-        var liveOscillators = {};
-
-    //output node
-        this.out = function(){return mainOut;}
-
-    //oscillator generator
-        function makeOSC(
-            context, connection, midiNumber,
-            type, periodicWave, 
-            gain, attack, release,
-            detune, octave
-        ){
-            return new function(){
-                this.generator = context.createOscillator();
-                    if(type == 'custom'){ 
-                        this.generator.setPeriodicWave(
-                            context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
-                        ); 
-                    }else{ this.generator.type = type; }
-                    this.generator.frequency.setTargetAtTime(__globals.audio.midiNumber_frequency(midiNumber,octave), context.currentTime, 0);
-                    this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
-                    this.generator.start(0);
-
-                this.gain = context.createGain();
-                    this.generator.connect(this.gain);
-                    this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                    changeAudioParam(this.gain.gain, gain, attack.time, attack.curve, false);
-                    this.gain.connect(connection);
-
-                this.detune = function(target,time,curve){
-                    changeAudioParam(this.generator.detune,target,time,curve);
-                };
-                this.stop = function(){
-                    changeAudioParam(this.gain.gain,0,release.time,release.curve, false);
-                    setTimeout(function(that){
-                        that.gain.disconnect(); 
-                        that.generator.stop(); 
-                        that.generator.disconnect(); 
-                        that.gain=null; 
-                        that.generator=null; 
-                    }, release.time*1000, this);
-                };
-            };
-        }
-
-    //wobbling detune
-        var wobble = {
-            phase: true,
-            high: 100,
-            low: -100,
-            period: 0.1,
-            wave: 's'
-        };
-        setInterval(function(){            
-            var OSCs = Object.keys(liveOscillators);
-            if(wobble.phase){
-                for(var b = 0; b < OSCs.length; b++){ 
-                    liveOscillators[OSCs[b]].detune(wobble.high,0.9*wobble.period,wobble.wave);
+            var keys = Object.keys(shape.dial);
+            for(var a = 0; a < keys.length; a++){
+                var data = shape.dial[keys[a]];
+                var labelKeys = Object.keys(data.labels);
+                for(var b = 0; b < labelKeys.length; b++){
+                    var label = data.labels[labelKeys[b]];
+                    _mainObject.append(parts.display.label(labelKeys[b], label.x, label.y, label.text, label.style));
                 }
-            }else{
-                for(var b = 0; b < OSCs.length; b++){ 
-                    liveOscillators[OSCs[b]].detune(wobble.low,0.9*wobble.period,wobble.wave);
+
+                if(data.type == 'continuous'){
+                    var dial = parts.control.dial_continuous(
+                        keys[a],
+                        data.x, data.y, data.r,
+                        data.startAngle, data.maxAngle,
+                        data.handleStyle, data.slotStyle, data.needleStyle,
+                        data.arcDistance, data.outerArcStyle
+                    );
+                    _mainObject.dial.continuous[keys[a]] = dial;
                 }
-            }
-            wobble.phase = !wobble.phase;
-        }, 1000*wobble.period);
+                else if(data.type == 'discrete'){
+                    var dial = parts.control.dial_discrete(
+                        keys[a],
+                        data.x, data.y, data.r,
+                        data.optionCount,
+                        data.startAngle, data.maxAngle,
+                        data.handleStyle, data.slotStyle, data.needleStyle,
+                        data.arcDistance, data.outerArcStyle
+                    );
+                    _mainObject.dial.discrete[keys[a]] = dial;
+                }else{console.error('unknow dial type: "'+ data.type + '"'); var dial = null;}
 
-    //methods
-        this.perform = function(note){
-            if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
-            else if( !liveOscillators[note.num] ){ 
-                //create new tone
-                liveOscillators[note.num] = makeOSC(context, mainOut, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave); 
+                dial.onChange = data.onChange;
+                dial.onRelease = data.onRelease;
+                _mainObject.append(dial);
             }
-            else if( note.velocity == 0 ){ 
-                //stop and destroy tone
-                liveOscillators[note.num].stop();
-                delete liveOscillators[note.num];
-            }
-        };
-        this.panic = function(){
-            var OSCs = Object.keys(liveOscillators);
-            for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
-        };
 
-    //functions
-        function changeAudioParam(audioParam,target,time,curve,cancelScheduledValues=true){
-            if(target==null){return audioParam.value;}
+        //connection nodes
+            _mainObject.io = {};
 
-            if(cancelScheduledValues){
-                audioParam.cancelScheduledValues(context.currentTime);
+            var keys = Object.keys(shape.connector.audio);
+            for(var a = 0; a < keys.length; a++){
+                var data = shape.connector.audio[keys[a]];
+                _mainObject.io[keys[a]] = parts.dynamic.connectionNode_audio( keys[a], data.type, data.x, data.y, data.width, data.height, __globals.audio.context );
+                _mainObject.prepend(_mainObject.io[keys[a]]);
             }
-            
-            switch(curve){
-                case 'linear': 
-                    audioParam.linearRampToValueAtTime(target, context.currentTime+time);
-                break;
-                case 'exponential':
-                    console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
-                    if(target == 0){target = 1/10000;}
-                    audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
-                break;
-                case 's':
-                    var mux = target - audioParam.value;
-                    var array = __globals.utility.math.curveGenerator.s(10);
-                    for(var a = 0; a < array.length; a++){
-                        array[a] = audioParam.value + array[a]*mux;
-                    }
-                    audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
-                break;
-                case 'instant': default:
-                    audioParam.setTargetAtTime(target, context.currentTime, 0.001);
-                break;
+
+            var keys = Object.keys(shape.connector.data);
+            for(var a = 0; a < keys.length; a++){
+                var data = shape.connector.data[keys[a]];
+                _mainObject.io[keys[a]] = parts.dynamic.connectionNode_data( keys[a], data.x, data.y, data.width, data.height, data.angle);
+                _mainObject.io[keys[a]].receive = data.receive;
+                _mainObject.prepend(_mainObject.io[keys[a]]);
             }
-        }
-};
+
+        //circuitry
+            _mainObject.__unit = new parts.audio.filterUnit(__globals.audio.context);
+            _mainObject.io.audioIn.out().connect( _mainObject.__unit.in() );
+            _mainObject.__unit.out().connect( _mainObject.io.audioOut.in() );
+
+
+        //setup
+
+        return _mainObject;
+}
+
+//audio effect units
+    var distortionUnit_1 = __globals.objects.make_distortionUnit(310, 35);
+    __globals.panes.middleground.append( distortionUnit_1 );
+    var reverbUnit_1 = __globals.objects.make_reverbUnit(185, 40);
+    __globals.panes.middleground.append( reverbUnit_1 );
+    var filterUnit_1 = __globals.objects.make_filterUnit(40, 35);
+    __globals.panes.middleground.append( filterUnit_1 );
 
 //add objects
-    var audioSink_1 = __globals.objects.make_audioSink(-150,-35);
+    var audioSink_1 = __globals.objects.make_audioSink(-300,-35);
     __globals.panes.middleground.append( audioSink_1 );
 
-    var audioDuplicator_1 = __globals.objects.make_audioDuplicator(100,25);
+    var audioDuplicator_1 = __globals.objects.make_audioDuplicator(-50,25);
     __globals.panes.middleground.append( audioDuplicator_1 );
-    var audioDuplicator_2 = __globals.objects.make_audioDuplicator(0,-35);
+    var audioDuplicator_2 = __globals.objects.make_audioDuplicator(-150,-35);
     __globals.panes.middleground.append( audioDuplicator_2 );
 
-    var basicSynth_1 = __globals.objects.make_basicSynth(200,25);
-    __globals.panes.middleground.append( basicSynth_1 );
-
-    var synthTester_1 = __globals.objects.make_basicWobbleSynth(200,125);//__globals.objects.make_synthTester(200,125,parts.audio.synthesizer_gainWobble);
-    __globals.panes.middleground.append( synthTester_1 );
-
-    var launchpad_1 = __globals.objects.make_launchpad(500,25);
+    var launchpad_1 = __globals.objects.make_launchpad(750,25);
     __globals.panes.middleground.append( launchpad_1 );
 
-    var pulseClock_1 = __globals.objects.make_pulseClock(700,25);
+    var basicSynth2_1 = __globals.objects.make_basicSynth2(450,25);
+    __globals.panes.middleground.append( basicSynth2_1 );
+
+    var pulseClock_1 = __globals.objects.make_pulseClock(950,25);
     __globals.panes.middleground.append( pulseClock_1 );
 
-    var periodicWaveMaker_1 = __globals.objects.make_periodicWaveMaker(500,-100);
+    var periodicWaveMaker_1 = __globals.objects.make_periodicWaveMaker(750,-100);
     __globals.panes.middleground.append( periodicWaveMaker_1 );
 
-    var warbler_1 = __globals.objects.make_warbler(345, -100);
-    __globals.panes.middleground.append( warbler_1 );
-
-    var audioScope_1 = __globals.objects.make_audioScope(-145,80);
+    var audioScope_1 = __globals.objects.make_audioScope(-295,80);
     __globals.panes.middleground.append( audioScope_1 );
 
-    var universalReadout_1 = makeUniversalReadout(600,200);
+    var universalReadout_1 = makeUniversalReadout(850,200);
     __globals.panes.middleground.append( universalReadout_1 );
 
 //do connections
-    periodicWaveMaker_1.io.out.connectTo(basicSynth_1.io.periodicWave);
+    periodicWaveMaker_1.io.out.connectTo(basicSynth2_1.io.periodicWave);
     pulseClock_1.io.out.connectTo(launchpad_1.io.pulseIn);
-    // launchpad_1.io.out.connectTo(basicSynth_1.io.midiNote);
-    launchpad_1.io.out.connectTo(synthTester_1.io.midiNote);
-    synthTester_1.io.audioOut.connectTo(audioDuplicator_1.io.in);
+    launchpad_1.io.out.connectTo(basicSynth2_1.io.midiNote);
 
-    // warbler_1.io['io.data.out:%'].connectTo(basicSynth_1.io.dataIn_gain);
+    basicSynth2_1.io.audioOut.connectTo(distortionUnit_1.io.audioIn);
+    distortionUnit_1.io.audioOut.connectTo(reverbUnit_1.io.audioIn);
+    reverbUnit_1.io.audioOut.connectTo(filterUnit_1.io.audioIn);
+    filterUnit_1.io.audioOut.connectTo(audioDuplicator_1.io.in);
 
     audioDuplicator_1.io.out_1.connectTo(audioDuplicator_2.io.in);
     audioDuplicator_1.io.out_2.connectTo(audioScope_1.io.audioIn);
@@ -5380,29 +5867,28 @@ parts.audio.synthesizer_detuneWobble = function(
     audioDuplicator_2.io.out_2.connectTo(audioSink_1.io['audioSink.io.audio.in:left']);
 
 //additional setting up
-    basicSynth_1.io.gain.receive('%',1/2);
-
     launchpad_1.importData({
         pages: 
         [
             [
                 [false, false, false, false, false, false, false, false],
-                [false, false, false, false, false, false, false, false],
-                [false, false, false, false, false, false, true,  false],
                 [false, false, true,  false, false, false, false, false],
-                [false, false, false, false, false, true,  false, true ],
-                [false, true,  false, true,  false, false, false, false],
+                [false, false, false, false, true,  false, true,  false],
+                [true,  false, true,  false, false, false, false, true ],
+                [false, false, false, false, false, false, true,  false],
+                [false, false, false, true,  false, false, false, false],
                 [false, false, false, false, true,  false, false, false],
-                [true, false,  false, false, false, false, false, false]
+                [true,  false, false, false, false, false, false, false]
             ]
         ],
         currentPage: 0,
         velocityDial: 1/2
     });
+    pulseClock_1.children.dial_tempo.set(0.22)
 
 //viewport adjust
-    // __globals.utility.workspace.gotoPosition(166, 124, 1, 0);
-    __globals.utility.workspace.gotoPosition(138.306, -105.076, 1.10022, 0);
+    // __globals.utility.workspace.gotoPosition(317, 111, 1, 0);
+    __globals.utility.workspace.gotoPosition(167.589, -95.771, 4.33547, 0);
         }
     }
 

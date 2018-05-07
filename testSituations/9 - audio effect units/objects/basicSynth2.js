@@ -1,6 +1,6 @@
-__globals.objects.make_basicWobbleSynth = function(x,y){
+__globals.objects.make_basicSynth2 = function(x,y){
     //set numbers
-    var type = 'basicWobbleSynth';
+    var type = 'basicSynth2';
     var attributes = {
         detuneLimits: {min:-100, max:100}
     };
@@ -17,7 +17,28 @@ __globals.objects.make_basicWobbleSynth = function(x,y){
         needle: 'fill:rgba(250,150,150,1)'
     };
     var shape = {
-        base: [{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:200,y:80},{x:0,y:80}],
+        base: [{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90}],
+        markings:{
+            rect:{
+                periodicWaveType: {
+                    x: 230, y: 21.75, angle: 0,
+                    width: 10, height: 2.5,
+                    style: style.slot
+                }
+            },
+            text:{
+                gainWobble: {
+                    x: 10, y: 70, angle: -Math.PI/2,
+                    text: 'gain',
+                    style: style.h2
+                },
+                detuneWobble: {
+                    x: 95, y: 70, angle: -Math.PI/2,
+                    text: 'detune',
+                    style: style.h2
+                }
+            },
+        },
         connector: {
             audio:{
                 audioOut:{ type: 1, x: -15, y: 5, width: 30, height: 30 },
@@ -49,6 +70,10 @@ __globals.objects.make_basicWobbleSynth = function(x,y){
                 waveType:{ x: 12.5+(40*5), y: -7.5, width: 15, height: 15, receive: function(address,data){ if(address != 'discrete'){return;} _mainObject.dial.discrete.waveType.select(data); } },
                 periodicWave:{ x: 232.5, y: 12.5, width: 15, height: 15, receive: function(address,data){ if(address != 'periodicWave'){return;} _mainObject.__synthesizer.periodicWave(data); } },
                 midiNote:{ x: 217.5, y: 37.5, width: 30, height: 30, angle: Math.PI/4, receive: function(address,data){  if(address != 'midiNumber'){return;} _mainObject.__synthesizer.perform(data); } },
+                gainWobblePeriod:{ x: 12.5+(40*0), y: 90-7.5, width: 15, height: 15, receive: function(address,data){ if(address != '%'){return;} _mainObject.dial.continuous.gainWobblePeriod.set(data); } },
+                gainWobbleDepth:{ x: 12.5+(40*1), y: 90-7.5, width: 15, height: 15, receive: function(address,data){ if(address != '%'){return;} _mainObject.dial.continuous.gainWobbleDepth.set(data); } },
+                detuneWobblePeriod:{ x: 12.5+(40*2), y: 90-7.5, width: 15, height: 15, receive: function(address,data){ if(address != '%'){return;} _mainObject.dial.continuous.detuneWobblePeriod.set(data); } },
+                detuneWobbleDepth:{ x: 12.5+(40*3), y: 90-7.5, width: 15, height: 15, receive: function(address,data){ if(address != '%'){return;} _mainObject.dial.continuous.detuneWobbleDepth.set(data); } },
             }
         },
         button:{
@@ -126,9 +151,9 @@ __globals.objects.make_basicWobbleSynth = function(x,y){
                 outerArcStyle: style.markings,
                 labels:[
                     { name: null, x: (40*3)+7,     y: (3)+40, text: 'detune', style: style.h1 },
-                    { name: null, x: (40*3)+2,     y: (3)+34, text: '0',      style: style.h2 },
-                    { name: null, x: (40*3)+18.75, y: (3)+4,  text: '5',      style: style.h2 },
-                    { name: null, x: (40*3)+28,    y: (3)+34, text: '10',     style: style.h2 },
+                    { name: null, x: (40*3)+2,     y: (3)+34, text: '-100',   style: style.h2 },
+                    { name: null, x: (40*3)+18.75, y: (3)+4,  text: '0',      style: style.h2 },
+                    { name: null, x: (40*3)+28,    y: (3)+34, text: '100',    style: style.h2 },
                 ],
                 onChange: function(value){ _mainObject.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); },
             },
@@ -167,11 +192,79 @@ __globals.objects.make_basicWobbleSynth = function(x,y){
                 labels:[
                     { name: null, x: (40*5)+11, y: (3)+40, text: 'wave', style: style.h1 },
                     { name: null, x: (40*5)+0,  y: (3)+32, text: 'sine', style: style.h2 },
-                    { name: null, x: (40*5)+0,  y: (3)+18, text: 'tri',  style: style.h2 },
+                    { name: null, x: (40*5)-1,  y: (3)+18, text: 'tri',  style: style.h2 },
                     { name: null, x: (40*5)+10, y: (3)+6,  text: 'squ',  style: style.h2 },
                     { name: null, x: (40*5)+27, y: (3)+7,  text: 'saw',  style: style.h2 },
                 ],
                 onChange: function(value){ _mainObject.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); },
+            },
+            gainWobblePeriod: {
+                type: 'continuous',
+                x: 10+(40*0)+20, y: 3+62, r: 12,
+                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                handleStyle: style.handle,
+                slotStyle: style.slot,
+                needleStyle: style.needle,
+                arcDistance: 1.2,
+                outerArcStyle: style.markings,
+                labels:[
+                    { name: null, x: 10+(40*0)+11, y: (3+42)+40, text: 'rate', style: style.h1 },
+                    { name: null, x: 10+(40*0)+6,  y: (3+42)+34, text: '0',    style: style.h2 },
+                    { name: null, x: 10+(40*0)+18, y: (3+42)+4,  text: '50',   style: style.h2 },
+                    { name: null, x: 10+(40*0)+30, y: (3+42)+34, text: '100',  style: style.h2 },
+                ],
+                onChange: function(value){ _mainObject.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); },
+            },
+            gainWobbleDepth: {
+                type: 'continuous',
+                x: 5+(40*1)+20, y: 3+62, r: 12,
+                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                handleStyle: style.handle,
+                slotStyle: style.slot,
+                needleStyle: style.needle,
+                arcDistance: 1.2,
+                outerArcStyle: style.markings,
+                labels:[
+                    { name: null, x: 5+(40*1)+9,  y: (3+42)+40, text: 'depth', style: style.h1 },
+                    { name: null, x: 5+(40*1)+5,  y: (3+42)+34, text: '0',     style: style.h2 },
+                    { name: null, x: 5+(40*1)+16, y: (3+42)+4,  text: '1/2',   style: style.h2 },
+                    { name: null, x: 5+(40*1)+32, y: (3+42)+34, text: '1',     style: style.h2 },
+                ],
+                onChange: function(value){_mainObject.__synthesizer.gainWobbleDepth(value);},
+            },
+            detuneWobblePeriod: {
+                type: 'continuous',
+                x: 14+(40*2)+20, y: 3+62, r: 12,
+                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                handleStyle: style.handle,
+                slotStyle: style.slot,
+                needleStyle: style.needle,
+                arcDistance: 1.2,
+                outerArcStyle: style.markings,
+                labels:[
+                    { name: null, x: 14+(40*2)+11, y: (3+42)+40, text: 'rate', style: style.h1 },
+                    { name: null, x: 14+(40*2)+6,  y: (3+42)+34, text: '0',    style: style.h2 },
+                    { name: null, x: 14+(40*2)+18, y: (3+42)+4,  text: '50',   style: style.h2 },
+                    { name: null, x: 14+(40*2)+30, y: (3+42)+34, text: '100',  style: style.h2 },
+                ],
+                onChange: function(value){ _mainObject.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); },
+            },
+            detuneWobbleDepth: {
+                type: 'continuous',
+                x: 9+(40*3)+20, y: 3+62, r: 12,
+                startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                handleStyle: style.handle,
+                slotStyle: style.slot,
+                needleStyle: style.needle,
+                arcDistance: 1.2,
+                outerArcStyle: style.markings,
+                labels:[
+                    { name: null, x: 9+(40*3)+9,  y: (3+42)+40, text: 'depth', style: style.h1 },
+                    { name: null, x: 9+(40*3)+5,  y: (3+42)+34, text: '0',     style: style.h2 },
+                    { name: null, x: 9+(40*3)+16, y: (3+42)+4,  text: '1/2',   style: style.h2 },
+                    { name: null, x: 9+(40*3)+32, y: (3+42)+34, text: '1',     style: style.h2 },
+                ],
+                onChange: function(value){_mainObject.__synthesizer.detuneWobbleDepth(value*100);},
             }
         }
     };
@@ -188,6 +281,20 @@ __globals.objects.make_basicWobbleSynth = function(x,y){
 
         //generate selection area
             __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
+
+        //markings
+            //text
+                var keys = Object.keys( shape.markings.text );
+                for(var a = 0; a < keys.length; a++){
+                    var data = shape.markings.text[keys[a]];
+                    _mainObject.append(parts.display.label(keys[a], data.x, data.y, data.text, data.style, data.angle));
+                }
+            //rect
+                var keys = Object.keys( shape.markings.rect );
+                for(var a = 0; a < keys.length; a++){
+                    var data = shape.markings.rect[keys[a]];
+                    _mainObject.append(parts.basic.rect(keys[a], data.x, data.y, data.width, data.height, data.angle, data.style));
+                }
 
         //buttons
             _mainObject.button = {};
@@ -242,6 +349,7 @@ __globals.objects.make_basicWobbleSynth = function(x,y){
                 }else{console.error('unknow dial type: "'+ data.type + '"'); var dial = null;}
 
                 dial.onChange = data.onChange;
+                dial.onRelease = data.onRelease;
                 _mainObject.append(dial);
             }
 
@@ -265,11 +373,11 @@ __globals.objects.make_basicWobbleSynth = function(x,y){
             }
 
     //circuitry
-        _mainObject.__synthesizer = new parts.audio.synthesizer_gainWobble(__globals.audio.context);
+        _mainObject.__synthesizer = new parts.audio.synthesizer2(__globals.audio.context);
         _mainObject.__synthesizer.out().connect( _mainObject.io.audioOut.in() );
 
     //setup
-        _mainObject.dial.continuous.gain.set(0.25);
+        _mainObject.dial.continuous.gain.set(0.5);
         _mainObject.dial.continuous.detune.set(0.5);
         _mainObject.dial.discrete.octave.select(3);
 

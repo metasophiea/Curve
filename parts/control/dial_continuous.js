@@ -115,7 +115,7 @@ this.dial_continuous = function(
                 __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
             };
             __globals.svgElement.onmouseup = function(){
-                this.tempRef.set(this.tempRef.get());
+                this.tempRef.set(this.tempRef.get(),false);
                 delete this.tempRef;
 
                 __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;

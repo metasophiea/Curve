@@ -1,4 +1,4 @@
-parts.audio.synthesizer_gainWobble = function(
+parts.audio.synthesizer1_detuneWobble = function(
     context,
     waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
     gain=1, 
@@ -8,79 +8,9 @@ parts.audio.synthesizer_gainWobble = function(
     //components
         var mainOut = context.createGain();
             mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
-        var wobbleGain = context.createGain();
-            wobbleGain.gain.setTargetAtTime(1, context.currentTime, 0);
-        var oscAggregator = context.createGain();
-            oscAggregator.gain.setTargetAtTime(1, context.currentTime, 0);
-
-        oscAggregator.connect(wobbleGain);
-        wobbleGain.connect(mainOut);
 
     //live oscillators
         var liveOscillators = {};
-
-    //options
-        this.waveType = function(a){if(a==null){return waveType;}waveType=a;};
-        this.periodicWave = function(a){if(a==null){return periodicWave;}periodicWave=a;};
-        this.gain = function(target,time,curve){
-            return changeAudioParam(mainOut.gain,target,time,curve);
-        };
-        this.attack = function(time,curve){
-            if(time==null&&curve==null){return attack;}
-            attack.time = time ? time : attack.time;
-            attack.curve = curve ? curve : attack.curve;
-        };
-        this.release = function(time,curve){
-            if(time==null&&curve==null){return release;}
-            release.time = time ? time : release.time;
-            release.curve = curve ? curve : release.curve;
-        };
-        this.octave = function(a){if(a==null){return octave;}octave=a;};
-        this.detune = function(target,time,curve){
-            if(a==null){return detune;}
-
-            //change stored value for any new oscillators that are made
-                var start = detune;
-                var mux = target-start;
-                var stepsPerSecond = Math.round(Math.abs(mux));
-                var totalSteps = stepsPerSecond*time;
-
-                var steps = [1];
-                switch(curve){
-                    case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-                    case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-                    case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps,8); break;
-                    case 'instant': default: break;
-                }
-                
-                if(steps.length != 0){
-                    var interval = setInterval(function(){
-                        detune = start+(steps.shift()*mux);
-                        if(steps.length == 0){clearInterval(interval);}
-                    },1000/stepsPerSecond);
-                }
-
-            //instruct liveOscillators to adjust their values
-                var OSCs = Object.keys(liveOscillators);
-                for(var b = 0; b < OSCs.length; b++){ 
-                    liveOscillators[OSCs[b]].osc.detune(target,time,curve);
-                }
-        };
-        this.wobbleDepth = function(value){
-            if(value==null){return wobble.high-wobble.low; }
-            wobble.high = 1;
-            wobble.low = 1 - value;
-            this.stopWobble();
-            this.startWobble();
-        };
-        this.wobblePeriod = function(value){
-            if(value==null){return wobble.period; }
-
-            wobble.period = value;
-
-            this.stopWobble();
-            this.startWobble();
-        };
 
     //output node
         this.out = function(){return mainOut;}
@@ -125,39 +55,39 @@ parts.audio.synthesizer_gainWobble = function(
             };
         }
 
-    //wobbling gain
+    //wobbling detune
         var wobble = {
             phase: true,
-            high: 1,
-            low: 0.5,
-            period: 0.05,
-            wave: 's',
-            interval : null
+            high: 100,
+            low: -100,
+            period: 0.1,
+            wave: 's'
         };
-        this.startWobble = function(){
-            wobble.interval = setInterval(function(){
-                if(wobble.phase){ changeAudioParam( wobbleGain.gain, wobble.high, 0.9*wobble.period, wobble.wave ); }
-                else{             changeAudioParam( wobbleGain.gain, wobble.low,  0.9*wobble.period, wobble.wave ); }
-                wobble.phase = !wobble.phase;
-            }, 1000*wobble.period);
-        };this.startWobble();
-        this.stopWobble = function(){ clearInterval(wobble.interval); };
+        setInterval(function(){
+            var OSCs = Object.keys(liveOscillators);
+            if(wobble.phase){
+                for(var b = 0; b < OSCs.length; b++){ 
+                    liveOscillators[OSCs[b]].detune(wobble.high,0.9*wobble.period,wobble.wave);
+                }
+            }else{
+                for(var b = 0; b < OSCs.length; b++){ 
+                    liveOscillators[OSCs[b]].detune(wobble.low,0.9*wobble.period,wobble.wave);
+                }
+            }
+            wobble.phase = !wobble.phase;
+        }, 1000*wobble.period);
 
     //methods
         this.perform = function(note){
             if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
             else if( !liveOscillators[note.num] ){ 
                 //create new tone
-                liveOscillators[note.num] = makeOSC(context, oscAggregator, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave);
+                liveOscillators[note.num] = makeOSC(context, mainOut, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave); 
             }
             else if( note.velocity == 0 ){ 
                 //stop and destroy tone
                 liveOscillators[note.num].stop();
                 delete liveOscillators[note.num];
-            }
-            else{
-                //adjust tone
-                liveOscillators[note.num].osc.changeVelocity(note.velocity);
             }
         };
         this.panic = function(){

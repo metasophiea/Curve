@@ -51,15 +51,18 @@ this.dial_discrete = function(
 
 
     //methods
-    object.select = function(a=null, update=true){
+    object.select = function(a=null, live=true, update=true){
         if(a==null){return this._selection;}
 
         a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
         a = (a<0 ? 0 : a);
 
+        if(this._selection == a){/*nothings changed*/return;}
+
         this._selection = a;
         this._set( a/(this._data.optionCount-1) );
         if(update&&this.onChange){ this.onChange(a); }
+        if(update&&!live&&this.onRelease){ this.onRelease(value); }
     };
     object._get = function(){ return this._value; };
     object._set = function(value){
@@ -73,8 +76,9 @@ this.dial_discrete = function(
 
     //callback
     object.onChange = function(){};
+    object.onRelease = function(){};
 
-
+    
     //mouse interaction
     object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
     object.onwheel = function(event){
@@ -110,6 +114,7 @@ this.dial_discrete = function(
             );
         };
         __globals.svgElement.onmouseup = function(){
+            this.tempRef.select(this.tempRef.select(),false);
             this.tempRef = null;
             
             __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;

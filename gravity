@@ -22,6 +22,8 @@ def includer(location, parentFile, inputfileName, outputObject, spacer=''):
             print()
             print('\terror:', sys.exc_info())
             exit()
+    elif(inputfileName[0] == '.'):
+        pass
     else:
         if os.path.isdir(location+'/'+inputfileName):
             includer( location+'/'+inputfileName+'/', '', '*', outputObject, spacer)

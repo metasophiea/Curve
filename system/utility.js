@@ -1,3 +1,46 @@
+// utility
+// workspace
+//     currentPosition                 ()
+//     gotoPosition                    (x,y,z,r)
+//     getPane                         (element)
+//     objectUnderPoint                (x,y) (browser position)
+//     pointConverter
+//         browser2workspace           (x,y)
+//         workspace2browser           (x,y)
+//     dotMaker                        (x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;')
+//
+// element
+//     getTransform                    (element)
+//     getCumulativeTransform          (element)
+//     setTransform                    (element, transform:{x:0, y:0, s:1, r:0})
+//     setTransform_XYonly             (element, x, y)
+//     setStyle                        (element, style)
+//     setRotation                     (element, rotation)
+//     getBoundingBox                  (element)
+//     makeUnselectable                (element)
+//
+// object
+//     requestInteraction              (x,y,type) (browser position)
+//     disconnectEverything            (object)
+//     generateSelectionArea           (points:[{x:0,y:0},...], object)
+//
+// audio
+//     changeAudioParam                (audioParam,target,time,curve,cancelScheduledValues=true)
+//
+// math
+//     averageArray                    (array)
+//     polar2cartesian                 (angle,distance)
+//     cartesian2polar                 (x,y)
+//     boundingBoxFromPoints           (points:[{x:0,y:0},...])
+//     intersectionOfTwoLineSegments   (segment1:{{x:0,y:0},{x:0,y:0}}, segment2:{{x:0,y:0},{x:0,y:0}})
+//     detectOverlap                   (poly_a:[{x:0,y:0},...], poly_b:[{x:0,y:0},...], box_a:[{x:0,y:0},{x:0,y:0}]=null, box_b:[{x:0,y:0},{x:0,y:0}]=null)
+//     curveGenerator
+//         linear                      (stepCount, start=0, end=1)
+//         sin                         (stepCount, start=0, end=1)
+//         cos                         (stepCount, start=0, end=1)
+//         s                           (stepCount, start=0, end=1, sharpness=8)
+//         exponential                 (stepCount, start=0, end=1)
+
 __globals.utility = new function(){
     this.workspace = new function(){
         this.currentPosition = function(){
@@ -137,6 +180,37 @@ __globals.utility = new function(){
             };
 
             object.updateSelectionArea();
+        };
+    };
+    this.audio = new function(){
+        this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
+            if(target==null){return audioParam.value;}
+
+            if(cancelScheduledValues){ audioParam.cancelScheduledValues(context.currentTime); }
+
+            try{
+                switch(curve){
+                    case 'linear': 
+                        audioParam.linearRampToValueAtTime(target, context.currentTime+time);
+                    break;
+                    case 'exponential':
+                        console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
+                        if(target == 0){target = 1/10000;}
+                        audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
+                    break;
+                    case 's':
+                        var mux = target - audioParam.value;
+                        var array = __globals.utility.math.curveGenerator.s(10);
+                        for(var a = 0; a < array.length; a++){
+                            array[a] = audioParam.value + array[a]*mux;
+                        }
+                        audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
+                    break;
+                    case 'instant': default:
+                        audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                    break;
+                }
+            }catch(e){console.log('could not change param (probably due to an overlap)');console.log(e);}
         };
     };
     this.math = new function(){
