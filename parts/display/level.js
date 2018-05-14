@@ -2,18 +2,17 @@ this.level = function(
     id='level',
     x, y, angle,
     width, height,
-    layerCount=1,
     backingStyle='fill:rgb(10,10,10)',
     levelStyles=['fill:rgb(250,250,250)','fill:rgb(200,200,200)']
 ){
-    var values = Array.apply(null, Array(layerCount)).map(Number.prototype.valueOf,0);
+    var values = Array.apply(null, Array(levelStyles.length)).map(Number.prototype.valueOf,0);
 
     // elements
         var object = parts.basic.g(id, x, y);
 
         //level layers are layered from back forward, so backing must go on last
         var levels = [];
-        for(var a = 0; a < layerCount; a++){
+        for(var a = 0; a < levelStyles.length; a++){
             var tempStyle = levelStyles[a]!=undefined ? levelStyles[a] : levelStyles[0];
             var temp = parts.basic.rect(
                 'movingRect_'+a,

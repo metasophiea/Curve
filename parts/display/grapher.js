@@ -32,8 +32,8 @@ this.grapher = function(
     //internal methods
     object._pointConverter = function(realHeight, viewbox, y){
         var viewboxDistance = Math.abs( viewbox.h - viewbox.l );
-        var y_graphingDistance = realHeight * (-(viewbox.l + y )/viewboxDistance)
-        return y_graphingDistance;
+        var y_graphingDistance = realHeight * (viewbox.h-y)/viewboxDistance
+        return !isNaN(y_graphingDistance) ? y_graphingDistance : 0;
     };
     object._lineCorrecter = function(points, maxheight){
         if( points.y1 < 0 && points.y2 < 0 ){ return; }
@@ -49,11 +49,12 @@ this.grapher = function(
         return points;
     };
     object._test = function(){
-        this.horizontalMarkings([0.75,0.5,0.25,0,-0.25,-0.5,-0.75,1,1.25,1.5,1.75,-1.75]);
+        // this.horizontalMarkings([0.75,0.5,0.25,0,-0.25,-0.5,-0.75,1,1.25,1.5,1.75,-1.75]);
+        this.horizontalMarkings([0.75,0,-0.25,-2,-1,1]);
         this.verticalMarkings([0,1,2,3,4,5,6,7,8,9,10]);
-        this.viewbox({'l':-2,'h':2});
+        this.viewbox({'l':-2,'h':4});
         this.drawBackground();
-        this.draw([-2,1,-1,2]);
+        this.draw([0,-2,1,-1,2]);
     };
     
 

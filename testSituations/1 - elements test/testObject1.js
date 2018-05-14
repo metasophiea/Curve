@@ -1,4 +1,4 @@
-function makeTestObject(x,y,debug=false){
+function makeTestObject1(x,y,debug=false){
     //set numbers
         var type = 'testObject';
 
@@ -10,7 +10,7 @@ function makeTestObject(x,y,debug=false){
         //backing
             var backing = parts.basic.rect(null, 0, 0, 335, 285, 0, 'fill:rgba(255,100,255,0.75)');
                 _mainObject.append(backing);
-                __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, makeTestObject);
+                __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, makeTestObject1);
 
         //crazy square
             var crazySquare = parts.basic.rect('crazySquare', 5, 5, 30, 30, 0, 'fill:rgba(0,0,0,0.75)');

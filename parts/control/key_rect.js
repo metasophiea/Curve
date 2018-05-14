@@ -43,12 +43,12 @@ this.key_rect = function(
     object.press =   function(){
         if( this.state%2 != 0 ){return;} //key already pressed 
         this.activateState(this.state+1);
-        this.onkeydown();
+        if(this.onkeydown){this.onkeydown();}
     };
     object.release = function(){ 
         if( this.state%2 == 0 ){return;} //key not pressed 
         this.activateState(object.state-1); 
-        this.onkeyup();
+        if(this.onkeyup){this.onkeyup();}
     };
     object.glow = function(){ this.activateState(this.state+2); };
     object.dim  = function(){ this.activateState(this.state-2); };

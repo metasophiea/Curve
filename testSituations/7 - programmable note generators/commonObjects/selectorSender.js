@@ -55,11 +55,11 @@ __globals.objects.make_selectorSender = function(x,y){
                 decButton.onclick = function(){ decValue(); }
 
         //readout
-            var segmentDisplays = [];
+            var sevenSegmentDisplays = [];
             for(var a = 0; a < shape.readouts.length; a++){
-                var temp = parts.display.segmentDisplay(null, shape.readouts[a].x, shape.readouts[a].y, shape.readouts[a].width, shape.readouts[a].height);
+                var temp = parts.display.sevenSegmentDisplay(null, shape.readouts[a].x, shape.readouts[a].y, shape.readouts[a].width, shape.readouts[a].height);
                     _mainObject.append(temp);
-                    segmentDisplays.push(temp);
+                    sevenSegmentDisplays.push(temp);
             }
 
     //connection nodes
@@ -79,7 +79,7 @@ __globals.objects.make_selectorSender = function(x,y){
             
     //internal workings
         function render(){
-            segmentDisplays[0].enterCharacter(''+attributes.value);
+            sevenSegmentDisplays[0].enterCharacter(''+attributes.value);
         }
         function incValue(){
             attributes.value = attributes.value >= attributes.valueLimit ? 0 : attributes.value+1;

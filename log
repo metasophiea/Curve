@@ -1,4 +1,84 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-05-14
+  - updated gravity shebang so it'll work in other systems (hopefully)
+
+
+2018-05-11
+  - fixed preservation of indentation in gravity
+  - wrote up objectBuilder (a bit crude, but it's there)
+
+  future ideas
+  - you could probably delete that 'parts/modifiers' folder
+
+
+2018-05-10
+  - test situation 10 "recorded audio" / 1 "microphones" works, and rather
+    simply too. All very gentle and nice
+  - created rudimentary audio-in object
+
+
+2018-05-09
+  future ideas
+  - audio in / import-export / playback / record / edit
+  - look into "DynamicsCompressorNode", "DelayNode" and "IIRFilterNode"
+
+
+2018-05-08
+  - seems the feedback problem was caused by the 'Q' being set way too high. It
+    used to be at 10000, but now it's at 0.1 and things are much more reasonable
+  - wrote up simple filter object
+
+  future ideas
+  - none of that 'power on' stuff to get round the new "no auto-play" features,
+    instead, I'll just rely on some other activation method external to the main
+    system. Keeps things clean I think
+
+
+2018-05-04
+  - chrome's "no autoplay" feature has arrived, and it's causing problems. You
+    can go into 'chrome://flags/' and turn it off, but this is only a 
+    development solution. There's going to have to be some sort of activation
+    method..perhaps a gain dial on the audio sink that's set to zero.
+    - added a 'power' button to the audio sink, but this will have to be changed
+      to something else eventually
+  - wrote synthesizer 3 which is gainJourney based (though it accommodates the
+    velocity of a note)
+  - wrote up a reverb unit and object, which uses those impulse responses from
+    before. There's an output gain dail, a method of selecting between the ~38
+    types and a wet/dry dial
+
+  - filter unit has strange feed-back loop I can't seem to find the root of ):/
+
+
+2018-05-02
+  - wrote a pile of notes on synthesizers
+  - fixed a little problem in basicSynth_2 where setting the rate dials to max
+    would stop the wobble completely
+  - start test situation 9 "audio effect units"
+  - pushed 'changeAudioParam' to '__globals.utility.audio.changeAudioParam'
+  - wrote up simplistic distortion box (complete with in/out gain adjust,
+    distortion, resolution and over-sample controls. Seems to work pretty well)
+  - added 'onRelease' callback to 'dial_discrete'
+  - the 'onChange' callback for 'dial_discrete' is now only called when the
+    value actually changes
+  
+  future ideas
+  - reverb unit
+  - EQ unit
+  - multi-band distortion unit
+  - mixing units
+
+
+2018-05-01
+  - added adjustment dials to new gain-wobble synthesizer (for period and depth)
+  - updated gravity to ignore files which have names that begin with a dot
+  - created synthesizer 2 and it's object (which incorporates gain and detune
+    wobble; with dials for depth and rate)
+
+  future ideas
+  - need to do layouts of potential new synthesizers
+
+
 2018-04-30
   - rewrote basicSynth into new style (it's actually longer than the original)
   - pushed the new synthesizer into main place (should probably rename it)
@@ -114,6 +194,7 @@
 
 
 2018-04-16
+  - started log
   - added glowbox to test object in test situation one
   - deleted unneeded files
   - fixed up the first test situation a little to use the latest writings

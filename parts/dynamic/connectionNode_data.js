@@ -29,7 +29,7 @@ this.connectionNode_data = function(
         },100);
 
         if(!object.foreignNode){ /*console.log('send::error: node unconnected');*/ return; }
-        object.foreignNode.receive(address, data);
+        if(object.foreignNode.receive){object.foreignNode.receive(address, data);}
 
         object._cable.activate();
         object.foreignNode.activate();

@@ -27,7 +27,7 @@ this.dial_continuous = function(
             }
             var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
             arcPath.push( temp );
-            var outerArc = parts.basic.path(id=null, path=arcPath, 'Q', outerArcStyle);
+            var outerArc = parts.basic.path(id='arc', path=arcPath, 'Q', outerArcStyle);
             object.appendChild(outerArc);
 
         //slot
@@ -115,7 +115,7 @@ this.dial_continuous = function(
                 __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
             };
             __globals.svgElement.onmouseup = function(){
-                this.tempRef.set(this.tempRef.get());
+                this.tempRef.set(this.tempRef.get(),false);
                 delete this.tempRef;
 
                 __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;

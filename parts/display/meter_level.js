@@ -18,7 +18,7 @@ this.meter_level = function(
     //level
         levelStyles[0] += 'transition: height 0s;';
         levelStyles[1] += 'transition: height 0.01s;';
-        var level = parts.display.level('mainlevel',0,0,angle,width,height,2,backingStyle,levelStyles);
+        var level = parts.display.level('mainlevel',0,0,angle,width,height,backingStyle,levelStyles);
         object.append(level);
 
     //markings

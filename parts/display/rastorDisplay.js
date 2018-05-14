@@ -42,15 +42,7 @@ this.rastorDisplay = function(
     //methods
         object.get = function(x,y){ return pixelValues[x][y]; };
         object.set = function(x,y,state){ pixelValues[x][y] = state; render() };
-        object.reverseLoad = function(data){
-        for(var y = 0; y < yCount; y++){
-            for(var x = 0; x < xCount; x++){
-                    this.set(x,y,data[y][x]);
-                }
-            }
-            render();
-        };
-        object.load = function(data){
+        object.import = function(data){
             for(var x = 0; x < xCount; x++){
                 for(var y = 0; y < yCount; y++){
                     this.set(x,y,data[x][y]);
@@ -58,7 +50,7 @@ this.rastorDisplay = function(
             }
             render();
         };
-        object.unload = function(){ return pixelValues; }
+        object.export = function(){ return pixelValues; }
         object.setAll = function(value){
             for(var x = 0; x < xCount; x++){
                 for(var y = 0; y < yCount; y++){
@@ -69,6 +61,10 @@ this.rastorDisplay = function(
 
         object.test = function(){
             this.setAll([1,1,1]);
+            this.set(1,1,[1,0.5,0.5]);
+            this.set(2,2,[0.5,1,0.5]);
+            this.set(3,3,[0.5,0.5,1]);
+            this.set(4,4,[1,0.5,1]);
             render();
         };
 

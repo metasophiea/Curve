@@ -81,9 +81,10 @@ this.slide_horizontal = function(
             var numerator = __globals.svgElement.tempRef._data.initialX-event.x;
             var divider = __globals.utility.element.getTransform(__globals.panes.global).s;
 
-            __globals.svgElement.tempRef.set( value - numerator/(divider*mux) );
+            __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
         };
         __globals.svgElement.onmouseup = function(){
+            __globals.svgElement.tempRef.set( __globals.svgElement.tempRef.get(), false );
             this.tempRef = null;
             this.onmousemove = null;
             this.onmouseleave = null;

@@ -1,5 +1,5 @@
-this.segmentDisplay = function(
-    id='segmentDisplay',
+this.sevenSegmentDisplay = function(
+    id='sevenSegmentDisplay',
     x, y, width, height,
     backgroundStyle='fill:rgb(0,0,0)',
     glowStyle='fill:rgb(200,200,200)',

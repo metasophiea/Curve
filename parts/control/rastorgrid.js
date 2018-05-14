@@ -16,7 +16,7 @@ this.rastorgrid = function(
         for(var x = 0; x < xcount; x++){
             var temp = parts.control.checkbox_rect(y+'_'+x, x*(width/xcount), y*(height/ycount), width/xcount, height/ycount, 0, checkStyle, backingStyle, checkGlowStyle, backingGlowStyle);
             object.appendChild(temp);
-            temp.onChange = function(){ object.onChange(object.get()); };
+            temp.onChange = function(){ if(object.onChange){object.onChange(object.get());} };
         }
     }
 

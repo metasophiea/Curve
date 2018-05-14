@@ -12,8 +12,9 @@ this.slidePanel_vertical = function(
         object.appendChild(rect);
     for(var a = 0; a < count; a++){
         var temp = parts.control.slide_vertical( id+'_'+a, a*(width/count), 0, width/count, height, handleStyle, backingStyle, slotStyle );
-        object.appendChild(temp);
         temp.onChange = function(){ object.onChange(object.get()); };
+        temp.onRelease = function(){ object.onRelease(object.get()); };
+        object.appendChild(temp);
     }
 
 

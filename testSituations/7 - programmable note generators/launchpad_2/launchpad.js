@@ -97,7 +97,7 @@ __globals.objects.make_launchpad = function(x,y){
             var prevPage = parts.control.button_rect('prevPage', shape.prevPage.x, shape.prevPage.y, shape.prevPage.width, shape.prevPage.height, 0, style.button.up, style.button.hover, style.button.down);
                 _mainObject.append(prevPage);
                 prevPage.onclick = function(){ setPage(variables.currentPage-1); }
-            var pageNumberReadout = parts.display.segmentDisplay(null, shape.pageNumberReadout.x, shape.pageNumberReadout.y, shape.pageNumberReadout.width, shape.pageNumberReadout.height);
+            var pageNumberReadout = parts.display.sevenSegmentDisplay(null, shape.pageNumberReadout.x, shape.pageNumberReadout.y, shape.pageNumberReadout.width, shape.pageNumberReadout.height);
                 _mainObject.append(pageNumberReadout);
 
     //connection nodes

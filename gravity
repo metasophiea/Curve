@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/python3
 
 import sys, os, re
 
@@ -22,6 +22,8 @@ def includer(location, parentFile, inputfileName, outputObject, spacer=''):
             print()
             print('\terror:', sys.exc_info())
             exit()
+    elif(inputfileName[0] == '.'):
+        pass
     else:
         if os.path.isdir(location+'/'+inputfileName):
             includer( location+'/'+inputfileName+'/', '', '*', outputObject, spacer)
@@ -31,17 +33,15 @@ def includer(location, parentFile, inputfileName, outputObject, spacer=''):
                 start = line.find('{{')
                 end = line.find('}}')
                 if( start != -1 and end != -1 ):
-
+                    potentialSpacer = line[:len(line)-len(line.lstrip())]
                     line = line.strip()
                     if line[:2] == '//': continue
                     line = line.split('{{')[1].split('}}')[0].split(':')
 
                     if 'include' in line[0]:
-                        newSpacer = line[0].replace('include','')
                         newLocation = '/'.join((location+'/'+line[1]).split('/')[:-1])
                         newFile = line[1].split('/')[-1]
-                        includer( newLocation, inputfileName, newFile, outputObject, spacer+newSpacer)
-
+                        includer( newLocation, inputfileName, newFile, outputObject, spacer+potentialSpacer)
                 else:
                     outputObject.write(spacer+line)
 

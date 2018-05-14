@@ -12,8 +12,9 @@ this.slidePanel_horizontal = function(
         object.appendChild(rect);
     for(var a = 0; a < count; a++){
         var temp = parts.control.slide_horizontal( id+'_'+a, 0, a*(height/count), width, height/count, handleStyle, backingStyle, slotStyle );
-        object.appendChild(temp);
         temp.onChange = function(){ object.onChange(object.get()); };
+        temp.onRelease = function(){ object.onRelease(object.get()); };
+        object.appendChild(temp);
     }
 
 

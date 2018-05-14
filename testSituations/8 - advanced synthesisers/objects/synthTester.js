@@ -6,13 +6,13 @@ __globals.objects.make_synthTester = function(x,y, synth){
         background: 'fill:rgba(200,200,200,1); stroke:none;'
     };
     var shape = {
-        base: [{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:200,y:80},{x:0,y:80}],
+        base: [{x:0,y:0},{x:140,y:0},{x:140,y:40},{x:100,y:80},{x:0,y:80}],
         connector: {
             audio:{
                 audioOut:{ type: 1, x: -15, y: 5, width: 30, height: 30 },
             },
             data:{
-                midiNote:{ x: 217.5, y: 37.5, width: 30, height: 30, angle: Math.PI/4, receive: function(address,data){  if(address != 'midiNumber'){return;} _mainObject.__synthesizer.perform(data); } },
+                midiNote:{ x: 117.5, y: 37.5, width: 30, height: 30, angle: Math.PI/4, receive: function(address,data){  if(address != 'midiNumber'){return;} _mainObject.__synthesizer.perform(data); } },
             }
         }
     };
