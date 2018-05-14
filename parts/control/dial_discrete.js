@@ -51,6 +51,7 @@ this.dial_discrete = function(
 
 
     //methods
+<<<<<<< HEAD
         object.select = function(a=null, live=true, update=true){
             if(a==null){return this._selection;}
 
@@ -77,6 +78,34 @@ this.dial_discrete = function(
     //callback
         object.onChange = function(){};
         object.onRelease = function(){};
+=======
+    object.select = function(a=null, live=true, update=true){
+        if(a==null){return this._selection;}
+
+        a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
+        a = (a<0 ? 0 : a);
+
+        if(this._selection == a){/*nothings changed*/return;}
+
+        this._selection = a;
+        this._set( a/(this._data.optionCount-1) );
+        if(update&&this.onChange){ this.onChange(a); }
+        if(update&&!live&&this.onRelease){ this.onRelease(value); }
+    };
+    object._get = function(){ return this._value; };
+    object._set = function(value){
+        value = (value>1 ? 1 : value);
+        value = (value<0 ? 0 : value);
+
+        this._value = value;
+        this.children['needle'].rotation(startAngle + maxAngle*value);
+    };object._set(0);
+  
+
+    //callback
+    object.onChange = function(){};
+    object.onRelease = function(){};
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
 
     
     //mouse interaction
@@ -92,6 +121,7 @@ this.dial_discrete = function(
                 object.onwheel.acc = 0;
             }
         };
+<<<<<<< HEAD
         object.onmousedown = function(event){
             __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
             __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
@@ -127,6 +157,19 @@ this.dial_discrete = function(
             };
             __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
             __globals.svgElement.onmousemove(event);
+=======
+        __globals.svgElement.onmouseup = function(){
+            this.tempRef.select(this.tempRef.select(),false);
+            this.tempRef = null;
+            
+            __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+            __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+
+            __globals.svgElement.onmousemove_old = null;
+            __globals.svgElement.onmouseleave_old = null;
+            __globals.svgElement.onmouseup_old = null;
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
         };
         
 

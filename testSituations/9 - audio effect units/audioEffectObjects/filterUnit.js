@@ -4,12 +4,20 @@ __globals.objects.make_filterUnit = function(x,y){
         var attributes = {};
         var style = {
             background: 'fill:rgba(200,200,200,1); stroke:none;',
+<<<<<<< HEAD
             h1: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
             h2: 'fill:rgba(0,0,0,1); font-size:3px; font-family:Courier New;',
             h3: 'fill:rgba(0,0,0,1); font-size:2px; font-family:Courier New;',
             text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
     
             markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:0.5;',
+=======
+            h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+            h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+            text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
+    
+            markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
     
             handle: 'fill:rgba(220,220,220,1)',
             slot: 'fill:rgba(50,50,50,1)',
@@ -17,6 +25,7 @@ __globals.objects.make_filterUnit = function(x,y){
         };
         var shape = {};
             shape.width = 102.5;
+<<<<<<< HEAD
             shape.height = 100;
             shape.base = [
                 {x:0+10,y:0},
@@ -25,6 +34,17 @@ __globals.objects.make_filterUnit = function(x,y){
                 {x:shape.width,y:shape.height-30},
                 {x:shape.width/2,y:shape.height},
                 {x:0,y:shape.height-30},
+=======
+            shape.height = 50;
+            shape.base = [
+                {x:0,y:0+10},
+                {x:shape.width/2,y:0},
+                {x:shape.width,y:0+10},
+
+                {x:shape.width,y:shape.height-10},
+                {x:shape.width/2,y:shape.height},
+                {x:0,y:shape.height-10},
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
             ];
             shape.readouts = {};
             shape.button = {};
@@ -35,6 +55,7 @@ __globals.objects.make_filterUnit = function(x,y){
                 },
                 data: {}
             };
+<<<<<<< HEAD
             shape.dial = {
                 Q:{
                     type: 'continuous',
@@ -112,6 +133,9 @@ __globals.objects.make_filterUnit = function(x,y){
                 }
             };
             shape.button = {};
+=======
+            shape.dial = {};
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
 
     //main
         var _mainObject = parts.basic.g(type, x, y);
@@ -126,17 +150,24 @@ __globals.objects.make_filterUnit = function(x,y){
         //generate selection area
             __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
 
+<<<<<<< HEAD
         //grapher
         var grapher = parts.display.grapher(null, 15, 5, 72.5, 50);
             _mainObject.append(grapher);
             grapher.drawBackground();
             grapher.viewbox({'l':0,'h':2});
 
+=======
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
         //readout
             var keys = Object.keys(shape.readouts);
             for(var a = 0; a < keys.length; a++){
                 data = shape.readouts[keys[a]];
+<<<<<<< HEAD
                 data.element = parts.display.sevenSegmentDisplay(keys[a], data.x, data.y, data.width, data.height);
+=======
+                data.element = parts.display.segmentDisplay(keys[a], data.x, data.y, data.width, data.height);
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
                 _mainObject.append(data.element);
             }
 
@@ -212,6 +243,7 @@ __globals.objects.make_filterUnit = function(x,y){
                 _mainObject.prepend(_mainObject.io[keys[a]]);
             }
 
+<<<<<<< HEAD
         //buttons
             _mainObject.button = {};
 
@@ -230,11 +262,14 @@ __globals.objects.make_filterUnit = function(x,y){
                 _mainObject.append(temp);
             }
 
+=======
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
         //circuitry
             _mainObject.__unit = new parts.audio.filterUnit(__globals.audio.context);
             _mainObject.io.audioIn.out().connect( _mainObject.__unit.in() );
             _mainObject.__unit.out().connect( _mainObject.io.audioOut.in() );
 
+<<<<<<< HEAD
             _mainObject.__updateGraph = function(){
                 grapher.draw(_mainObject.__unit.measureFrequencyResponse(0,2000,10)[0]);
             };
@@ -245,6 +280,10 @@ __globals.objects.make_filterUnit = function(x,y){
             _mainObject.dial.continuous.gain.set(0.1);
             _mainObject.dial.continuous.frequency.set(1);
             setTimeout(function(){_mainObject.__updateGraph();},50);
+=======
+
+        //setup
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
 
         return _mainObject;
 }

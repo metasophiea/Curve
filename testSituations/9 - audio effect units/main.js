@@ -72,5 +72,10 @@ __globals.objects = {};
     pulseClock_1.children.dial_tempo.set(0.22)
 
 //viewport adjust
+<<<<<<< HEAD
     __globals.utility.workspace.gotoPosition(317, 111, 1, 0);
     // __globals.utility.workspace.gotoPosition(-267.126, -572.177, 7.29808, 0);
+=======
+    // __globals.utility.workspace.gotoPosition(317, 111, 1, 0);
+    __globals.utility.workspace.gotoPosition(167.589, -95.771, 4.33547, 0);
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c

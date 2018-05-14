@@ -57,8 +57,11 @@ parts.audio.synthesizer2 = function(
                         that.generator.disconnect(); 
                         that.gain=null; 
                         that.generator=null; 
+<<<<<<< HEAD
                         that=null; 
                         delete that;
+=======
+>>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
                     }, release.time*1000, this);
                 };
             };

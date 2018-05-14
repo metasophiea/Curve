@@ -8,9 +8,11 @@ Neither of these things are anyway near finished yet, but have developed far eno
 
 I write elsewhere, so updates will probably come in sudden bundles.
 
+The code works on all my favourite browers (Safari, Firefox and Chrome) though I've found that the sound works best on Chrome, and the SVGs are a little werid on Firefox.
+
 ## Structure
 Workspace can be found essentially everywhere. Curve is currently only in the 'testSituations' folder. The 'testSituations' folder is like a workshop for code that eventually makes it way out into the framework. 
 
 ## Compiling
 You can use the 'comp' function to quickly build together the latest version of Curve and play around with whatever I was working on last by opening the 'index.html' file in a browser.
-The command uses a little JavaScript compiler written in Python3, which can go through JS files looking for commands and execute them, ultimatly producing a single JS file. So far there's only one command - a straightforward include - but that's all I really need currently
+The command uses a little JavaScript compiler written in Python3 called Gravity, which can go through JS files looking for commands and execute them, ultimatly producing a single JS file. So far there's only one command - a straightforward include - but that's all I really need currently
