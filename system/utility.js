@@ -40,12 +40,9 @@
 //         cos                         (stepCount, start=0, end=1)
 //         s                           (stepCount, start=0, end=1, sharpness=8)
 //         exponential                 (stepCount, start=0, end=1)
-<<<<<<< HEAD
 //
 // experimental
 //      objectBuilder
-=======
->>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
 
 __globals.utility = new function(){
     this.workspace = new function(){

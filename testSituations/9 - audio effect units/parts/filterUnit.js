@@ -15,7 +15,6 @@ parts.audio.filterUnit = function(
 
     //filterNode
         flow.filterNode.node = context.createBiquadFilter();
-<<<<<<< HEAD
 	    flow.filterNode.node.type = "lowpass";
         __globals.utility.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
         __globals.utility.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
@@ -24,17 +23,6 @@ parts.audio.filterUnit = function(
     //outAggregator
         flow.outAggregator.gain = 1;
         flow.outAggregator.node = context.createGain();
-=======
-	    flow.filterNode.node.type = "highpass";
-        flow.filterNode.node.frequency.value = 1000;
-        flow.filterNode.node.gain.value = 0.1;
-        flow.filterNode.node.Q.value = 10000;
-
-
-    //outAggregator
-        flow.outAggregator.gain = 1;
-        flow.outAggregator.node = context.createGain();    
->>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
         __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
 
 
@@ -45,7 +33,6 @@ parts.audio.filterUnit = function(
     //input/output node
         this.in = function(){return flow.inAggregator.node;}
         this.out = function(){return flow.outAggregator.node;}
-<<<<<<< HEAD
 
     //methods
         this.type = function(type){flow.filterNode.node.type = type;};
@@ -63,6 +50,4 @@ parts.audio.filterUnit = function(
             flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
             return [magResponseOutput,frequencyArray];
         };
-=======
->>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
 };

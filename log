@@ -1,5 +1,4 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
-<<<<<<< HEAD
 2018-05-14
   - updated gravity shebang so it'll work in other systems (hopefully)
 
@@ -35,8 +34,6 @@
     system. Keeps things clean I think
 
 
-=======
->>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
 2018-05-04
   - chrome's "no autoplay" feature has arrived, and it's causing problems. You
     can go into 'chrome://flags/' and turn it off, but this is only a 
@@ -52,10 +49,7 @@
 
   - filter unit has strange feed-back loop I can't seem to find the root of ):/
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
 2018-05-02
   - wrote a pile of notes on synthesizers
   - fixed a little problem in basicSynth_2 where setting the rate dials to max

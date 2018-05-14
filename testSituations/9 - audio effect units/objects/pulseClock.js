@@ -68,19 +68,11 @@ __globals.objects.make_pulseClock = function(x,y){
         //tempo readout
             _mainObject.append( parts.basic.rect(null, shape.readoutBacking.x, shape.readoutBacking.y, shape.readoutBacking.width, shape.readoutBacking.height, 0, style.readoutBacking) );
 
-<<<<<<< HEAD
             var sevenSegmentDisplays = [];
             for(var a = 0; a < shape.readouts.length; a++){
                 var temp = parts.display.sevenSegmentDisplay(null, shape.readouts[a].x, shape.readouts[a].y, shape.readouts[a].width, shape.readouts[a].height);
                     _mainObject.append(temp);
                     sevenSegmentDisplays.push(temp);
-=======
-            var segmentDisplays = [];
-            for(var a = 0; a < shape.readouts.length; a++){
-                var temp = parts.display.segmentDisplay(null, shape.readouts[a].x, shape.readouts[a].y, shape.readouts[a].width, shape.readouts[a].height);
-                    _mainObject.append(temp);
-                    segmentDisplays.push(temp);
->>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
             }
 
     //connection nodes
@@ -93,11 +85,7 @@ __globals.objects.make_pulseClock = function(x,y){
         function setReadout(num){
             num = ''+num;
             while(num.length < 3){ num = '0'+num;}
-<<<<<<< HEAD
             for(var a = 0; a < num.length; a++){ sevenSegmentDisplays[a].enterCharacter(num[a]); }
-=======
-            for(var a = 0; a < num.length; a++){ segmentDisplays[a].enterCharacter(num[a]); }
->>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
         }
     
         function startClock(tempo){

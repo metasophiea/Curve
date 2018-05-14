@@ -16,12 +16,8 @@
             // {{include:testSituations/6 - midi files/main.js}}
             // {{include:testSituations/7 - programmable note generators/main.js}}
             // {{include:testSituations/8 - advanced synthesisers/main.js}}
-<<<<<<< HEAD
             // {{include:testSituations/9 - audio effect units/main.js}}
             // {{include:testSituations/10 - recorded audio/main.js}}
-=======
-            {{include:testSituations/9 - audio effect units/main.js}}
->>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
         }
     }
 

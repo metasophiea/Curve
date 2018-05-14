@@ -141,11 +141,7 @@ __globals.objects.make_reverbUnit = function(x,y){
             var keys = Object.keys(shape.readouts);
             for(var a = 0; a < keys.length; a++){
                 data = shape.readouts[keys[a]];
-<<<<<<< HEAD
                 data.element = parts.display.sevenSegmentDisplay(keys[a], data.x, data.y, data.width, data.height);
-=======
-                data.element = parts.display.segmentDisplay(keys[a], data.x, data.y, data.width, data.height);
->>>>>>> 51477d723dd2a28778dc9c3fc77f89b46ea1b27c
                 _mainObject.append(data.element);
             }
 
