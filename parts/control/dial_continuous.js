@@ -54,8 +54,8 @@ this.dial_continuous = function(
             value = (value<0 ? 0 : value);
 
             this._value = value;
-            if(update&&this.onChange){ this.onChange(value); }
-            if(update&&!live&&this.onRelease){ this.onRelease(value); }
+            if(update&&this.onchange){ this.onchange(value); }
+            if(update&&!live&&this.onrelease){ this.onrelease(value); }
             this.children['needle'].rotation(startAngle + maxAngle*value);
         };object.set(0);
         object.smoothSet = function(target,time,curve,update=true){
@@ -85,8 +85,8 @@ this.dial_continuous = function(
         
 
     //callback
-        object.onChange = function(){};
-        object.onRelease = function(){};
+        object.onchange = function(){};
+        object.onrelease = function(){};
 
 
     //mouse interaction

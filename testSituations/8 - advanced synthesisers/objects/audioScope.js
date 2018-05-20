@@ -61,7 +61,7 @@ __globals.objects.make_audioScope = function(x,y){
                 style.dial.handle, style.dial.slot, style.dial.needle, 1.2, style.dial.markings
             );
             _mainObject.append(dial_framerate);
-            dial_framerate.onChange = function(a){
+            dial_framerate.onchange = function(a){
                 graph.refreshRate(
                     attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a)
                 );

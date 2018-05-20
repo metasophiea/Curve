@@ -1,4 +1,39 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-05-18
+  - redid the paste fix from yesterday, to put the 'declareObjectGrapple' back
+    into the object builder
+  - fix in autio_meter_level where not setting the angle value would produce the
+    element upside-down. It now defaults to 0 so that doesn't happen.
+  - redid object builder to have z position control, it's also just flatly
+    better now
+  - making all the element callbacks lower case (it was inconsistent before)
+  - another attempt at making gravity work everywhere (now mac works..we'll see)
+
+
+2018-05-17
+  - fixed keyboard interaction from yesterday (the logic was broken) there's now
+    also the option of 'all' so you don't have to declare everything
+  - fixed onmouseup problem in button_rect (it's that this/timeout thing)
+
+  bugs
+  - the new object-design concept has totally broken the paste functionality :/
+  -> scratch that; I fixed it by pulling the 'declareObjectGrapple' function out
+    ..still a little wonky I feel
+
+
+2018-05-16
+  - created readout using sixteen segment display
+  - wrote up a pretty snazzy audio-input object with input select
+
+  bugs
+  - the logic in keyboardInteraction/declareKeycaptureObject/keyProcessor is 
+    broken
+
+
+2018-05-15
+  - created sixteen segment display
+
+
 2018-05-14
   - updated gravity shebang so it'll work in other systems (hopefully)
 

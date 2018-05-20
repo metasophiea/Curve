@@ -62,7 +62,7 @@ __globals.objects.make_distortionUnit = function(x,y){
                         { name: null, x: (40*0)+16.5, y: (50)+4,  text: '1/2', style: style.h2 },
                         { name: null, x: (40*0)+30,   y: (50)+34, text: '1',   style: style.h2 },
                     ],
-                    onChange: function(value){ _mainObject.__unit.outGain( value ); },
+                    onchange: function(value){ _mainObject.__unit.outGain( value ); },
                 },
                 distortionAmount:{
                     type: 'continuous',
@@ -79,7 +79,7 @@ __globals.objects.make_distortionUnit = function(x,y){
                         { name: null, x: (40*0)+17.5, y: (3)+4,  text: '50',   style: style.h2 },
                         { name: null, x: (40*0)+30,   y: (3)+34, text: '100',  style: style.h2 },
                     ],
-                    onChange: function(value){ _mainObject.__unit.distortionAmount(value*100); },
+                    onchange: function(value){ _mainObject.__unit.distortionAmount(value*100); },
                 },
                 resolution:{
                     type: 'continuous',
@@ -96,7 +96,7 @@ __globals.objects.make_distortionUnit = function(x,y){
                         { name: null, x: (40*1)-10+16.5, y: (30)+4,  text: '500', style: style.h2 },
                         { name: null, x: (40*1)-10+29,   y: (30)+34, text: '1000',style: style.h2 },
                     ],
-                    onChange: function(value){ _mainObject.__unit.resolution( Math.round(value*1000) ); },
+                    onchange: function(value){ _mainObject.__unit.resolution( Math.round(value*1000) ); },
                 },
                 overSample:{
                     type: 'discrete',
@@ -114,7 +114,7 @@ __globals.objects.make_distortionUnit = function(x,y){
                         { name: null, x: (40*2)-18+17.75, y: (3)+5,  text: '2x',       style: style.h2 },
                         { name: null, x: (40*2)-18+30,    y: (3)+10, text: '4x',       style: style.h2 },
                     ],
-                    onChange: function(value){ _mainObject.__unit.oversample( ['none','2x','4x'][value] ); },
+                    onchange: function(value){ _mainObject.__unit.oversample( ['none','2x','4x'][value] ); },
                 },
                 inGain:{
                     type: 'continuous',
@@ -131,7 +131,7 @@ __globals.objects.make_distortionUnit = function(x,y){
                         { name: null, x: (40*2)-18+18.75, y: (50)+4,  text: '1',  style: style.h2 },
                         { name: null, x: (40*2)-18+30,    y: (50)+34, text: '2',  style: style.h2 },
                     ],
-                    onChange: function(value){ _mainObject.__unit.inGain( 2*value ); },
+                    onchange: function(value){ _mainObject.__unit.inGain( 2*value ); },
                 },
             };
 
@@ -182,8 +182,8 @@ __globals.objects.make_distortionUnit = function(x,y){
                     _mainObject.dial.discrete[keys[a]] = dial;
                 }else{console.error('unknow dial type: "'+ data.type + '"'); var dial = null;}
 
-                dial.onChange = data.onChange;
-                dial.onRelease = data.onRelease;
+                dial.onchange = data.onchange;
+                dial.onrelease = data.onrelease;
                 _mainObject.append(dial);
             }
 

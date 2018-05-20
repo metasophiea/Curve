@@ -29,7 +29,7 @@ function makePulseClock(x,y){
     var Cdial = parts.control.dial_continuous('Cdial', 2+30/2, 2+30/2, 12);
         _mainObject.append(Cdial);
         Cdial.ondblclick = function(){ this.set(1/3); };
-        Cdial.onChange = function(data){
+        Cdial.onchange = function(data){
             data = tempoLimits.low + (tempoLimits.high-tempoLimits.low)*data
             tempoReadout.text(data);
             startClock(data);

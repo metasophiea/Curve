@@ -20,15 +20,19 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
             meta:event.metaKey,
             alt:event.altKey
         };
-    
-        if(event.ctrlKey  && ( !desiredKeys.control || !desiredKeys.control.includes(event.key) ) ){return false;}
-        if(event.metaKey  && ( !desiredKeys.meta    || !desiredKeys.meta.includes(event.key)    ) ){return false;}
-        if(event.shiftKey && ( !desiredKeys.shift   || !desiredKeys.shift.includes(event.key)   ) ){return false;}
-        if(event.altKey   && ( !desiredKeys.alt     || !desiredKeys.alt.includes(event.key)     ) ){return false;}
-        if(!desiredKeys.none.includes(event.key)){return false;}
 
-        connectionObject[type](event.key,modifiers);
-        return true;
+        if( 
+            (event.ctrlKey  && desiredKeys.control && ( desiredKeys.control=='all' || (Array.isArray(desiredKeys.control) && desiredKeys.control.includes(event.key)) )) ||
+            (event.shiftKey && desiredKeys.shift   && ( desiredKeys.shift=='all'   || (Array.isArray(desiredKeys.shift)   && desiredKeys.shift.includes(event.key))   )) ||
+            (event.metaKey  && desiredKeys.meta    && ( desiredKeys.meta=='all'    || (Array.isArray(desiredKeys.meta)    && desiredKeys.meta.includes(event.key))    )) ||
+            (event.altKey   && desiredKeys.alt     && ( desiredKeys.alt=='all'     || (Array.isArray(desiredKeys.alt)     && desiredKeys.alt.includes(event.key))     )) ||
+            (                  desiredKeys.none    && ( desiredKeys.none=='all'    || (Array.isArray(desiredKeys.none)    && desiredKeys.none.includes(event.key))    ))
+        ){
+            connectionObject[type](event.key,modifiers);
+            return true;
+        }
+
+        return false;
     }
     object.onkeydown = function(event){ return keyProcessor('keyPress',event); };
     object.onkeyup = function(event){ return keyProcessor('keyRelease',event); };

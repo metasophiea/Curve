@@ -1,48 +1,49 @@
 // utility
-// workspace
-//     currentPosition                 ()
-//     gotoPosition                    (x,y,z,r)
-//     getPane                         (element)
-//     objectUnderPoint                (x,y) (browser position)
-//     pointConverter
-//         browser2workspace           (x,y)
-//         workspace2browser           (x,y)
-//     dotMaker                        (x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;')
-//
-// element
-//     getTransform                    (element)
-//     getCumulativeTransform          (element)
-//     setTransform                    (element, transform:{x:0, y:0, s:1, r:0})
-//     setTransform_XYonly             (element, x, y)
-//     setStyle                        (element, style)
-//     setRotation                     (element, rotation)
-//     getBoundingBox                  (element)
-//     makeUnselectable                (element)
-//
-// object
-//     requestInteraction              (x,y,type) (browser position)
-//     disconnectEverything            (object)
-//     generateSelectionArea           (points:[{x:0,y:0},...], object)
-//
-// audio
-//     changeAudioParam                (audioParam,target,time,curve,cancelScheduledValues=true)
-//
-// math
-//     averageArray                    (array)
-//     polar2cartesian                 (angle,distance)
-//     cartesian2polar                 (x,y)
-//     boundingBoxFromPoints           (points:[{x:0,y:0},...])
-//     intersectionOfTwoLineSegments   (segment1:{{x:0,y:0},{x:0,y:0}}, segment2:{{x:0,y:0},{x:0,y:0}})
-//     detectOverlap                   (poly_a:[{x:0,y:0},...], poly_b:[{x:0,y:0},...], box_a:[{x:0,y:0},{x:0,y:0}]=null, box_b:[{x:0,y:0},{x:0,y:0}]=null)
-//     curveGenerator
-//         linear                      (stepCount, start=0, end=1)
-//         sin                         (stepCount, start=0, end=1)
-//         cos                         (stepCount, start=0, end=1)
-//         s                           (stepCount, start=0, end=1, sharpness=8)
-//         exponential                 (stepCount, start=0, end=1)
-//
-// experimental
-//      objectBuilder
+//    workspace
+//        currentPosition                 ()
+//        gotoPosition                    (x,y,z,r)
+//        getPane                         (element)
+//        objectUnderPoint                (x,y) (browser position)
+//        pointConverter
+//            browser2workspace           (x,y)
+//            workspace2browser           (x,y)
+//        dotMaker                        (x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;')
+//    
+//    element
+//        getTransform                    (element)
+//        getCumulativeTransform          (element)
+//        setTransform                    (element, transform:{x:0, y:0, s:1, r:0})
+//        setTransform_XYonly             (element, x, y)
+//        setStyle                        (element, style)
+//        setRotation                     (element, rotation)
+//        getBoundingBox                  (element)
+//        makeUnselectable                (element)
+//    
+//    object
+//        requestInteraction              (x,y,type) (browser position)
+//        disconnectEverything            (object)
+//        generateSelectionArea           (points:[{x:0,y:0},...], object)
+//    
+//    audio
+//        changeAudioParam                (audioParam,target,time,curve,cancelScheduledValues=true)
+//    
+//    math
+//        averageArray                    (array)
+//        polar2cartesian                 (angle,distance)
+//        cartesian2polar                 (x,y)
+//        boundingBoxFromPoints           (points:[{x:0,y:0},...])
+//        intersectionOfTwoLineSegments   (segment1:{{x:0,y:0},{x:0,y:0}}, segment2:{{x:0,y:0},{x:0,y:0}})
+//        detectOverlap                   (poly_a:[{x:0,y:0},...], poly_b:[{x:0,y:0},...], box_a:[{x:0,y:0},{x:0,y:0}]=null, box_b:[{x:0,y:0},{x:0,y:0}]=null)
+//        curveGenerator
+//            linear                      (stepCount, start=0, end=1)
+//            sin                         (stepCount, start=0, end=1)
+//            cos                         (stepCount, start=0, end=1)
+//            s                           (stepCount, start=0, end=1, sharpness=8)
+//            exponential                 (stepCount, start=0, end=1)
+//    
+//    experimental
+//         elementMaker                   (type,name,data)
+//         objectBuilder                  (creatorMethod,design)
 
 __globals.utility = new function(){
     this.workspace = new function(){
@@ -484,300 +485,162 @@ __globals.utility = new function(){
         };
     };
     this.experimental = new function(){
-        this.objectBuilder = function(design,style){
-            //main
-                var _mainObject = parts.basic.g(design.type, design.x, design.y);
+        this.elementMaker = function(type,name,data){
+            if(!data.style){data.style={};}
 
-            //mandatory elements
-                //backing
-                    var backing = parts.basic.path(null, design.base.points, 'L', design.base.style);
-                    _mainObject.append(backing);
-                    __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
-                //generate selection area
-                    __globals.utility.object.generateSelectionArea(design.base.points, _mainObject);
+            switch(type){
+                default: return null; break;
 
-            //optional elements
+                //basic
+                    case 'path': return parts.basic.path(name, data.path, data.lineType, data.style); break;
+                
                 //display
-                    //label
-                        if(design.label){
-                            var keys = Object.keys(design.label);
-                            for(var b = 0; b < keys.length; b++){
-                                var data = design.label[keys[b]];
-                                design.label[keys[b]] = parts.display.label(keys[b], data.x, data.y, data.text, data.style, data.angle);
-                                _mainObject.append(design.label[keys[b]]);
-                            }
-                        }
-
-                    //level
-                        if(design.level){
-                            var keys = Object.keys(design.level);
-                            for(var b = 0; b < keys.length; b++){
-                                var data = design.level[keys[b]];
-                                design.level[keys[b]] = parts.display.level(keys[b], data.x, data.y, data.angle, data.width, data.height, data.style.backing, data.style.level);
-                                _mainObject.append(design.level[keys[b]]);
-                            }
-                        }
-
-                    //meter_level
-                        if(design.meter_level){
-                            var keys = Object.keys(design.meter_level);
-                            for(var b = 0; b < keys.length; b++){
-                                var data = design.meter_level[keys[b]];
-                                design.meter_level[keys[b]] = parts.display.meter_level(keys[b], data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking);
-                                _mainObject.append(design.meter_level[keys[b]]);
-                            }
-                        }
-
-                    //audio_meter_level
-                        if(design.audio_meter_level){
-                            var keys = Object.keys(design.audio_meter_level);
-                            for(var b = 0; b < keys.length; b++){
-                                var data = design.audio_meter_level[keys[b]];
-                                design.audio_meter_level[keys[b]] = parts.display.audio_meter_level(keys[b], data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking);
-                                _mainObject.append(design.audio_meter_level[keys[b]]);
-                            }
-                        }
-
-                    //sevenSegmentDisplay
-                        if(design.sevenSegmentDisplay){
-                            var keys = Object.keys(design.sevenSegmentDisplay);
-                            for(var a = 0; a < keys.length; a++){
-                                data = design.sevenSegmentDisplay[keys[a]];
-                                design.sevenSegmentDisplay[keys[a]] = parts.display.sevenSegmentDisplay(keys[a], data.x, data.y, data.width, data.height, data.style.backgroundStyle, data.style.glowStyle, data.style.dimStyle);
-                                _mainObject.append(design.sevenSegmentDisplay[keys[a]]);
-                            }
-                        }
-
-                    //sixteenSegmentDisplay
-                        if(design.sixteenSegmentDisplay){
-                            var keys = Object.keys(design.sixteenSegmentDisplay);
-                            for(var a = 0; a < keys.length; a++){
-                                data = design.sixteenSegmentDisplay[keys[a]];
-                                design.sixteenSegmentDisplay[keys[a]] = parts.display.sixteenSegmentDisplay(keys[a], data.x, data.y, data.width, data.height, data.style.backgroundStyle, data.style.glowStyle, data.style.dimStyle);
-                                _mainObject.append(design.sixteenSegmentDisplay[keys[a]]);
-                            }
-                        }
-
-                    //rastorDisplay
-                        if(design.rastorDisplay){
-                            var keys = Object.keys(design.rastorDisplay);
-                            for(var a = 0; a < keys.length; a++){
-                                data = design.rastorDisplay[keys[a]];
-                                design.rastorDisplay[keys[a]] = parts.display.rastorDisplay(keys[a], data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage);
-                                _mainObject.append(design.rastorDisplay[keys[a]]);
-                            }
-                        }
-
-                    //glowbox
-                        if(design.glowbox){
-                            var keys = Object.keys(design.glowbox);
-                            for(var a = 0; a < keys.length; a++){
-                                data = design.glowbox[keys[a]];
-                                design.glowbox[keys[a]] = parts.display.glowbox_rect(keys[a], data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim);
-                                _mainObject.append(design.glowbox[keys[a]]);
-                            }
-                        } 
-
-                    //grapher
-                        if(design.graph){
-                            var keys = Object.keys(design.graph);
-                            for(var a = 0; a < keys.length; a++){
-                                data = design.graph[keys[a]];
-                                design.graph[keys[a]] = parts.display.grapher(keys[a], data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing);
-                                _mainObject.append(design.graph[keys[a]]);
-                            }
-                        }
+                    case 'label': return parts.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;
+                    case 'level': return parts.display.level(name, data.x, data.y, data.angle, data.width, data.height, data.style.backing, data.style.level); break;
+                    case 'meter_level': return parts.display.meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
+                    case 'audio_meter_level': return parts.display.audio_meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
+                    case 'sevenSegmentDisplay': return parts.display.sevenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
+                    case 'sixteenSegmentDisplay': return parts.display.sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dime); break;
+                    case 'readout_sixteenSegmentDisplay': return parts.display.readout_sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.count, data.style.background, data.style.glow, data.style.dime); break;
+                    case 'rastorDisplay': return parts.display.rastorDisplay(name, data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage); break;
+                    case 'glowbox_rect': return parts.display.glowbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim); break;
+                    case 'grapher': return parts.display.grapher(name, data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing); break;
+                    case 'grapher_periodicWave': return parts.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.middlegroundStyle, data.backgroundStyle, data.backgroundTextStyle, data.backingStyle); break;
                 
-                    //grapher_periodicWave
-                        if(design.grapher_periodicWave){
-                            var keys = Object.keys(design.grapher_periodicWave);
-                            for(var a = 0; a < keys.length; a++){
-                                data = design.grapher_periodicWave[keys[a]];
-                                design.grapher_periodicWave[keys[a]] = parts.display.grapher_periodicWave(keys[a], data.x, data.y, data.width, data.height, data.middlegroundStyle, data.backgroundStyle, data.backgroundTextStyle, data.backingStyle);
-                                _mainObject.append(design.grapher_periodicWave[keys[a]]);
-                            }
-                        }
-                
-                    //grapher_audioScope
-
                 //control
-                    //button
-                        if(design.button){
-                            var keys = Object.keys(design.button);
-                            for(var a = 0; a < keys.length; a++){
-                                var data = design.button[keys[a]];
-                                switch(data.type){
-                                    case 'rectangle':
-                                        design.button[keys[a]] = parts.control.button_rect(keys[a], data.x, data.y, data.width, data.height, data.angle ,data.style.up, data.style.hover, data.style.down, data.style.glow);
-                                    break;
-                                    default: console.error('unknown button type: "'+ data.type + '"'); continue; break;
-                                }
-
-                                design.button[keys[a]].onclick = data.onClick;
-                                _mainObject.append(design.button[keys[a]]);
-                            }
-                        }
-
-                    //checkbox
-                        if(design.checkbox){
-                            var keys = Object.keys(design.checkbox);
-                            for(var a = 0; a < keys.length; a++){
-                                var data = design.checkbox[keys[a]];
-                                switch(data.type){
-                                    case 'rectangle':
-                                        design.checkbox[keys[a]] = parts.control.checkbox_rect(keys[a], data.x, data.y, data.width, data.height, data.angle, data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow);
-                                    break;
-                                    default: console.error('unknown checkbox type: "'+ data.type + '"'); continue; break;
-                                }
-
-                                design.checkbox[keys[a]].onChange = data.onChange;
-                                _mainObject.append(design.checkbox[keys[a]]);
-                            }
-                        }
-                    
-                    //key
-                        if(design.key){
-                            var keys = Object.keys(design.key);
-                            for(var a = 0; a < keys.length; a++){
-                                var data = design.key[keys[a]];
-                                switch(data.type){
-                                    case 'rectangle':
-                                        design.key[keys[a]] = parts.control.key_rect(keys[a], data.x, data.y, data.width, data.height, data.angle, data.style.off, data.style.press, data.style.glow, data.style.pressAndGlow);
-                                    break;
-                                    default: console.error('unknown key type: "'+ data.type + '"'); continue; break;
-                                }
-
-                                design.key[keys[a]].onkeyup = data.onkeyup;
-                                design.key[keys[a]].onkeydown = data.onkeydown;
-                                _mainObject.append(design.key[keys[a]]);
-                            }
-                        }
-
-                    //sliders
-                        if(design.slider){
-                            var keys = Object.keys(design.slider);
-                            for(var a = 0; a < keys.length; a++){
-                                var data = design.slider[keys[a]];
-                                if(data.type == 'vertical'){
-                                    design.slider[keys[a]] = parts.control.slide_vertical(keys[a], data.x, data.y, data.width, data.height, data.style.handle, data.style.backing, data.style.slot);
-                                }
-                                else if(data.type == 'horizontal'){
-                                    design.slider[keys[a]] = parts.control.slide_horizontal(keys[a], data.x, data.y, data.width, data.height, data.style.handle, data.style.backing, data.style.slot);
-                                }
-                                else{console.error('unknown slider type: "'+ data.type + '"'); continue;}
-
-                                design.slider[keys[a]].onChange = data.onChange;
-                                design.slider[keys[a]].onRelease = data.onRelease;
-                                _mainObject.append(design.slider[keys[a]]);
-                            }
-                        }
-                        if(design.sliderPanel){
-                            var keys = Object.keys(design.sliderPanel);
-                            for(var a = 0; a < keys.length; a++){
-                                var data = design.sliderPanel[keys[a]];
-                                if(data.type == 'vertical'){
-                                    design.sliderPanel[keys[a]] = parts.control.slidePanel_vertical(keys[a], data.x, data.y, data.width, data.height, data.count, data.style.handle, data.style.backing, data.style.slot);
-                                }
-                                else if(data.type == 'horizontal'){
-                                    design.sliderPanel[keys[a]] = parts.control.slidePanel_horizontal(keys[a], data.x, data.y, data.width, data.height, data.count,data.style.handle, data.style.backing, data.style.slot);
-                                }
-                                else{console.error('unknown slider panel type: "'+ data.type + '"'); continue;}
-
-                                design.sliderPanel[keys[a]].onChange = data.onChange;
-                                design.sliderPanel[keys[a]].onRelease = data.onRelease;
-                                _mainObject.append(design.sliderPanel[keys[a]]);
-                            }
-                        }
-
-                    //dials
-                        if(design.continuousDial){
-                            var keys = Object.keys(design.continuousDial);
-                            for(var a = 0; a < keys.length; a++){
-                                var data = design.continuousDial[keys[a]];
-                                design.continuousDial[keys[a]] = parts.control.dial_continuous(
-                                    keys[a],
-                                    data.x, data.y, data.r,
-                                    data.startAngle, data.maxAngle,
-                                    data.style.handle, data.style.slot, data.style.needle,
-                                    data.arcDistance, data.style.outerArc
-                                );
-
-                                design.continuousDial[keys[a]].onChange = data.onChange;
-                                design.continuousDial[keys[a]].onRelease = data.onRelease;
-                                _mainObject.append(design.continuousDial[keys[a]]);
-                            }
-                        }
-                        if(design.discreteDial){
-                            var keys = Object.keys(design.discreteDial);
-                            for(var a = 0; a < keys.length; a++){
-                                var data = design.discreteDial[keys[a]];
-                                design.discreteDial[keys[a]] = parts.control.dial_discrete(
-                                    keys[a],
-                                    data.x, data.y, data.r,
-                                    data.optionCount,
-                                    data.startAngle, data.maxAngle,
-                                    data.style.handle, data.style.slot, data.style.needle,
-                                    data.arcDistance, data.style.outerArc
-                                );
-
-                                design.discreteDial[keys[a]].onChange = data.onChange;
-                                design.discreteDial[keys[a]].onRelease = data.onRelease;
-                                _mainObject.append(design.discreteDial[keys[a]]);
-                            }
-                        }
-                    //rastorgrid
-                        if(design.rastorgrid){
-                            var keys = Object.keys(design.rastorgrid);
-                            for(var a = 0; a < keys.length; a++){
-                                var data = design.rastorgrid[keys[a]];
-
-                                design.rastorgrid[keys[a]] = parts.control.rastorgrid(
-                                    keys[a],
-                                    data.x, data.y, data.width, data.height,
-                                    data.xCount, data.yCount,
-                                    data.style.backing,
-                                    data.style.check,
-                                    data.style.backingGlow,
-                                    data.style.checkGlow
-                                );
-
-                                design.rastorgrid[keys[a]].onChange = data.onChange;
-                                _mainObject.append(design.rastorgrid[keys[a]]);
-                            }
-                        }
-                        
+                    case 'button_rect': 
+                        var temp = parts.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle ,data.style.up, data.style.hover, data.style.down, data.style.glow);
+                        temp.onmouseup =    data.onmouseup    ? data.onmouseup    : temp.onmouseup   ;
+                        temp.onmousedown =  data.onmousedown  ? data.onmousedown  : temp.onmousedown ;
+                        temp.onmouseenter = data.onmouseenter ? data.onmouseenter : temp.onmouseenter;
+                        temp.onmouseleave = data.onmouseleave ? data.onmouseleave : temp.onmouseleave;
+                        temp.onmousemove =  data.onmousemove  ? data.onmousemove  : temp.onmousemove ;
+                        temp.onclick =      data.onclick      ? data.onclick      : temp.onclick     ;
+                        temp.ondblclick =   data.ondblclick   ? data.ondblclick   : temp.ondblclick  ;
+                        return temp;
+                    break;
+                    case 'checkbox_rect':
+                        var temp = parts.control.checkbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow);
+                        temp.onchange = data.onchange ? data.onchange : temp.onchange;
+                        return temp;
+                    break;
+                    case 'key_rect':
+                        var temp = parts.control.key_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.off, data.style.press, data.style.glow, data.style.pressAndGlow);
+                        temp.onkeyup =   data.onkeyup   ? data.onkeyup   : temp.onkeyup;
+                        temp.onkeydown = data.onkeydown ? data.onkeydown : temp.onkeydown;
+                        return temp;
+                    break;
+                    case 'slide_vertical':
+                        var temp = parts.control.slide_vertical(name, data.x, data.y, data.width, data.height, data.style.handle, data.style.backing, data.style.slot);
+                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                        return temp;
+                    break;
+                    case 'slide_horizontal':
+                        var temp = parts.control.slide_horizontal(name, data.x, data.y, data.width, data.height, data.style.handle, data.style.backing, data.style.slot);
+                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                        return temp;
+                    break;
+                    case 'slidePanel_vertical':
+                        var temp = parts.control.slidePanel_vertical(name, data.x, data.y, data.width, data.height, data.count, data.style.handle, data.style.backing, data.style.slot);
+                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                        return temp;
+                    break;
+                    case 'slidePanel_horizontal':
+                        var temp = parts.control.slidePanel_horizontal(name, data.x, data.y, data.width, data.height, data.count, data.style.handle, data.style.backing, data.style.slot);
+                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                        return temp;
+                    break;
+                    case 'dial_continuous': 
+                        var temp = parts.control.dial_continuous(
+                            name,
+                            data.x, data.y, data.r,
+                            data.startAngle, data.maxAngle,
+                            data.style.handle, data.style.slot, data.style.needle,
+                            data.arcDistance, data.style.outerArc
+                        );
+                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                        return temp;
+                    break;
+                    case 'dial_discrete': 
+                        var temp = parts.control.dial_discrete(
+                            name,
+                            data.x, data.y, data.r,
+                            data.optionCount,
+                            data.startAngle, data.maxAngle,
+                            data.style.handle, data.style.slot, data.style.needle,
+                            data.arcDistance, data.style.outerArc
+                        );
+                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                        return temp;
+                    break;
+                    case 'rastorgrid':
+                        var temp = parts.control.rastorgrid(
+                            name,
+                            data.x, data.y, data.width, data.height,
+                            data.xCount, data.yCount,
+                            data.style.backing,
+                            data.style.check,
+                            data.style.backingGlow,
+                            data.style.checkGlow
+                        );
+                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                        return temp;
+                    break;
 
                 //dynamic
-                    //connection nodes
-                        if(design.connector){
-                            _mainObject.io = {};
-                            if(design.connector.audio){
-                                var keys = Object.keys(design.connector.audio);
-                                for(var a = 0; a < keys.length; a++){
-                                    var data = design.connector.audio[keys[a]];
-                                    design.connector.audio[keys[a]] = parts.dynamic.connectionNode_audio( keys[a], data.type, data.x, data.y, data.width, data.height, __globals.audio.context );
-                                    _mainObject.io[keys[a]] = design.connector.audio[keys[a]];
-                                    _mainObject.prepend(design.connector.audio[keys[a]]);
+                    case 'connectionNode_audio': return parts.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, __globals.audio.context); break;
+                    case 'connectionNode_data': 
+                        var temp = parts.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle);
+                        temp.receive = data.receive;
+                        temp.give = data.give;
+                        return temp;
+                    break;
+            }
+        }; 
+        this.objectBuilder = function(creatorMethod,design){
+            //main
+                var obj = parts.basic.g(design.type, design.x, design.y);
 
-                                    if(data.prepend){_mainObject.prepend(design.connector.audio[keys[a]]);}
-                                    else{_mainObject.append(design.connector.audio[keys[a]]);}
-                                }
-                            }
-                            if(design.connector.data){
-                                var keys = Object.keys(design.connector.data);
-                                for(var a = 0; a < keys.length; a++){
-                                    var data = design.connector.data[keys[a]];
-                                    design.connector.data[keys[a]] = parts.dynamic.connectionNode_data( keys[a], data.x, data.y, data.width, data.height, data.angle);
-                                    design.connector.data[keys[a]].receive = data.receive;
-                                    _mainObject.io[keys[a]] = design.connector.data[keys[a]];
+            //generate selection area
+                __globals.utility.object.generateSelectionArea(design.base.points, obj);
+            //backing
+                design.base = parts.basic.path(null, design.base.points, 'L', design.base.style);
+                obj.append(design.base);
+            //declare grapple
+                __globals.mouseInteraction.declareObjectGrapple(design.base, obj, creatorMethod);
 
-                                    if(data.prepend){_mainObject.prepend(design.connector.data[keys[a]]);}
-                                    else{_mainObject.append(design.connector.data[keys[a]]);}
-                                }
-                            }
-                        }
+            //generate elements
+                for(var a = 0; a < design.elements.length; a++){
+                    if(!design[design.elements[a].type]){design[design.elements[a].type]={};}
+                    if(design.elements[a].name in design[design.elements[a].type]){console.warn('error: element with the name "'+design.elements[a].name+'" already exists. Element:',design.elements[a],'will not be added');continue;}
+                    design[design.elements[a].type][design.elements[a].name] = __globals.utility.experimental.elementMaker(design.elements[a].type,design.elements[a].name,design.elements[a].data);
+                    obj.append(design[design.elements[a].type][design.elements[a].name]);
+                }
 
-            return _mainObject;
+            //io setup
+                obj.io = {};
+                if(design.connectionNode_audio){
+                    var keys = Object.keys(design.connectionNode_audio);
+                    for(var a = 0; a < keys.length; a++){
+                        if(keys[a] in obj.io){console.warn('error: connection node with the name "'+keys[a]+'" already exists in the .io group. Node ',design.connectionNode_data[keys[a]],' will not be added');continue;}
+                        obj.io[keys[a]] = design.connectionNode_audio[keys[a]];
+                    }
+                }
+                if(design.connectionNode_data){
+                    var keys = Object.keys(design.connectionNode_data);
+                    for(var a = 0; a < keys.length; a++){
+                        if(keys[a] in obj.io){console.warn('error: connection node with the name "'+keys[a]+'" already exists in the .io group. Node ',design.connectionNode_data[keys[a]],' will not be added');continue;}
+                        obj.io[keys[a]] = design.connectionNode_data[keys[a]];
+                    }
+                }
+
+            return obj;
         };
     };
 };

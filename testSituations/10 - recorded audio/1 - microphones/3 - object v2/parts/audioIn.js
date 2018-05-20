@@ -10,7 +10,7 @@ parts.audio.audioIn = function(
     //outAggregator
         flow.outAggregator.gain = 1;
         flow.outAggregator.node = context.createGain();
-        __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+        __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
 
 
     //output node
@@ -36,6 +36,11 @@ parts.audio.audioIn = function(
                     console.warn('\terror:',error);
                 }
             );
+        };
+        this.gain = function(a){
+            if(a==null){return flow.outAggregator.gain;}
+            flow.outAggregator.gain = a;
+            __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
         };
 
     //setup

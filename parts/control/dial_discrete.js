@@ -61,8 +61,8 @@ this.dial_discrete = function(
 
             this._selection = a;
             this._set( a/(this._data.optionCount-1) );
-            if(update&&this.onChange){ this.onChange(a); }
-            if(update&&!live&&this.onRelease){ this.onRelease(value); }
+            if(update&&this.onchange){ this.onchange(a); }
+            if(update&&!live&&this.onrelease){ this.onrelease(value); }
         };
         object._get = function(){ return this._value; };
         object._set = function(value){
@@ -75,8 +75,8 @@ this.dial_discrete = function(
   
 
     //callback
-        object.onChange = function(){};
-        object.onRelease = function(){};
+        object.onchange = function(){};
+        object.onrelease = function(){};
 
     
     //mouse interaction

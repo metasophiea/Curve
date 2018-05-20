@@ -53,12 +53,12 @@ __globals.objects.make_pulseClock = function(x,y){
             );
             _mainObject.append(dial_tempo);
             dial_tempo.ondblclick = function(){ this.set(1/3); };
-            dial_tempo.onChange = function(data){
+            dial_tempo.onchange = function(data){
                 data = attributes.tempoLimits.low + (attributes.tempoLimits.high-attributes.tempoLimits.low)*data;
                 data = Math.round(data);
                 setReadout(data);
             };
-            dial_tempo.onRelease = function(data){
+            dial_tempo.onrelease = function(data){
                 data = attributes.tempoLimits.low + (attributes.tempoLimits.high-attributes.tempoLimits.low)*data;
                 data = Math.round(data);
                 setReadout(data);

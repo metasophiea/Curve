@@ -1,6 +1,6 @@
 this.audio_meter_level = function(
     id='audio_meter_level',
-    x, y, angle,
+    x, y, angle=0,
     width, height,
     markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
 
@@ -8,6 +8,7 @@ this.audio_meter_level = function(
     levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
     markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
 ){
+    
     //elements
         var object = parts.display.meter_level('mainlevel',x,y,angle,width,height,markings,backingStyle,levelStyles,markingStyle);
             

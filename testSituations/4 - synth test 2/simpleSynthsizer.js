@@ -194,12 +194,12 @@ function makeSimpleSynthsizer(x,y){
     //wiring
         synthesizer.out().connect( _mainObject.io.audioOut.in() );
 
-        dial_gain.onChange = function(value){ synthesizer.gain( value ); };
-        dial_attack.onChange = function(value){ synthesizer.attack( value*10 ); };
-        dial_release.onChange = function(value){ synthesizer.release( value*10 ); };
-        dial_detune.onChange = function(value){ synthesizer.detune( value*200 - 100 ); };
-        dial_octave.onChange = function(value){ synthesizer.octave(value-3); };
-        dial_type.onChange = function(value){synthesizer.type(['sine','triangle','square','sawtooth','custom'][value]);};
+        dial_gain.onchange = function(value){ synthesizer.gain( value ); };
+        dial_attack.onchange = function(value){ synthesizer.attack( value*10 ); };
+        dial_release.onchange = function(value){ synthesizer.release( value*10 ); };
+        dial_detune.onchange = function(value){ synthesizer.detune( value*200 - 100 ); };
+        dial_octave.onchange = function(value){ synthesizer.octave(value-3); };
+        dial_type.onchange = function(value){synthesizer.type(['sine','triangle','square','sawtooth','custom'][value]);};
 
         _mainObject.io.dataIn_gain.receive =    function(address,data){ if(address != '%'){return;} dial_gain.set(data); };
         _mainObject.io.dataIn_attack.receive =  function(address,data){ if(address != '%'){return;} dial_attack.set(data); }; 

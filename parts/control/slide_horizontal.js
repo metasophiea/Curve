@@ -27,8 +27,8 @@ this.slide_horizontal = function(
         value = (value<0 ? 0 : value);
 
         this._value = value;
-        if(update&&this.onChange){ this.onChange(value); }
-        if(update&&!live&&this.onRelease){ this.onRelease(value); }
+        if(update&&this.onchange){ this.onchange(value); }
+        if(update&&!live&&this.onrelease){ this.onrelease(value); }
         this.children['handle'].x.baseVal.valueInSpecifiedUnits = value*this._data.w*this._data.handleSize;
     };
     object.smoothSet = function(target,time,curve,update=true){
@@ -58,8 +58,8 @@ this.slide_horizontal = function(
 
 
     //callback
-    object.onChange = function(){};
-    object.onRelease = function(){};
+    object.onchange = function(){};
+    object.onrelease = function(){};
 
     
     //mouse interaction

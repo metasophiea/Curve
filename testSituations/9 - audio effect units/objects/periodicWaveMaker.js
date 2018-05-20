@@ -72,7 +72,7 @@ __globals.objects.make_periodicWaveMaker = function(x,y){
             slidePanel_cos.setAll(0.5);
         }
 
-        slidePanel_sin.onChange = function(wave){
+        slidePanel_sin.onchange = function(wave){
             //adjust values
             var newWave = []
             for(var a = 0; a < wave.length; a++){
@@ -90,7 +90,7 @@ __globals.objects.make_periodicWaveMaker = function(x,y){
             sendWave();
         };
 
-        slidePanel_cos.onChange = function(wave){
+        slidePanel_cos.onchange = function(wave){
             //adjust values
             var newWave = [];
             for(var a = 0; a < wave.length; a++){

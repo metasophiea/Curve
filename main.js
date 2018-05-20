@@ -7,8 +7,9 @@
 
             {{include:system/setup}}
             {{include:parts/parts.js}}
+            {{include:objects/objects.js}}
             
-            {{include:testSituations/1 - elements test/main.js}}
+            // {{include:testSituations/1 - elements test/main.js}}
             // {{include:testSituations/2 - synth test/main.js}}
             // {{include:testSituations/3 - tests/main.js}}
             // {{include:testSituations/4 - synth test 2/main.js}}
@@ -17,7 +18,7 @@
             // {{include:testSituations/7 - programmable note generators/main.js}}
             // {{include:testSituations/8 - advanced synthesisers/main.js}}
             // {{include:testSituations/9 - audio effect units/main.js}}
-            // {{include:testSituations/10 - recorded audio/main.js}}
+            {{include:testSituations/10 - recorded audio/main.js}}
         }
     }
 

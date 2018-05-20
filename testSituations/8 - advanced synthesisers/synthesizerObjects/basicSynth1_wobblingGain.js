@@ -81,7 +81,7 @@ __globals.objects.make_basicSynth1_wobblingGain = function(x,y){
                     { name: null, x: (40*0)+16.5, y: (3)+5,  text: '1/2',  style: style.h2 },
                     { name: null, x: (40*0)+30,   y: (3)+34, text: '1',    style: style.h2 },
                 ],
-                onChange: function(value){ _mainObject.__synthesizer.gain( value ); },
+                onchange: function(value){ _mainObject.__synthesizer.gain( value ); },
             },
             attack:{
                 type: 'continuous',
@@ -98,7 +98,7 @@ __globals.objects.make_basicSynth1_wobblingGain = function(x,y){
                     { name: null, x: (40*1)+18.5, y: (3)+4,  text: '5',      style: style.h2 },
                     { name: null, x: (40*1)+30,   y: (3)+34, text: '10',     style: style.h2 },
                 ],
-                onChange: function(value){ _mainObject.__synthesizer.attack( value ); },
+                onchange: function(value){ _mainObject.__synthesizer.attack( value ); },
             },
             release:{
                 type: 'continuous',
@@ -115,7 +115,7 @@ __globals.objects.make_basicSynth1_wobblingGain = function(x,y){
                     { name: null, x: (40*2)+18.5, y: (3)+4,  text: '5',       style: style.h2 },
                     { name: null, x: (40*2)+30,   y: (3)+34, text: '10',      style: style.h2 },
                 ],
-                onChange: function(value){ _mainObject.__synthesizer.release( value ); },
+                onchange: function(value){ _mainObject.__synthesizer.release( value ); },
             },
             detune:{
                 type: 'continuous',
@@ -132,7 +132,7 @@ __globals.objects.make_basicSynth1_wobblingGain = function(x,y){
                     { name: null, x: (40*3)+18.75, y: (3)+4,  text: '5',      style: style.h2 },
                     { name: null, x: (40*3)+28,    y: (3)+34, text: '10',     style: style.h2 },
                 ],
-                onChange: function(value){ _mainObject.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); },
+                onchange: function(value){ _mainObject.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); },
             },
             octave:{
                 type: 'discrete',
@@ -154,7 +154,7 @@ __globals.objects.make_basicSynth1_wobblingGain = function(x,y){
                     { name: null, x: (40*4)+35,    y: (3)+21, text: '2',      style: style.h2 },
                     { name: null, x: (40*4)+30,    y: (3)+32, text: '3',      style: style.h2 },
                 ],
-                onChange: function(value){ _mainObject.__synthesizer.octave(value-3); },
+                onchange: function(value){ _mainObject.__synthesizer.octave(value-3); },
             },
             waveType:{
                 type: 'discrete',
@@ -173,7 +173,7 @@ __globals.objects.make_basicSynth1_wobblingGain = function(x,y){
                     { name: null, x: (40*5)+10, y: (3)+6,  text: 'squ',  style: style.h2 },
                     { name: null, x: (40*5)+27, y: (3)+7,  text: 'saw',  style: style.h2 },
                 ],
-                onChange: function(value){ _mainObject.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); },
+                onchange: function(value){ _mainObject.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); },
             },
             wobblePeriod: {
                 type: 'continuous',
@@ -190,7 +190,7 @@ __globals.objects.make_basicSynth1_wobblingGain = function(x,y){
                     { name: null, x: (40*0)+16,    y: (3+42)+4,  text: '0.5',    style: style.h2 },
                     { name: null, x: (40*0)+30,    y: (3+42)+34, text: '1.0',    style: style.h2 },
                 ],
-                onChange: function(value){ _mainObject.__synthesizer.wobblePeriod(value); },
+                onchange: function(value){ _mainObject.__synthesizer.wobblePeriod(value); },
             },
             wobbleDepth: {
                 type: 'continuous',
@@ -207,7 +207,7 @@ __globals.objects.make_basicSynth1_wobblingGain = function(x,y){
                     { name: null, x: (40*1)+16,    y: (3+42)+4,  text: '1/2',  style: style.h2 },
                     { name: null, x: (40*1)+32,    y: (3+42)+34, text: '1',    style: style.h2 },
                 ],
-                onChange: function(value){ _mainObject.__synthesizer.wobbleDepth(value); },
+                onchange: function(value){ _mainObject.__synthesizer.wobbleDepth(value); },
             }
         }
     };
@@ -277,7 +277,7 @@ __globals.objects.make_basicSynth1_wobblingGain = function(x,y){
                     _mainObject.dial.discrete[keys[a]] = dial;
                 }else{console.error('unknow dial type: "'+ data.type + '"'); var dial = null;}
 
-                dial.onChange = data.onChange;
+                dial.onchange = data.onchange;
                 _mainObject.append(dial);
             }
 

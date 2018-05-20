@@ -34,7 +34,7 @@ this.checkbox_rect = function(
         
         updateGraphics();
 
-        if(update&&this.onChange){ this.onChange(value); }
+        if(update&&this.onchange){ this.onchange(value); }
     };
     object.light = function(state){
         if(state){
@@ -49,7 +49,7 @@ this.checkbox_rect = function(
 
 
     //callback
-    object.onChange = function(){};
+    object.onchange = function(){};
 
 
     //mouse interaction

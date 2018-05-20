@@ -12,8 +12,8 @@ this.slidePanel_vertical = function(
         object.appendChild(rect);
     for(var a = 0; a < count; a++){
         var temp = parts.control.slide_vertical( id+'_'+a, a*(width/count), 0, width/count, height, handleStyle, backingStyle, slotStyle );
-        temp.onChange = function(){ object.onChange(object.get()); };
-        temp.onRelease = function(){ object.onRelease(object.get()); };
+        temp.onchange = function(){ object.onchange(object.get()); };
+        temp.onrelease = function(){ object.onrelease(object.get()); };
         object.appendChild(temp);
     }
 
@@ -35,8 +35,8 @@ this.slidePanel_vertical = function(
                 this.slide(b).set(1/2,live,false);
             }
 
-            if(update&&this.onChange){ this.onChange(a); }
-            if(update&&!live&&this.onRelease){ this.onRelease(a); }
+            if(update&&this.onchange){ this.onchange(a); }
+            if(update&&!live&&this.onrelease){ this.onrelease(a); }
         };
         object.smoothSet = function(a,time,curve,update=true){
             for(var b = 0; b < a.length; b++){
@@ -46,8 +46,8 @@ this.slidePanel_vertical = function(
                 this.slide(b).smoothSet(1/2,time,curve,false);
             }
 
-            if(update&&this.onChange){ setTimeout(function(){this.onChange(a);},time); }
-            if(update&&!live&&this.onRelease){ setTimeout(function(){this.onRelease(a);},time); }
+            if(update&&this.onchange){ setTimeout(function(){this.onchange(a);},time); }
+            if(update&&!live&&this.onrelease){ setTimeout(function(){this.onrelease(a);},time); }
         };
         object.setAll = function(a, live=false, update=true){
             this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a) );
@@ -57,8 +57,8 @@ this.slidePanel_vertical = function(
         };
 
     //callback
-        object.onChange = function(){};
-        object.onRelease = function(){};
+        object.onchange = function(){};
+        object.onrelease = function(){};
 
     return object;
 };

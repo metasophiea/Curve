@@ -4,7 +4,7 @@ this.button_rect = function(
     upStyle = 'fill:rgba(200,200,200,1)',
     hoverStyle = 'fill:rgba(220,220,220,1)',
     downStyle = 'fill:rgba(180,180,180,1)',
-    glowStyle = 'fill:rgba(220,200,220,1)'
+    glowStyle = 'fill:rgba(220,200,220,1)',
 ){
 
     // elements 
@@ -29,7 +29,12 @@ this.button_rect = function(
     object.ondblclick =   function(){ /*console.log('doubleclick');*/ };
 
     //methods
-    object.click = function(glow=false){ this.onclick(); this.onmousedown(); if(glow){rect.glow();}else{rect.onmousedown();} setTimeout(function(){rect.onmouseup();this.onmouseup();},250); };
+    object.click = function(glow=false){ 
+        this.onclick(); this.onmousedown(); 
+        if(glow){rect.glow();}
+        else{rect.onmousedown();} 
+        setTimeout(function(that){rect.onmouseup();that.onmouseup();},250,this);
+    };
     object.hover = function(){ this.onmouseenter(); rect.onmouseenter(); };
     object.unhover = function(){this.onmouseleave(); rect.onmouseleave();};
 

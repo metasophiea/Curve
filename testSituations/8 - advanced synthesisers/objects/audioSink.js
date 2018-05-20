@@ -60,7 +60,7 @@ __globals.objects.make_audioSink = function(x,y){
                         { name: null, x: shape.base[2].x-23.5, y: (3)+2,  text: '1/2',  style: style.h2 },
                         { name: null, x: shape.base[2].x-10,   y: (3)+31, text: '1',    style: style.h2 },
                     ],
-                    onChange: function(value){
+                    onchange: function(value){
                         gain_right.gain.setTargetAtTime(value, __globals.audio.context.currentTime, 0);
                         gain_left.gain.setTargetAtTime(value, __globals.audio.context.currentTime, 0);
                     },
@@ -165,7 +165,7 @@ __globals.objects.make_audioSink = function(x,y){
                     _mainObject.dial.discrete[keys[a]] = dial;
                 }else{console.error('unknow dial type: "'+ data.type + '"'); var dial = null;}
 
-                dial.onChange = data.onChange;
+                dial.onchange = data.onchange;
                 _mainObject.append(dial);
             }
 

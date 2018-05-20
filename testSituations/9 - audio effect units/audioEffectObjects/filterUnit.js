@@ -51,7 +51,7 @@ __globals.objects.make_filterUnit = function(x,y){
                         { name: null, x: (82.5)+6.5, y: (70)+6,  text: '1',   style: style.h2 },
                         { name: null, x: (82.5)-1.5, y: (70)+9,  text: 'Q',   style: style.h1 },
                     ],
-                    onChange: function(value){_mainObject.__unit.Q(value*10);_mainObject.__updateGraph();},
+                    onchange: function(value){_mainObject.__unit.Q(value*10);_mainObject.__updateGraph();},
                 },
                 gain:{
                     type: 'continuous',
@@ -68,7 +68,7 @@ __globals.objects.make_filterUnit = function(x,y){
                         { name: null, x: (62.5)+6.5, y: (80)+6,  text: '10',   style: style.h2 },
                         { name: null, x: (62.5)-4.5, y: (80)+9,  text: 'Gain', style: style.h1 },
                     ],
-                    onChange: function(value){_mainObject.__unit.gain(value*10);_mainObject.__updateGraph();},
+                    onchange: function(value){_mainObject.__unit.gain(value*10);_mainObject.__updateGraph();},
                 },
                 frequency:{
                     type: 'continuous',
@@ -85,7 +85,7 @@ __globals.objects.make_filterUnit = function(x,y){
                         { name: null, x: (40)+4,   y: (80)+6,  text: '1000', style: style.h2 },
                         { name: null, x: (40)-4.5, y: (80)+9,  text: 'Freq', style: style.h1 },
                     ],
-                    onChange: function(value){_mainObject.__unit.frequency(2000*value);_mainObject.__updateGraph();},
+                    onchange: function(value){_mainObject.__unit.frequency(2000*value);_mainObject.__updateGraph();},
                 },
                 type:{
                     type: 'discrete',
@@ -108,7 +108,7 @@ __globals.objects.make_filterUnit = function(x,y){
                         { name: null, x: (20)+9,    y: (67.5)+1.5, text: 'notch', style: style.h3 },
                         { name: null, x: (20)+5.5,  y: (67.5)+7,   text: 'all',   style: style.h3 },
                     ],
-                    onChange: function(value){_mainObject.__unit.type(['lowpass','highpass','bandpass','lowshelf','highshelf','peaking','notch','allpass'][value]);_mainObject.__updateGraph();},
+                    onchange: function(value){_mainObject.__unit.type(['lowpass','highpass','bandpass','lowshelf','highshelf','peaking','notch','allpass'][value]);_mainObject.__updateGraph();},
                 }
             };
             shape.button = {};
@@ -189,8 +189,8 @@ __globals.objects.make_filterUnit = function(x,y){
                     _mainObject.dial.discrete[keys[a]] = dial;
                 }else{console.error('unknow dial type: "'+ data.type + '"'); var dial = null;}
 
-                dial.onChange = data.onChange;
-                dial.onRelease = data.onRelease;
+                dial.onchange = data.onchange;
+                dial.onrelease = data.onrelease;
                 _mainObject.append(dial);
             }
 

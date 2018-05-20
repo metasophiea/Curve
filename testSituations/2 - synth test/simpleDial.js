@@ -15,13 +15,13 @@ function makeSimpleDial(x,y){
 
     var Cdial = parts.control.dial_continuous('Cdial', 30/2, 30/2, 12);
         _mainObject.append(Cdial);
-        Cdial.onChange = function(data){
+        Cdial.onchange = function(data){
             this.parentElement.children['connectionNode_data_1'].send( '%', data );
         }
 
     var Ddial = parts.control.dial_discrete('Ddial', 30 + 30/2, 30/2, 12, 7);
         _mainObject.append(Ddial);
-        Ddial.onChange = function(data){
+        Ddial.onchange = function(data){
             this.parentElement.children['connectionNode_data_2'].send( 'discrete', data );
         }
 

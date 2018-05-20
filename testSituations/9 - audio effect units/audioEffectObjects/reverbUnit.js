@@ -105,7 +105,7 @@ __globals.objects.make_reverbUnit = function(x,y){
                         { name: null, x: 16.5, y: (5)+5,  text: '1/2', style: style.h2 },
                         { name: null, x: 30,   y: (5)+34, text: '1',   style: style.h2 },
                     ],
-                    onChange: function(value){ _mainObject.__unit.outGain( value ); },
+                    onchange: function(value){ _mainObject.__unit.outGain( value ); },
                 },
                 wetdry:{
                     type: 'continuous',
@@ -120,7 +120,7 @@ __globals.objects.make_reverbUnit = function(x,y){
                         { name: null, x: (62.5)+4,    y: (5)+34, text: 'dry',   style: style.h2 },
                         { name: null, x: (62.5)+30,   y: (5)+34, text: 'wet',   style: style.h2 },
                     ],
-                    onChange: function(value){ _mainObject.__unit.wetdry( value ); },
+                    onchange: function(value){ _mainObject.__unit.wetdry( value ); },
                 }
             };
 
@@ -194,8 +194,8 @@ __globals.objects.make_reverbUnit = function(x,y){
                     _mainObject.dial.discrete[keys[a]] = dial;
                 }else{console.error('unknow dial type: "'+ data.type + '"'); var dial = null;}
 
-                dial.onChange = data.onChange;
-                dial.onRelease = data.onRelease;
+                dial.onchange = data.onchange;
+                dial.onrelease = data.onrelease;
                 _mainObject.append(dial);
             }
 
