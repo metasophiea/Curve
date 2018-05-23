@@ -10,11 +10,14 @@
             //        currentPosition                 ()
             //        gotoPosition                    (x,y,z,r)
             //        getPane                         (element)
+            //        getGlobal                       (element)
             //        objectUnderPoint                (x,y) (browser position)
             //        pointConverter
             //            browser2workspace           (x,y)
             //            workspace2browser           (x,y)
             //        dotMaker                        (x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;')
+            //        getGlobalScale                  (element)
+            //        getViewportDimensions           ()
             //    
             //    element
             //        getTransform                    (element)
@@ -54,13 +57,17 @@
             __globals.utility = new function(){
                 this.workspace = new function(){
                     this.currentPosition = function(){
-                        return __globals.utility.element.getTransform(__globals.panes.global);
+                        return __globals.utility.element.getTransform(__globals.panes.workspace);
                     };
                     this.gotoPosition = function(x,y,z,r){
-                        __globals.utility.element.setTransform(__globals.panes.global, {x:x,y:y,s:z,r:r});
+                        __globals.utility.element.setTransform(__globals.panes.workspace, {x:x,y:y,s:z,r:r});
                     };
                     this.getPane = function(element){
                         while( !element.getAttribute('pane') ){ element = element.parentElement; }
+                        return element;
+                    };
+                    this.getGlobal = function(element){
+                        while( !element.getAttribute('global') ){ element = element.parentElement; }
                         return element;
                     };
                     this.objectUnderPoint = function(x,y){
@@ -75,11 +82,11 @@
                     };
                     this.pointConverter = new function(){
                         this.browser2workspace = function(x,y){
-                            var globalTransform = __globals.utility.element.getTransform(__globals.panes.global);
+                            var globalTransform = __globals.utility.element.getTransform(__globals.panes.workspace);
                             return {'x':(x-globalTransform.x)/globalTransform.s, 'y':(y-globalTransform.y)/globalTransform.s};
                         };
                         this.workspace2browser = function(x,y){
-                            var globalTransform = __globals.utility.element.getTransform(__globals.panes.global);
+                            var globalTransform = __globals.utility.element.getTransform(__globals.panes.workspace);
                             return {'x':(x*globalTransform.s)+globalTransform.x, 'y':(y*globalTransform.s)+globalTransform.y};
                         };
                     };
@@ -90,6 +97,12 @@
                         g.appendChild(dot);
                         g.appendChild(textElement);
                         return g;
+                    };
+                    this.getGlobalScale = function(element){
+                        return __globals.utility.element.getTransform(__globals.utility.workspace.getGlobal(element)).s
+                    };
+                    this.getViewportDimensions = function(){
+                        return {width:__globals.svgElement.width.baseVal.value, height:__globals.svgElement.height.baseVal.value};
                     };
                 };
                 this.element = new function(){
@@ -131,7 +144,7 @@
                     };
                     this.getBoundingBox = function(element){
                         var tempG = document.createElementNS('http://www.w3.org/2000/svg','g');
-                        __globals.panes.global.append(tempG);
+                        __globals.panes.workspace.append(tempG);
                 
                         element = element.cloneNode(true);
                         tempG.append(element);
@@ -148,17 +161,17 @@
                     };
                 };
                 this.object = new function(){
-                    this.requestInteraction = function(x,y,type){
+                    this.requestInteraction = function(x,y,type,globalName){
                         if(!x || !y){return true;}
                         var temp = document.elementFromPoint(x,y);
                 
                         if(temp.hasAttribute('workspace')){return true;}
-                        while(!temp.hasAttribute('pane')){ 
+                        while(!temp.hasAttribute('global')){
                             if(temp[type] || temp.hasAttribute(type)){return false;}
                             temp = temp.parentElement;
                         }
                         
-                        return true;
+                        return temp.getAttribute('pane')==globalName;
                     };
                     this.disconnectEverything = function(object){
                         console.warn('you\'re using this?');
@@ -495,10 +508,12 @@
                         if(!data.style){data.style={};}
             
                         switch(type){
-                            default: return null; break;
+                            default: console.warn('Unknown element: '+ type); return null; break;
             
                             //basic
+                                case 'rect': return parts.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
                                 case 'path': return parts.basic.path(name, data.path, data.lineType, data.style); break;
+                                case 'text': return parts.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
                             
                             //display
                                 case 'label': return parts.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;
@@ -511,8 +526,9 @@
                                 case 'rastorDisplay': return parts.display.rastorDisplay(name, data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage); break;
                                 case 'glowbox_rect': return parts.display.glowbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim); break;
                                 case 'grapher': return parts.display.grapher(name, data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing); break;
-                                case 'grapher_periodicWave': return parts.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.middlegroundStyle, data.backgroundStyle, data.backgroundTextStyle, data.backingStyle); break;
-                            
+                                case 'grapher_periodicWave': return parts.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing); break;
+                                case 'grapher_audioScope': return parts.display.grapher_audioScope(name, data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing); break;
+            
                             //control
                                 case 'button_rect': 
                                     var temp = parts.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle ,data.style.up, data.style.hover, data.style.down, data.style.glow);
@@ -572,7 +588,7 @@
                                     temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
                                     return temp;
                                 break;
-                                case 'dial_discrete': 
+                                case 'dial_discrete':
                                     var temp = parts.control.dial_discrete(
                                         name,
                                         data.x, data.y, data.r,
@@ -622,11 +638,13 @@
                             __globals.mouseInteraction.declareObjectGrapple(design.base, obj, creatorMethod);
             
                         //generate elements
-                            for(var a = 0; a < design.elements.length; a++){
-                                if(!design[design.elements[a].type]){design[design.elements[a].type]={};}
-                                if(design.elements[a].name in design[design.elements[a].type]){console.warn('error: element with the name "'+design.elements[a].name+'" already exists. Element:',design.elements[a],'will not be added');continue;}
-                                design[design.elements[a].type][design.elements[a].name] = __globals.utility.experimental.elementMaker(design.elements[a].type,design.elements[a].name,design.elements[a].data);
-                                obj.append(design[design.elements[a].type][design.elements[a].name]);
+                            if(design.elements){
+                                for(var a = 0; a < design.elements.length; a++){
+                                    if(!design[design.elements[a].type]){design[design.elements[a].type]={};}
+                                    if(design.elements[a].name in design[design.elements[a].type]){console.warn('error: element with the name "'+design.elements[a].name+'" already exists. Element:',design.elements[a],'will not be added');continue;}
+                                    design[design.elements[a].type][design.elements[a].name] = __globals.utility.experimental.elementMaker(design.elements[a].type,design.elements[a].name,design.elements[a].data);
+                                    obj.append(design[design.elements[a].type][design.elements[a].name]);
+                                }
                             }
             
                         //io setup
@@ -657,7 +675,7 @@
                 for(var a = 0; a < __globals.svgElement.children.length; a++){
                     if( __globals.svgElement.children[a].hasAttribute('pane') ){
                         switch(__globals.svgElement.children[a].getAttribute('pane')){
-                            case 'global': __globals.panes.global = __globals.svgElement.children[a]; break;
+                            case 'global': __globals.panes.workspace = __globals.svgElement.children[a]; break;
                             case 'background': __globals.panes.background = __globals.svgElement.children[a]; break;
                             case 'middleground': __globals.panes.middleground = __globals.svgElement.children[a]; break;
                             case 'foreground': __globals.panes.foreground = __globals.svgElement.children[a]; break;
@@ -667,7 +685,10 @@
                 }
             
                 //if the 'background', 'middleground' or 'menu' elements were not made, create them
-                if(__globals.panes.global == null){ __globals.panes.global = document.createElementNS('http://www.w3.org/2000/svg','g'); }
+                if(__globals.panes.workspace == null){ 
+                    __globals.panes.workspace = document.createElementNS('http://www.w3.org/2000/svg','g');
+                    __globals.panes.workspace.setAttribute('pane','workspace');
+                }
                 if(__globals.panes.background == null){ 
                     __globals.panes.background = document.createElementNS('http://www.w3.org/2000/svg','g');
                     __globals.panes.background.setAttribute('pane','background');
@@ -692,18 +713,20 @@
             __globals.utility.element.makeUnselectable(__globals.panes.foreground );
             
             
-            //setup global
-            if(!__globals.panes.global.style.transform){ __globals.panes.global.style.transform = 'translate(0px,0px) scale(1) rotate(0rad)'; }
-            __globals.panes.global.setAttribute('global',true);
+            //setup globals
+            if(!__globals.panes.workspace.style.transform){ __globals.panes.workspace.style.transform = 'translate(0px,0px) scale(1) rotate(0rad)'; }
+            __globals.panes.workspace.setAttribute('global',true);
+            if(!__globals.panes.menu.style.transform){ __globals.panes.menu.style.transform = 'translate(0px,0px) scale(1) rotate(0rad)'; }
+            __globals.panes.menu.setAttribute('global',true);
             
             //clear out svg element
             __globals.svgElement.innerHTML = '';
             
             //add __globals.panes to svg element
-            __globals.svgElement.append(__globals.panes.global);
-            __globals.panes.global.append(__globals.panes.background);
-            __globals.panes.global.append(__globals.panes.middleground);
-            __globals.panes.global.append(__globals.panes.foreground);
+            __globals.svgElement.append(__globals.panes.workspace);
+            __globals.panes.workspace.append(__globals.panes.background);
+            __globals.panes.workspace.append(__globals.panes.middleground);
+            __globals.panes.workspace.append(__globals.panes.foreground);
             __globals.svgElement.append(__globals.panes.menu);
             //setup selected objects spaces and functionality
             __globals.selection = new function(){
@@ -824,7 +847,7 @@
                             // then add on the mouses's position, or the provided position
                                 if(!position){
                                     // //use viewport for position (functional, but unused)
-                                    //     var position = __globals.utility.element.getTransform(__globals.panes.global);
+                                    //     var position = __globals.utility.element.getTransform(__globals.panes.workspace);
                                     //     position = {x:-position.x/position.s, y:-position.y/position.s};
             
                                     //use mouse position
@@ -1013,7 +1036,7 @@
                                         position.y = __globals.svgElement.temp_oldObjectPositions[a].y;
                                         position.s = __globals.svgElement.temp_oldObjectPositions[a].s;
                                         position.r = __globals.svgElement.temp_oldObjectPositions[a].r;
-                                    var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
+                                    var globalScale = __globals.utility.workspace.getGlobalScale(__globals.selection.selectedObjects[a]);
             
                                     position.x = (position.x-(clickPosition[0]-event.x)/globalScale);
                                     position.y = (position.y-(clickPosition[1]-event.y)/globalScale);
@@ -1089,14 +1112,17 @@
             // onmousemove functions
                 __globals.mouseInteraction.onmousemove_functionList = [];
                 __globals.svgElement.onmousemove = function(event){
-                    if(!__globals.utility.object.requestInteraction(event.x,event.y,'onmousemove')){return;}
-                    for(var a = 0; a < __globals.mouseInteraction.onmousemove_functionList.length; a++){
-                        var shouldRun = true;
-                        for(var b = 0; b < __globals.mouseInteraction.onmousemove_functionList[a].specialKeys.length; b++){
-                            shouldRun = shouldRun && event[__globals.mouseInteraction.onmousemove_functionList[a].specialKeys[b]];
-                            if(!shouldRun){break;}
+                    //menu
+                    //workspace
+                    if(__globals.utility.object.requestInteraction(event.x,event.y,'onmousemove','workspace')){
+                        for(var a = 0; a < __globals.mouseInteraction.onmousemove_functionList.length; a++){
+                            var shouldRun = true;
+                            for(var b = 0; b < __globals.mouseInteraction.onmousemove_functionList[a].specialKeys.length; b++){
+                                shouldRun = shouldRun && event[__globals.mouseInteraction.onmousemove_functionList[a].specialKeys[b]];
+                                if(!shouldRun){break;}
+                            }
+                            if(shouldRun){ __globals.mouseInteraction.onmousemove_functionList[a].function(event); break; }
                         }
-                        if(shouldRun){ __globals.mouseInteraction.onmousemove_functionList[a].function(event); break; }
                     }
                 };
             
@@ -1120,14 +1146,16 @@
             // onmousedown functions
                 __globals.mouseInteraction.onmousedown_functionList = [];
                 __globals.svgElement.onmousedown = function(event){
-                    if(!__globals.utility.object.requestInteraction(event.x,event.y,'onmousedown') || event.button != 0){return;}
+                    //menu
+                    //workspace
+                    if(!__globals.utility.object.requestInteraction(event.x,event.y,'onmousedown','workspace') || event.button != 0){return;}
                     for(var a = 0; a < __globals.mouseInteraction.onmousedown_functionList.length; a++){
                         var shouldRun = true;
                         for(var b = 0; b < __globals.mouseInteraction.onmousedown_functionList[a].specialKeys.length; b++){
                             shouldRun = shouldRun && event[__globals.mouseInteraction.onmousedown_functionList[a].specialKeys[b]];
                             if(!shouldRun){break;}
                         }
-                        if(shouldRun){ __globals.mouseInteraction.onmousedown_functionList[a].function(event); break; }
+                        if(shouldRun){ __globals.mouseInteraction.onmousedown_functionList[a].function(event,__globals.panes.workspace); break; }
                     }
                 };
             
@@ -1135,7 +1163,7 @@
                 __globals.mouseInteraction.onmousedown_functionList.push(
                     {
                         'specialKeys':['shiftKey'],
-                        'function':function(event){
+                        'function':function(event,globalPane){
                                 //setup
                                 __globals.svgElement.tempData = {};
                                 __globals.svgElement.tempElements = [];
@@ -1217,8 +1245,8 @@
                                         this.onmousemove = __globals.svgElement.onmousemove_old;
                                         delete __globals.svgElement.onmousemove_old;
                                         this.onmouseleave = null;
-                                        __globals.panes.global.removeAttribute('oldPosition');
-                                        __globals.panes.global.removeAttribute('clickPosition');
+                                        globalPane.removeAttribute('oldPosition');
+                                        globalPane.removeAttribute('clickPosition');
                                         this.onmouseleave = null;
                                         this.onmouseup = null;
                                 };
@@ -1234,10 +1262,10 @@
                 __globals.mouseInteraction.onmousedown_functionList.push(
                     {
                         'specialKeys':[],
-                        'function':function(event){
+                        'function':function(event,globalPane){
                             __globals.selection.deselectEverything();
-                            __globals.svgElement.temp_oldPosition = __globals.utility.element.getTransform(__globals.panes.global);
-                            __globals.panes.global.setAttribute('clickPosition','['+event.x +','+ event.y+']');
+                            __globals.svgElement.temp_oldPosition = __globals.utility.element.getTransform(globalPane);
+                            __globals.panes.workspace.setAttribute('clickPosition','['+event.x +','+ event.y+']');
             
                             __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
                             __globals.svgElement.onmousemove = function(event){
@@ -1246,17 +1274,17 @@
                                     position.y = __globals.svgElement.temp_oldPosition.y;
                                     position.s = __globals.svgElement.temp_oldPosition.s;
                                     position.r = __globals.svgElement.temp_oldPosition.r;
-                                var clickPosition = JSON.parse(__globals.panes.global.getAttribute('clickPosition'));
+                                var clickPosition = JSON.parse(globalPane.getAttribute('clickPosition'));
                                 position.x = position.x-(clickPosition[0]-event.x);
                                 position.y = position.y-(clickPosition[1]-event.y);
-                                __globals.utility.element.setTransform(__globals.panes.global, position);
+                                __globals.utility.element.setTransform(globalPane, position);
                             };
             
                             __globals.svgElement.onmouseup = function(){
                                 this.onmousemove = __globals.svgElement.onmousemove_old;
                                 delete __globals.svgElement.onmousemove_old;
-                                __globals.panes.global.removeAttribute('oldPosition');
-                                __globals.panes.global.removeAttribute('clickPosition');
+                                globalPane.removeAttribute('oldPosition');
+                                globalPane.removeAttribute('clickPosition');
                                 this.onmouseleave = null;
                                 this.onmouseup = null;
                             };
@@ -1278,14 +1306,17 @@
             // onwheel functions
                 __globals.mouseInteraction.onwheel_functionList = [];
                 __globals.svgElement.onwheel = function(event){
-                    if(!__globals.utility.object.requestInteraction(event.x,event.y,'onwheel')){return;}
-                    for(var a = 0; a < __globals.mouseInteraction.onwheel_functionList.length; a++){
-                        var shouldRun = true;
-                        for(var b = 0; b < __globals.mouseInteraction.onwheel_functionList[a].specialKeys.length; b++){
-                            shouldRun = shouldRun && event[__globals.mouseInteraction.onwheel_functionList[a].specialKeys[b]];
-                            if(!shouldRun){break;}
+                    //menu
+                    //workspace
+                    if(__globals.utility.object.requestInteraction(event.x,event.y,'onwheel','workspace')){
+                        for(var a = 0; a < __globals.mouseInteraction.onwheel_functionList.length; a++){
+                            var shouldRun = true;
+                            for(var b = 0; b < __globals.mouseInteraction.onwheel_functionList[a].specialKeys.length; b++){
+                                shouldRun = shouldRun && event[__globals.mouseInteraction.onwheel_functionList[a].specialKeys[b]];
+                                if(!shouldRun){break;}
+                            }
+                            if(shouldRun){ __globals.mouseInteraction.onwheel_functionList[a].function(event); break; }
                         }
-                        if(shouldRun){ __globals.mouseInteraction.onwheel_functionList[a].function(event); break; }
                     }
                 };
             
@@ -1294,7 +1325,7 @@
                         'specialKeys':[],
                         'function':function(event){
                             var zoomLimits = {'max':10, 'min':0.1};
-                            var position = __globals.utility.element.getTransform(__globals.panes.global);
+                            var position = __globals.utility.element.getTransform(__globals.panes.workspace);
             
                             var XPosition = (event.x - position.x)/position.s;
                             var YPosition = (event.y - position.y)/position.s;
@@ -1309,7 +1340,7 @@
                             position.x = position.x - ( newPixX - oldPixX );
                             position.y = position.y - ( newPixY - oldPixY );
             
-                            __globals.utility.element.setTransform(__globals.panes.global, position);
+                            __globals.utility.element.setTransform(__globals.panes.workspace, position);
                         }
                     }
                 );
@@ -1368,7 +1399,7 @@
                     //keyboard input, direct the keyboard input to it. If the object doesn't care about this
                     //key or if input is not accepted; use the global functions
                     var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
-                    if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeydown')){
+                    if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeydown','workspace')){
                         if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown(event)){ return; }
                     }
             
@@ -1420,7 +1451,7 @@
                     //keyboard input, direct the keyboard input to it. If the object doesn't care about this
                     //key or if input is not accepted; use the global functions
                     var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
-                    if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeyup')){
+                    if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeyup','workspace')){
                         if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup(event)){ return; }
                     }
                                         
@@ -1500,21 +1531,6 @@
 
             var parts = new function(){
                 this.basic = new function(){
-                    this.circle = function(id=null, x=0, y=0, r=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
-                        var element = document.createElementNS('http://www.w3.org/2000/svg','circle');
-                        element.id = id;
-                        element.setAttribute('r',r);
-                        element.style = 'transform: translate('+x+'px,'+y+'px) scale(1); rotate('+angle+'rad);' + style;
-                    
-                        return element;
-                    };
-                    this.g = function(id=null, x=0, y=0){
-                        var element = document.createElementNS('http://www.w3.org/2000/svg','g');
-                            element.id = id;
-                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate(0rad)';
-                    
-                        return element;
-                    };
                     this.line = function(id=null, x1=0, y1=0, x2=10, y2=10, style='stroke:rgb(255,0,0); stroke-width:1'){
                         var element = document.createElementNS('http://www.w3.org/2000/svg','line');
                         element.id = id;
@@ -1526,7 +1542,29 @@
                     
                         return element;
                     };
-                    this.path = function(id=null, path=[], lineType='L', style='fill:none; stroke:rgb(255,0,0); stroke-width:1;'){
+                    this.circle = function(id=null, x=0, y=0, r=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
+                        var element = document.createElementNS('http://www.w3.org/2000/svg','circle');
+                        element.id = id;
+                        element.setAttribute('r',r);
+                        element.style = 'transform: translate('+x+'px,'+y+'px) scale(1); rotate('+angle+'rad);' + style;
+                    
+                        return element;
+                    };
+                    this.rect = function(id=null, x=0, y=0, width=0, height=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
+                        var element = document.createElementNS('http://www.w3.org/2000/svg','rect');
+                        element.id = id;
+                        element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad);' + style;
+                        element.setAttribute('height',height);
+                        element.setAttribute('width',width);
+                    
+                        element.rotation = function(a){
+                            if(a==null){return __globals.utility.element.getTransform(this).r;}
+                            __globals.utility.element.setRotation(this, a);
+                        };
+                    
+                        return element;
+                    };
+                    this.path = function(id=null, path=[], lineType='L', style='fill:rgba(0,0,0,0);'){
                         // uppercase: absolute, lowercase: relative
                         // M = moveto
                         // L = lineto
@@ -1561,17 +1599,10 @@
                     
                         return element;
                     };
-                    this.rect = function(id=null, x=0, y=0, width=0, height=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
-                        var element = document.createElementNS('http://www.w3.org/2000/svg','rect');
-                        element.id = id;
-                        element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad);' + style;
-                        element.setAttribute('height',height);
-                        element.setAttribute('width',width);
-                    
-                        element.rotation = function(a){
-                            if(a==null){return __globals.utility.element.getTransform(this).r;}
-                            __globals.utility.element.setRotation(this, a);
-                        };
+                    this.g = function(id=null, x=0, y=0){
+                        var element = document.createElementNS('http://www.w3.org/2000/svg','g');
+                            element.id = id;
+                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate(0rad)';
                     
                         return element;
                     };
@@ -1593,214 +1624,6 @@
                     // };
                 }
                 this.display = new function(){
-                    this.audio_meter_level = function(
-                        id='audio_meter_level',
-                        x, y, angle=0,
-                        width, height,
-                        markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                    
-                        backingStyle='fill:rgb(10,10,10)',
-                        levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
-                        markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                    ){
-                        
-                        //elements
-                            var object = parts.display.meter_level('mainlevel',x,y,angle,width,height,markings,backingStyle,levelStyles,markingStyle);
-                                
-                        //circuitry
-                            var converter = parts.audio.audio2percentage()
-                                converter.newValue = function(val){object.set( val );};
-                    
-                        //audio connections
-                            object.audioIn = function(){ return converter.audioIn(); }
-                    
-                        //methods
-                            object.start = function(){ converter.start(); };
-                            object.stop = function(){ converter.stop(); };
-                    
-                        //setup
-                            object.set(0)
-                    
-                        return object;
-                    };
-                    this.glowbox_rect = function(
-                        id='glowbox_rect',
-                        x, y, width, height, angle=0,
-                        glowStyle = 'fill:rgba(240,240,240,1)',
-                        dimStyle = 'fill:rgba(80,80,80,1)'
-                    ){
-                    
-                        // elements 
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, dimStyle);
-                            object.appendChild(rect);
-                    
-                        //methods
-                        object.on = function(){
-                            __globals.utility.element.setStyle(rect,glowStyle);
-                        };
-                        object.off = function(){
-                            __globals.utility.element.setStyle(rect,dimStyle);
-                        };
-                    
-                        return object;
-                    };
-                    this.grapher = function(
-                        id='grapher',
-                        x, y, width, height,
-                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
-                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                        backingStyle = 'fill:rgba(50,50,50,1)',
-                    ){
-                        //elements
-                        var object = parts.basic.g(id, x, y);
-                            object._data = {};
-                            object._data.width = width,
-                            object._data.height = height,
-                            object._data.viewbox = {'l':-1,'h':1};
-                            object._data.horizontalMarkings = [0.75,0.5,0.25,0,-0.25,-0.5,-0.75];
-                            object._data.verticalMarkings = [0.75,0.5,0.25,0,-0.25,-0.5,-0.75];
-                            object._data.styles = {
-                                'middleground':middlegroundStyle, 
-                                'background':backgroundStyle, 
-                                'backgroundText':backgroundTextStyle,
-                                'backing':backingStyle
-                            };
-                    
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                        var background = parts.basic.g('background', 0, 0);
-                            object.appendChild(background);
-                        var middleground = parts.basic.g('middleground', 0, 0);
-                            object.appendChild(middleground);
-                    
-                    
-                        //internal methods
-                        object._pointConverter = function(realHeight, viewbox, y){
-                            var viewboxDistance = Math.abs( viewbox.h - viewbox.l );
-                            var y_graphingDistance = realHeight * (viewbox.h-y)/viewboxDistance
-                            return !isNaN(y_graphingDistance) ? y_graphingDistance : 0;
-                        };
-                        object._lineCorrecter = function(points, maxheight){
-                            if( points.y1 < 0 && points.y2 < 0 ){ return; }
-                            if( points.y1 > maxheight && points.y2 > maxheight ){ return; }
-                    
-                            var slope = (points.y2 - points.y1)/(points.x2 - points.x1);
-                    
-                            if( points.y1 < 0 ){ points.x1 = (0 - points.y1 + slope*points.x1)/slope; points.y1 = 0; }
-                            else if( points.y2 < 0 ){ points.x2 = (0 - points.y2 + slope*points.x2)/slope; points.y2 = 0; }
-                            if( points.y1 > maxheight ){ points.x1 = (maxheight - points.y1 + slope*points.x1)/slope; points.y1 = maxheight; }
-                            else if( points.y2 > maxheight ){ points.x2 = (maxheight - points.y2 + slope*points.x2)/slope; points.y2 = maxheight; }
-                    
-                            return points;
-                        };
-                        object._test = function(){
-                            // this.horizontalMarkings([0.75,0.5,0.25,0,-0.25,-0.5,-0.75,1,1.25,1.5,1.75,-1.75]);
-                            this.horizontalMarkings([0.75,0,-0.25,-2,-1,1]);
-                            this.verticalMarkings([0,1,2,3,4,5,6,7,8,9,10]);
-                            this.viewbox({'l':-2,'h':4});
-                            this.drawBackground();
-                            this.draw([0,-2,1,-1,2]);
-                        };
-                        
-                    
-                        //methods
-                        object.viewbox = function(a){
-                            if(a==null){return object._data.viewbox;}
-                            object._data.viewbox = a;
-                        };
-                        object.horizontalMarkings = function(a){
-                            if(a==null){return object._data.horizontalMarkings;}
-                            object._data.horizontalMarkings = a;
-                        };
-                        object.verticalMarkings = function(a){
-                            if(a==null){return object._data.verticalMarkings;}
-                            object._data.verticalMarkings = a;
-                        };
-                        object.drawBackground = function(){
-                            this.children['background'].innerHTML = '';
-                    
-                            //horizontal lines
-                            for(var a = 0; a < this._data.horizontalMarkings.length; a++){
-                                this.children['background'].append(
-                                    parts.basic.line(
-                                        null,
-                                        0,
-                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a] ),
-                                        this._data.width,
-                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a] ),
-                                        this._data.styles.background
-                                    )
-                                );
-                                this.children['background'].append(
-                                    parts.basic.text(
-                                        null,
-                                        0.5,
-                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a]-0.075 ),
-                                        this._data.horizontalMarkings[a],
-                                        0,
-                                        this._data.styles.backgroundText,
-                                        0.1
-                                    )
-                                );
-                            }
-                    
-                            //vertical lines
-                            for(var a = 0; a < this._data.verticalMarkings.length; a++){
-                                this.children['background'].append(
-                                    parts.basic.line(
-                                        null,
-                                        a*(this._data.width/this._data.verticalMarkings.length),
-                                        0,
-                                        a*(this._data.width/this._data.verticalMarkings.length),
-                                        this._data.height,
-                                        this._data.styles.background
-                                    )
-                                );
-                                this.children['background'].append(
-                                    parts.basic.text(
-                                        null,
-                                        a*(this._data.width/this._data.verticalMarkings.length) + 0.5,
-                                        this._pointConverter(this._data.height, this._data.viewbox, -0.075),
-                                        this._data.verticalMarkings[a],
-                                        0,
-                                        this._data.styles.backgroundText,
-                                        0.1
-                                    )
-                                );
-                            }
-                    
-                            //(the vertical line on the right)
-                            this.children['background'].append( parts.basic.line( null, this._data.width, 0, this._data.width, this._data.height, this._data.styles.background ) );
-                        };
-                        object.draw = function(Y, X=null){
-                            this.children['middleground'].innerHTML = '';
-                    
-                            for(var a = 0; a < Y.length-1; a++){
-                                var points = this._lineCorrecter({
-                                    'x1': (a+0)*(this._data.width/(Y.length-1)),
-                                    'x2': (a+1)*(this._data.width/(Y.length-1)),
-                                    'y1': this._pointConverter(this._data.height, this._data.viewbox, Y[a+0]),
-                                    'y2': this._pointConverter(this._data.height, this._data.viewbox, Y[a+1])
-                                }, this._data.height);
-                    
-                                if(points){
-                                    this.children['middleground'].append(
-                                        parts.basic.line(
-                                            null,
-                                            points.x1, points.y1,
-                                            points.x2, points.y2,
-                                            this._data.styles.middleground
-                                        )
-                                    );
-                                }
-                            }
-                        };
-                    
-                    
-                        return object;
-                    };
                     this.grapher_audioScope = function(
                         id='grapher_audioScope',
                         x, y, width, height,
@@ -1881,364 +1704,6 @@
                     
                         //setup
                             setBackground();
-                    
-                        return object;
-                    };
-                    this.grapher_periodicWave = function(
-                        id='grapher_periodicWave',
-                        x, y, width, height,
-                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
-                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                        backingStyle = 'fill:rgba(50,50,50,1)',
-                    ){
-                        //elements 
-                        var object = parts.basic.g(id, x, y);
-                            object._data = {};
-                            object._data.wave = {'sin':[],'cos':[]};
-                            object._data.resolution = 500;
-                    
-                        var grapher = parts.display.grapher(null, 0, 0, width, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
-                            object.append(grapher);
-                    
-                    
-                        //methods
-                        object.wave = function(a=null,type=null){
-                            if(a==null){
-                                while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
-                                while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
-                                for(var a = 0; a < this._data.wave['sin'].length; a++){
-                                    if( !this._data.wave['sin'][a] ){ this._data.wave['sin'][a] = 0; }
-                                    if( !this._data.wave['cos'][a] ){ this._data.wave['cos'][a] = 0; }
-                                }
-                                return this._data.wave;
-                            }
-                    
-                            if(type==null){
-                                this._data.wave = a;
-                            }
-                            switch(type){
-                                case 'sin': this._data.wave.sin = a; break;
-                                case 'cos': this._data.wave.cos = a; break;
-                                default: break;
-                            }
-                        }
-                        object.waveElement = function(type, mux, a){
-                            if(a==null){return this._data.wave[type][mux];}
-                            this._data.wave[type][mux] = a;
-                        }
-                        object.resolution = function(a=null){
-                            if(a==null){return this._data.resolution;}
-                            this._data.resolution = a;
-                        }
-                        object.updateBackground = function(){
-                            grapher.viewbox( {'l':-1.1,'h':1.1} );
-                            grapher.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
-                            grapher.verticalMarkings([0,'1/4','1/2','3/4']);
-                            grapher.drawBackground();
-                        };
-                        object.draw = function(){
-                            var data = [];
-                            var temp = 0;
-                            for(var a = 0; a <= this._data.resolution; a++){
-                                temp = 0;
-                                for(var b = 0; b < this._data.wave['sin'].length; b++){
-                                    if(!this._data.wave['sin'][b]){this._data.wave['sin'][b]=0;} // cover missing elements
-                                    temp += Math.sin(b*(2*Math.PI*(a/this._data.resolution)))*this._data.wave['sin'][b]; 
-                                }
-                                for(var b = 0; b < this._data.wave['cos'].length; b++){
-                                    if(!this._data.wave['cos'][b]){this._data.wave['cos'][b]=0;} // cover missing elements
-                                    temp += Math.cos(b*(2*Math.PI*(a/this._data.resolution)) )*this._data.wave['cos'][b]; 
-                                }
-                                data.push(temp);
-                            }
-                    
-                            grapher.draw( data );
-                        }
-                        object.reset = function(){
-                            this.wave({'sin':[],'cos':[]});
-                            this.resolution(500);
-                            this.updateBackground();
-                            this.draw();
-                        }
-                    
-                    
-                        object.reset();
-                        return object;
-                    };
-                    // var grapher2 = parts.display.grapher(null, width/2, 0, width/2, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
-                    //     object.append(grapher2);
-                    
-                    // function setBackground(){
-                    //     // grapher2.viewbox( {'l':-1.1,'h':1.1} );
-                    //     // grapher2.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
-                    //     // grapher2.verticalMarkings([0,0.25,0.5,0.75]);
-                    //     // grapher2.drawBackground();
-                    // }
-                    this.label = function(
-                        id='label',
-                        x, y, text,
-                        style='fill:rgba(0,0,0,1); font-size:3; font-family:Helvetica;',
-                        angle=0
-                    ){
-                        //elements 
-                        var object = parts.basic.g(id, x, y);
-                        var textElement = parts.basic.text(null, 0, 0, text, angle, style);
-                            object.appendChild(textElement);
-                    
-                    
-                        //methods
-                        object.text = function(a=null){
-                            if(a==null){return textElement.innerHTML;}
-                            textElement.innerHTML = a;
-                        }
-                    
-                        return object;
-                    };
-                    this.level = function(
-                        id='level',
-                        x, y, angle,
-                        width, height,
-                        backingStyle='fill:rgb(10,10,10)',
-                        levelStyles=['fill:rgb(250,250,250)','fill:rgb(200,200,200)']
-                    ){
-                        var values = Array.apply(null, Array(levelStyles.length)).map(Number.prototype.valueOf,0);
-                    
-                        // elements
-                            var object = parts.basic.g(id, x, y);
-                    
-                            //level layers are layered from back forward, so backing must go on last
-                            var levels = [];
-                            for(var a = 0; a < levelStyles.length; a++){
-                                var tempStyle = levelStyles[a]!=undefined ? levelStyles[a] : levelStyles[0];
-                                var temp = parts.basic.rect(
-                                    'movingRect_'+a,
-                                    (-height*Math.sin(angle) + width*Math.cos(angle)).toFixed(10),
-                                    (height*Math.cos(angle) + width*Math.sin(angle)).toFixed(10),
-                                    width,
-                                    0,
-                                    angle+Math.PI,
-                                    tempStyle
-                                );
-                                levels.push(temp);
-                                object.prepend(temp);
-                            }
-                    
-                            var backing = parts.basic.rect('backing', 0, 0, width, height, angle, backingStyle);
-                                object.prepend(backing);
-                    
-                        //methods
-                            object.set = function(a, layer=0){
-                                if(a==null){return value;}
-                    
-                                a = (a>1 ? 1 : a);
-                                a = (a<0 ? 0 : a);
-                    
-                                value = a;
-                    
-                                levels[layer].height.baseVal.valueInSpecifiedUnits = height*value;
-                            };
-                            object.getLevelStyle = function(levelLayer){
-                                return levels[levelLayer].style;
-                            };
-                    
-                        return object;
-                    };
-                    this.meter_level = function(
-                        id='meter_level',
-                        x, y, angle,
-                        width, height,
-                        markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                    
-                        backingStyle='fill:rgb(10,10,10)',
-                        levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
-                        markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                    ){
-                        //values
-                            var coolDown = 0;
-                            var mostRecentSetting = 0;
-                    
-                        //elements
-                            var object = parts.basic.g(id, x, y);
-                    
-                        //level
-                            levelStyles[0] += 'transition: height 0s;';
-                            levelStyles[1] += 'transition: height 0.01s;';
-                            var level = parts.display.level('mainlevel',0,0,angle,width,height,backingStyle,levelStyles);
-                            object.append(level);
-                    
-                        //markings
-                            function makeMark(y){
-                                var markThickness = 0.2;
-                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                                return parts.basic.path(null, path, 'L', markingStyle);
-                            }
-                            function insertText(y,text){
-                                return parts.display.label(null, 0, y+0.3, text, markingStyle);
-                            }
-                    
-                            for(var a = 0; a < markings.length; a++){
-                                object.append(makeMark(height*(1-markings[a])));
-                                object.append(insertText(height*(1-markings[a]),markings[a]));
-                            }
-                    
-                        //update intervals
-                            setInterval(function(){        
-                                level.set(mostRecentSetting,0);
-                    
-                                if(coolDown>0){coolDown-=0.0025;}
-                                level.set(coolDown,1);
-                    
-                                if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
-                            },1000/30);
-                    
-                        //methods
-                            object.set = function(a){
-                                mostRecentSetting = a;
-                                mostRecentSetting_slow = a;
-                            };
-                    
-                        return object;
-                    };
-                    this.rastorDisplay = function(
-                        id='rastorDisplay',
-                        x, y, width, height,
-                        xCount, yCount, xGappage=1, yGappage=1
-                    ){
-                        //elements
-                            //main
-                            var object = parts.basic.g(id, x, y);
-                    
-                            //backing
-                            var rect = parts.basic.rect(null, 0, 0, width, height, 0, 'fill:rgb(0,0,0)');
-                                object.appendChild(rect);
-                    
-                            //pixels
-                                var pixels = [];
-                                var pixelValues = [];
-                                var pixWidth = width/xCount;
-                                var pixHeight = height/yCount;
-                    
-                                for(var x = 0; x < xCount; x++){
-                                    var temp_pixels = [];
-                                    var temp_pixelValues = [];
-                                    for(var y = 0; y < yCount; y++){
-                                        var rect = parts.basic.rect(null, (x*pixWidth)+xGappage/2, (y*pixHeight)+yGappage/2, pixWidth-xGappage, pixHeight-yGappage, 0, 'fill:rgb(0,0,0)');
-                                            temp_pixels.push(rect);
-                                            temp_pixelValues.push([0,0,0]);
-                                            object.appendChild(rect);
-                                    }
-                                    pixels.push(temp_pixels);
-                                    pixelValues.push(temp_pixelValues);
-                                }
-                    
-                        //inner workings
-                            function render(){
-                                for(var x = 0; x < xCount; x++){
-                                    for(var y = 0; y < yCount; y++){
-                                        __globals.utility.element.setStyle(pixels[x][y], 'fill:rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')' );
-                                    }
-                                }
-                            }
-                            
-                        //methods
-                            object.get = function(x,y){ return pixelValues[x][y]; };
-                            object.set = function(x,y,state){ pixelValues[x][y] = state; render() };
-                            object.import = function(data){
-                                for(var x = 0; x < xCount; x++){
-                                    for(var y = 0; y < yCount; y++){
-                                        this.set(x,y,data[x][y]);
-                                    }
-                                }
-                                render();
-                            };
-                            object.export = function(){ return pixelValues; }
-                            object.setAll = function(value){
-                                for(var x = 0; x < xCount; x++){
-                                    for(var y = 0; y < yCount; y++){
-                                        this.set(x,y,value);
-                                    }
-                                }
-                            }
-                    
-                            object.test = function(){
-                                this.setAll([1,1,1]);
-                                this.set(1,1,[1,0.5,0.5]);
-                                this.set(2,2,[0.5,1,0.5]);
-                                this.set(3,3,[0.5,0.5,1]);
-                                this.set(4,4,[1,0.5,1]);
-                                render();
-                            };
-                    
-                        return object;
-                    };
-                    this.readout_sixteenSegmentDisplay = function(
-                        id='readout_sixteenSegmentDisplay',
-                        x, y, width, height, count,
-                        backgroundStyle='fill:rgb(0,0,0)',
-                        glowStyle='fill:rgb(200,200,200)',
-                        dimStyle='fill:rgb(20,20,20)'
-                    ){
-                        //values
-                            var text = '';
-                            var displayInterval = null;
-                    
-                        //elements
-                            //main
-                                var object = parts.basic.g(id, x, y);
-                    
-                            //display units
-                                var units = [];
-                                for(var a = 0; a < count; a++){
-                                    var temp = parts.display.sixteenSegmentDisplay(
-                                        a, 
-                                        (width/count)*a, 0, width/count, height, 
-                                        backgroundStyle, glowStyle, dimStyle
-                                    );
-                                    object.append( temp );
-                                    units.push(temp);
-                                }
-                    
-                        //methods
-                            object.test = function(){
-                                this.text('Look at all the text I\'ve got here! 1234567890 \\/<>()[]{}*!?"#_,.');
-                                this.print('r2lSweep');
-                            };
-                    
-                            object.text = function(a){
-                                if(a==null){return text;}
-                                text = a;
-                            };
-                    
-                            object.print = function(style){
-                                clearInterval(displayInterval);
-                                switch(style){
-                                    case 'smart':
-                                        if(text.length > units.length){this.print('r2lSweep');}
-                                        else{this.print('regular')}
-                                    break;
-                                    case 'r2lSweep':
-                                        var displayIntervalTime = 100;
-                                        var displayStage = 0;
-                    
-                                        displayInterval = setInterval(function(){
-                                            for(var a = units.length-1; a >= 0; a--){
-                                                units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                            }
-                    
-                                            displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                        },displayIntervalTime);
-                                    break;
-                                    case 'regular': default:
-                                        for(var a = 0; a < units.length; a++){
-                                            units[a].enterCharacter(text[a]);
-                                        }
-                                    break;
-                                }
-                            };
-                    
-                    
-                    
                     
                         return object;
                     };
@@ -3243,8 +2708,637 @@
                     
                         return object;
                     };
+                    this.rastorDisplay = function(
+                        id='rastorDisplay',
+                        x, y, width, height,
+                        xCount, yCount, xGappage=1, yGappage=1
+                    ){
+                        //elements
+                            //main
+                            var object = parts.basic.g(id, x, y);
+                    
+                            //backing
+                            var rect = parts.basic.rect(null, 0, 0, width, height, 0, 'fill:rgb(0,0,0)');
+                                object.appendChild(rect);
+                    
+                            //pixels
+                                var pixels = [];
+                                var pixelValues = [];
+                                var pixWidth = width/xCount;
+                                var pixHeight = height/yCount;
+                    
+                                for(var x = 0; x < xCount; x++){
+                                    var temp_pixels = [];
+                                    var temp_pixelValues = [];
+                                    for(var y = 0; y < yCount; y++){
+                                        var rect = parts.basic.rect(null, (x*pixWidth)+xGappage/2, (y*pixHeight)+yGappage/2, pixWidth-xGappage, pixHeight-yGappage, 0, 'fill:rgb(0,0,0)');
+                                            temp_pixels.push(rect);
+                                            temp_pixelValues.push([0,0,0]);
+                                            object.appendChild(rect);
+                                    }
+                                    pixels.push(temp_pixels);
+                                    pixelValues.push(temp_pixelValues);
+                                }
+                    
+                        //inner workings
+                            function render(){
+                                for(var x = 0; x < xCount; x++){
+                                    for(var y = 0; y < yCount; y++){
+                                        __globals.utility.element.setStyle(pixels[x][y], 'fill:rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')' );
+                                    }
+                                }
+                            }
+                            
+                        //methods
+                            object.get = function(x,y){ return pixelValues[x][y]; };
+                            object.set = function(x,y,state){ pixelValues[x][y] = state; render() };
+                            object.import = function(data){
+                                for(var x = 0; x < xCount; x++){
+                                    for(var y = 0; y < yCount; y++){
+                                        this.set(x,y,data[x][y]);
+                                    }
+                                }
+                                render();
+                            };
+                            object.export = function(){ return pixelValues; }
+                            object.setAll = function(value){
+                                for(var x = 0; x < xCount; x++){
+                                    for(var y = 0; y < yCount; y++){
+                                        this.set(x,y,value);
+                                    }
+                                }
+                            }
+                    
+                            object.test = function(){
+                                this.setAll([1,1,1]);
+                                this.set(1,1,[1,0.5,0.5]);
+                                this.set(2,2,[0.5,1,0.5]);
+                                this.set(3,3,[0.5,0.5,1]);
+                                this.set(4,4,[1,0.5,1]);
+                                render();
+                            };
+                    
+                        return object;
+                    };
+                    this.glowbox_rect = function(
+                        id='glowbox_rect',
+                        x, y, width, height, angle=0,
+                        glowStyle = 'fill:rgba(240,240,240,1)',
+                        dimStyle = 'fill:rgba(80,80,80,1)'
+                    ){
+                    
+                        // elements 
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, dimStyle);
+                            object.appendChild(rect);
+                    
+                        //methods
+                        object.on = function(){
+                            __globals.utility.element.setStyle(rect,glowStyle);
+                        };
+                        object.off = function(){
+                            __globals.utility.element.setStyle(rect,dimStyle);
+                        };
+                    
+                        return object;
+                    };
+                    this.audio_meter_level = function(
+                        id='audio_meter_level',
+                        x, y, angle=0,
+                        width, height,
+                        markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                    
+                        backingStyle='fill:rgb(10,10,10)',
+                        levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
+                        markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                    ){
+                        
+                        //elements
+                            var object = parts.display.meter_level('mainlevel',x,y,angle,width,height,markings,backingStyle,levelStyles,markingStyle);
+                                
+                        //circuitry
+                            var converter = parts.audio.audio2percentage()
+                                converter.newValue = function(val){object.set( val );};
+                    
+                        //audio connections
+                            object.audioIn = function(){ return converter.audioIn(); }
+                    
+                        //methods
+                            object.start = function(){ converter.start(); };
+                            object.stop = function(){ converter.stop(); };
+                    
+                        //setup
+                            object.set(0)
+                    
+                        return object;
+                    };
+                    // var grapher2 = parts.display.grapher(null, width/2, 0, width/2, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
+                    //     object.append(grapher2);
+                    
+                    // function setBackground(){
+                    //     // grapher2.viewbox( {'l':-1.1,'h':1.1} );
+                    //     // grapher2.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
+                    //     // grapher2.verticalMarkings([0,0.25,0.5,0.75]);
+                    //     // grapher2.drawBackground();
+                    // }
+                    this.grapher = function(
+                        id='grapher',
+                        x, y, width, height,
+                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                        backingStyle = 'fill:rgba(50,50,50,1)',
+                    ){
+                        //elements
+                        var object = parts.basic.g(id, x, y);
+                            object._data = {};
+                            object._data.width = width,
+                            object._data.height = height,
+                            object._data.viewbox = {'l':-1,'h':1};
+                            object._data.horizontalMarkings = [0.75,0.5,0.25,0,-0.25,-0.5,-0.75];
+                            object._data.verticalMarkings = [0.75,0.5,0.25,0,-0.25,-0.5,-0.75];
+                            object._data.styles = {
+                                'middleground':middlegroundStyle, 
+                                'background':backgroundStyle, 
+                                'backgroundText':backgroundTextStyle,
+                                'backing':backingStyle
+                            };
+                    
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
+                        var background = parts.basic.g('background', 0, 0);
+                            object.appendChild(background);
+                        var middleground = parts.basic.g('middleground', 0, 0);
+                            object.appendChild(middleground);
+                    
+                    
+                        //internal methods
+                        object._pointConverter = function(realHeight, viewbox, y){
+                            var viewboxDistance = Math.abs( viewbox.h - viewbox.l );
+                            var y_graphingDistance = realHeight * (viewbox.h-y)/viewboxDistance
+                            return !isNaN(y_graphingDistance) ? y_graphingDistance : 0;
+                        };
+                        object._lineCorrecter = function(points, maxheight){
+                            if( points.y1 < 0 && points.y2 < 0 ){ return; }
+                            if( points.y1 > maxheight && points.y2 > maxheight ){ return; }
+                    
+                            var slope = (points.y2 - points.y1)/(points.x2 - points.x1);
+                    
+                            if( points.y1 < 0 ){ points.x1 = (0 - points.y1 + slope*points.x1)/slope; points.y1 = 0; }
+                            else if( points.y2 < 0 ){ points.x2 = (0 - points.y2 + slope*points.x2)/slope; points.y2 = 0; }
+                            if( points.y1 > maxheight ){ points.x1 = (maxheight - points.y1 + slope*points.x1)/slope; points.y1 = maxheight; }
+                            else if( points.y2 > maxheight ){ points.x2 = (maxheight - points.y2 + slope*points.x2)/slope; points.y2 = maxheight; }
+                    
+                            return points;
+                        };
+                        object._test = function(){
+                            // this.horizontalMarkings([0.75,0.5,0.25,0,-0.25,-0.5,-0.75,1,1.25,1.5,1.75,-1.75]);
+                            this.horizontalMarkings([0.75,0,-0.25,-2,-1,1]);
+                            this.verticalMarkings([0,1,2,3,4,5,6,7,8,9,10]);
+                            this.viewbox({'l':-2,'h':4});
+                            this.drawBackground();
+                            this.draw([0,-2,1,-1,2]);
+                        };
+                        
+                    
+                        //methods
+                        object.viewbox = function(a){
+                            if(a==null){return object._data.viewbox;}
+                            object._data.viewbox = a;
+                        };
+                        object.horizontalMarkings = function(a){
+                            if(a==null){return object._data.horizontalMarkings;}
+                            object._data.horizontalMarkings = a;
+                        };
+                        object.verticalMarkings = function(a){
+                            if(a==null){return object._data.verticalMarkings;}
+                            object._data.verticalMarkings = a;
+                        };
+                        object.drawBackground = function(){
+                            this.children['background'].innerHTML = '';
+                    
+                            //horizontal lines
+                            for(var a = 0; a < this._data.horizontalMarkings.length; a++){
+                                this.children['background'].append(
+                                    parts.basic.line(
+                                        null,
+                                        0,
+                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a] ),
+                                        this._data.width,
+                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a] ),
+                                        this._data.styles.background
+                                    )
+                                );
+                                this.children['background'].append(
+                                    parts.basic.text(
+                                        null,
+                                        0.5,
+                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a]-0.075 ),
+                                        this._data.horizontalMarkings[a],
+                                        0,
+                                        this._data.styles.backgroundText,
+                                        0.1
+                                    )
+                                );
+                            }
+                    
+                            //vertical lines
+                            for(var a = 0; a < this._data.verticalMarkings.length; a++){
+                                this.children['background'].append(
+                                    parts.basic.line(
+                                        null,
+                                        a*(this._data.width/this._data.verticalMarkings.length),
+                                        0,
+                                        a*(this._data.width/this._data.verticalMarkings.length),
+                                        this._data.height,
+                                        this._data.styles.background
+                                    )
+                                );
+                                this.children['background'].append(
+                                    parts.basic.text(
+                                        null,
+                                        a*(this._data.width/this._data.verticalMarkings.length) + 0.5,
+                                        this._pointConverter(this._data.height, this._data.viewbox, -0.075),
+                                        this._data.verticalMarkings[a],
+                                        0,
+                                        this._data.styles.backgroundText,
+                                        0.1
+                                    )
+                                );
+                            }
+                    
+                            //(the vertical line on the right)
+                            this.children['background'].append( parts.basic.line( null, this._data.width, 0, this._data.width, this._data.height, this._data.styles.background ) );
+                        };
+                        object.draw = function(Y, X=null){
+                            this.children['middleground'].innerHTML = '';
+                    
+                            for(var a = 0; a < Y.length-1; a++){
+                                var points = this._lineCorrecter({
+                                    'x1': (a+0)*(this._data.width/(Y.length-1)),
+                                    'x2': (a+1)*(this._data.width/(Y.length-1)),
+                                    'y1': this._pointConverter(this._data.height, this._data.viewbox, Y[a+0]),
+                                    'y2': this._pointConverter(this._data.height, this._data.viewbox, Y[a+1])
+                                }, this._data.height);
+                    
+                                if(points){
+                                    this.children['middleground'].append(
+                                        parts.basic.line(
+                                            null,
+                                            points.x1, points.y1,
+                                            points.x2, points.y2,
+                                            this._data.styles.middleground
+                                        )
+                                    );
+                                }
+                            }
+                        };
+                    
+                    
+                        return object;
+                    };
+                    this.meter_level = function(
+                        id='meter_level',
+                        x, y, angle,
+                        width, height,
+                        markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                    
+                        backingStyle='fill:rgb(10,10,10)',
+                        levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
+                        markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                    ){
+                        //values
+                            var coolDown = 0;
+                            var mostRecentSetting = 0;
+                    
+                        //elements
+                            var object = parts.basic.g(id, x, y);
+                    
+                        //level
+                            levelStyles[0] += 'transition: height 0s;';
+                            levelStyles[1] += 'transition: height 0.01s;';
+                            var level = parts.display.level('mainlevel',0,0,angle,width,height,backingStyle,levelStyles);
+                            object.append(level);
+                    
+                        //markings
+                            function makeMark(y){
+                                var markThickness = 0.2;
+                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
+                                return parts.basic.path(null, path, 'L', markingStyle);
+                            }
+                            function insertText(y,text){
+                                return parts.display.label(null, 0, y+0.3, text, markingStyle);
+                            }
+                    
+                            for(var a = 0; a < markings.length; a++){
+                                object.append(makeMark(height*(1-markings[a])));
+                                object.append(insertText(height*(1-markings[a]),markings[a]));
+                            }
+                    
+                        //update intervals
+                            setInterval(function(){        
+                                level.set(mostRecentSetting,0);
+                    
+                                if(coolDown>0){coolDown-=0.0025;}
+                                level.set(coolDown,1);
+                    
+                                if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                            },1000/30);
+                    
+                        //methods
+                            object.set = function(a){
+                                mostRecentSetting = a;
+                                mostRecentSetting_slow = a;
+                            };
+                    
+                        return object;
+                    };
+                    this.grapher_periodicWave = function(
+                        id='grapher_periodicWave',
+                        x, y, width, height,
+                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                        backingStyle = 'fill:rgba(50,50,50,1)',
+                    ){
+                        //elements 
+                        var object = parts.basic.g(id, x, y);
+                            object._data = {};
+                            object._data.wave = {'sin':[],'cos':[]};
+                            object._data.resolution = 500;
+                    
+                        var grapher = parts.display.grapher(null, 0, 0, width, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
+                            object.append(grapher);
+                    
+                    
+                        //methods
+                        object.wave = function(a=null,type=null){
+                            if(a==null){
+                                while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
+                                while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
+                                for(var a = 0; a < this._data.wave['sin'].length; a++){
+                                    if( !this._data.wave['sin'][a] ){ this._data.wave['sin'][a] = 0; }
+                                    if( !this._data.wave['cos'][a] ){ this._data.wave['cos'][a] = 0; }
+                                }
+                                return this._data.wave;
+                            }
+                    
+                            if(type==null){
+                                this._data.wave = a;
+                            }
+                            switch(type){
+                                case 'sin': this._data.wave.sin = a; break;
+                                case 'cos': this._data.wave.cos = a; break;
+                                default: break;
+                            }
+                        }
+                        object.waveElement = function(type, mux, a){
+                            if(a==null){return this._data.wave[type][mux];}
+                            this._data.wave[type][mux] = a;
+                        }
+                        object.resolution = function(a=null){
+                            if(a==null){return this._data.resolution;}
+                            this._data.resolution = a;
+                        }
+                        object.updateBackground = function(){
+                            grapher.viewbox( {'l':-1.1,'h':1.1} );
+                            grapher.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
+                            grapher.verticalMarkings([0,'1/4','1/2','3/4']);
+                            grapher.drawBackground();
+                        };
+                        object.draw = function(){
+                            var data = [];
+                            var temp = 0;
+                            for(var a = 0; a <= this._data.resolution; a++){
+                                temp = 0;
+                                for(var b = 0; b < this._data.wave['sin'].length; b++){
+                                    if(!this._data.wave['sin'][b]){this._data.wave['sin'][b]=0;} // cover missing elements
+                                    temp += Math.sin(b*(2*Math.PI*(a/this._data.resolution)))*this._data.wave['sin'][b]; 
+                                }
+                                for(var b = 0; b < this._data.wave['cos'].length; b++){
+                                    if(!this._data.wave['cos'][b]){this._data.wave['cos'][b]=0;} // cover missing elements
+                                    temp += Math.cos(b*(2*Math.PI*(a/this._data.resolution)) )*this._data.wave['cos'][b]; 
+                                }
+                                data.push(temp);
+                            }
+                    
+                            grapher.draw( data );
+                        }
+                        object.reset = function(){
+                            this.wave({'sin':[],'cos':[]});
+                            this.resolution(500);
+                            this.updateBackground();
+                            this.draw();
+                        }
+                    
+                    
+                        object.reset();
+                        return object;
+                    };
+                    this.readout_sixteenSegmentDisplay = function(
+                        id='readout_sixteenSegmentDisplay',
+                        x, y, width, height, count,
+                        backgroundStyle='fill:rgb(0,0,0)',
+                        glowStyle='fill:rgb(200,200,200)',
+                        dimStyle='fill:rgb(20,20,20)'
+                    ){
+                        //values
+                            var text = '';
+                            var displayInterval = null;
+                    
+                        //elements
+                            //main
+                                var object = parts.basic.g(id, x, y);
+                    
+                            //display units
+                                var units = [];
+                                for(var a = 0; a < count; a++){
+                                    var temp = parts.display.sixteenSegmentDisplay(
+                                        a, 
+                                        (width/count)*a, 0, width/count, height, 
+                                        backgroundStyle, glowStyle, dimStyle
+                                    );
+                                    object.append( temp );
+                                    units.push(temp);
+                                }
+                    
+                        //methods
+                            object.test = function(){
+                                this.text('Look at all the text I\'ve got here! 1234567890 \\/<>()[]{}*!?"#_,.');
+                                this.print('r2lSweep');
+                            };
+                    
+                            object.text = function(a){
+                                if(a==null){return text;}
+                                text = a;
+                            };
+                    
+                            object.print = function(style){
+                                clearInterval(displayInterval);
+                                switch(style){
+                                    case 'smart':
+                                        if(text.length > units.length){this.print('r2lSweep');}
+                                        else{this.print('regular')}
+                                    break;
+                                    case 'r2lSweep':
+                                        var displayIntervalTime = 100;
+                                        var displayStage = 0;
+                    
+                                        displayInterval = setInterval(function(){
+                                            for(var a = units.length-1; a >= 0; a--){
+                                                units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                            }
+                    
+                                            displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                        },displayIntervalTime);
+                                    break;
+                                    case 'regular': default:
+                                        for(var a = 0; a < units.length; a++){
+                                            units[a].enterCharacter(text[a]);
+                                        }
+                                    break;
+                                }
+                            };
+                    
+                    
+                    
+                    
+                        return object;
+                    };
+                    this.label = function(
+                        id='label',
+                        x, y, text,
+                        style='fill:rgba(0,0,0,1); font-size:3; font-family:Helvetica;',
+                        angle=0
+                    ){
+                        //elements 
+                        var object = parts.basic.g(id, x, y);
+                        var textElement = parts.basic.text(null, 0, 0, text, angle, style);
+                            object.appendChild(textElement);
+                    
+                    
+                        //methods
+                        object.text = function(a=null){
+                            if(a==null){return textElement.innerHTML;}
+                            textElement.innerHTML = a;
+                        }
+                    
+                        return object;
+                    };
+                    this.level = function(
+                        id='level',
+                        x, y, angle,
+                        width, height,
+                        backingStyle='fill:rgb(10,10,10)',
+                        levelStyles=['fill:rgb(250,250,250)','fill:rgb(200,200,200)']
+                    ){
+                        var values = Array.apply(null, Array(levelStyles.length)).map(Number.prototype.valueOf,0);
+                    
+                        // elements
+                            var object = parts.basic.g(id, x, y);
+                    
+                            //level layers are layered from back forward, so backing must go on last
+                            var levels = [];
+                            for(var a = 0; a < levelStyles.length; a++){
+                                var tempStyle = levelStyles[a]!=undefined ? levelStyles[a] : levelStyles[0];
+                                var temp = parts.basic.rect(
+                                    'movingRect_'+a,
+                                    (-height*Math.sin(angle) + width*Math.cos(angle)).toFixed(10),
+                                    (height*Math.cos(angle) + width*Math.sin(angle)).toFixed(10),
+                                    width,
+                                    0,
+                                    angle+Math.PI,
+                                    tempStyle
+                                );
+                                levels.push(temp);
+                                object.prepend(temp);
+                            }
+                    
+                            var backing = parts.basic.rect('backing', 0, 0, width, height, angle, backingStyle);
+                                object.prepend(backing);
+                    
+                        //methods
+                            object.set = function(a, layer=0){
+                                if(a==null){return value;}
+                    
+                                a = (a>1 ? 1 : a);
+                                a = (a<0 ? 0 : a);
+                    
+                                value = a;
+                    
+                                levels[layer].height.baseVal.valueInSpecifiedUnits = height*value;
+                            };
+                            object.getLevelStyle = function(levelLayer){
+                                return levels[levelLayer].style;
+                            };
+                    
+                        return object;
+                    };
                 }
                 this.control = new function(){
+                    this.rastorgrid = function(
+                        id='rastorgrid', 
+                        x, y, width, height,
+                        xcount, ycount,
+                        backingStyle = 'fill:rgba(200,200,200,1)',
+                        checkStyle = 'fill:rgba(150,150,150,1)',
+                        backingGlowStyle = 'fill:rgba(220,220,220,1)',
+                        checkGlowStyle = 'fill:rgba(220,220,220,1)',
+                    ){
+                        // elements
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
+                    
+                        for(var y = 0; y < ycount; y++){
+                            for(var x = 0; x < xcount; x++){
+                                var temp = parts.control.checkbox_rect(y+'_'+x, x*(width/xcount), y*(height/ycount), width/xcount, height/ycount, 0, checkStyle, backingStyle, checkGlowStyle, backingGlowStyle);
+                                object.appendChild(temp);
+                                temp.onchange = function(){ if(object.onchange){object.onchange(object.get());} };
+                            }
+                        }
+                    
+                    
+                        //methods
+                        object.box = function(x,y){ return object.children[y+'_'+x]; };
+                        object.get = function(){
+                            var outputArray = [];
+                    
+                            for(var y = 0; y < ycount; y++){
+                                var temp = [];
+                                for(var x = 0; x < xcount; x++){
+                                    temp.push(this.box(x,y).get());
+                                }
+                                outputArray.push(temp);
+                            }
+                    
+                            return outputArray;
+                        };
+                        object.set = function(value, update=true){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(value[y][x],false);
+                                }
+                            }
+                        };
+                        object.clear = function(){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(false,false);
+                                }
+                            }
+                        };
+                        object.light = function(x,y,state){
+                            object.box(x,y).light(state);
+                        };
+                    
+                    
+                        //callback
+                        object.onchange = function(){};
+                    
+                    
+                        return object;
+                    };
                     this.button_rect = function(
                         id='button_rect',
                         x, y, width, height, angle=0,
@@ -3284,6 +3378,63 @@
                         };
                         object.hover = function(){ this.onmouseenter(); rect.onmouseenter(); };
                         object.unhover = function(){this.onmouseleave(); rect.onmouseleave();};
+                    
+                        return object;
+                    };
+                    this.key_rect = function(
+                        id='key_rect',
+                        x, y, width, height, angle=0,
+                        style_off = 'fill:rgba(200,200,200,1)',
+                        style_press = 'fill:rgba(180,180,180,1)',
+                        style_glow = 'fill:rgba(220,200,220,1)',
+                        style_pressAndGlow = 'fill:rgba(200,190,200,1)'
+                    ){
+                    
+                        // elements 
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, style_off);
+                            object.appendChild(rect);
+                    
+                        //state
+                        object.state = 0;
+                        object.activateState = function(state){
+                            // 0 - off
+                            // 1 - pressed
+                            // 2 - glowing
+                            // 3 - pressed and glowing
+                            switch(state){
+                                case 0: __globals.utility.element.setStyle(rect, style_off); break;
+                                case 1: __globals.utility.element.setStyle(rect, style_press); break;
+                                case 2: __globals.utility.element.setStyle(rect, style_glow); break;
+                                case 3: __globals.utility.element.setStyle(rect, style_pressAndGlow); break;
+                                default: /*console.error('Unknown state reached:', state);*/ return; break;
+                            }
+                            object.state = state;
+                        };
+                    
+                        //interactivity
+                        rect.onmousedown =  function(){ object.press();   };
+                        rect.onmouseup =    function(){ object.release(); };
+                        rect.onmouseleave = function(){ object.release(); };
+                        rect.onmouseenter = function(event){ if(event.buttons == 1){object.press();} };
+                    
+                        //callbacks
+                        object.onkeyup =    function(){ /*console.log('mouseup');    */ };
+                        object.onkeydown =  function(){ /*console.log('mousedown');  */ };
+                    
+                        //methods;
+                        object.press =   function(){
+                            if( this.state%2 != 0 ){return;} //key already pressed 
+                            this.activateState(this.state+1);
+                            if(this.onkeydown){this.onkeydown();}
+                        };
+                        object.release = function(){ 
+                            if( this.state%2 == 0 ){return;} //key not pressed 
+                            this.activateState(object.state-1); 
+                            if(this.onkeyup){this.onkeyup();}
+                        };
+                        object.glow = function(){ this.activateState(this.state+2); };
+                        object.dim  = function(){ this.activateState(this.state-2); };
                     
                         return object;
                     };
@@ -3346,6 +3497,202 @@
                             object.set(!object.get());
                         };
                     
+                    
+                        return object;
+                    };
+                    this.slide_vertical = function(
+                        id='slide_vertical', 
+                        x, y, width, height,
+                        handleStyle = 'fill:rgba(200,200,200,1)',
+                        backingStyle = 'fill:rgba(150,150,150,1)',
+                        slotStyle = 'fill:rgba(50,50,50,1)'
+                    ){
+                        // elements
+                        var object = parts.basic.g(id, x, y);
+                            object._value = 0;
+                            object._data = {
+                                'h':height,
+                                'handleSize':0.9
+                            };
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
+                        var slot = parts.basic.rect(null, width*0.45, height*0.05, width*0.1, height*0.9, 0, slotStyle);
+                            object.appendChild(slot);
+                        var handle = parts.basic.rect('handle', 0, 0, width, height*0.1, 0, handleStyle);
+                            object.appendChild(handle);
+                    
+                    
+                        //methods
+                        object.get = function(){ return this._value; };
+                        object.set = function(value, live=false, update=true){
+                            value = (value>1 ? 1 : value);
+                            value = (value<0 ? 0 : value);
+                    
+                            this._value = value;
+                            if(update&&this.onchange){ this.onchange(value); }
+                            if(update&&!live&&this.onrelease){ this.onrelease(value); }
+                            this.children['handle'].y.baseVal.valueInSpecifiedUnits = value*this._data.h*this._data.handleSize;
+                        };
+                        object.smoothSet = function(target,time,curve,update=true){
+                            var start = this.get();
+                            var mux = target-start;
+                            var stepsPerSecond = Math.round(Math.abs(mux)*100);
+                            var totalSteps = stepsPerSecond*time;
+                    
+                            var steps = [1];
+                            switch(curve){
+                                case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                                case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
+                                case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
+                                case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                                case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
+                                case 'instant': default: break;
+                            }
+                    
+                            if(steps.length == 0){return;}
+                    
+                            if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                            object.smoothSet.interval = setInterval(function(){
+                                object.set( (start+(steps.shift()*mux)),true,update );
+                                if(steps.length == 0){clearInterval(object.smoothSet.interval);}
+                            },1000/stepsPerSecond);
+                        };
+                    
+                        
+                        //callback
+                        object.onchange = function(){};
+                        object.onrelease = function(){};
+                        
+                    
+                        //mouse interaction
+                        object.ondblclick = function(){ this.set(0.5); };
+                        object.onwheel = function(event){
+                            var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                            var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                    
+                            this.set( this.get() + move/(10*globalScale) );
+                        }; 
+                        object.onmousedown = function(event){
+                            __globals.svgElement.tempRef = this;
+                            __globals.svgElement.tempRef._data.initialValue = this.get();
+                            __globals.svgElement.tempRef._data.initialY = event.y;
+                            __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.h*__globals.svgElement.tempRef._data.handleSize;
+                            __globals.svgElement.onmousemove = function(event){
+                                var mux = __globals.svgElement.tempRef._data.mux;
+                                var value = __globals.svgElement.tempRef._data.initialValue;
+                                var numerator = __globals.svgElement.tempRef._data.initialY-event.y;
+                                var divider = __globals.utility.workspace.getGlobalScale(object);
+                    
+                                __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
+                            };
+                            __globals.svgElement.onmouseup = function(){
+                                __globals.svgElement.tempRef.set( __globals.svgElement.tempRef.get(), false );
+                                this.tempRef = null;
+                                this.onmousemove = null;
+                                this.onmouseleave = null;
+                                this.onmouseup = null;
+                            };
+                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                            __globals.svgElement.onmousemove(event);
+                        };
+                    
+                        return object;
+                    };
+                    this.slide_horizontal = function(
+                        id='slide_horizontal', 
+                        x, y, width, height,
+                        handleStyle = 'fill:rgba(200,200,200,1)',
+                        backingStyle = 'fill:rgba(150,150,150,1)',
+                        slotStyle = 'fill:rgba(50,50,50,1)'
+                    ){
+                        //elements
+                        var object = parts.basic.g(id, x, y);
+                            object._value = 0;
+                            object._data = {
+                                'w':width,
+                                'handleSize':0.9
+                            };
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
+                        var slot = parts.basic.rect(null, width*0.05, height*0.45, width*0.9, height*0.1, 0, slotStyle);
+                            object.appendChild(slot);
+                        var handle = parts.basic.rect('handle', 0, 0, width*0.1, height, 0, handleStyle);
+                            object.appendChild(handle);
+                    
+                    
+                        //methods
+                        object.get = function(){ return this._value; };
+                        object.set = function(value, live=false, update=true){
+                            value = (value>1 ? 1 : value);
+                            value = (value<0 ? 0 : value);
+                    
+                            this._value = value;
+                            if(update&&this.onchange){ this.onchange(value); }
+                            if(update&&!live&&this.onrelease){ this.onrelease(value); }
+                            this.children['handle'].x.baseVal.valueInSpecifiedUnits = value*this._data.w*this._data.handleSize;
+                        };
+                        object.smoothSet = function(target,time,curve,update=true){
+                            var start = this.get();
+                            var mux = target-start;
+                            var stepsPerSecond = Math.round(Math.abs(mux)*100);
+                            var totalSteps = stepsPerSecond*time;
+                    
+                            var steps = [1];
+                            switch(curve){
+                                case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                                case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
+                                case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
+                                case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                                case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
+                                case 'instant': default: break;
+                            }
+                    
+                            if(steps.length == 0){return;}
+                    
+                            if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                            object.smoothSet.interval = setInterval(function(){
+                                object.set( (start+(steps.shift()*mux)),true,update );
+                                if(steps.length == 0){clearInterval(object.smoothSet.interval);}
+                            },1000/stepsPerSecond);
+                        };
+                    
+                    
+                        //callback
+                        object.onchange = function(){};
+                        object.onrelease = function(){};
+                    
+                        
+                        //mouse interaction
+                        object.ondblclick = function(){ this.set(0.5); };
+                        object.onwheel = function(event){
+                            var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                            var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                    
+                            this.set( this.get() + move/(10*globalScale) );
+                        }; 
+                        object.onmousedown = function(event){
+                            __globals.svgElement.tempRef = this;
+                            __globals.svgElement.tempRef._data.initialValue = this.get();
+                            __globals.svgElement.tempRef._data.initialX = event.x;
+                            __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.w*__globals.svgElement.tempRef._data.handleSize;
+                            __globals.svgElement.onmousemove = function(event){
+                                var mux = __globals.svgElement.tempRef._data.mux;
+                                var value = __globals.svgElement.tempRef._data.initialValue;
+                                var numerator = __globals.svgElement.tempRef._data.initialX-event.x;
+                                var divider = __globals.utility.workspace.getGlobalScale(object);
+                    
+                                __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
+                            };
+                            __globals.svgElement.onmouseup = function(){
+                                __globals.svgElement.tempRef.set( __globals.svgElement.tempRef.get(), false );
+                                this.tempRef = null;
+                                this.onmousemove = null;
+                                this.onmouseleave = null;
+                                this.onmouseup = null;
+                            };
+                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                            __globals.svgElement.onmousemove(event);
+                        };
                     
                         return object;
                     };
@@ -3444,7 +3791,7 @@
                             object.ondblclick = function(){ this.set(0.5); };
                             object.onwheel = function(event){
                                 var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                                var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
+                                var globalScale = __globals.utility.workspace.getGlobalScale(object);
                     
                                 this.set( this.get() - move/(10*globalScale) );
                             };
@@ -3461,7 +3808,7 @@
                                     var mux = __globals.svgElement.tempRef._data.mux;
                                     var value = __globals.svgElement.tempRef._data.initialValue;
                                     var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
-                                    var divider = __globals.utility.element.getTransform(__globals.panes.global).s;
+                                    var divider = __globals.utility.workspace.getGlobalScale(object);
                     
                                     __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
                                 };
@@ -3481,456 +3828,6 @@
                                 __globals.svgElement.onmousemove(event);
                             };
                     
-                    
-                        return object;
-                    };
-                    this.dial_discrete = function(
-                        id='dial_discrete',
-                        x, y, r,
-                        optionCount=5,
-                        startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                        handleStyle = 'fill:rgba(200,200,200,1)',
-                        slotStyle = 'fill:rgba(50,50,50,1)',
-                        needleStyle = 'fill:rgba(250,100,100,1)',
-                        arcDistance=1.35,
-                        outerArcStyle='fill:none; stroke:none;',
-                    ){
-                        // elements
-                        var object = parts.basic.g(id, x, y);
-                            object._value = 0;
-                            object._selection = 0;
-                            object._data = { 
-                                'optionCount':optionCount,
-                                'mux':r*4
-                            };
-                    
-                            //arc
-                                var points = 5;
-                                var pushDistance = 1.11;
-                                var arcPath = [];
-                                for(var a = 0; a < points; a++){
-                                    var temp = __globals.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
-                                    arcPath.push( temp );
-                                    var temp = __globals.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
-                                    arcPath.push( temp );
-                                }
-                                var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
-                                arcPath.push( temp );
-                                var outerArc = parts.basic.path(id=null, path=arcPath, 'Q', outerArcStyle);
-                                object.appendChild(outerArc);
-                    
-                            //slot
-                                var slot = parts.basic.circle(null, 0, 0, r*1.1, 0, slotStyle);
-                                    object.appendChild(slot);
-                    
-                            //handle
-                                var handle = parts.basic.circle(null, 0, 0, r, 0, handleStyle);
-                                    object.appendChild(handle);
-                    
-                            //needle
-                                var needleWidth = r/5;
-                                var needleLength = r;
-                                var needle = parts.basic.rect('needle', 0, 0, needleLength, needleWidth, 0, needleStyle);
-                                    needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
-                                    needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
-                                    object.appendChild(needle);
-                    
-                    
-                        //methods
-                            object.select = function(a=null, live=true, update=true){
-                                if(a==null){return this._selection;}
-                    
-                                a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
-                                a = (a<0 ? 0 : a);
-                    
-                                if(this._selection == a){/*nothings changed*/return;}
-                    
-                                this._selection = a;
-                                this._set( a/(this._data.optionCount-1) );
-                                if(update&&this.onchange){ this.onchange(a); }
-                                if(update&&!live&&this.onrelease){ this.onrelease(value); }
-                            };
-                            object._get = function(){ return this._value; };
-                            object._set = function(value){
-                                value = (value>1 ? 1 : value);
-                                value = (value<0 ? 0 : value);
-                    
-                                this._value = value;
-                                this.children['needle'].rotation(startAngle + maxAngle*value);
-                            };object._set(0);
-                      
-                    
-                        //callback
-                            object.onchange = function(){};
-                            object.onrelease = function(){};
-                    
-                        
-                        //mouse interaction
-                            object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
-                            object.onwheel = function(event){
-                                var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                                var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
-                    
-                                if(!object.onwheel.acc){object.onwheel.acc=0;}
-                                object.onwheel.acc += move/globalScale;
-                                if( Math.abs(object.onwheel.acc) >= 1 ){
-                                    this.select( this.select()-1*Math.sign(object.onwheel.acc) );
-                                    object.onwheel.acc = 0;
-                                }
-                            };
-                            object.onmousedown = function(event){
-                                __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
-                                __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
-                                __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
-                    
-                                __globals.svgElement.tempRef = this;
-                                __globals.svgElement.tempRef._data.initialValue = this._get();
-                                __globals.svgElement.tempRef._data.initialY = event.y;
-                                __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
-                                __globals.svgElement.onmousemove = function(event){
-                                    var mux = __globals.svgElement.tempRef._data.mux;
-                                    var value = __globals.svgElement.tempRef._data.initialValue;
-                                    var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
-                                    var divider = __globals.utility.element.getTransform(__globals.panes.global).s;
-                    
-                                    __globals.svgElement.tempRef.select(
-                                        Math.round(
-                                            (__globals.svgElement.tempRef._data.optionCount-1)*(value - numerator/(divider*mux))
-                                        ) 
-                                    );
-                                };
-                                __globals.svgElement.onmouseup = function(){
-                                    this.tempRef.select(this.tempRef.select(),false);
-                                    this.tempRef = null;
-                                    
-                                    __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
-                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
-                                    __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
-                    
-                                    __globals.svgElement.onmousemove_old = null;
-                                    __globals.svgElement.onmouseleave_old = null;
-                                    __globals.svgElement.onmouseup_old = null;
-                                };
-                                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                                __globals.svgElement.onmousemove(event);
-                            };
-                            
-                    
-                      return object;
-                    };
-                    this.key_rect = function(
-                        id='key_rect',
-                        x, y, width, height, angle=0,
-                        style_off = 'fill:rgba(200,200,200,1)',
-                        style_press = 'fill:rgba(180,180,180,1)',
-                        style_glow = 'fill:rgba(220,200,220,1)',
-                        style_pressAndGlow = 'fill:rgba(200,190,200,1)'
-                    ){
-                    
-                        // elements 
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, style_off);
-                            object.appendChild(rect);
-                    
-                        //state
-                        object.state = 0;
-                        object.activateState = function(state){
-                            // 0 - off
-                            // 1 - pressed
-                            // 2 - glowing
-                            // 3 - pressed and glowing
-                            switch(state){
-                                case 0: __globals.utility.element.setStyle(rect, style_off); break;
-                                case 1: __globals.utility.element.setStyle(rect, style_press); break;
-                                case 2: __globals.utility.element.setStyle(rect, style_glow); break;
-                                case 3: __globals.utility.element.setStyle(rect, style_pressAndGlow); break;
-                                default: /*console.error('Unknown state reached:', state);*/ return; break;
-                            }
-                            object.state = state;
-                        };
-                    
-                        //interactivity
-                        rect.onmousedown =  function(){ object.press();   };
-                        rect.onmouseup =    function(){ object.release(); };
-                        rect.onmouseleave = function(){ object.release(); };
-                        rect.onmouseenter = function(event){ if(event.buttons == 1){object.press();} };
-                    
-                        //callbacks
-                        object.onkeyup =    function(){ /*console.log('mouseup');    */ };
-                        object.onkeydown =  function(){ /*console.log('mousedown');  */ };
-                    
-                        //methods;
-                        object.press =   function(){
-                            if( this.state%2 != 0 ){return;} //key already pressed 
-                            this.activateState(this.state+1);
-                            if(this.onkeydown){this.onkeydown();}
-                        };
-                        object.release = function(){ 
-                            if( this.state%2 == 0 ){return;} //key not pressed 
-                            this.activateState(object.state-1); 
-                            if(this.onkeyup){this.onkeyup();}
-                        };
-                        object.glow = function(){ this.activateState(this.state+2); };
-                        object.dim  = function(){ this.activateState(this.state-2); };
-                    
-                        return object;
-                    };
-                    this.rastorgrid = function(
-                        id='rastorgrid', 
-                        x, y, width, height,
-                        xcount, ycount,
-                        backingStyle = 'fill:rgba(200,200,200,1)',
-                        checkStyle = 'fill:rgba(150,150,150,1)',
-                        backingGlowStyle = 'fill:rgba(220,220,220,1)',
-                        checkGlowStyle = 'fill:rgba(220,220,220,1)',
-                    ){
-                        // elements
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                    
-                        for(var y = 0; y < ycount; y++){
-                            for(var x = 0; x < xcount; x++){
-                                var temp = parts.control.checkbox_rect(y+'_'+x, x*(width/xcount), y*(height/ycount), width/xcount, height/ycount, 0, checkStyle, backingStyle, checkGlowStyle, backingGlowStyle);
-                                object.appendChild(temp);
-                                temp.onchange = function(){ if(object.onchange){object.onchange(object.get());} };
-                            }
-                        }
-                    
-                    
-                        //methods
-                        object.box = function(x,y){ return object.children[y+'_'+x]; };
-                        object.get = function(){
-                            var outputArray = [];
-                    
-                            for(var y = 0; y < ycount; y++){
-                                var temp = [];
-                                for(var x = 0; x < xcount; x++){
-                                    temp.push(this.box(x,y).get());
-                                }
-                                outputArray.push(temp);
-                            }
-                    
-                            return outputArray;
-                        };
-                        object.set = function(value, update=true){
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    object.box(x,y).set(value[y][x],false);
-                                }
-                            }
-                        };
-                        object.clear = function(){
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    object.box(x,y).set(false,false);
-                                }
-                            }
-                        };
-                        object.light = function(x,y,state){
-                            object.box(x,y).light(state);
-                        };
-                    
-                    
-                        //callback
-                        object.onchange = function(){};
-                    
-                    
-                        return object;
-                    };
-                    this.slide_horizontal = function(
-                        id='slide_horizontal', 
-                        x, y, width, height,
-                        handleStyle = 'fill:rgba(200,200,200,1)',
-                        backingStyle = 'fill:rgba(150,150,150,1)',
-                        slotStyle = 'fill:rgba(50,50,50,1)'
-                    ){
-                        //elements
-                        var object = parts.basic.g(id, x, y);
-                            object._value = 0;
-                            object._data = {
-                                'w':width,
-                                'handleSize':0.9
-                            };
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                        var slot = parts.basic.rect(null, width*0.05, height*0.45, width*0.9, height*0.1, 0, slotStyle);
-                            object.appendChild(slot);
-                        var handle = parts.basic.rect('handle', 0, 0, width*0.1, height, 0, handleStyle);
-                            object.appendChild(handle);
-                    
-                    
-                        //methods
-                        object.get = function(){ return this._value; };
-                        object.set = function(value, live=false, update=true){
-                            value = (value>1 ? 1 : value);
-                            value = (value<0 ? 0 : value);
-                    
-                            this._value = value;
-                            if(update&&this.onchange){ this.onchange(value); }
-                            if(update&&!live&&this.onrelease){ this.onrelease(value); }
-                            this.children['handle'].x.baseVal.valueInSpecifiedUnits = value*this._data.w*this._data.handleSize;
-                        };
-                        object.smoothSet = function(target,time,curve,update=true){
-                            var start = this.get();
-                            var mux = target-start;
-                            var stepsPerSecond = Math.round(Math.abs(mux)*100);
-                            var totalSteps = stepsPerSecond*time;
-                    
-                            var steps = [1];
-                            switch(curve){
-                                case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-                                case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
-                                case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
-                                case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-                                case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
-                                case 'instant': default: break;
-                            }
-                    
-                            if(steps.length == 0){return;}
-                    
-                            if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                            object.smoothSet.interval = setInterval(function(){
-                                object.set( (start+(steps.shift()*mux)),true,update );
-                                if(steps.length == 0){clearInterval(object.smoothSet.interval);}
-                            },1000/stepsPerSecond);
-                        };
-                    
-                    
-                        //callback
-                        object.onchange = function(){};
-                        object.onrelease = function(){};
-                    
-                        
-                        //mouse interaction
-                        object.ondblclick = function(){ this.set(0.5); };
-                        object.onwheel = function(event){
-                            var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                            var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
-                    
-                            this.set( this.get() + move/(10*globalScale) );
-                        }; 
-                        object.onmousedown = function(event){
-                            __globals.svgElement.tempRef = this;
-                            __globals.svgElement.tempRef._data.initialValue = this.get();
-                            __globals.svgElement.tempRef._data.initialX = event.x;
-                            __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.w*__globals.svgElement.tempRef._data.handleSize;
-                            __globals.svgElement.onmousemove = function(event){
-                                var mux = __globals.svgElement.tempRef._data.mux;
-                                var value = __globals.svgElement.tempRef._data.initialValue;
-                                var numerator = __globals.svgElement.tempRef._data.initialX-event.x;
-                                var divider = __globals.utility.element.getTransform(__globals.panes.global).s;
-                    
-                                __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
-                            };
-                            __globals.svgElement.onmouseup = function(){
-                                __globals.svgElement.tempRef.set( __globals.svgElement.tempRef.get(), false );
-                                this.tempRef = null;
-                                this.onmousemove = null;
-                                this.onmouseleave = null;
-                                this.onmouseup = null;
-                            };
-                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                            __globals.svgElement.onmousemove(event);
-                        };
-                    
-                        return object;
-                    };
-                    this.slide_vertical = function(
-                        id='slide_vertical', 
-                        x, y, width, height,
-                        handleStyle = 'fill:rgba(200,200,200,1)',
-                        backingStyle = 'fill:rgba(150,150,150,1)',
-                        slotStyle = 'fill:rgba(50,50,50,1)'
-                    ){
-                        // elements
-                        var object = parts.basic.g(id, x, y);
-                            object._value = 0;
-                            object._data = {
-                                'h':height,
-                                'handleSize':0.9
-                            };
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                        var slot = parts.basic.rect(null, width*0.45, height*0.05, width*0.1, height*0.9, 0, slotStyle);
-                            object.appendChild(slot);
-                        var handle = parts.basic.rect('handle', 0, 0, width, height*0.1, 0, handleStyle);
-                            object.appendChild(handle);
-                    
-                    
-                        //methods
-                        object.get = function(){ return this._value; };
-                        object.set = function(value, live=false, update=true){
-                            value = (value>1 ? 1 : value);
-                            value = (value<0 ? 0 : value);
-                    
-                            this._value = value;
-                            if(update&&this.onchange){ this.onchange(value); }
-                            if(update&&!live&&this.onrelease){ this.onrelease(value); }
-                            this.children['handle'].y.baseVal.valueInSpecifiedUnits = value*this._data.h*this._data.handleSize;
-                        };
-                        object.smoothSet = function(target,time,curve,update=true){
-                            var start = this.get();
-                            var mux = target-start;
-                            var stepsPerSecond = Math.round(Math.abs(mux)*100);
-                            var totalSteps = stepsPerSecond*time;
-                    
-                            var steps = [1];
-                            switch(curve){
-                                case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-                                case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
-                                case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
-                                case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-                                case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
-                                case 'instant': default: break;
-                            }
-                    
-                            if(steps.length == 0){return;}
-                    
-                            if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                            object.smoothSet.interval = setInterval(function(){
-                                object.set( (start+(steps.shift()*mux)),true,update );
-                                if(steps.length == 0){clearInterval(object.smoothSet.interval);}
-                            },1000/stepsPerSecond);
-                        };
-                    
-                        
-                        //callback
-                        object.onchange = function(){};
-                        object.onrelease = function(){};
-                        
-                    
-                        //mouse interaction
-                        object.ondblclick = function(){ this.set(0.5); };
-                        object.onwheel = function(event){
-                            var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                            var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
-                    
-                            this.set( this.get() + move/(10*globalScale) );
-                        }; 
-                        object.onmousedown = function(event){
-                            __globals.svgElement.tempRef = this;
-                            __globals.svgElement.tempRef._data.initialValue = this.get();
-                            __globals.svgElement.tempRef._data.initialY = event.y;
-                            __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.h*__globals.svgElement.tempRef._data.handleSize;
-                            __globals.svgElement.onmousemove = function(event){
-                                var mux = __globals.svgElement.tempRef._data.mux;
-                                var value = __globals.svgElement.tempRef._data.initialValue;
-                                var numerator = __globals.svgElement.tempRef._data.initialY-event.y;
-                                var divider = __globals.utility.element.getTransform(__globals.panes.global).s;
-                    
-                                __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
-                            };
-                            __globals.svgElement.onmouseup = function(){
-                                __globals.svgElement.tempRef.set( __globals.svgElement.tempRef.get(), false );
-                                this.tempRef = null;
-                                this.onmousemove = null;
-                                this.onmouseleave = null;
-                                this.onmouseup = null;
-                            };
-                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                            __globals.svgElement.onmousemove(event);
-                        };
                     
                         return object;
                     };
@@ -4058,8 +3955,368 @@
                     
                         return object;
                     };
+                    this.dial_discrete = function(
+                        id='dial_discrete',
+                        x, y, r,
+                        optionCount=5,
+                        startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                        handleStyle = 'fill:rgba(200,200,200,1)',
+                        slotStyle = 'fill:rgba(50,50,50,1)',
+                        needleStyle = 'fill:rgba(250,100,100,1)',
+                        arcDistance=1.35,
+                        outerArcStyle='fill:none; stroke:none;',
+                    ){
+                        // elements
+                        var object = parts.basic.g(id, x, y);
+                            object._value = 0;
+                            object._selection = 0;
+                            object._data = { 
+                                'optionCount':optionCount,
+                                'mux':r*4
+                            };
+                    
+                            //arc
+                                var points = 5;
+                                var pushDistance = 1.11;
+                                var arcPath = [];
+                                for(var a = 0; a < points; a++){
+                                    var temp = __globals.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
+                                    arcPath.push( temp );
+                                    var temp = __globals.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
+                                    arcPath.push( temp );
+                                }
+                                var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
+                                arcPath.push( temp );
+                                var outerArc = parts.basic.path(id=null, path=arcPath, 'Q', outerArcStyle);
+                                object.appendChild(outerArc);
+                    
+                            //slot
+                                var slot = parts.basic.circle(null, 0, 0, r*1.1, 0, slotStyle);
+                                    object.appendChild(slot);
+                    
+                            //handle
+                                var handle = parts.basic.circle(null, 0, 0, r, 0, handleStyle);
+                                    object.appendChild(handle);
+                    
+                            //needle
+                                var needleWidth = r/5;
+                                var needleLength = r;
+                                var needle = parts.basic.rect('needle', 0, 0, needleLength, needleWidth, 0, needleStyle);
+                                    needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
+                                    needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
+                                    object.appendChild(needle);
+                    
+                    
+                        //methods
+                            object.select = function(a=null, live=true, update=true){
+                                if(a==null){return this._selection;}
+                    
+                                a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
+                                a = (a<0 ? 0 : a);
+                    
+                                if(this._selection == a){/*nothings changed*/return;}
+                    
+                                this._selection = a;
+                                this._set( a/(this._data.optionCount-1) );
+                                if(update&&this.onchange){ this.onchange(a); }
+                                if(update&&!live&&this.onrelease){ this.onrelease(value); }
+                            };
+                            object._get = function(){ return this._value; };
+                            object._set = function(value){
+                                value = (value>1 ? 1 : value);
+                                value = (value<0 ? 0 : value);
+                    
+                                this._value = value;
+                                this.children['needle'].rotation(startAngle + maxAngle*value);
+                            };object._set(0);
+                      
+                    
+                        //callback
+                            object.onchange = function(){};
+                            object.onrelease = function(){};
+                    
+                        
+                        //mouse interaction
+                            object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
+                            object.onwheel = function(event){
+                                var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                                var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                    
+                                if(!object.onwheel.acc){object.onwheel.acc=0;}
+                                object.onwheel.acc += move/globalScale;
+                                if( Math.abs(object.onwheel.acc) >= 1 ){
+                                    this.select( this.select()-1*Math.sign(object.onwheel.acc) );
+                                    object.onwheel.acc = 0;
+                                }
+                            };
+                            object.onmousedown = function(event){
+                                __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                                __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
+                                __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
+                    
+                                __globals.svgElement.tempRef = this;
+                                __globals.svgElement.tempRef._data.initialValue = this._get();
+                                __globals.svgElement.tempRef._data.initialY = event.y;
+                                __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
+                                __globals.svgElement.onmousemove = function(event){
+                                    var mux = __globals.svgElement.tempRef._data.mux;
+                                    var value = __globals.svgElement.tempRef._data.initialValue;
+                                    var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
+                                    var divider = __globals.utility.workspace.getGlobalScale(object);
+                    
+                                    __globals.svgElement.tempRef.select(
+                                        Math.round(
+                                            (__globals.svgElement.tempRef._data.optionCount-1)*(value - numerator/(divider*mux))
+                                        ) 
+                                    );
+                                };
+                                __globals.svgElement.onmouseup = function(){
+                                    this.tempRef.select(this.tempRef.select(),false);
+                                    this.tempRef = null;
+                                    
+                                    __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                                    __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+                    
+                                    __globals.svgElement.onmousemove_old = null;
+                                    __globals.svgElement.onmouseleave_old = null;
+                                    __globals.svgElement.onmouseup_old = null;
+                                };
+                                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                __globals.svgElement.onmousemove(event);
+                            };
+                            
+                    
+                      return object;
+                    };
                 }
                 this.audio = new function(){
+                    this.synthesizer2 = function(
+                        context,
+                        waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
+                        gain=1, gainWobbleDepth=0, gainWobblePeriod=0, gainWobbleMin=0.01, gainWobbleMax=1,
+                        attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+                        octave=0,
+                        detune=0, detuneWobbleDepth=0, detuneWobblePeriod=0, detuneWobbleMin=0.01, detuneWobbleMax=1
+                    ){
+                        //flow chain
+                            var flow = {
+                                OSCmaker:{},
+                                liveOscillators: {},
+                                wobbler_detune: {},
+                                aggregator: {},
+                                wobbler_gain: {},
+                                mainOut: {}
+                            };
+                    
+                    
+                            flow.OSCmaker.waveType = waveType;
+                            flow.OSCmaker.periodicWave = periodicWave;
+                            flow.OSCmaker.attack = attack;
+                            flow.OSCmaker.release = release;
+                            flow.OSCmaker.octave  = octave;
+                            flow.OSCmaker.detune  = detune;
+                            flow.OSCmaker.func = function(
+                                context, connection, midiNumber,
+                                type, periodicWave, 
+                                gain, attack, release,
+                                detune, octave
+                            ){
+                                return new function(){
+                                    this.generator = context.createOscillator();
+                                        if(type == 'custom'){ 
+                                            this.generator.setPeriodicWave(
+                                                context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                                            ); 
+                                        }else{ this.generator.type = type; }
+                                        this.generator.frequency.setTargetAtTime(__globals.audio.midiNumber_frequency(midiNumber,octave), context.currentTime, 0);
+                                        this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                                        this.generator.start(0);
+                    
+                                    this.gain = context.createGain();
+                                        this.generator.connect(this.gain);
+                                        this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                                        __globals.utility.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
+                                        this.gain.connect(connection);
+                    
+                                    this.detune = function(target,time,curve){
+                                        __globals.utility.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
+                                    };
+                                    this.stop = function(){
+                                        __globals.utility.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve, false);
+                                        setTimeout(function(that){
+                                            that.gain.disconnect(); 
+                                            that.generator.stop(); 
+                                            that.generator.disconnect(); 
+                                            that.gain=null; 
+                                            that.generator=null; 
+                                            that=null; 
+                                            delete that;
+                                        }, release.time*1000, this);
+                                    };
+                                };
+                            };
+                    
+                    
+                            flow.wobbler_detune.depth = detuneWobbleDepth;
+                            flow.wobbler_detune.period = detuneWobblePeriod;
+                            flow.wobbler_detune.phase = true;
+                            flow.wobbler_detune.wave = 's';
+                            flow.wobbler_detune.interval = null;
+                            flow.wobbler_detune.start = function(){
+                                if(flow.wobbler_detune.period < detuneWobbleMin || flow.wobbler_detune.period >= detuneWobbleMax){ return; }
+                                flow.wobbler_detune.interval = setInterval(function(){
+                                    var OSCs = Object.keys(flow.liveOscillators);
+                                    if(flow.wobbler_detune.phase){
+                                        for(var b = 0; b < OSCs.length; b++){ 
+                                            flow.liveOscillators[OSCs[b]].detune(flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                                        }
+                                    }else{
+                                        for(var b = 0; b < OSCs.length; b++){ 
+                                            flow.liveOscillators[OSCs[b]].detune(-flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                                        }
+                                    }
+                                    flow.wobbler_detune.phase = !flow.wobbler_detune.phase;
+                                }, 1000*flow.wobbler_detune.period);
+                            };
+                            flow.wobbler_detune.stop = function(){clearInterval(flow.wobbler_detune.interval);};
+                    
+                    
+                            flow.aggregator.node = context.createGain();    
+                            flow.aggregator.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                    
+                    
+                            flow.wobbler_gain.depth = gainWobbleDepth;
+                            flow.wobbler_gain.period = gainWobblePeriod;
+                            flow.wobbler_gain.phase = true;
+                            flow.wobbler_gain.wave = 's';
+                            flow.wobbler_gain.interval = null;
+                            flow.wobbler_gain.start = function(){
+                                if(flow.wobbler_gain.period < gainWobbleMin || flow.wobbler_gain.period >= gainWobbleMax){
+                                    __globals.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.01, flow.wobbler_gain.wave );
+                                    return;
+                                }
+                                flow.wobbler_gain.interval = setInterval(function(){
+                                    if(flow.wobbler_gain.phase){ __globals.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                                    else{                        __globals.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1-flow.wobbler_gain.depth,  0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                                    flow.wobbler_gain.phase = !flow.wobbler_gain.phase;
+                                }, 1000*flow.wobbler_gain.period);
+                            };
+                            flow.wobbler_gain.stop = function(){clearInterval(flow.wobbler_gain.interval);};
+                            flow.wobbler_gain.node = context.createGain();
+                            flow.wobbler_gain.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                            flow.aggregator.node.connect(flow.wobbler_gain.node);
+                    
+                            
+                            flow.mainOut.gain = gain;
+                            flow.mainOut.node = context.createGain();
+                            flow.mainOut.node.gain.setTargetAtTime(gain, context.currentTime, 0);
+                            flow.wobbler_gain.node.connect(flow.mainOut.node);
+                    
+                        //output node
+                            this.out = function(){return flow.mainOut.node;}
+                    
+                        //controls
+                            this.perform = function(note){
+                                if( !flow.liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
+                                else if( !flow.liveOscillators[note.num] ){ 
+                                    //create new tone
+                                    flow.liveOscillators[note.num] = flow.OSCmaker.func(
+                                        context, 
+                                        flow.aggregator.node, 
+                                        note.num, 
+                                        flow.OSCmaker.waveType, 
+                                        flow.OSCmaker.periodicWave, 
+                                        note.velocity, 
+                                        flow.OSCmaker.attack, 
+                                        flow.OSCmaker.release, 
+                                        flow.OSCmaker.detune, 
+                                        flow.OSCmaker.octave
+                                    );
+                                }
+                                else if( note.velocity == 0 ){ 
+                                    //stop and destroy tone
+                                    flow.liveOscillators[note.num].stop();
+                                    delete flow.liveOscillators[note.num];
+                                }
+                                else{
+                                    //adjust tone
+                                    flow.liveOscillators[note.num].osc.changeVelocity(note.velocity);
+                                }
+                            };
+                            this.panic = function(){
+                                var OSCs = Object.keys(flow.liveOscillators);
+                                for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+                            };
+                            this.waveType = function(a){if(a==null){return flow.OSCmaker.waveType;}flow.OSCmaker.waveType=a;};
+                            this.periodicWave = function(a){if(a==null){return flow.OSCmaker.periodicWave;}flow.OSCmaker.periodicWave=a;};
+                            this.gain = function(target,time,curve){ return __globals.utility.audio.changeAudioParam(context,flow.mainOut.node.gain,target,time,curve); };
+                            this.attack = function(time,curve){
+                                if(time==null&&curve==null){return flow.OSCmaker.attack;}
+                                flow.OSCmaker.attack.time = time ? time : flow.OSCmaker.attack.time;
+                                flow.OSCmaker.attack.curve = curve ? curve : flow.OSCmaker.attack.curve;
+                            };
+                            this.release = function(time,curve){
+                                if(time==null&&curve==null){return flow.OSCmaker.release;}
+                                flow.OSCmaker.release.time = time ? time : flow.OSCmaker.release.time;
+                                flow.OSCmaker.release.curve = curve ? curve : flow.OSCmaker.release.curve;
+                            };
+                            this.octave = function(a){if(a==null){return flow.OSCmaker.octave;}flow.OSCmaker.octave=a;};
+                            this.detune = function(target,time,curve){
+                                if(a==null){return flow.OSCmaker.detune;}
+                    
+                                //change stored value for any new oscillators that are made
+                                    var start = flow.OSCmaker.detune;
+                                    var mux = target-start;
+                                    var stepsPerSecond = Math.round(Math.abs(mux));
+                                    var totalSteps = stepsPerSecond*time;
+                    
+                                    var steps = [1];
+                                    switch(curve){
+                                        case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                                        case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                                        case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps,8); break;
+                                        case 'instant': default: break;
+                                    }
+                                    
+                                    if(steps.length != 0){
+                                        var interval = setInterval(function(){
+                                            flow.OSCmaker.detune = start+(steps.shift()*mux);
+                                            if(steps.length == 0){clearInterval(interval);}
+                                        },1000/stepsPerSecond);
+                                    }
+                    
+                                //instruct liveOscillators to adjust their values
+                                    var OSCs = Object.keys(flow.liveOscillators);
+                                    for(var b = 0; b < OSCs.length; b++){ 
+                                        flow.liveOscillators[OSCs[b]].detune(target,time,curve);
+                                    }
+                            };
+                            this.gainWobbleDepth = function(value){
+                                if(value==null){return flow.wobbler_gain.depth; }
+                                flow.wobbler_gain.depth = value;
+                                flow.wobbler_gain.stop();
+                                flow.wobbler_gain.start();
+                            };
+                            this.gainWobblePeriod = function(value){
+                                if(value==null){return flow.wobbler_gain.period; }
+                                flow.wobbler_gain.period = value;
+                                flow.wobbler_gain.stop();
+                                flow.wobbler_gain.start();
+                            };
+                            this.detuneWobbleDepth = function(value){
+                                if(value==null){return flow.wobbler_detune.depth; }
+                                flow.wobbler_detune.depth = value;
+                                flow.wobbler_detune.stop();
+                                flow.wobbler_detune.start();
+                            };
+                            this.detuneWobblePeriod = function(value){
+                                if(value==null){return flow.wobbler_detune.period; }
+                                flow.wobbler_detune.period = value;
+                                flow.wobbler_detune.stop();
+                                flow.wobbler_detune.start();
+                            };
+                    };
                     this.audio2percentage = function(){
                         return new function(){
                             var analyser = {
@@ -4106,7 +4363,7 @@
                                 this.newValue = function(a){};
                         };
                     };
-                    this.synthesizer_basic = function(
+                    this.synthesizer_1 = function(
                         context,
                         waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
                         gain=1, 
@@ -4617,64 +4874,328 @@
                 }
             };
             var objects = new function(){
-                this.audio_sink = function(x,y){
+                this.audio_duplicator = function(x,y){
                     var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        level:{
-                            backing:'fill:rgb(10,10,10)', 
-                            levels:['fill:rgb(250,250,250);','fill:rgb(200,200,200);'],
-                            marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                        },
+                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
                     };
                     var design = {
-                        type:'audio_sink',
+                        type:'audio_duplicator',
                         x:x, y:y,
                         base:{
-                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
-                            style:style.background
+                            points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
                         },
                         elements:[
-                            {type:'connectionNode_audio', name:'right', data:{
-                                type:0, x:90, y:5, width:20, height:20
+                            {type:'connectionNode_audio', name:'input', data:{
+                                type:0, x:45, y:5, width:20, height:20
                             }},
-                            {type:'connectionNode_audio', name:'left', data:{
-                                type:0, x:90, y:30, width:20, height:20
+                            {type:'connectionNode_audio', name:'output_1', data:{
+                                type:1, x:-10, y:5, width:20, height:20
                             }},
-                            {type:'audio_meter_level', name:'right', data:{
-                                x:10, y:5, width:5, height:45, 
-                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            {type:'connectionNode_audio', name:'output_2', data:{
+                                type:1, x:-10, y:30, width:20, height:20
                             }},
-                            {type:'audio_meter_level', name:'left', data:{
-                                x:5, y:5, width:5, height:45,
-                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                
+                            {type:'path', name:'backing', data:{
+                                path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                                style:style.background
                             }},
-                        ],
+                
+                            {type:'path', name:'upperArrow', data:{
+                                path:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}],
+                                style:style.markings,
+                            }},
+                            {type:'path', name:'lowerArrow', data:{
+                                path:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}],
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'topHorizontal', data:{
+                                x:5, y:15, width:45, height:2, 
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'vertical', data:{
+                                x:27.5, y:15, width:2, height:25.5, 
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'bottomHorizontal', data:{
+                                x:5, y:40, width:24.5, height:2, 
+                                style:style.markings,
+                            }},
+                        ]
                     };
-                 
+                
                     //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.testObject,design);
+                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_duplicator,design);
                 
                     //circuitry
-                        var flow = {
-                            destination:null,
-                            pan_left:null, pan_right:null,
-                        };
-                        //destination
-                            flow._destination = __globals.audio.context.destination;
-                        //pan left/right
-                            flow.pan_left = __globals.audio.context.createStereoPanner();
-                                flow.pan_left.pan.setValueAtTime(1, __globals.audio.context.currentTime);
-                                flow.pan_left.connect(flow._destination);
-                            flow.pan_right = __globals.audio.context.createStereoPanner();
-                                flow.pan_right.pan.setValueAtTime(-1, __globals.audio.context.currentTime);
-                                flow.pan_right.connect(flow._destination);
-                        //audio connections
-                            design.connectionNode_audio.left.out().connect(flow.pan_left);
-                            design.connectionNode_audio.right.out().connect(flow.pan_right);
-                            design.connectionNode_audio.left.out().connect(design.audio_meter_level.left.audioIn());
-                            design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
-                            design.audio_meter_level.left.start();
-                            design.audio_meter_level.right.start();
+                        design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_1.in() );
+                        design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_2.in() );
+                    
+                    return obj;
+                };
+                this.basicSynthesizer = function(x,y){
+                    var attributes = {
+                        detuneLimits: {min:-100, max:100}
+                    };
+                    var style = {
+                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+                        h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+                        h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+                
+                        dial:{
+                            handle: 'fill:rgba(220,220,220,1)',
+                            slot: 'fill:rgba(50,50,50,1)',
+                            needle: 'fill:rgba(250,150,150,1)',
+                            outerArc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+                        }
+                    };
+                    var design = {
+                        type:'basicSynthesizer',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90}], 
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'audioOut', data: {
+                                type: 1, x: -15, y: 5, width: 30, height: 30
+                            }},
+                            {type:'connectionNode_data', name:'gain', data:{
+                                x: 12.5, y: -7.5, width: 15, height: 15,
+                                receive: function(address,data){
+                                    switch(address){
+                                        case '%': obj.dial.continuous.gain.set(data); break;
+                                        case '%t': 
+                                            obj.__synthesizer.gain(data.target,data.time,data.curve);
+                                            design.dial_continuous.gain.smoothSet(data.target,data.time,data.curve,false);
+                                        break;
+                                        default: break;
+                                    }
+                                }
+                            }},
+                            {type:'connectionNode_data', name:'attack', data:{
+                                x: 52.5, y: -7.5, width: 15, height: 15,
+                                receive: function(address,data){
+                                    if(address != '%'){return;}
+                                    design.dial_continuous.attack.set(data);
+                                } 
+                            }},
+                            {type:'connectionNode_data', name:'release', data:{
+                                x: 92.5, y: -7.5, width: 15, height: 15,
+                                receive: function(address,data){
+                                    if(address != '%'){return;}
+                                    design.dial_continuous.release.set(data);
+                                } 
+                            }},
+                            {type:'connectionNode_data', name:'detune', data:{
+                                x: 132.5, y: -7.5, width: 15, height: 15,
+                                receive: function(address,data){ 
+                                    switch(address){
+                                        case '%': design.dial_continuous.detune.set(data); break;
+                                        case '%t': 
+                                            obj.__synthesizer.detune((data.target*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min),data.time,data.curve);
+                                            design.dial_continuous.detune.smoothSet(data.target,data.time,data.curve,false);
+                                        break;
+                                        default: break;
+                                    }
+                                }
+                            }},
+                            {type:'connectionNode_data', name:'octave', data:{
+                                x: 170.5, y: -7.5, width: 15, height: 15,
+                                receive: function(address,data){
+                                    if(address != 'discrete'){return;}
+                                    design.dial_discrete.octave.select(data);
+                                } 
+                            }},
+                            {type:'connectionNode_data', name:'waveType', data:{
+                                x: 210.5, y: -7.5, width: 15, height: 15,
+                                receive: function(address,data){
+                                    if(address != 'discrete'){return;}
+                                    design.dial_discrete.waveType.select(data);
+                                }
+                            }},
+                            {type:'connectionNode_data', name:'periodicWave', data:{
+                                x: 232.5, y: 12.5, width: 15, height: 15,
+                                receive: function(address,data){
+                                    if(address != 'periodicWave'){return;}
+                                    obj.__synthesizer.periodicWave(data);
+                                }
+                            }},
+                            {type:'connectionNode_data', name:'midiNote', data:{
+                                x: 217.5, y: 37.5, width: 30, height: 30, angle:Math.PI/4,
+                                receive: function(address,data){
+                                    if(address != 'midiNumber'){return;}
+                                    obj.__synthesizer.perform(data);
+                                }
+                            }},
+                            {type:'connectionNode_data', name:'gainWobblePeriod', data:{
+                                x: 22.5, y: 82.5, width: 15, height: 15,
+                                receive: function(address,data){
+                                    if(address != '%'){return;}
+                                    design.dial_continuous.gainWobblePeriod.set(data);
+                                }
+                            }},
+                            {type:'connectionNode_data', name:'gainWobbleDepth', data:{
+                                x: 57.5, y: 82.5, width: 15, height: 15,
+                                receive: function(address,data){
+                                    if(address != '%'){return;}
+                                    design.dial_continuous.gainWobbleDepth.set(data);
+                                }
+                            }},
+                            {type:'connectionNode_data', name:'detuneWobblePeriod', data:{
+                                x: 107.5, y: 82.5, width: 15, height: 15,
+                                receive: function(address,data){
+                                    if(address != '%'){return;}
+                                    design.dial_continuous.detuneWobblePeriod.set(data);
+                                }
+                            }},
+                            {type:'connectionNode_data', name:'detuneWobbleDepth', data:{
+                                x: 142.5, y: 82.5, width: 15, height: 15,
+                                receive: function(address,data){
+                                    if(address != '%'){return;}
+                                    design.dial_continuous.detuneWobbleDepth.set(data);
+                                }
+                            }},
+                
+                
+                            {type:'path', name:'backing', data:{
+                                path:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90}],
+                                style:style.background
+                            }},
+                            {type:'rect', name:'periodicWaveType', data:{
+                                x: 230, y: 21.75, angle: 0,
+                                width: 10, height: 2.5,
+                                style:style.dial.slot,
+                            }},
+                            //gain dial
+                                {type:'text', name:'gain_gain', data:{x: 11,   y: 43, text: 'gain', style: style.h1}},
+                                {type:'text', name:'gain_0',    data:{x: 7,    y: 37, text: '0',    style: style.h2}},
+                                {type:'text', name:'gain_1/2',  data:{x: 16.5, y: 7,  text: '1/2',  style: style.h2}},
+                                {type:'text', name:'gain_1',    data:{x: 30,   y: 37, text: '1',    style: style.h2}},
+                            //attack dial
+                                {type:'text', name:'attack_gain', data:{x: 47,   y: 43, text: 'attack', style: style.h1}},
+                                {type:'text', name:'attack_0',    data:{x: 47,   y: 37, text: '0',      style: style.h2}},
+                                {type:'text', name:'attack_5',    data:{x: 58.5, y: 7,  text: '5',      style: style.h2}},
+                                {type:'text', name:'attack_10',   data:{x: 70,   y: 37, text: '10',     style: style.h2}},
+                            //release dial
+                                {type:'text', name:'release_gain', data:{x: 85,   y: 43, text: 'release', style: style.h1}},
+                                {type:'text', name:'release_0',    data:{x: 85,   y: 37, text: '0',       style: style.h2}},
+                                {type:'text', name:'release_5',    data:{x: 98.5, y: 7,  text: '5',       style: style.h2}},
+                                {type:'text', name:'release_10',   data:{x: 110,  y: 37, text: '10',      style: style.h2}},
+                            //detune dial
+                                {type:'text', name:'detune_gain', data:{x: 127,   y: 43, text: 'detune', style: style.h1}},
+                                {type:'text', name:'detune_-100', data:{x: 122,   y: 37, text: '-100',   style: style.h2}},
+                                {type:'text', name:'detune_0',    data:{x: 138.5, y: 7,  text: '0',      style: style.h2}},
+                                {type:'text', name:'detune_100',  data:{x: 150,   y: 37, text: '100',    style: style.h2}},
+                            //octave dial
+                                {type:'text', name:'octave_gain', data:{x: 167,    y: 43, text: 'octave', style: style.h1}},
+                                {type:'text', name:'octave_-3',   data:{x: 164,    y: 35, text: '-3',     style: style.h2}},
+                                {type:'text', name:'octave_-2',   data:{x: 160,    y: 24, text: '-2',     style: style.h2}},
+                                {type:'text', name:'octave_-1',   data:{x: 164,    y: 13, text: '-1',     style: style.h2}},
+                                {type:'text', name:'octave_0',    data:{x: 178.75, y: 8,  text: '0',      style: style.h2}},
+                                {type:'text', name:'octave_1',    data:{x: 190,    y: 13, text: '1',      style: style.h2}},
+                                {type:'text', name:'octave_2',    data:{x: 195,    y: 24, text: '2',      style: style.h2}},
+                                {type:'text', name:'octave_3',    data:{x: 190,    y: 35, text: '3',      style: style.h2}},
+                            //waveType dial
+                                {type:'text', name:'waveType_gain', data:{x: 211, y: 43, text: 'wave', style: style.h1}},
+                                {type:'text', name:'waveType_sin',  data:{x: 202, y: 35, text: 'sin',  style: style.h2}},
+                                {type:'text', name:'waveType_tri',  data:{x: 199, y: 21, text: 'tri',  style: style.h2}},
+                                {type:'text', name:'waveType_squ',  data:{x: 210, y: 9,  text: 'squ',  style: style.h2}},
+                                {type:'text', name:'waveType_saw',  data:{x: 227, y: 10, text: 'saw',  style: style.h2}},
+                            //gainWobblePeriod dial
+                                {type:'text', name:'gainWobble', data:{x: 13, y: 70, angle: -Math.PI/2,text: 'gain', style: style.h2}}, 
+                                {type:'text', name:'gainWobblePeriod_gain', data:{x: 21,   y: 84,      text: 'rate', style: style.h1}},
+                                {type:'text', name:'gainWobblePeriod_0',    data:{x: 16,   y: 77,      text: '0',    style: style.h2}},
+                                {type:'text', name:'gainWobblePeriod_50',   data:{x: 27.5, y: 49,      text: '50',   style: style.h2}},
+                                {type:'text', name:'gainWobblePeriod_100',  data:{x: 42,   y: 77,      text: '100',  style: style.h2}},
+                            //gainWobbleDepth dial
+                                {type:'text', name:'gainWobbleDepth_gain', data:{x: 54, y: 84, text: 'depth', style: style.h1}},
+                                {type:'text', name:'gainWobbleDepth_0',    data:{x: 51, y: 77, text: '0',     style: style.h2}},
+                                {type:'text', name:'gainWobbleDepth_50',   data:{x: 61, y: 49, text: '1/2',   style: style.h2}},
+                                {type:'text', name:'gainWobbleDepth_100',  data:{x: 77, y: 77, text: '1',     style: style.h2}},
+                            //detuneWobblePeriod dial
+                                {type:'text', name:'detuneWobble', data:{x: 98, y: 70, angle: -Math.PI/2, text: 'detune', style: style.h2}},    
+                                {type:'text', name:'detuneWobblePeriod_gain', data:{x: 105,   y: 84,      text: 'rate',   style: style.h1}},
+                                {type:'text', name:'detuneWobblePeriod_0',    data:{x: 100,   y: 77,      text: '0',      style: style.h2}},
+                                {type:'text', name:'detuneWobblePeriod_50',   data:{x: 111.5, y: 49,      text: '50',     style: style.h2}},
+                                {type:'text', name:'detuneWobblePeriod_100',  data:{x: 126,   y: 77,      text: '100',    style: style.h2}},
+                            //detuneWobbleDepth dial
+                                {type:'text', name:'detuneWobbleDepth_gain', data:{x: 140,   y: 84, text: 'depth', style: style.h1}},
+                                {type:'text', name:'detuneWobbleDepth_0',    data:{x: 135,   y: 77, text: '0',     style: style.h2}},
+                                {type:'text', name:'detuneWobbleDepth_50',   data:{x: 145.5, y: 49, text: '1/2',   style: style.h2}},
+                                {type:'text', name:'detuneWobbleDepth_100',  data:{x: 161,   y: 77, text: '1',     style: style.h2}},
+                
+                            {type:'button_rect', name:'panicButton', data: {
+                                x:197.5, y: 47.5, width:20, height:20, angle: Math.PI/4,
+                                style:{
+                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                                }, 
+                            }},   
+                
+                            {type:'dial_continuous',name:'gain',data:{
+                                x: 20, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
+                                onchange: function(value){ obj.__synthesizer.gain( value ); }
+                            }},
+                            {type:'dial_continuous',name:'attack',data:{
+                                x: 60, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
+                                onchange: function(value){ obj.__synthesizer.attack( value ); }
+                            }},
+                            {type:'dial_continuous',name:'release',data:{
+                                x: 100, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
+                                onchange: function(value){ obj.__synthesizer.release( value ); }
+                            }},
+                            {type:'dial_continuous',name:'detune',data:{
+                                x: 140, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
+                                onchange: function(value){ obj.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); }
+                            }},
+                            {type:'dial_discrete',name:'octave',data:{
+                                x: 180, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 7,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                onchange: function(value){ obj.__synthesizer.octave(value-3); }
+                            }},
+                            {type:'dial_discrete',name:'waveType',data:{
+                                x: 220, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4,  optionCount: 5,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                onchange: function(value){ obj.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); }
+                            }},
+                            {type:'dial_continuous',name:'gainWobblePeriod',data:{
+                                x: 30, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
+                                onchange: function(value){ obj.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
+                            }},
+                            {type:'dial_continuous',name:'gainWobbleDepth',data:{
+                                x: 65, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
+                                onchange: function(value){ obj.__synthesizer.gainWobbleDepth(value); },
+                            }},
+                            {type:'dial_continuous',name:'detuneWobblePeriod',data:{
+                                x: 114, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
+                                onchange: function(value){ obj.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
+                            }},
+                            {type:'dial_continuous',name:'detuneWobbleDepth',data:{
+                                x: 149, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
+                                onchange: function(value){ obj.__synthesizer.detuneWobbleDepth(value*100); }
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.basicSynthesizer,design);
+                
+                    //circuitry
+                        obj.__synthesizer = new parts.audio.synthesizer2(__globals.audio.context);
+                        obj.__synthesizer.out().connect( design.connectionNode_audio.audioOut.in() );
+                
+                    //setup
+                        design.dial_continuous.gain.set(0.5);
+                        design.dial_continuous.detune.set(0.5);
+                        design.dial_discrete.octave.select(3);
                 
                     return obj;
                 };
@@ -4746,7 +5267,7 @@
                                 onrelease:function(){console.log('dial_continuous onrelease');}
                             }},
                             {type:'dial_discrete',name:'dial_discrete',data:{
-                                x: 105, y: 22.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, 
+                                x: 105, y: 22.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, optionCount: 8,
                                 style:{handle:style.handle, slot:style.slot, needle:style.needle, outerArc:style.markings}, 
                                 onchange:function(){console.log('dial_discrete onchange');},
                                 onrelease:function(){console.log('dial_discrete onrelease');}
@@ -4910,230 +5431,295 @@
                 
                     return obj;
                 }
-            };
-            
-            __globals.objects = {};
-            __globals.objects.make_audioSink = function(x,y){
-                //set numbers
-                    var type = 'audioSink';
-                    var shape = {};
-                        shape.base = [{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}];
-                        shape.connector = { width: 20, height: 20 };
-                        shape.connections = {};
-                            shape.connections.audio = [];
-                                shape.connections.audio.push(
-                                    {
-                                        name: type+'.io.audio.in:right',
-                                        type: 0,
-                                        x:shape.base[2].x-shape.connector.width/2, 
-                                        y:shape.connector.height*0.25, 
-                                        width:shape.connector.width, 
-                                        height:shape.connector.height
-                                    },
-                                    {
-                                        name: type+'.io.audio.in:left',
-                                        type: 0,
-                                        x:shape.base[2].x-shape.connector.width/2, 
-                                        y:shape.base[2].y-shape.connector.height*1.25, 
-                                        width:shape.connector.width, 
-                                        height:shape.connector.height
-                                    }
-                                );
-                    
+                this.audio_sink = function(x,y){
                     var style = {
-                        background: 'fill:rgba(200,200,200,1)',
-                        text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;'
+                        background:'fill:rgba(200,200,200,1)',
+                        level:{
+                            backing:'fill:rgb(10,10,10)', 
+                            levels:['fill:rgb(250,250,250);','fill:rgb(200,200,200);'],
+                            marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                        },
                     };
-            
-                //main
-                var _mainObject = parts.basic.g(type, x, y);
-                    _mainObject._type = type;
-            
-                //circuitry
-                    //audio destination
-                        _mainObject._destination = __globals.audio.context.destination;
-                    //panning nodes
-                        var pan_right = __globals.audio.context.createStereoPanner();
-                            pan_right.pan.setValueAtTime(1, __globals.audio.context.currentTime);
-                            pan_right.connect(_mainObject._destination);
-                        var pan_left  = __globals.audio.context.createStereoPanner();
-                            pan_left.pan.setValueAtTime(-1, __globals.audio.context.currentTime);
-                            pan_left.connect(_mainObject._destination);
-            
-                //elements
-                    //backing
-                        var backing = parts.basic.path(null, shape.base, 'L', style.background);
-                        _mainObject.append(backing);
-                        __globals.mouseInteraction.declareObjectGrapple(backing, _mainObject, arguments.callee);
-               
-                    //generate selection area
-                        __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
-            
-                    //levels
-                        var audioMeter_right = parts.display.audio_meter_level('audioMeter_right', 10, 5, 0, 5, 45);
-                        _mainObject.append(audioMeter_right);
-                        audioMeter_right.start();
-                        var audioMeter_left = parts.display.audio_meter_level('audioMeter_left', 5, 5, 0, 5, 45);
-                        _mainObject.append(audioMeter_left);
-                        audioMeter_left.start();
-            
-                //connection nodes
-                    _mainObject.io = {};
-            
-                    //audio
-                        shape.connections.audio.forEach(function(data){
-                            _mainObject.io[data.name] = parts.dynamic.connectionNode_audio(data.name, data.type, data.x, data.y, data.width, data.height, __globals.audio.context);
-                            _mainObject.prepend(_mainObject.io[data.name]);
-                        });
-            
-                        _mainObject.io['audioSink.io.audio.in:right'].out().connect(audioMeter_right.audioIn());
-                        _mainObject.io['audioSink.io.audio.in:right'].out().connect(pan_right);
-                        _mainObject.io['audioSink.io.audio.in:left'].out().connect(audioMeter_left.audioIn());
-                        _mainObject.io['audioSink.io.audio.in:left'].out().connect(pan_left);
-            
-                return _mainObject;
+                    var design = {
+                        type:'audio_sink',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'right', data:{
+                                type:0, x:90, y:5, width:20, height:20
+                            }},
+                            {type:'connectionNode_audio', name:'left', data:{
+                                type:0, x:90, y:30, width:20, height:20
+                            }},
+                            {type:'audio_meter_level', name:'right', data:{
+                                x:10, y:5, width:5, height:45, 
+                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            }},
+                            {type:'audio_meter_level', name:'left', data:{
+                                x:5, y:5, width:5, height:45,
+                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            }},
+                        ],
+                    };
+                 
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_sink,design);
+                
+                    //circuitry
+                        var flow = {
+                            destination:null,
+                            pan_left:null, pan_right:null,
+                        };
+                        //destination
+                            flow._destination = __globals.audio.context.destination;
+                        //pan left/right
+                            flow.pan_left = __globals.audio.context.createStereoPanner();
+                                flow.pan_left.pan.setValueAtTime(1, __globals.audio.context.currentTime);
+                                flow.pan_left.connect(flow._destination);
+                            flow.pan_right = __globals.audio.context.createStereoPanner();
+                                flow.pan_right.pan.setValueAtTime(-1, __globals.audio.context.currentTime);
+                                flow.pan_right.connect(flow._destination);
+                        //audio connections
+                            //inputs to meters
+                                design.connectionNode_audio.left.out().connect(design.audio_meter_level.left.audioIn());
+                                design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
+                            //inputs to panning nodes
+                                design.connectionNode_audio.left.out().connect(flow.pan_left);
+                                design.connectionNode_audio.right.out().connect(flow.pan_right);
+                            //panning nodes to output 
+                                design.audio_meter_level.left.start();
+                                design.audio_meter_level.right.start();
+                
+                    return obj;
+                };
+                this.audio_scope = function(x,y){
+                    var attributes = {
+                        framerateLimits: {min:1, max:30}
+                    };
+                    var style = {
+                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+                        text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;'
+                    };
+                    var design = {
+                        type:'audio_scope',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'input', data:{
+                                type:0, x:195, y:5, width:10, height:20
+                            }},
+                            {type:'path', name:'backing', data:{
+                                path:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
+                                style:style.background
+                            }},
+                
+                            {type:'grapher_audioScope', name:'waveport', data:{
+                                x:5, y:5, width:150, height:100
+                            }},
+                            {type:'key_rect', name:'holdKey', data:{
+                                x:160, y:5, width:30, height:20,
+                                style:{
+                                    off:'fill:rgba(175,175,175,1)', press:'fill:rgba(220,220,220,1)', pressAndGlow:'fill:rgba(150,150,150,1)'
+                                },
+                                onkeydown:function(){design.grapher_audioScope.waveport.stop();},
+                                onkeyup:function(){design.grapher_audioScope.waveport.start();},
+                            }},
+                
+                            {type:'text', name:'framerate_name', data:{x: 155+6.5, y: 30+40, text: 'framerate', style: style.text}},
+                            {type:'text', name:'framerate_1',    data:{x: 155+4,   y: 30+34, text: '1',         style: style.text}},
+                            {type:'text', name:'framerate_15',   data:{x: 155+17,  y: 30+2,  text: '15',        style: style.text}},
+                            {type:'text', name:'framerate_30',   data:{x: 155+33,  y: 30+34, text: '30',        style: style.text}},
+                            {type:'dial_continuous', name:'framerate', data:{
+                                x:175, y:50, r:12,
+                                style:{
+                                    handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',
+                                    needle:'fill:rgba(250,150,250,1)', outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
+                                },
+                                onchange:function(a){
+                                    design.grapher_audioScope.waveport.refreshRate(
+                                        attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a)
+                                    );
+                                }
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_scope,design);
+                    
+                    //circuitry
+                        design.connectionNode_audio.input.out().connect(design.grapher_audioScope.waveport.getNode());
+                
+                    //setup
+                        design.grapher_audioScope.waveport.start();
+                        design.dial_continuous.framerate.set(1);
+                
+                    return obj;
+                };
             };
-            parts.audio.audioIn = function(
-                context
+            __globals.audio.context.resume().then(function(){
+                __globals.panes.menu.innerHTML = '';
+            },function(){
+                console.warn('I\'m not sure what to do now..I guess we just sit here in silence');
+            });
+            
+            
+            var viewportDimensions = __globals.utility.workspace.getViewportDimensions();
+            
+            //blocking screen
+                __globals.panes.menu.append(parts.basic.rect(null, 0, 0, viewportDimensions.width, viewportDimensions.height, 0, 'fill:rgba(255,255,255,0.9)'));
+            //explanation text
+                var text = __globals.utility.experimental.elementMaker('text','explanation',{
+                    x:10, y:30, 
+                    text:'because of the \'no autoplay\' feature in browsers; this site needs you to allow it to produce sound',
+                    style:'fill:rgba(0,0,0,1); font-size:15px; font-family:Courier New; pointer-events:none;'
+                });
+                __globals.panes.menu.append(text);
+                var textDimensions = text.getBBox();
+                __globals.utility.element.setTransform(text, {
+                    x:(viewportDimensions.width-textDimensions.width)/2,
+                    y:((viewportDimensions.height-textDimensions.height)/2)-30,
+                    s:1, r:0
+                });
+            //activation button
+                __globals.panes.menu.append(__globals.utility.experimental.elementMaker('button_rect','audioOn',{
+                    x:(viewportDimensions.width-100)/2, y:(viewportDimensions.height-50)/2,
+                    width:100, height:50,
+                    onclick:function(){
+                        __globals.audio.context.resume();
+                        __globals.panes.menu.innerHTML = '';
+                    }
+                }));
+            //button text
+                __globals.panes.menu.append(__globals.utility.experimental.elementMaker('text','explanation',{
+                    x:(viewportDimensions.width/2)-22.5, y:(viewportDimensions.height/2)+5, 
+                    text:'allow',
+                    style:'fill:rgba(0,0,0,1); font-size:15px; font-family:Courier New; pointer-events:none;'
+                }));
+
+            
+            parts.audio.audioFilePlayer = function(
+                context,
             ){
                 //flow chain
                     var flow = {
-                        audioDevice: null,
-                        outAggregator: {}
+                        audioBuffers:[],
+                        bufferSource:{},
+                        channelSplitter:{},
+                        leftOut:{}, rightOut:{}
                     };
             
-                //outAggregator
-                    flow.outAggregator.gain = 1;
-                    flow.outAggregator.node = context.createGain();
-                    __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
+            
+                //channelSplitter
+                    flow.channelSplitter = context.createChannelSplitter(2);
+            
+                //leftOut
+                    flow.leftOut.gain = 1;
+                    flow.leftOut.node = context.createGain();
+                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                    flow.channelSplitter.connect(flow.leftOut.node, 0);
+                //rightOut
+                    flow.rightOut.gain = 1;
+                    flow.rightOut.node = context.createGain();
+                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                    flow.channelSplitter.connect(flow.rightOut.node, 1);
             
             
                 //output node
-                    this.out = function(){return flow.outAggregator.node;}
-            
-                //methods
-                    this.listDevices = function(callback){
-                        navigator.mediaDevices.enumerateDevices().then(
-                            function(devices){
-                                callback(devices.filter((d) => d.kind === 'audioinput'));
+                    this.out_left  = function(){return flow.leftOut.node;}
+                    this.out_right = function(){return flow.rightOut.node;}
+                
+                //controls
+                    this.play = function(){
+                        flow.bufferSource = context.createBufferSource();
+                        flow.bufferSource.buffer = flow.audioBuffers[1];
+                        flow.bufferSource.connect(flow.channelSplitter);
+                        flow.bufferSource.start(0);
+                    }
+                    this.loadFile = function(URL,slot){
+                        var request = new XMLHttpRequest();
+                            request.open('GET', URL, true);
+                            request.responseType = 'arraybuffer';
+                            request.onload = function() {
+                                context.decodeAudioData(this.response, function(data) {
+                                    flow.audioBuffers[slot] = data;
+                                }, function(e){"Error with decoding audio data" + e.err});
                             }
-                        );
+                            request.send();
                     };
-                    this.selectDevice = function(deviceId){
-                        var promise = navigator.mediaDevices.getUserMedia({audio: { deviceId: deviceId}});
-                        promise.then(
-                            function(source){
-                                audioDevice = source;
-                                __globals.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
-                            },
-                            function(error){
-                                console.warn('could not find audio input device: "' + deviceId + '"');
-                                console.warn('\terror:',error);
-                            }
-                        );
-                    };
-                    this.gain = function(a){
-                        if(a==null){return flow.outAggregator.gain;}
-                        flow.outAggregator.gain = a;
-                        __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
+                    this._loadBuffer = function(bufferData,slot){
+                        flow.audioBuffers[slot] = bufferData;
                     };
             
                 //setup
-                    this.selectDevice('default');
+                    this.loadFile('http://metasophiea.com/apps/partyCalculator/tracks/4-piano_02.wav',0);
+                    this.loadFile('https://upload.wikimedia.org/wikipedia/commons/d/d7/16_-_Alexandra_02.ogg',1);
+                    this.loadFile('https://upload.wikimedia.org/wikipedia/en/7/7a/Penny_Lane_%28Beatles_song_-_sample%29.ogg',2);
+                    this.loadFile('https://upload.wikimedia.org/wikipedia/commons/transcoded/7/70/Exploration_mélodique_sur_les_accords_de_Tenderly_%28Exploration%29-en_wav.wav/Exploration_mélodique_sur_les_accords_de_Tenderly_%28Exploration%29-en_wav.wav.ogg',3);
+                    // this.loadFile('file:///na-homes/brandon/Downloads/Speaker%20-%20Headphones.mp3',1);
             };
-            __globals.objects.make_audioIn = function(x,y){
-                var attributes = {
-                    deviceList:[],
-                    currentSelection: 0
-                };
+            objects.testAudioObject = function(x,y,debug=false){
                 var style = {
-                    background: 'fill:rgba(200,200,200,1); stroke:none;',
-                    marking:'fill:none; stroke:rgb(160,160,160); stroke-width:1;pointer-events: none;',
-                    h1:'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
-                    h2:'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
-            
-                    readout: {background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'},
-                    button: {up:'fill:rgba(180,180,180,1)', hover:'fill:rgba(220,220,220,1)', down:'fill:rgba(170,170,170,1)', glow:'fill:rgba(220,200,220,1)'},
-                    dial: {handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',needle: 'fill:rgba(250,150,150,1)',outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'},
+                    background:'fill:rgba(200,200,200,1)',
                 };
                 var design = {
-                    type:'audioIn',
-                    x:x, y:y,
-                    base:{
-                        points:[
-                            {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
-                            {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
-                        ], 
+                    type: 'testAudioObject',
+                    x: x, y: y,
+                    base: {
+                        points:[{x:0,y:0},{x:50,y:0},{x:50,y:52.5},{x:0,y:52.5}], 
                         style:style.background
                     },
                     elements:[
-                            {type:'connectionNode_audio', name:'audioOut', data:{type: 1, x: -10, y: 15, width: 20, height: 20}},
-                            {type:'readout_sixteenSegmentDisplay', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
-                            {type:'readout_sixteenSegmentDisplay', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
-                            {type:'button_rect', name:'up',   data:{x:225, y: 15, width:15, height:10, style:style.button, onclick:function(){incSelection();}}},
-                            {type:'button_rect', name:'down', data:{x:225, y: 25, width:15, height:10, style:style.button, onclick:function(){decSelection();}}},
-                            {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, style:style.dial, onchange:function(value){obj.circuitry.unit.gain(value*2);}}},
-                            {type:'label', name:'gainLabel_name', data:{x:21.25, y:44, text:'gain', style:style.h1, angle:0}},
-                            {type:'label', name:'gainLabel_0',    data:{x:15, y:40, text:'0', style:style.h2, angle:0}},
-                            {type:'label', name:'gainLabel_1',    data:{x:28.75, y:7, text:'1', style:style.h2, angle:0}},
-                            {type:'label', name:'gainLabel_2',    data:{x:42.5, y:40, text:'2', style:style.h2, angle:0}},
-                            {type:'path', name:'upArrow',   data:{path:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], style:style.marking}},
-                            {type:'path', name:'downArrow', data:{path:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], style:style.marking}},
-                            {type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
+                        {type:'connectionNode_audio', name:'outRight', data: {
+                            type: 1, x: -10, y: 5, width: 20, height: 20
+                        }},
+                        {type:'connectionNode_audio', name:'outLeft', data: {
+                            type: 1, x: -10, y: 27.5, width: 20, height: 20
+                        }},
+            
+                        // {type:'button_rect', name:'panicButton', data: {
+                        //     x:15, y: 10, width:20, height:20,
+                        //     style:{
+                        //         up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                        //         down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                        //     },
+                        //     onclick: function(){
+                        //         var i = document.createElement('input');
+                        //         i.type = 'file'; i.id = '_global_metasophiea.com/code/js/liveEdit/loadsave.js';
+                        //         i.onchange = function(){
+                        //             var f = new FileReader();
+                        //             f.readAsBinaryString(this.files[0]);
+                        //             f.onload = function(){
+                        //                 // console.log(f.result);
+                        //                 __globals.audio.context.decodeAudioData(f.result, function(data){
+                        //                     obj.__audioFilePlayer._loadBuffer(data,1);
+                        //                 }, function(e){"Error with decoding audio data" + e.err});
+                        //             }
+                        //         };            
+                        //         document.body.appendChild(i);
+                        //         i.click();
+                        //     }
+                        // }},   
+            
+            
                     ]
                 };
             
                 //main object
-                    var obj = __globals.utility.experimental.objectBuilder(arguments.callee,design);
-            
-                    var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']});
-                        keycaptureObj.keyPress = function(key){
-                            switch(key){
-                                case 'ArrowUp': design.button_rect.up.click();  break;
-                                case 'ArrowDown': design.button_rect.down.click();  break;
-                                case 'ArrowLeft': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()-0.1);  break;
-                                case 'ArrowRight': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()+0.1);  break;
-                            }
-                        };
-            
+                    var obj = __globals.utility.experimental.objectBuilder(objects.testAudioObject,design);
             
                 //circuitry
-                    obj.circuitry = {
-                        unit: new parts.audio.audioIn(__globals.audio.context)
-                    };
-                    obj.circuitry.unit.out().connect( design.connectionNode_audio.audioOut.in() );
-                    obj.circuitry.unit.out().connect( design.audio_meter_level.audioIn.audioIn() );
-            
-                //internal functions
-                    function selectDevice(a){
-                        if(attributes.deviceList.length == 0){
-                            design.readout_sixteenSegmentDisplay.index.text(' n/a');
-                            design.readout_sixteenSegmentDisplay.index.print();
-                            design.readout_sixteenSegmentDisplay.text.text('no devices');
-                            design.readout_sixteenSegmentDisplay.text.print('smart');
-                            return;
-                        }
-                        if( a < 0 || a >= attributes.deviceList.length ){return;}
-                        attributes.currentSelection = a;
-            
-                        selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
-                        totalNum=''+attributes.deviceList.length;while(totalNum.length < 2){ totalNum = '0'+totalNum;}
-                        design.readout_sixteenSegmentDisplay.index.text(selectionNum+'/'+totalNum);
-                        design.readout_sixteenSegmentDisplay.index.print();
-            
-                        var text = attributes.deviceList[a].deviceId;
-                        if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
-                        design.readout_sixteenSegmentDisplay.text.text(text);
-                        design.readout_sixteenSegmentDisplay.text.print('smart');
-                    }
-                    function incSelection(){ selectDevice(attributes.currentSelection+1); }
-                    function decSelection(){ selectDevice(attributes.currentSelection-1); }
+                    obj.__audioFilePlayer = new parts.audio.audioFilePlayer(__globals.audio.context);
+                    obj.__audioFilePlayer.out_right().connect( design.connectionNode_audio.outRight.in() );
+                    obj.__audioFilePlayer.out_left().connect( design.connectionNode_audio.outLeft.in() );
             
                 //setup
-                    obj.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
-                    setTimeout(function(){selectDevice(0);},100);
-                    design.dial_continuous.outputGain.set(0.5);
-                    design.audio_meter_level.audioIn.start();
+                    setTimeout(function(){obj.__audioFilePlayer.play();},2000);
             
                 return obj;
             };
@@ -5142,19 +5728,36 @@
             
             
             //create objects
-                var audioIn_1 = __globals.objects.make_audioIn(300, 50);
-                __globals.panes.middleground.append( audioIn_1 );
+                var audioScope_1 = objects.audio_scope(50,10);
+                __globals.panes.middleground.append( audioScope_1 );
+                var audioScope_2 = objects.audio_scope(50,130);
+                __globals.panes.middleground.append( audioScope_2 );
             
-                var audioSink_1 = objects.audio_sink(50,50);
+                var audioDuplicator_1 = objects.audio_duplicator(300,30);
+                __globals.panes.middleground.append( audioDuplicator_1 );
+                var audioDuplicator_2 = objects.audio_duplicator(300,130);
+                __globals.panes.middleground.append( audioDuplicator_2 );
+            
+                var testAudioObject_1 = objects.testAudioObject(400,50);
+                __globals.panes.middleground.append( testAudioObject_1 );
+            
+                var audioSink_1 = objects.audio_sink(150, 275);
                 __globals.panes.middleground.append( audioSink_1 );
             
             //do connections
-                audioIn_1.io.audioOut.connectTo(audioSink_1.io.right );
+                testAudioObject_1.io.outRight.connectTo( audioDuplicator_1.io.input );
+                testAudioObject_1.io.outLeft.connectTo( audioDuplicator_2.io.input );
             
-            // __globals.utility.workspace.gotoPosition(-389.066, 78.6368, 2.3409, 0);
+                audioDuplicator_1.io.output_1.connectTo( audioScope_1.io.input );
+                audioDuplicator_2.io.output_1.connectTo( audioScope_2.io.input );;
+            
+                audioDuplicator_1.io.output_2.connectTo( audioSink_1.io.right );
+                audioDuplicator_2.io.output_2.connectTo( audioSink_1.io.left );
+            
+            //viewport position
+                __globals.utility.workspace.gotoPosition(-85.5379, -8.1652, 2.24189, 0);
 
 
         }
     }
-
 // })();

@@ -33,7 +33,7 @@ this.audio_sink = function(x,y){
     };
  
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.testObject,design);
+        var obj = __globals.utility.experimental.objectBuilder(objects.audio_sink,design);
 
     //circuitry
         var flow = {
@@ -50,12 +50,15 @@ this.audio_sink = function(x,y){
                 flow.pan_right.pan.setValueAtTime(-1, __globals.audio.context.currentTime);
                 flow.pan_right.connect(flow._destination);
         //audio connections
-            design.connectionNode_audio.left.out().connect(flow.pan_left);
-            design.connectionNode_audio.right.out().connect(flow.pan_right);
-            design.connectionNode_audio.left.out().connect(design.audio_meter_level.left.audioIn());
-            design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
-            design.audio_meter_level.left.start();
-            design.audio_meter_level.right.start();
+            //inputs to meters
+                design.connectionNode_audio.left.out().connect(design.audio_meter_level.left.audioIn());
+                design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
+            //inputs to panning nodes
+                design.connectionNode_audio.left.out().connect(flow.pan_left);
+                design.connectionNode_audio.right.out().connect(flow.pan_right);
+            //panning nodes to output 
+                design.audio_meter_level.left.start();
+                design.audio_meter_level.right.start();
 
     return obj;
 };

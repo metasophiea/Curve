@@ -4,15 +4,13 @@ __globals.objects = {};
 //synths
     var synthTester_1 = __globals.objects.make_synthTester(200,125,parts.audio.synthesizer3);
     __globals.panes.middleground.append( synthTester_1 );
-    // var basicSynth1_1 = __globals.objects.make_basicSynth1(200,25);
-    // __globals.panes.middleground.append( basicSynth1_1 );
-    // var basicSynth1_wobblingGain_1 = __globals.objects.make_basicSynth1_wobblingGain(200,125);
-    // __globals.panes.middleground.append( basicSynth1_wobblingGain_1 );
-    var basicSynth2_1 = __globals.objects.make_basicSynth2(200,25);
+    // var basicSynth2_1 = __globals.objects.make_basicSynth2(200,25);
+    var basicSynth2_1 = objects.basicSynthesizer(200,25);
     __globals.panes.middleground.append( basicSynth2_1 );
 
 //add objects
-    var audioSink_1 = __globals.objects.make_audioSink(-150,-35);
+    // var audioSink_1 = __globals.objects.make_audioSink(-150,-35);
+    var audioSink_1 = objects.audio_sink(-150,-35);
     __globals.panes.middleground.append( audioSink_1 );
 
     var audioDuplicator_1 = __globals.objects.make_audioDuplicator(100,25);
@@ -39,18 +37,18 @@ __globals.objects = {};
     pulseClock_1.io.out.connectTo(launchpad_1.io.pulseIn);
 
     //synthTester_1 
-        launchpad_1.io.out.connectTo(synthTester_1.io.midiNote);
-        synthTester_1.io.audioOut.connectTo(audioDuplicator_1.io.in);
+        // launchpad_1.io.out.connectTo(synthTester_1.io.midiNote);
+        // synthTester_1.io.audioOut.connectTo(audioDuplicator_1.io.in);
 
     //basicSynth2_1
-        // periodicWaveMaker_1.io.out.connectTo(basicSynth2_1.io.periodicWave);
-        // launchpad_1.io.out.connectTo(basicSynth2_1.io.midiNote);
-        // basicSynth2_1.io.audioOut.connectTo(audioDuplicator_1.io.in);
+        periodicWaveMaker_1.io.out.connectTo(basicSynth2_1.io.periodicWave);
+        launchpad_1.io.out.connectTo(basicSynth2_1.io.midiNote);
+        basicSynth2_1.io.audioOut.connectTo(audioDuplicator_1.io.in);
 
     audioDuplicator_1.io.out_1.connectTo(audioDuplicator_2.io.in);
     audioDuplicator_1.io.out_2.connectTo(audioScope_1.io.audioIn);
-    audioDuplicator_2.io.out_1.connectTo(audioSink_1.io['audioSink.io.audio.in:right']);
-    audioDuplicator_2.io.out_2.connectTo(audioSink_1.io['audioSink.io.audio.in:left']);
+    audioDuplicator_2.io.out_1.connectTo(audioSink_1.io.right);
+    audioDuplicator_2.io.out_2.connectTo(audioSink_1.io.left);
 
 //additional setting up
     launchpad_1.importData({

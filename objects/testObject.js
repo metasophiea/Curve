@@ -66,7 +66,7 @@ this.testObject = function(x,y,debug=false){
                 onrelease:function(){console.log('dial_continuous onrelease');}
             }},
             {type:'dial_discrete',name:'dial_discrete',data:{
-                x: 105, y: 22.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, 
+                x: 105, y: 22.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, optionCount: 8,
                 style:{handle:style.handle, slot:style.slot, needle:style.needle, outerArc:style.markings}, 
                 onchange:function(){console.log('dial_discrete onchange');},
                 onrelease:function(){console.log('dial_discrete onrelease');}

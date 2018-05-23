@@ -53,7 +53,7 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
         //keyboard input, direct the keyboard input to it. If the object doesn't care about this
         //key or if input is not accepted; use the global functions
         var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
-        if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeydown')){
+        if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeydown','workspace')){
             if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown(event)){ return; }
         }
 
@@ -105,7 +105,7 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
         //keyboard input, direct the keyboard input to it. If the object doesn't care about this
         //key or if input is not accepted; use the global functions
         var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
-        if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeyup')){
+        if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeyup','workspace')){
             if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup(event)){ return; }
         }
                             

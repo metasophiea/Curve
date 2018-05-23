@@ -8,6 +8,7 @@
             {{include:system/setup}}
             {{include:parts/parts.js}}
             {{include:objects/objects.js}}
+            {{include:menu/main.js}}
             
             // {{include:testSituations/1 - elements test/main.js}}
             // {{include:testSituations/2 - synth test/main.js}}
@@ -21,5 +22,4 @@
             {{include:testSituations/10 - recorded audio/main.js}}
         }
     }
-
 // })();

@@ -1,24 +1,49 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-05-23
+  - began work on the overlay menu
+  - updated svg element layout to have different global panes, also there's an
+    improved system for finding the scale of those global panes
+  - changed how object.requestInteraction works; now it requires a global pane
+    name to work with. This is so one can differentiate between actions for the
+    workspace and ones for the menu. Currently, most mouse actions aren't really
+    necessary - buttons and sliders work by their own anyway, and menu items
+    aren't moveable - but things change and things should be open to this.
+
+
+2018-05-22
+  - redid audio_scope and audio_duplicator in new style, and put them in the 
+    objects folder
+  - successfully got the audio producing node to split the loaded track into its
+    left and right channels
+
+
+2018-05-21
+  - another day, another attempt at that shebang thing in gravity
+  - redid the basic synthesizer object with the new object builder system
+  - created basic audio playback object (still working on 'uploading' files)
+
+
 2018-05-18
   - redid the paste fix from yesterday, to put the 'declareObjectGrapple' back
     into the object builder
-  - fix in autio_meter_level where not setting the angle value would produce the
-    element upside-down. It now defaults to 0 so that doesn't happen.
+  - fix in autio_meter_level, where not setting the angle value would produce
+    the element upside-down. It now defaults to 0 so that doesn't happen.
   - redid object builder to have z position control, it's also just flatly
     better now
   - making all the element callbacks lower case (it was inconsistent before)
-  - another attempt at making gravity work everywhere (now mac works..we'll see)
+  - another attempt at making gravity work everywhere (now mac works..we'll 
+    see)
 
 
 2018-05-17
-  - fixed keyboard interaction from yesterday (the logic was broken) there's now
-    also the option of 'all' so you don't have to declare everything
+  - fixed keyboard interaction from yesterday (the logic was broken) there's
+    now also the option of 'all' so you don't have to declare everything
   - fixed onmouseup problem in button_rect (it's that this/timeout thing)
 
   bugs
   - the new object-design concept has totally broken the paste functionality :/
-  -> scratch that; I fixed it by pulling the 'declareObjectGrapple' function out
-    ..still a little wonky I feel
+  -> scratch that; I fixed it by pulling the 'declareObjectGrapple' function 
+    out ..still a little wonky I feel
 
 
 2018-05-16
@@ -60,13 +85,14 @@
 
 2018-05-08
   - seems the feedback problem was caused by the 'Q' being set way too high. It
-    used to be at 10000, but now it's at 0.1 and things are much more reasonable
+    used to be at 10000, but now it's at 0.1 and things are much more 
+    reasonable
   - wrote up simple filter object
 
   future ideas
   - none of that 'power on' stuff to get round the new "no auto-play" features,
-    instead, I'll just rely on some other activation method external to the main
-    system. Keeps things clean I think
+    instead, I'll just rely on some other activation method external to the
+    main system. Keeps things clean I think
 
 
 2018-05-04
@@ -74,8 +100,8 @@
     can go into 'chrome://flags/' and turn it off, but this is only a 
     development solution. There's going to have to be some sort of activation
     method..perhaps a gain dial on the audio sink that's set to zero.
-    - added a 'power' button to the audio sink, but this will have to be changed
-      to something else eventually
+    - added a 'power' button to the audio sink, but this will have to be
+      changed to something else eventually
   - wrote synthesizer 3 which is gainJourney based (though it accommodates the
     velocity of a note)
   - wrote up a reverb unit and object, which uses those impulse responses from
@@ -123,16 +149,16 @@
 
   future ideas
   - we're going to have to make more self-contained synthesizers instead of this
-    multi-unit idea, as things are pretty heavy on the processor, and there seems
-    to be a lot of time spent on fixing things that aren't that necessary (like
-    the warbler sending the correct gain adjust signals fast enough, and the dial
-    being able to keep up..slow moves are pretty much fine)
+    multi-unit idea, as things are pretty heavy on the processor, and there 
+    seems to be a lot of time spent on fixing things that aren't that necessary
+    (like the warbler sending the correct gain adjust signals fast enough, and
+    the dial being able to keep up..slow moves are pretty much fine)
       It goes slightly against my desire to do everything in atomic parts (or at
     least, have the option to) but here we are. Audiotool is contained like that.
-    Logic, Acid, etc. all the same. I suppose its a battle between wanting to make
-    things as open as possible, which led me to this everything-atomic way, but I 
-    think I can provide the same level of control with a more integrated (and
-    efficient) units.
+    Logic, Acid, etc. all the same. I suppose its a battle between wanting to
+    make things as open as possible, which led me to this everything-atomic way,
+    but I think I can provide the same level of control with a more integrated
+    (and efficient) units.
 
 
 2018-04-27
@@ -144,9 +170,9 @@
     code more and don't rely on the individual sliders for panel-wide updates
   - audio meter part; complete with level; slow-moving background level and 
     markings (looks pretty pro too)
-  - tried making a 'warbler' which changes the gain of a synthesizer a lot. Seems
-    to break manual control though, and if you go fast enough the dial doesn't
-    move 
+  - tried making a 'warbler' which changes the gain of a synthesizer a lot. 
+    Seems to break manual control though, and if you go fast enough the dial
+    doesn't move 
   
 
 2018-04-26

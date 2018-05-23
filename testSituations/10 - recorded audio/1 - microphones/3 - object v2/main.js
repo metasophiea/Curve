@@ -1,5 +1,4 @@
 __globals.objects = {};
-{{include:../../../9 - audio effect units/objects/audioSink.js}}
 {{include:parts/*}}
 {{include:objects/*}}
 /**/
@@ -7,7 +6,7 @@ __globals.objects = {};
 
 
 //create objects
-    var audioIn_1 = __globals.objects.make_audioIn(300, 50);
+    var audioIn_1 = __globals.objects.make_audioIn(200, 50);
     __globals.panes.middleground.append( audioIn_1 );
 
     var audioSink_1 = objects.audio_sink(50,50);
@@ -16,4 +15,5 @@ __globals.objects = {};
 //do connections
     audioIn_1.io.audioOut.connectTo(audioSink_1.io.right );
 
-// __globals.utility.workspace.gotoPosition(-389.066, 78.6368, 2.3409, 0);
+//viewport position
+    __globals.utility.workspace.gotoPosition(-106.304, -98.9442, 2.57551, 0);

@@ -117,7 +117,7 @@ __globals.selection = new function(){
                 // then add on the mouses's position, or the provided position
                     if(!position){
                         // //use viewport for position (functional, but unused)
-                        //     var position = __globals.utility.element.getTransform(__globals.panes.global);
+                        //     var position = __globals.utility.element.getTransform(__globals.panes.workspace);
                         //     position = {x:-position.x/position.s, y:-position.y/position.s};
 
                         //use mouse position

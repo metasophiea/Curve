@@ -3,11 +3,14 @@
 //        currentPosition                 ()
 //        gotoPosition                    (x,y,z,r)
 //        getPane                         (element)
+//        getGlobal                       (element)
 //        objectUnderPoint                (x,y) (browser position)
 //        pointConverter
 //            browser2workspace           (x,y)
 //            workspace2browser           (x,y)
 //        dotMaker                        (x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;')
+//        getGlobalScale                  (element)
+//        getViewportDimensions           ()
 //    
 //    element
 //        getTransform                    (element)
@@ -48,13 +51,17 @@
 __globals.utility = new function(){
     this.workspace = new function(){
         this.currentPosition = function(){
-            return __globals.utility.element.getTransform(__globals.panes.global);
+            return __globals.utility.element.getTransform(__globals.panes.workspace);
         };
         this.gotoPosition = function(x,y,z,r){
-            __globals.utility.element.setTransform(__globals.panes.global, {x:x,y:y,s:z,r:r});
+            __globals.utility.element.setTransform(__globals.panes.workspace, {x:x,y:y,s:z,r:r});
         };
         this.getPane = function(element){
             while( !element.getAttribute('pane') ){ element = element.parentElement; }
+            return element;
+        };
+        this.getGlobal = function(element){
+            while( !element.getAttribute('global') ){ element = element.parentElement; }
             return element;
         };
         this.objectUnderPoint = function(x,y){
@@ -69,11 +76,11 @@ __globals.utility = new function(){
         };
         this.pointConverter = new function(){
             this.browser2workspace = function(x,y){
-                var globalTransform = __globals.utility.element.getTransform(__globals.panes.global);
+                var globalTransform = __globals.utility.element.getTransform(__globals.panes.workspace);
                 return {'x':(x-globalTransform.x)/globalTransform.s, 'y':(y-globalTransform.y)/globalTransform.s};
             };
             this.workspace2browser = function(x,y){
-                var globalTransform = __globals.utility.element.getTransform(__globals.panes.global);
+                var globalTransform = __globals.utility.element.getTransform(__globals.panes.workspace);
                 return {'x':(x*globalTransform.s)+globalTransform.x, 'y':(y*globalTransform.s)+globalTransform.y};
             };
         };
@@ -84,6 +91,12 @@ __globals.utility = new function(){
             g.appendChild(dot);
             g.appendChild(textElement);
             return g;
+        };
+        this.getGlobalScale = function(element){
+            return __globals.utility.element.getTransform(__globals.utility.workspace.getGlobal(element)).s
+        };
+        this.getViewportDimensions = function(){
+            return {width:__globals.svgElement.width.baseVal.value, height:__globals.svgElement.height.baseVal.value};
         };
     };
     this.element = new function(){
@@ -125,7 +138,7 @@ __globals.utility = new function(){
         };
         this.getBoundingBox = function(element){
             var tempG = document.createElementNS('http://www.w3.org/2000/svg','g');
-            __globals.panes.global.append(tempG);
+            __globals.panes.workspace.append(tempG);
     
             element = element.cloneNode(true);
             tempG.append(element);
@@ -142,17 +155,17 @@ __globals.utility = new function(){
         };
     };
     this.object = new function(){
-        this.requestInteraction = function(x,y,type){
+        this.requestInteraction = function(x,y,type,globalName){
             if(!x || !y){return true;}
             var temp = document.elementFromPoint(x,y);
     
             if(temp.hasAttribute('workspace')){return true;}
-            while(!temp.hasAttribute('pane')){ 
+            while(!temp.hasAttribute('global')){
                 if(temp[type] || temp.hasAttribute(type)){return false;}
                 temp = temp.parentElement;
             }
             
-            return true;
+            return temp.getAttribute('pane')==globalName;
         };
         this.disconnectEverything = function(object){
             console.warn('you\'re using this?');
@@ -489,10 +502,12 @@ __globals.utility = new function(){
             if(!data.style){data.style={};}
 
             switch(type){
-                default: return null; break;
+                default: console.warn('Unknown element: '+ type); return null; break;
 
                 //basic
+                    case 'rect': return parts.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
                     case 'path': return parts.basic.path(name, data.path, data.lineType, data.style); break;
+                    case 'text': return parts.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
                 
                 //display
                     case 'label': return parts.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;
@@ -505,8 +520,9 @@ __globals.utility = new function(){
                     case 'rastorDisplay': return parts.display.rastorDisplay(name, data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage); break;
                     case 'glowbox_rect': return parts.display.glowbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim); break;
                     case 'grapher': return parts.display.grapher(name, data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing); break;
-                    case 'grapher_periodicWave': return parts.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.middlegroundStyle, data.backgroundStyle, data.backgroundTextStyle, data.backingStyle); break;
-                
+                    case 'grapher_periodicWave': return parts.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing); break;
+                    case 'grapher_audioScope': return parts.display.grapher_audioScope(name, data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing); break;
+
                 //control
                     case 'button_rect': 
                         var temp = parts.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle ,data.style.up, data.style.hover, data.style.down, data.style.glow);
@@ -566,7 +582,7 @@ __globals.utility = new function(){
                         temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
                         return temp;
                     break;
-                    case 'dial_discrete': 
+                    case 'dial_discrete':
                         var temp = parts.control.dial_discrete(
                             name,
                             data.x, data.y, data.r,
@@ -616,11 +632,13 @@ __globals.utility = new function(){
                 __globals.mouseInteraction.declareObjectGrapple(design.base, obj, creatorMethod);
 
             //generate elements
-                for(var a = 0; a < design.elements.length; a++){
-                    if(!design[design.elements[a].type]){design[design.elements[a].type]={};}
-                    if(design.elements[a].name in design[design.elements[a].type]){console.warn('error: element with the name "'+design.elements[a].name+'" already exists. Element:',design.elements[a],'will not be added');continue;}
-                    design[design.elements[a].type][design.elements[a].name] = __globals.utility.experimental.elementMaker(design.elements[a].type,design.elements[a].name,design.elements[a].data);
-                    obj.append(design[design.elements[a].type][design.elements[a].name]);
+                if(design.elements){
+                    for(var a = 0; a < design.elements.length; a++){
+                        if(!design[design.elements[a].type]){design[design.elements[a].type]={};}
+                        if(design.elements[a].name in design[design.elements[a].type]){console.warn('error: element with the name "'+design.elements[a].name+'" already exists. Element:',design.elements[a],'will not be added');continue;}
+                        design[design.elements[a].type][design.elements[a].name] = __globals.utility.experimental.elementMaker(design.elements[a].type,design.elements[a].name,design.elements[a].data);
+                        obj.append(design[design.elements[a].type][design.elements[a].name]);
+                    }
                 }
 
             //io setup

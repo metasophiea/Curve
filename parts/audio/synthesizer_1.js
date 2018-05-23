@@ -1,4 +1,4 @@
-this.synthesizer_basic = function(
+this.synthesizer_1 = function(
     context,
     waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
     gain=1, 

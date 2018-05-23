@@ -93,7 +93,7 @@ this.dial_continuous = function(
         object.ondblclick = function(){ this.set(0.5); };
         object.onwheel = function(event){
             var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-            var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
+            var globalScale = __globals.utility.workspace.getGlobalScale(object);
 
             this.set( this.get() - move/(10*globalScale) );
         };
@@ -110,7 +110,7 @@ this.dial_continuous = function(
                 var mux = __globals.svgElement.tempRef._data.mux;
                 var value = __globals.svgElement.tempRef._data.initialValue;
                 var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
-                var divider = __globals.utility.element.getTransform(__globals.panes.global).s;
+                var divider = __globals.utility.workspace.getGlobalScale(object);
 
                 __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
             };

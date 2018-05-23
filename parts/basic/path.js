@@ -1,4 +1,4 @@
-this.path = function(id=null, path=[], lineType='L', style='fill:none; stroke:rgb(255,0,0); stroke-width:1;'){
+this.path = function(id=null, path=[], lineType='L', style='fill:rgba(0,0,0,0);'){
     // uppercase: absolute, lowercase: relative
     // M = moveto
     // L = lineto

@@ -115,7 +115,7 @@
                             position.y = __globals.svgElement.temp_oldObjectPositions[a].y;
                             position.s = __globals.svgElement.temp_oldObjectPositions[a].s;
                             position.r = __globals.svgElement.temp_oldObjectPositions[a].r;
-                        var globalScale = __globals.utility.element.getTransform(__globals.panes.global).s;
+                        var globalScale = __globals.utility.workspace.getGlobalScale(__globals.selection.selectedObjects[a]);
 
                         position.x = (position.x-(clickPosition[0]-event.x)/globalScale);
                         position.y = (position.y-(clickPosition[1]-event.y)/globalScale);
@@ -191,14 +191,17 @@
 // onmousemove functions
     __globals.mouseInteraction.onmousemove_functionList = [];
     __globals.svgElement.onmousemove = function(event){
-        if(!__globals.utility.object.requestInteraction(event.x,event.y,'onmousemove')){return;}
-        for(var a = 0; a < __globals.mouseInteraction.onmousemove_functionList.length; a++){
-            var shouldRun = true;
-            for(var b = 0; b < __globals.mouseInteraction.onmousemove_functionList[a].specialKeys.length; b++){
-                shouldRun = shouldRun && event[__globals.mouseInteraction.onmousemove_functionList[a].specialKeys[b]];
-                if(!shouldRun){break;}
+        //menu
+        //workspace
+        if(__globals.utility.object.requestInteraction(event.x,event.y,'onmousemove','workspace')){
+            for(var a = 0; a < __globals.mouseInteraction.onmousemove_functionList.length; a++){
+                var shouldRun = true;
+                for(var b = 0; b < __globals.mouseInteraction.onmousemove_functionList[a].specialKeys.length; b++){
+                    shouldRun = shouldRun && event[__globals.mouseInteraction.onmousemove_functionList[a].specialKeys[b]];
+                    if(!shouldRun){break;}
+                }
+                if(shouldRun){ __globals.mouseInteraction.onmousemove_functionList[a].function(event); break; }
             }
-            if(shouldRun){ __globals.mouseInteraction.onmousemove_functionList[a].function(event); break; }
         }
     };
 
@@ -222,14 +225,16 @@
 // onmousedown functions
     __globals.mouseInteraction.onmousedown_functionList = [];
     __globals.svgElement.onmousedown = function(event){
-        if(!__globals.utility.object.requestInteraction(event.x,event.y,'onmousedown') || event.button != 0){return;}
+        //menu
+        //workspace
+        if(!__globals.utility.object.requestInteraction(event.x,event.y,'onmousedown','workspace') || event.button != 0){return;}
         for(var a = 0; a < __globals.mouseInteraction.onmousedown_functionList.length; a++){
             var shouldRun = true;
             for(var b = 0; b < __globals.mouseInteraction.onmousedown_functionList[a].specialKeys.length; b++){
                 shouldRun = shouldRun && event[__globals.mouseInteraction.onmousedown_functionList[a].specialKeys[b]];
                 if(!shouldRun){break;}
             }
-            if(shouldRun){ __globals.mouseInteraction.onmousedown_functionList[a].function(event); break; }
+            if(shouldRun){ __globals.mouseInteraction.onmousedown_functionList[a].function(event,__globals.panes.workspace); break; }
         }
     };
 
@@ -237,7 +242,7 @@
     __globals.mouseInteraction.onmousedown_functionList.push(
         {
             'specialKeys':['shiftKey'],
-            'function':function(event){
+            'function':function(event,globalPane){
                     //setup
                     __globals.svgElement.tempData = {};
                     __globals.svgElement.tempElements = [];
@@ -319,8 +324,8 @@
                             this.onmousemove = __globals.svgElement.onmousemove_old;
                             delete __globals.svgElement.onmousemove_old;
                             this.onmouseleave = null;
-                            __globals.panes.global.removeAttribute('oldPosition');
-                            __globals.panes.global.removeAttribute('clickPosition');
+                            globalPane.removeAttribute('oldPosition');
+                            globalPane.removeAttribute('clickPosition');
                             this.onmouseleave = null;
                             this.onmouseup = null;
                     };
@@ -336,10 +341,10 @@
     __globals.mouseInteraction.onmousedown_functionList.push(
         {
             'specialKeys':[],
-            'function':function(event){
+            'function':function(event,globalPane){
                 __globals.selection.deselectEverything();
-                __globals.svgElement.temp_oldPosition = __globals.utility.element.getTransform(__globals.panes.global);
-                __globals.panes.global.setAttribute('clickPosition','['+event.x +','+ event.y+']');
+                __globals.svgElement.temp_oldPosition = __globals.utility.element.getTransform(globalPane);
+                __globals.panes.workspace.setAttribute('clickPosition','['+event.x +','+ event.y+']');
 
                 __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
                 __globals.svgElement.onmousemove = function(event){
@@ -348,17 +353,17 @@
                         position.y = __globals.svgElement.temp_oldPosition.y;
                         position.s = __globals.svgElement.temp_oldPosition.s;
                         position.r = __globals.svgElement.temp_oldPosition.r;
-                    var clickPosition = JSON.parse(__globals.panes.global.getAttribute('clickPosition'));
+                    var clickPosition = JSON.parse(globalPane.getAttribute('clickPosition'));
                     position.x = position.x-(clickPosition[0]-event.x);
                     position.y = position.y-(clickPosition[1]-event.y);
-                    __globals.utility.element.setTransform(__globals.panes.global, position);
+                    __globals.utility.element.setTransform(globalPane, position);
                 };
 
                 __globals.svgElement.onmouseup = function(){
                     this.onmousemove = __globals.svgElement.onmousemove_old;
                     delete __globals.svgElement.onmousemove_old;
-                    __globals.panes.global.removeAttribute('oldPosition');
-                    __globals.panes.global.removeAttribute('clickPosition');
+                    globalPane.removeAttribute('oldPosition');
+                    globalPane.removeAttribute('clickPosition');
                     this.onmouseleave = null;
                     this.onmouseup = null;
                 };
@@ -380,14 +385,17 @@
 // onwheel functions
     __globals.mouseInteraction.onwheel_functionList = [];
     __globals.svgElement.onwheel = function(event){
-        if(!__globals.utility.object.requestInteraction(event.x,event.y,'onwheel')){return;}
-        for(var a = 0; a < __globals.mouseInteraction.onwheel_functionList.length; a++){
-            var shouldRun = true;
-            for(var b = 0; b < __globals.mouseInteraction.onwheel_functionList[a].specialKeys.length; b++){
-                shouldRun = shouldRun && event[__globals.mouseInteraction.onwheel_functionList[a].specialKeys[b]];
-                if(!shouldRun){break;}
+        //menu
+        //workspace
+        if(__globals.utility.object.requestInteraction(event.x,event.y,'onwheel','workspace')){
+            for(var a = 0; a < __globals.mouseInteraction.onwheel_functionList.length; a++){
+                var shouldRun = true;
+                for(var b = 0; b < __globals.mouseInteraction.onwheel_functionList[a].specialKeys.length; b++){
+                    shouldRun = shouldRun && event[__globals.mouseInteraction.onwheel_functionList[a].specialKeys[b]];
+                    if(!shouldRun){break;}
+                }
+                if(shouldRun){ __globals.mouseInteraction.onwheel_functionList[a].function(event); break; }
             }
-            if(shouldRun){ __globals.mouseInteraction.onwheel_functionList[a].function(event); break; }
         }
     };
 
@@ -396,7 +404,7 @@
             'specialKeys':[],
             'function':function(event){
                 var zoomLimits = {'max':10, 'min':0.1};
-                var position = __globals.utility.element.getTransform(__globals.panes.global);
+                var position = __globals.utility.element.getTransform(__globals.panes.workspace);
 
                 var XPosition = (event.x - position.x)/position.s;
                 var YPosition = (event.y - position.y)/position.s;
@@ -411,7 +419,7 @@
                 position.x = position.x - ( newPixX - oldPixX );
                 position.y = position.y - ( newPixY - oldPixY );
 
-                __globals.utility.element.setTransform(__globals.panes.global, position);
+                __globals.utility.element.setTransform(__globals.panes.workspace, position);
             }
         }
     );
