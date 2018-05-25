@@ -36,6 +36,8 @@
 //        cartesian2polar                 (x,y)
 //        boundingBoxFromPoints           (points:[{x:0,y:0},...])
 //        intersectionOfTwoLineSegments   (segment1:{{x:0,y:0},{x:0,y:0}}, segment2:{{x:0,y:0},{x:0,y:0}})
+//        seconds2time                    (seconds)
+//        padString                       (string,length)
 //        detectOverlap                   (poly_a:[{x:0,y:0},...], poly_b:[{x:0,y:0},...], box_a:[{x:0,y:0},{x:0,y:0}]=null, box_b:[{x:0,y:0},{x:0,y:0}]=null)
 //        curveGenerator
 //            linear                      (stepCount, start=0, end=1)
@@ -279,6 +281,29 @@ __globals.utility = new function(){
                 'inSeg1': (u1 >= 0 && u1 <= 1),
                 'inSeg2': (u2 >= 0 && u2 <= 1)
             };
+        };
+        this.seconds2time = function(seconds){
+            var result = {h:0, m:0, s:0};
+            
+            result.h = Math.floor(seconds/3600);
+            seconds = seconds - result.h*3600;
+
+            result.m = Math.floor(seconds/60);
+            seconds = seconds - result.m*60;
+
+            result.s = seconds;
+
+            return result;
+        };
+        this.padString = function(string,length,padding=' '){
+            if(padding.length<1){return string;}
+            string = ''+string;
+
+            while(string.length < length){
+                string = padding + string;
+            }
+
+            return string;
         };
         this.detectOverlap = function(poly_a, poly_b, box_a, box_b){
             // Quick Judgement with bounding boxes

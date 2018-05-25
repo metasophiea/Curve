@@ -42,6 +42,8 @@
             //        polar2cartesian                 (angle,distance)
             //        cartesian2polar                 (x,y)
             //        boundingBoxFromPoints           (points:[{x:0,y:0},...])
+            //        seconds2time                    (seconds)
+            //        padString                       (string,length)
             //        detectOverlap                   (poly_a:[{x:0,y:0},...], poly_b:[{x:0,y:0},...], box_a:[{x:0,y:0},{x:0,y:0}]=null, box_b:[{x:0,y:0},{x:0,y:0}]=null)
             //        curveGenerator
             //            linear                      (stepCount, start=0, end=1)
@@ -285,6 +287,29 @@
                             'inSeg1': (u1 >= 0 && u1 <= 1),
                             'inSeg2': (u2 >= 0 && u2 <= 1)
                         };
+                    };
+                    this.seconds2time = function(seconds){
+                        var result = {h:0, m:0, s:0};
+                        
+                        result.h = Math.floor(seconds/3600);
+                        seconds = seconds - result.h*3600;
+            
+                        result.m = Math.floor(seconds/60);
+                        seconds = seconds - result.m*60;
+            
+                        result.s = seconds;
+            
+                        return result;
+                    };
+                    this.padString = function(string,length,padding=' '){
+                        if(padding.length<1){return string;}
+                        string = ''+string;
+            
+                        while(string.length < length){
+                            string = padding + string;
+                        }
+            
+                        return string;
                     };
                     this.detectOverlap = function(poly_a, poly_b, box_a, box_b){
                         // Quick Judgement with bounding boxes
@@ -1531,17 +1556,6 @@
 
             var parts = new function(){
                 this.basic = new function(){
-                    this.line = function(id=null, x1=0, y1=0, x2=10, y2=10, style='stroke:rgb(255,0,0); stroke-width:1'){
-                        var element = document.createElementNS('http://www.w3.org/2000/svg','line');
-                        element.id = id;
-                        element.setAttribute('x1',x1);
-                        element.setAttribute('y1',y1);
-                        element.setAttribute('x2',x2);
-                        element.setAttribute('y2',y2);
-                        element.setAttribute('style',style);
-                    
-                        return element;
-                    };
                     this.circle = function(id=null, x=0, y=0, r=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
                         var element = document.createElementNS('http://www.w3.org/2000/svg','circle');
                         element.id = id;
@@ -1550,17 +1564,21 @@
                     
                         return element;
                     };
-                    this.rect = function(id=null, x=0, y=0, width=0, height=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
-                        var element = document.createElementNS('http://www.w3.org/2000/svg','rect');
-                        element.id = id;
-                        element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad);' + style;
-                        element.setAttribute('height',height);
-                        element.setAttribute('width',width);
+                    this.g = function(id=null, x=0, y=0){
+                        var element = document.createElementNS('http://www.w3.org/2000/svg','g');
+                            element.id = id;
+                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate(0rad)';
                     
-                        element.rotation = function(a){
-                            if(a==null){return __globals.utility.element.getTransform(this).r;}
-                            __globals.utility.element.setRotation(this, a);
-                        };
+                        return element;
+                    };
+                    this.line = function(id=null, x1=0, y1=0, x2=10, y2=10, style='stroke:rgb(255,0,0); stroke-width:1'){
+                        var element = document.createElementNS('http://www.w3.org/2000/svg','line');
+                        element.id = id;
+                        element.setAttribute('x1',x1);
+                        element.setAttribute('y1',y1);
+                        element.setAttribute('x2',x2);
+                        element.setAttribute('y2',y2);
+                        element.setAttribute('style',style);
                     
                         return element;
                     };
@@ -1599,10 +1617,17 @@
                     
                         return element;
                     };
-                    this.g = function(id=null, x=0, y=0){
-                        var element = document.createElementNS('http://www.w3.org/2000/svg','g');
-                            element.id = id;
-                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate(0rad)';
+                    this.rect = function(id=null, x=0, y=0, width=0, height=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
+                        var element = document.createElementNS('http://www.w3.org/2000/svg','rect');
+                        element.id = id;
+                        element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad);' + style;
+                        element.setAttribute('height',height);
+                        element.setAttribute('width',width);
+                    
+                        element.rotation = function(a){
+                            if(a==null){return __globals.utility.element.getTransform(this).r;}
+                            __globals.utility.element.setRotation(this, a);
+                        };
                     
                         return element;
                     };
@@ -1624,6 +1649,214 @@
                     // };
                 }
                 this.display = new function(){
+                    this.audio_meter_level = function(
+                        id='audio_meter_level',
+                        x, y, angle=0,
+                        width, height,
+                        markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                    
+                        backingStyle='fill:rgb(10,10,10)',
+                        levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
+                        markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                    ){
+                        
+                        //elements
+                            var object = parts.display.meter_level('mainlevel',x,y,angle,width,height,markings,backingStyle,levelStyles,markingStyle);
+                                
+                        //circuitry
+                            var converter = parts.audio.audio2percentage()
+                                converter.newValue = function(val){object.set( val );};
+                    
+                        //audio connections
+                            object.audioIn = function(){ return converter.audioIn(); }
+                    
+                        //methods
+                            object.start = function(){ converter.start(); };
+                            object.stop = function(){ converter.stop(); };
+                    
+                        //setup
+                            object.set(0)
+                    
+                        return object;
+                    };
+                    this.glowbox_rect = function(
+                        id='glowbox_rect',
+                        x, y, width, height, angle=0,
+                        glowStyle = 'fill:rgba(240,240,240,1)',
+                        dimStyle = 'fill:rgba(80,80,80,1)'
+                    ){
+                    
+                        // elements 
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, dimStyle);
+                            object.appendChild(rect);
+                    
+                        //methods
+                        object.on = function(){
+                            __globals.utility.element.setStyle(rect,glowStyle);
+                        };
+                        object.off = function(){
+                            __globals.utility.element.setStyle(rect,dimStyle);
+                        };
+                    
+                        return object;
+                    };
+                    this.grapher = function(
+                        id='grapher',
+                        x, y, width, height,
+                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                        backingStyle = 'fill:rgba(50,50,50,1)',
+                    ){
+                        //elements
+                        var object = parts.basic.g(id, x, y);
+                            object._data = {};
+                            object._data.width = width,
+                            object._data.height = height,
+                            object._data.viewbox = {'l':-1,'h':1};
+                            object._data.horizontalMarkings = [0.75,0.5,0.25,0,-0.25,-0.5,-0.75];
+                            object._data.verticalMarkings = [0.75,0.5,0.25,0,-0.25,-0.5,-0.75];
+                            object._data.styles = {
+                                'middleground':middlegroundStyle, 
+                                'background':backgroundStyle, 
+                                'backgroundText':backgroundTextStyle,
+                                'backing':backingStyle
+                            };
+                    
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
+                        var background = parts.basic.g('background', 0, 0);
+                            object.appendChild(background);
+                        var middleground = parts.basic.g('middleground', 0, 0);
+                            object.appendChild(middleground);
+                    
+                    
+                        //internal methods
+                        object._pointConverter = function(realHeight, viewbox, y){
+                            var viewboxDistance = Math.abs( viewbox.h - viewbox.l );
+                            var y_graphingDistance = realHeight * (viewbox.h-y)/viewboxDistance
+                            return !isNaN(y_graphingDistance) ? y_graphingDistance : 0;
+                        };
+                        object._lineCorrecter = function(points, maxheight){
+                            if( points.y1 < 0 && points.y2 < 0 ){ return; }
+                            if( points.y1 > maxheight && points.y2 > maxheight ){ return; }
+                    
+                            var slope = (points.y2 - points.y1)/(points.x2 - points.x1);
+                    
+                            if( points.y1 < 0 ){ points.x1 = (0 - points.y1 + slope*points.x1)/slope; points.y1 = 0; }
+                            else if( points.y2 < 0 ){ points.x2 = (0 - points.y2 + slope*points.x2)/slope; points.y2 = 0; }
+                            if( points.y1 > maxheight ){ points.x1 = (maxheight - points.y1 + slope*points.x1)/slope; points.y1 = maxheight; }
+                            else if( points.y2 > maxheight ){ points.x2 = (maxheight - points.y2 + slope*points.x2)/slope; points.y2 = maxheight; }
+                    
+                            return points;
+                        };
+                        object._test = function(){
+                            // this.horizontalMarkings([0.75,0.5,0.25,0,-0.25,-0.5,-0.75,1,1.25,1.5,1.75,-1.75]);
+                            this.horizontalMarkings([0.75,0,-0.25,-2,-1,1]);
+                            this.verticalMarkings([0,1,2,3,4,5,6,7,8,9,10]);
+                            this.viewbox({'l':-2,'h':4});
+                            this.drawBackground();
+                            this.draw([0,-2,1,-1,2]);
+                        };
+                        
+                    
+                        //methods
+                        object.viewbox = function(a){
+                            if(a==null){return object._data.viewbox;}
+                            object._data.viewbox = a;
+                        };
+                        object.horizontalMarkings = function(a){
+                            if(a==null){return object._data.horizontalMarkings;}
+                            object._data.horizontalMarkings = a;
+                        };
+                        object.verticalMarkings = function(a){
+                            if(a==null){return object._data.verticalMarkings;}
+                            object._data.verticalMarkings = a;
+                        };
+                        object.drawBackground = function(){
+                            this.children['background'].innerHTML = '';
+                    
+                            //horizontal lines
+                            for(var a = 0; a < this._data.horizontalMarkings.length; a++){
+                                this.children['background'].append(
+                                    parts.basic.line(
+                                        null,
+                                        0,
+                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a] ),
+                                        this._data.width,
+                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a] ),
+                                        this._data.styles.background
+                                    )
+                                );
+                                this.children['background'].append(
+                                    parts.basic.text(
+                                        null,
+                                        0.5,
+                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a]-0.075 ),
+                                        this._data.horizontalMarkings[a],
+                                        0,
+                                        this._data.styles.backgroundText,
+                                        0.1
+                                    )
+                                );
+                            }
+                    
+                            //vertical lines
+                            for(var a = 0; a < this._data.verticalMarkings.length; a++){
+                                this.children['background'].append(
+                                    parts.basic.line(
+                                        null,
+                                        a*(this._data.width/this._data.verticalMarkings.length),
+                                        0,
+                                        a*(this._data.width/this._data.verticalMarkings.length),
+                                        this._data.height,
+                                        this._data.styles.background
+                                    )
+                                );
+                                this.children['background'].append(
+                                    parts.basic.text(
+                                        null,
+                                        a*(this._data.width/this._data.verticalMarkings.length) + 0.5,
+                                        this._pointConverter(this._data.height, this._data.viewbox, -0.075),
+                                        this._data.verticalMarkings[a],
+                                        0,
+                                        this._data.styles.backgroundText,
+                                        0.1
+                                    )
+                                );
+                            }
+                    
+                            //(the vertical line on the right)
+                            this.children['background'].append( parts.basic.line( null, this._data.width, 0, this._data.width, this._data.height, this._data.styles.background ) );
+                        };
+                        object.draw = function(Y, X=null){
+                            this.children['middleground'].innerHTML = '';
+                    
+                            for(var a = 0; a < Y.length-1; a++){
+                                var points = this._lineCorrecter({
+                                    'x1': (a+0)*(this._data.width/(Y.length-1)),
+                                    'x2': (a+1)*(this._data.width/(Y.length-1)),
+                                    'y1': this._pointConverter(this._data.height, this._data.viewbox, Y[a+0]),
+                                    'y2': this._pointConverter(this._data.height, this._data.viewbox, Y[a+1])
+                                }, this._data.height);
+                    
+                                if(points){
+                                    this.children['middleground'].append(
+                                        parts.basic.line(
+                                            null,
+                                            points.x1, points.y1,
+                                            points.x2, points.y2,
+                                            this._data.styles.middleground
+                                        )
+                                    );
+                                }
+                            }
+                        };
+                    
+                    
+                        return object;
+                    };
                     this.grapher_audioScope = function(
                         id='grapher_audioScope',
                         x, y, width, height,
@@ -1704,6 +1937,364 @@
                     
                         //setup
                             setBackground();
+                    
+                        return object;
+                    };
+                    this.grapher_periodicWave = function(
+                        id='grapher_periodicWave',
+                        x, y, width, height,
+                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                        backingStyle = 'fill:rgba(50,50,50,1)',
+                    ){
+                        //elements 
+                        var object = parts.basic.g(id, x, y);
+                            object._data = {};
+                            object._data.wave = {'sin':[],'cos':[]};
+                            object._data.resolution = 500;
+                    
+                        var grapher = parts.display.grapher(null, 0, 0, width, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
+                            object.append(grapher);
+                    
+                    
+                        //methods
+                        object.wave = function(a=null,type=null){
+                            if(a==null){
+                                while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
+                                while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
+                                for(var a = 0; a < this._data.wave['sin'].length; a++){
+                                    if( !this._data.wave['sin'][a] ){ this._data.wave['sin'][a] = 0; }
+                                    if( !this._data.wave['cos'][a] ){ this._data.wave['cos'][a] = 0; }
+                                }
+                                return this._data.wave;
+                            }
+                    
+                            if(type==null){
+                                this._data.wave = a;
+                            }
+                            switch(type){
+                                case 'sin': this._data.wave.sin = a; break;
+                                case 'cos': this._data.wave.cos = a; break;
+                                default: break;
+                            }
+                        }
+                        object.waveElement = function(type, mux, a){
+                            if(a==null){return this._data.wave[type][mux];}
+                            this._data.wave[type][mux] = a;
+                        }
+                        object.resolution = function(a=null){
+                            if(a==null){return this._data.resolution;}
+                            this._data.resolution = a;
+                        }
+                        object.updateBackground = function(){
+                            grapher.viewbox( {'l':-1.1,'h':1.1} );
+                            grapher.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
+                            grapher.verticalMarkings([0,'1/4','1/2','3/4']);
+                            grapher.drawBackground();
+                        };
+                        object.draw = function(){
+                            var data = [];
+                            var temp = 0;
+                            for(var a = 0; a <= this._data.resolution; a++){
+                                temp = 0;
+                                for(var b = 0; b < this._data.wave['sin'].length; b++){
+                                    if(!this._data.wave['sin'][b]){this._data.wave['sin'][b]=0;} // cover missing elements
+                                    temp += Math.sin(b*(2*Math.PI*(a/this._data.resolution)))*this._data.wave['sin'][b]; 
+                                }
+                                for(var b = 0; b < this._data.wave['cos'].length; b++){
+                                    if(!this._data.wave['cos'][b]){this._data.wave['cos'][b]=0;} // cover missing elements
+                                    temp += Math.cos(b*(2*Math.PI*(a/this._data.resolution)) )*this._data.wave['cos'][b]; 
+                                }
+                                data.push(temp);
+                            }
+                    
+                            grapher.draw( data );
+                        }
+                        object.reset = function(){
+                            this.wave({'sin':[],'cos':[]});
+                            this.resolution(500);
+                            this.updateBackground();
+                            this.draw();
+                        }
+                    
+                    
+                        object.reset();
+                        return object;
+                    };
+                    // var grapher2 = parts.display.grapher(null, width/2, 0, width/2, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
+                    //     object.append(grapher2);
+                    
+                    // function setBackground(){
+                    //     // grapher2.viewbox( {'l':-1.1,'h':1.1} );
+                    //     // grapher2.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
+                    //     // grapher2.verticalMarkings([0,0.25,0.5,0.75]);
+                    //     // grapher2.drawBackground();
+                    // }
+                    this.label = function(
+                        id='label',
+                        x, y, text,
+                        style='fill:rgba(0,0,0,1); font-size:3; font-family:Helvetica;',
+                        angle=0
+                    ){
+                        //elements 
+                        var object = parts.basic.g(id, x, y);
+                        var textElement = parts.basic.text(null, 0, 0, text, angle, style);
+                            object.appendChild(textElement);
+                    
+                    
+                        //methods
+                        object.text = function(a=null){
+                            if(a==null){return textElement.innerHTML;}
+                            textElement.innerHTML = a;
+                        }
+                    
+                        return object;
+                    };
+                    this.level = function(
+                        id='level',
+                        x, y, angle,
+                        width, height,
+                        backingStyle='fill:rgb(10,10,10)',
+                        levelStyles=['fill:rgb(250,250,250)','fill:rgb(200,200,200)']
+                    ){
+                        var values = Array.apply(null, Array(levelStyles.length)).map(Number.prototype.valueOf,0);
+                    
+                        // elements
+                            var object = parts.basic.g(id, x, y);
+                    
+                            //level layers are layered from back forward, so backing must go on last
+                            var levels = [];
+                            for(var a = 0; a < levelStyles.length; a++){
+                                var tempStyle = levelStyles[a]!=undefined ? levelStyles[a] : levelStyles[0];
+                                var temp = parts.basic.rect(
+                                    'movingRect_'+a,
+                                    (-height*Math.sin(angle) + width*Math.cos(angle)).toFixed(10),
+                                    (height*Math.cos(angle) + width*Math.sin(angle)).toFixed(10),
+                                    width,
+                                    0,
+                                    angle+Math.PI,
+                                    tempStyle
+                                );
+                                levels.push(temp);
+                                object.prepend(temp);
+                            }
+                    
+                            var backing = parts.basic.rect('backing', 0, 0, width, height, angle, backingStyle);
+                                object.prepend(backing);
+                    
+                        //methods
+                            object.set = function(a, layer=0){
+                                if(a==null){return value;}
+                    
+                                a = (a>1 ? 1 : a);
+                                a = (a<0 ? 0 : a);
+                    
+                                value = a;
+                    
+                                levels[layer].height.baseVal.valueInSpecifiedUnits = height*value;
+                            };
+                            object.getLevelStyle = function(levelLayer){
+                                return levels[levelLayer].style;
+                            };
+                    
+                        return object;
+                    };
+                    this.meter_level = function(
+                        id='meter_level',
+                        x, y, angle,
+                        width, height,
+                        markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                    
+                        backingStyle='fill:rgb(10,10,10)',
+                        levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
+                        markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                    ){
+                        //values
+                            var coolDown = 0;
+                            var mostRecentSetting = 0;
+                    
+                        //elements
+                            var object = parts.basic.g(id, x, y);
+                    
+                        //level
+                            levelStyles[0] += 'transition: height 0s;';
+                            levelStyles[1] += 'transition: height 0.01s;';
+                            var level = parts.display.level('mainlevel',0,0,angle,width,height,backingStyle,levelStyles);
+                            object.append(level);
+                    
+                        //markings
+                            function makeMark(y){
+                                var markThickness = 0.2;
+                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
+                                return parts.basic.path(null, path, 'L', markingStyle);
+                            }
+                            function insertText(y,text){
+                                return parts.display.label(null, 0, y+0.3, text, markingStyle);
+                            }
+                    
+                            for(var a = 0; a < markings.length; a++){
+                                object.append(makeMark(height*(1-markings[a])));
+                                object.append(insertText(height*(1-markings[a]),markings[a]));
+                            }
+                    
+                        //update intervals
+                            setInterval(function(){        
+                                level.set(mostRecentSetting,0);
+                    
+                                if(coolDown>0){coolDown-=0.0025;}
+                                level.set(coolDown,1);
+                    
+                                if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                            },1000/30);
+                    
+                        //methods
+                            object.set = function(a){
+                                mostRecentSetting = a;
+                                mostRecentSetting_slow = a;
+                            };
+                    
+                        return object;
+                    };
+                    this.rastorDisplay = function(
+                        id='rastorDisplay',
+                        x, y, width, height,
+                        xCount, yCount, xGappage=1, yGappage=1
+                    ){
+                        //elements
+                            //main
+                            var object = parts.basic.g(id, x, y);
+                    
+                            //backing
+                            var rect = parts.basic.rect(null, 0, 0, width, height, 0, 'fill:rgb(0,0,0)');
+                                object.appendChild(rect);
+                    
+                            //pixels
+                                var pixels = [];
+                                var pixelValues = [];
+                                var pixWidth = width/xCount;
+                                var pixHeight = height/yCount;
+                    
+                                for(var x = 0; x < xCount; x++){
+                                    var temp_pixels = [];
+                                    var temp_pixelValues = [];
+                                    for(var y = 0; y < yCount; y++){
+                                        var rect = parts.basic.rect(null, (x*pixWidth)+xGappage/2, (y*pixHeight)+yGappage/2, pixWidth-xGappage, pixHeight-yGappage, 0, 'fill:rgb(0,0,0)');
+                                            temp_pixels.push(rect);
+                                            temp_pixelValues.push([0,0,0]);
+                                            object.appendChild(rect);
+                                    }
+                                    pixels.push(temp_pixels);
+                                    pixelValues.push(temp_pixelValues);
+                                }
+                    
+                        //inner workings
+                            function render(){
+                                for(var x = 0; x < xCount; x++){
+                                    for(var y = 0; y < yCount; y++){
+                                        __globals.utility.element.setStyle(pixels[x][y], 'fill:rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')' );
+                                    }
+                                }
+                            }
+                            
+                        //methods
+                            object.get = function(x,y){ return pixelValues[x][y]; };
+                            object.set = function(x,y,state){ pixelValues[x][y] = state; render() };
+                            object.import = function(data){
+                                for(var x = 0; x < xCount; x++){
+                                    for(var y = 0; y < yCount; y++){
+                                        this.set(x,y,data[x][y]);
+                                    }
+                                }
+                                render();
+                            };
+                            object.export = function(){ return pixelValues; }
+                            object.setAll = function(value){
+                                for(var x = 0; x < xCount; x++){
+                                    for(var y = 0; y < yCount; y++){
+                                        this.set(x,y,value);
+                                    }
+                                }
+                            }
+                    
+                            object.test = function(){
+                                this.setAll([1,1,1]);
+                                this.set(1,1,[1,0.5,0.5]);
+                                this.set(2,2,[0.5,1,0.5]);
+                                this.set(3,3,[0.5,0.5,1]);
+                                this.set(4,4,[1,0.5,1]);
+                                render();
+                            };
+                    
+                        return object;
+                    };
+                    this.readout_sixteenSegmentDisplay = function(
+                        id='readout_sixteenSegmentDisplay',
+                        x, y, width, height, count,
+                        backgroundStyle='fill:rgb(0,0,0)',
+                        glowStyle='fill:rgb(200,200,200)',
+                        dimStyle='fill:rgb(20,20,20)'
+                    ){
+                        //values
+                            var text = '';
+                            var displayInterval = null;
+                    
+                        //elements
+                            //main
+                                var object = parts.basic.g(id, x, y);
+                    
+                            //display units
+                                var units = [];
+                                for(var a = 0; a < count; a++){
+                                    var temp = parts.display.sixteenSegmentDisplay(
+                                        a, 
+                                        (width/count)*a, 0, width/count, height, 
+                                        backgroundStyle, glowStyle, dimStyle
+                                    );
+                                    object.append( temp );
+                                    units.push(temp);
+                                }
+                    
+                        //methods
+                            object.test = function(){
+                                this.text('Look at all the text I\'ve got here! 1234567890 \\/<>()[]{}*!?"#_,.');
+                                this.print('r2lSweep');
+                            };
+                    
+                            object.text = function(a){
+                                if(a==null){return text;}
+                                text = a;
+                            };
+                    
+                            object.print = function(style){
+                                clearInterval(displayInterval);
+                                switch(style){
+                                    case 'smart':
+                                        if(text.length > units.length){this.print('r2lSweep');}
+                                        else{this.print('regular')}
+                                    break;
+                                    case 'r2lSweep':
+                                        var displayIntervalTime = 100;
+                                        var displayStage = 0;
+                    
+                                        displayInterval = setInterval(function(){
+                                            for(var a = units.length-1; a >= 0; a--){
+                                                units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                            }
+                    
+                                            displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                        },displayIntervalTime);
+                                    break;
+                                    case 'regular': default:
+                                        for(var a = 0; a < units.length; a++){
+                                            units[a].enterCharacter(text[a]);
+                                        }
+                                    break;
+                                }
+                            };
+                    
+                    
+                    
                     
                         return object;
                     };
@@ -2214,6 +2805,15 @@
                                                0,0,
                                         ]; 
                                     break;
+                                    case ':':
+                                        stamp = [
+                                               0,0,
+                                            0,1,0,1,0,
+                                               0,0,
+                                            0,1,0,1,0,
+                                               0,0,
+                                        ]; 
+                                    break;
                                     case '"': 
                                         stamp = [
                                                0,0,
@@ -2708,637 +3308,8 @@
                     
                         return object;
                     };
-                    this.rastorDisplay = function(
-                        id='rastorDisplay',
-                        x, y, width, height,
-                        xCount, yCount, xGappage=1, yGappage=1
-                    ){
-                        //elements
-                            //main
-                            var object = parts.basic.g(id, x, y);
-                    
-                            //backing
-                            var rect = parts.basic.rect(null, 0, 0, width, height, 0, 'fill:rgb(0,0,0)');
-                                object.appendChild(rect);
-                    
-                            //pixels
-                                var pixels = [];
-                                var pixelValues = [];
-                                var pixWidth = width/xCount;
-                                var pixHeight = height/yCount;
-                    
-                                for(var x = 0; x < xCount; x++){
-                                    var temp_pixels = [];
-                                    var temp_pixelValues = [];
-                                    for(var y = 0; y < yCount; y++){
-                                        var rect = parts.basic.rect(null, (x*pixWidth)+xGappage/2, (y*pixHeight)+yGappage/2, pixWidth-xGappage, pixHeight-yGappage, 0, 'fill:rgb(0,0,0)');
-                                            temp_pixels.push(rect);
-                                            temp_pixelValues.push([0,0,0]);
-                                            object.appendChild(rect);
-                                    }
-                                    pixels.push(temp_pixels);
-                                    pixelValues.push(temp_pixelValues);
-                                }
-                    
-                        //inner workings
-                            function render(){
-                                for(var x = 0; x < xCount; x++){
-                                    for(var y = 0; y < yCount; y++){
-                                        __globals.utility.element.setStyle(pixels[x][y], 'fill:rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')' );
-                                    }
-                                }
-                            }
-                            
-                        //methods
-                            object.get = function(x,y){ return pixelValues[x][y]; };
-                            object.set = function(x,y,state){ pixelValues[x][y] = state; render() };
-                            object.import = function(data){
-                                for(var x = 0; x < xCount; x++){
-                                    for(var y = 0; y < yCount; y++){
-                                        this.set(x,y,data[x][y]);
-                                    }
-                                }
-                                render();
-                            };
-                            object.export = function(){ return pixelValues; }
-                            object.setAll = function(value){
-                                for(var x = 0; x < xCount; x++){
-                                    for(var y = 0; y < yCount; y++){
-                                        this.set(x,y,value);
-                                    }
-                                }
-                            }
-                    
-                            object.test = function(){
-                                this.setAll([1,1,1]);
-                                this.set(1,1,[1,0.5,0.5]);
-                                this.set(2,2,[0.5,1,0.5]);
-                                this.set(3,3,[0.5,0.5,1]);
-                                this.set(4,4,[1,0.5,1]);
-                                render();
-                            };
-                    
-                        return object;
-                    };
-                    this.glowbox_rect = function(
-                        id='glowbox_rect',
-                        x, y, width, height, angle=0,
-                        glowStyle = 'fill:rgba(240,240,240,1)',
-                        dimStyle = 'fill:rgba(80,80,80,1)'
-                    ){
-                    
-                        // elements 
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, dimStyle);
-                            object.appendChild(rect);
-                    
-                        //methods
-                        object.on = function(){
-                            __globals.utility.element.setStyle(rect,glowStyle);
-                        };
-                        object.off = function(){
-                            __globals.utility.element.setStyle(rect,dimStyle);
-                        };
-                    
-                        return object;
-                    };
-                    this.audio_meter_level = function(
-                        id='audio_meter_level',
-                        x, y, angle=0,
-                        width, height,
-                        markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                    
-                        backingStyle='fill:rgb(10,10,10)',
-                        levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
-                        markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                    ){
-                        
-                        //elements
-                            var object = parts.display.meter_level('mainlevel',x,y,angle,width,height,markings,backingStyle,levelStyles,markingStyle);
-                                
-                        //circuitry
-                            var converter = parts.audio.audio2percentage()
-                                converter.newValue = function(val){object.set( val );};
-                    
-                        //audio connections
-                            object.audioIn = function(){ return converter.audioIn(); }
-                    
-                        //methods
-                            object.start = function(){ converter.start(); };
-                            object.stop = function(){ converter.stop(); };
-                    
-                        //setup
-                            object.set(0)
-                    
-                        return object;
-                    };
-                    // var grapher2 = parts.display.grapher(null, width/2, 0, width/2, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
-                    //     object.append(grapher2);
-                    
-                    // function setBackground(){
-                    //     // grapher2.viewbox( {'l':-1.1,'h':1.1} );
-                    //     // grapher2.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
-                    //     // grapher2.verticalMarkings([0,0.25,0.5,0.75]);
-                    //     // grapher2.drawBackground();
-                    // }
-                    this.grapher = function(
-                        id='grapher',
-                        x, y, width, height,
-                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
-                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                        backingStyle = 'fill:rgba(50,50,50,1)',
-                    ){
-                        //elements
-                        var object = parts.basic.g(id, x, y);
-                            object._data = {};
-                            object._data.width = width,
-                            object._data.height = height,
-                            object._data.viewbox = {'l':-1,'h':1};
-                            object._data.horizontalMarkings = [0.75,0.5,0.25,0,-0.25,-0.5,-0.75];
-                            object._data.verticalMarkings = [0.75,0.5,0.25,0,-0.25,-0.5,-0.75];
-                            object._data.styles = {
-                                'middleground':middlegroundStyle, 
-                                'background':backgroundStyle, 
-                                'backgroundText':backgroundTextStyle,
-                                'backing':backingStyle
-                            };
-                    
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                        var background = parts.basic.g('background', 0, 0);
-                            object.appendChild(background);
-                        var middleground = parts.basic.g('middleground', 0, 0);
-                            object.appendChild(middleground);
-                    
-                    
-                        //internal methods
-                        object._pointConverter = function(realHeight, viewbox, y){
-                            var viewboxDistance = Math.abs( viewbox.h - viewbox.l );
-                            var y_graphingDistance = realHeight * (viewbox.h-y)/viewboxDistance
-                            return !isNaN(y_graphingDistance) ? y_graphingDistance : 0;
-                        };
-                        object._lineCorrecter = function(points, maxheight){
-                            if( points.y1 < 0 && points.y2 < 0 ){ return; }
-                            if( points.y1 > maxheight && points.y2 > maxheight ){ return; }
-                    
-                            var slope = (points.y2 - points.y1)/(points.x2 - points.x1);
-                    
-                            if( points.y1 < 0 ){ points.x1 = (0 - points.y1 + slope*points.x1)/slope; points.y1 = 0; }
-                            else if( points.y2 < 0 ){ points.x2 = (0 - points.y2 + slope*points.x2)/slope; points.y2 = 0; }
-                            if( points.y1 > maxheight ){ points.x1 = (maxheight - points.y1 + slope*points.x1)/slope; points.y1 = maxheight; }
-                            else if( points.y2 > maxheight ){ points.x2 = (maxheight - points.y2 + slope*points.x2)/slope; points.y2 = maxheight; }
-                    
-                            return points;
-                        };
-                        object._test = function(){
-                            // this.horizontalMarkings([0.75,0.5,0.25,0,-0.25,-0.5,-0.75,1,1.25,1.5,1.75,-1.75]);
-                            this.horizontalMarkings([0.75,0,-0.25,-2,-1,1]);
-                            this.verticalMarkings([0,1,2,3,4,5,6,7,8,9,10]);
-                            this.viewbox({'l':-2,'h':4});
-                            this.drawBackground();
-                            this.draw([0,-2,1,-1,2]);
-                        };
-                        
-                    
-                        //methods
-                        object.viewbox = function(a){
-                            if(a==null){return object._data.viewbox;}
-                            object._data.viewbox = a;
-                        };
-                        object.horizontalMarkings = function(a){
-                            if(a==null){return object._data.horizontalMarkings;}
-                            object._data.horizontalMarkings = a;
-                        };
-                        object.verticalMarkings = function(a){
-                            if(a==null){return object._data.verticalMarkings;}
-                            object._data.verticalMarkings = a;
-                        };
-                        object.drawBackground = function(){
-                            this.children['background'].innerHTML = '';
-                    
-                            //horizontal lines
-                            for(var a = 0; a < this._data.horizontalMarkings.length; a++){
-                                this.children['background'].append(
-                                    parts.basic.line(
-                                        null,
-                                        0,
-                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a] ),
-                                        this._data.width,
-                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a] ),
-                                        this._data.styles.background
-                                    )
-                                );
-                                this.children['background'].append(
-                                    parts.basic.text(
-                                        null,
-                                        0.5,
-                                        this._pointConverter(this._data.height, this._data.viewbox, this._data.horizontalMarkings[a]-0.075 ),
-                                        this._data.horizontalMarkings[a],
-                                        0,
-                                        this._data.styles.backgroundText,
-                                        0.1
-                                    )
-                                );
-                            }
-                    
-                            //vertical lines
-                            for(var a = 0; a < this._data.verticalMarkings.length; a++){
-                                this.children['background'].append(
-                                    parts.basic.line(
-                                        null,
-                                        a*(this._data.width/this._data.verticalMarkings.length),
-                                        0,
-                                        a*(this._data.width/this._data.verticalMarkings.length),
-                                        this._data.height,
-                                        this._data.styles.background
-                                    )
-                                );
-                                this.children['background'].append(
-                                    parts.basic.text(
-                                        null,
-                                        a*(this._data.width/this._data.verticalMarkings.length) + 0.5,
-                                        this._pointConverter(this._data.height, this._data.viewbox, -0.075),
-                                        this._data.verticalMarkings[a],
-                                        0,
-                                        this._data.styles.backgroundText,
-                                        0.1
-                                    )
-                                );
-                            }
-                    
-                            //(the vertical line on the right)
-                            this.children['background'].append( parts.basic.line( null, this._data.width, 0, this._data.width, this._data.height, this._data.styles.background ) );
-                        };
-                        object.draw = function(Y, X=null){
-                            this.children['middleground'].innerHTML = '';
-                    
-                            for(var a = 0; a < Y.length-1; a++){
-                                var points = this._lineCorrecter({
-                                    'x1': (a+0)*(this._data.width/(Y.length-1)),
-                                    'x2': (a+1)*(this._data.width/(Y.length-1)),
-                                    'y1': this._pointConverter(this._data.height, this._data.viewbox, Y[a+0]),
-                                    'y2': this._pointConverter(this._data.height, this._data.viewbox, Y[a+1])
-                                }, this._data.height);
-                    
-                                if(points){
-                                    this.children['middleground'].append(
-                                        parts.basic.line(
-                                            null,
-                                            points.x1, points.y1,
-                                            points.x2, points.y2,
-                                            this._data.styles.middleground
-                                        )
-                                    );
-                                }
-                            }
-                        };
-                    
-                    
-                        return object;
-                    };
-                    this.meter_level = function(
-                        id='meter_level',
-                        x, y, angle,
-                        width, height,
-                        markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                    
-                        backingStyle='fill:rgb(10,10,10)',
-                        levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
-                        markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                    ){
-                        //values
-                            var coolDown = 0;
-                            var mostRecentSetting = 0;
-                    
-                        //elements
-                            var object = parts.basic.g(id, x, y);
-                    
-                        //level
-                            levelStyles[0] += 'transition: height 0s;';
-                            levelStyles[1] += 'transition: height 0.01s;';
-                            var level = parts.display.level('mainlevel',0,0,angle,width,height,backingStyle,levelStyles);
-                            object.append(level);
-                    
-                        //markings
-                            function makeMark(y){
-                                var markThickness = 0.2;
-                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                                return parts.basic.path(null, path, 'L', markingStyle);
-                            }
-                            function insertText(y,text){
-                                return parts.display.label(null, 0, y+0.3, text, markingStyle);
-                            }
-                    
-                            for(var a = 0; a < markings.length; a++){
-                                object.append(makeMark(height*(1-markings[a])));
-                                object.append(insertText(height*(1-markings[a]),markings[a]));
-                            }
-                    
-                        //update intervals
-                            setInterval(function(){        
-                                level.set(mostRecentSetting,0);
-                    
-                                if(coolDown>0){coolDown-=0.0025;}
-                                level.set(coolDown,1);
-                    
-                                if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
-                            },1000/30);
-                    
-                        //methods
-                            object.set = function(a){
-                                mostRecentSetting = a;
-                                mostRecentSetting_slow = a;
-                            };
-                    
-                        return object;
-                    };
-                    this.grapher_periodicWave = function(
-                        id='grapher_periodicWave',
-                        x, y, width, height,
-                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
-                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                        backingStyle = 'fill:rgba(50,50,50,1)',
-                    ){
-                        //elements 
-                        var object = parts.basic.g(id, x, y);
-                            object._data = {};
-                            object._data.wave = {'sin':[],'cos':[]};
-                            object._data.resolution = 500;
-                    
-                        var grapher = parts.display.grapher(null, 0, 0, width, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
-                            object.append(grapher);
-                    
-                    
-                        //methods
-                        object.wave = function(a=null,type=null){
-                            if(a==null){
-                                while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
-                                while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
-                                for(var a = 0; a < this._data.wave['sin'].length; a++){
-                                    if( !this._data.wave['sin'][a] ){ this._data.wave['sin'][a] = 0; }
-                                    if( !this._data.wave['cos'][a] ){ this._data.wave['cos'][a] = 0; }
-                                }
-                                return this._data.wave;
-                            }
-                    
-                            if(type==null){
-                                this._data.wave = a;
-                            }
-                            switch(type){
-                                case 'sin': this._data.wave.sin = a; break;
-                                case 'cos': this._data.wave.cos = a; break;
-                                default: break;
-                            }
-                        }
-                        object.waveElement = function(type, mux, a){
-                            if(a==null){return this._data.wave[type][mux];}
-                            this._data.wave[type][mux] = a;
-                        }
-                        object.resolution = function(a=null){
-                            if(a==null){return this._data.resolution;}
-                            this._data.resolution = a;
-                        }
-                        object.updateBackground = function(){
-                            grapher.viewbox( {'l':-1.1,'h':1.1} );
-                            grapher.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
-                            grapher.verticalMarkings([0,'1/4','1/2','3/4']);
-                            grapher.drawBackground();
-                        };
-                        object.draw = function(){
-                            var data = [];
-                            var temp = 0;
-                            for(var a = 0; a <= this._data.resolution; a++){
-                                temp = 0;
-                                for(var b = 0; b < this._data.wave['sin'].length; b++){
-                                    if(!this._data.wave['sin'][b]){this._data.wave['sin'][b]=0;} // cover missing elements
-                                    temp += Math.sin(b*(2*Math.PI*(a/this._data.resolution)))*this._data.wave['sin'][b]; 
-                                }
-                                for(var b = 0; b < this._data.wave['cos'].length; b++){
-                                    if(!this._data.wave['cos'][b]){this._data.wave['cos'][b]=0;} // cover missing elements
-                                    temp += Math.cos(b*(2*Math.PI*(a/this._data.resolution)) )*this._data.wave['cos'][b]; 
-                                }
-                                data.push(temp);
-                            }
-                    
-                            grapher.draw( data );
-                        }
-                        object.reset = function(){
-                            this.wave({'sin':[],'cos':[]});
-                            this.resolution(500);
-                            this.updateBackground();
-                            this.draw();
-                        }
-                    
-                    
-                        object.reset();
-                        return object;
-                    };
-                    this.readout_sixteenSegmentDisplay = function(
-                        id='readout_sixteenSegmentDisplay',
-                        x, y, width, height, count,
-                        backgroundStyle='fill:rgb(0,0,0)',
-                        glowStyle='fill:rgb(200,200,200)',
-                        dimStyle='fill:rgb(20,20,20)'
-                    ){
-                        //values
-                            var text = '';
-                            var displayInterval = null;
-                    
-                        //elements
-                            //main
-                                var object = parts.basic.g(id, x, y);
-                    
-                            //display units
-                                var units = [];
-                                for(var a = 0; a < count; a++){
-                                    var temp = parts.display.sixteenSegmentDisplay(
-                                        a, 
-                                        (width/count)*a, 0, width/count, height, 
-                                        backgroundStyle, glowStyle, dimStyle
-                                    );
-                                    object.append( temp );
-                                    units.push(temp);
-                                }
-                    
-                        //methods
-                            object.test = function(){
-                                this.text('Look at all the text I\'ve got here! 1234567890 \\/<>()[]{}*!?"#_,.');
-                                this.print('r2lSweep');
-                            };
-                    
-                            object.text = function(a){
-                                if(a==null){return text;}
-                                text = a;
-                            };
-                    
-                            object.print = function(style){
-                                clearInterval(displayInterval);
-                                switch(style){
-                                    case 'smart':
-                                        if(text.length > units.length){this.print('r2lSweep');}
-                                        else{this.print('regular')}
-                                    break;
-                                    case 'r2lSweep':
-                                        var displayIntervalTime = 100;
-                                        var displayStage = 0;
-                    
-                                        displayInterval = setInterval(function(){
-                                            for(var a = units.length-1; a >= 0; a--){
-                                                units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                            }
-                    
-                                            displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                        },displayIntervalTime);
-                                    break;
-                                    case 'regular': default:
-                                        for(var a = 0; a < units.length; a++){
-                                            units[a].enterCharacter(text[a]);
-                                        }
-                                    break;
-                                }
-                            };
-                    
-                    
-                    
-                    
-                        return object;
-                    };
-                    this.label = function(
-                        id='label',
-                        x, y, text,
-                        style='fill:rgba(0,0,0,1); font-size:3; font-family:Helvetica;',
-                        angle=0
-                    ){
-                        //elements 
-                        var object = parts.basic.g(id, x, y);
-                        var textElement = parts.basic.text(null, 0, 0, text, angle, style);
-                            object.appendChild(textElement);
-                    
-                    
-                        //methods
-                        object.text = function(a=null){
-                            if(a==null){return textElement.innerHTML;}
-                            textElement.innerHTML = a;
-                        }
-                    
-                        return object;
-                    };
-                    this.level = function(
-                        id='level',
-                        x, y, angle,
-                        width, height,
-                        backingStyle='fill:rgb(10,10,10)',
-                        levelStyles=['fill:rgb(250,250,250)','fill:rgb(200,200,200)']
-                    ){
-                        var values = Array.apply(null, Array(levelStyles.length)).map(Number.prototype.valueOf,0);
-                    
-                        // elements
-                            var object = parts.basic.g(id, x, y);
-                    
-                            //level layers are layered from back forward, so backing must go on last
-                            var levels = [];
-                            for(var a = 0; a < levelStyles.length; a++){
-                                var tempStyle = levelStyles[a]!=undefined ? levelStyles[a] : levelStyles[0];
-                                var temp = parts.basic.rect(
-                                    'movingRect_'+a,
-                                    (-height*Math.sin(angle) + width*Math.cos(angle)).toFixed(10),
-                                    (height*Math.cos(angle) + width*Math.sin(angle)).toFixed(10),
-                                    width,
-                                    0,
-                                    angle+Math.PI,
-                                    tempStyle
-                                );
-                                levels.push(temp);
-                                object.prepend(temp);
-                            }
-                    
-                            var backing = parts.basic.rect('backing', 0, 0, width, height, angle, backingStyle);
-                                object.prepend(backing);
-                    
-                        //methods
-                            object.set = function(a, layer=0){
-                                if(a==null){return value;}
-                    
-                                a = (a>1 ? 1 : a);
-                                a = (a<0 ? 0 : a);
-                    
-                                value = a;
-                    
-                                levels[layer].height.baseVal.valueInSpecifiedUnits = height*value;
-                            };
-                            object.getLevelStyle = function(levelLayer){
-                                return levels[levelLayer].style;
-                            };
-                    
-                        return object;
-                    };
                 }
                 this.control = new function(){
-                    this.rastorgrid = function(
-                        id='rastorgrid', 
-                        x, y, width, height,
-                        xcount, ycount,
-                        backingStyle = 'fill:rgba(200,200,200,1)',
-                        checkStyle = 'fill:rgba(150,150,150,1)',
-                        backingGlowStyle = 'fill:rgba(220,220,220,1)',
-                        checkGlowStyle = 'fill:rgba(220,220,220,1)',
-                    ){
-                        // elements
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                    
-                        for(var y = 0; y < ycount; y++){
-                            for(var x = 0; x < xcount; x++){
-                                var temp = parts.control.checkbox_rect(y+'_'+x, x*(width/xcount), y*(height/ycount), width/xcount, height/ycount, 0, checkStyle, backingStyle, checkGlowStyle, backingGlowStyle);
-                                object.appendChild(temp);
-                                temp.onchange = function(){ if(object.onchange){object.onchange(object.get());} };
-                            }
-                        }
-                    
-                    
-                        //methods
-                        object.box = function(x,y){ return object.children[y+'_'+x]; };
-                        object.get = function(){
-                            var outputArray = [];
-                    
-                            for(var y = 0; y < ycount; y++){
-                                var temp = [];
-                                for(var x = 0; x < xcount; x++){
-                                    temp.push(this.box(x,y).get());
-                                }
-                                outputArray.push(temp);
-                            }
-                    
-                            return outputArray;
-                        };
-                        object.set = function(value, update=true){
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    object.box(x,y).set(value[y][x],false);
-                                }
-                            }
-                        };
-                        object.clear = function(){
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    object.box(x,y).set(false,false);
-                                }
-                            }
-                        };
-                        object.light = function(x,y,state){
-                            object.box(x,y).light(state);
-                        };
-                    
-                    
-                        //callback
-                        object.onchange = function(){};
-                    
-                    
-                        return object;
-                    };
                     this.button_rect = function(
                         id='button_rect',
                         x, y, width, height, angle=0,
@@ -3378,63 +3349,6 @@
                         };
                         object.hover = function(){ this.onmouseenter(); rect.onmouseenter(); };
                         object.unhover = function(){this.onmouseleave(); rect.onmouseleave();};
-                    
-                        return object;
-                    };
-                    this.key_rect = function(
-                        id='key_rect',
-                        x, y, width, height, angle=0,
-                        style_off = 'fill:rgba(200,200,200,1)',
-                        style_press = 'fill:rgba(180,180,180,1)',
-                        style_glow = 'fill:rgba(220,200,220,1)',
-                        style_pressAndGlow = 'fill:rgba(200,190,200,1)'
-                    ){
-                    
-                        // elements 
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, style_off);
-                            object.appendChild(rect);
-                    
-                        //state
-                        object.state = 0;
-                        object.activateState = function(state){
-                            // 0 - off
-                            // 1 - pressed
-                            // 2 - glowing
-                            // 3 - pressed and glowing
-                            switch(state){
-                                case 0: __globals.utility.element.setStyle(rect, style_off); break;
-                                case 1: __globals.utility.element.setStyle(rect, style_press); break;
-                                case 2: __globals.utility.element.setStyle(rect, style_glow); break;
-                                case 3: __globals.utility.element.setStyle(rect, style_pressAndGlow); break;
-                                default: /*console.error('Unknown state reached:', state);*/ return; break;
-                            }
-                            object.state = state;
-                        };
-                    
-                        //interactivity
-                        rect.onmousedown =  function(){ object.press();   };
-                        rect.onmouseup =    function(){ object.release(); };
-                        rect.onmouseleave = function(){ object.release(); };
-                        rect.onmouseenter = function(event){ if(event.buttons == 1){object.press();} };
-                    
-                        //callbacks
-                        object.onkeyup =    function(){ /*console.log('mouseup');    */ };
-                        object.onkeydown =  function(){ /*console.log('mousedown');  */ };
-                    
-                        //methods;
-                        object.press =   function(){
-                            if( this.state%2 != 0 ){return;} //key already pressed 
-                            this.activateState(this.state+1);
-                            if(this.onkeydown){this.onkeydown();}
-                        };
-                        object.release = function(){ 
-                            if( this.state%2 == 0 ){return;} //key not pressed 
-                            this.activateState(object.state-1); 
-                            if(this.onkeyup){this.onkeyup();}
-                        };
-                        object.glow = function(){ this.activateState(this.state+2); };
-                        object.dim  = function(){ this.activateState(this.state-2); };
                     
                         return object;
                     };
@@ -3497,202 +3411,6 @@
                             object.set(!object.get());
                         };
                     
-                    
-                        return object;
-                    };
-                    this.slide_vertical = function(
-                        id='slide_vertical', 
-                        x, y, width, height,
-                        handleStyle = 'fill:rgba(200,200,200,1)',
-                        backingStyle = 'fill:rgba(150,150,150,1)',
-                        slotStyle = 'fill:rgba(50,50,50,1)'
-                    ){
-                        // elements
-                        var object = parts.basic.g(id, x, y);
-                            object._value = 0;
-                            object._data = {
-                                'h':height,
-                                'handleSize':0.9
-                            };
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                        var slot = parts.basic.rect(null, width*0.45, height*0.05, width*0.1, height*0.9, 0, slotStyle);
-                            object.appendChild(slot);
-                        var handle = parts.basic.rect('handle', 0, 0, width, height*0.1, 0, handleStyle);
-                            object.appendChild(handle);
-                    
-                    
-                        //methods
-                        object.get = function(){ return this._value; };
-                        object.set = function(value, live=false, update=true){
-                            value = (value>1 ? 1 : value);
-                            value = (value<0 ? 0 : value);
-                    
-                            this._value = value;
-                            if(update&&this.onchange){ this.onchange(value); }
-                            if(update&&!live&&this.onrelease){ this.onrelease(value); }
-                            this.children['handle'].y.baseVal.valueInSpecifiedUnits = value*this._data.h*this._data.handleSize;
-                        };
-                        object.smoothSet = function(target,time,curve,update=true){
-                            var start = this.get();
-                            var mux = target-start;
-                            var stepsPerSecond = Math.round(Math.abs(mux)*100);
-                            var totalSteps = stepsPerSecond*time;
-                    
-                            var steps = [1];
-                            switch(curve){
-                                case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-                                case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
-                                case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
-                                case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-                                case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
-                                case 'instant': default: break;
-                            }
-                    
-                            if(steps.length == 0){return;}
-                    
-                            if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                            object.smoothSet.interval = setInterval(function(){
-                                object.set( (start+(steps.shift()*mux)),true,update );
-                                if(steps.length == 0){clearInterval(object.smoothSet.interval);}
-                            },1000/stepsPerSecond);
-                        };
-                    
-                        
-                        //callback
-                        object.onchange = function(){};
-                        object.onrelease = function(){};
-                        
-                    
-                        //mouse interaction
-                        object.ondblclick = function(){ this.set(0.5); };
-                        object.onwheel = function(event){
-                            var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                            var globalScale = __globals.utility.workspace.getGlobalScale(object);
-                    
-                            this.set( this.get() + move/(10*globalScale) );
-                        }; 
-                        object.onmousedown = function(event){
-                            __globals.svgElement.tempRef = this;
-                            __globals.svgElement.tempRef._data.initialValue = this.get();
-                            __globals.svgElement.tempRef._data.initialY = event.y;
-                            __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.h*__globals.svgElement.tempRef._data.handleSize;
-                            __globals.svgElement.onmousemove = function(event){
-                                var mux = __globals.svgElement.tempRef._data.mux;
-                                var value = __globals.svgElement.tempRef._data.initialValue;
-                                var numerator = __globals.svgElement.tempRef._data.initialY-event.y;
-                                var divider = __globals.utility.workspace.getGlobalScale(object);
-                    
-                                __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
-                            };
-                            __globals.svgElement.onmouseup = function(){
-                                __globals.svgElement.tempRef.set( __globals.svgElement.tempRef.get(), false );
-                                this.tempRef = null;
-                                this.onmousemove = null;
-                                this.onmouseleave = null;
-                                this.onmouseup = null;
-                            };
-                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                            __globals.svgElement.onmousemove(event);
-                        };
-                    
-                        return object;
-                    };
-                    this.slide_horizontal = function(
-                        id='slide_horizontal', 
-                        x, y, width, height,
-                        handleStyle = 'fill:rgba(200,200,200,1)',
-                        backingStyle = 'fill:rgba(150,150,150,1)',
-                        slotStyle = 'fill:rgba(50,50,50,1)'
-                    ){
-                        //elements
-                        var object = parts.basic.g(id, x, y);
-                            object._value = 0;
-                            object._data = {
-                                'w':width,
-                                'handleSize':0.9
-                            };
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                        var slot = parts.basic.rect(null, width*0.05, height*0.45, width*0.9, height*0.1, 0, slotStyle);
-                            object.appendChild(slot);
-                        var handle = parts.basic.rect('handle', 0, 0, width*0.1, height, 0, handleStyle);
-                            object.appendChild(handle);
-                    
-                    
-                        //methods
-                        object.get = function(){ return this._value; };
-                        object.set = function(value, live=false, update=true){
-                            value = (value>1 ? 1 : value);
-                            value = (value<0 ? 0 : value);
-                    
-                            this._value = value;
-                            if(update&&this.onchange){ this.onchange(value); }
-                            if(update&&!live&&this.onrelease){ this.onrelease(value); }
-                            this.children['handle'].x.baseVal.valueInSpecifiedUnits = value*this._data.w*this._data.handleSize;
-                        };
-                        object.smoothSet = function(target,time,curve,update=true){
-                            var start = this.get();
-                            var mux = target-start;
-                            var stepsPerSecond = Math.round(Math.abs(mux)*100);
-                            var totalSteps = stepsPerSecond*time;
-                    
-                            var steps = [1];
-                            switch(curve){
-                                case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-                                case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
-                                case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
-                                case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-                                case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
-                                case 'instant': default: break;
-                            }
-                    
-                            if(steps.length == 0){return;}
-                    
-                            if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                            object.smoothSet.interval = setInterval(function(){
-                                object.set( (start+(steps.shift()*mux)),true,update );
-                                if(steps.length == 0){clearInterval(object.smoothSet.interval);}
-                            },1000/stepsPerSecond);
-                        };
-                    
-                    
-                        //callback
-                        object.onchange = function(){};
-                        object.onrelease = function(){};
-                    
-                        
-                        //mouse interaction
-                        object.ondblclick = function(){ this.set(0.5); };
-                        object.onwheel = function(event){
-                            var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                            var globalScale = __globals.utility.workspace.getGlobalScale(object);
-                    
-                            this.set( this.get() + move/(10*globalScale) );
-                        }; 
-                        object.onmousedown = function(event){
-                            __globals.svgElement.tempRef = this;
-                            __globals.svgElement.tempRef._data.initialValue = this.get();
-                            __globals.svgElement.tempRef._data.initialX = event.x;
-                            __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.w*__globals.svgElement.tempRef._data.handleSize;
-                            __globals.svgElement.onmousemove = function(event){
-                                var mux = __globals.svgElement.tempRef._data.mux;
-                                var value = __globals.svgElement.tempRef._data.initialValue;
-                                var numerator = __globals.svgElement.tempRef._data.initialX-event.x;
-                                var divider = __globals.utility.workspace.getGlobalScale(object);
-                    
-                                __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
-                            };
-                            __globals.svgElement.onmouseup = function(){
-                                __globals.svgElement.tempRef.set( __globals.svgElement.tempRef.get(), false );
-                                this.tempRef = null;
-                                this.onmousemove = null;
-                                this.onmouseleave = null;
-                                this.onmouseup = null;
-                            };
-                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                            __globals.svgElement.onmousemove(event);
-                        };
                     
                         return object;
                     };
@@ -3831,130 +3549,6 @@
                     
                         return object;
                     };
-                    this.slidePanel_horizontal = function(
-                        id='slidePanel_horizontal', 
-                        x, y, width, height,
-                        count,
-                        handleStyle = 'fill:rgba(180,180,180,1)',
-                        backingStyle = 'fill:rgba(150,150,150,1)',
-                        slotStyle = 'fill:rgba(50,50,50,1)'
-                    ){
-                        // elements
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                        for(var a = 0; a < count; a++){
-                            var temp = parts.control.slide_horizontal( id+'_'+a, 0, a*(height/count), width, height/count, handleStyle, backingStyle, slotStyle );
-                            temp.onchange = function(){ object.onchange(object.get()); };
-                            temp.onrelease = function(){ object.onrelease(object.get()); };
-                            object.appendChild(temp);
-                        }
-                    
-                    
-                        //methods
-                            object.slide = function(index){ return object.children[object.id+'_'+index]; };
-                            object.get = function(){
-                                var outputArray = [];
-                                for(var b = 0; b < count; b++){
-                                    outputArray.push(this.slide(b).get());
-                                }
-                                return outputArray;
-                            };
-                            object.set = function(a, live=false, update=true){
-                                for(var b = 0; b < count; b++){
-                                    this.slide(b).set(a[b],false);
-                                }
-                    
-                                if(update&&this.onchange){ this.onchange(a); }
-                            };
-                            object.smoothSet = function(a,time,curve,update=true){
-                                for(var b = 0; b < a.length; b++){
-                                    this.slide(b).smoothSet(a[b],time,curve,false);
-                                }
-                                for(var b = a.length; b < count; b++){
-                                    this.slide(b).smoothSet(1/2,time,curve,false);
-                                }
-                    
-                                if(update&&this.onchange){ setTimeout(function(){this.onchange(a);},time); }
-                                if(update&&!live&&this.onrelease){ setTimeout(function(){this.onrelease(a);},time); }
-                            };
-                            object.setAll = function(a, live=false, update=true){
-                                this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a) );
-                            };
-                            object.smoothSetAll = function(a, time, curve, update=true){
-                                this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a), time, curve, update );
-                            };
-                        
-                        //callback
-                            object.onchange = function(){};
-                            object.onrelease = function(){};
-                    
-                        return object;
-                    };
-                    this.slidePanel_vertical = function(
-                        id='slidePanel_vertical', 
-                        x, y, width, height,
-                        count,
-                        handleStyle = 'fill:rgba(180,180,180,1)',
-                        backingStyle = 'fill:rgba(150,150,150,1)',
-                        slotStyle = 'fill:rgba(50,50,50,1)'
-                    ){
-                        // elements
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                        for(var a = 0; a < count; a++){
-                            var temp = parts.control.slide_vertical( id+'_'+a, a*(width/count), 0, width/count, height, handleStyle, backingStyle, slotStyle );
-                            temp.onchange = function(){ object.onchange(object.get()); };
-                            temp.onrelease = function(){ object.onrelease(object.get()); };
-                            object.appendChild(temp);
-                        }
-                    
-                    
-                        //methods
-                            object.slide = function(index){ return object.children[object.id+'_'+index]; };
-                            object.get = function(){
-                                var outputArray = [];
-                                for(var b = 0; b < count; b++){
-                                    outputArray.push(this.slide(b).get());
-                                }
-                                return outputArray;
-                            };
-                            object.set = function(a, live=false, update=true){
-                                for(var b = 0; b < a.length; b++){
-                                    this.slide(b).set(a[b],live,false);
-                                }
-                                for(var b = a.length; b < count; b++){
-                                    this.slide(b).set(1/2,live,false);
-                                }
-                    
-                                if(update&&this.onchange){ this.onchange(a); }
-                                if(update&&!live&&this.onrelease){ this.onrelease(a); }
-                            };
-                            object.smoothSet = function(a,time,curve,update=true){
-                                for(var b = 0; b < a.length; b++){
-                                    this.slide(b).smoothSet(a[b],time,curve,false);
-                                }
-                                for(var b = a.length; b < count; b++){
-                                    this.slide(b).smoothSet(1/2,time,curve,false);
-                                }
-                    
-                                if(update&&this.onchange){ setTimeout(function(){this.onchange(a);},time); }
-                                if(update&&!live&&this.onrelease){ setTimeout(function(){this.onrelease(a);},time); }
-                            };
-                            object.setAll = function(a, live=false, update=true){
-                                this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a) );
-                            };
-                            object.smoothSetAll = function(a, time, curve, update=true){
-                                this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a), time, curve, update );
-                            };
-                    
-                        //callback
-                            object.onchange = function(){};
-                            object.onrelease = function(){};
-                    
-                        return object;
-                    };
                     this.dial_discrete = function(
                         id='dial_discrete',
                         x, y, r,
@@ -4089,8 +3683,663 @@
                     
                       return object;
                     };
+                    this.key_rect = function(
+                        id='key_rect',
+                        x, y, width, height, angle=0,
+                        style_off = 'fill:rgba(200,200,200,1)',
+                        style_press = 'fill:rgba(180,180,180,1)',
+                        style_glow = 'fill:rgba(220,200,220,1)',
+                        style_pressAndGlow = 'fill:rgba(200,190,200,1)'
+                    ){
+                    
+                        // elements 
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, style_off);
+                            object.appendChild(rect);
+                    
+                        //state
+                        object.state = 0;
+                        object.activateState = function(state){
+                            // 0 - off
+                            // 1 - pressed
+                            // 2 - glowing
+                            // 3 - pressed and glowing
+                            switch(state){
+                                case 0: __globals.utility.element.setStyle(rect, style_off); break;
+                                case 1: __globals.utility.element.setStyle(rect, style_press); break;
+                                case 2: __globals.utility.element.setStyle(rect, style_glow); break;
+                                case 3: __globals.utility.element.setStyle(rect, style_pressAndGlow); break;
+                                default: /*console.error('Unknown state reached:', state);*/ return; break;
+                            }
+                            object.state = state;
+                        };
+                    
+                        //interactivity
+                        rect.onmousedown =  function(){ object.press();   };
+                        rect.onmouseup =    function(){ object.release(); };
+                        rect.onmouseleave = function(){ object.release(); };
+                        rect.onmouseenter = function(event){ if(event.buttons == 1){object.press();} };
+                    
+                        //callbacks
+                        object.onkeyup =    function(){ /*console.log('mouseup');    */ };
+                        object.onkeydown =  function(){ /*console.log('mousedown');  */ };
+                    
+                        //methods;
+                        object.press =   function(){
+                            if( this.state%2 != 0 ){return;} //key already pressed 
+                            this.activateState(this.state+1);
+                            if(this.onkeydown){this.onkeydown();}
+                        };
+                        object.release = function(){ 
+                            if( this.state%2 == 0 ){return;} //key not pressed 
+                            this.activateState(object.state-1); 
+                            if(this.onkeyup){this.onkeyup();}
+                        };
+                        object.glow = function(){ this.activateState(this.state+2); };
+                        object.dim  = function(){ this.activateState(this.state-2); };
+                    
+                        return object;
+                    };
+                    this.rastorgrid = function(
+                        id='rastorgrid', 
+                        x, y, width, height,
+                        xcount, ycount,
+                        backingStyle = 'fill:rgba(200,200,200,1)',
+                        checkStyle = 'fill:rgba(150,150,150,1)',
+                        backingGlowStyle = 'fill:rgba(220,220,220,1)',
+                        checkGlowStyle = 'fill:rgba(220,220,220,1)',
+                    ){
+                        // elements
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
+                    
+                        for(var y = 0; y < ycount; y++){
+                            for(var x = 0; x < xcount; x++){
+                                var temp = parts.control.checkbox_rect(y+'_'+x, x*(width/xcount), y*(height/ycount), width/xcount, height/ycount, 0, checkStyle, backingStyle, checkGlowStyle, backingGlowStyle);
+                                object.appendChild(temp);
+                                temp.onchange = function(){ if(object.onchange){object.onchange(object.get());} };
+                            }
+                        }
+                    
+                    
+                        //methods
+                        object.box = function(x,y){ return object.children[y+'_'+x]; };
+                        object.get = function(){
+                            var outputArray = [];
+                    
+                            for(var y = 0; y < ycount; y++){
+                                var temp = [];
+                                for(var x = 0; x < xcount; x++){
+                                    temp.push(this.box(x,y).get());
+                                }
+                                outputArray.push(temp);
+                            }
+                    
+                            return outputArray;
+                        };
+                        object.set = function(value, update=true){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(value[y][x],false);
+                                }
+                            }
+                        };
+                        object.clear = function(){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(false,false);
+                                }
+                            }
+                        };
+                        object.light = function(x,y,state){
+                            object.box(x,y).light(state);
+                        };
+                    
+                    
+                        //callback
+                        object.onchange = function(){};
+                    
+                    
+                        return object;
+                    };
+                    this.slidePanel_horizontal = function(
+                        id='slidePanel_horizontal', 
+                        x, y, width, height,
+                        count,
+                        handleStyle = 'fill:rgba(180,180,180,1)',
+                        backingStyle = 'fill:rgba(150,150,150,1)',
+                        slotStyle = 'fill:rgba(50,50,50,1)'
+                    ){
+                        // elements
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
+                        for(var a = 0; a < count; a++){
+                            var temp = parts.control.slide_horizontal( id+'_'+a, 0, a*(height/count), width, height/count, handleStyle, backingStyle, slotStyle );
+                            temp.onchange = function(){ object.onchange(object.get()); };
+                            temp.onrelease = function(){ object.onrelease(object.get()); };
+                            object.appendChild(temp);
+                        }
+                    
+                    
+                        //methods
+                            object.slide = function(index){ return object.children[object.id+'_'+index]; };
+                            object.get = function(){
+                                var outputArray = [];
+                                for(var b = 0; b < count; b++){
+                                    outputArray.push(this.slide(b).get());
+                                }
+                                return outputArray;
+                            };
+                            object.set = function(a, live=false, update=true){
+                                for(var b = 0; b < count; b++){
+                                    this.slide(b).set(a[b],false);
+                                }
+                    
+                                if(update&&this.onchange){ this.onchange(a); }
+                            };
+                            object.smoothSet = function(a,time,curve,update=true){
+                                for(var b = 0; b < a.length; b++){
+                                    this.slide(b).smoothSet(a[b],time,curve,false);
+                                }
+                                for(var b = a.length; b < count; b++){
+                                    this.slide(b).smoothSet(1/2,time,curve,false);
+                                }
+                    
+                                if(update&&this.onchange){ setTimeout(function(){this.onchange(a);},time); }
+                                if(update&&!live&&this.onrelease){ setTimeout(function(){this.onrelease(a);},time); }
+                            };
+                            object.setAll = function(a, live=false, update=true){
+                                this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a) );
+                            };
+                            object.smoothSetAll = function(a, time, curve, update=true){
+                                this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a), time, curve, update );
+                            };
+                        
+                        //callback
+                            object.onchange = function(){};
+                            object.onrelease = function(){};
+                    
+                        return object;
+                    };
+                    this.slidePanel_vertical = function(
+                        id='slidePanel_vertical', 
+                        x, y, width, height,
+                        count,
+                        handleStyle = 'fill:rgba(180,180,180,1)',
+                        backingStyle = 'fill:rgba(150,150,150,1)',
+                        slotStyle = 'fill:rgba(50,50,50,1)'
+                    ){
+                        // elements
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
+                        for(var a = 0; a < count; a++){
+                            var temp = parts.control.slide_vertical( id+'_'+a, a*(width/count), 0, width/count, height, handleStyle, backingStyle, slotStyle );
+                            temp.onchange = function(){ object.onchange(object.get()); };
+                            temp.onrelease = function(){ object.onrelease(object.get()); };
+                            object.appendChild(temp);
+                        }
+                    
+                    
+                        //methods
+                            object.slide = function(index){ return object.children[object.id+'_'+index]; };
+                            object.get = function(){
+                                var outputArray = [];
+                                for(var b = 0; b < count; b++){
+                                    outputArray.push(this.slide(b).get());
+                                }
+                                return outputArray;
+                            };
+                            object.set = function(a, live=false, update=true){
+                                for(var b = 0; b < a.length; b++){
+                                    this.slide(b).set(a[b],live,false);
+                                }
+                                for(var b = a.length; b < count; b++){
+                                    this.slide(b).set(1/2,live,false);
+                                }
+                    
+                                if(update&&this.onchange){ this.onchange(a); }
+                                if(update&&!live&&this.onrelease){ this.onrelease(a); }
+                            };
+                            object.smoothSet = function(a,time,curve,update=true){
+                                for(var b = 0; b < a.length; b++){
+                                    this.slide(b).smoothSet(a[b],time,curve,false);
+                                }
+                                for(var b = a.length; b < count; b++){
+                                    this.slide(b).smoothSet(1/2,time,curve,false);
+                                }
+                    
+                                if(update&&this.onchange){ setTimeout(function(){this.onchange(a);},time); }
+                                if(update&&!live&&this.onrelease){ setTimeout(function(){this.onrelease(a);},time); }
+                            };
+                            object.setAll = function(a, live=false, update=true){
+                                this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a) );
+                            };
+                            object.smoothSetAll = function(a, time, curve, update=true){
+                                this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,a), time, curve, update );
+                            };
+                    
+                        //callback
+                            object.onchange = function(){};
+                            object.onrelease = function(){};
+                    
+                        return object;
+                    };
+                    this.slide_horizontal = function(
+                        id='slide_horizontal', 
+                        x, y, width, height,
+                        handleStyle = 'fill:rgba(200,200,200,1)',
+                        backingStyle = 'fill:rgba(150,150,150,1)',
+                        slotStyle = 'fill:rgba(50,50,50,1)'
+                    ){
+                        //elements
+                        var object = parts.basic.g(id, x, y);
+                            object._value = 0;
+                            object._data = {
+                                'w':width,
+                                'handleSize':0.9,
+                                grasped:false,
+                            };
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
+                        var slot = parts.basic.rect(null, width*0.05, height*0.45, width*0.9, height*0.1, 0, slotStyle);
+                            object.appendChild(slot);
+                        var handle = parts.basic.rect('handle', 0, 0, width*0.1, height, 0, handleStyle);
+                            object.appendChild(handle);
+                    
+                    
+                        //methods
+                        object.get = function(){ return this._value; };
+                        object.set = function(value, live=false, update=true){
+                            if(object._data.grasped){return;}
+                            this._set(value,live,update);
+                        };
+                        object._set = function(value, live=false, update=true){
+                            value = (value>1 ? 1 : value);
+                            value = (value<0 ? 0 : value);
+                    
+                            this._value = value;
+                            if(update&&this.onchange){ this.onchange(value); }
+                            if(update&&!live&&this.onrelease){ this.onrelease(value); }
+                            this.children['handle'].x.baseVal.valueInSpecifiedUnits = value*this._data.w*this._data.handleSize;
+                        };
+                        object.smoothSet = function(target,time,curve,update=true){
+                            var start = this.get();
+                            var mux = target-start;
+                            var stepsPerSecond = Math.round(Math.abs(mux)*100);
+                            var totalSteps = stepsPerSecond*time;
+                    
+                            var steps = [1];
+                            switch(curve){
+                                case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                                case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
+                                case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
+                                case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                                case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
+                                case 'instant': default: break;
+                            }
+                    
+                            if(steps.length == 0){return;}
+                    
+                            if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                            object.smoothSet.interval = setInterval(function(){
+                                object.set( (start+(steps.shift()*mux)),true,update );
+                                if(steps.length == 0){clearInterval(object.smoothSet.interval);}
+                            },1000/stepsPerSecond);
+                        };
+                    
+                    
+                        //callback
+                        object.onchange = function(){};
+                        object.onrelease = function(){};
+                    
+                        
+                        //mouse interaction
+                        object.ondblclick = function(){ this.set(0.5); };
+                        object.onwheel = function(event){
+                            var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                            var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                    
+                            this._set( this.get() + move/(10*globalScale) );
+                        }; 
+                        object.onmousedown = function(event){
+                            object._data.grasped = true;
+                            __globals.svgElement.tempRef = this;
+                            __globals.svgElement.tempRef._data.initialValue = this.get();
+                            __globals.svgElement.tempRef._data.initialX = event.x;
+                            __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.w*__globals.svgElement.tempRef._data.handleSize;
+                            __globals.svgElement.onmousemove = function(event){
+                                var mux = __globals.svgElement.tempRef._data.mux;
+                                var value = __globals.svgElement.tempRef._data.initialValue;
+                                var numerator = __globals.svgElement.tempRef._data.initialX-event.x;
+                                var divider = __globals.utility.workspace.getGlobalScale(object);
+                    
+                                __globals.svgElement.tempRef._set( value - numerator/(divider*mux), true );
+                            };
+                            __globals.svgElement.onmouseup = function(){
+                                object._data.grasped = false;
+                                __globals.svgElement.tempRef._set( __globals.svgElement.tempRef.get(), false );
+                                this.tempRef = null;
+                                this.onmousemove = null;
+                                this.onmouseleave = null;
+                                this.onmouseup = null;
+                            };
+                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                            __globals.svgElement.onmousemove(event);
+                        };
+                    
+                        return object;
+                    };
+                    this.slide_vertical = function(
+                        id='slide_vertical', 
+                        x, y, width, height,
+                        handleStyle = 'fill:rgba(200,200,200,1)',
+                        backingStyle = 'fill:rgba(150,150,150,1)',
+                        slotStyle = 'fill:rgba(50,50,50,1)'
+                    ){
+                        // elements
+                        var object = parts.basic.g(id, x, y);
+                            object._value = 0;
+                            object._data = {
+                                'h':height,
+                                'handleSize':0.9
+                            };
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
+                        var slot = parts.basic.rect(null, width*0.45, height*0.05, width*0.1, height*0.9, 0, slotStyle);
+                            object.appendChild(slot);
+                        var handle = parts.basic.rect('handle', 0, 0, width, height*0.1, 0, handleStyle);
+                            object.appendChild(handle);
+                    
+                    
+                        //methods
+                        object.get = function(){ return this._value; };
+                        object.set = function(value, live=false, update=true){
+                            value = (value>1 ? 1 : value);
+                            value = (value<0 ? 0 : value);
+                    
+                            this._value = value;
+                            if(update&&this.onchange){ this.onchange(value); }
+                            if(update&&!live&&this.onrelease){ this.onrelease(value); }
+                            this.children['handle'].y.baseVal.valueInSpecifiedUnits = value*this._data.h*this._data.handleSize;
+                        };
+                        object.smoothSet = function(target,time,curve,update=true){
+                            var start = this.get();
+                            var mux = target-start;
+                            var stepsPerSecond = Math.round(Math.abs(mux)*100);
+                            var totalSteps = stepsPerSecond*time;
+                    
+                            var steps = [1];
+                            switch(curve){
+                                case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                                case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
+                                case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
+                                case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                                case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
+                                case 'instant': default: break;
+                            }
+                    
+                            if(steps.length == 0){return;}
+                    
+                            if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                            object.smoothSet.interval = setInterval(function(){
+                                object.set( (start+(steps.shift()*mux)),true,update );
+                                if(steps.length == 0){clearInterval(object.smoothSet.interval);}
+                            },1000/stepsPerSecond);
+                        };
+                    
+                        
+                        //callback
+                        object.onchange = function(){};
+                        object.onrelease = function(){};
+                        
+                    
+                        //mouse interaction
+                        object.ondblclick = function(){ this.set(0.5); };
+                        object.onwheel = function(event){
+                            var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                            var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                    
+                            this.set( this.get() + move/(10*globalScale) );
+                        }; 
+                        object.onmousedown = function(event){
+                            __globals.svgElement.tempRef = this;
+                            __globals.svgElement.tempRef._data.initialValue = this.get();
+                            __globals.svgElement.tempRef._data.initialY = event.y;
+                            __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.h*__globals.svgElement.tempRef._data.handleSize;
+                            __globals.svgElement.onmousemove = function(event){
+                                var mux = __globals.svgElement.tempRef._data.mux;
+                                var value = __globals.svgElement.tempRef._data.initialValue;
+                                var numerator = __globals.svgElement.tempRef._data.initialY-event.y;
+                                var divider = __globals.utility.workspace.getGlobalScale(object);
+                    
+                                __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
+                            };
+                            __globals.svgElement.onmouseup = function(){
+                                __globals.svgElement.tempRef.set( __globals.svgElement.tempRef.get(), false );
+                                this.tempRef = null;
+                                this.onmousemove = null;
+                                this.onmouseleave = null;
+                                this.onmouseup = null;
+                            };
+                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                            __globals.svgElement.onmousemove(event);
+                        };
+                    
+                        return object;
+                    };
                 }
                 this.audio = new function(){
+                    this.audio2percentage = function(){
+                        return new function(){
+                            var analyser = {
+                                timeDomainDataArray: null,
+                                frequencyData: null,
+                                refreshRate: 30,
+                                refreshInterval: null,
+                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                resolution: 128
+                            };
+                            analyser.analyserNode = __globals.audio.context.createAnalyser();
+                            analyser.analyserNode.fftSize = analyser.resolution;
+                            analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
+                            analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
+                    
+                            this.__render = function(){
+                                    analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
+                    
+                                    var numbers = [];
+                                    for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
+                                        numbers.push(
+                                            analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
+                                        );
+                                    }
+                    
+                                    var val = 0;
+                                    numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
+                    
+                                    this.newValue(val);
+                            }
+                    
+                            //audio connections
+                                this.audioIn = function(){return analyser.analyserNode;};
+                    
+                            //methods
+                                this.start = function(){
+                                    analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
+                                };
+                                this.stop = function(){
+                                    clearInterval(analyser.refreshInterval);
+                                };
+                    
+                            //callbacks
+                                this.newValue = function(a){};
+                        };
+                    };
+                    this.synthesizer_1 = function(
+                        context,
+                        waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
+                        gain=1, 
+                        attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+                        detune=0, octave=0
+                    ){
+                        //components
+                            var mainOut = context.createGain();
+                                mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
+                    
+                        //live oscillators
+                            var liveOscillators = {};
+                    
+                        //options
+                            this.waveType = function(a){if(a==null){return waveType;}waveType=a;};
+                            this.periodicWave = function(a){if(a==null){return periodicWave;}periodicWave=a;};
+                            this.gain = function(target,time,curve){
+                                return changeAudioParam(mainOut.gain,target,time,curve);
+                            };
+                            this.attack = function(time,curve){
+                                if(time==null&&curve==null){return attack;}
+                                attack.time = time ? time : attack.time;
+                                attack.curve = curve ? curve : attack.curve;
+                            };
+                            this.release = function(time,curve){
+                                if(time==null&&curve==null){return release;}
+                                release.time = time ? time : release.time;
+                                release.curve = curve ? curve : release.curve;
+                            };
+                            this.octave = function(a){if(a==null){return octave;}octave=a;};
+                            this.detune = function(target,time,curve){
+                                if(a==null){return detune;}
+                    
+                                //change stored value for any new oscillators that are made
+                                    var start = detune;
+                                    var mux = target-start;
+                                    var stepsPerSecond = Math.round(Math.abs(mux));
+                                    var totalSteps = stepsPerSecond*time;
+                    
+                                    var steps = [1];
+                                    switch(curve){
+                                        case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                                        case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                                        case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps,8); break;
+                                        case 'instant': default: break;
+                                    }
+                                    
+                                    if(steps.length != 0){
+                                        var interval = setInterval(function(){
+                                            detune = start+(steps.shift()*mux);
+                                            if(steps.length == 0){clearInterval(interval);}
+                                        },1000/stepsPerSecond);
+                                    }
+                    
+                                //instruct liveOscillators to adjust their values
+                                    var OSCs = Object.keys(liveOscillators);
+                                    for(var b = 0; b < OSCs.length; b++){ 
+                                        liveOscillators[OSCs[b]].detune(target,time,curve);
+                                    }
+                            };
+                    
+                        //output node
+                            this.out = function(){return mainOut;}
+                    
+                        //oscillator generator
+                            function makeOSC(
+                                context, connection, midiNumber,
+                                type, periodicWave, 
+                                gain, attack, release,
+                                detune, octave
+                            ){
+                                return new function(){
+                                    this.generator = context.createOscillator();
+                                        if(type == 'custom'){ 
+                                            this.generator.setPeriodicWave( 
+                                                // context.createPeriodicWave(new Float32Array(periodicWave.sin),new Float32Array(periodicWave.cos))
+                                                context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                                            ); 
+                                        }else{ this.generator.type = type; }
+                                        this.generator.frequency.setTargetAtTime(__globals.audio.midiNumber_frequency(midiNumber,octave), context.currentTime, 0);
+                                        this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                                        this.generator.start(0);
+                    
+                                    this.gain = context.createGain();
+                                        this.generator.connect(this.gain);
+                                        this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                                        changeAudioParam(this.gain.gain, gain, attack.time, attack.curve, false);
+                                        this.gain.connect(connection);
+                    
+                                    this.detune = function(target,time,curve){
+                                        changeAudioParam(this.generator.detune,target,time,curve);
+                                    };
+                                    this.changeVelocity = function(a){
+                                        changeAudioParam(this.gain.gain,a,attack.time,attack.curve);
+                                    };
+                                    this.stop = function(){
+                                        changeAudioParam(this.gain.gain,0,release.time,release.curve, false);
+                                        setTimeout(function(that){
+                                            that.gain.disconnect(); 
+                                            that.generator.stop(); 
+                                            that.generator.disconnect(); 
+                                            that.gain=null; 
+                                            that.generator=null; 
+                                        }, release.time*1000, this);
+                                    };
+                                };
+                            }
+                    
+                        //methods
+                            this.perform = function(note){
+                                if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
+                                else if( !liveOscillators[note.num] ){ 
+                                    //create new tone
+                                    liveOscillators[note.num] = makeOSC(context, mainOut, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave); 
+                                }
+                                else if( note.velocity == 0 ){ 
+                                    //stop and destroy tone
+                                    liveOscillators[note.num].stop();
+                                    delete liveOscillators[note.num];
+                                }
+                                else{
+                                    //adjust tone
+                                    liveOscillators[note.num].changeVelocity(note.velocity);
+                                }
+                            };
+                            this.panic = function(){
+                                var OSCs = Object.keys(liveOscillators);
+                                for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+                            };
+                    
+                        //functions
+                            function changeAudioParam(audioParam,target,time,curve,cancelScheduledValues=true){
+                                if(target==null){return audioParam.value;}
+                    
+                                if(cancelScheduledValues){
+                                    audioParam.cancelScheduledValues(context.currentTime);
+                                }
+                                
+                                switch(curve){
+                                    case 'linear': 
+                                        audioParam.linearRampToValueAtTime(target, context.currentTime+time);
+                                    break;
+                                    case 'exponential':
+                                        console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
+                                        if(target == 0){target = 1/10000;}
+                                        audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
+                                    break;
+                                    case 's':
+                                        var mux = target - audioParam.value;
+                                        var array = __globals.utility.math.curveGenerator.s(10);
+                                        for(var a = 0; a < array.length; a++){
+                                            array[a] = audioParam.value + array[a]*mux;
+                                        }
+                                        audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
+                                    break;
+                                    case 'instant': default:
+                                        audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                                    break;
+                                }
+                            }
+                    };
                     this.synthesizer2 = function(
                         context,
                         waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
@@ -4316,214 +4565,6 @@
                                 flow.wobbler_detune.stop();
                                 flow.wobbler_detune.start();
                             };
-                    };
-                    this.audio2percentage = function(){
-                        return new function(){
-                            var analyser = {
-                                timeDomainDataArray: null,
-                                frequencyData: null,
-                                refreshRate: 30,
-                                refreshInterval: null,
-                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                resolution: 128
-                            };
-                            analyser.analyserNode = __globals.audio.context.createAnalyser();
-                            analyser.analyserNode.fftSize = analyser.resolution;
-                            analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
-                            analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
-                    
-                            this.__render = function(){
-                                    analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
-                    
-                                    var numbers = [];
-                                    for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
-                                        numbers.push(
-                                            analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
-                                        );
-                                    }
-                    
-                                    var val = 0;
-                                    numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
-                    
-                                    this.newValue(val);
-                            }
-                    
-                            //audio connections
-                                this.audioIn = function(){return analyser.analyserNode;};
-                    
-                            //methods
-                                this.start = function(){
-                                    analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
-                                };
-                                this.stop = function(){
-                                    clearInterval(analyser.refreshInterval);
-                                };
-                    
-                            //callbacks
-                                this.newValue = function(a){};
-                        };
-                    };
-                    this.synthesizer_1 = function(
-                        context,
-                        waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
-                        gain=1, 
-                        attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
-                        detune=0, octave=0
-                    ){
-                        //components
-                            var mainOut = context.createGain();
-                                mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
-                    
-                        //live oscillators
-                            var liveOscillators = {};
-                    
-                        //options
-                            this.waveType = function(a){if(a==null){return waveType;}waveType=a;};
-                            this.periodicWave = function(a){if(a==null){return periodicWave;}periodicWave=a;};
-                            this.gain = function(target,time,curve){
-                                return changeAudioParam(mainOut.gain,target,time,curve);
-                            };
-                            this.attack = function(time,curve){
-                                if(time==null&&curve==null){return attack;}
-                                attack.time = time ? time : attack.time;
-                                attack.curve = curve ? curve : attack.curve;
-                            };
-                            this.release = function(time,curve){
-                                if(time==null&&curve==null){return release;}
-                                release.time = time ? time : release.time;
-                                release.curve = curve ? curve : release.curve;
-                            };
-                            this.octave = function(a){if(a==null){return octave;}octave=a;};
-                            this.detune = function(target,time,curve){
-                                if(a==null){return detune;}
-                    
-                                //change stored value for any new oscillators that are made
-                                    var start = detune;
-                                    var mux = target-start;
-                                    var stepsPerSecond = Math.round(Math.abs(mux));
-                                    var totalSteps = stepsPerSecond*time;
-                    
-                                    var steps = [1];
-                                    switch(curve){
-                                        case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-                                        case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-                                        case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps,8); break;
-                                        case 'instant': default: break;
-                                    }
-                                    
-                                    if(steps.length != 0){
-                                        var interval = setInterval(function(){
-                                            detune = start+(steps.shift()*mux);
-                                            if(steps.length == 0){clearInterval(interval);}
-                                        },1000/stepsPerSecond);
-                                    }
-                    
-                                //instruct liveOscillators to adjust their values
-                                    var OSCs = Object.keys(liveOscillators);
-                                    for(var b = 0; b < OSCs.length; b++){ 
-                                        liveOscillators[OSCs[b]].detune(target,time,curve);
-                                    }
-                            };
-                    
-                        //output node
-                            this.out = function(){return mainOut;}
-                    
-                        //oscillator generator
-                            function makeOSC(
-                                context, connection, midiNumber,
-                                type, periodicWave, 
-                                gain, attack, release,
-                                detune, octave
-                            ){
-                                return new function(){
-                                    this.generator = context.createOscillator();
-                                        if(type == 'custom'){ 
-                                            this.generator.setPeriodicWave( 
-                                                // context.createPeriodicWave(new Float32Array(periodicWave.sin),new Float32Array(periodicWave.cos))
-                                                context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
-                                            ); 
-                                        }else{ this.generator.type = type; }
-                                        this.generator.frequency.setTargetAtTime(__globals.audio.midiNumber_frequency(midiNumber,octave), context.currentTime, 0);
-                                        this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
-                                        this.generator.start(0);
-                    
-                                    this.gain = context.createGain();
-                                        this.generator.connect(this.gain);
-                                        this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                                        changeAudioParam(this.gain.gain, gain, attack.time, attack.curve, false);
-                                        this.gain.connect(connection);
-                    
-                                    this.detune = function(target,time,curve){
-                                        changeAudioParam(this.generator.detune,target,time,curve);
-                                    };
-                                    this.changeVelocity = function(a){
-                                        changeAudioParam(this.gain.gain,a,attack.time,attack.curve);
-                                    };
-                                    this.stop = function(){
-                                        changeAudioParam(this.gain.gain,0,release.time,release.curve, false);
-                                        setTimeout(function(that){
-                                            that.gain.disconnect(); 
-                                            that.generator.stop(); 
-                                            that.generator.disconnect(); 
-                                            that.gain=null; 
-                                            that.generator=null; 
-                                        }, release.time*1000, this);
-                                    };
-                                };
-                            }
-                    
-                        //methods
-                            this.perform = function(note){
-                                if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
-                                else if( !liveOscillators[note.num] ){ 
-                                    //create new tone
-                                    liveOscillators[note.num] = makeOSC(context, mainOut, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave); 
-                                }
-                                else if( note.velocity == 0 ){ 
-                                    //stop and destroy tone
-                                    liveOscillators[note.num].stop();
-                                    delete liveOscillators[note.num];
-                                }
-                                else{
-                                    //adjust tone
-                                    liveOscillators[note.num].changeVelocity(note.velocity);
-                                }
-                            };
-                            this.panic = function(){
-                                var OSCs = Object.keys(liveOscillators);
-                                for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
-                            };
-                    
-                        //functions
-                            function changeAudioParam(audioParam,target,time,curve,cancelScheduledValues=true){
-                                if(target==null){return audioParam.value;}
-                    
-                                if(cancelScheduledValues){
-                                    audioParam.cancelScheduledValues(context.currentTime);
-                                }
-                                
-                                switch(curve){
-                                    case 'linear': 
-                                        audioParam.linearRampToValueAtTime(target, context.currentTime+time);
-                                    break;
-                                    case 'exponential':
-                                        console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
-                                        if(target == 0){target = 1/10000;}
-                                        audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
-                                    break;
-                                    case 's':
-                                        var mux = target - audioParam.value;
-                                        var array = __globals.utility.math.curveGenerator.s(10);
-                                        for(var a = 0; a < array.length; a++){
-                                            array[a] = audioParam.value + array[a]*mux;
-                                        }
-                                        audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
-                                    break;
-                                    case 'instant': default:
-                                        audioParam.setTargetAtTime(target, context.currentTime, 0.001);
-                                    break;
-                                }
-                            }
                     };
                 }
                 this.dynamic = new function(){
@@ -4931,6 +4972,136 @@
                         design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_1.in() );
                         design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_2.in() );
                     
+                    return obj;
+                };
+                this.audio_scope = function(x,y){
+                    var attributes = {
+                        framerateLimits: {min:1, max:30}
+                    };
+                    var style = {
+                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+                        text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;'
+                    };
+                    var design = {
+                        type:'audio_scope',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'input', data:{
+                                type:0, x:195, y:5, width:10, height:20
+                            }},
+                            {type:'path', name:'backing', data:{
+                                path:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
+                                style:style.background
+                            }},
+                
+                            {type:'grapher_audioScope', name:'waveport', data:{
+                                x:5, y:5, width:150, height:100
+                            }},
+                            {type:'key_rect', name:'holdKey', data:{
+                                x:160, y:5, width:30, height:20,
+                                style:{
+                                    off:'fill:rgba(175,175,175,1)', press:'fill:rgba(220,220,220,1)', pressAndGlow:'fill:rgba(150,150,150,1)'
+                                },
+                                onkeydown:function(){design.grapher_audioScope.waveport.stop();},
+                                onkeyup:function(){design.grapher_audioScope.waveport.start();},
+                            }},
+                
+                            {type:'text', name:'framerate_name', data:{x: 155+6.5, y: 30+40, text: 'framerate', style: style.text}},
+                            {type:'text', name:'framerate_1',    data:{x: 155+4,   y: 30+34, text: '1',         style: style.text}},
+                            {type:'text', name:'framerate_15',   data:{x: 155+17,  y: 30+2,  text: '15',        style: style.text}},
+                            {type:'text', name:'framerate_30',   data:{x: 155+33,  y: 30+34, text: '30',        style: style.text}},
+                            {type:'dial_continuous', name:'framerate', data:{
+                                x:175, y:50, r:12,
+                                style:{
+                                    handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',
+                                    needle:'fill:rgba(250,150,250,1)', outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
+                                },
+                                onchange:function(a){
+                                    design.grapher_audioScope.waveport.refreshRate(
+                                        attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a)
+                                    );
+                                }
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_scope,design);
+                    
+                    //circuitry
+                        design.connectionNode_audio.input.out().connect(design.grapher_audioScope.waveport.getNode());
+                
+                    //setup
+                        design.grapher_audioScope.waveport.start();
+                        design.dial_continuous.framerate.set(1);
+                
+                    return obj;
+                };
+                this.audio_sink = function(x,y){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        level:{
+                            backing:'fill:rgb(10,10,10)', 
+                            levels:['fill:rgb(250,250,250);','fill:rgb(200,200,200);'],
+                            marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                        },
+                    };
+                    var design = {
+                        type:'audio_sink',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'right', data:{
+                                type:0, x:90, y:5, width:20, height:20
+                            }},
+                            {type:'connectionNode_audio', name:'left', data:{
+                                type:0, x:90, y:30, width:20, height:20
+                            }},
+                            {type:'audio_meter_level', name:'right', data:{
+                                x:10, y:5, width:5, height:45, 
+                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            }},
+                            {type:'audio_meter_level', name:'left', data:{
+                                x:5, y:5, width:5, height:45,
+                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            }},
+                        ],
+                    };
+                 
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_sink,design);
+                
+                    //circuitry
+                        var flow = {
+                            destination:null,
+                            pan_left:null, pan_right:null,
+                        };
+                        //destination
+                            flow._destination = __globals.audio.context.destination;
+                        //pan left/right
+                            flow.pan_left = __globals.audio.context.createStereoPanner();
+                                flow.pan_left.pan.setValueAtTime(1, __globals.audio.context.currentTime);
+                                flow.pan_left.connect(flow._destination);
+                            flow.pan_right = __globals.audio.context.createStereoPanner();
+                                flow.pan_right.pan.setValueAtTime(-1, __globals.audio.context.currentTime);
+                                flow.pan_right.connect(flow._destination);
+                        //audio connections
+                            //inputs to meters
+                                design.connectionNode_audio.left.out().connect(design.audio_meter_level.left.audioIn());
+                                design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
+                            //inputs to panning nodes
+                                design.connectionNode_audio.left.out().connect(flow.pan_left);
+                                design.connectionNode_audio.right.out().connect(flow.pan_right);
+                            //panning nodes to output 
+                                design.audio_meter_level.left.start();
+                                design.audio_meter_level.right.start();
+                
                     return obj;
                 };
                 this.basicSynthesizer = function(x,y){
@@ -5431,184 +5602,68 @@
                 
                     return obj;
                 }
-                this.audio_sink = function(x,y){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        level:{
-                            backing:'fill:rgb(10,10,10)', 
-                            levels:['fill:rgb(250,250,250);','fill:rgb(200,200,200);'],
-                            marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                        },
-                    };
-                    var design = {
-                        type:'audio_sink',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'right', data:{
-                                type:0, x:90, y:5, width:20, height:20
-                            }},
-                            {type:'connectionNode_audio', name:'left', data:{
-                                type:0, x:90, y:30, width:20, height:20
-                            }},
-                            {type:'audio_meter_level', name:'right', data:{
-                                x:10, y:5, width:5, height:45, 
-                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
-                            }},
-                            {type:'audio_meter_level', name:'left', data:{
-                                x:5, y:5, width:5, height:45,
-                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
-                            }},
-                        ],
-                    };
-                 
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_sink,design);
-                
-                    //circuitry
-                        var flow = {
-                            destination:null,
-                            pan_left:null, pan_right:null,
-                        };
-                        //destination
-                            flow._destination = __globals.audio.context.destination;
-                        //pan left/right
-                            flow.pan_left = __globals.audio.context.createStereoPanner();
-                                flow.pan_left.pan.setValueAtTime(1, __globals.audio.context.currentTime);
-                                flow.pan_left.connect(flow._destination);
-                            flow.pan_right = __globals.audio.context.createStereoPanner();
-                                flow.pan_right.pan.setValueAtTime(-1, __globals.audio.context.currentTime);
-                                flow.pan_right.connect(flow._destination);
-                        //audio connections
-                            //inputs to meters
-                                design.connectionNode_audio.left.out().connect(design.audio_meter_level.left.audioIn());
-                                design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
-                            //inputs to panning nodes
-                                design.connectionNode_audio.left.out().connect(flow.pan_left);
-                                design.connectionNode_audio.right.out().connect(flow.pan_right);
-                            //panning nodes to output 
-                                design.audio_meter_level.left.start();
-                                design.audio_meter_level.right.start();
-                
-                    return obj;
-                };
-                this.audio_scope = function(x,y){
-                    var attributes = {
-                        framerateLimits: {min:1, max:30}
-                    };
-                    var style = {
-                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
-                        text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;'
-                    };
-                    var design = {
-                        type:'audio_scope',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'input', data:{
-                                type:0, x:195, y:5, width:10, height:20
-                            }},
-                            {type:'path', name:'backing', data:{
-                                path:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
-                                style:style.background
-                            }},
-                
-                            {type:'grapher_audioScope', name:'waveport', data:{
-                                x:5, y:5, width:150, height:100
-                            }},
-                            {type:'key_rect', name:'holdKey', data:{
-                                x:160, y:5, width:30, height:20,
-                                style:{
-                                    off:'fill:rgba(175,175,175,1)', press:'fill:rgba(220,220,220,1)', pressAndGlow:'fill:rgba(150,150,150,1)'
-                                },
-                                onkeydown:function(){design.grapher_audioScope.waveport.stop();},
-                                onkeyup:function(){design.grapher_audioScope.waveport.start();},
-                            }},
-                
-                            {type:'text', name:'framerate_name', data:{x: 155+6.5, y: 30+40, text: 'framerate', style: style.text}},
-                            {type:'text', name:'framerate_1',    data:{x: 155+4,   y: 30+34, text: '1',         style: style.text}},
-                            {type:'text', name:'framerate_15',   data:{x: 155+17,  y: 30+2,  text: '15',        style: style.text}},
-                            {type:'text', name:'framerate_30',   data:{x: 155+33,  y: 30+34, text: '30',        style: style.text}},
-                            {type:'dial_continuous', name:'framerate', data:{
-                                x:175, y:50, r:12,
-                                style:{
-                                    handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',
-                                    needle:'fill:rgba(250,150,250,1)', outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
-                                },
-                                onchange:function(a){
-                                    design.grapher_audioScope.waveport.refreshRate(
-                                        attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a)
-                                    );
-                                }
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_scope,design);
-                    
-                    //circuitry
-                        design.connectionNode_audio.input.out().connect(design.grapher_audioScope.waveport.getNode());
-                
-                    //setup
-                        design.grapher_audioScope.waveport.start();
-                        design.dial_continuous.framerate.set(1);
-                
-                    return obj;
-                };
             };
             __globals.audio.context.resume().then(function(){
                 __globals.panes.menu.innerHTML = '';
+                clearTimeout(timeout);
             },function(){
                 console.warn('I\'m not sure what to do now..I guess we just sit here in silence');
             });
             
-            var viewportDimensions = __globals.utility.workspace.getViewportDimensions();
             
-            //blocking screen
-                __globals.panes.menu.append(parts.basic.rect(null, 0, 0, viewportDimensions.width, viewportDimensions.height, 0, 'fill:rgba(255,255,255,0.9)'));
-            //explanation text
-                var text = __globals.utility.experimental.elementMaker('text','explanation',{
-                    x:10, y:30, 
-                    text:'because of the \'no autoplay\' feature in browsers; this site needs you to allow it to produce sound',
-                    style:'fill:rgba(0,0,0,1); font-size:15px; font-family:Courier New; pointer-events:none;'
-                });
-                __globals.panes.menu.append(text);
-                var textDimensions = text.getBBox();
-                __globals.utility.element.setTransform(text, {
-                    x:(viewportDimensions.width-textDimensions.width)/2,
-                    y:((viewportDimensions.height-textDimensions.height)/2)-30,
-                    s:1, r:0
-                });
-            //activation button
-                __globals.panes.menu.append(__globals.utility.experimental.elementMaker('button_rect','audioOn',{
-                    x:(viewportDimensions.width-100)/2, y:(viewportDimensions.height-50)/2,
-                    width:100, height:50,
-                    onclick:function(){
-                        __globals.audio.context.resume();
-                        __globals.panes.menu.innerHTML = '';
-                    }
-                }));
-            //button text
-                __globals.panes.menu.append(__globals.utility.experimental.elementMaker('text','explanation',{
-                    x:(viewportDimensions.width/2)-22.5, y:(viewportDimensions.height/2)+5, 
-                    text:'allow',
-                    style:'fill:rgba(0,0,0,1); font-size:15px; font-family:Courier New; pointer-events:none;'
-                }));
-
+            var timeout = setTimeout(function(){
+                var viewportDimensions = __globals.utility.workspace.getViewportDimensions();
+            
+                //blocking screen
+                    __globals.panes.menu.append(parts.basic.rect(null, 0, 0, viewportDimensions.width, viewportDimensions.height, 0, 'fill:rgba(255,255,255,0.9)'));
+                //explanation text
+                    var text = __globals.utility.experimental.elementMaker('text','explanation',{
+                        x:10, y:30, 
+                        text:'because of the \'no autoplay\' feature in browsers; this site needs you to allow it to produce sound',
+                        style:'fill:rgba(0,0,0,1); font-size:15px; font-family:Courier New; pointer-events:none;'
+                    });
+                    __globals.panes.menu.append(text);
+                    var textDimensions = text.getBBox();
+                    __globals.utility.element.setTransform(text, {
+                        x:(viewportDimensions.width-textDimensions.width)/2,
+                        y:((viewportDimensions.height-textDimensions.height)/2)-30,
+                        s:1, r:0
+                    });
+                //activation button
+                    __globals.panes.menu.append(__globals.utility.experimental.elementMaker('button_rect','audioOn',{
+                        x:(viewportDimensions.width-100)/2, y:(viewportDimensions.height-50)/2,
+                        width:100, height:50,
+                        onclick:function(){
+                            __globals.audio.context.resume();
+                            __globals.panes.menu.innerHTML = '';
+                        }
+                    }));
+                //button text
+                    __globals.panes.menu.append(__globals.utility.experimental.elementMaker('text','explanation',{
+                        x:(viewportDimensions.width/2)-22.5, y:(viewportDimensions.height/2)+5, 
+                        text:'allow',
+                        style:'fill:rgba(0,0,0,1); font-size:15px; font-family:Courier New; pointer-events:none;'
+                    }));
+            },1);
             
             parts.audio.audioFilePlayer = function(
                 context,
             ){
+                var values = {
+                    itself:this,
+                    currentTrack:0,
+                    loopActive:false,
+                    loopBounds:{start:0,end:1},
+                    startedAt:-1,
+                    needlePosition:0.0,
+                    loaded:false,
+                    playing:false,
+                };
+            
                 //flow chain
                     var flow = {
-                        audioBuffers:[],
-                        bufferSource:{},
+                        track:{},
+                        bufferSource:null,
                         channelSplitter:{},
                         leftOut:{}, rightOut:{}
                     };
@@ -5628,39 +5683,144 @@
                     flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
                     flow.channelSplitter.connect(flow.rightOut.node, 1);
             
-            
                 //output node
                     this.out_left  = function(){return flow.leftOut.node;}
                     this.out_right = function(){return flow.rightOut.node;}
-                
-                //controls
-                    this.play = function(){
+            
+                    function loadBuffer(data){
                         flow.bufferSource = context.createBufferSource();
-                        flow.bufferSource.buffer = flow.audioBuffers[1];
+                        flow.bufferSource.buffer = data;
                         flow.bufferSource.connect(flow.channelSplitter);
-                        flow.bufferSource.start(0);
+                        flow.bufferSource.onended = function(a){values.itself.pause();};
                     }
-                    this.loadFile = function(URL,slot){
+                    function reset(){
+                        values.needlePosition = 0;
+                        values.playing = false;
+                    }
+            
+                //controls
+                    this.load_url = function(url, callback){
+                        values.loaded = false;
                         var request = new XMLHttpRequest();
-                            request.open('GET', URL, true);
+                            request.open('GET', url, true);
                             request.responseType = 'arraybuffer';
-                            request.onload = function() {
-                                context.decodeAudioData(this.response, function(data) {
-                                    flow.audioBuffers[slot] = data;
-                                }, function(e){"Error with decoding audio data" + e.err});
+                            request.onload = function(){
+                                values.itself.stop();
+                                context.decodeAudioData(this.response, function(data){
+                                    flow.track = {
+                                        buffer:data,
+                                        name:(url.split('/')).pop(),
+                                        duration:buffer.duration,
+                                    };
+                                    values.loaded = true;
+                                    reset();
+                                    if(callback){callback({name:url});}
+                                }, function(e){console.warn("Error with decoding audio data" + e.err);});
                             }
                             request.send();
                     };
-                    this._loadBuffer = function(bufferData,slot){
-                        flow.audioBuffers[slot] = bufferData;
+                    this.load_file = function(callback){
+                        values.loaded = false;
+                        var inputObject = document.createElement('input');
+                        inputObject.type = 'file';
+                        inputObject.onchange = function(){
+                            var file = this.files[0];
+                            var fileReader = new FileReader();
+                            fileReader.readAsArrayBuffer(file);
+                            fileReader.onload = function(data){
+                                values.itself.stop();
+                                __globals.audio.context.decodeAudioData(data.target.result, function(buffer){
+                                    var source = __globals.audio.context.createBufferSource();
+                                    flow.track = {
+                                        buffer:buffer,
+                                        name:file.name,
+                                        duration:buffer.duration,
+                                    };
+                                    values.loaded = true;
+                                    reset();
+                                    if(callback){callback(file);}
+                                });
+                            }
+                            this.parentElement.removeChild(this);
+                        };
+                        document.body.appendChild(inputObject);
+                        inputObject.click();
                     };
             
-                //setup
-                    this.loadFile('http://metasophiea.com/apps/partyCalculator/tracks/4-piano_02.wav',0);
-                    this.loadFile('https://upload.wikimedia.org/wikipedia/commons/d/d7/16_-_Alexandra_02.ogg',1);
-                    this.loadFile('https://upload.wikimedia.org/wikipedia/en/7/7a/Penny_Lane_%28Beatles_song_-_sample%29.ogg',2);
-                    this.loadFile('https://upload.wikimedia.org/wikipedia/commons/transcoded/7/70/Exploration_mélodique_sur_les_accords_de_Tenderly_%28Exploration%29-en_wav.wav/Exploration_mélodique_sur_les_accords_de_Tenderly_%28Exploration%29-en_wav.wav.ogg',3);
-                    // this.loadFile('file:///na-homes/brandon/Downloads/Speaker%20-%20Headphones.mp3',1);
+                    this.loopActive = function(bool=false){
+                        values.loopActive = bool;
+                        flow.bufferSource.loop = values.loopActive;
+                    };
+                    this.loopBounds = function(data={start:0,end:1}){
+                        if(data==null||data==undefined){return data;}
+                        if(data.start!=null && data.start!=undefined){values.loopBounds.start=data.start}
+                        if(data.end!=null && data.end!=undefined){values.loopBounds.end=data.end}
+                        flow.bufferSource.loopStart = values.loopBounds.start;
+                        flow.bufferSource.loopEnd = values.loopBounds.end;
+                    };
+            
+                    this.play = function(){
+                        if(values.startedAt!=-1 || !values.loaded){return;}
+                        loadBuffer(flow.track.buffer);
+                        flow.bufferSource.start(0,values.needlePosition);
+            
+                        flow.bufferSource.loop = values.loopActive;
+                        flow.bufferSource.loopStart = values.loopBounds.start;
+                        flow.bufferSource.loopEnd = values.loopBounds.end;
+            
+                        values.startedAt = context.currentTime-values.needlePosition;
+                        values.playing = true;
+                    };
+                    this.pause = function(callback){
+                        if(values.startedAt==-1){return;}
+                        flow.bufferSource.stop(0);
+                        if(callback){flow.bufferSource.onended = function(){callback();};}
+                        flow.bufferSource = undefined;
+                        values.needlePosition = context.currentTime-values.startedAt;
+                        values.startedAt = -1;
+                        values.playing = false;
+                    };
+                    this.stop = function(){
+                        this.pause();
+                        values.needlePosition = 0;
+                    };
+                    this.jumpTo_time = function(seconds){
+                        if(values.startedAt==-1){
+                            values.needlePosition = seconds;
+                            return;
+                        }
+            
+                        var callback = function(){ values.needlePosition = seconds; };
+                        if(values.playing){
+                            callback = function(){
+                                values.needlePosition = seconds;
+                                values.itself.play();
+                            };
+                        }
+            
+                        this.pause(callback);
+                    };
+                    this.jumpTo_percentage = function(percent){
+                        percent = (percent>1 ? 1 : percent);
+                        percent = (percent<0 ? 0 : percent);
+                        this.jumpTo_time(this.duration()*percent);
+                    };
+            
+                    this.duration = function(){
+                        if(!values.loaded){return -1;}
+                        return flow.track.duration;
+                    };
+                    this.getCurrentTime = function(){
+                        if(!values.loaded){return -1;}
+                        if(values.startedAt == -1){ return values.needlePosition; }
+                        return context.currentTime-values.startedAt;
+                    };
+                    this.title = function(){
+                        return flow.track.name;
+                    };
+                    this.viewWaveformSegment = function(track,start=0,end=1){
+                        return [0,1,-1,0];
+                    };
             };
             objects.testAudioObject = function(x,y,debug=false){
                 var style = {
@@ -5670,40 +5830,71 @@
                     type: 'testAudioObject',
                     x: x, y: y,
                     base: {
-                        points:[{x:0,y:0},{x:50,y:0},{x:50,y:52.5},{x:0,y:52.5}], 
+                        points:[{x:0,y:0},{x:220,y:0},{x:220,y:52.5},{x:0,y:52.5}], 
                         style:style.background
                     },
                     elements:[
                         {type:'connectionNode_audio', name:'outRight', data: {
-                            type: 1, x: -10, y: 5, width: 20, height: 20
+                            type: 1, x: -10, y: 5, width: 10, height: 20
                         }},
                         {type:'connectionNode_audio', name:'outLeft', data: {
-                            type: 1, x: -10, y: 27.5, width: 20, height: 20
+                            type: 1, x: -10, y: 27.5, width: 10, height: 20
+                        }},
+                        {type:'readout_sixteenSegmentDisplay', name:'trackNameReadout', data:{
+                            x: 30, y: 5, angle:0, width:100, height:20, count:10, 
+                            style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
+                        }},
+                        {type:'readout_sixteenSegmentDisplay', name:'time', data:{
+                            x: 135, y: 5, angle:0, width:80, height:20, count:8, 
+                            style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
                         }},
             
-                        // {type:'button_rect', name:'panicButton', data: {
-                        //     x:15, y: 10, width:20, height:20,
-                        //     style:{
-                        //         up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
-                        //         down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
-                        //     },
-                        //     onclick: function(){
-                        //         var i = document.createElement('input');
-                        //         i.type = 'file'; i.id = '_global_metasophiea.com/code/js/liveEdit/loadsave.js';
-                        //         i.onchange = function(){
-                        //             var f = new FileReader();
-                        //             f.readAsBinaryString(this.files[0]);
-                        //             f.onload = function(){
-                        //                 // console.log(f.result);
-                        //                 __globals.audio.context.decodeAudioData(f.result, function(data){
-                        //                     obj.__audioFilePlayer._loadBuffer(data,1);
-                        //                 }, function(e){"Error with decoding audio data" + e.err});
-                        //             }
-                        //         };            
-                        //         document.body.appendChild(i);
-                        //         i.click();
-                        //     }
-                        // }},   
+                        {type:'slide_horizontal',name:'scrubber',data:{
+                            x:45, y:30, width: 170, height: 20,
+                            style:{handle:'fill:rgb(220,220,220);'}, 
+                            onchange:function(data){}, 
+                            onrelease:function(data){
+                                obj.__audioFilePlayer.jumpTo_percentage(data);
+                            }
+                        }},
+            
+                        {type:'button_rect',name:'play',data:{
+                            x:5, y: 30, width:10, height:20, 
+                            style:{
+                                up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
+                                down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
+                            }, 
+                            onclick:function(){obj.__audioFilePlayer.play();}
+                        }},
+                        {type:'button_rect',name:'pause',data:{
+                            x:17.5, y: 30, width:10, height:20, 
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            }, 
+                            onclick:function(){obj.__audioFilePlayer.pause();}
+                        }},
+                        {type:'button_rect',name:'stop',data:{
+                            x:30, y: 30, width:10, height:20, 
+                            style:{
+                                up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
+                                down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(240,200,220,1)'
+                            }, 
+                            onclick:function(){obj.__audioFilePlayer.stop();}
+                        }},
+                        {type:'button_rect', name:'loadFile', data: {
+                            x:5, y: 5, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){
+                                obj.__audioFilePlayer.load_file(function(data){
+                                    design.readout_sixteenSegmentDisplay.trackNameReadout.text(obj.__audioFilePlayer.title());
+                                    design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
+                                });
+                            }
+                        }},   
             
             
                     ]
@@ -5716,9 +5907,30 @@
                     obj.__audioFilePlayer = new parts.audio.audioFilePlayer(__globals.audio.context);
                     obj.__audioFilePlayer.out_right().connect( design.connectionNode_audio.outRight.in() );
                     obj.__audioFilePlayer.out_left().connect( design.connectionNode_audio.outLeft.in() );
+                    setInterval(function(){
+                        //check if there's a track at all
+                            if( -1==obj.__audioFilePlayer.getCurrentTime() ){return;}
+            
+                        //time readout
+                            var time = __globals.utility.math.seconds2time( Math.round(obj.__audioFilePlayer.getCurrentTime()));
+            
+                            design.readout_sixteenSegmentDisplay.time.text(
+                                __globals.utility.math.padString(time.h,2,'0')+':'+
+                                __globals.utility.math.padString(time.m,2,'0')+':'+
+                                __globals.utility.math.padString(time.s,2,'0')
+                            );
+                            design.readout_sixteenSegmentDisplay.time.print();
+            
+                        //scrubber
+                            var progress = obj.__audioFilePlayer.getCurrentTime()/obj.__audioFilePlayer.duration();
+                            if( !isNaN(progress) ){
+                                design.slide_horizontal.scrubber.set(progress,true);
+                            }
+                    },100);
             
                 //setup
-                    setTimeout(function(){obj.__audioFilePlayer.play();},2000);
+                    design.readout_sixteenSegmentDisplay.trackNameReadout.text('    --');
+                    design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
             
                 return obj;
             };
@@ -5754,7 +5966,7 @@
                 audioDuplicator_2.io.output_2.connectTo( audioSink_1.io.left );
             
             //viewport position
-                __globals.utility.workspace.gotoPosition(-85.5379, -8.1652, 2.24189, 0);
+                __globals.utility.workspace.gotoPosition(-301.538, 23.8348, 2.24189, 0);
 
 
         }

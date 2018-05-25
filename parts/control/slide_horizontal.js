@@ -10,7 +10,8 @@ this.slide_horizontal = function(
         object._value = 0;
         object._data = {
             'w':width,
-            'handleSize':0.9
+            'handleSize':0.9,
+            grasped:false,
         };
     var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
         object.appendChild(rect);
@@ -23,6 +24,10 @@ this.slide_horizontal = function(
     //methods
     object.get = function(){ return this._value; };
     object.set = function(value, live=false, update=true){
+        if(object._data.grasped){return;}
+        this._set(value,live,update);
+    };
+    object._set = function(value, live=false, update=true){
         value = (value>1 ? 1 : value);
         value = (value<0 ? 0 : value);
 
@@ -68,9 +73,10 @@ this.slide_horizontal = function(
         var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
         var globalScale = __globals.utility.workspace.getGlobalScale(object);
 
-        this.set( this.get() + move/(10*globalScale) );
+        this._set( this.get() + move/(10*globalScale) );
     }; 
     object.onmousedown = function(event){
+        object._data.grasped = true;
         __globals.svgElement.tempRef = this;
         __globals.svgElement.tempRef._data.initialValue = this.get();
         __globals.svgElement.tempRef._data.initialX = event.x;
@@ -81,10 +87,11 @@ this.slide_horizontal = function(
             var numerator = __globals.svgElement.tempRef._data.initialX-event.x;
             var divider = __globals.utility.workspace.getGlobalScale(object);
 
-            __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
+            __globals.svgElement.tempRef._set( value - numerator/(divider*mux), true );
         };
         __globals.svgElement.onmouseup = function(){
-            __globals.svgElement.tempRef.set( __globals.svgElement.tempRef.get(), false );
+            object._data.grasped = false;
+            __globals.svgElement.tempRef._set( __globals.svgElement.tempRef.get(), false );
             this.tempRef = null;
             this.onmousemove = null;
             this.onmouseleave = null;

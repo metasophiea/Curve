@@ -326,6 +326,15 @@ this.sixteenSegmentDisplay = function(
                            0,0,
                     ]; 
                 break;
+                case ':':
+                    stamp = [
+                           0,0,
+                        0,1,0,1,0,
+                           0,0,
+                        0,1,0,1,0,
+                           0,0,
+                    ]; 
+                break;
                 case '"': 
                     stamp = [
                            0,0,

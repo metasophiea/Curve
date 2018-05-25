@@ -32,4 +32,4 @@
     audioDuplicator_2.io.output_2.connectTo( audioSink_1.io.left );
 
 //viewport position
-    __globals.utility.workspace.gotoPosition(-85.5379, -8.1652, 2.24189, 0);
+    __globals.utility.workspace.gotoPosition(-301.538, 23.8348, 2.24189, 0);

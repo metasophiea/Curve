@@ -1,4 +1,26 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-05-25
+  - added 'seconds2time' and 'padString' utilities under math (the second isn't
+    really math though..I should make a 'string' catagory or something...)
+  - fixed up play/pause/stop functionality in the audio file player, and added
+    the ability to get the current time
+  - horizontal slider has been updated to override programmactic 'set' calls
+    when the user is pulling the handle..it works, but needs work. Also it needs
+    to be copied to other such controls
+  - audio file player object now has a scrubber (everything needs work)
+
+  future ideas
+  - theres some 'detune' and 'play rate' methods in the audio source buffer
+    thing somewhere..
+
+
+2018-05-24
+  - got upload of audio files to work. there's features for looping, starting
+    mid track and graphing the waveform too that need to be worked on now
+  - expanding audio file playing object to display the name of the loaded track,
+    and have play/stop buttons (pause is under development)
+
+
 2018-05-23
   - began work on the overlay menu
   - updated svg element layout to have different global panes, also there's an
