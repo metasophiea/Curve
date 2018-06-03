@@ -127,7 +127,7 @@ __globals.objects.make_filterUnit = function(x,y){
             __globals.utility.object.generateSelectionArea(shape.base, _mainObject);
 
         //grapher
-        var grapher = parts.display.grapher(null, 15, 5, 72.5, 50);
+        var grapher = parts.display.grapherSVG(null, 15, 5, 72.5, 50);
             _mainObject.append(grapher);
             grapher.drawBackground();
             grapher.viewbox({'l':0,'h':2});

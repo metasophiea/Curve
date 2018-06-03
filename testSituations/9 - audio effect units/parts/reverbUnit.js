@@ -23,7 +23,7 @@ parts.audio.reverbUnit = function(
         __globals.utility.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
 
     //reverbNode
-        flow.reverbNode.impulseResponseRepoURL = 'http://metasophiea.com/lib/audio/impulseResponse/';
+        flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
         flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
         flow.reverbNode.node = context.createConvolver();
 

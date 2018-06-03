@@ -32,6 +32,7 @@
 //    
 //    math
 //        averageArray                    (array)
+//        largestValueFound               (array)
 //        polar2cartesian                 (angle,distance)
 //        cartesian2polar                 (x,y)
 //        boundingBoxFromPoints           (points:[{x:0,y:0},...])
@@ -47,8 +48,10 @@
 //            exponential                 (stepCount, start=0, end=1)
 //    
 //    experimental
+//         styleExtractor                 (string)
 //         elementMaker                   (type,name,data)
 //         objectBuilder                  (creatorMethod,design)
+//         stylePacker                    (object)
 
 __globals.utility = new function(){
     this.workspace = new function(){
@@ -86,7 +89,7 @@ __globals.utility = new function(){
                 return {'x':(x*globalTransform.s)+globalTransform.x, 'y':(y*globalTransform.s)+globalTransform.y};
             };
         };
-        this.dotMaker = function(x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;'){
+        this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;'){
             var g = parts.basic.g(null, x, y);
             var dot = parts.basic.circle(null, 0, 0, r, 0, style);
             var textElement = parts.basic.text(null, r, 0, text, 0, style);
@@ -236,6 +239,11 @@ __globals.utility = new function(){
     };
     this.math = new function(){
         this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
+        this.largestValueFound = function(array){
+            return array.reduce(function(max,current){
+                return Math.abs(max) > Math.abs(current) ? max : current;
+            });
+        };
         this.polar2cartesian = function(angle,distance){
             return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
         };
@@ -523,6 +531,35 @@ __globals.utility = new function(){
         };
     };
     this.experimental = new function(){
+        this.styleExtractor = function(string){
+            var outputObject= {};
+
+            //split style string into individual settings (and filter out any empty strings)
+                var array = string.split(';').filter(function(n){ return n.length != 0 });
+
+            //create the object
+            try{
+                for(var a = 0; a < array.length; a++){
+                    //split on colon
+                        var temp = array[a].split(':');
+                    //strip whitespace
+                        temp[0] = temp[0].replace(/^\s+|\s+$/g, '');
+                        temp[1] = temp[1].replace(/^\s+|\s+$/g, '');
+                    //push into object
+                        outputObject[temp[0]] = temp[1];
+                }
+            }catch(e){console.error('styleExtractor was unable to parse the string "'+string+'"');return {};}
+            
+            return outputObject;
+        };
+        this.stylePacker = function(object){
+            var styleString = '';
+            var keys = Object.keys(object);
+            for(var a = 0; a < keys.length; a++){
+                styleString += keys[a] +':'+ object[keys[a]] +';';
+            }
+            return styleString;
+        };
         this.elementMaker = function(type,name,data){
             if(!data.style){data.style={};}
 
@@ -530,6 +567,7 @@ __globals.utility = new function(){
                 default: console.warn('Unknown element: '+ type); return null; break;
 
                 //basic
+                    case 'line': return parts.basic.line(name, data.x1, data.y1, data.x2, data.y2, data.style); break;
                     case 'rect': return parts.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
                     case 'path': return parts.basic.path(name, data.path, data.lineType, data.style); break;
                     case 'text': return parts.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
@@ -544,9 +582,10 @@ __globals.utility = new function(){
                     case 'readout_sixteenSegmentDisplay': return parts.display.readout_sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.count, data.style.background, data.style.glow, data.style.dime); break;
                     case 'rastorDisplay': return parts.display.rastorDisplay(name, data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage); break;
                     case 'glowbox_rect': return parts.display.glowbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim); break;
-                    case 'grapher': return parts.display.grapher(name, data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing); break;
-                    case 'grapher_periodicWave': return parts.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing); break;
-                    case 'grapher_audioScope': return parts.display.grapher_audioScope(name, data.x, data.y, data.width, data.height, data.style.middleground, data.style.background, data.style.backgroundText, data.style.backing); break;
+                    case 'grapherSVG': return parts.display.grapherSVG(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+                    case 'grapherCanvas': return parts.display.grapherCanvas(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+                    case 'grapher_periodicWave': return parts.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+                    case 'grapher_audioScope': return parts.display.grapher_audioScope(  name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
 
                 //control
                     case 'button_rect': 
@@ -571,26 +610,14 @@ __globals.utility = new function(){
                         temp.onkeydown = data.onkeydown ? data.onkeydown : temp.onkeydown;
                         return temp;
                     break;
-                    case 'slide_vertical':
-                        var temp = parts.control.slide_vertical(name, data.x, data.y, data.width, data.height, data.style.handle, data.style.backing, data.style.slot);
+                    case 'slide':
+                        var temp = parts.control.slide(name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle);
                         temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
                         temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
                         return temp;
                     break;
-                    case 'slide_horizontal':
-                        var temp = parts.control.slide_horizontal(name, data.x, data.y, data.width, data.height, data.style.handle, data.style.backing, data.style.slot);
-                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                        return temp;
-                    break;
-                    case 'slidePanel_vertical':
-                        var temp = parts.control.slidePanel_vertical(name, data.x, data.y, data.width, data.height, data.count, data.style.handle, data.style.backing, data.style.slot);
-                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                        return temp;
-                    break;
-                    case 'slidePanel_horizontal':
-                        var temp = parts.control.slidePanel_horizontal(name, data.x, data.y, data.width, data.height, data.count, data.style.handle, data.style.backing, data.style.slot);
+                    case 'slidePanel':
+                        var temp = parts.control.slidePanel(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot);
                         temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
                         temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
                         return temp;
@@ -635,6 +662,12 @@ __globals.utility = new function(){
                     break;
 
                 //dynamic
+                    case 'grapher_waveWorkspace': return parts.dynamic.grapher_waveWorkspace(
+                        name, data.x, data.y, data.width, data.height, data.graphType,
+                        data.style.foreground,   data.style.foregroundText,
+                        data.style.middleground, data.style.middlegroundText,
+                        data.style.background,   data.style.backgroundText,
+                    ); break;
                     case 'connectionNode_audio': return parts.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, __globals.audio.context); break;
                     case 'connectionNode_data': 
                         var temp = parts.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle);

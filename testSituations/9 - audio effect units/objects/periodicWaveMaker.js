@@ -41,9 +41,9 @@ __globals.objects.make_periodicWaveMaker = function(x,y){
             _mainObject.append(graph);
 
         //sliders
-        var slidePanel_sin = parts.control.slidePanel_vertical(null, shape.slidePanel_sin.x, shape.slidePanel_sin.y, shape.slidePanel_sin.width, shape.slidePanel_sin.height, shape.slidePanel_sin.count);
+        var slidePanel_sin = parts.control.slidePanel(null, shape.slidePanel_sin.x, shape.slidePanel_sin.y, shape.slidePanel_sin.width, shape.slidePanel_sin.height, shape.slidePanel_sin.count);
             _mainObject.append(slidePanel_sin);
-        var slidePanel_cos = parts.control.slidePanel_vertical(null, shape.slidePanel_cos.x, shape.slidePanel_cos.y, shape.slidePanel_cos.width, shape.slidePanel_cos.height, shape.slidePanel_cos.count);
+        var slidePanel_cos = parts.control.slidePanel(null, shape.slidePanel_cos.x, shape.slidePanel_cos.y, shape.slidePanel_cos.width, shape.slidePanel_cos.height, shape.slidePanel_cos.count);
             _mainObject.append(slidePanel_cos);
 
         //resetButton
@@ -72,7 +72,9 @@ __globals.objects.make_periodicWaveMaker = function(x,y){
             slidePanel_cos.setAll(0.5);
         }
 
-        slidePanel_sin.onchange = function(wave){
+        slidePanel_sin.onchange = function(){
+            var wave = this.get();
+
             //adjust values
             var newWave = []
             for(var a = 0; a < wave.length; a++){
@@ -90,7 +92,9 @@ __globals.objects.make_periodicWaveMaker = function(x,y){
             sendWave();
         };
 
-        slidePanel_cos.onchange = function(wave){
+        slidePanel_cos.onchange = function(){
+            var wave = this.get();
+
             //adjust values
             var newWave = [];
             for(var a = 0; a < wave.length; a++){

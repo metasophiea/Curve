@@ -35,29 +35,27 @@ this.testObject = function(x,y,debug=false){
             style:style.background
         },
         elements:[
-            {type:'slide_vertical',name:'slide_vertical',data:{
-                x:5, y:40, width: 10, height: 120, 
+            {type:'slide',name:'slide_vertical',data:{
+                x:5, y:40, width: 10, height: 120, angle:0,
                 style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
                 onchange:function(data){design.connectionNode_data.externalData_1.send('slide_vertical',data);}, 
                 onrelease:function(){console.log('slide_vertical onrelease');}
             }},
-            {type:'slide_horizontal',name:'slide_horizontal',data:{
-                x:5, y:165, width: 115, height: 10, 
+            {type:'slide',name:'slide_horizontal',data:{
+                x:5, y:175, height: 115, width: 10, angle:-Math.PI/2,
                 style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
                 onchange:function(data){design.connectionNode_data.externalData_1.send('slide_horizontal',data);}, 
                 onrelease:function(){console.log('slide_horizontal onrelease');}
             }},
-            {type:'slidePanel_vertical',name:'slidePanel_vertical',data:{
+            {type:'slidePanel',name:'slidePanel_vertical',data:{
                 x:20, y:40, width: 100, height: 120, count: 10, 
                 style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
-                onchange:function(){/*console.log('slidePanel_vertical onchange');*/}, 
-                onrelease:function(){/*console.log('slidePanel_vertical onrelease');*/}
+                onchange:function(slide,value){ design.connectionNode_data.externalData_1.send('slidePanel_vertical',{slide:slide,value:value}); },
             }},
-            {type:'slidePanel_horizontal',name:'slidePanel_horizontal',data:{
-                x:5, y:180, width: 115, height: 100, count: 10,
+            {type:'slidePanel',name:'slidePanel_horizontal',data:{
+                x:5, y:280, width: 100, height: 115, count: 10, angle:-Math.PI/2,
                 style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
-                onchange:function(){/*console.log('slide_horizontalPanel onchange');*/}, 
-                onrelease:function(){/*console.log('slide_horizontalPanel onrelease');*/}
+                onchange:function(slide,value){ design.connectionNode_data.externalData_1.send('slidePanel_horizontal',{slide:slide,value:value}); },
             }},
             {type:'dial_continuous',name:'dial_continuous',data:{
                 x: 70, y: 22.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, 
@@ -104,7 +102,7 @@ this.testObject = function(x,y,debug=false){
                 }, 
                 onchange:function(){design.connectionNode_data.externalData_1.send('rastorgrid', design.rastorgrid.rastorgrid.get());}
             }},
-            {type:'glowbox', name:'globox', data:{
+            {type:'glowbox_rect', name:'glowbox_rect', data:{
                 x:120, y:5, width: 10, height:10, angle:0, 
                 style:{glow:'fill:rgba(240,240,240,1)', dim:'fill:rgba(80,80,80,1)'}
             }},
@@ -138,7 +136,7 @@ this.testObject = function(x,y,debug=false){
             {type:'rastorDisplay', name:'rastorDisplay', data:{
                 x: 162.5, y: 262.5, angle:0, width:20, height:20, xCount:8, yCount:8, xGappage:0.1, yGappage:0.1
             }},
-            {type:'grapher', name:'grapher', data:{
+            {type:'grapherSVG', name:'grapherSVG', data:{
                 x:125, y:30, width:100, height:100,
                 style:{
                     middleground:style.grapher.middleground, background:style.grapher.background, 
@@ -168,19 +166,19 @@ this.testObject = function(x,y,debug=false){
                 x: 230, y: 100, width: 30, height: 30, 
                 receive:function(address, data){
                     switch(address){
-                        case 'slide_vertical':        design.slide_vertical.slide_vertical.set(data,true,false);               break;
-                        case 'slide_horizontal':      design.slide_horizontal.slide_horizontal.set(data,true,false);           break;
-                        case 'slidePanel_vertical':   design.slidePanel_vertical.slidePanel_vertical.set(data,true,false);     break;
-                        case 'slide_horizontalPanel': design.slidePanel_horizontal.slidePanel_horizontal.set(data,true,false); break;
-                        case 'dial_continuous':       design.dial_continuous.dial_continuous.set(data,true,false);             break;
-                        case 'dial_discrete':         design.dial_discrete.dial_discrete.select(data,true,false);              break;
+                        case 'slide_vertical':        design.slide.slide_vertical.set(data,false);             break;
+                        case 'slide_horizontal':      design.slide.slide_horizontal.set(data,false);           break;
+                        case 'slidePanel_vertical':   design.slidePanel.slidePanel_vertical.slide(data.slide).set(data.value,false); break;
+                        case 'slidePanel_horizontal': design.slidePanel.slidePanel_horizontal.slide(data.slide).set(data.value,false); break;
+                        case 'dial_continuous':       design.dial_continuous.dial_continuous.set(data,false);  break;
+                        case 'dial_discrete':         design.dial_discrete.dial_discrete.select(data,false);   break;
                         case 'button_rect': 
                             design.grapher_periodicWave.grapher_periodicWave.reset(); 
                             design.dial_continuous.dial_continuous.smoothSet(1,1,'s',false); 
-                            design.slide_vertical.slide_vertical.smoothSet(1,1,'linear',false); 
-                            design.slidePanel_horizontal.slidePanel_horizontal.smoothSet(1,1,'sin',false); 
-                            design.slidePanel_vertical.slidePanel_vertical.smoothSetAll(1,1,'cos',false); 
-                            design.slidePanel_horizontal.slidePanel_horizontal.smoothSetAll(1,1,'exponential',false);
+                            design.slide.slide_vertical.smoothSet(1,1,'linear',false); 
+                            design.slidePanel.slidePanel_horizontal.smoothSet(1,1,'sin',false); 
+                            design.slidePanel.slidePanel_vertical.smoothSetAll(1,1,'cos',false); 
+                            design.slidePanel.slidePanel_horizontal.smoothSetAll(1,1,'exponential',false);
                         break;
                         case 'checkbox_rect': design.checkbox_rect.checkbox_rect.set(data,false); break;
                         case 'key_rect': 
@@ -202,8 +200,8 @@ this.testObject = function(x,y,debug=false){
 
     //setup
         setTimeout(function(){
-            for(var a = 0; a < 10; a++){ design.slidePanel_vertical.slidePanel_vertical.slide(a).set( 1-1/(a+1)  ); }
-            for(var a = 0; a < 10; a++){ design.slidePanel_horizontal.slidePanel_horizontal.slide(a).set( 1-1/(a+1)  ); }
+            for(var a = 0; a < 10; a++){ design.slidePanel.slidePanel_vertical.slide(a).set( 1-1/(a+1)  ); }
+            for(var a = 0; a < 10; a++){ design.slidePanel.slidePanel_horizontal.slide(a).set( 1-1/(a+1)  ); }
 
             setInterval(function(){
                 design.sevenSegmentDisplay.sevenSegmentDisplay.enterCharacter( ''+Math.round(Math.random()*9) ); 
@@ -214,7 +212,7 @@ this.testObject = function(x,y,debug=false){
             design.readout_sixteenSegmentDisplay.readout_sixteenSegmentDisplay.test();
             design.rastorDisplay.rastorDisplay.test();
 
-            design.grapher.grapher._test();
+            design.grapherSVG.grapherSVG._test();
 
             design.grapher_periodicWave.grapher_periodicWave.waveElement('sin',1,1);
             design.grapher_periodicWave.grapher_periodicWave.draw();

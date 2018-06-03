@@ -115,5 +115,8 @@ function p(a=''){console.log(a);}
     p( __globals.utility.math.cartesian2polar(x,y) );
     p();
 
-
+//styleExtractor
+    p( __globals.utility.experimental.styleExtractor('stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;') );
+    p( __globals.utility.experimental.styleExtractor('stroke:rgba(0,255,0,1);stroke-width:0.5;stroke-linecap:round;') );
+    p();
 })();

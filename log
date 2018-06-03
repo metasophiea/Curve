@@ -1,4 +1,53 @@
- ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-06-01
+  - redid the original grapher to be more like the new canvas grapher, and
+    subsequently made it possible (and easy) to switch between the two. Parts
+    that use a grapher part, now give the ability to chose which you want to use
+    (canvas is default)
+  - upgraded the slider to to have 'click to go to this position' functionality. 
+    Also the handle has a little more grapple area than is visible
+  - began on overlay control object (which will be used with the waveWorkspace
+    later)
+
+
+2018-05-31
+  - finished off canvas-based grapher, and put it into the audioFilePlayer object
+    this move better now (as expected)
+  - created wave form workspace with grapherCanvas. It's pretty nice too.
+  - added rudimentary selection-area to grapher_waveWorkspace (need to work
+    on backward selection)
+
+
+2018-05-30
+  - there's a problem with putting a canvas in a svg element. It appears to be a
+    known bug on chrome, but no-one has dealt with it since 2015. There's a note
+    on the bug reporting site that's from 2018-02-14 that seems to claim that 
+    they'll be able to fix this bug..nothing after this though.
+      It seems I can hack together a fix where an image element is actually used,
+    and a canvas element is hidden. The canvas is drawn to, and then a 'print'
+    command can be run which prints the canvas data to the image element. It's 
+    essentially the same (I think). Problems now are to do with detail, but I think
+    that can be fixed...probably user selected
+
+
+2018-05-29
+  - current time in audioFilePlayer now accounts for playback rate (but not
+    detune, which is just a different way of changing the playback rate, so I've
+    removed that feature)
+  - developed rudimentary waveform viewer; but its causing a lot of strain of then
+    browser. I'm working on integrating a canvas element to deal with this. There's
+    still a lot of time spent on gathering the points to graph though..
+
+
+2018-05-28
+  - redid the slider and slider panel; things are simpler now and I've thrown out
+    the horizontal and vertical versions of both, in favour of just using an
+    angle value.
+  - wrote up new version of the audioFilePlayer (developing with a new object)
+    (the 'currentTime' method doesn't account for playback rate changes..need to
+    fix that)
+
+
 2018-05-25
   - added 'seconds2time' and 'padString' utilities under math (the second isn't
     really math though..I should make a 'string' catagory or something...)
