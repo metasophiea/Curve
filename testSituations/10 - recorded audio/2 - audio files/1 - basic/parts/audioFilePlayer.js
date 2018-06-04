@@ -10,7 +10,7 @@ parts.audio.audioFilePlayer = function(
         lastSightingTimeOfTheNeedlePosition:0.0,
         detune:0,
 
-        loop:{active:false, start:0, end:1},
+        loop:{active:false, start:0, end:1,timeout:null},
         rate:1,
     };
 
@@ -95,16 +95,41 @@ parts.audio.audioFilePlayer = function(
             flow.bufferSource.connect(flow.channelSplitter);
             flow.bufferSource.onended = function(a){state.itself.stop();};
         }
-        function updateNeedle(){
-            state.needlePosition = state.itself.currentTime();
+        function updateNeedle(specificTime){
+            state.needlePosition = specificTime == undefined ? state.itself.currentTime() : specificTime;
             state.lastSightingTimeOfTheNeedlePosition = context.currentTime;
+        }
+        function loopCompute(){
+            //this code is used to calculate when the loop end will occur, and thus when the needle should jump
+            //to the start of the loop. The actual looping of the audio is done by the system, so this process
+            //is done solely to update the needle position.
+            //  Using the needle's current postiion and paly rate; the length of time before the needle is scheduled
+            //to reach the end bound of the loop is calculated and given to a timeout. When this timeout occurs; 
+            //the needle will jump to the start bound and the process is run again to calculate the new length of
+            //time before the needle reaches the end bound.
+            //  The playhead cannot move beyond the end bound, thus any negative time calculated will be set to
+            //zero, and the playhead will instantly jump back to the start bound (this is a limitation of the
+            //underlying audio system)
+
+            clearInterval(state.loop.timeout);
+
+            //obviously, if the loop isn't active or the file isn't playing, don't do any of the work
+            if(!state.loop.active || !state.playing){return;}
+
+            updateNeedle();
+            var timeUntil = state.loop.end - state.itself.currentTime();
+            if(timeUntil < 0){timeUntil = 0;}
+
+            state.loop.timeout = setTimeout(function(){
+                state.itself.jumpTo_seconds(state.loop.start);
+                loopCompute();
+            }, (timeUntil*1000)/state.rate);
         }
 
     //controls
         this.load = function(type,callback){
             loadFile(type,function(data){
                 callback(data);
-                // updateNeedle();
                 state.needlePosition = 0.0;
             });
         };
@@ -120,9 +145,10 @@ parts.audio.audioFilePlayer = function(
                 flow.bufferSource.detune.value = state.detune;
                 flow.bufferSource.playbackRate.value = state.rate;
                 flow.bufferSource.start(0,state.needlePosition);
-            //log the starting time and the play state
+            //log the starting time, play state and run loopCompute
                 state.lastSightingTimeOfTheNeedlePosition = context.currentTime;
                 state.playing = true;
+                loopCompute();
         };
         this.stop = function(callback){
             //check if we should stop at all
@@ -154,6 +180,10 @@ parts.audio.audioFilePlayer = function(
                     return;
                 }
 
+            //if loop is enabled, and the desired value is beyond the loop's end boundry,
+            //set the value to the start value
+            if(state.loop.active && value > state.loop.end){value = state.loop.start;}
+
             //stop playback, with a callback that will change the needle position
             //and then restart playback
                 this.stop(function(){
@@ -164,16 +194,24 @@ parts.audio.audioFilePlayer = function(
         };
         this.loop = function(bool=false){
             state.loop.active = bool;
-            flow.bufferSource.loop = bool;
+            if(flow.bufferSource){
+                flow.bufferSource.loop = state.loop.active;
+            }
+
+            loopCompute();
         };
         this.loopBounds = function(data={start:0,end:1}){
             if(data==undefined){return data;}
 
-            state.loop.start = data.start!=undefined ? data.start : state.loop.start;
-            state.loop.end   = data.end!=undefined ?   data.end :   state.loop.end;
+            state.loop.start = data.start!=undefined ? data.start*this.duration() : state.loop.start;
+            state.loop.end   = data.end!=undefined ?   data.end*this.duration() :   state.loop.end;
 
-            flow.bufferSource.loopStart = state.loop.start;
-            flow.bufferSource.loopEnd = state.loop.end;
+            if(flow.bufferSource){
+                flow.bufferSource.loopStart = state.loop.start;
+                flow.bufferSource.loopEnd = state.loop.end;
+            }
+
+            loopCompute();
         };
         this.detune = function(value=0){
             //detune is trash right now. All it is, is a different way to adjust rate,
@@ -188,6 +226,7 @@ parts.audio.audioFilePlayer = function(
             state.rate = value;
             if(flow.bufferSource){flow.bufferSource.playbackRate.value = value;}
             updateNeedle();
+            loopCompute();
         };
 
     //info

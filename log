@@ -1,4 +1,19 @@
   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-06-04
+  - needleOverlay work complete, seems pretty solid now
+  - worked on integrating the needleOverlay with the audioFilePlayer object. You
+    can now select the loop region, move it around and disactivate it. It's a bit
+    rickity, but it works (you might want to check up on the 'loopCompute' and 
+    anything to do with getting the current time in the audioFilePlayer audio 
+    part. It works on my machine!)
+  - cleaned things up a bit in test situation 10 - 2
+
+
+2018-06-03
+  - more work on the needleOverlay; seem to have basic mouse interaction working
+    now
+
+
 2018-06-01
   - redid the original grapher to be more like the new canvas grapher, and
     subsequently made it possible (and easy) to switch between the two. Parts

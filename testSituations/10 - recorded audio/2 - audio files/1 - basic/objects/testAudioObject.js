@@ -77,7 +77,8 @@ objects.testAudioObject = function(x,y,debug=false){
                         design.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
                         design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
                         design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.__audioFilePlayer.waveformSegment() );
-                        design.grapher_waveWorkspace.grapher_waveWorkspace.setNeedlePosition(0);
+                        design.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
+                        design.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
                     });
                 }
             }},
@@ -92,37 +93,52 @@ objects.testAudioObject = function(x,y,debug=false){
         var obj = __globals.utility.experimental.objectBuilder(objects.testAudioObject,design);
 
     //circuitry
-        obj.__audioFilePlayer = new parts.audio.audioFilePlayer(__globals.audio.context);
-        obj.__audioFilePlayer.out_right().connect( design.connectionNode_audio.outRight.in() );
-        obj.__audioFilePlayer.out_left().connect( design.connectionNode_audio.outLeft.in() );
-        setInterval(function(){
-            //check if there's a track at all
-                if( obj.__audioFilePlayer.currentTime() == -1 ){return;}
+        //audioFilePlayer
+            obj.__audioFilePlayer = new parts.audio.audioFilePlayer(__globals.audio.context);
+            obj.__audioFilePlayer.out_right().connect( design.connectionNode_audio.outRight.in() );
+            obj.__audioFilePlayer.out_left().connect( design.connectionNode_audio.outLeft.in() );
 
-            //time readout
-                var time = __globals.utility.math.seconds2time( Math.round(obj.__audioFilePlayer.currentTime()));
+        //constantly gather information from the audioFilePlayer, and push this info to the display elements
+            setInterval(function(){
+                //check if there's a track at all
+                    if( obj.__audioFilePlayer.currentTime() == -1 ){return;}
 
-                design.readout_sixteenSegmentDisplay.time.text(
-                    __globals.utility.math.padString(time.h,2,'0')+':'+
-                    __globals.utility.math.padString(time.m,2,'0')+':'+
-                    __globals.utility.math.padString(time.s,2,'0')
-                );
-                design.readout_sixteenSegmentDisplay.time.print();
+                //time readout
+                    var time = __globals.utility.math.seconds2time( Math.round(obj.__audioFilePlayer.currentTime()));
 
-            //scrubber
-                var progress = obj.__audioFilePlayer.currentTime()/obj.__audioFilePlayer.duration();
-                if( !isNaN(progress) ){
-                    design.slide.scrubber.set(progress,true);
+                    design.readout_sixteenSegmentDisplay.time.text(
+                        __globals.utility.math.padString(time.h,2,'0')+':'+
+                        __globals.utility.math.padString(time.m,2,'0')+':'+
+                        __globals.utility.math.padString(time.s,2,'0')
+                    );
+                    design.readout_sixteenSegmentDisplay.time.print();
+
+                //progress
+                    var progress = obj.__audioFilePlayer.currentTime()/obj.__audioFilePlayer.duration();
+                    if( !isNaN(progress) ){
+                        design.slide.scrubber.set(progress,false);
+                        design.grapher_waveWorkspace.grapher_waveWorkspace.select(progress);
+                    }
+            },100);
+
+        //connect waveWorkspace controls to the audioFilePlayer
+            design.grapher_waveWorkspace.grapher_waveWorkspace.selectionAreaToggle = function(bool){ obj.__audioFilePlayer.loop(bool); };
+            design.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
+                if(needle == 'lead'){ obj.__audioFilePlayer.jumpTo_percent(value); }
+                else if(needle == 'selection_A' || needle == 'selection_B'){
+                    var temp = design.grapher_waveWorkspace.grapher_waveWorkspace.area();
+                    if(temp.A < temp.B){
+                        obj.__audioFilePlayer.loopBounds({start:temp.A,end:temp.B});
+                    }else{
+                        obj.__audioFilePlayer.loopBounds({start:temp.B,end:temp.A});
+                    }
                 }
-            //waveform
-                design.grapher_waveWorkspace.grapher_waveWorkspace.setNeedlePosition(progress,false);
-        },100);
+            }
 
     //setup
         design.dial_continuous.rate.set(0.5);
         design.grapher_waveWorkspace.grapher_waveWorkspace.foregroundLineThickness(1);
         design.grapher_waveWorkspace.grapher_waveWorkspace.drawBackground();
-        design.grapher_waveWorkspace.grapher_waveWorkspace.needleSet = function(a){ obj.__audioFilePlayer.jumpTo_percent(a); }
 
     return obj;
 };

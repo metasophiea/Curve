@@ -21,6 +21,7 @@
 //        setRotation                     (element, rotation)
 //        getBoundingBox                  (element)
 //        makeUnselectable                (element)
+//        positionFromMousePoint          (mousePoint={x:0,y:0}, elementOrigin={x:0,y:0}, elementWidth, elementHeight, elementAngle)
 //    
 //    object
 //        requestInteraction              (x,y,type) (browser position)
@@ -157,6 +158,22 @@ __globals.utility = new function(){
             element.style['-moz-user-select'] = 'none';
             element.style['-ms-user-select'] = 'none';
             element.style['user-select'] = 'none';
+        };
+        this.positionFromMousePoint = function(mousePoint, elementOrigin, elementWidth, elementHeight, elementAngle){
+            var mouseClick = __globals.utility.workspace.pointConverter.browser2workspace(mousePoint.x,mousePoint.y);
+
+            var temp = __globals.utility.math.cartesian2polar(
+                mouseClick.x-elementOrigin.x,
+                mouseClick.y-elementOrigin.y
+            );
+            temp.ang -= elementAngle;
+            temp = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+
+            var ans = { x:temp.x/elementWidth, y:temp.y/elementHeight };
+            if(ans.x < 0){ans.x = 0;}else if(ans.x > 1){ans.x = 1;}
+            if(ans.y < 0){ans.y = 0;}else if(ans.y > 1){ans.y = 1;}
+
+            return ans;
         };
     };
     this.object = new function(){
@@ -657,22 +674,38 @@ __globals.utility = new function(){
                             data.style.backingGlow,
                             data.style.checkGlow
                         );
+                        temp.onchange = data.onchange ? data.onchange  : temp.onchange  ;
+                        return temp;
+                    break;
+                    case 'needleOverlay':
+                        var temp = parts.control.needleOverlay(
+                            name, data.x, data.y, data.width, data.height, data.angle,
+                            data.needleStyles, data.areaStyles
+                        );
+                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange;
+                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
+                        temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle;
+                        return temp;
+                    break;
+                    case 'grapher_waveWorkspace': 
+                        var temp = parts.control.grapher_waveWorkspace(
+                            name, data.x, data.y, data.width, data.height, data.angle, data.graphType,
+                            data.style.foreground,   data.style.foregroundText,
+                            data.style.middleground, data.style.middlegroundText,
+                            data.style.background,   data.style.backgroundText,
+                        );
                         temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                        temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle ;
                         return temp;
                     break;
 
                 //dynamic
-                    case 'grapher_waveWorkspace': return parts.dynamic.grapher_waveWorkspace(
-                        name, data.x, data.y, data.width, data.height, data.graphType,
-                        data.style.foreground,   data.style.foregroundText,
-                        data.style.middleground, data.style.middlegroundText,
-                        data.style.background,   data.style.backgroundText,
-                    ); break;
                     case 'connectionNode_audio': return parts.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, __globals.audio.context); break;
                     case 'connectionNode_data': 
                         var temp = parts.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle);
-                        temp.receive = data.receive;
-                        temp.give = data.give;
+                        temp.receive = data.receive ? data.receive : temp.receive;
+                        temp.give = data.give ? data.give : temp.give;
                         return temp;
                     break;
             }

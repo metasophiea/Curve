@@ -132,7 +132,7 @@ this.slide = function(
                 var divider = __globals.utility.workspace.getGlobalScale(object);
                 set( initialValue - numerator/(divider*mux) );
             };
-            __globals.svgElement.onmouseup = function(){
+            __globals.svgElement.onmouseup = function(event){
                 var numerator = initialY-currentMousePosition(event);
                 var divider = __globals.utility.workspace.getGlobalScale(object);
                 object.onrelease(initialValue - numerator/(divider*mux));
@@ -146,8 +146,8 @@ this.slide = function(
         };
 
     //callbacks
-        object.onchange = function(){console.log('onchange');};
-        object.onrelease = function(){console.log('onrelease');};
+        object.onchange = function(){};
+        object.onrelease = function(){};
 
     //setup
         set(value);

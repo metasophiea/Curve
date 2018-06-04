@@ -28,6 +28,7 @@
             //        setRotation                     (element, rotation)
             //        getBoundingBox                  (element)
             //        makeUnselectable                (element)
+            //        positionFromMousePoint          (mousePoint={x:0,y:0}, elementOrigin={x:0,y:0}, elementWidth, elementHeight, elementAngle)
             //    
             //    object
             //        requestInteraction              (x,y,type) (browser position)
@@ -163,6 +164,22 @@
                         element.style['-moz-user-select'] = 'none';
                         element.style['-ms-user-select'] = 'none';
                         element.style['user-select'] = 'none';
+                    };
+                    this.positionFromMousePoint = function(mousePoint, elementOrigin, elementWidth, elementHeight, elementAngle){
+                        var mouseClick = __globals.utility.workspace.pointConverter.browser2workspace(mousePoint.x,mousePoint.y);
+            
+                        var temp = __globals.utility.math.cartesian2polar(
+                            mouseClick.x-elementOrigin.x,
+                            mouseClick.y-elementOrigin.y
+                        );
+                        temp.ang -= elementAngle;
+                        temp = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+            
+                        var ans = { x:temp.x/elementWidth, y:temp.y/elementHeight };
+                        if(ans.x < 0){ans.x = 0;}else if(ans.x > 1){ans.x = 1;}
+                        if(ans.y < 0){ans.y = 0;}else if(ans.y > 1){ans.y = 1;}
+            
+                        return ans;
                     };
                 };
                 this.object = new function(){
@@ -663,22 +680,38 @@
                                         data.style.backingGlow,
                                         data.style.checkGlow
                                     );
+                                    temp.onchange = data.onchange ? data.onchange  : temp.onchange  ;
+                                    return temp;
+                                break;
+                                case 'needleOverlay':
+                                    var temp = parts.control.needleOverlay(
+                                        name, data.x, data.y, data.width, data.height, data.angle,
+                                        data.needleStyles, data.areaStyles
+                                    );
+                                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange;
+                                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
+                                    temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle;
+                                    return temp;
+                                break;
+                                case 'grapher_waveWorkspace': 
+                                    var temp = parts.control.grapher_waveWorkspace(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.graphType,
+                                        data.style.foreground,   data.style.foregroundText,
+                                        data.style.middleground, data.style.middlegroundText,
+                                        data.style.background,   data.style.backgroundText,
+                                    );
                                     temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                                    temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle ;
                                     return temp;
                                 break;
             
                             //dynamic
-                                case 'grapher_waveWorkspace': return parts.dynamic.grapher_waveWorkspace(
-                                    name, data.x, data.y, data.width, data.height, data.graphType,
-                                    data.style.foreground,   data.style.foregroundText,
-                                    data.style.middleground, data.style.middlegroundText,
-                                    data.style.background,   data.style.backgroundText,
-                                ); break;
                                 case 'connectionNode_audio': return parts.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, __globals.audio.context); break;
                                 case 'connectionNode_data': 
                                     var temp = parts.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle);
-                                    temp.receive = data.receive;
-                                    temp.give = data.give;
+                                    temp.receive = data.receive ? data.receive : temp.receive;
+                                    temp.give = data.give ? data.give : temp.give;
                                     return temp;
                                 break;
                         }
@@ -3916,6 +3949,60 @@
                     
                       return object;
                     };
+                    this.grapher_waveWorkspace = function(
+                        id='grapher_waveWorkspace',
+                        x, y, width, height, angle=0, graphType='Canvas',
+                        foregroundStyles=['fill:rgba(255, 231, 114);'],
+                        foregroundTextStyles=['fill:rgba(0,255,255,1); font-size:3; font-family:Helvetica;'],
+                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+                        middlegroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
+                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                        backingStyle='fill:rgba(50,50,50,1)',
+                    ){
+                        var needleWidth = 1/4;
+                    
+                        //elements
+                            //main
+                                var object = parts.basic.g(id, x, y);
+                            //main graph
+                                var graph = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+                                    x:0, y:0, width:width, height:height,
+                                    style:{
+                                        foreground:middlegroundStyle, foregroundText:middlegroundTextStyle, 
+                                        background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                        backing:backingStyle
+                                    }
+                                });
+                                
+                                object.append(graph);
+                            //needle overlay
+                                var overlay = __globals.utility.experimental.elementMaker('needleOverlay', 'overlay', {
+                                    x:0, y:0, width:width, height:height
+                                });
+                                object.append(overlay);
+                    
+                        //controls
+                            object.select = overlay.select;
+                            object.area = overlay.area;
+                            object.draw = graph.draw;
+                            object.foregroundLineThickness = graph.foregroundLineThickness;
+                            object.drawBackground = graph.drawBackground;
+                            object.area = overlay.area;
+                    
+                        //callbacks
+                            object.onchange = function(needle,value){};
+                            overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
+                            object.onrelease = function(needle,value){};
+                            overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
+                            object.selectionAreaToggle = function(toggle){};
+                            overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
+                    
+                        //setup
+                            graph._test();
+                    
+                        return object;
+                    };
                     this.key_rect = function(
                         id='key_rect',
                         x, y, width, height, angle=0,
@@ -3970,6 +4057,191 @@
                         };
                         object.glow = function(){ this.activateState(this.state+2); };
                         object.dim  = function(){ this.activateState(this.state-2); };
+                    
+                        return object;
+                    };
+                    this.needleOverlay = function(
+                        id='needleOverlay',
+                        x, y, width, height, angle=0, needleWidth=0.00125,
+                        needleStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
+                        areaStyles=['fill:rgba(255, 231, 114, 0.33);']
+                    ){
+                        var needleData = {};
+                    
+                        //elements
+                            //main
+                                var object = parts.basic.g(id, x, y, angle);
+                            //backing
+                                var backing = parts.basic.rect('backing', 0, 0, width, height, 0, 'fill:rgba(100,100,100, 0);');
+                                object.appendChild(backing);
+                            //control objects
+                                var invisibleHandleWidth = width*needleWidth + width*0.005;
+                                var controlObjects = {};
+                                    //lead
+                                    controlObjects.lead = parts.basic.g('lead', 0, 0, 0);
+                                    controlObjects.lead.append(parts.basic.rect('handle', 0, 0, needleWidth*width, height, 0, needleStyles[0]));
+                                    controlObjects.lead.append(parts.basic.rect('invisibleHandle', (width*needleWidth - invisibleHandleWidth)/2, 0, invisibleHandleWidth, height, 0, 'fill:rgba(255,0,0,0);cursor: col-resize;'));
+                                    //selection_A
+                                    controlObjects.selection_A = parts.basic.g('selection_A', 0, 0, 0);
+                                    controlObjects.selection_A.append(parts.basic.rect('handle', 0, 0, needleWidth*width, height, 0, needleStyles[1]));
+                                    controlObjects.selection_A.append(parts.basic.rect('invisibleHandle', (width*needleWidth - invisibleHandleWidth)/2, 0, invisibleHandleWidth, height, 0, 'fill:rgba(255,0,0,0);cursor: col-resize;'));
+                                    //selection_B
+                                    controlObjects.selection_B = parts.basic.g('selection_B', 0, 0, 0);
+                                    controlObjects.selection_B.append(parts.basic.rect('handle', 0, 0, needleWidth*width, height, 0, needleStyles[1]));
+                                    controlObjects.selection_B.append(parts.basic.rect('invisibleHandle', (width*needleWidth - invisibleHandleWidth)/2, 0, invisibleHandleWidth, height, 0, 'fill:rgba(255,0,0,0);cursor: col-resize;'));
+                                    //selection_area
+                                    controlObjects.selection_area = parts.basic.rect('selection_area', 0, 0, 0, height, 0, areaStyles[0]+'cursor: move;');
+                                var controlObjectsGroup = parts.basic.g('controlObjectsGroup', 0, 0);
+                                object.append(controlObjectsGroup);
+                    
+                        //internal functions
+                            function needleJumpTo(needle,location){
+                                //place the selected needle at the selected locaion
+                    
+                                //if the location is wrong, remove the needle and return
+                                if(location == undefined || location < 0 || location > 1){
+                                    controlObjects[needle].remove();
+                                    delete needleData[needle];
+                                    return;
+                                }
+                    
+                                //if the needle isn't in the scene, add it
+                                if( !controlObjectsGroup.contains(controlObjects[needle]) ){
+                                    controlObjectsGroup.append(controlObjects[needle]);
+                                }
+                    
+                                //actualy set the location of the needle (adjusting for the size of needle)
+                                __globals.utility.element.setTransform_XYonly( controlObjects[needle], location*width - width*needleWidth*location, 0);
+                                //save this value
+                                needleData[needle] = location;
+                            }
+                            function computeSelectionArea(){
+                                //if the selection needles' data are missing (or they are the same position) remove the area element and return
+                                if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
+                                    controlObjects.selection_area.remove();
+                                    object.selectionAreaToggle(false);
+                                    delete needleData.selection_area;
+                                    return;
+                                }
+                    
+                                //if the area isn't in the scene, add it
+                                if( !controlObjectsGroup.contains(controlObjects.selection_area) ){
+                                    controlObjectsGroup.append(controlObjects.selection_area);
+                                    object.selectionAreaToggle(true);
+                                }
+                    
+                                //compute area position and size
+                                if(needleData.selection_A < needleData.selection_B){
+                                    var A = needleData.selection_A;
+                                    var B = needleData.selection_B;
+                                }else{
+                                    var A = needleData.selection_B;
+                                    var B = needleData.selection_A;
+                                }
+                                var start = A - needleWidth*A + needleWidth
+                                var area = B - needleWidth*B - start; 
+                                if(area < 0){area = 0}
+                    
+                                __globals.utility.element.setTransform_XYonly(controlObjects.selection_area, width*start, 0);
+                                controlObjects.selection_area.setAttribute('width',width*area);
+                            }
+                    
+                        //interaction
+                            //generic onmousedown code for interaction
+                            function needle_onmousedown(needleName,callback){
+                                if(object.onchange){ object.onchange(needleName,__globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x); }
+                                __globals.svgElement.onmousemove = function(event){
+                                    var x = __globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x;
+                                    needleJumpTo(needleName,x);
+                                    if(object.onchange){ object.onchange(needleName,x); }
+                                    if(callback){callback();}
+                                };
+                                __globals.svgElement.onmouseup = function(event){
+                                    var x = __globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x;
+                                    needleJumpTo(needleName,x);
+                                    if(object.onrelease){ object.onrelease(needleName,x); }
+                                    if(callback){callback();}
+                                    __globals.svgElement.onmousemove = undefined;
+                                    __globals.svgElement.onmouseleave = undefined;
+                                    __globals.svgElement.onmouseup = undefined;
+                                };
+                                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                            }
+                    
+                            backing.onmousedown = function(event){
+                                if(!event.shiftKey){
+                                    needleJumpTo('lead',__globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x);
+                                    needle_onmousedown('lead');
+                                }
+                                else{
+                                    needleJumpTo('selection_A',__globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x);
+                                    needle_onmousedown('selection_B',computeSelectionArea);
+                                }
+                            };
+                            controlObjects.lead.onmousedown = function(){ needle_onmousedown('lead'); };
+                            controlObjects.selection_A.onmousedown = function(){ needle_onmousedown('selection_A',computeSelectionArea); };
+                            controlObjects.selection_B.onmousedown = function(){ needle_onmousedown('selection_B',computeSelectionArea); };
+                            controlObjects.selection_area.onmousedown = function(){
+                                __globals.svgElement.onmousemove = function(event){
+                                    var divider = __globals.utility.workspace.getGlobalScale(object);
+                                    var newAlocation = needleData['selection_A']+event.movementX/(width*divider);
+                                    var newBlocation = needleData['selection_B']+event.movementX/(width*divider);
+                    
+                                    if(newAlocation > 1 || newAlocation < 0 || newBlocation > 1 || newBlocation < 0){return;}
+                    
+                                    if(object.onchange){ object.onchange('selection_A',newAlocation); object.onchange('selection_B',newBlocation); }
+                                    needleJumpTo('selection_A',newAlocation);
+                                    needleJumpTo('selection_B',newBlocation);
+                                    computeSelectionArea();
+                                };
+                                __globals.svgElement.onmouseup = function(event){
+                                    if(object.onrelease){ object.onrelease('selection_A',needleData.selection_A); object.onrelease('selection_B',needleData.selection_B); }
+                                    __globals.svgElement.onmousemove = undefined;
+                                    __globals.svgElement.onmouseleave = undefined;
+                                    __globals.svgElement.onmouseup = undefined;
+                                };
+                            };
+                            
+                            //doubleclick to destroy selection area
+                            controlObjects.selection_A.ondblclick = function(){
+                                needleJumpTo('selection_A');
+                                needleJumpTo('selection_B');
+                                computeSelectionArea();
+                            };
+                            controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
+                            controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
+                    
+                        //controls
+                            object.select = function(position,update=true){
+                                //if there's no input, return the value
+                                //if input is out of bounds, remove the needle
+                                //otherwise, set the position
+                                if(position == undefined){ return needleData.lead; }
+                                else if(position > 1 || position < 0){ needleJumpTo('lead'); }
+                                else{ needleJumpTo('lead',position); }
+                            };
+                            object.area = function(positionA,positionB){
+                                //if there's no input, return the values
+                                //if input is out of bounds, remove the needles
+                                //otherwise, set the position
+                                if(positionA == undefined || positionB == undefined){
+                                    return {A:needleData.selection_A, B:needleData.selection_B};
+                                }else if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 ){
+                                    needleJumpTo('selection_A');
+                                    needleJumpTo('selection_B');
+                                }else{
+                                    needleJumpTo('selection_A',positionA);
+                                    needleJumpTo('selection_B',positionB);
+                                }
+                    
+                                //you always gotta computer the selection area
+                                computeSelectionArea();
+                            };
+                    
+                        //callbacks
+                            object.onchange = function(needle,value){};
+                            object.onrelease = function(needle,value){};
+                            object.selectionAreaToggle = function(bool){};
                     
                         return object;
                     };
@@ -4170,7 +4442,7 @@
                                     var divider = __globals.utility.workspace.getGlobalScale(object);
                                     set( initialValue - numerator/(divider*mux) );
                                 };
-                                __globals.svgElement.onmouseup = function(){
+                                __globals.svgElement.onmouseup = function(event){
                                     var numerator = initialY-currentMousePosition(event);
                                     var divider = __globals.utility.workspace.getGlobalScale(object);
                                     object.onrelease(initialValue - numerator/(divider*mux));
@@ -4184,8 +4456,8 @@
                             };
                     
                         //callbacks
-                            object.onchange = function(){console.log('onchange');};
-                            object.onrelease = function(){console.log('onrelease');};
+                            object.onchange = function(){};
+                            object.onrelease = function(){};
                     
                         //setup
                             set(value);
@@ -5035,135 +5307,6 @@
                     
                         return object;
                     };
-                    this.grapher_waveWorkspace = function(
-                        id='grapher_waveWorkspace',
-                        x, y, width, height,
-                        foregroundStyle='fill:rgb(255, 231, 114);', 
-                        foregroundTextStyle='fill:rgba(0,255,255,1); font-size:3; font-family:Helvetica;',
-                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
-                        middlegroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
-                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                        backingStyle='fill:rgba(50,50,50,1)',
-                    ){
-                        var needlePosition = 0;
-                        var needleWidth = 1/4;
-                        var selectionNeedlePosition = 0;
-                        var selectionAreaWidth = 0;
-                        var leadNeedleStyle = 'fill:rgb(237, 237, 237);'+'pointer-events: none;';
-                        var selectionNeedleStyle = 'fill:rgb(255, 231, 114);'+'pointer-events: none;';
-                        var selectionAreaStyle = 'fill:rgba(255, 231, 114, 0.25);'+'pointer-events: none;';
-                    
-                        //elements
-                            //main
-                                var object = parts.basic.g(id, x, y);
-                            //main graph
-                                var graph = parts.display.grapherCanvas(
-                                    id,0,0,width,height,
-                                    middlegroundStyle, middlegroundTextStyle,
-                                    backgroundStyle,   backgroundTextStyle,
-                                    backingStyle
-                                );
-                                object.appendChild(graph);
-                    
-                            //overlay objects
-                                //needle
-                                    var needle = __globals.utility.experimental.elementMaker(
-                                        'rect', 'needle', {
-                                            x:0, y:0, width:needleWidth, height:height, angle:0, style:leadNeedleStyle
-                                        }
-                                    );
-                                    object.appendChild(needle);
-                                //selection needle
-                                    var selectionArea = __globals.utility.experimental.elementMaker(
-                                        'rect', 'selectionArea', {
-                                            x:selectionNeedlePosition, y:0, width:selectionAreaWidth*width, height:height, angle:0, style:selectionAreaStyle
-                                        }
-                                    );
-                                    var selectionNeedle_start = __globals.utility.experimental.elementMaker(
-                                        'rect', 'selectionNeedle_start', {
-                                            x:selectionNeedlePosition, y:0, width:needleWidth, height:height, angle:0, style:selectionNeedleStyle
-                                        }
-                                    );
-                                    var selectionNeedle_end = __globals.utility.experimental.elementMaker(
-                                        'rect', 'selectionNeedle_end', {
-                                            x:selectionNeedlePosition+selectionAreaWidth*width, y:0, width:needleWidth, height:height, angle:0, style:selectionNeedleStyle
-                                        }
-                                    );
-                    
-                                    object.appendChild(selectionArea);
-                                    object.appendChild(selectionNeedle_start);
-                                    object.appendChild(selectionNeedle_end);
-                    
-                                
-                        //internal functions
-                            function setNeedlePosition(a,update=true){
-                                a = (a>1 ? 1 : a);
-                                a = (a<0 ? 0 : a);
-                                needlePosition = a;
-                                __globals.utility.element.setTransform_XYonly(needle, (width*a)-needleWidth/2, 0);
-                                if(object.needleSet && update){object.needleSet(a);}
-                            }
-                            function setSelectionArea_start(a,update=true){
-                                a = (a>1 ? 1 : a);
-                                a = (a<0 ? 0 : a);
-                                selectionNeedlePosition = a;
-                                __globals.utility.element.setTransform_XYonly(selectionNeedle_start, (width*a)-needleWidth/2, 0);
-                                __globals.utility.element.setTransform_XYonly(selectionArea, (width*a)-needleWidth/2, 0);
-                            }
-                            function setSelectionArea_end(a,update=true){
-                                a = (a>1 ? 1 : a);
-                                a = (a<0 ? 0 : a);
-                                selectionAreaWidth = a-selectionNeedlePosition;
-                                if( selectionAreaWidth > 0 ){
-                                    __globals.utility.element.setTransform_XYonly(selectionNeedle_end, (width*a)-needleWidth/2, 0);
-                                    selectionArea.setAttribute('width',(selectionAreaWidth*width));
-                                }else{
-                                    selectionArea.setAttribute('width',(Math.abs(selectionAreaWidth)*width));
-                                }
-                            }
-                    
-                        //controls
-                            object._test = function(){
-                                graph._test();
-                                this.setNeedlePosition(0.25);
-                            };
-                            object.setNeedlePosition = function(percentage,update=true){setNeedlePosition(percentage,update);};
-                            object.getNeedlePosition = function(){return needlePosition};
-                            object.draw = graph.draw;
-                            object.foregroundLineThickness = graph.foregroundLineThickness;
-                            object.drawBackground = graph.drawBackground;
-                        
-                        //interaction
-                            graph.onmousedown = function(event){
-                                var boundingClientRect = this.getBoundingClientRect();
-                                var x = (event.offsetX-boundingClientRect.x)/boundingClientRect.width;
-                    
-                                //!shift -> effect lead needle
-                                // shift -> effect selection area
-                                if( !event.shiftKey ){
-                                    setNeedlePosition(x);
-                                }else{
-                                    setSelectionArea_start(x);
-                                    graph.onmousemove = function(event){
-                                        var boundingClientRect = this.getBoundingClientRect();
-                                        var x = (event.offsetX-boundingClientRect.x)/boundingClientRect.width;
-                                        setSelectionArea_end(x);
-                                    };
-                                    graph.onmouseup = function(){
-                                        graph.onmousemove = null;
-                                        graph.onmouseup = null;
-                                        graph.onmouseout = null;
-                                    };
-                                    graph.onmouseout = graph.onmouseup;
-                                }
-                            };
-                    
-                        //callbacks
-                            object.needleSet = function(a){};
-                    
-                        return object;
-                    };
                 }
             };
             var objects = new function(){
@@ -5908,7 +6051,7 @@
                     lastSightingTimeOfTheNeedlePosition:0.0,
                     detune:0,
             
-                    loop:{active:false, start:0, end:1},
+                    loop:{active:false, start:0, end:1,timeout:null},
                     rate:1,
                 };
             
@@ -5993,16 +6136,45 @@
                         flow.bufferSource.connect(flow.channelSplitter);
                         flow.bufferSource.onended = function(a){state.itself.stop();};
                     }
-                    function updateNeedle(){
-                        state.needlePosition = state.itself.currentTime();
+                    function updateNeedle(specificTime){
+                        state.needlePosition = specificTime == undefined ? state.itself.currentTime() : specificTime;
                         state.lastSightingTimeOfTheNeedlePosition = context.currentTime;
+                    }
+                    function loopCompute(){
+                        //this code is used to calculate when the loop end will occur, and thus when the needle should jump
+                        //to the start of the loop. The actual looping of the audio is done by the system, so this process
+                        //is done solely to update the needle position.
+                        //  Using the needles current postiion and paly rate, the length of time before the needle is scheduled
+                        //to reach the end bound of the loop is calculated and given to a timeout. When this timeout occurs, 
+                        //the needle will jump to the start bound and the process is run again to calculate the new length of
+                        //time.
+                        //  The playhead cannot move beyond the end bound, thus any negative time calculated, will be set to
+                        //zero, and the playhead will instantly jump back to the start bound (this is a limitation of the
+                        //underlying audio system)
+            
+                        clearInterval(state.loop.timeout);
+                        if(!state.loop.active || !state.playing){return;} //obviously, if the loop isn't active, don't do any of the work
+            
+                        updateNeedle();
+                        var timeUntil = state.loop.end - state.itself.currentTime();
+                        if(timeUntil < 0){timeUntil = 0;}
+            
+                        // if(state.playing){
+                        //     state.loop.timeout = setTimeout(function(){
+                        //         state.itself.jumpTo_seconds(state.loop.start);
+                        //         loopCompute();
+                        //     }, (timeUntil*1000)/state.rate);
+                        // }
+                        state.loop.timeout = setTimeout(function(){
+                            state.itself.jumpTo_seconds(state.loop.start);
+                            loopCompute();
+                        }, (timeUntil*1000)/state.rate);
                     }
             
                 //controls
                     this.load = function(type,callback){
                         loadFile(type,function(data){
                             callback(data);
-                            // updateNeedle();
                             state.needlePosition = 0.0;
                         });
                     };
@@ -6018,9 +6190,10 @@
                             flow.bufferSource.detune.value = state.detune;
                             flow.bufferSource.playbackRate.value = state.rate;
                             flow.bufferSource.start(0,state.needlePosition);
-                        //log the starting time and the play state
+                        //log the starting time, play state and run loopCompute
                             state.lastSightingTimeOfTheNeedlePosition = context.currentTime;
                             state.playing = true;
+                            loopCompute();
                     };
                     this.stop = function(callback){
                         //check if we should stop at all
@@ -6052,6 +6225,10 @@
                                 return;
                             }
             
+                        //if loop is enabled, and the desired value is beyond the loop's end boundry,
+                        //set the value to the start value
+                        if(state.loop.active && value > state.loop.end){value = state.loop.start;}
+            
                         //stop playback, with a callback that will change the needle position
                         //and then restart playback
                             this.stop(function(){
@@ -6062,16 +6239,24 @@
                     };
                     this.loop = function(bool=false){
                         state.loop.active = bool;
-                        flow.bufferSource.loop = bool;
+                        if(flow.bufferSource){
+                            flow.bufferSource.loop = state.loop.active;
+                        }
+            
+                        loopCompute();
                     };
                     this.loopBounds = function(data={start:0,end:1}){
                         if(data==undefined){return data;}
             
-                        state.loop.start = data.start!=undefined ? data.start : state.loop.start;
-                        state.loop.end   = data.end!=undefined ?   data.end :   state.loop.end;
+                        state.loop.start = data.start!=undefined ? data.start*this.duration() : state.loop.start;
+                        state.loop.end   = data.end!=undefined ?   data.end*this.duration() :   state.loop.end;
             
-                        flow.bufferSource.loopStart = state.loop.start;
-                        flow.bufferSource.loopEnd = state.loop.end;
+                        if(flow.bufferSource){
+                            flow.bufferSource.loopStart = state.loop.start;
+                            flow.bufferSource.loopEnd = state.loop.end;
+                        }
+            
+                        loopCompute();
                     };
                     this.detune = function(value=0){
                         //detune is trash right now. All it is, is a different way to adjust rate,
@@ -6086,6 +6271,7 @@
                         state.rate = value;
                         if(flow.bufferSource){flow.bufferSource.playbackRate.value = value;}
                         updateNeedle();
+                        loopCompute();
                     };
             
                 //info
@@ -6209,7 +6395,8 @@
                                     design.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
                                     design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
                                     design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.__audioFilePlayer.waveformSegment() );
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.setNeedlePosition(0);
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
                                 });
                             }
                         }},
@@ -6224,37 +6411,52 @@
                     var obj = __globals.utility.experimental.objectBuilder(objects.testAudioObject,design);
             
                 //circuitry
-                    obj.__audioFilePlayer = new parts.audio.audioFilePlayer(__globals.audio.context);
-                    obj.__audioFilePlayer.out_right().connect( design.connectionNode_audio.outRight.in() );
-                    obj.__audioFilePlayer.out_left().connect( design.connectionNode_audio.outLeft.in() );
-                    setInterval(function(){
-                        //check if there's a track at all
-                            if( obj.__audioFilePlayer.currentTime() == -1 ){return;}
+                    //audioFilePlayer
+                        obj.__audioFilePlayer = new parts.audio.audioFilePlayer(__globals.audio.context);
+                        obj.__audioFilePlayer.out_right().connect( design.connectionNode_audio.outRight.in() );
+                        obj.__audioFilePlayer.out_left().connect( design.connectionNode_audio.outLeft.in() );
             
-                        //time readout
-                            var time = __globals.utility.math.seconds2time( Math.round(obj.__audioFilePlayer.currentTime()));
+                    //constantly gather information from the audioFilePlayer, and push this info to the display elements
+                        setInterval(function(){
+                            //check if there's a track at all
+                                if( obj.__audioFilePlayer.currentTime() == -1 ){return;}
             
-                            design.readout_sixteenSegmentDisplay.time.text(
-                                __globals.utility.math.padString(time.h,2,'0')+':'+
-                                __globals.utility.math.padString(time.m,2,'0')+':'+
-                                __globals.utility.math.padString(time.s,2,'0')
-                            );
-                            design.readout_sixteenSegmentDisplay.time.print();
+                            //time readout
+                                var time = __globals.utility.math.seconds2time( Math.round(obj.__audioFilePlayer.currentTime()));
             
-                        //scrubber
-                            var progress = obj.__audioFilePlayer.currentTime()/obj.__audioFilePlayer.duration();
-                            if( !isNaN(progress) ){
-                                design.slide.scrubber.set(progress,true);
+                                design.readout_sixteenSegmentDisplay.time.text(
+                                    __globals.utility.math.padString(time.h,2,'0')+':'+
+                                    __globals.utility.math.padString(time.m,2,'0')+':'+
+                                    __globals.utility.math.padString(time.s,2,'0')
+                                );
+                                design.readout_sixteenSegmentDisplay.time.print();
+            
+                            //progress
+                                var progress = obj.__audioFilePlayer.currentTime()/obj.__audioFilePlayer.duration();
+                                if( !isNaN(progress) ){
+                                    design.slide.scrubber.set(progress,false);
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.select(progress);
+                                }
+                        },100);
+            
+                    //connect waveWorkspace controls to the audioFilePlayer
+                        design.grapher_waveWorkspace.grapher_waveWorkspace.selectionAreaToggle = function(bool){ obj.__audioFilePlayer.loop(bool); };
+                        design.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
+                            if(needle == 'lead'){ obj.__audioFilePlayer.jumpTo_percent(value); }
+                            else if(needle == 'selection_A' || needle == 'selection_B'){
+                                var temp = design.grapher_waveWorkspace.grapher_waveWorkspace.area();
+                                if(temp.A < temp.B){
+                                    obj.__audioFilePlayer.loopBounds({start:temp.A,end:temp.B});
+                                }else{
+                                    obj.__audioFilePlayer.loopBounds({start:temp.B,end:temp.A});
+                                }
                             }
-                        //waveform
-                            design.grapher_waveWorkspace.grapher_waveWorkspace.setNeedlePosition(progress,false);
-                    },100);
+                        }
             
                 //setup
                     design.dial_continuous.rate.set(0.5);
                     design.grapher_waveWorkspace.grapher_waveWorkspace.foregroundLineThickness(1);
                     design.grapher_waveWorkspace.grapher_waveWorkspace.drawBackground();
-                    design.grapher_waveWorkspace.grapher_waveWorkspace.needleSet = function(a){ obj.__audioFilePlayer.jumpTo_percent(a); }
             
                 return obj;
             };
