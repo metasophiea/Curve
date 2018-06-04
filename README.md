@@ -14,3 +14,7 @@ Workspace can be found essentially everywhere. Curve is currently only in the 't
 ## Compiling
 You can use the 'comp' function to quickly build together the latest version of Curve and play around with whatever I was working on last by opening the 'docs/index.html' file in a browser.
 The command uses a little JavaScript compiler written in Python3 called Gravity, which can go through JS files looking for commands and execute them, ultimatly producing a single JS file. So far there's only one command - a straightforward include - but that's all I really need currently
+
+## Compatibility
+Though I'd really like it to work everywhere, currently the only browser that seems to be able to handle this is Chrome. Safari covers alot of things, but has trouble with a few of the WebAudio elements, and Firefox seems to be having problems with the SVG... honestly I'm not totally sure, so just use Chrome for now
+
