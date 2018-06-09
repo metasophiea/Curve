@@ -31,7 +31,7 @@ this.testObject = function(x,y,debug=false){
         type: 'testObject2',
         x: x, y: y,
         base: {
-            points:[{x:0,y:0},{x:335,y:0},{x:335,y:285},{x:0,y:285}], 
+            points:[{x:0,y:0},{x:510,y:0},{x:510,y:285},{x:0,y:285}], 
             style:style.background
         },
         elements:[
@@ -95,7 +95,7 @@ this.testObject = function(x,y,debug=false){
                 onkeyup:function(){design.connectionNode_data.externalData_1.send('key_rect',false);}
             }},
             {type:'rastorgrid', name:'rastorgrid', data:{
-                x:230, y:135, width:100, height:100, xCount:4, yCount:4, 
+                x:125, y:135, width:100, height:100, xCount:4, yCount:4, 
                 style:{
                     backing:'fill:rgba(200,200,200,1)', check:'fill:rgba(150,150,150,1)',
                     backingGlow:'fill:rgba(220,220,220,1)', checkGlow:'fill:rgba(220,220,220,1)'
@@ -136,34 +136,20 @@ this.testObject = function(x,y,debug=false){
             {type:'rastorDisplay', name:'rastorDisplay', data:{
                 x: 162.5, y: 262.5, angle:0, width:20, height:20, xCount:8, yCount:8, xGappage:0.1, yGappage:0.1
             }},
-            {type:'grapherSVG', name:'grapherSVG', data:{
-                x:125, y:30, width:100, height:100,
-                style:{
-                    middleground:style.grapher.middleground, background:style.grapher.background, 
-                    backgroundText:style.grapher.backgroundText, backing:style.grapher.backing
-                }
-            }},
-            {type:'grapher_periodicWave', name:'grapher_periodicWave', data:{
-                x:125, y:135, width:100, height:100,
-                style:{
-                    middleground:style.grapher.middleground, background:style.grapher.background, 
-                    backgroundText:style.grapher.backgroundText, backing:style.grapher.backing
-                }
-            }},
             {type:'connectionNode_audio', name:'internalAudio_1', data: {
-                type: 1, x: 230, y: 65, width: 30, height: 30
+                type: 1, x: 125, y: 65, width: 30, height: 30
             }},
             {type:'connectionNode_audio', name:'internalAudio_2', data:{
-                type: 0, x: 300, y: 65, width: 30, height: 30
+                type: 0, x: 195, y: 65, width: 30, height: 30
             }},
             {type:'connectionNode_data', name:'internalData_1', data:{
-                x: 230, y: 30, width: 30, height: 30
+                x: 125, y: 30, width: 30, height: 30
             }},
             {type:'connectionNode_data', name:'internalData_2', data:{
-                x: 300, y: 30, width: 30, height: 30
+                x: 195, y: 30, width: 30, height: 30
             }},
             {type:'connectionNode_data', name:'externalData_1', data:{
-                x: 230, y: 100, width: 30, height: 30, 
+                x: 125, y: 100, width: 30, height: 30, 
                 receive:function(address, data){
                     switch(address){
                         case 'slide_vertical':        design.slide.slide_vertical.set(data,false);             break;
@@ -192,6 +178,34 @@ this.testObject = function(x,y,debug=false){
                     }
                 }, 
             }},
+
+            //graphers
+                //SVGs
+                    {type:'grapherSVG', name:'grapherSVG', data:{
+                        x:300, y:5, width:100, height:50,
+                    }},
+                    {type:'grapher_periodicWave', name:'grapher_periodicWave_SVG', data:{
+                        x:300, y:60, width:100, height:50, graphType:'SVG'
+                    }},
+                    {type:'grapher_audioScope', name:'grapher_audioScope_SVG', data:{
+                        x:300, y:115, width:100, height:50, graphType:'SVG'
+                    }},
+                    {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_SVG', data:{
+                        x:300, y:170, width:100, height:50, graphType:'SVG'
+                    }},
+                //Canvas
+                    {type:'grapherCanvas', name:'grapherCanvas', data:{
+                        x:405, y:5, width:100, height:50,
+                    }},
+                    {type:'grapher_periodicWave', name:'grapher_periodicWave_canvas', data:{
+                        x:405, y:60, width:100, height:50, graphType:'Canvas'
+                    }},
+                    {type:'grapher_audioScope', name:'grapher_audioScope_canvas', data:{
+                        x:405, y:115, width:100, height:50, graphType:'Canvas'
+                    }},
+                    {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_canvas', data:{
+                        x:405, y:170, width:100, height:50, graphType:'Canvas'
+                    }},
         ]
     };
  
@@ -213,9 +227,11 @@ this.testObject = function(x,y,debug=false){
             design.rastorDisplay.rastorDisplay.test();
 
             design.grapherSVG.grapherSVG._test();
-
-            design.grapher_periodicWave.grapher_periodicWave.waveElement('sin',1,1);
-            design.grapher_periodicWave.grapher_periodicWave.draw();
+            design.grapher_waveWorkspace.grapher_waveWorkspace_SVG._test();
+            design.grapher_audioScope.grapher_audioScope_SVG.start();
+            design.grapherCanvas.grapherCanvas._test();
+            design.grapher_waveWorkspace.grapher_waveWorkspace_canvas._test();
+            design.grapher_audioScope.grapher_audioScope_canvas.start();
 
             design.level.level.set(0.5,0);
             design.level.level.set(0.75,1);

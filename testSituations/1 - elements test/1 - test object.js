@@ -4,7 +4,7 @@
     __globals.panes.middleground.append( testObject_1 );
 
 //creating second object, adding to pane
-    var testObject_2 = objects.testObject(400,0,true);
+    var testObject_2 = objects.testObject(600,0,true);
     __globals.panes.middleground.append( testObject_2 );
 
 //connecting first object to second

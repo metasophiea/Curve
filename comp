@@ -1,2 +1,1 @@
-./gravity main.js workspace.js
-mv workspace.js docs/
+./gravity main.js docs/workspace.js

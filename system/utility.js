@@ -15,13 +15,14 @@
 //    element
 //        getTransform                    (element)
 //        getCumulativeTransform          (element)
+//        getTruePoint                    (element)
 //        setTransform                    (element, transform:{x:0, y:0, s:1, r:0})
 //        setTransform_XYonly             (element, x, y)
 //        setStyle                        (element, style)
 //        setRotation                     (element, rotation)
 //        getBoundingBox                  (element)
 //        makeUnselectable                (element)
-//        positionFromMousePoint          (mousePoint={x:0,y:0}, elementOrigin={x:0,y:0}, elementWidth, elementHeight, elementAngle)
+//        getPositionWithinFromMouse      (event, element, elementWidth, elementHeight)
 //    
 //    object
 //        requestInteraction              (x,y,type) (browser position)
@@ -30,6 +31,8 @@
 //    
 //    audio
 //        changeAudioParam                (audioParam,target,time,curve,cancelScheduledValues=true)
+//        loadAudioBuffer                 (callback,type='file',url)
+//        waveformSegment                 (audioBuffer, bounds={start:0,end:1})
 //    
 //    math
 //        averageArray                    (array)
@@ -90,12 +93,15 @@ __globals.utility = new function(){
                 return {'x':(x*globalTransform.s)+globalTransform.x, 'y':(y*globalTransform.s)+globalTransform.y};
             };
         };
-        this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;'){
+        this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;',push=false){
             var g = parts.basic.g(null, x, y);
             var dot = parts.basic.circle(null, 0, 0, r, 0, style);
             var textElement = parts.basic.text(null, r, 0, text, 0, style);
             g.appendChild(dot);
             g.appendChild(textElement);
+
+            if(push){__globals.panes.foreground.append(g);}
+
             return g;
         };
         this.getGlobalScale = function(element){
@@ -121,6 +127,23 @@ __globals.utility = new function(){
                 var newData = this.getTransform(element);
                 data.x += newData.x;
                 data.y += newData.y;
+                data.s *= newData.s;
+                data.r += newData.r;
+            }
+            return data;
+        };
+        this.getTruePoint = function(element){
+            data = this.getTransform(element);
+            while( !element.parentElement.getAttribute('pane') ){
+                element = element.parentElement;
+                var newData = this.getTransform(element);
+                var temp = __globals.utility.math.cartesian2polar(data.x,data.y);
+                temp.ang += newData.r;
+                temp = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+                data.x = temp.x + newData.x;
+                data.y = temp.y + newData.y;
+                data.s *= newData.s;
+                data.r += newData.r;
             }
             return data;
         };
@@ -159,20 +182,20 @@ __globals.utility = new function(){
             element.style['-ms-user-select'] = 'none';
             element.style['user-select'] = 'none';
         };
-        this.positionFromMousePoint = function(mousePoint, elementOrigin, elementWidth, elementHeight, elementAngle){
-            var mouseClick = __globals.utility.workspace.pointConverter.browser2workspace(mousePoint.x,mousePoint.y);
+        this.getPositionWithinFromMouse = function(event, element, elementWidth, elementHeight){
+            var elementOrigin = __globals.utility.element.getTruePoint(element);
+            var mouseClick = __globals.utility.workspace.pointConverter.browser2workspace(event.offsetX,event.offsetY);
 
             var temp = __globals.utility.math.cartesian2polar(
                 mouseClick.x-elementOrigin.x,
                 mouseClick.y-elementOrigin.y
             );
-            temp.ang -= elementAngle;
+            temp.ang -= elementOrigin.r;
             temp = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
 
             var ans = { x:temp.x/elementWidth, y:temp.y/elementHeight };
             if(ans.x < 0){ans.x = 0;}else if(ans.x > 1){ans.x = 1;}
             if(ans.y < 0){ans.y = 0;}else if(ans.y > 1){ans.y = 1;}
-
             return ans;
         };
     };
@@ -252,6 +275,74 @@ __globals.utility = new function(){
                     break;
                 }
             }catch(e){console.log('could not change param (probably due to an overlap)');console.log(e);}
+        };
+        this.loadAudioFile = function(callback,type='file',url=''){
+            switch(type){
+                case 'url': 
+                    var request = new XMLHttpRequest();
+                    request.open('GET', url, true);
+                    request.responseType = 'arraybuffer';
+                    request.onload = function(){
+                        context.decodeAudioData(this.response, function(data){
+                            callback({
+                                buffer:data,
+                                name:(url.split('/')).pop(),
+                                duration:buffer.duration,
+                            });
+                        }, function(e){console.warn("Error with decoding audio data" + e.err);});
+                    }
+                    request.send();
+                break;
+                case 'file': default:
+                    var inputObject = document.createElement('input');
+                    inputObject.type = 'file';
+                    inputObject.onchange = function(){
+                        var file = this.files[0];
+                        var fileReader = new FileReader();
+                        fileReader.readAsArrayBuffer(file);
+                        fileReader.onload = function(data){
+                            __globals.audio.context.decodeAudioData(data.target.result, function(buffer){
+                                callback({
+                                    buffer:buffer,
+                                    name:file.name,
+                                    duration:buffer.duration,
+                                });
+                            });
+                        }
+                    };
+                    document.body.appendChild(inputObject);
+                    inputObject.click();
+                break;
+            }
+        };
+        this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}){
+            var waveform = audioBuffer.getChannelData(0);
+            var channelCount = audioBuffer.numberOfChannels;
+
+            bounds.start = bounds.start ? bounds.start : 0;
+            bounds.end = bounds.end ? bounds.end : 1;
+            var resolution = 10000;
+            var start = audioBuffer.length*bounds.start;
+            var end = audioBuffer.length*bounds.end;
+            var step = (end - start)/resolution;
+
+            var outputArray = [];
+            for(var a = start; a < end; a+=Math.round(step)){
+                outputArray.push( 
+                    __globals.utility.math.largestValueFound(
+                        waveform.slice(a, a+Math.round(step))
+                    )
+                );
+            }
+
+            return outputArray;
+        };
+        this.loadBuffer = function(context, data, destination, onended){
+            var temp = context.createBufferSource();
+            temp.buffer = data;
+            temp.connect(destination);
+            temp.onended = onended;
+            return temp;
         };
     };
     this.math = new function(){
@@ -680,16 +771,17 @@ __globals.utility = new function(){
                     case 'needleOverlay':
                         var temp = parts.control.needleOverlay(
                             name, data.x, data.y, data.width, data.height, data.angle,
-                            data.needleStyles, data.areaStyles
+                            data.needleWidth, data.selectNeedle, data.selectionArea,
+                            data.needleStyles,
                         );
                         temp.onchange = data.onchange   ? data.onchange  : temp.onchange;
                         temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
                         temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle;
                         return temp;
                     break;
-                    case 'grapher_waveWorkspace': 
+                    case 'grapher_waveWorkspace':
                         var temp = parts.control.grapher_waveWorkspace(
-                            name, data.x, data.y, data.width, data.height, data.angle, data.graphType,
+                            name, data.x, data.y, data.width, data.height, data.angle, data.graphType, data.selectNeedle, data.selectionArea,
                             data.style.foreground,   data.style.foregroundText,
                             data.style.middleground, data.style.middlegroundText,
                             data.style.background,   data.style.backgroundText,

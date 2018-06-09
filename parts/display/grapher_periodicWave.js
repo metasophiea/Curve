@@ -1,7 +1,7 @@
 this.grapher_periodicWave = function(
     id='grapher_periodicWave',
     x, y, width, height,
-    graphType='canvas',
+    graphType='Canvas',
     foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
     foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
     backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
@@ -14,8 +14,15 @@ this.grapher_periodicWave = function(
         object._data.wave = {'sin':[],'cos':[]};
         object._data.resolution = 500;
 
-    var graphMaker = graphType == 'svg' ? parts.display.grapherSVG : parts.display.grapherCanvas;
-    var grapher = graphMaker('grapher', 0, 0, width, height, foregroundStyle, foregroundTextStyle, backgroundStyle, backgroundTextStyle, backingStyle);
+    //main graph
+        var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+            x:0, y:0, width:width, height:height,
+            style:{
+                foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
+                background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                backing:backingStyle
+            }
+        });
         object.append(grapher);
 
 

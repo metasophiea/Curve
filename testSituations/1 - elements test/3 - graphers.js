@@ -1,5 +1,3 @@
-{{include:grapher_waveWorkspace.js}}
-
 objects.testObject = function(x,y,debug=false){
     var style = {
         background: 'fill:rgba(200,200,200,1); stroke:none;',
@@ -20,36 +18,46 @@ objects.testObject = function(x,y,debug=false){
             style:style.background
         },
         elements:[
-
-            // {type:'grapherSVG', name:'grapherSVG', data:{
-            //     x:5, y:0, width:100, height:50,
-            // }},
-            // {type:'grapher_periodicWave', name:'grapher_periodicWave', data:{
-            //     x:5, y:55, width:100, height:50,
-            // }},
-            // {type:'grapherCanvas', name:'grapherCanvas', data:{
-            //     x:125, y:0, width:100, height:50,
-            // }},
-            // {type:'grapher_audioScope', name:'grapher_audioScope', data:{
-            //     x:125, y:110, width:100, height:50,
-            // }},
-
-            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                x:125, y:55, width:100, height:50,
-            }},
-
+            //SVGs
+                {type:'grapherSVG', name:'grapherSVG', data:{
+                    x:5, y:0, width:100, height:50,
+                }},
+                {type:'grapher_periodicWave', name:'grapher_periodicWave_SVG', data:{
+                    x:5, y:55, width:100, height:50, graphType:'SVG'
+                }},
+                {type:'grapher_audioScope', name:'grapher_audioScope_SVG', data:{
+                    x:5, y:110, width:100, height:50, graphType:'SVG'
+                }},
+                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_SVG', data:{
+                    x:5, y:165, width:100, height:50, graphType:'SVG'
+                }},
+            //Canvas
+                {type:'grapherCanvas', name:'grapherCanvas', data:{
+                    x:125, y:0, width:100, height:50,
+                }},
+                {type:'grapher_periodicWave', name:'grapher_periodicWave_canvas', data:{
+                    x:125, y:55, width:100, height:50, graphType:'Canvas'
+                }},
+                {type:'grapher_audioScope', name:'grapher_audioScope_canvas', data:{
+                    x:125, y:110, width:100, height:50, graphType:'Canvas'
+                }},
+                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_canvas', data:{
+                    x:125, y:165, width:100, height:50, graphType:'Canvas'
+                }},
         ]
     };
-
+    
 
     //main object
         var obj = __globals.utility.experimental.objectBuilder(objects.testObject,design);
 
     //setup
-        // design.grapherCanvas.grapherCanvas._test();
-        // design.grapherSVG.grapherSVG._test();
-        design.grapher_waveWorkspace.grapher_waveWorkspace._test();
-        // design.grapher_audioScope.grapher_audioScope.start();
+        design.grapherSVG.grapherSVG._test();
+        design.grapher_waveWorkspace.grapher_waveWorkspace_SVG._test();
+        design.grapher_audioScope.grapher_audioScope_SVG.start();
+        design.grapherCanvas.grapherCanvas._test();
+        design.grapher_waveWorkspace.grapher_waveWorkspace_canvas._test();
+        design.grapher_audioScope.grapher_audioScope_canvas.start();
 
     return obj;
 }
@@ -58,4 +66,4 @@ objects.testObject = function(x,y,debug=false){
 var testObject_1 = objects.testObject(50,50,true);
 __globals.panes.middleground.append( testObject_1 );
 
-__globals.utility.workspace.gotoPosition(-1126.52, -666.166, 6.63325, 0);
+__globals.utility.workspace.gotoPosition(-101.407, -107.362, 2.3409, 0);

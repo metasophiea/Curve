@@ -1,9 +1,9 @@
 this.grapher_waveWorkspace = function(
     id='grapher_waveWorkspace',
-    x, y, width, height, angle=0, graphType='Canvas',
-    foregroundStyles=['fill:rgba(255, 231, 114);'],
+    x, y, width, height, angle=0, graphType='Canvas', selectNeedle=true, selectionArea=true,
+    foregroundStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
     foregroundTextStyles=['fill:rgba(0,255,255,1); font-size:3; font-family:Helvetica;'],
-    middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+    middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.1; stroke-linecap:round;',
     middlegroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
     backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
     backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
@@ -27,7 +27,8 @@ this.grapher_waveWorkspace = function(
             object.append(graph);
         //needle overlay
             var overlay = __globals.utility.experimental.elementMaker('needleOverlay', 'overlay', {
-                x:0, y:0, width:width, height:height
+                x:0, y:0, width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                needleStyles:foregroundStyles,
             });
             object.append(overlay);
 
@@ -38,6 +39,8 @@ this.grapher_waveWorkspace = function(
         object.foregroundLineThickness = graph.foregroundLineThickness;
         object.drawBackground = graph.drawBackground;
         object.area = overlay.area;
+        object._test = graph._test;
+        object.genericNeedle = overlay.genericNeedle;
 
     //callbacks
         object.onchange = function(needle,value){};
@@ -48,7 +51,7 @@ this.grapher_waveWorkspace = function(
         overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
 
     //setup
-        graph._test();
+        object.drawBackground();
 
     return object;
 };

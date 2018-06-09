@@ -1,8 +1,7 @@
 this.needleOverlay = function(
     id='needleOverlay',
-    x, y, width, height, angle=0, needleWidth=0.00125,
+    x, y, width, height, angle=0, needleWidth=0.00125, selectNeedle=true, selectionArea=true,
     needleStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
-    areaStyles=['fill:rgba(255, 231, 114, 0.33);']
 ){
     var needleData = {};
 
@@ -28,14 +27,29 @@ this.needleOverlay = function(
                 controlObjects.selection_B.append(parts.basic.rect('handle', 0, 0, needleWidth*width, height, 0, needleStyles[1]));
                 controlObjects.selection_B.append(parts.basic.rect('invisibleHandle', (width*needleWidth - invisibleHandleWidth)/2, 0, invisibleHandleWidth, height, 0, 'fill:rgba(255,0,0,0);cursor: col-resize;'));
                 //selection_area
-                controlObjects.selection_area = parts.basic.rect('selection_area', 0, 0, 0, height, 0, areaStyles[0]+'cursor: move;');
+                controlObjects.selection_area = parts.basic.rect('selection_area', 0, 0, 0, height, 0, needleStyles[1]+'opacity:0.33; cursor: move;');
+                //generic needles
+                controlObjects.generic = [];
             var controlObjectsGroup = parts.basic.g('controlObjectsGroup', 0, 0);
             object.append(controlObjectsGroup);
 
     //internal functions
+        function setGenericNeedle(number,location,specialStyle=''){
+            if(controlObjects.generic[number] && location != undefined){
+                __globals.utility.element.setTransform_XYonly( controlObjects.generic[number], location*width - width*needleWidth*location, 0);
+            }else if(controlObjects.generic[number]){
+                controlObjects.generic[number].remove();
+                delete controlObjects.generic[number];
+            }else{
+                controlObjects.generic[number] = parts.basic.g('generic_'+number, (location*width - needleWidth*width/2), 0, 0);
+                controlObjects.generic[number].append(parts.basic.rect('handle', 0, 0, needleWidth*width, height, 0, needleStyles[0]));
+                controlObjects.generic[number].append(parts.basic.rect('invisibleHandle', (width*needleWidth - invisibleHandleWidth)/2, 0, invisibleHandleWidth, height, 0, 'fill:rgba(255,0,0,0);'));
+                controlObjectsGroup.append( controlObjects.generic[number] );
+                if(specialStyle.length > 0){ __globals.utility.element.setStyle(controlObjects.generic[number],specialStyle); }
+            }
+        }
+        //place the selected needle at the selected location
         function needleJumpTo(needle,location){
-            //place the selected needle at the selected locaion
-
             //if the location is wrong, remove the needle and return
             if(location == undefined || location < 0 || location > 1){
                 controlObjects[needle].remove();
@@ -87,15 +101,16 @@ this.needleOverlay = function(
     //interaction
         //generic onmousedown code for interaction
         function needle_onmousedown(needleName,callback){
-            if(object.onchange){ object.onchange(needleName,__globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x); }
+            if(object.onchange){ object.onchange(needleName,__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x); }
             __globals.svgElement.onmousemove = function(event){
-                var x = __globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x;
+                var x = __globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
+
                 needleJumpTo(needleName,x);
                 if(object.onchange){ object.onchange(needleName,x); }
                 if(callback){callback();}
             };
             __globals.svgElement.onmouseup = function(event){
-                var x = __globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x;
+                var x = __globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
                 needleJumpTo(needleName,x);
                 if(object.onrelease){ object.onrelease(needleName,x); }
                 if(callback){callback();}
@@ -108,17 +123,23 @@ this.needleOverlay = function(
 
         backing.onmousedown = function(event){
             if(!event.shiftKey){
-                needleJumpTo('lead',__globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x);
+                if(!selectNeedle){return;}
+                needleJumpTo('lead',__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
                 needle_onmousedown('lead');
             }
             else{
-                needleJumpTo('selection_A',__globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x);
+                if(!selectionArea){return;}
+                needleJumpTo('selection_A',__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
                 needle_onmousedown('selection_B',computeSelectionArea);
             }
         };
         controlObjects.lead.onmousedown = function(){ needle_onmousedown('lead'); };
-        controlObjects.selection_A.onmousedown = function(){ needle_onmousedown('selection_A',computeSelectionArea); };
-        controlObjects.selection_B.onmousedown = function(){ needle_onmousedown('selection_B',computeSelectionArea); };
+        controlObjects.selection_A.onmousedown = function(){
+            needle_onmousedown('selection_A',computeSelectionArea); 
+        };
+        controlObjects.selection_B.onmousedown = function(){
+            needle_onmousedown('selection_B',computeSelectionArea); 
+        };
         controlObjects.selection_area.onmousedown = function(){
             __globals.svgElement.onmousemove = function(event){
                 var divider = __globals.utility.workspace.getGlobalScale(object);
@@ -151,6 +172,7 @@ this.needleOverlay = function(
 
     //controls
         object.select = function(position,update=true){
+            if(!selectNeedle){return;}
             //if there's no input, return the value
             //if input is out of bounds, remove the needle
             //otherwise, set the position
@@ -159,6 +181,8 @@ this.needleOverlay = function(
             else{ needleJumpTo('lead',position); }
         };
         object.area = function(positionA,positionB){
+            if(!selectionArea){return;}
+
             //if there's no input, return the values
             //if input is out of bounds, remove the needles
             //otherwise, set the position
@@ -174,6 +198,9 @@ this.needleOverlay = function(
 
             //you always gotta computer the selection area
             computeSelectionArea();
+        };
+        object.genericNeedle = function(number,position,specialStyle=''){
+            setGenericNeedle(number,position,specialStyle);
         };
 
     //callbacks

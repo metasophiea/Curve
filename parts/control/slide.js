@@ -45,21 +45,6 @@ this.slide = function(
             return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
         }
     
-    //internal functionality
-        function positionFromPoint(event){
-            var elementOrigin = __globals.utility.element.getCumulativeTransform(backingAndSlot);
-            var mouseClick = __globals.utility.workspace.pointConverter.browser2workspace(event.offsetX,event.offsetY);
-
-            var temp = __globals.utility.math.cartesian2polar(
-                mouseClick.x-elementOrigin.x,
-                mouseClick.y-elementOrigin.y
-            );
-            temp.ang -= angle;
-            temp = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
-
-            return {x:temp.x/width,y:temp.y/height};
-        }
-
     //methods
         object.set = function(value,update){
             if(grappled){return;}
@@ -114,7 +99,8 @@ this.slide = function(
             if(grappled){return;}
             if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
 
-            var y = positionFromPoint(event).y;
+            var y = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
+
             var value = y + 0.5*handleHeight*((2*y)-1);
             set(value);
             object.onrelease(value);

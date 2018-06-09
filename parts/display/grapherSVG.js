@@ -5,7 +5,7 @@ this.grapherSVG = function(
     foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
     backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
     backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-    backingStyle = 'rgba(50,50,50,1)',
+    backingStyle = 'fill:rgba(50,50,50,1)',
 ){
     var viewbox = {'l':-1,'h':1};
     var horizontalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printText:false};

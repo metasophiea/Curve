@@ -42,59 +42,6 @@ parts.audio.audioFilePlayer = function(
             this.out_right = function(){return flow.rightOut.node;}
 
     //internal functions
-        function loadFile(type,callback){
-            state.fileLoaded = false;
-
-            switch(type){
-                case 'url': 
-                    var request = new XMLHttpRequest();
-                    request.open('GET', url, true);
-                    request.responseType = 'arraybuffer';
-                    request.onload = function(){
-                        state.itself.stop();
-                        context.decodeAudioData(this.response, function(data){
-                            flow.track = {
-                                buffer:data,
-                                name:(url.split('/')).pop(),
-                                duration:buffer.duration,
-                            };
-                            state.fileLoaded = true;
-                            if(callback){callback({name:url.split('/').pop(),duration:buffer.duration});}
-                        }, function(e){console.warn("Error with decoding audio data" + e.err);});
-                    }
-                    request.send();
-                break;
-                case 'file': default:
-                    var inputObject = document.createElement('input');
-                    inputObject.type = 'file';
-                    inputObject.onchange = function(){
-                        var file = this.files[0];
-                        var fileReader = new FileReader();
-                        fileReader.readAsArrayBuffer(file);
-                        fileReader.onload = function(data){
-                            state.itself.stop();
-                            __globals.audio.context.decodeAudioData(data.target.result, function(buffer){
-                                flow.track = {
-                                    buffer:buffer,
-                                    name:file.name,
-                                    duration:buffer.duration,
-                                };
-                                state.fileLoaded = true;
-                                if(callback){callback(file);}
-                            });
-                        }
-                    };
-                    document.body.appendChild(inputObject);
-                    inputObject.click();
-                break;
-            }
-        }
-        function loadBuffer(data){
-            flow.bufferSource = context.createBufferSource();
-            flow.bufferSource.buffer = data;
-            flow.bufferSource.connect(flow.channelSplitter);
-            flow.bufferSource.onended = function(a){state.itself.stop();};
-        }
         function updateNeedle(specificTime){
             state.needlePosition = specificTime == undefined ? state.itself.currentTime() : specificTime;
             state.lastSightingTimeOfTheNeedlePosition = context.currentTime;
@@ -127,18 +74,24 @@ parts.audio.audioFilePlayer = function(
         }
 
     //controls
-        this.load = function(type,callback){
-            loadFile(type,function(data){
-                callback(data);
-                state.needlePosition = 0.0;
-            });
+        this.load = function(type,callback,url=''){
+            state.fileLoaded = false;
+            __globals.utility.audio.loadAudioFile(
+                function(data){
+                    state.itself.stop();
+                    flow.track = data;
+                    state.fileLoaded = true;
+                    state.needlePosition = 0.0;
+                    callback(data);
+                },
+            type,url);
         };
         this.play = function(){
             //check if we should play at all
             //(player must be stopped and file must be loaded)
                 if(state.playing || !state.fileLoaded){return;}
             //load buffer, enter settings and start from needle position
-                loadBuffer(flow.track.buffer);
+                flow.bufferSource = __globals.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(a){state.itself.stop();});
                 flow.bufferSource.loop = state.loop.active;
                 flow.bufferSource.loopStart = state.loop.start;
                 flow.bufferSource.loopEnd = state.loop.end;
@@ -154,7 +107,7 @@ parts.audio.audioFilePlayer = function(
             //check if we should stop at all
             //(player must be playing)
                 if( !state.playing ){return;}
-            //(if we get one) replace the onended callback
+            //(if we have one) replace the onended callback
             //(this callback will be replaced when 'play' is run again)
                 if(callback){flow.bufferSource.onended = function(){callback();};}
             //actually stop the buffer and destroy it
@@ -244,30 +197,11 @@ parts.audio.audioFilePlayer = function(
         };
         this.title = function(){
             if(!state.fileLoaded){return '';}
-            return flow.track.name;};
+            return flow.track.name;
+        };
         this.waveformSegment = function(data={start:0,end:1}){
             if(data==undefined){return [];}
             if(!state.fileLoaded){return [];}
-            data.start = data.start ? data.start : 0;
-            data.end = data.end ? data.end : 1;
-            data.resolution = 10000;
-
-            var waveform = flow.track.buffer.getChannelData(0);
-            var channelCount = flow.track.buffer.numberOfChannels;
-
-            data.start = flow.track.buffer.length*data.start;
-            data.end = flow.track.buffer.length*data.end;
-            data.step = (data.end - data.start)/data.resolution;
-
-            var outputArray = [];
-            for(var a = data.start; a < data.end; a+=Math.round(data.step)){
-                outputArray.push( 
-                    __globals.utility.math.largestValueFound(
-                        waveform.slice(a, a+Math.round(data.step))
-                    )
-                );
-            }
-
-            return outputArray;
+            return __globals.utility.audio.waveformSegment(flow.track.buffer, data);
         };
 };

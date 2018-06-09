@@ -1,4 +1,39 @@
-  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+ ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-06-08
+  - there's now different types of oneShot circuitry; one that allows multiple 
+    instances to play, and one that doesn't (named oneShot_single and 
+    oneShot_multi)
+  - wrote up looper circuitry and object. It just takes a file and always loops
+    it while playing. The circuitry has the ability to loop a sub-section of the
+    file, but the object doesn't have that feature
+  - wrote up new verison of the generic audio file player, which is written a bit
+    nicer, with some small changes
+  - test situation 10 / 2 / 2 is looking good, now with each player type in an
+    object (and labels)
+
+
+2018-06-06
+  - upgraded the needle-positioning on the oneShot player object. It now uses
+    a transition instead of constant updates to the position.. I need to
+    investigate whether a similar technique could be used for other players
+  - needleOverlay now has the ability to disable regular selection and area
+    selection
+  - gave the oneShot object a trigger data input
+    
+
+2018-06-05
+  - turns out there was a flaw in how 'positionFromMousePoint' was being used.
+    'getCumulativeTransform' doesn't do a great job in getting the actual X/Y
+    point, so 'getTruePoint' has been created which does much better
+  - 'positionFromMousePoint' replaced with 'getPositionWithinFromMouse' which has
+    the same functionality, but a nicer interface
+  - updated grapher_audioScope and grapher_PeriodicWave to the new way of
+    selecting what type of graph you want
+  - updated testObject to have all the latest graphers
+  - added 'loadAudioBuffer' to utility.audio
+  - wrote up 'oneShot' audio file player circuit and object (object needs work)
+
+
 2018-06-04
   - needleOverlay work complete, seems pretty solid now
   - worked on integrating the needleOverlay with the audioFilePlayer object. You

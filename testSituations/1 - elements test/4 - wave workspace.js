@@ -1,7 +1,7 @@
 {{include:grapher_waveWorkspace.js}}
 
 __globals.panes.foreground.append(
-    parts.dynamic.grapher_waveWorkspace(
+    parts.control.grapher_waveWorkspace(
         'grapher_waveWorkspace', 10, 10, 200, 50
     )
 );

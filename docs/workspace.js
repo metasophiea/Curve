@@ -22,13 +22,14 @@
             //    element
             //        getTransform                    (element)
             //        getCumulativeTransform          (element)
+            //        getTruePoint                    (element)
             //        setTransform                    (element, transform:{x:0, y:0, s:1, r:0})
             //        setTransform_XYonly             (element, x, y)
             //        setStyle                        (element, style)
             //        setRotation                     (element, rotation)
             //        getBoundingBox                  (element)
             //        makeUnselectable                (element)
-            //        positionFromMousePoint          (mousePoint={x:0,y:0}, elementOrigin={x:0,y:0}, elementWidth, elementHeight, elementAngle)
+            //        getPositionWithinFromMouse      (event, element, elementWidth, elementHeight)
             //    
             //    object
             //        requestInteraction              (x,y,type) (browser position)
@@ -37,6 +38,8 @@
             //    
             //    audio
             //        changeAudioParam                (audioParam,target,time,curve,cancelScheduledValues=true)
+            //        loadAudioBuffer                 (callback,type='file',url)
+            //        waveformSegment                 (audioBuffer, bounds={start:0,end:1})
             //    
             //    math
             //        averageArray                    (array)
@@ -96,12 +99,15 @@
                             return {'x':(x*globalTransform.s)+globalTransform.x, 'y':(y*globalTransform.s)+globalTransform.y};
                         };
                     };
-                    this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;'){
+                    this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;',push=false){
                         var g = parts.basic.g(null, x, y);
                         var dot = parts.basic.circle(null, 0, 0, r, 0, style);
                         var textElement = parts.basic.text(null, r, 0, text, 0, style);
                         g.appendChild(dot);
                         g.appendChild(textElement);
+            
+                        if(push){__globals.panes.foreground.append(g);}
+            
                         return g;
                     };
                     this.getGlobalScale = function(element){
@@ -127,6 +133,23 @@
                             var newData = this.getTransform(element);
                             data.x += newData.x;
                             data.y += newData.y;
+                            data.s *= newData.s;
+                            data.r += newData.r;
+                        }
+                        return data;
+                    };
+                    this.getTruePoint = function(element){
+                        data = this.getTransform(element);
+                        while( !element.parentElement.getAttribute('pane') ){
+                            element = element.parentElement;
+                            var newData = this.getTransform(element);
+                            var temp = __globals.utility.math.cartesian2polar(data.x,data.y);
+                            temp.ang += newData.r;
+                            temp = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+                            data.x = temp.x + newData.x;
+                            data.y = temp.y + newData.y;
+                            data.s *= newData.s;
+                            data.r += newData.r;
                         }
                         return data;
                     };
@@ -165,20 +188,20 @@
                         element.style['-ms-user-select'] = 'none';
                         element.style['user-select'] = 'none';
                     };
-                    this.positionFromMousePoint = function(mousePoint, elementOrigin, elementWidth, elementHeight, elementAngle){
-                        var mouseClick = __globals.utility.workspace.pointConverter.browser2workspace(mousePoint.x,mousePoint.y);
+                    this.getPositionWithinFromMouse = function(event, element, elementWidth, elementHeight){
+                        var elementOrigin = __globals.utility.element.getTruePoint(element);
+                        var mouseClick = __globals.utility.workspace.pointConverter.browser2workspace(event.offsetX,event.offsetY);
             
                         var temp = __globals.utility.math.cartesian2polar(
                             mouseClick.x-elementOrigin.x,
                             mouseClick.y-elementOrigin.y
                         );
-                        temp.ang -= elementAngle;
+                        temp.ang -= elementOrigin.r;
                         temp = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
             
                         var ans = { x:temp.x/elementWidth, y:temp.y/elementHeight };
                         if(ans.x < 0){ans.x = 0;}else if(ans.x > 1){ans.x = 1;}
                         if(ans.y < 0){ans.y = 0;}else if(ans.y > 1){ans.y = 1;}
-            
                         return ans;
                     };
                 };
@@ -258,6 +281,74 @@
                                 break;
                             }
                         }catch(e){console.log('could not change param (probably due to an overlap)');console.log(e);}
+                    };
+                    this.loadAudioFile = function(callback,type='file',url=''){
+                        switch(type){
+                            case 'url': 
+                                var request = new XMLHttpRequest();
+                                request.open('GET', url, true);
+                                request.responseType = 'arraybuffer';
+                                request.onload = function(){
+                                    context.decodeAudioData(this.response, function(data){
+                                        callback({
+                                            buffer:data,
+                                            name:(url.split('/')).pop(),
+                                            duration:buffer.duration,
+                                        });
+                                    }, function(e){console.warn("Error with decoding audio data" + e.err);});
+                                }
+                                request.send();
+                            break;
+                            case 'file': default:
+                                var inputObject = document.createElement('input');
+                                inputObject.type = 'file';
+                                inputObject.onchange = function(){
+                                    var file = this.files[0];
+                                    var fileReader = new FileReader();
+                                    fileReader.readAsArrayBuffer(file);
+                                    fileReader.onload = function(data){
+                                        __globals.audio.context.decodeAudioData(data.target.result, function(buffer){
+                                            callback({
+                                                buffer:buffer,
+                                                name:file.name,
+                                                duration:buffer.duration,
+                                            });
+                                        });
+                                    }
+                                };
+                                document.body.appendChild(inputObject);
+                                inputObject.click();
+                            break;
+                        }
+                    };
+                    this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}){
+                        var waveform = audioBuffer.getChannelData(0);
+                        var channelCount = audioBuffer.numberOfChannels;
+            
+                        bounds.start = bounds.start ? bounds.start : 0;
+                        bounds.end = bounds.end ? bounds.end : 1;
+                        var resolution = 10000;
+                        var start = audioBuffer.length*bounds.start;
+                        var end = audioBuffer.length*bounds.end;
+                        var step = (end - start)/resolution;
+            
+                        var outputArray = [];
+                        for(var a = start; a < end; a+=Math.round(step)){
+                            outputArray.push( 
+                                __globals.utility.math.largestValueFound(
+                                    waveform.slice(a, a+Math.round(step))
+                                )
+                            );
+                        }
+            
+                        return outputArray;
+                    };
+                    this.loadBuffer = function(context, data, destination, onended){
+                        var temp = context.createBufferSource();
+                        temp.buffer = data;
+                        temp.connect(destination);
+                        temp.onended = onended;
+                        return temp;
                     };
                 };
                 this.math = new function(){
@@ -686,16 +777,17 @@
                                 case 'needleOverlay':
                                     var temp = parts.control.needleOverlay(
                                         name, data.x, data.y, data.width, data.height, data.angle,
-                                        data.needleStyles, data.areaStyles
+                                        data.needleWidth, data.selectNeedle, data.selectionArea,
+                                        data.needleStyles,
                                     );
                                     temp.onchange = data.onchange   ? data.onchange  : temp.onchange;
                                     temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
                                     temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle;
                                     return temp;
                                 break;
-                                case 'grapher_waveWorkspace': 
+                                case 'grapher_waveWorkspace':
                                     var temp = parts.control.grapher_waveWorkspace(
-                                        name, data.x, data.y, data.width, data.height, data.angle, data.graphType,
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.graphType, data.selectNeedle, data.selectionArea,
                                         data.style.foreground,   data.style.foregroundText,
                                         data.style.middleground, data.style.middlegroundText,
                                         data.style.background,   data.style.backgroundText,
@@ -1802,7 +1894,7 @@
                     this.grapher_audioScope = function(
                         id='grapher_audioScope',
                         x, y, width, height,
-                        graphType='canvas',
+                        graphType='Canvas',
                         foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
                         foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
                         backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
@@ -1833,9 +1925,15 @@
                                 object._data.wave = {'sin':[],'cos':[]};
                                 object._data.resolution = 500;
                     
-                            //scope
-                            var graphMaker = graphType == 'svg' ? parts.display.grapherSVG : parts.display.grapherCanvas;
-                            var grapher = graphMaker('grapher', 0, 0, width, height, foregroundStyle, foregroundTextStyle, backgroundStyle, backgroundTextStyle, backingStyle);
+                            //main graph
+                                var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+                                    x:0, y:0, width:width, height:height,
+                                    style:{
+                                        foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
+                                        background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                        backing:backingStyle
+                                    }
+                                });
                                 object.append(grapher);
                                 
                         //methods
@@ -1888,7 +1986,7 @@
                     this.grapher_periodicWave = function(
                         id='grapher_periodicWave',
                         x, y, width, height,
-                        graphType='canvas',
+                        graphType='Canvas',
                         foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
                         foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
                         backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
@@ -1901,8 +1999,15 @@
                             object._data.wave = {'sin':[],'cos':[]};
                             object._data.resolution = 500;
                     
-                        var graphMaker = graphType == 'svg' ? parts.display.grapherSVG : parts.display.grapherCanvas;
-                        var grapher = graphMaker('grapher', 0, 0, width, height, foregroundStyle, foregroundTextStyle, backgroundStyle, backgroundTextStyle, backingStyle);
+                        //main graph
+                            var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+                                x:0, y:0, width:width, height:height,
+                                style:{
+                                    foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
+                                    background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                    backing:backingStyle
+                                }
+                            });
                             object.append(grapher);
                     
                     
@@ -2152,7 +2257,7 @@
                         foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
                         backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
                         backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                        backingStyle = 'rgba(50,50,50,1)',
+                        backingStyle = 'fill:rgba(50,50,50,1)',
                     ){
                         var viewbox = {'l':-1,'h':1};
                         var horizontalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printText:false};
@@ -3951,10 +4056,10 @@
                     };
                     this.grapher_waveWorkspace = function(
                         id='grapher_waveWorkspace',
-                        x, y, width, height, angle=0, graphType='Canvas',
-                        foregroundStyles=['fill:rgba(255, 231, 114);'],
+                        x, y, width, height, angle=0, graphType='Canvas', selectNeedle=true, selectionArea=true,
+                        foregroundStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
                         foregroundTextStyles=['fill:rgba(0,255,255,1); font-size:3; font-family:Helvetica;'],
-                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.1; stroke-linecap:round;',
                         middlegroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
                         backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
                         backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
@@ -3978,7 +4083,8 @@
                                 object.append(graph);
                             //needle overlay
                                 var overlay = __globals.utility.experimental.elementMaker('needleOverlay', 'overlay', {
-                                    x:0, y:0, width:width, height:height
+                                    x:0, y:0, width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                                    needleStyles:foregroundStyles,
                                 });
                                 object.append(overlay);
                     
@@ -3989,6 +4095,8 @@
                             object.foregroundLineThickness = graph.foregroundLineThickness;
                             object.drawBackground = graph.drawBackground;
                             object.area = overlay.area;
+                            object._test = graph._test;
+                            object.genericNeedle = overlay.genericNeedle;
                     
                         //callbacks
                             object.onchange = function(needle,value){};
@@ -3999,7 +4107,7 @@
                             overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
                     
                         //setup
-                            graph._test();
+                            object.drawBackground();
                     
                         return object;
                     };
@@ -4062,9 +4170,8 @@
                     };
                     this.needleOverlay = function(
                         id='needleOverlay',
-                        x, y, width, height, angle=0, needleWidth=0.00125,
+                        x, y, width, height, angle=0, needleWidth=0.00125, selectNeedle=true, selectionArea=true,
                         needleStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
-                        areaStyles=['fill:rgba(255, 231, 114, 0.33);']
                     ){
                         var needleData = {};
                     
@@ -4090,14 +4197,29 @@
                                     controlObjects.selection_B.append(parts.basic.rect('handle', 0, 0, needleWidth*width, height, 0, needleStyles[1]));
                                     controlObjects.selection_B.append(parts.basic.rect('invisibleHandle', (width*needleWidth - invisibleHandleWidth)/2, 0, invisibleHandleWidth, height, 0, 'fill:rgba(255,0,0,0);cursor: col-resize;'));
                                     //selection_area
-                                    controlObjects.selection_area = parts.basic.rect('selection_area', 0, 0, 0, height, 0, areaStyles[0]+'cursor: move;');
+                                    controlObjects.selection_area = parts.basic.rect('selection_area', 0, 0, 0, height, 0, needleStyles[1]+'opacity:0.33; cursor: move;');
+                                    //generic needles
+                                    controlObjects.generic = [];
                                 var controlObjectsGroup = parts.basic.g('controlObjectsGroup', 0, 0);
                                 object.append(controlObjectsGroup);
                     
                         //internal functions
+                            function setGenericNeedle(number,location,specialStyle=''){
+                                if(controlObjects.generic[number] && location != undefined){
+                                    __globals.utility.element.setTransform_XYonly( controlObjects.generic[number], location*width - width*needleWidth*location, 0);
+                                }else if(controlObjects.generic[number]){
+                                    controlObjects.generic[number].remove();
+                                    delete controlObjects.generic[number];
+                                }else{
+                                    controlObjects.generic[number] = parts.basic.g('generic_'+number, (location*width - needleWidth*width/2), 0, 0);
+                                    controlObjects.generic[number].append(parts.basic.rect('handle', 0, 0, needleWidth*width, height, 0, needleStyles[0]));
+                                    controlObjects.generic[number].append(parts.basic.rect('invisibleHandle', (width*needleWidth - invisibleHandleWidth)/2, 0, invisibleHandleWidth, height, 0, 'fill:rgba(255,0,0,0);'));
+                                    controlObjectsGroup.append( controlObjects.generic[number] );
+                                    if(specialStyle.length > 0){ __globals.utility.element.setStyle(controlObjects.generic[number],specialStyle); }
+                                }
+                            }
+                            //place the selected needle at the selected location
                             function needleJumpTo(needle,location){
-                                //place the selected needle at the selected locaion
-                    
                                 //if the location is wrong, remove the needle and return
                                 if(location == undefined || location < 0 || location > 1){
                                     controlObjects[needle].remove();
@@ -4149,15 +4271,16 @@
                         //interaction
                             //generic onmousedown code for interaction
                             function needle_onmousedown(needleName,callback){
-                                if(object.onchange){ object.onchange(needleName,__globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x); }
+                                if(object.onchange){ object.onchange(needleName,__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x); }
                                 __globals.svgElement.onmousemove = function(event){
-                                    var x = __globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x;
+                                    var x = __globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
+                    
                                     needleJumpTo(needleName,x);
                                     if(object.onchange){ object.onchange(needleName,x); }
                                     if(callback){callback();}
                                 };
                                 __globals.svgElement.onmouseup = function(event){
-                                    var x = __globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x;
+                                    var x = __globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
                                     needleJumpTo(needleName,x);
                                     if(object.onrelease){ object.onrelease(needleName,x); }
                                     if(callback){callback();}
@@ -4170,17 +4293,23 @@
                     
                             backing.onmousedown = function(event){
                                 if(!event.shiftKey){
-                                    needleJumpTo('lead',__globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x);
+                                    if(!selectNeedle){return;}
+                                    needleJumpTo('lead',__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
                                     needle_onmousedown('lead');
                                 }
                                 else{
-                                    needleJumpTo('selection_A',__globals.utility.element.positionFromMousePoint({x:event.offsetX,y:event.offsetY}, __globals.utility.element.getCumulativeTransform(object), width, height, angle).x);
+                                    if(!selectionArea){return;}
+                                    needleJumpTo('selection_A',__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
                                     needle_onmousedown('selection_B',computeSelectionArea);
                                 }
                             };
                             controlObjects.lead.onmousedown = function(){ needle_onmousedown('lead'); };
-                            controlObjects.selection_A.onmousedown = function(){ needle_onmousedown('selection_A',computeSelectionArea); };
-                            controlObjects.selection_B.onmousedown = function(){ needle_onmousedown('selection_B',computeSelectionArea); };
+                            controlObjects.selection_A.onmousedown = function(){
+                                needle_onmousedown('selection_A',computeSelectionArea); 
+                            };
+                            controlObjects.selection_B.onmousedown = function(){
+                                needle_onmousedown('selection_B',computeSelectionArea); 
+                            };
                             controlObjects.selection_area.onmousedown = function(){
                                 __globals.svgElement.onmousemove = function(event){
                                     var divider = __globals.utility.workspace.getGlobalScale(object);
@@ -4213,6 +4342,7 @@
                     
                         //controls
                             object.select = function(position,update=true){
+                                if(!selectNeedle){return;}
                                 //if there's no input, return the value
                                 //if input is out of bounds, remove the needle
                                 //otherwise, set the position
@@ -4221,6 +4351,8 @@
                                 else{ needleJumpTo('lead',position); }
                             };
                             object.area = function(positionA,positionB){
+                                if(!selectionArea){return;}
+                    
                                 //if there's no input, return the values
                                 //if input is out of bounds, remove the needles
                                 //otherwise, set the position
@@ -4236,6 +4368,9 @@
                     
                                 //you always gotta computer the selection area
                                 computeSelectionArea();
+                            };
+                            object.genericNeedle = function(number,position,specialStyle=''){
+                                setGenericNeedle(number,position,specialStyle);
                             };
                     
                         //callbacks
@@ -4355,21 +4490,6 @@
                                 return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
                             }
                         
-                        //internal functionality
-                            function positionFromPoint(event){
-                                var elementOrigin = __globals.utility.element.getCumulativeTransform(backingAndSlot);
-                                var mouseClick = __globals.utility.workspace.pointConverter.browser2workspace(event.offsetX,event.offsetY);
-                    
-                                var temp = __globals.utility.math.cartesian2polar(
-                                    mouseClick.x-elementOrigin.x,
-                                    mouseClick.y-elementOrigin.y
-                                );
-                                temp.ang -= angle;
-                                temp = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
-                    
-                                return {x:temp.x/width,y:temp.y/height};
-                            }
-                    
                         //methods
                             object.set = function(value,update){
                                 if(grappled){return;}
@@ -4424,7 +4544,8 @@
                                 if(grappled){return;}
                                 if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
                     
-                                var y = positionFromPoint(event).y;
+                                var y = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
+                    
                                 var value = y + 0.5*handleHeight*((2*y)-1);
                                 set(value);
                                 object.onrelease(value);
@@ -5798,7 +5919,7 @@
                         type: 'testObject2',
                         x: x, y: y,
                         base: {
-                            points:[{x:0,y:0},{x:335,y:0},{x:335,y:285},{x:0,y:285}], 
+                            points:[{x:0,y:0},{x:510,y:0},{x:510,y:285},{x:0,y:285}], 
                             style:style.background
                         },
                         elements:[
@@ -5862,7 +5983,7 @@
                                 onkeyup:function(){design.connectionNode_data.externalData_1.send('key_rect',false);}
                             }},
                             {type:'rastorgrid', name:'rastorgrid', data:{
-                                x:230, y:135, width:100, height:100, xCount:4, yCount:4, 
+                                x:125, y:135, width:100, height:100, xCount:4, yCount:4, 
                                 style:{
                                     backing:'fill:rgba(200,200,200,1)', check:'fill:rgba(150,150,150,1)',
                                     backingGlow:'fill:rgba(220,220,220,1)', checkGlow:'fill:rgba(220,220,220,1)'
@@ -5903,34 +6024,20 @@
                             {type:'rastorDisplay', name:'rastorDisplay', data:{
                                 x: 162.5, y: 262.5, angle:0, width:20, height:20, xCount:8, yCount:8, xGappage:0.1, yGappage:0.1
                             }},
-                            {type:'grapherSVG', name:'grapherSVG', data:{
-                                x:125, y:30, width:100, height:100,
-                                style:{
-                                    middleground:style.grapher.middleground, background:style.grapher.background, 
-                                    backgroundText:style.grapher.backgroundText, backing:style.grapher.backing
-                                }
-                            }},
-                            {type:'grapher_periodicWave', name:'grapher_periodicWave', data:{
-                                x:125, y:135, width:100, height:100,
-                                style:{
-                                    middleground:style.grapher.middleground, background:style.grapher.background, 
-                                    backgroundText:style.grapher.backgroundText, backing:style.grapher.backing
-                                }
-                            }},
                             {type:'connectionNode_audio', name:'internalAudio_1', data: {
-                                type: 1, x: 230, y: 65, width: 30, height: 30
+                                type: 1, x: 125, y: 65, width: 30, height: 30
                             }},
                             {type:'connectionNode_audio', name:'internalAudio_2', data:{
-                                type: 0, x: 300, y: 65, width: 30, height: 30
+                                type: 0, x: 195, y: 65, width: 30, height: 30
                             }},
                             {type:'connectionNode_data', name:'internalData_1', data:{
-                                x: 230, y: 30, width: 30, height: 30
+                                x: 125, y: 30, width: 30, height: 30
                             }},
                             {type:'connectionNode_data', name:'internalData_2', data:{
-                                x: 300, y: 30, width: 30, height: 30
+                                x: 195, y: 30, width: 30, height: 30
                             }},
                             {type:'connectionNode_data', name:'externalData_1', data:{
-                                x: 230, y: 100, width: 30, height: 30, 
+                                x: 125, y: 100, width: 30, height: 30, 
                                 receive:function(address, data){
                                     switch(address){
                                         case 'slide_vertical':        design.slide.slide_vertical.set(data,false);             break;
@@ -5959,6 +6066,34 @@
                                     }
                                 }, 
                             }},
+                
+                            //graphers
+                                //SVGs
+                                    {type:'grapherSVG', name:'grapherSVG', data:{
+                                        x:300, y:5, width:100, height:50,
+                                    }},
+                                    {type:'grapher_periodicWave', name:'grapher_periodicWave_SVG', data:{
+                                        x:300, y:60, width:100, height:50, graphType:'SVG'
+                                    }},
+                                    {type:'grapher_audioScope', name:'grapher_audioScope_SVG', data:{
+                                        x:300, y:115, width:100, height:50, graphType:'SVG'
+                                    }},
+                                    {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_SVG', data:{
+                                        x:300, y:170, width:100, height:50, graphType:'SVG'
+                                    }},
+                                //Canvas
+                                    {type:'grapherCanvas', name:'grapherCanvas', data:{
+                                        x:405, y:5, width:100, height:50,
+                                    }},
+                                    {type:'grapher_periodicWave', name:'grapher_periodicWave_canvas', data:{
+                                        x:405, y:60, width:100, height:50, graphType:'Canvas'
+                                    }},
+                                    {type:'grapher_audioScope', name:'grapher_audioScope_canvas', data:{
+                                        x:405, y:115, width:100, height:50, graphType:'Canvas'
+                                    }},
+                                    {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_canvas', data:{
+                                        x:405, y:170, width:100, height:50, graphType:'Canvas'
+                                    }},
                         ]
                     };
                  
@@ -5980,9 +6115,11 @@
                             design.rastorDisplay.rastorDisplay.test();
                 
                             design.grapherSVG.grapherSVG._test();
-                
-                            design.grapher_periodicWave.grapher_periodicWave.waveElement('sin',1,1);
-                            design.grapher_periodicWave.grapher_periodicWave.draw();
+                            design.grapher_waveWorkspace.grapher_waveWorkspace_SVG._test();
+                            design.grapher_audioScope.grapher_audioScope_SVG.start();
+                            design.grapherCanvas.grapherCanvas._test();
+                            design.grapher_waveWorkspace.grapher_waveWorkspace_canvas._test();
+                            design.grapher_audioScope.grapher_audioScope_canvas.start();
                 
                             design.level.level.set(0.5,0);
                             design.level.level.set(0.75,1);
@@ -6039,30 +6176,23 @@
                     }));
             },1);
             
-            parts.audio.audioFilePlayer = function(
-                context
-            ){
+            parts.audio.audioFilePlayer_looper = function(context){
                 //state
-                var state = {
-                    itself:this,
-                    fileLoaded:false,
-                    playing:false,
-                    needlePosition:0.0,
-                    lastSightingTimeOfTheNeedlePosition:0.0,
-                    detune:0,
-            
-                    loop:{active:false, start:0, end:1,timeout:null},
-                    rate:1,
-                };
+                    var state = {
+                        itself:this,
+                        fileLoaded:false,
+                        rate:1,
+                        loop:{active:true, start:0, end:1,timeout:null},
+                    };
             
                 //flow
-                    //flow chain
-                        var flow = {
-                            track:{},
-                            bufferSource:null,
-                            channelSplitter:{},
-                            leftOut:{}, rightOut:{}
-                        };
+                    //chain
+                    var flow = {
+                        track:{},
+                        bufferSource:null,
+                        channelSplitter:{},
+                        leftOut:{}, rightOut:{}
+                    };
             
                     //channelSplitter
                         flow.channelSplitter = context.createChannelSplitter(2);
@@ -6082,196 +6212,43 @@
                         this.out_left  = function(){return flow.leftOut.node;}
                         this.out_right = function(){return flow.rightOut.node;}
             
-                //internal functions
-                    function loadFile(type,callback){
-                        state.fileLoaded = false;
-            
-                        switch(type){
-                            case 'url': 
-                                var request = new XMLHttpRequest();
-                                request.open('GET', url, true);
-                                request.responseType = 'arraybuffer';
-                                request.onload = function(){
-                                    state.itself.stop();
-                                    context.decodeAudioData(this.response, function(data){
-                                        flow.track = {
-                                            buffer:data,
-                                            name:(url.split('/')).pop(),
-                                            duration:buffer.duration,
-                                        };
-                                        state.fileLoaded = true;
-                                        if(callback){callback({name:url.split('/').pop(),duration:buffer.duration});}
-                                    }, function(e){console.warn("Error with decoding audio data" + e.err);});
-                                }
-                                request.send();
-                            break;
-                            case 'file': default:
-                                var inputObject = document.createElement('input');
-                                inputObject.type = 'file';
-                                inputObject.onchange = function(){
-                                    var file = this.files[0];
-                                    var fileReader = new FileReader();
-                                    fileReader.readAsArrayBuffer(file);
-                                    fileReader.onload = function(data){
-                                        state.itself.stop();
-                                        __globals.audio.context.decodeAudioData(data.target.result, function(buffer){
-                                            flow.track = {
-                                                buffer:buffer,
-                                                name:file.name,
-                                                duration:buffer.duration,
-                                            };
-                                            state.fileLoaded = true;
-                                            if(callback){callback(file);}
-                                        });
-                                    }
-                                };
-                                document.body.appendChild(inputObject);
-                                inputObject.click();
-                            break;
-                        }
-                    }
-                    function loadBuffer(data){
-                        flow.bufferSource = context.createBufferSource();
-                        flow.bufferSource.buffer = data;
-                        flow.bufferSource.connect(flow.channelSplitter);
-                        flow.bufferSource.onended = function(a){state.itself.stop();};
-                    }
-                    function updateNeedle(specificTime){
-                        state.needlePosition = specificTime == undefined ? state.itself.currentTime() : specificTime;
-                        state.lastSightingTimeOfTheNeedlePosition = context.currentTime;
-                    }
-                    function loopCompute(){
-                        //this code is used to calculate when the loop end will occur, and thus when the needle should jump
-                        //to the start of the loop. The actual looping of the audio is done by the system, so this process
-                        //is done solely to update the needle position.
-                        //  Using the needles current postiion and paly rate, the length of time before the needle is scheduled
-                        //to reach the end bound of the loop is calculated and given to a timeout. When this timeout occurs, 
-                        //the needle will jump to the start bound and the process is run again to calculate the new length of
-                        //time.
-                        //  The playhead cannot move beyond the end bound, thus any negative time calculated, will be set to
-                        //zero, and the playhead will instantly jump back to the start bound (this is a limitation of the
-                        //underlying audio system)
-            
-                        clearInterval(state.loop.timeout);
-                        if(!state.loop.active || !state.playing){return;} //obviously, if the loop isn't active, don't do any of the work
-            
-                        updateNeedle();
-                        var timeUntil = state.loop.end - state.itself.currentTime();
-                        if(timeUntil < 0){timeUntil = 0;}
-            
-                        // if(state.playing){
-                        //     state.loop.timeout = setTimeout(function(){
-                        //         state.itself.jumpTo_seconds(state.loop.start);
-                        //         loopCompute();
-                        //     }, (timeUntil*1000)/state.rate);
-                        // }
-                        state.loop.timeout = setTimeout(function(){
-                            state.itself.jumpTo_seconds(state.loop.start);
-                            loopCompute();
-                        }, (timeUntil*1000)/state.rate);
-                    }
-            
-                //controls
-                    this.load = function(type,callback){
-                        loadFile(type,function(data){
-                            callback(data);
-                            state.needlePosition = 0.0;
-                        });
-                    };
-                    this.play = function(){
-                        //check if we should play at all
-                        //(player must be stopped and file must be loaded)
-                            if(state.playing || !state.fileLoaded){return;}
-                        //load buffer, enter settings and start from needle position
-                            loadBuffer(flow.track.buffer);
-                            flow.bufferSource.loop = state.loop.active;
-                            flow.bufferSource.loopStart = state.loop.start;
-                            flow.bufferSource.loopEnd = state.loop.end;
-                            flow.bufferSource.detune.value = state.detune;
-                            flow.bufferSource.playbackRate.value = state.rate;
-                            flow.bufferSource.start(0,state.needlePosition);
-                        //log the starting time, play state and run loopCompute
-                            state.lastSightingTimeOfTheNeedlePosition = context.currentTime;
-                            state.playing = true;
-                            loopCompute();
-                    };
-                    this.stop = function(callback){
-                        //check if we should stop at all
-                        //(player must be playing)
-                            if( !state.playing ){return;}
-                        //(if we get one) replace the onended callback
-                        //(this callback will be replaced when 'play' is run again)
-                            if(callback){flow.bufferSource.onended = function(){callback();};}
-                        //actually stop the buffer and destroy it
-                            flow.bufferSource.stop(0);
-                            flow.bufferSource = undefined;
-                        //log needle position and play state
-                            updateNeedle();
-                            state.playing = false;
-                    };
-                    this.jumpTo_percent = function(value=0){
-                        value = (value>1 ? 1 : value);
-                        value = (value<0 ? 0 : value);
-                        this.jumpTo_seconds(this.duration()*value);
-                    };
-                    this.jumpTo_seconds = function(value=0){
-                        //check if we should jump at all
-                        //(file must be loaded)
-                            if(!state.fileLoaded){return;}
-                        //if playback is stopped; only adjust the needle position
-                            if( !state.playing ){
-                                state.needlePosition = value;
-                                state.lastSightingTimeOfTheNeedlePosition = context.currentTime;
-                                return;
-                            }
-            
-                        //if loop is enabled, and the desired value is beyond the loop's end boundry,
-                        //set the value to the start value
-                        if(state.loop.active && value > state.loop.end){value = state.loop.start;}
-            
-                        //stop playback, with a callback that will change the needle position
-                        //and then restart playback
-                            this.stop(function(){
-                                state.needlePosition = value;
-                                state.lastSightingTimeOfTheNeedlePosition = context.currentTime;
-                                state.itself.play();
-                            });
-                    };
-                    this.loop = function(bool=false){
-                        state.loop.active = bool;
-                        if(flow.bufferSource){
-                            flow.bufferSource.loop = state.loop.active;
-                        }
-            
-                        loopCompute();
-                    };
-                    this.loopBounds = function(data={start:0,end:1}){
-                        if(data==undefined){return data;}
-            
-                        state.loop.start = data.start!=undefined ? data.start*this.duration() : state.loop.start;
-                        state.loop.end   = data.end!=undefined ?   data.end*this.duration() :   state.loop.end;
-            
-                        if(flow.bufferSource){
-                            flow.bufferSource.loopStart = state.loop.start;
-                            flow.bufferSource.loopEnd = state.loop.end;
-                        }
-            
-                        loopCompute();
-                    };
-                    this.detune = function(value=0){
-                        //detune is trash right now. All it is, is a different way to adjust rate,
-                        //using 'cents' instead of factors. When there's a proper detune which
-                        //preserves time, this functionality will be revisited
                         
-                        // state.detune = value;
-                        // if(flow.bufferSource){flow.bufferSource.detune.value = value;}
-                        // updateNeedle();
+                //controls
+                    this.load = function(type,callback,url=''){
+                        state.fileLoaded = false;
+                        __globals.utility.audio.loadAudioFile(
+                            function(data){
+                                state.itself.stop();
+                                flow.track = data;
+                                state.fileLoaded = true;
+                                state.needlePosition = 0.0;
+                                callback(data);
+                            },
+                        type,url);
                     };
-                    this.rate = function(value=1){
+                    this.start = function(){
+                        //check if we should play at all (the file must be loaded)
+                            if(!state.fileLoaded){return;}
+                        //stop any previous buffers, load buffer, enter settings and start from zero
+                            if(flow.bufferSource){
+                                flow.bufferSource.onended = function(){};
+                                flow.bufferSource.stop(0);
+                            }
+                            flow.bufferSource = __globals.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                            flow.bufferSource.playbackRate.value = state.rate;
+                            flow.bufferSource.loop = state.loop.active;
+                            flow.bufferSource.loopStart = state.loop.start*this.duration();
+                            flow.bufferSource.loopEnd = state.loop.end*this.duration();
+                            flow.bufferSource.start(0,0);
+                            flow.bufferSource.onended = function(){flow.bufferSource = null;};
+                    };
+                    this.stop = function(){
+                        if(!state.fileLoaded || !flow.bufferSource){return;}
+                        flow.bufferSource.stop(0);
+                        flow.bufferSource = undefined;
+                    };
+                    this.rate = function(){
                         state.rate = value;
-                        if(flow.bufferSource){flow.bufferSource.playbackRate.value = value;}
-                        updateNeedle();
-                        loopCompute();
                     };
             
                 //info
@@ -6279,64 +6256,391 @@
                         if(!state.fileLoaded){return -1;}
                         return flow.track.duration;
                     };
-                    this.currentTime = function(){
-                        //check if file is loaded
-                            if(!state.fileLoaded){return -1;}
-                        //if playback is stopped, return the needle position, 
-                            if(!state.playing){return state.needlePosition;}
-                        //otherwise, calculate the current position
-                            return state.needlePosition + state.rate*(context.currentTime - state.lastSightingTimeOfTheNeedlePosition);
-                    };
                     this.title = function(){
                         if(!state.fileLoaded){return '';}
-                        return flow.track.name;};
+                        return flow.track.name;
+                    };
                     this.waveformSegment = function(data={start:0,end:1}){
                         if(data==undefined){return [];}
                         if(!state.fileLoaded){return [];}
-                        data.start = data.start ? data.start : 0;
-                        data.end = data.end ? data.end : 1;
-                        data.resolution = 10000;
+                        return __globals.utility.audio.waveformSegment(flow.track.buffer,data);
+                    };
+                    this.loop = function(bool=false){
+                        if(data==undefined){return data;}
+                        state.loop.active = bool;
+                    };
+                    this.loopBounds = function(data={start:0,end:1}){
+                        if(data==undefined){return data;}
             
-                        var waveform = flow.track.buffer.getChannelData(0);
-                        var channelCount = flow.track.buffer.numberOfChannels;
-            
-                        data.start = flow.track.buffer.length*data.start;
-                        data.end = flow.track.buffer.length*data.end;
-                        data.step = (data.end - data.start)/data.resolution;
-            
-                        var outputArray = [];
-                        for(var a = data.start; a < data.end; a+=Math.round(data.step)){
-                            outputArray.push( 
-                                __globals.utility.math.largestValueFound(
-                                    waveform.slice(a, a+Math.round(data.step))
-                                )
-                            );
-                        }
-            
-                        return outputArray;
+                        state.loop.start = data.start!=undefined ? data.start : state.loop.start;
+                        state.loop.end   = data.end!=undefined ? data.end : state.loop.end;
                     };
             };
-            objects.testAudioObject = function(x,y,debug=false){
+            parts.audio.audioFilePlayer_oneShot_multi = function(context){
+                //state
+                    var state = {
+                        itself:this,
+                        fileLoaded:false,
+                        rate:1,
+                    };
+            
+                //flow
+                    //chain
+                    var flow = {
+                        track:{},
+                        bufferSource:null,
+                        channelSplitter:{},
+                        leftOut:{}, rightOut:{}
+                    };
+            
+                    //channelSplitter
+                        flow.channelSplitter = context.createChannelSplitter(2);
+            
+                    //leftOut
+                        flow.leftOut.gain = 1;
+                        flow.leftOut.node = context.createGain();
+                        flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                        flow.channelSplitter.connect(flow.leftOut.node, 0);
+                    //rightOut
+                        flow.rightOut.gain = 1;
+                        flow.rightOut.node = context.createGain();
+                        flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                        flow.channelSplitter.connect(flow.rightOut.node, 1);
+            
+                    //output node
+                        this.out_left  = function(){return flow.leftOut.node;}
+                        this.out_right = function(){return flow.rightOut.node;}
+            
+                        
+                //controls
+                    this.load = function(type,callback,url=''){
+                        state.fileLoaded = false;
+                        __globals.utility.audio.loadAudioFile(
+                            function(data){
+                                state.itself.stop();
+                                flow.track = data;
+                                state.fileLoaded = true;
+                                state.needlePosition = 0.0;
+                                callback(data);
+                            },
+                        type,url);
+                    };
+                    this.fire = function(){
+                        //check if we should play at all (the file must be loaded)
+                            if(!state.fileLoaded){return;}
+                        //load buffer, enter settings and start from zero
+                            flow.bufferSource = __globals.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                            flow.bufferSource.playbackRate.value = state.rate;
+                            flow.bufferSource.start(0,0);
+                    };
+                    this.stop = function(){
+                        if(!state.fileLoaded){return;}
+                        flow.bufferSource.stop(0);
+                        flow.bufferSource = undefined;
+                    };
+                    this.rate = function(){
+                        state.rate = value;
+                    };
+            
+                //info
+                    this.duration = function(){
+                        if(!state.fileLoaded){return -1;}
+                        return flow.track.duration;
+                    };
+                    this.title = function(){
+                        if(!state.fileLoaded){return '';}
+                        return flow.track.name;
+                    };
+                    this.waveformSegment = function(data={start:0,end:1}){
+                        if(data==undefined){return [];}
+                        if(!state.fileLoaded){return [];}
+                        return __globals.utility.audio.waveformSegment(flow.track.buffer,data);
+                    };
+            };
+            parts.audio.audioFilePlayer_oneShot_single = function(context){
+                //state
+                    var state = {
+                        itself:this,
+                        fileLoaded:false,
+                        rate:1,
+                    };
+            
+                //flow
+                    //chain
+                    var flow = {
+                        track:{},
+                        bufferSource:null,
+                        channelSplitter:{},
+                        leftOut:{}, rightOut:{}
+                    };
+            
+                    //channelSplitter
+                        flow.channelSplitter = context.createChannelSplitter(2);
+            
+                    //leftOut
+                        flow.leftOut.gain = 1;
+                        flow.leftOut.node = context.createGain();
+                        flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                        flow.channelSplitter.connect(flow.leftOut.node, 0);
+                    //rightOut
+                        flow.rightOut.gain = 1;
+                        flow.rightOut.node = context.createGain();
+                        flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                        flow.channelSplitter.connect(flow.rightOut.node, 1);
+            
+                    //output node
+                        this.out_left  = function(){return flow.leftOut.node;}
+                        this.out_right = function(){return flow.rightOut.node;}
+            
+                        
+                //controls
+                    this.load = function(type,callback,url=''){
+                        state.fileLoaded = false;
+                        __globals.utility.audio.loadAudioFile(
+                            function(data){
+                                state.itself.stop();
+                                flow.track = data;
+                                state.fileLoaded = true;
+                                state.needlePosition = 0.0;
+                                callback(data);
+                            },
+                        type,url);
+                    };
+                    this.fire = function(){
+                        //check if we should play at all (the file must be loaded)
+                            if(!state.fileLoaded){return;}
+                        //stop any previous buffers, load buffer, enter settings and start from zero
+                            if(flow.bufferSource){
+                                flow.bufferSource.onended = function(){};
+                                flow.bufferSource.stop(0);
+                            }
+                            flow.bufferSource = __globals.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                            flow.bufferSource.playbackRate.value = state.rate;
+                            flow.bufferSource.start(0,0);
+                            flow.bufferSource.onended = function(){flow.bufferSource = null;};
+                    };
+                    this.stop = function(){
+                        if(!state.fileLoaded){return;}
+                        flow.bufferSource.stop(0);
+                        flow.bufferSource = undefined;
+                    };
+                    this.rate = function(){
+                        state.rate = value;
+                    };
+            
+                //info
+                    this.duration = function(){
+                        if(!state.fileLoaded){return -1;}
+                        return flow.track.duration;
+                    };
+                    this.title = function(){
+                        if(!state.fileLoaded){return '';}
+                        return flow.track.name;
+                    };
+                    this.waveformSegment = function(data={start:0,end:1}){
+                        if(data==undefined){return [];}
+                        if(!state.fileLoaded){return [];}
+                        return __globals.utility.audio.waveformSegment(flow.track.buffer,data);
+                    };
+            };
+            parts.audio.player = function(context){
+                //state
+                    var state = {
+                        itself:this,
+                        fileLoaded:false,
+                        playing:false,
+                        playhead:{ position:0, lastSightingTime:0 },
+                        loop:{ active:false, start:0, end:1, timeout:null},
+                        rate:1,
+                    };
+            
+                //flow
+                    //flow chain
+                    var flow = {
+                        track:{},
+                        bufferSource:null,
+                        channelSplitter:{},
+                        leftOut:{}, rightOut:{}
+                    };
+            
+                    //channelSplitter
+                        flow.channelSplitter = context.createChannelSplitter(2);
+            
+                    //leftOut
+                        flow.leftOut.gain = 1;
+                        flow.leftOut.node = context.createGain();
+                        flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                        flow.channelSplitter.connect(flow.leftOut.node, 0);
+                    //rightOut
+                        flow.rightOut.gain = 1;
+                        flow.rightOut.node = context.createGain();
+                        flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                        flow.channelSplitter.connect(flow.rightOut.node, 1);
+            
+                    //output node
+                        this.out_left  = function(){return flow.leftOut.node;}
+                        this.out_right = function(){return flow.rightOut.node;}
+            
+            
+                //internal functions
+                    function playheadCompute(){
+                        //this code is used to update the playhead position aswel as to calculate when the loop end will occur, 
+                        //and thus when the playhead should jump to the start of the loop. The actual looping of the audio is 
+                        //done by the system, so this process is done solely to update the playhead position data.
+                        //  Using the playhead's current postiion and paly rate; the length of time before the playhead is 
+                        //scheduled to reach the end bound of the loop is calculated and given to a timeout. When this timeout 
+                        //occurs; the playhead will jump to the start bound and the process is run again to calculate the new 
+                        //length of time before the playhead reaches the end bound.
+                        //  The playhead cannot move beyond the end bound, thus any negative time calculated will be set to
+                        //zero, and the playhead will instantly jump back to the start bound (this is to mirror the operation of
+                        //the underlying audio system)
+            
+                        clearInterval(state.loop.timeout);
+                        
+                        //update playhead position data
+                        state.playhead.position = state.itself.currentTime();
+                        state.playhead.lastSightingTime = context.currentTime;
+            
+                        //obviously, if the loop isn't active or the file isn't playing, don't do any of the work
+                        if(!state.loop.active || !state.playing){return;}
+            
+                        //calculate time until the timeout should be called
+                        var timeUntil = state.loop.end - state.itself.currentTime();
+                        if(timeUntil < 0){timeUntil = 0;}
+            
+                        //the callback (which performs the jump to the start of the loop, and recomputes)
+                        state.loop.timeout = setTimeout(function(){
+                            state.itself.jumpTo(state.loop.start,false);
+                            playheadCompute();
+                        }, (timeUntil*1000)/state.rate);
+                    }
+                    function jumpToTime(value){
+                        //check if we should jump at all
+                        //(file must be loaded)
+                            if(!state.fileLoaded){return;}
+                        //if playback is stopped; only adjust the playhead position
+                            if( !state.playing ){
+                                state.playhead.position = value;
+                                state.playhead.lastSightingTime = context.currentTime;
+                                return;
+                            }
+            
+                        //if loop is enabled, and the desired value is beyond the loop's end boundry,
+                        //set the value to the start value
+                            if(state.loop.active && value > state.loop.end){value = state.loop.start;}
+            
+                        //stop playback, with a callback that will change the playhead position
+                        //and then restart playback
+                            state.itself.stop(function(){
+                                state.playhead.position = value;
+                                state.playhead.lastSightingTime = context.currentTime;
+                                state.itself.start();
+                            });
+                    }
+            
+                //controls
+                    this.load = function(type,callback,url=''){
+                        state.fileLoaded = false;
+                        __globals.utility.audio.loadAudioFile(
+                            function(data){
+                                state.itself.stop();
+                                flow.track = data;
+                                state.fileLoaded = true;
+                                state.playhead.position = 0;
+                                callback(data);
+                            },
+                        type,url);
+                    };
+                    this.start = function(){
+                        //check if we should play at all
+                        //(player must be stopped and file must be loaded)
+                            if(state.playing || !state.fileLoaded){return;}
+                        //load buffer, enter settings and start from playhead position
+                            flow.bufferSource = __globals.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(a){state.itself.stop();});
+                            flow.bufferSource.loop = state.loop.active;
+                            flow.bufferSource.loopStart = state.loop.start;
+                            flow.bufferSource.loopEnd = state.loop.end;
+                            flow.bufferSource.playbackRate.value = state.rate;
+                            flow.bufferSource.start(0,state.playhead.position);
+                        //log the starting time, play state
+                            state.playhead.lastSightingTime = context.currentTime;
+                            state.playing = true;
+                            playheadCompute();
+                    };
+                    this.stop = function(callback){
+                        //check if we should stop at all (player must be playing)
+                            if( !state.playing ){return;}
+                        //replace the onended callback (if we get one)
+                        //(this callback will be replaced when 'play' is run again)
+                            if(callback){flow.bufferSource.onended = function(){callback();};}
+                        //actually stop the buffer and destroy it
+                            flow.bufferSource.stop(0);
+                            flow.bufferSource = undefined;
+                        //log playhead position, play state and run playheadCompute
+                            playheadCompute();
+                            state.playing = false;
+                    };
+                    this.jumpTo = function(value=0,percent=true){
+                        if(percent){
+                            value = (value>1 ? 1 : value);
+                            value = (value<0 ? 0 : value);
+                            jumpToTime(this.duration()*value);
+                        }else{jumpToTime(value);}
+                        playheadCompute();
+                    };
+                    this.loop = function(data={active:false,start:0,end:1},percent=true){
+                        if(data == undefined){return state.loop;}
+            
+                        if(data.active != undefined){
+                            state.loop.active = data.active;
+                            if(flow.bufferSource){flow.bufferSource.loop = data.active;}
+                        }
+            
+                        if( data.start!=undefined || data.end!=undefined){
+                            var mux = percent ? this.duration() : 1;
+                            state.loop.start = data.start!=undefined ? data.start*mux : state.loop.start;
+                            state.loop.end   = data.end!=undefined ?   data.end*mux :   state.loop.end;
+                            if(flow.bufferSource){
+                                flow.bufferSource.loopStart = state.loop.start;
+                                flow.bufferSource.loopEnd = state.loop.end;
+                            }
+                        }
+            
+                        playheadCompute();
+                    };
+                    this.rate = function(value=1){
+                        state.rate = value;
+                        if(flow.bufferSource){flow.bufferSource.playbackRate.value = value;}
+                        playheadCompute();
+                    };
+            
+                //info
+                    this.isLoaded = function(){return state.fileLoaded;};
+                    this.duration = function(){return !state.fileLoaded ? -1 : flow.track.duration;};
+                    this.title = function(){return !state.fileLoaded ? '' : flow.track.name;};
+                    this.currentTime = function(){
+                        //check if file is loaded
+                            if(!state.fileLoaded){return -1;}
+                        //if playback is stopped, return the playhead position, 
+                            if(!state.playing){return state.playhead.position;}
+                        //otherwise, calculate the current position
+                            return state.playhead.position + state.rate*(context.currentTime - state.playhead.lastSightingTime);
+                    };
+                    this.progress = function(){return this.currentTime()/this.duration()};
+                    this.waveformSegment = function(data={start:0,end:1}){
+                        if(data==undefined || !state.fileLoaded){return [];}
+                        return __globals.utility.audio.waveformSegment(flow.track.buffer, data);
+                    };
+            };
+            objects.testObject_looper = function(x,y,debug=false){
                 var style = {
                     background:'fill:rgba(200,200,200,1)',
-            
-                    text:'fill:rgba(0,0,0,1); font-size:3px; font-family:Courier New; pointer-events: none;',
-            
-                    handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',
-                    needle:'fill:rgba(250,150,250,1)', outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-            
-                    grapher:{
-                        middleground:'stroke:rgba(0,0,255,1); stroke-width:0.5; stroke-linecap:round;', 
-                        background:'stroke:rgba(0,0,100,1); stroke-width:0.25;',
-                        backgroundText:'fill:rgba(0,0,100,1); font-size:3; font-family:Helvetica;',
-                        backing:'fill:rgba(50,50,50,1)'
-                    },
                 };
                 var design = {
-                    type: 'testAudioObject',
+                    type: 'testObject_looper',
                     x: x, y: y,
                     base: {
-                        points:[{x:0,y:0},{x:220,y:0},{x:220,y:110},{x:0,y:110}], 
+                        points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
                         style:style.background
                     },
                     elements:[
@@ -6346,6 +6650,298 @@
                         {type:'connectionNode_audio', name:'outLeft', data: {
                             type: 1, x: -10, y: 27.5, width: 10, height: 20
                         }},
+                        {type:'connectionNode_data', name:'trigger', data:{
+                            x: 220, y: 17.5, width: 10, height: 20,
+                            receive:function(address, data){
+                                design.button_rect.fire.click();
+                            }
+                        }},
+            
+                        {type:'button_rect', name:'loadFile', data: {
+                            x:5, y: 5, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){
+                                obj.audioFilePlayer_looper.load('file',function(data){
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.audioFilePlayer_looper.waveformSegment() );
+                                });
+                            }
+                        }},
+                        {type:'button_rect',name:'fire',data:{
+                            x:5, y: 30, width:10, height:20, 
+                            style:{
+                                up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
+                                down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
+                            }, 
+                            onclick:function(){
+                                //no file = don't bother
+                                    if(obj.audioFilePlayer_looper.duration() < 0){return;}
+                        
+                                //actualy start the audio
+                                    obj.audioFilePlayer_looper.start();
+            
+                                //if there's a needle, remove it
+                                    if(needle){
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                        needle = false;
+                                        clearTimeout(needleTimout);
+                                    }
+            
+                                //perform graphical movements
+                                    var duration = obj.audioFilePlayer_looper.duration();
+                                    function func(){
+                                        //if there's already a needle; delete it
+                                        if(needle){
+                                            design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                        }
+            
+                                        //create new needle, and send it on its way
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
+                                        setTimeout(function(){design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,1);},1);
+                                        needle = true;
+            
+                                        //prep the next time this function should be run
+                                        needleTimout = setTimeout(func,duration*1000);
+                                    }
+            
+                                    func();
+                            }
+                        }},
+                        {type:'button_rect',name:'stop',data:{
+                            x:15, y: 30, width:10, height:20, 
+                            style:{
+                                up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
+                                down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(240,200,220,1)'
+                            }, 
+                            onclick:function(){
+                                obj.audioFilePlayer_looper.stop();
+            
+                                //if there's a needle, remove it
+                                if(needle){
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                    needle = false;
+                                    clearTimeout(needleTimout);
+                                }
+                            }
+                        }},
+            
+                        {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                            x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false,
+                        }},
+                    ]
+                };
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(objects.testObject_looper,design);
+            
+                //circuitry
+                        var needle = undefined;
+                        var needleTimout = undefined;
+            
+                    //audioFilePlayer
+                        obj.audioFilePlayer_looper = new parts.audio.audioFilePlayer_looper(__globals.audio.context);
+                        obj.audioFilePlayer_looper.out_right().connect( design.connectionNode_audio.outRight.in() );
+                        obj.audioFilePlayer_looper.out_left().connect( design.connectionNode_audio.outLeft.in() );
+            
+                return obj;
+            };
+            objects.testObject_oneShot_multi = function(x,y,debug=false){
+                var style = {
+                    background:'fill:rgba(200,200,200,1)',
+                };
+                var design = {
+                    type: 'testObject_oneShot_multi',
+                    x: x, y: y,
+                    base: {
+                        points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
+                        style:style.background
+                    },
+                    elements:[
+                        {type:'connectionNode_audio', name:'outRight', data: {
+                            type: 1, x: -10, y: 5, width: 10, height: 20
+                        }},
+                        {type:'connectionNode_audio', name:'outLeft', data: {
+                            type: 1, x: -10, y: 27.5, width: 10, height: 20
+                        }},
+                        {type:'connectionNode_data', name:'trigger', data:{
+                            x: 220, y: 17.5, width: 10, height: 20,
+                            receive:function(address, data){
+                                design.button_rect.fire.click();
+                            }
+                        }},
+            
+                        {type:'button_rect', name:'loadFile', data: {
+                            x:5, y: 5, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){
+                                obj.audioFilePlayer_oneShot.load('file',function(data){
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.audioFilePlayer_oneShot.waveformSegment() );
+                                });
+                            }
+                        }},
+                        {type:'button_rect',name:'fire',data:{
+                            x:5, y: 30, width:20, height:20, 
+                            style:{
+                                up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
+                                down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
+                            }, 
+                            onclick:function(){
+                                //no file = don't bother
+                                    if(obj.audioFilePlayer_oneShot.duration() < 0){return;}
+                        
+                                //actualy start the audio
+                                    obj.audioFilePlayer_oneShot.fire();
+            
+                                //determine playhead number
+                                    var playheadNumber = 0;
+                                    while(playheadNumber in playheads){playheadNumber++;}
+                                    playheads[playheadNumber] = true;
+            
+                                //perform graphical movements
+                                    var duration = obj.audioFilePlayer_oneShot.duration();
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(playheadNumber,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
+                                    setTimeout(function(){design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(playheadNumber,1);},1);
+                                    setTimeout(function(){
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(playheadNumber);
+                                        delete playheads[playheadNumber];
+                                    },duration*1000);
+                            }
+                        }},
+            
+                        {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                            x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false,
+                        }},
+                    ]
+                };
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(objects.testObject_oneShot_multi,design);
+            
+                //circuitry
+                        var playheads = {};
+            
+                    //audioFilePlayer
+                        obj.audioFilePlayer_oneShot = new parts.audio.audioFilePlayer_oneShot_multi(__globals.audio.context);
+                        obj.audioFilePlayer_oneShot.out_right().connect( design.connectionNode_audio.outRight.in() );
+                        obj.audioFilePlayer_oneShot.out_left().connect( design.connectionNode_audio.outLeft.in() );
+            
+                return obj;
+            };
+            objects.testObject_oneShot_single = function(x,y,debug=false){
+                var style = {
+                    background:'fill:rgba(200,200,200,1)',
+                };
+                var design = {
+                    type: 'audioFilePlayer_oneShot_single',
+                    x: x, y: y,
+                    base: {
+                        points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
+                        style:style.background
+                    },
+                    elements:[
+                        {type:'connectionNode_audio', name:'outRight', data: {
+                            type: 1, x: -10, y: 5, width: 10, height: 20
+                        }},
+                        {type:'connectionNode_audio', name:'outLeft', data: {
+                            type: 1, x: -10, y: 27.5, width: 10, height: 20
+                        }},
+                        {type:'connectionNode_data', name:'trigger', data:{
+                            x: 220, y: 17.5, width: 10, height: 20,
+                            receive:function(address, data){
+                                design.button_rect.fire.click();
+                            }
+                        }},
+            
+                        {type:'button_rect', name:'loadFile', data: {
+                            x:5, y: 5, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){
+                                obj.audioFilePlayer_oneShot.load('file',function(data){
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.audioFilePlayer_oneShot.waveformSegment() );
+                                });
+                            }
+                        }},
+                        {type:'button_rect',name:'fire',data:{
+                            x:5, y: 30, width:20, height:20, 
+                            style:{
+                                up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
+                                down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
+                            }, 
+                            onclick:function(){
+                                //no file = don't bother
+                                    if(obj.audioFilePlayer_oneShot.duration() < 0){return;}
+                        
+                                //actualy start the audio
+                                    obj.audioFilePlayer_oneShot.fire();
+            
+                                //if there's a playhead, remove it
+                                    if(playhead){
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                        playhead = false;
+                                        clearTimeout(playheadTimout);
+                                    }
+            
+                                //perform graphical movements
+                                    var duration = obj.audioFilePlayer_oneShot.duration();
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
+                                    playhead = true;
+                                    setTimeout(function(){design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,1);},1);
+                                    playheadTimout = setTimeout(function(){
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                        playhead = false;
+                                    },duration*1000);
+                            }
+                        }},
+            
+                        {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                            x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false,
+                        }},
+                    ]
+                };
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(objects.testObject_oneShot_multi,design);
+            
+                //circuitry
+                        var playhead = undefined;
+                        var playheadTimout = undefined;
+            
+                    //audioFilePlayer
+                        obj.audioFilePlayer_oneShot = new parts.audio.audioFilePlayer_oneShot_single(__globals.audio.context);
+                        obj.audioFilePlayer_oneShot.out_right().connect( design.connectionNode_audio.outRight.in() );
+                        obj.audioFilePlayer_oneShot.out_left().connect( design.connectionNode_audio.outLeft.in() );
+            
+                return obj;
+            };
+            objects.testObject_player = function(x,y,debug=false){
+                var style = {
+                    background:'fill:rgba(200,200,200,1)',
+                    text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
+            
+                };
+                var design = {
+                    type: 'player',
+                    x: x, y: y,
+                    base: {
+                        points:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}], 
+                        style:style.background
+                    },
+                    elements:[
+                        {type:'connectionNode_audio', name:'outRight', data: {
+                            type: 1, x: -10, y: 5, width: 10, height: 20
+                        }},
+                        {type:'connectionNode_audio', name:'outLeft', data: {
+                            type: 1, x: -10, y: 27.5, width: 10, height: 20
+                        }},
+            
                         {type:'readout_sixteenSegmentDisplay', name:'trackNameReadout', data:{
                             x: 30, y: 5, angle:0, width:100, height:20, count:10, 
                             style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
@@ -6354,27 +6950,33 @@
                             x: 135, y: 5, angle:0, width:80, height:20, count:8, 
                             style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
                         }},
-                       
-                        {type:'slide',name:'scrubber',data:{
-                            x:30, y:50, width: 20, height: 165, angle:-Math.PI/2, handleHeight:0.05,
-                            style:{handle:'fill:rgb(220,220,220);'}, 
-                            onchange:function(data){}, 
-                            onrelease:function(data){ obj.__audioFilePlayer.jumpTo_percent(data); }
-                        }},
             
-                        {type:'dial_continuous',name:'rate',data:{
-                            x:207.5, y:41.25, r: 7, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, 
-                            style:{handle:style.handle, slot:style.slot, needle:style.needle, outerArc:style.outerArc},
-                            onchange:function(data){ obj.__audioFilePlayer.rate( 2*data ); },
+                        {type:'button_rect', name:'load', data: {
+                            x:5, y: 5, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){
+                                obj.player.load('file',function(data){
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.player.waveformSegment() );                   
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
+                                
+                                    design.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
+                                    design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
+                                });
+                            }
                         }},
-            
-                        {type:'button_rect',name:'play',data:{
-                            x:5, y: 30, width:10, height:20, 
+                        {type:'button_rect',name:'start',data:{
+                            x:5, y: 30, width:20, height:20, 
                             style:{
                                 up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
                                 down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
                             }, 
-                            onclick:function(){obj.__audioFilePlayer.play();}
+                            onclick:function(){
+                                obj.player.start();
+                            }
                         }},
                         {type:'button_rect',name:'stop',data:{
                             x:15, y: 30, width:10, height:20, 
@@ -6382,47 +6984,62 @@
                                 up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
                                 down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(240,200,220,1)'
                             }, 
-                            onclick:function(){obj.__audioFilePlayer.stop();}
-                        }},
-                        {type:'button_rect', name:'loadFile', data: {
-                            x:5, y: 5, width:20, height:20,
-                            style:{
-                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
-                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
-                            },
-                            onclick: function(){
-                                obj.__audioFilePlayer.load('file',function(data){
-                                    design.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
-                                    design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.__audioFilePlayer.waveformSegment() );
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
-                                });
+                            onclick:function(){
+                                obj.player.stop();
                             }
+                        }},
+                        {type:'label', name:'rate_label_name', data:{
+                            x:10, y:78, text:'rate', style:style.text, 
+                        }},
+                        {type:'label', name:'rate_label_0', data:{
+                            x:5, y:75, text:'0', style:style.text, 
+                        }},
+                        {type:'label', name:'rate_label_1', data:{
+                            x:13.7, y:54, text:'1', style:style.text, 
+                        }},
+                        {type:'label', name:'rate_label_2', data:{
+                            x:23, y:75, text:'2', style:style.text, 
+                        }},
+                        {type:'dial_continuous',name:'rate',data:{
+                            x:15, y:65, r: 9, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, 
+                            style:{outerArc:'stroke:rgba(50,50,50,0.25); fill:none;'},
+                            onchange:function(data){ obj.player.rate( 2*data ); },
                         }},
             
                         {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                            x:5, y:55, width:210, height:50,
+                            x:30, y:30, width:185, height:45,
+                            selectionAreaToggle:function(bool){ obj.player.loop({active:bool}); },
+                            onchange:function(needle,value){
+                                if(needle == 'lead'){ obj.player.jumpTo(value); }
+                                else if(needle == 'selection_A' || needle == 'selection_B'){
+                                    var temp = design.grapher_waveWorkspace.grapher_waveWorkspace.area();
+                                    if(temp.A < temp.B){ obj.player.loop({start:temp.A,end:temp.B}); }
+                                    else{ obj.player.loop({start:temp.B,end:temp.A}); }
+                                }
+                            },
                         }},
                     ]
                 };
             
                 //main object
-                    var obj = __globals.utility.experimental.objectBuilder(objects.testAudioObject,design);
+                    var obj = __globals.utility.experimental.objectBuilder(objects.testObject_player,design);
             
                 //circuitry
-                    //audioFilePlayer
-                        obj.__audioFilePlayer = new parts.audio.audioFilePlayer(__globals.audio.context);
-                        obj.__audioFilePlayer.out_right().connect( design.connectionNode_audio.outRight.in() );
-                        obj.__audioFilePlayer.out_left().connect( design.connectionNode_audio.outLeft.in() );
+                        var playhead = undefined;
+                        var playheadTimout = undefined;
             
-                    //constantly gather information from the audioFilePlayer, and push this info to the display elements
-                        setInterval(function(){
+                    //audio file player
+                        obj.player = new parts.audio.player(__globals.audio.context);
+                        obj.player.out_right().connect( design.connectionNode_audio.outRight.in() );
+                        obj.player.out_left().connect( design.connectionNode_audio.outLeft.in() );
+            
+                    //data refresh
+                        function refresh(){
                             //check if there's a track at all
-                                if( obj.__audioFilePlayer.currentTime() == -1 ){return;}
+                                if( !obj.player.isLoaded() ){return;}
             
                             //time readout
-                                var time = __globals.utility.math.seconds2time( Math.round(obj.__audioFilePlayer.currentTime()));
+                                var time = __globals.utility.math.seconds2time( Math.round(obj.player.currentTime()));
             
                                 design.readout_sixteenSegmentDisplay.time.text(
                                     __globals.utility.math.padString(time.h,2,'0')+':'+
@@ -6431,68 +7048,63 @@
                                 );
                                 design.readout_sixteenSegmentDisplay.time.print();
             
-                            //progress
-                                var progress = obj.__audioFilePlayer.currentTime()/obj.__audioFilePlayer.duration();
-                                if( !isNaN(progress) ){
-                                    design.slide.scrubber.set(progress,false);
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.select(progress);
-                                }
-                        },100);
-            
-                    //connect waveWorkspace controls to the audioFilePlayer
-                        design.grapher_waveWorkspace.grapher_waveWorkspace.selectionAreaToggle = function(bool){ obj.__audioFilePlayer.loop(bool); };
-                        design.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
-                            if(needle == 'lead'){ obj.__audioFilePlayer.jumpTo_percent(value); }
-                            else if(needle == 'selection_A' || needle == 'selection_B'){
-                                var temp = design.grapher_waveWorkspace.grapher_waveWorkspace.area();
-                                if(temp.A < temp.B){
-                                    obj.__audioFilePlayer.loopBounds({start:temp.A,end:temp.B});
-                                }else{
-                                    obj.__audioFilePlayer.loopBounds({start:temp.B,end:temp.A});
-                                }
-                            }
+                            //wave box
+                                design.grapher_waveWorkspace.grapher_waveWorkspace.select(obj.player.progress());
                         }
+                        setInterval(refresh,1000/30);
             
                 //setup
                     design.dial_continuous.rate.set(0.5);
-                    design.grapher_waveWorkspace.grapher_waveWorkspace.foregroundLineThickness(1);
-                    design.grapher_waveWorkspace.grapher_waveWorkspace.drawBackground();
             
                 return obj;
             };
             /**/
             
-            
-            
             //create objects
-                var audioScope_1 = objects.audio_scope(50,10);
-                __globals.panes.middleground.append( audioScope_1 );
-                var audioScope_2 = objects.audio_scope(50,130);
-                __globals.panes.middleground.append( audioScope_2 );
+                //established objects
+                    var audioScope_1 = objects.audio_scope(50,10);
+                    __globals.panes.middleground.append( audioScope_1 );
+                    var audioScope_2 = objects.audio_scope(50,130);
+                    __globals.panes.middleground.append( audioScope_2 );
             
-                var audioDuplicator_1 = objects.audio_duplicator(300,30);
-                __globals.panes.middleground.append( audioDuplicator_1 );
-                var audioDuplicator_2 = objects.audio_duplicator(300,130);
-                __globals.panes.middleground.append( audioDuplicator_2 );
+                    var audioDuplicator_1 = objects.audio_duplicator(300,30);
+                    __globals.panes.middleground.append( audioDuplicator_1 );
+                    var audioDuplicator_2 = objects.audio_duplicator(300,130);
+                    __globals.panes.middleground.append( audioDuplicator_2 );
             
-                var testAudioObject_1 = objects.testAudioObject(400,50);
-                __globals.panes.middleground.append( testAudioObject_1 );
+                    var audioSink_1 = objects.audio_sink(150, 275);
+                    __globals.panes.middleground.append( audioSink_1 );
             
-                var audioSink_1 = objects.audio_sink(150, 275);
-                __globals.panes.middleground.append( audioSink_1 );
+                //connections
+                    audioDuplicator_1.io.output_1.connectTo( audioScope_1.io.input );
+                    audioDuplicator_2.io.output_1.connectTo( audioScope_2.io.input );;
             
-            //do connections
-                testAudioObject_1.io.outRight.connectTo( audioDuplicator_1.io.input );
-                testAudioObject_1.io.outLeft.connectTo( audioDuplicator_2.io.input );
+                    audioDuplicator_1.io.output_2.connectTo( audioSink_1.io.right );
+                    audioDuplicator_2.io.output_2.connectTo( audioSink_1.io.left );
             
-                audioDuplicator_1.io.output_1.connectTo( audioScope_1.io.input );
-                audioDuplicator_2.io.output_1.connectTo( audioScope_2.io.input );;
+                //test objects (and floating labels)
+                    var testObject_oneShot_single_1 = objects.testObject_oneShot_single(400,50);
+                    __globals.panes.middleground.append( testObject_oneShot_single_1 );
+                    __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:82.5, text:'oneShot_single' }) );
+                    
+                    var testObject_oneShot_multi_1 = objects.testObject_oneShot_multi(400,110);
+                    __globals.panes.middleground.append( testObject_oneShot_multi_1 );
+                    __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:142.5, text:'oneShot_multi' }) );
+                    
+                    var testObject_looper_1 = objects.testObject_looper(400,170);
+                    __globals.panes.middleground.append( testObject_looper_1 );
+                    __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:202.5, text:'looper' }) );
             
-                audioDuplicator_1.io.output_2.connectTo( audioSink_1.io.right );
-                audioDuplicator_2.io.output_2.connectTo( audioSink_1.io.left );
+                    var testObject_player_1 = objects.testObject_player(400,230);
+                    __globals.panes.middleground.append( testObject_player_1 );
+                    __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:262.5, text:'player' }) );
+            
+                //connections
+                    testObject_player_1.io.outRight.connectTo( audioDuplicator_1.io.input );
+                    testObject_player_1.io.outLeft.connectTo( audioDuplicator_2.io.input );
             
             //viewport position
-                __globals.utility.workspace.gotoPosition(-301.538, 23.8348, 2.24189, 0);
+                // __globals.utility.workspace.gotoPosition(-3630.89, -2815.88, 10, 0);
 
 
         }

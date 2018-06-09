@@ -85,6 +85,15 @@ objects.testAudioObject = function(x,y,debug=false){
 
             {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
                 x:5, y:55, width:210, height:50,
+                selectionAreaToggle:function(bool){ obj.__audioFilePlayer.loop(bool); },
+                onchange:function(needle,value){
+                    if(needle == 'lead'){ obj.__audioFilePlayer.jumpTo_percent(value); }
+                    else if(needle == 'selection_A' || needle == 'selection_B'){
+                        var temp = design.grapher_waveWorkspace.grapher_waveWorkspace.area();
+                        if(temp.A < temp.B){ obj.__audioFilePlayer.loopBounds({start:temp.A,end:temp.B}); }
+                        else{ obj.__audioFilePlayer.loopBounds({start:temp.B,end:temp.A}); }
+                    }
+                },
             }},
         ]
     };
@@ -120,20 +129,6 @@ objects.testAudioObject = function(x,y,debug=false){
                         design.grapher_waveWorkspace.grapher_waveWorkspace.select(progress);
                     }
             },100);
-
-        //connect waveWorkspace controls to the audioFilePlayer
-            design.grapher_waveWorkspace.grapher_waveWorkspace.selectionAreaToggle = function(bool){ obj.__audioFilePlayer.loop(bool); };
-            design.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
-                if(needle == 'lead'){ obj.__audioFilePlayer.jumpTo_percent(value); }
-                else if(needle == 'selection_A' || needle == 'selection_B'){
-                    var temp = design.grapher_waveWorkspace.grapher_waveWorkspace.area();
-                    if(temp.A < temp.B){
-                        obj.__audioFilePlayer.loopBounds({start:temp.A,end:temp.B});
-                    }else{
-                        obj.__audioFilePlayer.loopBounds({start:temp.B,end:temp.A});
-                    }
-                }
-            }
 
     //setup
         design.dial_continuous.rate.set(0.5);

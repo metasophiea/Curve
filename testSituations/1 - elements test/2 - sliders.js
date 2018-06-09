@@ -40,6 +40,10 @@ objects.testObject = function(x,y,debug=false){
                 x:20, y:45, width: 100, height: 120, count: 10, 
                 style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
             }},
+            {type:'slidePanel',name:'slidePanel2',data:{
+                x:125, y:145, width: 100, height: 120, count: 10, angle: -1,
+                style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
+            }},
         ]
     };
 
@@ -61,4 +65,4 @@ objects.testObject = function(x,y,debug=false){
 var testObject_1 = objects.testObject(50,50,true);
 __globals.panes.middleground.append( testObject_1 );
 
-__globals.utility.workspace.gotoPosition(-57.4413, -170.038, 2.57551, 0);
+__globals.utility.workspace.gotoPosition(-41.3953, -104.803, 2.24189, 0);
