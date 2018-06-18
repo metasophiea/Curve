@@ -685,7 +685,8 @@
                                 case 'rect': return parts.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
                                 case 'path': return parts.basic.path(name, data.path, data.lineType, data.style); break;
                                 case 'text': return parts.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
-                            
+                                case 'circle': return parts.basic.circle(name, data.x, data.y, data.r, data.angle, data.style); break;
+                        
                             //display
                                 case 'label': return parts.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;
                                 case 'level': return parts.display.level(name, data.x, data.y, data.angle, data.width, data.height, data.style.backing, data.style.level); break;
@@ -1714,26 +1715,16 @@
 
             var parts = new function(){
                 this.basic = new function(){
-                    this.canvas = function(id=null, x=0, y=0, width=0, height=0, angle=0, res=1){
-                        var canvas = document.createElement('canvas');
-                            canvas.setAttribute('height',res*height);
-                            canvas.setAttribute('width',res*width);
-                        
-                        var image = document.createElementNS('http://www.w3.org/2000/svg','image');
-                            image.id = id;
-                            image.style = 'transform: translate('+x+'px,'+y+'px) scale('+1/res+') rotate('+angle+'rad)';
-                            image.setAttribute('height',height*res);
-                            image.setAttribute('width',width*res);
+                    this.line = function(id=null, x1=0, y1=0, x2=10, y2=10, style='stroke:rgb(255,0,0); stroke-width:1'){
+                        var element = document.createElementNS('http://www.w3.org/2000/svg','line');
+                        element.id = id;
+                        element.setAttribute('x1',x1);
+                        element.setAttribute('y1',y1);
+                        element.setAttribute('x2',x2);
+                        element.setAttribute('y2',y2);
+                        element.setAttribute('style',style);
                     
-                        return {
-                            element:image,
-                            canvas:canvas,
-                            context:canvas.getContext("2d"),
-                            c:function(a){return a*res;},
-                            print:function(){
-                                this.element.setAttribute('href',this.canvas.toDataURL("image/png"));
-                            }
-                        };
+                        return element;
                     };
                     this.circle = function(id=null, x=0, y=0, r=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
                         var element = document.createElementNS('http://www.w3.org/2000/svg','circle');
@@ -1743,32 +1734,17 @@
                     
                         return element;
                     };
-                    this.g = function(id=null, x=0, y=0, r=0){
-                        var element = document.createElementNS('http://www.w3.org/2000/svg','g');
-                            element.id = id;
-                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+r+'rad)';
-                    
-                        return element;
-                    };
-                    this.image = function(id=null, url, x=0, y=0, width=0, height=0, angle=0){
-                        var element = document.createElementNS('http://www.w3.org/2000/svg','image');
-                            element.id = id;
-                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad)';
-                            element.setAttribute('height',height);
-                            element.setAttribute('width',width);
-                            element.setAttribute('href',url);
-                    
-                        return element;
-                    };
-                     
-                    this.line = function(id=null, x1=0, y1=0, x2=10, y2=10, style='stroke:rgb(255,0,0); stroke-width:1'){
-                        var element = document.createElementNS('http://www.w3.org/2000/svg','line');
+                    this.rect = function(id=null, x=0, y=0, width=0, height=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
+                        var element = document.createElementNS('http://www.w3.org/2000/svg','rect');
                         element.id = id;
-                        element.setAttribute('x1',x1);
-                        element.setAttribute('y1',y1);
-                        element.setAttribute('x2',x2);
-                        element.setAttribute('y2',y2);
-                        element.setAttribute('style',style);
+                        element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad);' + style;
+                        element.setAttribute('height',height);
+                        element.setAttribute('width',width);
+                    
+                        element.rotation = function(a){
+                            if(a==null){return __globals.utility.element.getTransform(this).r;}
+                            __globals.utility.element.setRotation(this, a);
+                        };
                     
                         return element;
                     };
@@ -1807,28 +1783,53 @@
                     
                         return element;
                     };
-                    this.rect = function(id=null, x=0, y=0, width=0, height=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
-                        var element = document.createElementNS('http://www.w3.org/2000/svg','rect');
-                        element.id = id;
-                        element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad);' + style;
-                        element.setAttribute('height',height);
-                        element.setAttribute('width',width);
-                    
-                        element.rotation = function(a){
-                            if(a==null){return __globals.utility.element.getTransform(this).r;}
-                            __globals.utility.element.setRotation(this, a);
-                        };
-                    
-                        return element;
-                    };
                     this.text = function(id=null, x=0, y=0, text='', angle=0, style='fill:rgba(0,0,0,1); font-size:3; font-family:Helvetica;', scale=1){
                         var element = document.createElementNS('http://www.w3.org/2000/svg','text');
-                            element.id = null;
+                            element.id = id;
                             element.style = 'transform: translate('+x+'px,'+y+'px) scale('+scale+') rotate('+angle+'rad);' + style;
                             element.innerHTML = text;
                     
                         return element;
                     };
+                    this.canvas = function(id=null, x=0, y=0, width=0, height=0, angle=0, res=1){
+                        var canvas = document.createElement('canvas');
+                            canvas.setAttribute('height',res*height);
+                            canvas.setAttribute('width',res*width);
+                        
+                        var image = document.createElementNS('http://www.w3.org/2000/svg','image');
+                            image.id = id;
+                            image.style = 'transform: translate('+x+'px,'+y+'px) scale('+1/res+') rotate('+angle+'rad)';
+                            image.setAttribute('height',height*res);
+                            image.setAttribute('width',width*res);
+                    
+                        return {
+                            element:image,
+                            canvas:canvas,
+                            context:canvas.getContext("2d"),
+                            c:function(a){return a*res;},
+                            print:function(){
+                                this.element.setAttribute('href',this.canvas.toDataURL("image/png"));
+                            }
+                        };
+                    };
+                    this.g = function(id=null, x=0, y=0, r=0){
+                        var element = document.createElementNS('http://www.w3.org/2000/svg','g');
+                            element.id = id;
+                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+r+'rad)';
+                    
+                        return element;
+                    };
+                    this.image = function(id=null, url, x=0, y=0, width=0, height=0, angle=0){
+                        var element = document.createElementNS('http://www.w3.org/2000/svg','image');
+                            element.id = id;
+                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad)';
+                            element.setAttribute('height',height);
+                            element.setAttribute('width',width);
+                            element.setAttribute('href',url);
+                    
+                        return element;
+                    };
+                     
                 }
                 this.modifier = new function(){
                     // this.makeUnselectable = function(element){
@@ -1839,6 +1840,279 @@
                     // };
                 }
                 this.display = new function(){
+                    this.sevenSegmentDisplay = function(
+                        id='sevenSegmentDisplay',
+                        x, y, width, height,
+                        backgroundStyle='fill:rgb(0,0,0)',
+                        glowStyle='fill:rgb(200,200,200)',
+                        dimStyle='fill:rgb(20,20,20)'
+                    ){
+                        var margin = width/8;
+                        var division = width/8;
+                        var shapes = {
+                            segments:{
+                                points: {
+                                    top:{
+                                        left:[
+                                            {x:division*1.0+margin,         y:division*1.0+margin},
+                                            {x:division*0.5+margin,         y:division*0.5+margin},
+                                            {x:division*1.0+margin,         y:division*0.0+margin},
+                                            {x:division*0.0+margin,         y:division*1.0+margin},
+                                        ],
+                                        right:[
+                                            {x:width-division*1.0-margin,   y:division*0.0+margin},
+                                            {x:width-division*0.5-margin,   y:division*0.5+margin},
+                                            {x:width-division*1.0-margin,   y:division*1.0+margin},
+                                            {x:width-division*0.0-margin,   y:division*1.0+margin}
+                                        ]
+                                    },
+                                    middle: {
+                                        left:[
+                                            {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                            {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
+                                            {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                            {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                            {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                        ],
+                                        right:[
+                                            {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
+                                            {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
+                                            {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                            {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                            {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
+                                        ]
+                                    },
+                                    bottom: {
+                                        left:[
+                                            {x:division*1.0+margin,         y:height-division*1.0-margin},
+                                            {x:division*0.5+margin,         y:height-division*0.5-margin},
+                                            {x:division*1.0+margin,         y:height-division*0.0-margin},
+                                            {x:division*0.0+margin,         y:height-division*1.0-margin},
+                                        ],
+                                        right:[
+                                            {x:width-division*1.0-margin,   y:height-division*0.0-margin},
+                                            {x:width-division*0.5-margin,   y:height-division*0.5-margin},
+                                            {x:width-division*1.0-margin,   y:height-division*1.0-margin},
+                                            {x:width-division*0.0-margin,   y:height-division*1.0-margin}
+                                        ]
+                                    }
+                                }
+                            }
+                        };
+                    
+                        //elements
+                            //main
+                            var object = parts.basic.g(id, x, y);
+                    
+                            //backing
+                            var rect = parts.basic.rect(null, 0, 0, width, height, 0, backgroundStyle);
+                                object.appendChild(rect);
+                    
+                            //segments
+                                var segments = [];
+                                var points = [
+                                    [
+                                        shapes.segments.points.top.left[0],
+                                        shapes.segments.points.top.right[2],
+                                        shapes.segments.points.top.right[1],
+                                        shapes.segments.points.top.right[0],
+                                        shapes.segments.points.top.left[2],
+                                        shapes.segments.points.top.left[1],
+                                    ],
+                                    [
+                                        shapes.segments.points.top.left[1],
+                                        shapes.segments.points.top.left[3],
+                                        shapes.segments.points.middle.left[3],
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.left[0],
+                                        shapes.segments.points.top.left[0],  
+                                    ],
+                                    [
+                                        shapes.segments.points.top.right[1],  
+                                        shapes.segments.points.top.right[3],  
+                                        shapes.segments.points.middle.right[3],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.top.right[2],  
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.left[0], 
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[0],
+                                        shapes.segments.points.middle.left[2], 
+                                        shapes.segments.points.middle.left[1], 
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.left[4],
+                                        shapes.segments.points.bottom.left[3],
+                                        shapes.segments.points.bottom.left[1],
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.middle.left[2],
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[4],
+                                        shapes.segments.points.bottom.right[3],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.middle.right[0],
+                                    ],
+                                    [
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[0],
+                                        shapes.segments.points.bottom.left[2],
+                                        shapes.segments.points.bottom.left[1],
+                                    ]
+                                ];
+                                for(var a = 0; a < points.length; a++){
+                                    var temp = {
+                                        segment: parts.basic.path(null, points[a], 'L', dimStyle),
+                                        state: false
+                                    };
+                                    segments.push( temp );
+                                    object.append( temp.segment );
+                                }
+                    
+                    
+                        //methods
+                            object.set = function(segment,state){
+                                segments[segment].state = state;
+                                if(state){ __globals.utility.element.setStyle(segments[segment].segment,glowStyle); }
+                                else{ __globals.utility.element.setStyle(segments[segment].segment,dimStyle); }
+                            };
+                            object.get = function(segment){ return segments[segment].state; };
+                            object.clear = function(){
+                                for(var a = 0; a < segments.length; a++){
+                                    this.set(a,false);
+                                }
+                            };
+                    
+                            object.enterCharacter = function(char){
+                                var stamp = [];
+                                switch(char){
+                                    case '0': stamp = [1,1,1,0,1,1,1]; break;
+                                    case '1': stamp = [0,0,1,0,0,1,0]; break;
+                                    case '2': stamp = [1,0,1,1,1,0,1]; break;
+                                    case '3': stamp = [1,0,1,1,0,1,1]; break;
+                                    case '4': stamp = [0,1,1,1,0,1,0]; break;
+                                    case '5': stamp = [1,1,0,1,0,1,1]; break;
+                                    case '6': stamp = [1,1,0,1,1,1,1]; break;
+                                    case '7': stamp = [1,0,1,0,0,1,0]; break;
+                                    case '8': stamp = [1,1,1,1,1,1,1]; break;
+                                    case '9': stamp = [1,1,1,1,0,1,1]; break;
+                                    default:  stamp = [0,0,0,0,0,0,0]; break;
+                                }
+                    
+                                for(var a = 0; a < stamp.length; a++){
+                                    this.set(a, stamp[a]==1);
+                                }
+                            };
+                    
+                            object.test = function(){
+                                this.clear();
+                                this.enterCharacter('9');
+                            };
+                    
+                        return object;
+                    };
+                    this.rastorDisplay = function(
+                        id='rastorDisplay',
+                        x, y, width, height,
+                        xCount, yCount, xGappage=1, yGappage=1
+                    ){
+                        //elements
+                            //main
+                            var object = parts.basic.g(id, x, y);
+                    
+                            //backing
+                            var rect = parts.basic.rect(null, 0, 0, width, height, 0, 'fill:rgb(0,0,0)');
+                                object.appendChild(rect);
+                    
+                            //pixels
+                                var pixels = [];
+                                var pixelValues = [];
+                                var pixWidth = width/xCount;
+                                var pixHeight = height/yCount;
+                    
+                                for(var x = 0; x < xCount; x++){
+                                    var temp_pixels = [];
+                                    var temp_pixelValues = [];
+                                    for(var y = 0; y < yCount; y++){
+                                        var rect = parts.basic.rect(null, (x*pixWidth)+xGappage/2, (y*pixHeight)+yGappage/2, pixWidth-xGappage, pixHeight-yGappage, 0, 'fill:rgb(0,0,0)');
+                                            temp_pixels.push(rect);
+                                            temp_pixelValues.push([0,0,0]);
+                                            object.appendChild(rect);
+                                    }
+                                    pixels.push(temp_pixels);
+                                    pixelValues.push(temp_pixelValues);
+                                }
+                    
+                        //inner workings
+                            function render(){
+                                for(var x = 0; x < xCount; x++){
+                                    for(var y = 0; y < yCount; y++){
+                                        __globals.utility.element.setStyle(pixels[x][y], 'fill:rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')' );
+                                    }
+                                }
+                            }
+                            
+                        //methods
+                            object.get = function(x,y){ return pixelValues[x][y]; };
+                            object.set = function(x,y,state){ pixelValues[x][y] = state; render() };
+                            object.import = function(data){
+                                for(var x = 0; x < xCount; x++){
+                                    for(var y = 0; y < yCount; y++){
+                                        this.set(x,y,data[x][y]);
+                                    }
+                                }
+                                render();
+                            };
+                            object.export = function(){ return pixelValues; }
+                            object.setAll = function(value){
+                                for(var x = 0; x < xCount; x++){
+                                    for(var y = 0; y < yCount; y++){
+                                        this.set(x,y,value);
+                                    }
+                                }
+                            }
+                    
+                            object.test = function(){
+                                this.setAll([1,1,1]);
+                                this.set(1,1,[1,0.5,0.5]);
+                                this.set(2,2,[0.5,1,0.5]);
+                                this.set(3,3,[0.5,0.5,1]);
+                                this.set(4,4,[1,0.5,1]);
+                                render();
+                            };
+                    
+                        return object;
+                    };
+                    this.glowbox_rect = function(
+                        id='glowbox_rect',
+                        x, y, width, height, angle=0,
+                        glowStyle = 'fill:rgba(240,240,240,1)',
+                        dimStyle = 'fill:rgba(80,80,80,1)'
+                    ){
+                    
+                        // elements 
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, dimStyle);
+                            object.appendChild(rect);
+                    
+                        //methods
+                        object.on = function(){
+                            __globals.utility.element.setStyle(rect,glowStyle);
+                        };
+                        object.off = function(){
+                            __globals.utility.element.setStyle(rect,dimStyle);
+                        };
+                    
+                        return object;
+                    };
                     this.audio_meter_level = function(
                         id='audio_meter_level',
                         x, y, angle=0,
@@ -1869,212 +2143,6 @@
                     
                         return object;
                     };
-                    this.glowbox_rect = function(
-                        id='glowbox_rect',
-                        x, y, width, height, angle=0,
-                        glowStyle = 'fill:rgba(240,240,240,1)',
-                        dimStyle = 'fill:rgba(80,80,80,1)'
-                    ){
-                    
-                        // elements 
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, dimStyle);
-                            object.appendChild(rect);
-                    
-                        //methods
-                        object.on = function(){
-                            __globals.utility.element.setStyle(rect,glowStyle);
-                        };
-                        object.off = function(){
-                            __globals.utility.element.setStyle(rect,dimStyle);
-                        };
-                    
-                        return object;
-                    };
-                    this.grapher_audioScope = function(
-                        id='grapher_audioScope',
-                        x, y, width, height,
-                        graphType='Canvas',
-                        foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
-                        foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
-                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                        backingStyle = 'fill:rgba(50,50,50,1)',
-                    ){
-                        //attributes
-                            var attributes = {
-                                analyser:{
-                                    analyserNode: __globals.audio.context.createAnalyser(),
-                                    timeDomainDataArray: null,
-                                    frequencyData: null,
-                                    refreshRate: 30,
-                                    scopeRefreshInterval: null,
-                                    returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                },
-                                graph:{
-                                    resolution: 256
-                                }
-                            };
-                            attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
-                            attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                            attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                    
-                        //elements 
-                            var object = parts.basic.g(id, x, y);
-                                object._data = {};
-                                object._data.wave = {'sin':[],'cos':[]};
-                                object._data.resolution = 500;
-                    
-                            //main graph
-                                var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
-                                    x:0, y:0, width:width, height:height,
-                                    style:{
-                                        foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
-                                        background:backgroundStyle, backgroundText:backgroundTextStyle, 
-                                        backing:backingStyle
-                                    }
-                                });
-                                object.append(grapher);
-                                
-                        //methods
-                            object.start = function(){
-                                if(attributes.analyser.scopeRefreshInterval == null){
-                                    attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
-                                }
-                            };
-                            object.stop = function(){
-                                clearInterval(attributes.analyser.scopeRefreshInterval);
-                                attributes.analyser.scopeRefreshInterval = null;
-                            };
-                            object.getNode = function(){return attributes.analyser.analyserNode;};
-                            object.resolution = function(res=null){
-                                if(res==null){return attributes.graph.resolution;}
-                                attributes.graph.resolution = res;
-                                this.stop();
-                                this.start();
-                            };
-                            object.refreshRate = function(a){
-                                if(a==null){return attributes.analyser.refreshRate;}
-                                attributes.analyser.refreshRate = a;
-                                this.stop();
-                                this.start();
-                            };
-                    
-                        //internal functions
-                            function render(){
-                                var numbers = [];
-                                attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
-                                for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
-                                    numbers.push(
-                                        attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
-                                    );
-                                }
-                                grapher.draw(numbers);
-                            }
-                            function setBackground(){
-                                grapher.viewbox( {'l':-1.1,'h':1.1} );
-                                grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
-                                grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
-                                grapher.drawBackground();
-                            };
-                    
-                        //setup
-                            setBackground();
-                    
-                        return object;
-                    };
-                    this.grapher_periodicWave = function(
-                        id='grapher_periodicWave',
-                        x, y, width, height,
-                        graphType='Canvas',
-                        foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
-                        foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
-                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                        backingStyle = 'fill:rgba(50,50,50,1)',
-                    ){
-                        //elements 
-                        var object = parts.basic.g(id, x, y);
-                            object._data = {};
-                            object._data.wave = {'sin':[],'cos':[]};
-                            object._data.resolution = 500;
-                    
-                        //main graph
-                            var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
-                                x:0, y:0, width:width, height:height,
-                                style:{
-                                    foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
-                                    background:backgroundStyle, backgroundText:backgroundTextStyle, 
-                                    backing:backingStyle
-                                }
-                            });
-                            object.append(grapher);
-                    
-                    
-                        //methods
-                        object.wave = function(a=null,type=null){
-                            if(a==null){
-                                while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
-                                while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
-                                for(var a = 0; a < this._data.wave['sin'].length; a++){
-                                    if( !this._data.wave['sin'][a] ){ this._data.wave['sin'][a] = 0; }
-                                    if( !this._data.wave['cos'][a] ){ this._data.wave['cos'][a] = 0; }
-                                }
-                                return this._data.wave;
-                            }
-                    
-                            if(type==null){
-                                this._data.wave = a;
-                            }
-                            switch(type){
-                                case 'sin': this._data.wave.sin = a; break;
-                                case 'cos': this._data.wave.cos = a; break;
-                                default: break;
-                            }
-                        }
-                        object.waveElement = function(type, mux, a){
-                            if(a==null){return this._data.wave[type][mux];}
-                            this._data.wave[type][mux] = a;
-                        }
-                        object.resolution = function(a=null){
-                            if(a==null){return this._data.resolution;}
-                            this._data.resolution = a;
-                        }
-                        object.updateBackground = function(){
-                            grapher.viewbox( {'l':-1.1,'h':1.1} );
-                            grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
-                            grapher.verticalMarkings({points:[0,'1/4','1/2','3/4'],printText:false});
-                            grapher.drawBackground();
-                        };
-                        object.draw = function(){
-                            var data = [];
-                            var temp = 0;
-                            for(var a = 0; a <= this._data.resolution; a++){
-                                temp = 0;
-                                for(var b = 0; b < this._data.wave['sin'].length; b++){
-                                    if(!this._data.wave['sin'][b]){this._data.wave['sin'][b]=0;} // cover missing elements
-                                    temp += Math.sin(b*(2*Math.PI*(a/this._data.resolution)))*this._data.wave['sin'][b]; 
-                                }
-                                for(var b = 0; b < this._data.wave['cos'].length; b++){
-                                    if(!this._data.wave['cos'][b]){this._data.wave['cos'][b]=0;} // cover missing elements
-                                    temp += Math.cos(b*(2*Math.PI*(a/this._data.resolution)) )*this._data.wave['cos'][b]; 
-                                }
-                                data.push(temp);
-                            }
-                    
-                            grapher.draw( data );
-                        }
-                        object.reset = function(){
-                            this.wave({'sin':[],'cos':[]});
-                            this.resolution(500);
-                            this.updateBackground();
-                            this.draw();
-                        }
-                    
-                    
-                        object.reset();
-                        return object;
-                    };
                     // var grapher2 = parts.display.grapher(null, width/2, 0, width/2, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
                     //     object.append(grapher2);
                     
@@ -2084,6 +2152,201 @@
                     //     // grapher2.verticalMarkings([0,0.25,0.5,0.75]);
                     //     // grapher2.drawBackground();
                     // }
+                    this.meter_level = function(
+                        id='meter_level',
+                        x, y, angle,
+                        width, height,
+                        markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                    
+                        backingStyle='fill:rgb(10,10,10)',
+                        levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
+                        markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                    ){
+                        //values
+                            var coolDown = 0;
+                            var mostRecentSetting = 0;
+                    
+                        //elements
+                            var object = parts.basic.g(id, x, y);
+                    
+                        //level
+                            levelStyles[0] += 'transition: height 0s;';
+                            levelStyles[1] += 'transition: height 0.01s;';
+                            var level = parts.display.level('mainlevel',0,0,angle,width,height,backingStyle,levelStyles);
+                            object.append(level);
+                    
+                        //markings
+                            function makeMark(y){
+                                var markThickness = 0.2;
+                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
+                                return parts.basic.path(null, path, 'L', markingStyle);
+                            }
+                            function insertText(y,text){
+                                return parts.display.label(null, 0, y+0.3, text, markingStyle);
+                            }
+                    
+                            for(var a = 0; a < markings.length; a++){
+                                object.append(makeMark(height*(1-markings[a])));
+                                object.append(insertText(height*(1-markings[a]),markings[a]));
+                            }
+                    
+                        //update intervals
+                            setInterval(function(){        
+                                level.set(mostRecentSetting,0);
+                    
+                                if(coolDown>0){coolDown-=0.0025;}
+                                level.set(coolDown,1);
+                    
+                                if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                            },1000/30);
+                    
+                        //methods
+                            object.set = function(a){
+                                mostRecentSetting = a;
+                                mostRecentSetting_slow = a;
+                            };
+                    
+                        return object;
+                    };
+                    this.readout_sixteenSegmentDisplay = function(
+                        id='readout_sixteenSegmentDisplay',
+                        x, y, width, height, count,
+                        backgroundStyle='fill:rgb(0,0,0)',
+                        glowStyle='fill:rgb(200,200,200)',
+                        dimStyle='fill:rgb(20,20,20)'
+                    ){
+                        //values
+                            var text = '';
+                            var displayInterval = null;
+                    
+                        //elements
+                            //main
+                                var object = parts.basic.g(id, x, y);
+                    
+                            //display units
+                                var units = [];
+                                for(var a = 0; a < count; a++){
+                                    var temp = parts.display.sixteenSegmentDisplay(
+                                        a, 
+                                        (width/count)*a, 0, width/count, height, 
+                                        backgroundStyle, glowStyle, dimStyle
+                                    );
+                                    object.append( temp );
+                                    units.push(temp);
+                                }
+                    
+                        //methods
+                            object.test = function(){
+                                this.text('Look at all the text I\'ve got here! 1234567890 \\/<>()[]{}*!?"#_,.');
+                                this.print('r2lSweep');
+                            };
+                    
+                            object.text = function(a){
+                                if(a==null){return text;}
+                                text = a;
+                            };
+                    
+                            object.print = function(style){
+                                clearInterval(displayInterval);
+                                switch(style){
+                                    case 'smart':
+                                        if(text.length > units.length){this.print('r2lSweep');}
+                                        else{this.print('regular')}
+                                    break;
+                                    case 'r2lSweep':
+                                        var displayIntervalTime = 100;
+                                        var displayStage = 0;
+                    
+                                        displayInterval = setInterval(function(){
+                                            for(var a = units.length-1; a >= 0; a--){
+                                                units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                            }
+                    
+                                            displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                        },displayIntervalTime);
+                                    break;
+                                    case 'regular': default:
+                                        for(var a = 0; a < units.length; a++){
+                                            units[a].enterCharacter(text[a]);
+                                        }
+                                    break;
+                                }
+                            };
+                    
+                    
+                    
+                    
+                        return object;
+                    };
+                    this.label = function(
+                        id='label',
+                        x, y, text,
+                        style='fill:rgba(0,0,0,1); font-size:3; font-family:Helvetica;',
+                        angle=0
+                    ){
+                        //elements 
+                        var object = parts.basic.g(id, x, y);
+                        var textElement = parts.basic.text(null, 0, 0, text, angle, style);
+                            object.appendChild(textElement);
+                    
+                    
+                        //methods
+                        object.text = function(a=null){
+                            if(a==null){return textElement.innerHTML;}
+                            textElement.innerHTML = a;
+                        }
+                    
+                        return object;
+                    };
+                    this.level = function(
+                        id='level',
+                        x, y, angle,
+                        width, height,
+                        backingStyle='fill:rgb(10,10,10)',
+                        levelStyles=['fill:rgb(250,250,250)','fill:rgb(200,200,200)']
+                    ){
+                        var values = Array.apply(null, Array(levelStyles.length)).map(Number.prototype.valueOf,0);
+                    
+                        // elements
+                            var object = parts.basic.g(id, x, y);
+                    
+                            //level layers are layered from back forward, so backing must go on last
+                            var levels = [];
+                            for(var a = 0; a < levelStyles.length; a++){
+                                var tempStyle = levelStyles[a]!=undefined ? levelStyles[a] : levelStyles[0];
+                                var temp = parts.basic.rect(
+                                    'movingRect_'+a,
+                                    (-height*Math.sin(angle) + width*Math.cos(angle)).toFixed(10),
+                                    (height*Math.cos(angle) + width*Math.sin(angle)).toFixed(10),
+                                    width,
+                                    0,
+                                    angle+Math.PI,
+                                    tempStyle
+                                );
+                                levels.push(temp);
+                                object.prepend(temp);
+                            }
+                    
+                            var backing = parts.basic.rect('backing', 0, 0, width, height, angle, backingStyle);
+                                object.prepend(backing);
+                    
+                        //methods
+                            object.set = function(a, layer=0){
+                                if(a==null){return value;}
+                    
+                                a = (a>1 ? 1 : a);
+                                a = (a<0 ? 0 : a);
+                    
+                                value = a;
+                    
+                                levels[layer].height.baseVal.valueInSpecifiedUnits = height*value;
+                            };
+                            object.getLevelStyle = function(levelLayer){
+                                return levels[levelLayer].style;
+                            };
+                    
+                        return object;
+                    };
                     this.grapherCanvas = function(
                         id='grapherCanvas',
                         x, y, width, height,
@@ -2402,450 +2665,188 @@
                     
                         return object;
                     };
-                    this.label = function(
-                        id='label',
-                        x, y, text,
-                        style='fill:rgba(0,0,0,1); font-size:3; font-family:Helvetica;',
-                        angle=0
+                    this.grapher_audioScope = function(
+                        id='grapher_audioScope',
+                        x, y, width, height,
+                        graphType='Canvas',
+                        foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+                        foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
+                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                        backingStyle = 'fill:rgba(50,50,50,1)',
+                    ){
+                        //attributes
+                            var attributes = {
+                                analyser:{
+                                    analyserNode: __globals.audio.context.createAnalyser(),
+                                    timeDomainDataArray: null,
+                                    frequencyData: null,
+                                    refreshRate: 30,
+                                    scopeRefreshInterval: null,
+                                    returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                },
+                                graph:{
+                                    resolution: 256
+                                }
+                            };
+                            attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
+                            attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                            attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                    
+                        //elements 
+                            var object = parts.basic.g(id, x, y);
+                                object._data = {};
+                                object._data.wave = {'sin':[],'cos':[]};
+                                object._data.resolution = 500;
+                    
+                            //main graph
+                                var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+                                    x:0, y:0, width:width, height:height,
+                                    style:{
+                                        foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
+                                        background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                        backing:backingStyle
+                                    }
+                                });
+                                object.append(grapher);
+                                
+                        //methods
+                            object.start = function(){
+                                if(attributes.analyser.scopeRefreshInterval == null){
+                                    attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
+                                }
+                            };
+                            object.stop = function(){
+                                clearInterval(attributes.analyser.scopeRefreshInterval);
+                                attributes.analyser.scopeRefreshInterval = null;
+                            };
+                            object.getNode = function(){return attributes.analyser.analyserNode;};
+                            object.resolution = function(res=null){
+                                if(res==null){return attributes.graph.resolution;}
+                                attributes.graph.resolution = res;
+                                this.stop();
+                                this.start();
+                            };
+                            object.refreshRate = function(a){
+                                if(a==null){return attributes.analyser.refreshRate;}
+                                attributes.analyser.refreshRate = a;
+                                this.stop();
+                                this.start();
+                            };
+                    
+                        //internal functions
+                            function render(){
+                                var numbers = [];
+                                attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
+                                for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
+                                    numbers.push(
+                                        attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
+                                    );
+                                }
+                                grapher.draw(numbers);
+                            }
+                            function setBackground(){
+                                grapher.viewbox( {'l':-1.1,'h':1.1} );
+                                grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+                                grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
+                                grapher.drawBackground();
+                            };
+                    
+                        //setup
+                            setBackground();
+                    
+                        return object;
+                    };
+                    this.grapher_periodicWave = function(
+                        id='grapher_periodicWave',
+                        x, y, width, height,
+                        graphType='Canvas',
+                        foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+                        foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
+                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                        backingStyle = 'fill:rgba(50,50,50,1)',
                     ){
                         //elements 
                         var object = parts.basic.g(id, x, y);
-                        var textElement = parts.basic.text(null, 0, 0, text, angle, style);
-                            object.appendChild(textElement);
+                            object._data = {};
+                            object._data.wave = {'sin':[],'cos':[]};
+                            object._data.resolution = 500;
+                    
+                        //main graph
+                            var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+                                x:0, y:0, width:width, height:height,
+                                style:{
+                                    foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
+                                    background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                    backing:backingStyle
+                                }
+                            });
+                            object.append(grapher);
                     
                     
                         //methods
-                        object.text = function(a=null){
-                            if(a==null){return textElement.innerHTML;}
-                            textElement.innerHTML = a;
+                        object.wave = function(a=null,type=null){
+                            if(a==null){
+                                while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
+                                while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
+                                for(var a = 0; a < this._data.wave['sin'].length; a++){
+                                    if( !this._data.wave['sin'][a] ){ this._data.wave['sin'][a] = 0; }
+                                    if( !this._data.wave['cos'][a] ){ this._data.wave['cos'][a] = 0; }
+                                }
+                                return this._data.wave;
+                            }
+                    
+                            if(type==null){
+                                this._data.wave = a;
+                            }
+                            switch(type){
+                                case 'sin': this._data.wave.sin = a; break;
+                                case 'cos': this._data.wave.cos = a; break;
+                                default: break;
+                            }
+                        }
+                        object.waveElement = function(type, mux, a){
+                            if(a==null){return this._data.wave[type][mux];}
+                            this._data.wave[type][mux] = a;
+                        }
+                        object.resolution = function(a=null){
+                            if(a==null){return this._data.resolution;}
+                            this._data.resolution = a;
+                        }
+                        object.updateBackground = function(){
+                            grapher.viewbox( {'l':-1.1,'h':1.1} );
+                            grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+                            grapher.verticalMarkings({points:[0,'1/4','1/2','3/4'],printText:false});
+                            grapher.drawBackground();
+                        };
+                        object.draw = function(){
+                            var data = [];
+                            var temp = 0;
+                            for(var a = 0; a <= this._data.resolution; a++){
+                                temp = 0;
+                                for(var b = 0; b < this._data.wave['sin'].length; b++){
+                                    if(!this._data.wave['sin'][b]){this._data.wave['sin'][b]=0;} // cover missing elements
+                                    temp += Math.sin(b*(2*Math.PI*(a/this._data.resolution)))*this._data.wave['sin'][b]; 
+                                }
+                                for(var b = 0; b < this._data.wave['cos'].length; b++){
+                                    if(!this._data.wave['cos'][b]){this._data.wave['cos'][b]=0;} // cover missing elements
+                                    temp += Math.cos(b*(2*Math.PI*(a/this._data.resolution)) )*this._data.wave['cos'][b]; 
+                                }
+                                data.push(temp);
+                            }
+                    
+                            grapher.draw( data );
+                        }
+                        object.reset = function(){
+                            this.wave({'sin':[],'cos':[]});
+                            this.resolution(500);
+                            this.updateBackground();
+                            this.draw();
                         }
                     
-                        return object;
-                    };
-                    this.level = function(
-                        id='level',
-                        x, y, angle,
-                        width, height,
-                        backingStyle='fill:rgb(10,10,10)',
-                        levelStyles=['fill:rgb(250,250,250)','fill:rgb(200,200,200)']
-                    ){
-                        var values = Array.apply(null, Array(levelStyles.length)).map(Number.prototype.valueOf,0);
                     
-                        // elements
-                            var object = parts.basic.g(id, x, y);
-                    
-                            //level layers are layered from back forward, so backing must go on last
-                            var levels = [];
-                            for(var a = 0; a < levelStyles.length; a++){
-                                var tempStyle = levelStyles[a]!=undefined ? levelStyles[a] : levelStyles[0];
-                                var temp = parts.basic.rect(
-                                    'movingRect_'+a,
-                                    (-height*Math.sin(angle) + width*Math.cos(angle)).toFixed(10),
-                                    (height*Math.cos(angle) + width*Math.sin(angle)).toFixed(10),
-                                    width,
-                                    0,
-                                    angle+Math.PI,
-                                    tempStyle
-                                );
-                                levels.push(temp);
-                                object.prepend(temp);
-                            }
-                    
-                            var backing = parts.basic.rect('backing', 0, 0, width, height, angle, backingStyle);
-                                object.prepend(backing);
-                    
-                        //methods
-                            object.set = function(a, layer=0){
-                                if(a==null){return value;}
-                    
-                                a = (a>1 ? 1 : a);
-                                a = (a<0 ? 0 : a);
-                    
-                                value = a;
-                    
-                                levels[layer].height.baseVal.valueInSpecifiedUnits = height*value;
-                            };
-                            object.getLevelStyle = function(levelLayer){
-                                return levels[levelLayer].style;
-                            };
-                    
-                        return object;
-                    };
-                    this.meter_level = function(
-                        id='meter_level',
-                        x, y, angle,
-                        width, height,
-                        markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                    
-                        backingStyle='fill:rgb(10,10,10)',
-                        levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
-                        markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                    ){
-                        //values
-                            var coolDown = 0;
-                            var mostRecentSetting = 0;
-                    
-                        //elements
-                            var object = parts.basic.g(id, x, y);
-                    
-                        //level
-                            levelStyles[0] += 'transition: height 0s;';
-                            levelStyles[1] += 'transition: height 0.01s;';
-                            var level = parts.display.level('mainlevel',0,0,angle,width,height,backingStyle,levelStyles);
-                            object.append(level);
-                    
-                        //markings
-                            function makeMark(y){
-                                var markThickness = 0.2;
-                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                                return parts.basic.path(null, path, 'L', markingStyle);
-                            }
-                            function insertText(y,text){
-                                return parts.display.label(null, 0, y+0.3, text, markingStyle);
-                            }
-                    
-                            for(var a = 0; a < markings.length; a++){
-                                object.append(makeMark(height*(1-markings[a])));
-                                object.append(insertText(height*(1-markings[a]),markings[a]));
-                            }
-                    
-                        //update intervals
-                            setInterval(function(){        
-                                level.set(mostRecentSetting,0);
-                    
-                                if(coolDown>0){coolDown-=0.0025;}
-                                level.set(coolDown,1);
-                    
-                                if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
-                            },1000/30);
-                    
-                        //methods
-                            object.set = function(a){
-                                mostRecentSetting = a;
-                                mostRecentSetting_slow = a;
-                            };
-                    
-                        return object;
-                    };
-                    this.rastorDisplay = function(
-                        id='rastorDisplay',
-                        x, y, width, height,
-                        xCount, yCount, xGappage=1, yGappage=1
-                    ){
-                        //elements
-                            //main
-                            var object = parts.basic.g(id, x, y);
-                    
-                            //backing
-                            var rect = parts.basic.rect(null, 0, 0, width, height, 0, 'fill:rgb(0,0,0)');
-                                object.appendChild(rect);
-                    
-                            //pixels
-                                var pixels = [];
-                                var pixelValues = [];
-                                var pixWidth = width/xCount;
-                                var pixHeight = height/yCount;
-                    
-                                for(var x = 0; x < xCount; x++){
-                                    var temp_pixels = [];
-                                    var temp_pixelValues = [];
-                                    for(var y = 0; y < yCount; y++){
-                                        var rect = parts.basic.rect(null, (x*pixWidth)+xGappage/2, (y*pixHeight)+yGappage/2, pixWidth-xGappage, pixHeight-yGappage, 0, 'fill:rgb(0,0,0)');
-                                            temp_pixels.push(rect);
-                                            temp_pixelValues.push([0,0,0]);
-                                            object.appendChild(rect);
-                                    }
-                                    pixels.push(temp_pixels);
-                                    pixelValues.push(temp_pixelValues);
-                                }
-                    
-                        //inner workings
-                            function render(){
-                                for(var x = 0; x < xCount; x++){
-                                    for(var y = 0; y < yCount; y++){
-                                        __globals.utility.element.setStyle(pixels[x][y], 'fill:rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')' );
-                                    }
-                                }
-                            }
-                            
-                        //methods
-                            object.get = function(x,y){ return pixelValues[x][y]; };
-                            object.set = function(x,y,state){ pixelValues[x][y] = state; render() };
-                            object.import = function(data){
-                                for(var x = 0; x < xCount; x++){
-                                    for(var y = 0; y < yCount; y++){
-                                        this.set(x,y,data[x][y]);
-                                    }
-                                }
-                                render();
-                            };
-                            object.export = function(){ return pixelValues; }
-                            object.setAll = function(value){
-                                for(var x = 0; x < xCount; x++){
-                                    for(var y = 0; y < yCount; y++){
-                                        this.set(x,y,value);
-                                    }
-                                }
-                            }
-                    
-                            object.test = function(){
-                                this.setAll([1,1,1]);
-                                this.set(1,1,[1,0.5,0.5]);
-                                this.set(2,2,[0.5,1,0.5]);
-                                this.set(3,3,[0.5,0.5,1]);
-                                this.set(4,4,[1,0.5,1]);
-                                render();
-                            };
-                    
-                        return object;
-                    };
-                    this.readout_sixteenSegmentDisplay = function(
-                        id='readout_sixteenSegmentDisplay',
-                        x, y, width, height, count,
-                        backgroundStyle='fill:rgb(0,0,0)',
-                        glowStyle='fill:rgb(200,200,200)',
-                        dimStyle='fill:rgb(20,20,20)'
-                    ){
-                        //values
-                            var text = '';
-                            var displayInterval = null;
-                    
-                        //elements
-                            //main
-                                var object = parts.basic.g(id, x, y);
-                    
-                            //display units
-                                var units = [];
-                                for(var a = 0; a < count; a++){
-                                    var temp = parts.display.sixteenSegmentDisplay(
-                                        a, 
-                                        (width/count)*a, 0, width/count, height, 
-                                        backgroundStyle, glowStyle, dimStyle
-                                    );
-                                    object.append( temp );
-                                    units.push(temp);
-                                }
-                    
-                        //methods
-                            object.test = function(){
-                                this.text('Look at all the text I\'ve got here! 1234567890 \\/<>()[]{}*!?"#_,.');
-                                this.print('r2lSweep');
-                            };
-                    
-                            object.text = function(a){
-                                if(a==null){return text;}
-                                text = a;
-                            };
-                    
-                            object.print = function(style){
-                                clearInterval(displayInterval);
-                                switch(style){
-                                    case 'smart':
-                                        if(text.length > units.length){this.print('r2lSweep');}
-                                        else{this.print('regular')}
-                                    break;
-                                    case 'r2lSweep':
-                                        var displayIntervalTime = 100;
-                                        var displayStage = 0;
-                    
-                                        displayInterval = setInterval(function(){
-                                            for(var a = units.length-1; a >= 0; a--){
-                                                units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                            }
-                    
-                                            displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                        },displayIntervalTime);
-                                    break;
-                                    case 'regular': default:
-                                        for(var a = 0; a < units.length; a++){
-                                            units[a].enterCharacter(text[a]);
-                                        }
-                                    break;
-                                }
-                            };
-                    
-                    
-                    
-                    
-                        return object;
-                    };
-                    this.sevenSegmentDisplay = function(
-                        id='sevenSegmentDisplay',
-                        x, y, width, height,
-                        backgroundStyle='fill:rgb(0,0,0)',
-                        glowStyle='fill:rgb(200,200,200)',
-                        dimStyle='fill:rgb(20,20,20)'
-                    ){
-                        var margin = width/8;
-                        var division = width/8;
-                        var shapes = {
-                            segments:{
-                                points: {
-                                    top:{
-                                        left:[
-                                            {x:division*1.0+margin,         y:division*1.0+margin},
-                                            {x:division*0.5+margin,         y:division*0.5+margin},
-                                            {x:division*1.0+margin,         y:division*0.0+margin},
-                                            {x:division*0.0+margin,         y:division*1.0+margin},
-                                        ],
-                                        right:[
-                                            {x:width-division*1.0-margin,   y:division*0.0+margin},
-                                            {x:width-division*0.5-margin,   y:division*0.5+margin},
-                                            {x:width-division*1.0-margin,   y:division*1.0+margin},
-                                            {x:width-division*0.0-margin,   y:division*1.0+margin}
-                                        ]
-                                    },
-                                    middle: {
-                                        left:[
-                                            {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
-                                            {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
-                                            {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
-                                            {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
-                                            {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
-                                        ],
-                                        right:[
-                                            {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
-                                            {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
-                                            {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
-                                            {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
-                                            {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
-                                        ]
-                                    },
-                                    bottom: {
-                                        left:[
-                                            {x:division*1.0+margin,         y:height-division*1.0-margin},
-                                            {x:division*0.5+margin,         y:height-division*0.5-margin},
-                                            {x:division*1.0+margin,         y:height-division*0.0-margin},
-                                            {x:division*0.0+margin,         y:height-division*1.0-margin},
-                                        ],
-                                        right:[
-                                            {x:width-division*1.0-margin,   y:height-division*0.0-margin},
-                                            {x:width-division*0.5-margin,   y:height-division*0.5-margin},
-                                            {x:width-division*1.0-margin,   y:height-division*1.0-margin},
-                                            {x:width-division*0.0-margin,   y:height-division*1.0-margin}
-                                        ]
-                                    }
-                                }
-                            }
-                        };
-                    
-                        //elements
-                            //main
-                            var object = parts.basic.g(id, x, y);
-                    
-                            //backing
-                            var rect = parts.basic.rect(null, 0, 0, width, height, 0, backgroundStyle);
-                                object.appendChild(rect);
-                    
-                            //segments
-                                var segments = [];
-                                var points = [
-                                    [
-                                        shapes.segments.points.top.left[0],
-                                        shapes.segments.points.top.right[2],
-                                        shapes.segments.points.top.right[1],
-                                        shapes.segments.points.top.right[0],
-                                        shapes.segments.points.top.left[2],
-                                        shapes.segments.points.top.left[1],
-                                    ],
-                                    [
-                                        shapes.segments.points.top.left[1],
-                                        shapes.segments.points.top.left[3],
-                                        shapes.segments.points.middle.left[3],
-                                        shapes.segments.points.middle.left[1],
-                                        shapes.segments.points.middle.left[0],
-                                        shapes.segments.points.top.left[0],  
-                                    ],
-                                    [
-                                        shapes.segments.points.top.right[1],  
-                                        shapes.segments.points.top.right[3],  
-                                        shapes.segments.points.middle.right[3],
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[2],
-                                        shapes.segments.points.top.right[2],  
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.left[0], 
-                                        shapes.segments.points.middle.right[2],
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[0],
-                                        shapes.segments.points.middle.left[2], 
-                                        shapes.segments.points.middle.left[1], 
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.left[1],
-                                        shapes.segments.points.middle.left[4],
-                                        shapes.segments.points.bottom.left[3],
-                                        shapes.segments.points.bottom.left[1],
-                                        shapes.segments.points.bottom.left[0],
-                                        shapes.segments.points.middle.left[2],
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[4],
-                                        shapes.segments.points.bottom.right[3],
-                                        shapes.segments.points.bottom.right[1],
-                                        shapes.segments.points.bottom.right[2],
-                                        shapes.segments.points.middle.right[0],
-                                    ],
-                                    [
-                                        shapes.segments.points.bottom.left[0],
-                                        shapes.segments.points.bottom.right[2],
-                                        shapes.segments.points.bottom.right[1],
-                                        shapes.segments.points.bottom.right[0],
-                                        shapes.segments.points.bottom.left[2],
-                                        shapes.segments.points.bottom.left[1],
-                                    ]
-                                ];
-                                for(var a = 0; a < points.length; a++){
-                                    var temp = {
-                                        segment: parts.basic.path(null, points[a], 'L', dimStyle),
-                                        state: false
-                                    };
-                                    segments.push( temp );
-                                    object.append( temp.segment );
-                                }
-                    
-                    
-                        //methods
-                            object.set = function(segment,state){
-                                segments[segment].state = state;
-                                if(state){ __globals.utility.element.setStyle(segments[segment].segment,glowStyle); }
-                                else{ __globals.utility.element.setStyle(segments[segment].segment,dimStyle); }
-                            };
-                            object.get = function(segment){ return segments[segment].state; };
-                            object.clear = function(){
-                                for(var a = 0; a < segments.length; a++){
-                                    this.set(a,false);
-                                }
-                            };
-                    
-                            object.enterCharacter = function(char){
-                                var stamp = [];
-                                switch(char){
-                                    case '0': stamp = [1,1,1,0,1,1,1]; break;
-                                    case '1': stamp = [0,0,1,0,0,1,0]; break;
-                                    case '2': stamp = [1,0,1,1,1,0,1]; break;
-                                    case '3': stamp = [1,0,1,1,0,1,1]; break;
-                                    case '4': stamp = [0,1,1,1,0,1,0]; break;
-                                    case '5': stamp = [1,1,0,1,0,1,1]; break;
-                                    case '6': stamp = [1,1,0,1,1,1,1]; break;
-                                    case '7': stamp = [1,0,1,0,0,1,0]; break;
-                                    case '8': stamp = [1,1,1,1,1,1,1]; break;
-                                    case '9': stamp = [1,1,1,1,0,1,1]; break;
-                                    default:  stamp = [0,0,0,0,0,0,0]; break;
-                                }
-                    
-                                for(var a = 0; a < stamp.length; a++){
-                                    this.set(a, stamp[a]==1);
-                                }
-                            };
-                    
-                            object.test = function(){
-                                this.clear();
-                                this.enterCharacter('9');
-                            };
-                    
+                        object.reset();
                         return object;
                     };
                     this.sixteenSegmentDisplay = function(
@@ -3681,107 +3682,60 @@
                     };
                 }
                 this.control = new function(){
-                    this.button_rect = function(
-                        id='button_rect',
-                        x, y, width, height, angle=0,
-                        upStyle = 'fill:rgba(200,200,200,1)',
-                        hoverStyle = 'fill:rgba(220,220,220,1)',
-                        downStyle = 'fill:rgba(180,180,180,1)',
-                        glowStyle = 'fill:rgba(220,200,220,1)',
+                    this.grapher_waveWorkspace = function(
+                        id='grapher_waveWorkspace',
+                        x, y, width, height, angle=0, graphType='Canvas', selectNeedle=true, selectionArea=true,
+                        foregroundStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
+                        foregroundTextStyles=['fill:rgba(0,255,255,1); font-size:3; font-family:Helvetica;'],
+                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.1; stroke-linecap:round;',
+                        middlegroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
+                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                        backingStyle='fill:rgba(50,50,50,1)',
                     ){
+                        var needleWidth = 1/4;
                     
-                        // elements 
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, upStyle);
-                            object.appendChild(rect);
+                        //elements
+                            //main
+                                var object = parts.basic.g(id, x, y);
+                            //main graph
+                                var graph = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+                                    x:0, y:0, width:width, height:height,
+                                    style:{
+                                        foreground:middlegroundStyle, foregroundText:middlegroundTextStyle, 
+                                        background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                        backing:backingStyle
+                                    }
+                                });
+                                
+                                object.append(graph);
+                            //needle overlay
+                                var overlay = __globals.utility.experimental.elementMaker('needleOverlay', 'overlay', {
+                                    x:0, y:0, width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                                    needleStyles:foregroundStyles,
+                                });
+                                object.append(overlay);
                     
-                        //interactivity
-                        rect.onmouseenter = function(){ __globals.utility.element.setStyle(this, hoverStyle); };
-                        rect.onmouseleave = function(){ __globals.utility.element.setStyle(this, upStyle);    };
-                        rect.onmousedown =  function(){ __globals.utility.element.setStyle(this, downStyle);  };
-                        rect.onmouseup =    function(){ this.onmouseleave();                          };
-                        rect.glow =         function(){ __globals.utility.element.setStyle(this, glowStyle) };
+                        //controls
+                            object.select = overlay.select;
+                            object.area = overlay.area;
+                            object.draw = graph.draw;
+                            object.foregroundLineThickness = graph.foregroundLineThickness;
+                            object.drawBackground = graph.drawBackground;
+                            object.area = overlay.area;
+                            object._test = graph._test;
+                            object.genericNeedle = overlay.genericNeedle;
                     
                         //callbacks
-                        object.onmouseup =    function(){ /*console.log('mouseup');    */ };
-                        object.onmousedown =  function(){ /*console.log('mousedown');  */ };
-                        object.onmouseenter = function(){ /*console.log('mouseenter'); */ };
-                        object.onmouseleave = function(){ /*console.log('mouseleave'); */ };
-                        object.onmousemove =  function(){ /*console.log('mousemove');  */ };
-                        object.onclick =      function(){ /*console.log('click');      */ };
-                        object.ondblclick =   function(){ /*console.log('doubleclick');*/ };
+                            object.onchange = function(needle,value){};
+                            overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
+                            object.onrelease = function(needle,value){};
+                            overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
+                            object.selectionAreaToggle = function(toggle){};
+                            overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
                     
-                        //methods
-                        object.click = function(glow=false){ 
-                            this.onclick(); this.onmousedown(); 
-                            if(glow){rect.glow();}
-                            else{rect.onmousedown();} 
-                            setTimeout(function(that){rect.onmouseup();that.onmouseup();},250,this);
-                        };
-                        object.hover = function(){ this.onmouseenter(); rect.onmouseenter(); };
-                        object.unhover = function(){this.onmouseleave(); rect.onmouseleave();};
-                    
-                        return object;
-                    };
-                    this.checkbox_rect = function(
-                        id='checkbox_rect',
-                        x, y, width, height, angle=0,
-                        checkStyle = 'fill:rgba(150,150,150,1)',
-                        backingStyle = 'fill:rgba(200,200,200,1)',
-                        checkGlowStyle = 'fill:rgba(220,220,220,1)',
-                        backingGlowStyle = 'fill:rgba(220,220,220,1)',
-                    ){
-                        // elements 
-                        var object = parts.basic.g(id, x, y);
-                            object._checked = false;
-                            object.styles = {
-                                'check':checkStyle,
-                                'uncheck':'fill:rgba(0,0,0,0)',
-                                'backing':backingStyle
-                            };
-                    
-                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, backingStyle);
-                            object.appendChild(rect);
-                        var checkrect = parts.basic.rect(null, width*0.1, height*0.1, width*0.8, height*0.8, angle, object.styles.uncheck);
-                            object.appendChild(checkrect);
-                    
-                    
-                        function updateGraphics(){
-                            if(object._checked){ __globals.utility.element.setStyle(checkrect,object.styles.check); }
-                            else{ __globals.utility.element.setStyle(checkrect,object.styles.uncheck); }
-                            __globals.utility.element.setStyle(rect,object.styles.backing);
-                        }
-                    
-                        //methods
-                        object.get = function(){ return object._checked; };
-                        object.set = function(value, update=true){
-                            object._checked = value;
-                            
-                            updateGraphics();
-                    
-                            if(update&&this.onchange){ this.onchange(value); }
-                        };
-                        object.light = function(state){
-                            if(state){
-                                object.styles.check = checkGlowStyle;
-                                object.styles.backing = backingGlowStyle;
-                            }else{
-                                object.styles.check = checkStyle;
-                                object.styles.backing = backingStyle;
-                            }
-                            updateGraphics();
-                        };
-                    
-                    
-                        //callback
-                        object.onchange = function(){};
-                    
-                    
-                        //mouse interaction
-                        object.onclick = function(event){
-                            object.set(!object.get());
-                        };
-                    
+                        //setup
+                            object.drawBackground();
                     
                         return object;
                     };
@@ -3917,254 +3871,6 @@
                                 __globals.svgElement.onmousemove(event);
                             };
                     
-                    
-                        return object;
-                    };
-                    this.dial_discrete = function(
-                        id='dial_discrete',
-                        x, y, r,
-                        optionCount=5,
-                        startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                        handleStyle = 'fill:rgba(200,200,200,1)',
-                        slotStyle = 'fill:rgba(50,50,50,1)',
-                        needleStyle = 'fill:rgba(250,100,100,1)',
-                        arcDistance=1.35,
-                        outerArcStyle='fill:none; stroke:none;',
-                    ){
-                        // elements
-                        var object = parts.basic.g(id, x, y);
-                            object._value = 0;
-                            object._selection = 0;
-                            object._data = { 
-                                'optionCount':optionCount,
-                                'mux':r*4
-                            };
-                    
-                            //arc
-                                var points = 5;
-                                var pushDistance = 1.11;
-                                var arcPath = [];
-                                for(var a = 0; a < points; a++){
-                                    var temp = __globals.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
-                                    arcPath.push( temp );
-                                    var temp = __globals.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
-                                    arcPath.push( temp );
-                                }
-                                var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
-                                arcPath.push( temp );
-                                var outerArc = parts.basic.path(id=null, path=arcPath, 'Q', outerArcStyle);
-                                object.appendChild(outerArc);
-                    
-                            //slot
-                                var slot = parts.basic.circle(null, 0, 0, r*1.1, 0, slotStyle);
-                                    object.appendChild(slot);
-                    
-                            //handle
-                                var handle = parts.basic.circle(null, 0, 0, r, 0, handleStyle);
-                                    object.appendChild(handle);
-                    
-                            //needle
-                                var needleWidth = r/5;
-                                var needleLength = r;
-                                var needle = parts.basic.rect('needle', 0, 0, needleLength, needleWidth, 0, needleStyle);
-                                    needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
-                                    needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
-                                    object.appendChild(needle);
-                    
-                    
-                        //methods
-                            object.select = function(a=null, live=true, update=true){
-                                if(a==null){return this._selection;}
-                    
-                                a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
-                                a = (a<0 ? 0 : a);
-                    
-                                if(this._selection == a){/*nothings changed*/return;}
-                    
-                                this._selection = a;
-                                this._set( a/(this._data.optionCount-1) );
-                                if(update&&this.onchange){ this.onchange(a); }
-                                if(update&&!live&&this.onrelease){ this.onrelease(value); }
-                            };
-                            object._get = function(){ return this._value; };
-                            object._set = function(value){
-                                value = (value>1 ? 1 : value);
-                                value = (value<0 ? 0 : value);
-                    
-                                this._value = value;
-                                this.children['needle'].rotation(startAngle + maxAngle*value);
-                            };object._set(0);
-                      
-                    
-                        //callback
-                            object.onchange = function(){};
-                            object.onrelease = function(){};
-                    
-                        
-                        //mouse interaction
-                            object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
-                            object.onwheel = function(event){
-                                var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                                var globalScale = __globals.utility.workspace.getGlobalScale(object);
-                    
-                                if(!object.onwheel.acc){object.onwheel.acc=0;}
-                                object.onwheel.acc += move/globalScale;
-                                if( Math.abs(object.onwheel.acc) >= 1 ){
-                                    this.select( this.select()-1*Math.sign(object.onwheel.acc) );
-                                    object.onwheel.acc = 0;
-                                }
-                            };
-                            object.onmousedown = function(event){
-                                __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
-                                __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
-                                __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
-                    
-                                __globals.svgElement.tempRef = this;
-                                __globals.svgElement.tempRef._data.initialValue = this._get();
-                                __globals.svgElement.tempRef._data.initialY = event.y;
-                                __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
-                                __globals.svgElement.onmousemove = function(event){
-                                    var mux = __globals.svgElement.tempRef._data.mux;
-                                    var value = __globals.svgElement.tempRef._data.initialValue;
-                                    var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
-                                    var divider = __globals.utility.workspace.getGlobalScale(object);
-                    
-                                    __globals.svgElement.tempRef.select(
-                                        Math.round(
-                                            (__globals.svgElement.tempRef._data.optionCount-1)*(value - numerator/(divider*mux))
-                                        ) 
-                                    );
-                                };
-                                __globals.svgElement.onmouseup = function(){
-                                    this.tempRef.select(this.tempRef.select(),false);
-                                    this.tempRef = null;
-                                    
-                                    __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
-                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
-                                    __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
-                    
-                                    __globals.svgElement.onmousemove_old = null;
-                                    __globals.svgElement.onmouseleave_old = null;
-                                    __globals.svgElement.onmouseup_old = null;
-                                };
-                                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                                __globals.svgElement.onmousemove(event);
-                            };
-                            
-                    
-                      return object;
-                    };
-                    this.grapher_waveWorkspace = function(
-                        id='grapher_waveWorkspace',
-                        x, y, width, height, angle=0, graphType='Canvas', selectNeedle=true, selectionArea=true,
-                        foregroundStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
-                        foregroundTextStyles=['fill:rgba(0,255,255,1); font-size:3; font-family:Helvetica;'],
-                        middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.1; stroke-linecap:round;',
-                        middlegroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
-                        backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                        backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                        backingStyle='fill:rgba(50,50,50,1)',
-                    ){
-                        var needleWidth = 1/4;
-                    
-                        //elements
-                            //main
-                                var object = parts.basic.g(id, x, y);
-                            //main graph
-                                var graph = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
-                                    x:0, y:0, width:width, height:height,
-                                    style:{
-                                        foreground:middlegroundStyle, foregroundText:middlegroundTextStyle, 
-                                        background:backgroundStyle, backgroundText:backgroundTextStyle, 
-                                        backing:backingStyle
-                                    }
-                                });
-                                
-                                object.append(graph);
-                            //needle overlay
-                                var overlay = __globals.utility.experimental.elementMaker('needleOverlay', 'overlay', {
-                                    x:0, y:0, width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
-                                    needleStyles:foregroundStyles,
-                                });
-                                object.append(overlay);
-                    
-                        //controls
-                            object.select = overlay.select;
-                            object.area = overlay.area;
-                            object.draw = graph.draw;
-                            object.foregroundLineThickness = graph.foregroundLineThickness;
-                            object.drawBackground = graph.drawBackground;
-                            object.area = overlay.area;
-                            object._test = graph._test;
-                            object.genericNeedle = overlay.genericNeedle;
-                    
-                        //callbacks
-                            object.onchange = function(needle,value){};
-                            overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
-                            object.onrelease = function(needle,value){};
-                            overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
-                            object.selectionAreaToggle = function(toggle){};
-                            overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
-                    
-                        //setup
-                            object.drawBackground();
-                    
-                        return object;
-                    };
-                    this.key_rect = function(
-                        id='key_rect',
-                        x, y, width, height, angle=0,
-                        style_off = 'fill:rgba(200,200,200,1)',
-                        style_press = 'fill:rgba(180,180,180,1)',
-                        style_glow = 'fill:rgba(220,200,220,1)',
-                        style_pressAndGlow = 'fill:rgba(200,190,200,1)'
-                    ){
-                    
-                        // elements 
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, style_off);
-                            object.appendChild(rect);
-                    
-                        //state
-                        object.state = 0;
-                        object.activateState = function(state){
-                            // 0 - off
-                            // 1 - pressed
-                            // 2 - glowing
-                            // 3 - pressed and glowing
-                            switch(state){
-                                case 0: __globals.utility.element.setStyle(rect, style_off); break;
-                                case 1: __globals.utility.element.setStyle(rect, style_press); break;
-                                case 2: __globals.utility.element.setStyle(rect, style_glow); break;
-                                case 3: __globals.utility.element.setStyle(rect, style_pressAndGlow); break;
-                                default: /*console.error('Unknown state reached:', state);*/ return; break;
-                            }
-                            object.state = state;
-                        };
-                    
-                        //interactivity
-                        rect.onmousedown =  function(){ object.press();   };
-                        rect.onmouseup =    function(){ object.release(); };
-                        rect.onmouseleave = function(){ object.release(); };
-                        rect.onmouseenter = function(event){ if(event.buttons == 1){object.press();} };
-                    
-                        //callbacks
-                        object.onkeyup =    function(){ /*console.log('mouseup');    */ };
-                        object.onkeydown =  function(){ /*console.log('mousedown');  */ };
-                    
-                        //methods;
-                        object.press =   function(){
-                            if( this.state%2 != 0 ){return;} //key already pressed 
-                            this.activateState(this.state+1);
-                            if(this.onkeydown){this.onkeydown();}
-                        };
-                        object.release = function(){ 
-                            if( this.state%2 == 0 ){return;} //key not pressed 
-                            this.activateState(object.state-1); 
-                            if(this.onkeyup){this.onkeyup();}
-                        };
-                        object.glow = function(){ this.activateState(this.state+2); };
-                        object.dim  = function(){ this.activateState(this.state-2); };
                     
                         return object;
                     };
@@ -4380,69 +4086,6 @@
                     
                         return object;
                     };
-                    this.rastorgrid = function(
-                        id='rastorgrid', 
-                        x, y, width, height,
-                        xcount, ycount,
-                        backingStyle = 'fill:rgba(200,200,200,1)',
-                        checkStyle = 'fill:rgba(150,150,150,1)',
-                        backingGlowStyle = 'fill:rgba(220,220,220,1)',
-                        checkGlowStyle = 'fill:rgba(220,220,220,1)',
-                    ){
-                        // elements
-                        var object = parts.basic.g(id, x, y);
-                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
-                            object.appendChild(rect);
-                    
-                        for(var y = 0; y < ycount; y++){
-                            for(var x = 0; x < xcount; x++){
-                                var temp = parts.control.checkbox_rect(y+'_'+x, x*(width/xcount), y*(height/ycount), width/xcount, height/ycount, 0, checkStyle, backingStyle, checkGlowStyle, backingGlowStyle);
-                                object.appendChild(temp);
-                                temp.onchange = function(){ if(object.onchange){object.onchange(object.get());} };
-                            }
-                        }
-                    
-                    
-                        //methods
-                        object.box = function(x,y){ return object.children[y+'_'+x]; };
-                        object.get = function(){
-                            var outputArray = [];
-                    
-                            for(var y = 0; y < ycount; y++){
-                                var temp = [];
-                                for(var x = 0; x < xcount; x++){
-                                    temp.push(this.box(x,y).get());
-                                }
-                                outputArray.push(temp);
-                            }
-                    
-                            return outputArray;
-                        };
-                        object.set = function(value, update=true){
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    object.box(x,y).set(value[y][x],false);
-                                }
-                            }
-                        };
-                        object.clear = function(){
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    object.box(x,y).set(false,false);
-                                }
-                            }
-                        };
-                        object.light = function(x,y,state){
-                            object.box(x,y).light(state);
-                        };
-                    
-                    
-                        //callback
-                        object.onchange = function(){};
-                    
-                    
-                        return object;
-                    };
                     this.slide = function(
                         id='slide', 
                         x, y, width, height, angle=0,
@@ -4646,216 +4289,366 @@
                         
                         return object;
                     };
-                }
-                this.audio = new function(){
-                    this.audio2percentage = function(){
-                        return new function(){
-                            var analyser = {
-                                timeDomainDataArray: null,
-                                frequencyData: null,
-                                refreshRate: 30,
-                                refreshInterval: null,
-                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                resolution: 128
-                            };
-                            analyser.analyserNode = __globals.audio.context.createAnalyser();
-                            analyser.analyserNode.fftSize = analyser.resolution;
-                            analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
-                            analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
-                    
-                            this.__render = function(){
-                                    analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
-                    
-                                    var numbers = [];
-                                    for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
-                                        numbers.push(
-                                            analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
-                                        );
-                                    }
-                    
-                                    var val = 0;
-                                    numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
-                    
-                                    this.newValue(val);
-                            }
-                    
-                            //audio connections
-                                this.audioIn = function(){return analyser.analyserNode;};
-                    
-                            //methods
-                                this.start = function(){
-                                    analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
-                                };
-                                this.stop = function(){
-                                    clearInterval(analyser.refreshInterval);
-                                };
-                    
-                            //callbacks
-                                this.newValue = function(a){};
-                        };
-                    };
-                    this.synthesizer_1 = function(
-                        context,
-                        waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
-                        gain=1, 
-                        attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
-                        detune=0, octave=0
+                    this.dial_discrete = function(
+                        id='dial_discrete',
+                        x, y, r,
+                        optionCount=5,
+                        startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                        handleStyle = 'fill:rgba(200,200,200,1)',
+                        slotStyle = 'fill:rgba(50,50,50,1)',
+                        needleStyle = 'fill:rgba(250,100,100,1)',
+                        arcDistance=1.35,
+                        outerArcStyle='fill:none; stroke:none;',
                     ){
-                        //components
-                            var mainOut = context.createGain();
-                                mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
-                    
-                        //live oscillators
-                            var liveOscillators = {};
-                    
-                        //options
-                            this.waveType = function(a){if(a==null){return waveType;}waveType=a;};
-                            this.periodicWave = function(a){if(a==null){return periodicWave;}periodicWave=a;};
-                            this.gain = function(target,time,curve){
-                                return changeAudioParam(mainOut.gain,target,time,curve);
-                            };
-                            this.attack = function(time,curve){
-                                if(time==null&&curve==null){return attack;}
-                                attack.time = time ? time : attack.time;
-                                attack.curve = curve ? curve : attack.curve;
-                            };
-                            this.release = function(time,curve){
-                                if(time==null&&curve==null){return release;}
-                                release.time = time ? time : release.time;
-                                release.curve = curve ? curve : release.curve;
-                            };
-                            this.octave = function(a){if(a==null){return octave;}octave=a;};
-                            this.detune = function(target,time,curve){
-                                if(a==null){return detune;}
-                    
-                                //change stored value for any new oscillators that are made
-                                    var start = detune;
-                                    var mux = target-start;
-                                    var stepsPerSecond = Math.round(Math.abs(mux));
-                                    var totalSteps = stepsPerSecond*time;
-                    
-                                    var steps = [1];
-                                    switch(curve){
-                                        case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-                                        case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-                                        case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps,8); break;
-                                        case 'instant': default: break;
-                                    }
-                                    
-                                    if(steps.length != 0){
-                                        var interval = setInterval(function(){
-                                            detune = start+(steps.shift()*mux);
-                                            if(steps.length == 0){clearInterval(interval);}
-                                        },1000/stepsPerSecond);
-                                    }
-                    
-                                //instruct liveOscillators to adjust their values
-                                    var OSCs = Object.keys(liveOscillators);
-                                    for(var b = 0; b < OSCs.length; b++){ 
-                                        liveOscillators[OSCs[b]].detune(target,time,curve);
-                                    }
+                        // elements
+                        var object = parts.basic.g(id, x, y);
+                            object._value = 0;
+                            object._selection = 0;
+                            object._data = { 
+                                'optionCount':optionCount,
+                                'mux':r*4
                             };
                     
-                        //output node
-                            this.out = function(){return mainOut;}
+                            //arc
+                                var points = 5;
+                                var pushDistance = 1.11;
+                                var arcPath = [];
+                                for(var a = 0; a < points; a++){
+                                    var temp = __globals.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
+                                    arcPath.push( temp );
+                                    var temp = __globals.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
+                                    arcPath.push( temp );
+                                }
+                                var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
+                                arcPath.push( temp );
+                                var outerArc = parts.basic.path(id=null, path=arcPath, 'Q', outerArcStyle);
+                                object.appendChild(outerArc);
                     
-                        //oscillator generator
-                            function makeOSC(
-                                context, connection, midiNumber,
-                                type, periodicWave, 
-                                gain, attack, release,
-                                detune, octave
-                            ){
-                                return new function(){
-                                    this.generator = context.createOscillator();
-                                        if(type == 'custom'){ 
-                                            this.generator.setPeriodicWave( 
-                                                // context.createPeriodicWave(new Float32Array(periodicWave.sin),new Float32Array(periodicWave.cos))
-                                                context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
-                                            ); 
-                                        }else{ this.generator.type = type; }
-                                        this.generator.frequency.setTargetAtTime(__globals.audio.midiNumber_frequency(midiNumber,octave), context.currentTime, 0);
-                                        this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
-                                        this.generator.start(0);
+                            //slot
+                                var slot = parts.basic.circle(null, 0, 0, r*1.1, 0, slotStyle);
+                                    object.appendChild(slot);
                     
-                                    this.gain = context.createGain();
-                                        this.generator.connect(this.gain);
-                                        this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                                        changeAudioParam(this.gain.gain, gain, attack.time, attack.curve, false);
-                                        this.gain.connect(connection);
+                            //handle
+                                var handle = parts.basic.circle(null, 0, 0, r, 0, handleStyle);
+                                    object.appendChild(handle);
                     
-                                    this.detune = function(target,time,curve){
-                                        changeAudioParam(this.generator.detune,target,time,curve);
-                                    };
-                                    this.changeVelocity = function(a){
-                                        changeAudioParam(this.gain.gain,a,attack.time,attack.curve);
-                                    };
-                                    this.stop = function(){
-                                        changeAudioParam(this.gain.gain,0,release.time,release.curve, false);
-                                        setTimeout(function(that){
-                                            that.gain.disconnect(); 
-                                            that.generator.stop(); 
-                                            that.generator.disconnect(); 
-                                            that.gain=null; 
-                                            that.generator=null; 
-                                        }, release.time*1000, this);
-                                    };
-                                };
-                            }
+                            //needle
+                                var needleWidth = r/5;
+                                var needleLength = r;
+                                var needle = parts.basic.rect('needle', 0, 0, needleLength, needleWidth, 0, needleStyle);
+                                    needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
+                                    needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
+                                    object.appendChild(needle);
+                    
                     
                         //methods
-                            this.perform = function(note){
-                                if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
-                                else if( !liveOscillators[note.num] ){ 
-                                    //create new tone
-                                    liveOscillators[note.num] = makeOSC(context, mainOut, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave); 
-                                }
-                                else if( note.velocity == 0 ){ 
-                                    //stop and destroy tone
-                                    liveOscillators[note.num].stop();
-                                    delete liveOscillators[note.num];
-                                }
-                                else{
-                                    //adjust tone
-                                    liveOscillators[note.num].changeVelocity(note.velocity);
+                            object.select = function(a=null, live=true, update=true){
+                                if(a==null){return this._selection;}
+                    
+                                a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
+                                a = (a<0 ? 0 : a);
+                    
+                                if(this._selection == a){/*nothings changed*/return;}
+                    
+                                this._selection = a;
+                                this._set( a/(this._data.optionCount-1) );
+                                if(update&&this.onchange){ this.onchange(a); }
+                                if(update&&!live&&this.onrelease){ this.onrelease(value); }
+                            };
+                            object._get = function(){ return this._value; };
+                            object._set = function(value){
+                                value = (value>1 ? 1 : value);
+                                value = (value<0 ? 0 : value);
+                    
+                                this._value = value;
+                                this.children['needle'].rotation(startAngle + maxAngle*value);
+                            };object._set(0);
+                      
+                    
+                        //callback
+                            object.onchange = function(){};
+                            object.onrelease = function(){};
+                    
+                        
+                        //mouse interaction
+                            object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
+                            object.onwheel = function(event){
+                                var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                                var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                    
+                                if(!object.onwheel.acc){object.onwheel.acc=0;}
+                                object.onwheel.acc += move/globalScale;
+                                if( Math.abs(object.onwheel.acc) >= 1 ){
+                                    this.select( this.select()-1*Math.sign(object.onwheel.acc) );
+                                    object.onwheel.acc = 0;
                                 }
                             };
-                            this.panic = function(){
-                                var OSCs = Object.keys(liveOscillators);
-                                for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+                            object.onmousedown = function(event){
+                                __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                                __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
+                                __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
+                    
+                                __globals.svgElement.tempRef = this;
+                                __globals.svgElement.tempRef._data.initialValue = this._get();
+                                __globals.svgElement.tempRef._data.initialY = event.y;
+                                __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
+                                __globals.svgElement.onmousemove = function(event){
+                                    var mux = __globals.svgElement.tempRef._data.mux;
+                                    var value = __globals.svgElement.tempRef._data.initialValue;
+                                    var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
+                                    var divider = __globals.utility.workspace.getGlobalScale(object);
+                    
+                                    __globals.svgElement.tempRef.select(
+                                        Math.round(
+                                            (__globals.svgElement.tempRef._data.optionCount-1)*(value - numerator/(divider*mux))
+                                        ) 
+                                    );
+                                };
+                                __globals.svgElement.onmouseup = function(){
+                                    this.tempRef.select(this.tempRef.select(),false);
+                                    this.tempRef = null;
+                                    
+                                    __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                                    __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+                    
+                                    __globals.svgElement.onmousemove_old = null;
+                                    __globals.svgElement.onmouseleave_old = null;
+                                    __globals.svgElement.onmouseup_old = null;
+                                };
+                                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                __globals.svgElement.onmousemove(event);
                             };
+                            
                     
-                        //functions
-                            function changeAudioParam(audioParam,target,time,curve,cancelScheduledValues=true){
-                                if(target==null){return audioParam.value;}
+                      return object;
+                    };
+                    this.rastorgrid = function(
+                        id='rastorgrid', 
+                        x, y, width, height,
+                        xcount, ycount,
+                        backingStyle = 'fill:rgba(200,200,200,1)',
+                        checkStyle = 'fill:rgba(150,150,150,1)',
+                        backingGlowStyle = 'fill:rgba(220,220,220,1)',
+                        checkGlowStyle = 'fill:rgba(220,220,220,1)',
+                    ){
+                        // elements
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, 0, backingStyle);
+                            object.appendChild(rect);
                     
-                                if(cancelScheduledValues){
-                                    audioParam.cancelScheduledValues(context.currentTime);
+                        for(var y = 0; y < ycount; y++){
+                            for(var x = 0; x < xcount; x++){
+                                var temp = parts.control.checkbox_rect(y+'_'+x, x*(width/xcount), y*(height/ycount), width/xcount, height/ycount, 0, checkStyle, backingStyle, checkGlowStyle, backingGlowStyle);
+                                object.appendChild(temp);
+                                temp.onchange = function(){ if(object.onchange){object.onchange(object.get());} };
+                            }
+                        }
+                    
+                    
+                        //methods
+                        object.box = function(x,y){ return object.children[y+'_'+x]; };
+                        object.get = function(){
+                            var outputArray = [];
+                    
+                            for(var y = 0; y < ycount; y++){
+                                var temp = [];
+                                for(var x = 0; x < xcount; x++){
+                                    temp.push(this.box(x,y).get());
                                 }
-                                
-                                switch(curve){
-                                    case 'linear': 
-                                        audioParam.linearRampToValueAtTime(target, context.currentTime+time);
-                                    break;
-                                    case 'exponential':
-                                        console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
-                                        if(target == 0){target = 1/10000;}
-                                        audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
-                                    break;
-                                    case 's':
-                                        var mux = target - audioParam.value;
-                                        var array = __globals.utility.math.curveGenerator.s(10);
-                                        for(var a = 0; a < array.length; a++){
-                                            array[a] = audioParam.value + array[a]*mux;
-                                        }
-                                        audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
-                                    break;
-                                    case 'instant': default:
-                                        audioParam.setTargetAtTime(target, context.currentTime, 0.001);
-                                    break;
+                                outputArray.push(temp);
+                            }
+                    
+                            return outputArray;
+                        };
+                        object.set = function(value, update=true){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(value[y][x],false);
                                 }
                             }
+                        };
+                        object.clear = function(){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(false,false);
+                                }
+                            }
+                        };
+                        object.light = function(x,y,state){
+                            object.box(x,y).light(state);
+                        };
+                    
+                    
+                        //callback
+                        object.onchange = function(){};
+                    
+                    
+                        return object;
                     };
+                    this.button_rect = function(
+                        id='button_rect',
+                        x, y, width, height, angle=0,
+                        upStyle = 'fill:rgba(200,200,200,1)',
+                        hoverStyle = 'fill:rgba(220,220,220,1)',
+                        downStyle = 'fill:rgba(180,180,180,1)',
+                        glowStyle = 'fill:rgba(220,200,220,1)',
+                    ){
+                    
+                        // elements 
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, upStyle);
+                            object.appendChild(rect);
+                    
+                        //interactivity
+                        rect.onmouseenter = function(){ __globals.utility.element.setStyle(this, hoverStyle); };
+                        rect.onmouseleave = function(){ __globals.utility.element.setStyle(this, upStyle);    };
+                        rect.onmousedown =  function(){ __globals.utility.element.setStyle(this, downStyle);  };
+                        rect.onmouseup =    function(){ this.onmouseleave();                          };
+                        rect.glow =         function(){ __globals.utility.element.setStyle(this, glowStyle) };
+                    
+                        //callbacks
+                        object.onmouseup =    function(){ /*console.log('mouseup');    */ };
+                        object.onmousedown =  function(){ /*console.log('mousedown');  */ };
+                        object.onmouseenter = function(){ /*console.log('mouseenter'); */ };
+                        object.onmouseleave = function(){ /*console.log('mouseleave'); */ };
+                        object.onmousemove =  function(){ /*console.log('mousemove');  */ };
+                        object.onclick =      function(){ /*console.log('click');      */ };
+                        object.ondblclick =   function(){ /*console.log('doubleclick');*/ };
+                    
+                        //methods
+                        object.click = function(glow=false){ 
+                            this.onclick(); this.onmousedown(); 
+                            if(glow){rect.glow();}
+                            else{rect.onmousedown();} 
+                            setTimeout(function(that){rect.onmouseup();that.onmouseup();},250,this);
+                        };
+                        object.hover = function(){ this.onmouseenter(); rect.onmouseenter(); };
+                        object.unhover = function(){this.onmouseleave(); rect.onmouseleave();};
+                    
+                        return object;
+                    };
+                    this.key_rect = function(
+                        id='key_rect',
+                        x, y, width, height, angle=0,
+                        style_off = 'fill:rgba(200,200,200,1)',
+                        style_press = 'fill:rgba(180,180,180,1)',
+                        style_glow = 'fill:rgba(220,200,220,1)',
+                        style_pressAndGlow = 'fill:rgba(200,190,200,1)'
+                    ){
+                    
+                        // elements 
+                        var object = parts.basic.g(id, x, y);
+                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, style_off);
+                            object.appendChild(rect);
+                    
+                        //state
+                        object.state = 0;
+                        object.activateState = function(state){
+                            // 0 - off
+                            // 1 - pressed
+                            // 2 - glowing
+                            // 3 - pressed and glowing
+                            switch(state){
+                                case 0: __globals.utility.element.setStyle(rect, style_off); break;
+                                case 1: __globals.utility.element.setStyle(rect, style_press); break;
+                                case 2: __globals.utility.element.setStyle(rect, style_glow); break;
+                                case 3: __globals.utility.element.setStyle(rect, style_pressAndGlow); break;
+                                default: /*console.error('Unknown state reached:', state);*/ return; break;
+                            }
+                            object.state = state;
+                        };
+                    
+                        //interactivity
+                        rect.onmousedown =  function(){ object.press();   };
+                        rect.onmouseup =    function(){ object.release(); };
+                        rect.onmouseleave = function(){ object.release(); };
+                        rect.onmouseenter = function(event){ if(event.buttons == 1){object.press();} };
+                    
+                        //callbacks
+                        object.onkeyup =    function(){ /*console.log('mouseup');    */ };
+                        object.onkeydown =  function(){ /*console.log('mousedown');  */ };
+                    
+                        //methods;
+                        object.press =   function(){
+                            if( this.state%2 != 0 ){return;} //key already pressed 
+                            this.activateState(this.state+1);
+                            if(this.onkeydown){this.onkeydown();}
+                        };
+                        object.release = function(){ 
+                            if( this.state%2 == 0 ){return;} //key not pressed 
+                            this.activateState(object.state-1); 
+                            if(this.onkeyup){this.onkeyup();}
+                        };
+                        object.glow = function(){ this.activateState(this.state+2); };
+                        object.dim  = function(){ this.activateState(this.state-2); };
+                    
+                        return object;
+                    };
+                    this.checkbox_rect = function(
+                        id='checkbox_rect',
+                        x, y, width, height, angle=0,
+                        checkStyle = 'fill:rgba(150,150,150,1)',
+                        backingStyle = 'fill:rgba(200,200,200,1)',
+                        checkGlowStyle = 'fill:rgba(220,220,220,1)',
+                        backingGlowStyle = 'fill:rgba(220,220,220,1)',
+                    ){
+                        // elements 
+                        var object = parts.basic.g(id, x, y);
+                            object._checked = false;
+                            object.styles = {
+                                'check':checkStyle,
+                                'uncheck':'fill:rgba(0,0,0,0)',
+                                'backing':backingStyle
+                            };
+                    
+                        var rect = parts.basic.rect(null, 0, 0, width, height, angle, backingStyle);
+                            object.appendChild(rect);
+                        var checkrect = parts.basic.rect(null, width*0.1, height*0.1, width*0.8, height*0.8, angle, object.styles.uncheck);
+                            object.appendChild(checkrect);
+                    
+                    
+                        function updateGraphics(){
+                            if(object._checked){ __globals.utility.element.setStyle(checkrect,object.styles.check); }
+                            else{ __globals.utility.element.setStyle(checkrect,object.styles.uncheck); }
+                            __globals.utility.element.setStyle(rect,object.styles.backing);
+                        }
+                    
+                        //methods
+                        object.get = function(){ return object._checked; };
+                        object.set = function(value, update=true){
+                            object._checked = value;
+                            
+                            updateGraphics();
+                    
+                            if(update&&this.onchange){ this.onchange(value); }
+                        };
+                        object.light = function(state){
+                            if(state){
+                                object.styles.check = checkGlowStyle;
+                                object.styles.backing = backingGlowStyle;
+                            }else{
+                                object.styles.check = checkStyle;
+                                object.styles.backing = backingStyle;
+                            }
+                            updateGraphics();
+                        };
+                    
+                    
+                        //callback
+                        object.onchange = function(){};
+                    
+                    
+                        //mouse interaction
+                        object.onclick = function(event){
+                            object.set(!object.get());
+                        };
+                    
+                    
+                        return object;
+                    };
+                }
+                this.audio = new function(){
                     this.synthesizer2 = function(
                         context,
                         waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
@@ -5081,6 +4874,214 @@
                                 flow.wobbler_detune.stop();
                                 flow.wobbler_detune.start();
                             };
+                    };
+                    this.audio2percentage = function(){
+                        return new function(){
+                            var analyser = {
+                                timeDomainDataArray: null,
+                                frequencyData: null,
+                                refreshRate: 30,
+                                refreshInterval: null,
+                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                resolution: 128
+                            };
+                            analyser.analyserNode = __globals.audio.context.createAnalyser();
+                            analyser.analyserNode.fftSize = analyser.resolution;
+                            analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
+                            analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
+                    
+                            this.__render = function(){
+                                    analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
+                    
+                                    var numbers = [];
+                                    for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
+                                        numbers.push(
+                                            analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
+                                        );
+                                    }
+                    
+                                    var val = 0;
+                                    numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
+                    
+                                    this.newValue(val);
+                            }
+                    
+                            //audio connections
+                                this.audioIn = function(){return analyser.analyserNode;};
+                    
+                            //methods
+                                this.start = function(){
+                                    analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
+                                };
+                                this.stop = function(){
+                                    clearInterval(analyser.refreshInterval);
+                                };
+                    
+                            //callbacks
+                                this.newValue = function(a){};
+                        };
+                    };
+                    this.synthesizer_1 = function(
+                        context,
+                        waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
+                        gain=1, 
+                        attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+                        detune=0, octave=0
+                    ){
+                        //components
+                            var mainOut = context.createGain();
+                                mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
+                    
+                        //live oscillators
+                            var liveOscillators = {};
+                    
+                        //options
+                            this.waveType = function(a){if(a==null){return waveType;}waveType=a;};
+                            this.periodicWave = function(a){if(a==null){return periodicWave;}periodicWave=a;};
+                            this.gain = function(target,time,curve){
+                                return changeAudioParam(mainOut.gain,target,time,curve);
+                            };
+                            this.attack = function(time,curve){
+                                if(time==null&&curve==null){return attack;}
+                                attack.time = time ? time : attack.time;
+                                attack.curve = curve ? curve : attack.curve;
+                            };
+                            this.release = function(time,curve){
+                                if(time==null&&curve==null){return release;}
+                                release.time = time ? time : release.time;
+                                release.curve = curve ? curve : release.curve;
+                            };
+                            this.octave = function(a){if(a==null){return octave;}octave=a;};
+                            this.detune = function(target,time,curve){
+                                if(a==null){return detune;}
+                    
+                                //change stored value for any new oscillators that are made
+                                    var start = detune;
+                                    var mux = target-start;
+                                    var stepsPerSecond = Math.round(Math.abs(mux));
+                                    var totalSteps = stepsPerSecond*time;
+                    
+                                    var steps = [1];
+                                    switch(curve){
+                                        case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                                        case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                                        case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps,8); break;
+                                        case 'instant': default: break;
+                                    }
+                                    
+                                    if(steps.length != 0){
+                                        var interval = setInterval(function(){
+                                            detune = start+(steps.shift()*mux);
+                                            if(steps.length == 0){clearInterval(interval);}
+                                        },1000/stepsPerSecond);
+                                    }
+                    
+                                //instruct liveOscillators to adjust their values
+                                    var OSCs = Object.keys(liveOscillators);
+                                    for(var b = 0; b < OSCs.length; b++){ 
+                                        liveOscillators[OSCs[b]].detune(target,time,curve);
+                                    }
+                            };
+                    
+                        //output node
+                            this.out = function(){return mainOut;}
+                    
+                        //oscillator generator
+                            function makeOSC(
+                                context, connection, midiNumber,
+                                type, periodicWave, 
+                                gain, attack, release,
+                                detune, octave
+                            ){
+                                return new function(){
+                                    this.generator = context.createOscillator();
+                                        if(type == 'custom'){ 
+                                            this.generator.setPeriodicWave( 
+                                                // context.createPeriodicWave(new Float32Array(periodicWave.sin),new Float32Array(periodicWave.cos))
+                                                context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                                            ); 
+                                        }else{ this.generator.type = type; }
+                                        this.generator.frequency.setTargetAtTime(__globals.audio.midiNumber_frequency(midiNumber,octave), context.currentTime, 0);
+                                        this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                                        this.generator.start(0);
+                    
+                                    this.gain = context.createGain();
+                                        this.generator.connect(this.gain);
+                                        this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                                        changeAudioParam(this.gain.gain, gain, attack.time, attack.curve, false);
+                                        this.gain.connect(connection);
+                    
+                                    this.detune = function(target,time,curve){
+                                        changeAudioParam(this.generator.detune,target,time,curve);
+                                    };
+                                    this.changeVelocity = function(a){
+                                        changeAudioParam(this.gain.gain,a,attack.time,attack.curve);
+                                    };
+                                    this.stop = function(){
+                                        changeAudioParam(this.gain.gain,0,release.time,release.curve, false);
+                                        setTimeout(function(that){
+                                            that.gain.disconnect(); 
+                                            that.generator.stop(); 
+                                            that.generator.disconnect(); 
+                                            that.gain=null; 
+                                            that.generator=null; 
+                                        }, release.time*1000, this);
+                                    };
+                                };
+                            }
+                    
+                        //methods
+                            this.perform = function(note){
+                                if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
+                                else if( !liveOscillators[note.num] ){ 
+                                    //create new tone
+                                    liveOscillators[note.num] = makeOSC(context, mainOut, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave); 
+                                }
+                                else if( note.velocity == 0 ){ 
+                                    //stop and destroy tone
+                                    liveOscillators[note.num].stop();
+                                    delete liveOscillators[note.num];
+                                }
+                                else{
+                                    //adjust tone
+                                    liveOscillators[note.num].changeVelocity(note.velocity);
+                                }
+                            };
+                            this.panic = function(){
+                                var OSCs = Object.keys(liveOscillators);
+                                for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+                            };
+                    
+                        //functions
+                            function changeAudioParam(audioParam,target,time,curve,cancelScheduledValues=true){
+                                if(target==null){return audioParam.value;}
+                    
+                                if(cancelScheduledValues){
+                                    audioParam.cancelScheduledValues(context.currentTime);
+                                }
+                                
+                                switch(curve){
+                                    case 'linear': 
+                                        audioParam.linearRampToValueAtTime(target, context.currentTime+time);
+                                    break;
+                                    case 'exponential':
+                                        console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
+                                        if(target == 0){target = 1/10000;}
+                                        audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
+                                    break;
+                                    case 's':
+                                        var mux = target - audioParam.value;
+                                        var array = __globals.utility.math.curveGenerator.s(10);
+                                        for(var a = 0; a < array.length; a++){
+                                            array[a] = audioParam.value + array[a]*mux;
+                                        }
+                                        audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
+                                    break;
+                                    case 'instant': default:
+                                        audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                                    break;
+                                }
+                            }
                     };
                 }
                 this.dynamic = new function(){
@@ -5488,136 +5489,6 @@
                         design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_1.in() );
                         design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_2.in() );
                     
-                    return obj;
-                };
-                this.audio_scope = function(x,y){
-                    var attributes = {
-                        framerateLimits: {min:1, max:30}
-                    };
-                    var style = {
-                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
-                        text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;'
-                    };
-                    var design = {
-                        type:'audio_scope',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'input', data:{
-                                type:0, x:195, y:5, width:10, height:20
-                            }},
-                            {type:'path', name:'backing', data:{
-                                path:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
-                                style:style.background
-                            }},
-                
-                            {type:'grapher_audioScope', name:'waveport', data:{
-                                x:5, y:5, width:150, height:100
-                            }},
-                            {type:'key_rect', name:'holdKey', data:{
-                                x:160, y:5, width:30, height:20,
-                                style:{
-                                    off:'fill:rgba(175,175,175,1)', press:'fill:rgba(220,220,220,1)', pressAndGlow:'fill:rgba(150,150,150,1)'
-                                },
-                                onkeydown:function(){design.grapher_audioScope.waveport.stop();},
-                                onkeyup:function(){design.grapher_audioScope.waveport.start();},
-                            }},
-                
-                            {type:'text', name:'framerate_name', data:{x: 155+6.5, y: 30+40, text: 'framerate', style: style.text}},
-                            {type:'text', name:'framerate_1',    data:{x: 155+4,   y: 30+34, text: '1',         style: style.text}},
-                            {type:'text', name:'framerate_15',   data:{x: 155+17,  y: 30+2,  text: '15',        style: style.text}},
-                            {type:'text', name:'framerate_30',   data:{x: 155+33,  y: 30+34, text: '30',        style: style.text}},
-                            {type:'dial_continuous', name:'framerate', data:{
-                                x:175, y:50, r:12,
-                                style:{
-                                    handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',
-                                    needle:'fill:rgba(250,150,250,1)', outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
-                                },
-                                onchange:function(a){
-                                    design.grapher_audioScope.waveport.refreshRate(
-                                        attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a)
-                                    );
-                                }
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_scope,design);
-                    
-                    //circuitry
-                        design.connectionNode_audio.input.out().connect(design.grapher_audioScope.waveport.getNode());
-                
-                    //setup
-                        design.grapher_audioScope.waveport.start();
-                        design.dial_continuous.framerate.set(1);
-                
-                    return obj;
-                };
-                this.audio_sink = function(x,y){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        level:{
-                            backing:'fill:rgb(10,10,10)', 
-                            levels:['fill:rgb(250,250,250);','fill:rgb(200,200,200);'],
-                            marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                        },
-                    };
-                    var design = {
-                        type:'audio_sink',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'right', data:{
-                                type:0, x:90, y:5, width:20, height:20
-                            }},
-                            {type:'connectionNode_audio', name:'left', data:{
-                                type:0, x:90, y:30, width:20, height:20
-                            }},
-                            {type:'audio_meter_level', name:'right', data:{
-                                x:10, y:5, width:5, height:45, 
-                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
-                            }},
-                            {type:'audio_meter_level', name:'left', data:{
-                                x:5, y:5, width:5, height:45,
-                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
-                            }},
-                        ],
-                    };
-                 
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_sink,design);
-                
-                    //circuitry
-                        var flow = {
-                            destination:null,
-                            pan_left:null, pan_right:null,
-                        };
-                        //destination
-                            flow._destination = __globals.audio.context.destination;
-                        //pan left/right
-                            flow.pan_left = __globals.audio.context.createStereoPanner();
-                                flow.pan_left.pan.setValueAtTime(1, __globals.audio.context.currentTime);
-                                flow.pan_left.connect(flow._destination);
-                            flow.pan_right = __globals.audio.context.createStereoPanner();
-                                flow.pan_right.pan.setValueAtTime(-1, __globals.audio.context.currentTime);
-                                flow.pan_right.connect(flow._destination);
-                        //audio connections
-                            //inputs to meters
-                                design.connectionNode_audio.left.out().connect(design.audio_meter_level.left.audioIn());
-                                design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
-                            //inputs to panning nodes
-                                design.connectionNode_audio.left.out().connect(flow.pan_left);
-                                design.connectionNode_audio.right.out().connect(flow.pan_right);
-                            //panning nodes to output 
-                                design.audio_meter_level.left.start();
-                                design.audio_meter_level.right.start();
-                
                     return obj;
                 };
                 this.basicSynthesizer = function(x,y){
@@ -6132,6 +6003,135 @@
                 
                     return obj;
                 }
+                this.audio_sink = function(x,y){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        level:{
+                            backing:'fill:rgb(10,10,10)', 
+                            levels:['fill:rgb(250,250,250);','fill:rgb(200,200,200);'],
+                            marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                        },
+                    };
+                    var design = {
+                        type:'audio_sink',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'right', data:{
+                                type:0, x:90, y:5, width:20, height:20
+                            }},
+                            {type:'connectionNode_audio', name:'left', data:{
+                                type:0, x:90, y:30, width:20, height:20
+                            }},
+                            {type:'audio_meter_level', name:'right', data:{
+                                x:10, y:5, width:5, height:45, 
+                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            }},
+                            {type:'audio_meter_level', name:'left', data:{
+                                x:5, y:5, width:5, height:45,
+                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            }},
+                        ],
+                    };
+                 
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_sink,design);
+                
+                    //circuitry
+                        var flow = {
+                            destination:null,
+                            stereoCombiner: null,
+                            pan_left:null, pan_right:null,
+                        };
+                        //destination
+                            flow._destination = __globals.audio.context.destination;
+                        //stereo channel combiner
+                            flow.stereoCombiner = new ChannelMergerNode(__globals.audio.context, {numberOfInputs:2});
+                
+                        //audio connections
+                            //inputs to meters
+                                design.connectionNode_audio.left.out().connect( design.audio_meter_level.left.audioIn() );
+                                design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
+                            //inputs to stereo combiner
+                                design.connectionNode_audio.left.out().connect(flow.stereoCombiner, 0, 0);
+                                design.connectionNode_audio.right.out().connect(flow.stereoCombiner, 0, 1);
+                            //stereo combiner to main output
+                                flow.stereoCombiner.connect(flow._destination);
+                
+                            //start audio meters
+                                design.audio_meter_level.left.start();
+                                design.audio_meter_level.right.start();
+                    return obj;
+                };
+                this.audio_scope = function(x,y){
+                    var attributes = {
+                        framerateLimits: {min:1, max:30}
+                    };
+                    var style = {
+                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+                        text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;'
+                    };
+                    var design = {
+                        type:'audio_scope',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'input', data:{
+                                type:0, x:195, y:5, width:10, height:20
+                            }},
+                            {type:'path', name:'backing', data:{
+                                path:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
+                                style:style.background
+                            }},
+                
+                            {type:'grapher_audioScope', name:'waveport', data:{
+                                x:5, y:5, width:150, height:100
+                            }},
+                            {type:'key_rect', name:'holdKey', data:{
+                                x:160, y:5, width:30, height:20,
+                                style:{
+                                    off:'fill:rgba(175,175,175,1)', press:'fill:rgba(220,220,220,1)', pressAndGlow:'fill:rgba(150,150,150,1)'
+                                },
+                                onkeydown:function(){design.grapher_audioScope.waveport.stop();},
+                                onkeyup:function(){design.grapher_audioScope.waveport.start();},
+                            }},
+                
+                            {type:'text', name:'framerate_name', data:{x: 155+6.5, y: 30+40, text: 'framerate', style: style.text}},
+                            {type:'text', name:'framerate_1',    data:{x: 155+4,   y: 30+34, text: '1',         style: style.text}},
+                            {type:'text', name:'framerate_15',   data:{x: 155+17,  y: 30+2,  text: '15',        style: style.text}},
+                            {type:'text', name:'framerate_30',   data:{x: 155+33,  y: 30+34, text: '30',        style: style.text}},
+                            {type:'dial_continuous', name:'framerate', data:{
+                                x:175, y:50, r:12,
+                                style:{
+                                    handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',
+                                    needle:'fill:rgba(250,150,250,1)', outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'
+                                },
+                                onchange:function(a){
+                                    design.grapher_audioScope.waveport.refreshRate(
+                                        attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a)
+                                    );
+                                }
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_scope,design);
+                    
+                    //circuitry
+                        design.connectionNode_audio.input.out().connect(design.grapher_audioScope.waveport.getNode());
+                
+                    //setup
+                        design.grapher_audioScope.waveport.start();
+                        design.dial_continuous.framerate.set(0);
+                
+                    return obj;
+                };
             };
             __globals.audio.context.resume().then(function(){
                 __globals.panes.menu.innerHTML = '';
@@ -6176,6 +6176,495 @@
                     }));
             },1);
             
+            parts.audio.recorder2 = function(context){
+            
+                //state
+                    var state = {
+                        recordedChunks: [],
+                        recordingStartTime: -1,
+                        recordingLength: 0,
+                    };
+            
+                //flow
+                    //flow chain
+                        var flow = {
+                            leftIn:{}, rightIn:{},
+                            recordingNode:{},
+                            leftOut:{}, rightOut:{},
+                        };
+            
+                    //leftIn
+                        flow.leftIn.node = context.createAnalyser();
+                    //rightIn
+                        flow.rightIn.node = context.createAnalyser();
+            
+                    //recordingNode
+                        flow.recordingNode.audioDest = new MediaStreamAudioDestinationNode(context);
+                        flow.recordingNode.node = new MediaRecorder(flow.recordingNode.audioDest.stream, {mimeType : 'audio/webm'});
+            
+                        flow.recordingNode.node.onstart = function(){};
+                        flow.recordingNode.node.ondataavailable = function(e){
+                            state.recordedChunks.push(e.data);
+                        };
+                        flow.recordingNode.node.onpause = function(){};
+                        flow.recordingNode.node.onresume = function(){};
+                        flow.recordingNode.node.onerror = function(error){console.log(error);};
+                        flow.recordingNode.node.onstop = function(){};
+            
+                        flow.leftIn.node.connect(flow.recordingNode.audioDest);
+                        flow.rightIn.node.connect(flow.recordingNode.audioDest);
+            
+                    //leftOut
+                        flow.leftOut.node = context.createAnalyser();
+                        flow.leftIn.node.connect(flow.leftOut.node);
+                    //rightIn
+                        flow.rightOut.node = context.createAnalyser();
+                        flow.rightIn.node.connect(flow.rightOut.node);
+            
+            
+                //internal functions
+                    function getRecordingLength(){
+                        switch(flow.recordingNode.node.state){
+                            case 'inactive': case 'paused':
+                                return state.recordingLength;
+                            break;
+                            case 'recording':
+                                return context.currentTime - state.recordingStartTime;
+                            break;
+                        }            
+                    }
+            
+                //controls
+                    this.clear =  function(){
+                        this.stop();
+                        state.recordedChunks = [];
+                        state.recordingStartTime = -1;
+                        state.recordingLength = 0;
+                    };
+                    this.start =  function(){
+                        this.clear();
+                        flow.recordingNode.node.start();
+                        state.recordingStartTime = context.currentTime;
+                    };
+                    this.pause =  function(){
+                        if(this.state() == 'inactive'){return;}
+                        state.recordingLength = getRecordingLength();
+                        flow.recordingNode.node.pause();
+                    };
+                    this.resume = function(){
+                        flow.recordingNode.node.resume();
+                        state.recordingStartTime = context.currentTime - state.recordingLength;
+                    };
+                    this.stop =   function(){
+                        if(this.state() == 'inactive'){return;}
+                        state.recordingLength = getRecordingLength();
+                        flow.recordingNode.node.stop();
+                    };
+                    this.export = function(){
+                        return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' });
+                    };
+                    this.save = function(filename='output'){
+                        var a = document.createElement('a');
+                        a.href = URL.createObjectURL(this.export());
+                        a.download = filename+'.ogg';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    };
+            
+                    this.state = function(){return flow.recordingNode.node.state;};
+                    this.recordingTime = function(){
+                        return getRecordingLength();
+                    };
+                    this.getTrack = function(){return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' }); };
+            
+                //io
+                    this.in_left  =  function(){return flow.leftIn.node;};
+                    this.in_right =  function(){return flow.rightIn.node;};
+                    this.out_left  = function(){return flow.leftOut.node;};
+                    this.out_right = function(){return flow.rightOut.node;};
+            };
+            parts.audio.recorder1 = function(context){
+            
+                //state
+                    var state = {
+                        recordedChunks: [],
+                    };
+            
+                //flow
+                    //flow chain
+                    var flow = {
+                        leftIn:{}, rightIn:{},
+                        recordingNode:{},
+                        leftOut:{}, rightOut:{},
+                    };
+            
+                    //leftIn
+                        flow.leftIn.node = __globals.audio.context.createStereoPanner();
+                        flow.leftIn.node.pan.setTargetAtTime(1, __globals.audio.context.currentTime, 0);
+                    //rightIn
+                        flow.rightIn.node = __globals.audio.context.createStereoPanner();
+                        flow.rightIn.node.pan.setTargetAtTime(-1, __globals.audio.context.currentTime, 0);
+            
+                    //recordingNode
+                        flow.recordingNode.audioDest = new MediaStreamAudioDestinationNode(context);
+                        flow.recordingNode.node = new MediaRecorder(flow.recordingNode.audioDest.stream);
+            
+                        flow.recordingNode.node.onstart = function(){
+                            console.log("recorder started");
+            
+                        };
+                        flow.recordingNode.node.ondataavailable = function(e){
+                            console.log(e);
+                            state.recordedChunks.push(e.data);
+                        };
+                        flow.recordingNode.node.onstop = function(){
+                            console.log("recorder stopped");
+                            var blob = new Blob(state.recordedChunks, { 'type' : 'audio/ogg; codecs=opus' });
+                            var a = document.createElement('a');
+                            var file = new Blob([data]);
+                            a.href = URL.createObjectURL(blob);
+                            a.download = 'output.ogg';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                        };
+            
+                        flow.leftIn.node.connect(flow.recordingNode.audioDest);
+                        flow.rightIn.node.connect(flow.recordingNode.audioDest);
+            
+                    //leftOut
+                        flow.leftOut.gain = 1;
+                        flow.leftOut.node = context.createGain();
+                        flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                    //rightOut
+                        flow.rightOut.gain = 1;
+                        flow.rightOut.node = context.createGain();
+                        flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+            
+                        flow.leftIn.node.connect(flow.leftOut.node);
+                        flow.rightIn.node.connect(flow.rightOut.node);
+            
+                //internal functions
+                //controls
+                    this.start = function(){
+                        flow.recordingNode.node.start();
+                    };
+                    this.stop = function(){
+                        flow.recordingNode.node.stop();
+                    };
+                    this.save = function(){
+            
+                    };
+                //info
+                //io
+                    this.in_left  =  function(){return flow.leftIn.node;};
+                    this.in_right =  function(){return flow.rightIn.node;};
+                    this.out_left  = function(){return flow.leftOut.node;};
+                    this.out_right = function(){return flow.rightOut.node;};
+            };
+            objects.testObject_recorder1 = function(x,y,debug=false){
+                var style = {
+                    background:'fill:rgba(200,200,200,1)',
+                };
+                var design = {
+                    type: 'testObject_recorder',
+                    x: x, y: y,
+                    base: {
+                        points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
+                        style:style.background
+                    },
+                    elements:[
+                        {type:'connectionNode_audio', name:'inRight',  data: {type: 0, x: 220, y: 5, width: 10, height: 20}},
+                        {type:'connectionNode_audio', name:'inLeft',   data: {type: 0, x: 220, y: 27.5, width: 10, height: 20}},
+                        {type:'connectionNode_audio', name:'outRight', data: {type: 1, x: -10, y: 5, width: 10, height: 20}},
+                        {type:'connectionNode_audio', name:'outLeft',  data: {type: 1, x: -10, y: 27.5, width: 10, height: 20}},
+            
+                        {type:'button_rect', name:'rec', data: {
+                            x:5, y: 5, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){ obj.recorder.start(); }
+                        }},
+                        {type:'button_rect', name:'stop', data: {
+                            x:30, y: 5, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){ obj.recorder.stop(); }
+                        }},
+            
+                    ]
+                };
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(objects.testObject_recorder1,design);
+            
+                //circuitry
+                    //audio recorder
+                    obj.recorder = new parts.audio.recorder1(__globals.audio.context);
+                    design.connectionNode_audio.inRight.out().connect( obj.recorder.in_right() );
+                    design.connectionNode_audio.inLeft.out().connect( obj.recorder.in_left() );
+                    obj.recorder.out_right().connect( design.connectionNode_audio.outRight.in() );
+                    obj.recorder.out_left().connect( design.connectionNode_audio.outLeft.in() );
+            
+                return obj;
+            };
+            objects.testObject_recorder2 = function(x,y,debug=false){
+                var style = {
+                    background:'fill:rgba(200,200,200,1)',
+                    text:'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;'
+                };
+                var design = {
+                    type: 'testObject_recorder',
+                    x: x, y: y,
+                    base: {
+                        points:[{x:0,y:0},{x:220,y:0},{x:220,y:220},{x:0,y:220}], 
+                        style:style.background
+                    },
+                    elements:[
+                        {type:'connectionNode_audio', name:'inRight',  data: {type: 0, x: 220, y: 5, width: 10, height: 20}},
+                        {type:'connectionNode_audio', name:'inLeft',   data: {type: 0, x: 220, y: 27.5, width: 10, height: 20}},
+                        {type:'connectionNode_audio', name:'outRight', data: {type: 1, x: -10, y: 5, width: 10, height: 20}},
+                        {type:'connectionNode_audio', name:'outLeft',  data: {type: 1, x: -10, y: 27.5, width: 10, height: 20}},
+            
+                        {type:'button_rect', name:'rec', data: {
+                            x:5, y: 5, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){ obj.recorder.start(); }
+                        }},
+                        {type:'text', name:'text_rec', data:{x: 30, y: 17.5, text: 'rec', style: style.text}},
+            
+                        {type:'button_rect', name:'stop', data: {
+                            x:5, y: 30, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){ obj.recorder.stop(); }
+                        }},
+                        {type:'text', name:'text_stop', data:{x: 30, y: 42.5, text: 'stop', style: style.text}},
+            
+                        {type:'button_rect', name:'save', data: {
+                            x:5, y: 55, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){ obj.recorder.save(); }
+                        }},
+                        {type:'text', name:'text_save', data:{x: 30, y: 67.5, text: 'save', style: style.text}},
+            
+                        {type:'button_rect', name:'clear', data: {
+                            x:5, y: 80, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){ obj.recorder.clear(); }
+                        }},
+                        {type:'text', name:'text_clear', data:{x: 30, y: 92.5, text: 'clear', style: style.text}},
+            
+                        {type:'button_rect', name:'pause', data: {
+                            x:5, y: 105, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){ obj.recorder.pause(); }
+                        }},
+                        {type:'text', name:'text_pause', data:{x: 30, y: 117.5, text: 'pause', style: style.text}},
+            
+                        {type:'button_rect', name:'resume', data: {
+                            x:5, y: 130, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){ obj.recorder.resume(); }
+                        }},
+                        {type:'text', name:'text_resume', data:{x: 30, y: 142.5, text: 'resume', style: style.text}},
+                    ]
+                };
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(objects.testObject_recorder2,design);
+            
+                //circuitry
+                    //audio recorder
+                    obj.recorder = new parts.audio.recorder2(__globals.audio.context);
+                    design.connectionNode_audio.inRight.out().connect( obj.recorder.in_right() );
+                    design.connectionNode_audio.inLeft.out().connect( obj.recorder.in_left() );
+                    obj.recorder.out_right().connect( design.connectionNode_audio.outRight.in() );
+                    obj.recorder.out_left().connect( design.connectionNode_audio.outLeft.in() );
+            
+                    // //costant readout
+                    // setInterval(function(){
+                    //     console.log( obj.recorder.state() );
+                    //     console.log( obj.recorder.recordingTime() );
+                    //     console.log( obj.recorder.getTrack() );
+                    //     console.log('');
+                    // },500);
+            
+                return obj;
+            };
+            objects.testObject_recorder3 = function(x,y,debug=false){
+                var style = {
+                    background:'fill:rgba(200,200,200,1)',
+                    text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;',
+                    buttonText:'fill:rgba(100,100,100,1); font-size:5px; font-family:Courier New; pointer-events: none;',
+                    logoText:'fill:rgba(100,100,100,1); font-size:8px; font-family:Bookman; pointer-events: none;',
+                };
+                var design = {
+                    type: 'testObject_recorder',
+                    x: x, y: y,
+                    base: {
+                        points:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], 
+                        style:style.background
+                    },
+                    elements:[
+                        {type:'connectionNode_audio', name:'inRight',  data: {type: 0, x: 175, y: 2.5, width: 10, height: 15}},
+                        {type:'connectionNode_audio', name:'inLeft',   data: {type: 0, x: 175, y: 22.5, width: 10, height: 15}},
+            
+            
+                        //logo label
+                            {type:'rect', name:'logo_rect', data:{x:135, y:27.5, angle:-0.25, width:35, height:10, style:'fill:rgb(230,230,230)'}},
+                            {type:'label', name:'logo_label', data:{x:139, y:34.5, angle:-0.25, text:'REcorder', style:style.logoText}},
+            
+                        //rec
+                            {type:'button_rect', name:'rec', data: {
+                                x:5, y: 25, width:20, height:10,
+                                style:{
+                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                                },
+                                onclick: function(){
+                                    if(state == 'paused'){obj.recorder.resume();}
+                                    else{obj.recorder.start();}
+                                    updateLights('rec');
+                                }
+                            }},
+                            {type:'text', name:'button_rect_text', data:{x:10.5, y:31.5, text:'rec', angle:0, style:style.buttonText}},
+                        //pause/resume
+                            {type:'button_rect', name:'pause/resume', data: {
+                                x:27.5, y: 25, width:20, height:10,
+                                style:{
+                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                                },
+                                onclick: function(){
+                                    if(state == 'paused'){obj.recorder.resume();}
+                                    else{obj.recorder.pause();}
+                                    updateLights('pause/resume');
+                                }
+                            }},
+                            {type:'text', name:'button_pause/resume_text', data:{x:30, y:31.5, text:'pause', angle:0, style:style.buttonText}},
+                        //stop
+                            {type:'button_rect', name:'stop', data: {
+                                x:50, y: 25, width:20, height:10,
+                                style:{
+                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                                },
+                                onclick: function(){updateLights('stop');obj.recorder.stop();}
+                            }},
+                            {type:'text', name:'button_stop_text', data:{x:54, y:31.5, text:'stop', angle:0, style:style.buttonText}},
+                        //save
+                            {type:'button_rect', name:'save', data: {
+                                x:72.5, y: 25, width:20, height:10,
+                                style:{
+                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                                },
+                                onclick: function(){
+                                    updateLights('save');
+                                    if(state != 'empty'){ obj.recorder.save(); }
+                                }
+                            }},
+                            {type:'text', name:'button_save_text', data:{x:76.5, y:31.5, text:'save', angle:0, style:style.buttonText}},
+                        //clear
+                            {type:'button_rect', name:'clear', data: {
+                                x:95, y: 25, width:20, height:10,
+                                style:{
+                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                                },
+                                onclick: function(){updateLights('clear');obj.recorder.clear();}
+                            }},
+                            {type:'text', name:'button_clear_text', data:{x:97.5, y:31.5, text:'clear', angle:0, style:style.buttonText}},
+            
+                        //time readout
+                            {type:'readout_sixteenSegmentDisplay', name:'time', data:{
+                                x: 70, y: 5, angle:0, width:100, height:15, count:11, 
+                                style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
+                            }},
+            
+                        //activity lights
+                            //recording
+                                {type:'glowbox_rect', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:'fill:rgb(255, 63, 63)', dim:'fill:rgb(25, 6, 6)'}}},
+                                {type:'text', name:'activityLight_recording_text', data:{x:8, y:14, text:'rec', angle:0, style:style.text}},
+                            //paused
+                                {type:'glowbox_rect', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:'fill:rgb(126, 186, 247)', dim:'fill:rgb(12, 18, 24)'}}},
+                                {type:'text', name:'activityLight_paused_text', data:{x:23, y:14, text:'pau', angle:0, style:style.text}},
+                            //empty
+                                {type:'glowbox_rect', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:'fill:rgb(199, 249, 244)', dim:'fill:rgb(19, 24, 24)'}}},
+                                {type:'text', name:'activityLight_empty_text', data:{x:38, y:14, text:'emp', angle:0, style:style.text}},
+                            //ready to save
+                                {type:'glowbox_rect', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:'fill:rgb(61, 224, 35)', dim:'fill:rgb(6, 22, 3)'}}},
+                                {type:'text', name:'activityLight_full_text', data:{x:53, y:14, text:'ful', angle:0, style:style.text}},
+                    ]
+                };
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(objects.testObject_recorder3,design);
+            
+                //circuitry
+                    //update functions
+                        //time readout
+                            setInterval(function(){
+                                var time = obj.recorder.recordingTime();
+                                var decimalValues = time % 1;
+                                time = __globals.utility.math.seconds2time( Math.round(time) );
+            
+                                design.readout_sixteenSegmentDisplay.time.text(
+                                    __globals.utility.math.padString(time.h,2,'0')+':'+
+                                    __globals.utility.math.padString(time.m,2,'0')+':'+
+                                    __globals.utility.math.padString(time.s,2,'0')+'.'+
+                                    __globals.utility.math.padString((''+decimalValues).slice(2),2,'0')
+                                );
+                                design.readout_sixteenSegmentDisplay.time.print();
+                            },100);
+                        //lights
+                            var state = 'empty'; //empty - recording - paused - full
+                            function updateLights(action){
+                                if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
+                                if( action == 'stop' || action == 'save' ){ state = 'full'; }
+                                if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
+                                if( action == 'clear' ){ state = 'empty'; }
+                                if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
+                                else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
+            
+                                if(state == 'empty'){design.glowbox_rect.activityLight_empty.on();}else{design.glowbox_rect.activityLight_empty.off();}
+                                if(state == 'recording'){design.glowbox_rect.activityLight_recording.on();}else{design.glowbox_rect.activityLight_recording.off();}
+                                if(state == 'paused'){design.glowbox_rect.activityLight_paused.on();}else{design.glowbox_rect.activityLight_paused.off();}
+                                if(state == 'full'){design.glowbox_rect.activityLight_full.on();}else{design.glowbox_rect.activityLight_full.off();}
+                            }
+                            updateLights('clear');
+                            design.glowbox_rect.activityLight_empty.on();
+            
+                    //audio recorder
+                    obj.recorder = new parts.audio.recorder2(__globals.audio.context);
+                    design.connectionNode_audio.inRight.out().connect( obj.recorder.in_right() );
+                    design.connectionNode_audio.inLeft.out().connect( obj.recorder.in_left() );
+            
+                return obj;
+            };
             parts.audio.audioFilePlayer_looper = function(context){
                 //state
                     var state = {
@@ -6606,6 +7095,7 @@
                             }
                         }
             
+                        console.log(state.loop);
                         playheadCompute();
                     };
                     this.rate = function(value=1){
@@ -6631,121 +7121,6 @@
                         if(data==undefined || !state.fileLoaded){return [];}
                         return __globals.utility.audio.waveformSegment(flow.track.buffer, data);
                     };
-            };
-            objects.testObject_looper = function(x,y,debug=false){
-                var style = {
-                    background:'fill:rgba(200,200,200,1)',
-                };
-                var design = {
-                    type: 'testObject_looper',
-                    x: x, y: y,
-                    base: {
-                        points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
-                        style:style.background
-                    },
-                    elements:[
-                        {type:'connectionNode_audio', name:'outRight', data: {
-                            type: 1, x: -10, y: 5, width: 10, height: 20
-                        }},
-                        {type:'connectionNode_audio', name:'outLeft', data: {
-                            type: 1, x: -10, y: 27.5, width: 10, height: 20
-                        }},
-                        {type:'connectionNode_data', name:'trigger', data:{
-                            x: 220, y: 17.5, width: 10, height: 20,
-                            receive:function(address, data){
-                                design.button_rect.fire.click();
-                            }
-                        }},
-            
-                        {type:'button_rect', name:'loadFile', data: {
-                            x:5, y: 5, width:20, height:20,
-                            style:{
-                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
-                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
-                            },
-                            onclick: function(){
-                                obj.audioFilePlayer_looper.load('file',function(data){
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.audioFilePlayer_looper.waveformSegment() );
-                                });
-                            }
-                        }},
-                        {type:'button_rect',name:'fire',data:{
-                            x:5, y: 30, width:10, height:20, 
-                            style:{
-                                up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
-                                down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
-                            }, 
-                            onclick:function(){
-                                //no file = don't bother
-                                    if(obj.audioFilePlayer_looper.duration() < 0){return;}
-                        
-                                //actualy start the audio
-                                    obj.audioFilePlayer_looper.start();
-            
-                                //if there's a needle, remove it
-                                    if(needle){
-                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
-                                        needle = false;
-                                        clearTimeout(needleTimout);
-                                    }
-            
-                                //perform graphical movements
-                                    var duration = obj.audioFilePlayer_looper.duration();
-                                    function func(){
-                                        //if there's already a needle; delete it
-                                        if(needle){
-                                            design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
-                                        }
-            
-                                        //create new needle, and send it on its way
-                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
-                                        setTimeout(function(){design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,1);},1);
-                                        needle = true;
-            
-                                        //prep the next time this function should be run
-                                        needleTimout = setTimeout(func,duration*1000);
-                                    }
-            
-                                    func();
-                            }
-                        }},
-                        {type:'button_rect',name:'stop',data:{
-                            x:15, y: 30, width:10, height:20, 
-                            style:{
-                                up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
-                                down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(240,200,220,1)'
-                            }, 
-                            onclick:function(){
-                                obj.audioFilePlayer_looper.stop();
-            
-                                //if there's a needle, remove it
-                                if(needle){
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
-                                    needle = false;
-                                    clearTimeout(needleTimout);
-                                }
-                            }
-                        }},
-            
-                        {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                            x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false,
-                        }},
-                    ]
-                };
-            
-                //main object
-                    var obj = __globals.utility.experimental.objectBuilder(objects.testObject_looper,design);
-            
-                //circuitry
-                        var needle = undefined;
-                        var needleTimout = undefined;
-            
-                    //audioFilePlayer
-                        obj.audioFilePlayer_looper = new parts.audio.audioFilePlayer_looper(__globals.audio.context);
-                        obj.audioFilePlayer_looper.out_right().connect( design.connectionNode_audio.outRight.in() );
-                        obj.audioFilePlayer_looper.out_left().connect( design.connectionNode_audio.outLeft.in() );
-            
-                return obj;
             };
             objects.testObject_oneShot_multi = function(x,y,debug=false){
                 var style = {
@@ -6921,6 +7296,121 @@
             
                 return obj;
             };
+            objects.testObject_looper = function(x,y,debug=false){
+                var style = {
+                    background:'fill:rgba(200,200,200,1)',
+                };
+                var design = {
+                    type: 'testObject_looper',
+                    x: x, y: y,
+                    base: {
+                        points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
+                        style:style.background
+                    },
+                    elements:[
+                        {type:'connectionNode_audio', name:'outRight', data: {
+                            type: 1, x: -10, y: 5, width: 10, height: 20
+                        }},
+                        {type:'connectionNode_audio', name:'outLeft', data: {
+                            type: 1, x: -10, y: 27.5, width: 10, height: 20
+                        }},
+                        {type:'connectionNode_data', name:'trigger', data:{
+                            x: 220, y: 17.5, width: 10, height: 20,
+                            receive:function(address, data){
+                                design.button_rect.fire.click();
+                            }
+                        }},
+            
+                        {type:'button_rect', name:'loadFile', data: {
+                            x:5, y: 5, width:20, height:20,
+                            style:{
+                                up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                            },
+                            onclick: function(){
+                                obj.audioFilePlayer_looper.load('file',function(data){
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.audioFilePlayer_looper.waveformSegment() );
+                                });
+                            }
+                        }},
+                        {type:'button_rect',name:'fire',data:{
+                            x:5, y: 30, width:10, height:20, 
+                            style:{
+                                up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
+                                down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
+                            }, 
+                            onclick:function(){
+                                //no file = don't bother
+                                    if(obj.audioFilePlayer_looper.duration() < 0){return;}
+                        
+                                //actualy start the audio
+                                    obj.audioFilePlayer_looper.start();
+            
+                                //if there's a needle, remove it
+                                    if(needle){
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                        needle = false;
+                                        clearTimeout(needleTimout);
+                                    }
+            
+                                //perform graphical movements
+                                    var duration = obj.audioFilePlayer_looper.duration();
+                                    function func(){
+                                        //if there's already a needle; delete it
+                                        if(needle){
+                                            design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                        }
+            
+                                        //create new needle, and send it on its way
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
+                                        setTimeout(function(){design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,1);},1);
+                                        needle = true;
+            
+                                        //prep the next time this function should be run
+                                        needleTimout = setTimeout(func,duration*1000);
+                                    }
+            
+                                    func();
+                            }
+                        }},
+                        {type:'button_rect',name:'stop',data:{
+                            x:15, y: 30, width:10, height:20, 
+                            style:{
+                                up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
+                                down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(240,200,220,1)'
+                            }, 
+                            onclick:function(){
+                                obj.audioFilePlayer_looper.stop();
+            
+                                //if there's a needle, remove it
+                                if(needle){
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                    needle = false;
+                                    clearTimeout(needleTimout);
+                                }
+                            }
+                        }},
+            
+                        {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                            x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false,
+                        }},
+                    ]
+                };
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(objects.testObject_looper,design);
+            
+                //circuitry
+                        var needle = undefined;
+                        var needleTimout = undefined;
+            
+                    //audioFilePlayer
+                        obj.audioFilePlayer_looper = new parts.audio.audioFilePlayer_looper(__globals.audio.context);
+                        obj.audioFilePlayer_looper.out_right().connect( design.connectionNode_audio.outRight.in() );
+                        obj.audioFilePlayer_looper.out_left().connect( design.connectionNode_audio.outLeft.in() );
+            
+                return obj;
+            };
             objects.testObject_player = function(x,y,debug=false){
                 var style = {
                     background:'fill:rgba(200,200,200,1)',
@@ -7025,9 +7515,6 @@
                     var obj = __globals.utility.experimental.objectBuilder(objects.testObject_player,design);
             
                 //circuitry
-                        var playhead = undefined;
-                        var playheadTimout = undefined;
-            
                     //audio file player
                         obj.player = new parts.audio.player(__globals.audio.context);
                         obj.player.out_right().connect( design.connectionNode_audio.outRight.in() );
@@ -7058,6 +7545,150 @@
             
                 return obj;
             };
+            parts.audio.audioIn = function(
+                context
+            ){
+                //flow chain
+                    var flow = {
+                        audioDevice: null,
+                        outAggregator: {}
+                    };
+            
+                //outAggregator
+                    flow.outAggregator.gain = 1;
+                    flow.outAggregator.node = context.createGain();
+                    __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
+            
+            
+                //output node
+                    this.out = function(){return flow.outAggregator.node;}
+            
+                //methods
+                    this.listDevices = function(callback){
+                        navigator.mediaDevices.enumerateDevices().then(
+                            function(devices){
+                                callback(devices.filter((d) => d.kind === 'audioinput'));
+                            }
+                        );
+                    };
+                    this.selectDevice = function(deviceId){
+                        var promise = navigator.mediaDevices.getUserMedia({audio: { deviceId: deviceId}});
+                        promise.then(
+                            function(source){
+                                audioDevice = source;
+                                __globals.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
+                            },
+                            function(error){
+                                console.warn('could not find audio input device: "' + deviceId + '"');
+                                console.warn('\terror:',error);
+                            }
+                        );
+                    };
+                    this.gain = function(a){
+                        if(a==null){return flow.outAggregator.gain;}
+                        flow.outAggregator.gain = a;
+                        __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
+                    };
+            
+                //setup
+                    this.selectDevice('default');
+            };
+            objects.make_audioIn = function(x,y){
+                var attributes = {
+                    deviceList:[],
+                    currentSelection: 0
+                };
+                var style = {
+                    background: 'fill:rgba(200,200,200,1); stroke:none;',
+                    marking:'fill:none; stroke:rgb(160,160,160); stroke-width:1;pointer-events: none;',
+                    h1:'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+                    h2:'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+            
+                    readout: {background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'},
+                    button: {up:'fill:rgba(180,180,180,1)', hover:'fill:rgba(220,220,220,1)', down:'fill:rgba(170,170,170,1)', glow:'fill:rgba(220,200,220,1)'},
+                    dial: {handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',needle: 'fill:rgba(250,150,150,1)',outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'},
+                };
+                var design = {
+                    type:'audioIn',
+                    x:x, y:y,
+                    base:{
+                        points:[
+                            {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
+                            {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
+                        ], 
+                        style:style.background
+                    },
+                    elements:[
+                            {type:'connectionNode_audio', name:'audioOut', data:{type: 1, x: -10, y: 15, width: 20, height: 20}},
+                            {type:'readout_sixteenSegmentDisplay', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
+                            {type:'readout_sixteenSegmentDisplay', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
+                            {type:'button_rect', name:'up',   data:{x:225, y: 15, width:15, height:10, style:style.button, onclick:function(){incSelection();}}},
+                            {type:'button_rect', name:'down', data:{x:225, y: 25, width:15, height:10, style:style.button, onclick:function(){decSelection();}}},
+                            {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, style:style.dial, onchange:function(value){obj.circuitry.unit.gain(value*2);}}},
+                            {type:'label', name:'gainLabel_name', data:{x:21.25, y:44, text:'gain', style:style.h1, angle:0}},
+                            {type:'label', name:'gainLabel_0',    data:{x:15, y:40, text:'0', style:style.h2, angle:0}},
+                            {type:'label', name:'gainLabel_1',    data:{x:28.75, y:7, text:'1', style:style.h2, angle:0}},
+                            {type:'label', name:'gainLabel_2',    data:{x:42.5, y:40, text:'2', style:style.h2, angle:0}},
+                            {type:'path', name:'upArrow',   data:{path:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], style:style.marking}},
+                            {type:'path', name:'downArrow', data:{path:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], style:style.marking}},
+                            {type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
+                    ]
+                };
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(arguments.callee,design);
+            
+                    var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']});
+                        keycaptureObj.keyPress = function(key){
+                            switch(key){
+                                case 'ArrowUp': design.button_rect.up.click();  break;
+                                case 'ArrowDown': design.button_rect.down.click();  break;
+                                case 'ArrowLeft': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()-0.1);  break;
+                                case 'ArrowRight': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()+0.1);  break;
+                            }
+                        };
+            
+            
+                //circuitry
+                    obj.circuitry = {
+                        unit: new parts.audio.audioIn(__globals.audio.context)
+                    };
+                    obj.circuitry.unit.out().connect( design.connectionNode_audio.audioOut.in() );
+                    obj.circuitry.unit.out().connect( design.audio_meter_level.audioIn.audioIn() );
+            
+                //internal functions
+                    function selectDevice(a){
+                        if(attributes.deviceList.length == 0){
+                            design.readout_sixteenSegmentDisplay.index.text(' n/a');
+                            design.readout_sixteenSegmentDisplay.index.print();
+                            design.readout_sixteenSegmentDisplay.text.text('no devices');
+                            design.readout_sixteenSegmentDisplay.text.print('smart');
+                            return;
+                        }
+                        if( a < 0 || a >= attributes.deviceList.length ){return;}
+                        attributes.currentSelection = a;
+            
+                        selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
+                        totalNum=''+attributes.deviceList.length;while(totalNum.length < 2){ totalNum = '0'+totalNum;}
+                        design.readout_sixteenSegmentDisplay.index.text(selectionNum+'/'+totalNum);
+                        design.readout_sixteenSegmentDisplay.index.print();
+            
+                        var text = attributes.deviceList[a].deviceId;
+                        if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
+                        design.readout_sixteenSegmentDisplay.text.text(text);
+                        design.readout_sixteenSegmentDisplay.text.print('smart');
+                    }
+                    function incSelection(){ selectDevice(attributes.currentSelection+1); }
+                    function decSelection(){ selectDevice(attributes.currentSelection-1); }
+            
+                //setup
+                    obj.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
+                    setTimeout(function(){selectDevice(0);},500);
+                    design.dial_continuous.outputGain.set(0.5);
+                    design.audio_meter_level.audioIn.start();
+            
+                return obj;
+            };
             /**/
             
             //create objects
@@ -7071,41 +7702,48 @@
                     __globals.panes.middleground.append( audioDuplicator_1 );
                     var audioDuplicator_2 = objects.audio_duplicator(300,130);
                     __globals.panes.middleground.append( audioDuplicator_2 );
+                    var audioDuplicator_3 = objects.audio_duplicator(525,30);
+                    __globals.panes.middleground.append( audioDuplicator_3 );
+                    var audioDuplicator_4 = objects.audio_duplicator(525,90);
+                    __globals.panes.middleground.append( audioDuplicator_4 );
+                    var audioDuplicator_5 = objects.audio_duplicator(600, 130);
+                    __globals.panes.middleground.append( audioDuplicator_5 );
             
                     var audioSink_1 = objects.audio_sink(150, 275);
                     __globals.panes.middleground.append( audioSink_1 );
             
-                //connections
-                    audioDuplicator_1.io.output_1.connectTo( audioScope_1.io.input );
-                    audioDuplicator_2.io.output_1.connectTo( audioScope_2.io.input );;
+                    //connections
+                        audioDuplicator_1.io.output_1.connectTo( audioScope_1.io.input );
+                        audioDuplicator_2.io.output_1.connectTo( audioScope_2.io.input );;
             
-                    audioDuplicator_1.io.output_2.connectTo( audioSink_1.io.right );
-                    audioDuplicator_2.io.output_2.connectTo( audioSink_1.io.left );
+                        audioDuplicator_1.io.output_2.connectTo( audioSink_1.io.right );
+                        audioDuplicator_2.io.output_2.connectTo( audioSink_1.io.left );
             
-                //test objects (and floating labels)
-                    var testObject_oneShot_single_1 = objects.testObject_oneShot_single(400,50);
-                    __globals.panes.middleground.append( testObject_oneShot_single_1 );
-                    __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:82.5, text:'oneShot_single' }) );
-                    
-                    var testObject_oneShot_multi_1 = objects.testObject_oneShot_multi(400,110);
-                    __globals.panes.middleground.append( testObject_oneShot_multi_1 );
-                    __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:142.5, text:'oneShot_multi' }) );
-                    
-                    var testObject_looper_1 = objects.testObject_looper(400,170);
-                    __globals.panes.middleground.append( testObject_looper_1 );
-                    __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:202.5, text:'looper' }) );
+                        audioDuplicator_3.io.output_1.connectTo( audioDuplicator_1.io.input );
+                        audioDuplicator_4.io.output_1.connectTo( audioDuplicator_2.io.input );
             
-                    var testObject_player_1 = objects.testObject_player(400,230);
+                //imported objects
+                    var audioIn_1 = objects.make_audioIn(680, 150);
+                    __globals.panes.middleground.append( audioIn_1 );
+            
+                    var testObject_player_1 = objects.testObject_player(675, 50);
                     __globals.panes.middleground.append( testObject_player_1 );
-                    __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:262.5, text:'player' }) );
+                    //connections
+                        testObject_player_1.io.outRight.connectTo( audioDuplicator_3.io.input );
+                        testObject_player_1.io.outLeft.connectTo( audioDuplicator_4.io.input );
             
-                //connections
-                    testObject_player_1.io.outRight.connectTo( audioDuplicator_1.io.input );
-                    testObject_player_1.io.outLeft.connectTo( audioDuplicator_2.io.input );
+                //test objects
+                    var testObject_recorder_1 = objects.testObject_recorder3(300,200);
+                    __globals.panes.middleground.append( testObject_recorder_1 );
+                    //connections
+                        audioDuplicator_3.io.output_2.connectTo( testObject_recorder_1.io.inRight );
+                        audioDuplicator_4.io.output_2.connectTo( testObject_recorder_1.io.inLeft );
             
             //viewport position
-                // __globals.utility.workspace.gotoPosition(-3630.89, -2815.88, 10, 0);
-
+                // __globals.utility.workspace.gotoPosition(-1242.22, -777.354, 4.61829, 0);
+            
+            //https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Recording_API/Using_the_MediaStream_Recording_API
+            //https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamAudioDestinationNode
 
         }
     }

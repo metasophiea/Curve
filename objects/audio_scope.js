@@ -60,7 +60,7 @@ this.audio_scope = function(x,y){
 
     //setup
         design.grapher_audioScope.waveport.start();
-        design.dial_continuous.framerate.set(1);
+        design.dial_continuous.framerate.set(0);
 
     return obj;
 };

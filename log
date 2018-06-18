@@ -1,5 +1,43 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
 2018-06-08
+  - wrote up a recorder object (with state lights and time readout)(the controls
+    are honestly a little more clunkly that I'd like, but it works)
+
+
+2018-06-15
+  - added 'export' functionality into recorder2 (in prep for the audio disk)
+  - little bit of development on audio disks (which I'm going to shelve for now)
+
+
+2018-06-14
+  future ideas
+  - audio disks (that you can move in and out of audio recording devices and
+    playback devices, etc)(they'd be a simple object that just contained one
+    audio-encoded blob)
+
+
+2018-06-13
+  - developed audio recording object and circuitry to include pause/resume
+    functionality, along with the ability to get the recording length at any 
+    time. I've also simplified the input/output audio nodes somewhat. The object 
+    is pretty sparse at current however.
+  - worked on simplifing audio channels; turns out things are already pretty
+    simple as they are (I was worried that the audio streams were mixing channel
+    counts, and didn't know how that was effecting things. Seems only the audio
+    file player was suffering from this. Need to be more vigilent about channels
+    and streams in future)
+
+2018-06-12
+  - created rudimentary audio recording object. Currently all it does is record 
+    the audio given to it, and then save that audio to a file when you  press
+    the stop button.
+
+  future ideas
+  - going to have to change all audio connections to single channel, instead of
+    this sudo-single channel we have currently
+
+
+2018-06-08
   - there's now different types of oneShot circuitry; one that allows multiple 
     instances to play, and one that doesn't (named oneShot_single and 
     oneShot_multi)

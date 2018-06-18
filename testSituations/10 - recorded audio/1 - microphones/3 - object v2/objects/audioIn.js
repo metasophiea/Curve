@@ -1,4 +1,4 @@
-__globals.objects.make_audioIn = function(x,y){
+objects.make_audioIn = function(x,y){
     var attributes = {
         deviceList:[],
         currentSelection: 0
@@ -88,7 +88,7 @@ __globals.objects.make_audioIn = function(x,y){
 
     //setup
         obj.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
-        setTimeout(function(){selectDevice(0);},100);
+        setTimeout(function(){selectDevice(0);},500);
         design.dial_continuous.outputGain.set(0.5);
         design.audio_meter_level.audioIn.start();
 

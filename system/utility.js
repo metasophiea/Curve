@@ -679,7 +679,8 @@ __globals.utility = new function(){
                     case 'rect': return parts.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
                     case 'path': return parts.basic.path(name, data.path, data.lineType, data.style); break;
                     case 'text': return parts.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
-                
+                    case 'circle': return parts.basic.circle(name, data.x, data.y, data.r, data.angle, data.style); break;
+            
                 //display
                     case 'label': return parts.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;
                     case 'level': return parts.display.level(name, data.x, data.y, data.angle, data.width, data.height, data.style.backing, data.style.level); break;

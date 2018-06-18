@@ -27,19 +27,19 @@
     //test objects (and floating labels)
         var testObject_oneShot_single_1 = objects.testObject_oneShot_single(400,50);
         __globals.panes.middleground.append( testObject_oneShot_single_1 );
-        __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:82.5, text:'oneShot_single' }) );
+        __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:82.5, text:'oneShot_single'}) );
         
         var testObject_oneShot_multi_1 = objects.testObject_oneShot_multi(400,110);
         __globals.panes.middleground.append( testObject_oneShot_multi_1 );
-        __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:142.5, text:'oneShot_multi' }) );
+        __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:142.5, text:'oneShot_multi'}) );
         
         var testObject_looper_1 = objects.testObject_looper(400,170);
         __globals.panes.middleground.append( testObject_looper_1 );
-        __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:202.5, text:'looper' }) );
+        __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:202.5, text:'looper'}) );
 
         var testObject_player_1 = objects.testObject_player(400,230);
         __globals.panes.middleground.append( testObject_player_1 );
-        __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:262.5, text:'player' }) );
+        __globals.panes.background.append( __globals.utility.experimental.elementMaker('label','',{x:640, y:262.5, text:'player'}) );
 
     //connections
         testObject_player_1.io.outRight.connectTo( audioDuplicator_1.io.input );

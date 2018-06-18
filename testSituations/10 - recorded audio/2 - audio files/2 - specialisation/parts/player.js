@@ -161,6 +161,7 @@ parts.audio.player = function(context){
                 }
             }
 
+            console.log(state.loop);
             playheadCompute();
         };
         this.rate = function(value=1){

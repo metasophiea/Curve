@@ -102,9 +102,6 @@ objects.testObject_player = function(x,y,debug=false){
         var obj = __globals.utility.experimental.objectBuilder(objects.testObject_player,design);
 
     //circuitry
-            var playhead = undefined;
-            var playheadTimout = undefined;
-
         //audio file player
             obj.player = new parts.audio.player(__globals.audio.context);
             obj.player.out_right().connect( design.connectionNode_audio.outRight.in() );

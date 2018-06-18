@@ -38,27 +38,26 @@ this.audio_sink = function(x,y){
     //circuitry
         var flow = {
             destination:null,
+            stereoCombiner: null,
             pan_left:null, pan_right:null,
         };
         //destination
             flow._destination = __globals.audio.context.destination;
-        //pan left/right
-            flow.pan_left = __globals.audio.context.createStereoPanner();
-                flow.pan_left.pan.setValueAtTime(1, __globals.audio.context.currentTime);
-                flow.pan_left.connect(flow._destination);
-            flow.pan_right = __globals.audio.context.createStereoPanner();
-                flow.pan_right.pan.setValueAtTime(-1, __globals.audio.context.currentTime);
-                flow.pan_right.connect(flow._destination);
+        //stereo channel combiner
+            flow.stereoCombiner = new ChannelMergerNode(__globals.audio.context, {numberOfInputs:2});
+
         //audio connections
             //inputs to meters
-                design.connectionNode_audio.left.out().connect(design.audio_meter_level.left.audioIn());
+                design.connectionNode_audio.left.out().connect( design.audio_meter_level.left.audioIn() );
                 design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
-            //inputs to panning nodes
-                design.connectionNode_audio.left.out().connect(flow.pan_left);
-                design.connectionNode_audio.right.out().connect(flow.pan_right);
-            //panning nodes to output 
+            //inputs to stereo combiner
+                design.connectionNode_audio.left.out().connect(flow.stereoCombiner, 0, 0);
+                design.connectionNode_audio.right.out().connect(flow.stereoCombiner, 0, 1);
+            //stereo combiner to main output
+                flow.stereoCombiner.connect(flow._destination);
+
+            //start audio meters
                 design.audio_meter_level.left.start();
                 design.audio_meter_level.right.start();
-
     return obj;
 };

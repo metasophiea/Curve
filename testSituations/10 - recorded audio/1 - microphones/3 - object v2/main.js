@@ -1,4 +1,3 @@
-__globals.objects = {};
 {{include:parts/*}}
 {{include:objects/*}}
 /**/
@@ -6,7 +5,7 @@ __globals.objects = {};
 
 
 //create objects
-    var audioIn_1 = __globals.objects.make_audioIn(200, 50);
+    var audioIn_1 = objects.make_audioIn(200, 50);
     __globals.panes.middleground.append( audioIn_1 );
 
     var audioSink_1 = objects.audio_sink(50,50);
