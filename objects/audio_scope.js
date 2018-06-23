@@ -11,14 +11,11 @@ this.audio_scope = function(x,y){
         x:x, y:y,
         base:{
             points:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
+            style:style.background,
         },
         elements:[
             {type:'connectionNode_audio', name:'input', data:{
                 type:0, x:195, y:5, width:10, height:20
-            }},
-            {type:'path', name:'backing', data:{
-                path:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
-                style:style.background
             }},
 
             {type:'grapher_audioScope', name:'waveport', data:{

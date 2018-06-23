@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>curve</title>
+        <meta charset="utf-8"></meta>
+        <style>
+            html, body{
+                margin:0px;
+                width:100%; height:100%;
+                overflow-x: hidden; overflow-y: hidden;
+            }
+        </style>
+    </head>
+
+    <body>
+        <section style='width:100%; height:100%;'>
+            <svg workspace style='width:100%; height:100%;'></svg>
+        </section>
+    </body>
+
+</html>
+
+<script type='text/javascript' src='workspace.js'></script>
+<script>
+    var pulseGenerator_1 = objects.pulseGenerator(750, 140);
+    __globals.panes.middleground.append( pulseGenerator_1 );
+    var launchpad_1 = objects.launchpad(525, 150);
+    __globals.panes.middleground.append( launchpad_1 );
+    var oneShot_multi_multiTrack_1 = objects.oneShot_multi_multiTrack(200, 20);
+    __globals.panes.middleground.append( oneShot_multi_multiTrack_1 );
+    var audio_sink_1 = objects.audio_sink(20,20);
+    __globals.panes.middleground.append( audio_sink_1 );
+
+    pulseGenerator_1.io.out.connectTo(launchpad_1.io.pulse);
+    launchpad_1.io.out_0.connectTo(oneShot_multi_multiTrack_1.io.trigger_0);
+    launchpad_1.io.out_1.connectTo(oneShot_multi_multiTrack_1.io.trigger_1);
+    launchpad_1.io.out_2.connectTo(oneShot_multi_multiTrack_1.io.trigger_2);
+    launchpad_1.io.out_3.connectTo(oneShot_multi_multiTrack_1.io.trigger_3);
+    launchpad_1.io.out_4.connectTo(oneShot_multi_multiTrack_1.io.trigger_4);
+    launchpad_1.io.out_5.connectTo(oneShot_multi_multiTrack_1.io.trigger_5);
+    launchpad_1.io.out_6.connectTo(oneShot_multi_multiTrack_1.io.trigger_6);
+    launchpad_1.io.out_7.connectTo(oneShot_multi_multiTrack_1.io.trigger_7);
+    oneShot_multi_multiTrack_1.io.outRight.connectTo( audio_sink_1.io.right );
+    oneShot_multi_multiTrack_1.io.outLeft.connectTo( audio_sink_1.io.left );
+</script>

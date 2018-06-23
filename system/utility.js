@@ -44,6 +44,12 @@
 //        seconds2time                    (seconds)
 //        padString                       (string,length)
 //        detectOverlap                   (poly_a:[{x:0,y:0},...], poly_b:[{x:0,y:0},...], box_a:[{x:0,y:0},{x:0,y:0}]=null, box_b:[{x:0,y:0},{x:0,y:0}]=null)
+//        normalizeStretchArray           (array)
+//        curvePoint
+//            linear                      (x, start=0, end=1)
+//            sin                         (x, start=0, end=1)
+//            cos                         (x, start=0, end=1)
+//            s                           (x, start=0, end=1, sharpness=8)
 //        curveGenerator
 //            linear                      (stepCount, start=0, end=1)
 //            sin                         (stepCount, start=0, end=1)
@@ -522,6 +528,48 @@ __globals.utility = new function(){
     
             return false;
         };
+        this.normalizeStretchArray = function(array){
+            //discover the largest number
+                var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
+
+            //devide everything by this largest number, making everything a ratio of this value 
+                var dux = Math.abs(array[biggestIndex]);
+                array = array.map(x => x / dux);
+
+            //stretch the other side of the array to meet 0 or 1
+                if(array[0] == 0 && array[array.length-1] == 1){return array;}
+                var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
+                array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
+
+            return array;
+        };
+        this.curvePoint = new function(){
+            this.linear = function(x=0.5, start=0, end=1){
+                return x *(end-start)+start;
+            };
+            this.sin = function(x=0.5, start=0, end=1){
+                return Math.sin(Math.PI/2*x) *(end-start)+start;
+            };
+            this.cos = function(x=0.5, start=0, end=1){
+                return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
+            };
+            this.s = function(x=0.5, start=0, end=1, sharpness=8){
+                var temp = __globals.utility.math.normalizeStretchArray([
+                    1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
+                    1/( 1 + Math.exp(-sharpness*(x-0.5)) ),
+                    1/( 1 + Math.exp(-sharpness*(1-0.5)) ),
+                ]);
+                return temp[1] *(end-start)+start;
+            };
+            this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
+                var temp = __globals.utility.math.normalizeStretchArray([
+                    (Math.exp(sharpness*0)-1)/(Math.E-1),
+                    (Math.exp(sharpness*x)-1)/(Math.E-1),
+                    (Math.exp(sharpness*1)-1)/(Math.E-1),
+                ]);
+                return temp[1] *(end-start)+start;
+            };
+        };
         this.curveGenerator = new function(){
             this.linear = function(stepCount=2, start=0, end=1){
                 stepCount = Math.abs(stepCount)-1; var outputArray = [0];
@@ -572,6 +620,8 @@ __globals.utility = new function(){
                 return outputArray;	
             };
             this.s = function(stepCount=2, start=0, end=1, sharpness=8){
+                if(sharpness == 0){sharpness = 1/1000000;}
+
                 var curve = [];
                 for(var a = 0; a < stepCount; a++){
                     curve.push(
@@ -579,40 +629,7 @@ __globals.utility = new function(){
                     );
                 }
     
-                //normalize curve
-                function normalizeStretchArray(array){
-                    var biggestIndex = 0;
-                    for(var a = 1; a < array.length; a++){
-                        if( Math.abs(array[a]) > Math.abs(array[biggestIndex]) ){
-                            biggestIndex = a;
-                        }
-                    }
-        
-                    var mux = Math.abs(1/array[biggestIndex]);
-        
-                    for(var a = 0; a < array.length; a++){
-                        array[a] = array[a]*mux;
-                    }
-    
-                    //stretching
-                    if(array[0] == 0 && array[array.length-1] == 1){return array;}
-                    else if( array[0] != 0 ){
-                        var pertinentValue = array[0];
-                        for(var a = 0; a < array.length; a++){
-                            array[a] = array[a] - pertinentValue*(1-a/(array.length-1));
-                        }
-                    }
-                    else{
-                        var pertinentValue = array[array.length-1];
-                        for(var a = 0; a < array.length; a++){
-                            array[a] = array[a] - pertinentValue*(a/(array.length-1));
-                        }
-                    }
-    
-                    return array;
-                }
-
-                var outputArray = normalizeStretchArray(curve);
+                var outputArray = __globals.utility.math.normalizeStretchArray(curve);
     
                 var mux = end-start;
                 for(var a = 0 ; a < outputArray.length; a++){
@@ -621,12 +638,12 @@ __globals.utility = new function(){
 
                 return outputArray;
             };
-            this.exponential = function(stepCount=2, start=0, end=1){
+            this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
                 var stepCount = stepCount-1;
                 var outputArray = [];
                 
                 for(var a = 0; a <= stepCount; a++){
-                    outputArray.push( (Math.exp(a/stepCount)-1)/(Math.E-1) ); // Math.E == Math.exp(1)
+                    outputArray.push( (Math.exp(sharpness*(a/stepCount))-1)/(Math.E-1) ); // Math.E == Math.exp(1)
                 }
 
                 var mux = end-start;
@@ -675,30 +692,32 @@ __globals.utility = new function(){
                 default: console.warn('Unknown element: '+ type); return null; break;
 
                 //basic
-                    case 'line': return parts.basic.line(name, data.x1, data.y1, data.x2, data.y2, data.style); break;
-                    case 'rect': return parts.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
-                    case 'path': return parts.basic.path(name, data.path, data.lineType, data.style); break;
-                    case 'text': return parts.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
-                    case 'circle': return parts.basic.circle(name, data.x, data.y, data.r, data.angle, data.style); break;
-            
+                    case 'g':      return parts.elements.basic.g(name, data.x, data.y, data.r); break;
+                    case 'line':   return parts.elements.basic.line(name, data.x1, data.y1, data.x2, data.y2, data.style); break;
+                    case 'rect':   return parts.elements.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
+                    case 'path':   return parts.elements.basic.path(name, data.path, data.lineType, data.style); break;
+                    case 'text':   return parts.elements.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
+                    case 'circle': return parts.elements.basic.circle(name, data.x, data.y, data.r, data.angle, data.style); break;
+                    case 'canvas': return parts.elements.basic.canvas(name, data.x, data.y, data.width, data.height, data.angle, data.resolution);
+
                 //display
-                    case 'label': return parts.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;
-                    case 'level': return parts.display.level(name, data.x, data.y, data.angle, data.width, data.height, data.style.backing, data.style.level); break;
-                    case 'meter_level': return parts.display.meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
-                    case 'audio_meter_level': return parts.display.audio_meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
-                    case 'sevenSegmentDisplay': return parts.display.sevenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
-                    case 'sixteenSegmentDisplay': return parts.display.sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dime); break;
-                    case 'readout_sixteenSegmentDisplay': return parts.display.readout_sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.count, data.style.background, data.style.glow, data.style.dime); break;
-                    case 'rastorDisplay': return parts.display.rastorDisplay(name, data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage); break;
-                    case 'glowbox_rect': return parts.display.glowbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim); break;
-                    case 'grapherSVG': return parts.display.grapherSVG(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-                    case 'grapherCanvas': return parts.display.grapherCanvas(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-                    case 'grapher_periodicWave': return parts.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-                    case 'grapher_audioScope': return parts.display.grapher_audioScope(  name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+                    case 'label': return parts.elements.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;
+                    case 'level': return parts.elements.display.level(name, data.x, data.y, data.angle, data.width, data.height, data.style.backing, data.style.level); break;
+                    case 'meter_level': return parts.elements.display.meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
+                    case 'audio_meter_level': return parts.elements.display.audio_meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
+                    case 'sevenSegmentDisplay': return parts.elements.display.sevenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
+                    case 'sixteenSegmentDisplay': return parts.elements.display.sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
+                    case 'readout_sixteenSegmentDisplay': return parts.elements.display.readout_sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.count, data.style.background, data.style.glow, data.style.dime); break;
+                    case 'rastorDisplay': return parts.elements.display.rastorDisplay(name, data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage); break;
+                    case 'glowbox_rect': return parts.elements.display.glowbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim); break;
+                    case 'grapherSVG': return parts.elements.display.grapherSVG(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+                    case 'grapherCanvas': return parts.elements.display.grapherCanvas(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+                    case 'grapher_periodicWave': return parts.elements.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+                    case 'grapher_audioScope': return parts.elements.display.grapher_audioScope(  name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
 
                 //control
                     case 'button_rect': 
-                        var temp = parts.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle ,data.style.up, data.style.hover, data.style.down, data.style.glow);
+                        var temp = parts.elements.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle ,data.style.up, data.style.hover, data.style.down, data.style.glow);
                         temp.onmouseup =    data.onmouseup    ? data.onmouseup    : temp.onmouseup   ;
                         temp.onmousedown =  data.onmousedown  ? data.onmousedown  : temp.onmousedown ;
                         temp.onmouseenter = data.onmouseenter ? data.onmouseenter : temp.onmouseenter;
@@ -709,30 +728,30 @@ __globals.utility = new function(){
                         return temp;
                     break;
                     case 'checkbox_rect':
-                        var temp = parts.control.checkbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow);
+                        var temp = parts.elements.control.checkbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow);
                         temp.onchange = data.onchange ? data.onchange : temp.onchange;
                         return temp;
                     break;
                     case 'key_rect':
-                        var temp = parts.control.key_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.off, data.style.press, data.style.glow, data.style.pressAndGlow);
+                        var temp = parts.elements.control.key_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.off, data.style.press, data.style.glow, data.style.pressAndGlow);
                         temp.onkeyup =   data.onkeyup   ? data.onkeyup   : temp.onkeyup;
                         temp.onkeydown = data.onkeydown ? data.onkeydown : temp.onkeydown;
                         return temp;
                     break;
                     case 'slide':
-                        var temp = parts.control.slide(name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle);
+                        var temp = parts.elements.control.slide(name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle);
                         temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
                         temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
                         return temp;
                     break;
                     case 'slidePanel':
-                        var temp = parts.control.slidePanel(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot);
+                        var temp = parts.elements.control.slidePanel(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot);
                         temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
                         temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
                         return temp;
                     break;
                     case 'dial_continuous': 
-                        var temp = parts.control.dial_continuous(
+                        var temp = parts.elements.control.dial_continuous(
                             name,
                             data.x, data.y, data.r,
                             data.startAngle, data.maxAngle,
@@ -744,7 +763,7 @@ __globals.utility = new function(){
                         return temp;
                     break;
                     case 'dial_discrete':
-                        var temp = parts.control.dial_discrete(
+                        var temp = parts.elements.control.dial_discrete(
                             name,
                             data.x, data.y, data.r,
                             data.optionCount,
@@ -757,7 +776,7 @@ __globals.utility = new function(){
                         return temp;
                     break;
                     case 'rastorgrid':
-                        var temp = parts.control.rastorgrid(
+                        var temp = parts.elements.control.rastorgrid(
                             name,
                             data.x, data.y, data.width, data.height,
                             data.xCount, data.yCount,
@@ -770,7 +789,7 @@ __globals.utility = new function(){
                         return temp;
                     break;
                     case 'needleOverlay':
-                        var temp = parts.control.needleOverlay(
+                        var temp = parts.elements.control.needleOverlay(
                             name, data.x, data.y, data.width, data.height, data.angle,
                             data.needleWidth, data.selectNeedle, data.selectionArea,
                             data.needleStyles,
@@ -781,7 +800,7 @@ __globals.utility = new function(){
                         return temp;
                     break;
                     case 'grapher_waveWorkspace':
-                        var temp = parts.control.grapher_waveWorkspace(
+                        var temp = parts.elements.control.grapher_waveWorkspace(
                             name, data.x, data.y, data.width, data.height, data.angle, data.graphType, data.selectNeedle, data.selectionArea,
                             data.style.foreground,   data.style.foregroundText,
                             data.style.middleground, data.style.middlegroundText,
@@ -794,9 +813,10 @@ __globals.utility = new function(){
                     break;
 
                 //dynamic
-                    case 'connectionNode_audio': return parts.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, __globals.audio.context); break;
+                    case 'cable': return parts.elements.dynamic.cable(name, data.x1, data.y1, data.x2, data.y2, data.style.unactive, data.style.active); break;
+                    case 'connectionNode_audio': return parts.elements.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, data.angle, __globals.audio.context); break;
                     case 'connectionNode_data': 
-                        var temp = parts.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle);
+                        var temp = parts.elements.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle);
                         temp.receive = data.receive ? data.receive : temp.receive;
                         temp.give = data.give ? data.give : temp.give;
                         return temp;
@@ -805,15 +825,38 @@ __globals.utility = new function(){
         }; 
         this.objectBuilder = function(creatorMethod,design){
             //main
-                var obj = parts.basic.g(design.type, design.x, design.y);
+                var obj = __globals.utility.experimental.elementMaker('g',design.type,{x:design.x, y:design.y});
 
             //generate selection area
-                __globals.utility.object.generateSelectionArea(design.base.points, obj);
-            //backing
-                design.base = parts.basic.path(null, design.base.points, 'L', design.base.style);
+                if(design.base.type == undefined){design.base.type = 'path';}
+                switch(design.base.type){
+                    case 'circle': 
+                        //generate selection area
+                            var res = 12; //(number of sides generated)
+                            var mux = 2*Math.PI/res;
+                            design.base.points = [];
+                            for(var a = 0; a < res; a++){
+                                design.base.points.push(
+                                    { x:design.base.x-Math.sin(a*mux)*design.base.r, y:design.base.y-Math.cos(a*mux)*design.base.r }
+                                );
+                            }
+                            __globals.utility.object.generateSelectionArea(design.base.points, obj);
+                            
+                        //backing
+                            design.base = __globals.utility.experimental.elementMaker('circle',null,{x:design.base.x, y:design.base.y, r:design.base.r, angle:design.base.angle, style:design.base.style});
+                    break;
+                    case 'path': 
+                        //generate selection area
+                            __globals.utility.object.generateSelectionArea(design.base.points, obj);
+                        //backing
+                            design.base = __globals.utility.experimental.elementMaker('path',null,{path:design.base.points, lineType:'L', style:design.base.style});
+                    break;
+                    default: console.error('Unknown base type:',design.base.type,'when creating object "'+design.type+'"'); return; break;
+                };
                 obj.append(design.base);
-            //declare grapple
-                __globals.mouseInteraction.declareObjectGrapple(design.base, obj, creatorMethod);
+
+                //declare grapple
+                    __globals.mouseInteraction.declareObjectGrapple(design.base, obj, creatorMethod);
 
             //generate elements
                 if(design.elements){

@@ -254,7 +254,7 @@ this.basicSynthesizer = function(x,y){
         var obj = __globals.utility.experimental.objectBuilder(objects.basicSynthesizer,design);
 
     //circuitry
-        obj.__synthesizer = new parts.audio.synthesizer2(__globals.audio.context);
+        obj.__synthesizer = new parts.circuits.audio.synthesizer2(__globals.audio.context);
         obj.__synthesizer.out().connect( design.connectionNode_audio.audioOut.in() );
 
     //setup

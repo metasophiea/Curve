@@ -250,15 +250,15 @@
 
                     //create 'selection box' graphic and add it to the menu pane
                     __globals.svgElement.tempElements.push(
-                        parts.basic.path(
-                            null, 
-                            [
-                                __globals.svgElement.tempData.start,
-                                __globals.svgElement.tempData.start,
-                                __globals.svgElement.tempData.start,
-                                __globals.svgElement.tempData.start
-                            ], 
-                            'L', 'fill:rgba(120,120,255,0.25)'
+                        __globals.utility.experimental.elementMaker(
+                            'path',null,{
+                                path:[
+                                    __globals.svgElement.tempData.start,
+                                    __globals.svgElement.tempData.start,
+                                    __globals.svgElement.tempData.start,
+                                    __globals.svgElement.tempData.start
+                                ], type:'L', style:'fill:rgba(120,120,255,0.25)'
+                            }
                         )
                     );
                     for(var a = 0; a < __globals.svgElement.tempElements.length; a++){ __globals.panes.menu.append(__globals.svgElement.tempElements[a]); }

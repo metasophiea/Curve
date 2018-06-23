@@ -10,15 +10,9 @@ this.audio_duplicator = function(x,y){
             points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
         },
         elements:[
-            {type:'connectionNode_audio', name:'input', data:{
-                type:0, x:45, y:5, width:20, height:20
-            }},
-            {type:'connectionNode_audio', name:'output_1', data:{
-                type:1, x:-10, y:5, width:20, height:20
-            }},
-            {type:'connectionNode_audio', name:'output_2', data:{
-                type:1, x:-10, y:30, width:20, height:20
-            }},
+            {type:'connectionNode_audio', name:'input', data:{ type:0, x:45, y:5, width:20, height:20 }},
+            {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:20, height:20 }},
+            {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:20, height:20 }},
 
             {type:'path', name:'backing', data:{
                 path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],

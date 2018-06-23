@@ -1,5 +1,69 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
-2018-06-08
+2018-06-22
+  - added symbols to the rest of the audio file players
+  - pushed the audio players and circuits to the 'finished' folder
+  - pushed audio recorder and circuit to the 'finished' folder
+  - created and added a universalreadout and launchpad to the 'finished' folder
+    ('launchpad' has been split up into the object and internal circuitry, in
+    turn creating a parts.circuits.sequencing area, and 
+    parts.circuits.sequencing.launchpad circuit (which probably needs a rename))
+    (also the universal readout doesn't print to the console, but to some text
+    in the viewport)
+  - reated and added a puse generator
+  - did import/export code for the launchpad
+  - redid the comp command, so now there's two files produced; a 'test' edition
+    thats the same as the old one, and a 'regular' one that has none of the test
+    situation code. In this way I can now test and develop like normal, while
+    having demo pages that are unaffected. Both still don't have the wrapping
+    enabled, so, there's work to be done still.
+  - created demo file of the multi-track audio file player hooked into a launchpad
+    and pulse generator..still needs audio files ofcourse
+
+  bug found
+  - odd bug in audio file player looper, where hitting the play button
+    repeatidly would always restart the audio, but sometimes the play head would
+    disappear. Seems to be caused by the style of the needle not being set in 
+    time before the request to move the needle to the other side of the viewbox
+    occurs (the style has a transition setting). The commands are being performed
+    in the correct order..it might be the browser not computing the style in time
+
+
+2018-06-21
+  - updated continuous dial callbacks to be wrapped in try/catch blocks
+  - redid the distortion unit and moved it to the developed objects folder
+  - jumped ahead and reorganised all the parts into 'elements' and 'circuits'. 
+    Have to rewrite alot of stuff to use the elementMaker now
+  - pushed distortion, reverb and filter into the "finished" objects area
+  - added symbols to some of the audio file players
+
+  future ideas
+  - splitting up 'parts' into 'elements' and 'circuitry', where 'elements' are
+    the graphical parts that a user would interact with (slides, dials, button,
+    graphs, labels, lights, etc) and 'circuitry' are parts of pure code that do
+    work (like distortion units and data processors)
+      Right now, 'parts' is almost entirely 'elements', so I'll wait till the 
+    circuitry parts come out of development more. I'd have to rewrite the element
+    maker..though it's name and function is already correct
+
+
+2018-06-20
+  - created a rudimentary multi-track oneShot file player object. The idea is
+    that one could load up drum beats, hook that into a launchpad or some pulse
+    generator, and have it perform drum beats for you
+  - added math.normalizeStretchArray to utilities (and fixed it up along the 
+    way)
+  - added math.curvePoint functions to utility, and fixed up other aspects of 
+    curve generation
+  - udpated smoothSet in the slider and continuous dial parts, in a bid to make
+    them more efficient and time conscious..I think it's worked
+  - started on revamping the testSituations folder
+
+  future ideas
+  - continue with 'testSituations' do-over, while updating partially developed
+    objects, and pushing them to the main list
+
+
+2018-06-18
   - wrote up a recorder object (with state lights and time readout)(the controls
     are honestly a little more clunkly that I'd like, but it works)
 
