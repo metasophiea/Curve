@@ -46,7 +46,7 @@ this.oneShot_multi = function(context){
             __globals.utility.audio.loadAudioFile(
                 function(data){
                     state.itself.loadRaw(data);
-                    callback(data);
+                    if(callback != undefined){ callback(data); }
                 },
             type,url);
         };

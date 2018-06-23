@@ -68,7 +68,7 @@ this.launchpad = function(xCount,yCount){
 
         //getting/setting the data ina page or all pages
             this.exportPages = function(){return pages;};
-            this.importPages = function(data){pages = data;};
+            this.importPages = function(data){pages = data;this.pageChange(currentPage);};
             this.exportPage = function(a){
                 if(a == undefined){a = currentPage;}
                 return pages[a];
@@ -76,6 +76,7 @@ this.launchpad = function(xCount,yCount){
             this.importPage = function(data,a){
                 if(a == undefined){a = currentPage;}
                 pages[a] = data;
+                this.pageChange(currentPage);
             };
         
 

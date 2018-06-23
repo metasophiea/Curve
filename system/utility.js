@@ -289,11 +289,11 @@ __globals.utility = new function(){
                     request.open('GET', url, true);
                     request.responseType = 'arraybuffer';
                     request.onload = function(){
-                        context.decodeAudioData(this.response, function(data){
+                        __globals.audio.context.decodeAudioData(this.response, function(data){
                             callback({
                                 buffer:data,
                                 name:(url.split('/')).pop(),
-                                duration:buffer.duration,
+                                duration:data.duration,
                             });
                         }, function(e){console.warn("Error with decoding audio data" + e.err);});
                     }

@@ -43,4 +43,49 @@
     launchpad_1.io.out_7.connectTo(oneShot_multi_multiTrack_1.io.trigger_7);
     oneShot_multi_multiTrack_1.io.outRight.connectTo( audio_sink_1.io.right );
     oneShot_multi_multiTrack_1.io.outLeft.connectTo( audio_sink_1.io.left );
+
+
+    document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[0].load('url',function(){
+        document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_0'].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[0].waveformSegment())
+    },'https://metasophiea.com/curve/sounds/bass.mp3');
+    document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[1].load('url',function(){
+        document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_1'].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[1].waveformSegment())
+    },'https://metasophiea.com/curve/sounds/snare.mp3');
+    document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[2].load('url',function(){
+        document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_2'].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[2].waveformSegment())
+    },'https://metasophiea.com/curve/sounds/openHiHat.mp3');
+    document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[3].load('url',function(){
+        document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_3'].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[3].waveformSegment())
+    },'https://metasophiea.com/curve/sounds/closeHiHat.mp3');
+    document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[4].load('url',function(){
+        document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_4'].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[4].waveformSegment())
+    },'https://metasophiea.com/curve/sounds/crash.mp3');
+
+    document.getElementById('launchpad').importData({
+        data:[
+            [
+                [true, false,false,true, true, false,false,false],
+                [false,false,true, false,false,false,true, false],
+                [false,false,false,false,false,false,false,false],
+                [true, false,true, false,true, false,true, false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+            ],
+            [
+                [true, false,false,true, true, true, false,false],
+                [false,false,true, false,false,true, false,false],
+                [false,false,false,false,false,false,true, false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+            ],
+        ]
+    });
+
+    document.getElementById('pulseGenerator').children.tempo.set(1)
+
 </script>

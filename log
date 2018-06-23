@@ -1,4 +1,14 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-06-23
+  - updated demo1 to have sound and sequencing
+  - launchpad object importData method updated to deal with missing values
+    (something) that sould be done everywhere probably
+  - oneShot_multi circuit load method callback protected against missing 
+    function
+  - launchpad circuit now runs the pageChange callback after importPage or 
+    importPages
+
+
 2018-06-22
   - added symbols to the rest of the audio file players
   - pushed the audio players and circuits to the 'finished' folder

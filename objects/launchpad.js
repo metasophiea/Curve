@@ -112,13 +112,13 @@ this.launchpad = function(x,y,debug=false){
     //import/export
         obj.exportData = function(){
             return {
-                currentPage:obj.internalCircuits.page(),
+                currentPage: obj.internalCircuits.page(),
                 data:obj.internalCircuits.exportPages(),
             };
         };
         obj.importData = function(data){
-            obj.internalCircuits.importPages(data.data);
-            obj.internalCircuits.page(data.currentPage);
+            if(data.data != undefined){ obj.internalCircuits.importPages(data.data); }
+            if(data.currentPage){ obj.internalCircuits.page(data.currentPage); }
         };
 
     //internal functions
