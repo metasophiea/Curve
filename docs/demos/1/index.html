@@ -21,7 +21,12 @@
 
 </html>
 
-<script type='text/javascript' src='workspace.js'></script>
+<script type='text/javascript' src='../../workspace.js'></script>
+<!-- <script type='text/javascript' src='../../workspace.min.js'></script> -->
+
+
+
+
 <script>
     var pulseGenerator_1 = objects.pulseGenerator(750, 140);
     __globals.panes.middleground.append( pulseGenerator_1 );
@@ -31,35 +36,33 @@
     __globals.panes.middleground.append( oneShot_multi_multiTrack_1 );
     var audio_sink_1 = objects.audio_sink(20,20);
     __globals.panes.middleground.append( audio_sink_1 );
+    //reverbUnit
+        var reverbUnit_1 = objects.reverbUnit(50, 180);
+        __globals.panes.middleground.append( reverbUnit_1 );
 
     pulseGenerator_1.io.out.connectTo(launchpad_1.io.pulse);
-    launchpad_1.io.out_0.connectTo(oneShot_multi_multiTrack_1.io.trigger_0);
-    launchpad_1.io.out_1.connectTo(oneShot_multi_multiTrack_1.io.trigger_1);
-    launchpad_1.io.out_2.connectTo(oneShot_multi_multiTrack_1.io.trigger_2);
-    launchpad_1.io.out_3.connectTo(oneShot_multi_multiTrack_1.io.trigger_3);
-    launchpad_1.io.out_4.connectTo(oneShot_multi_multiTrack_1.io.trigger_4);
-    launchpad_1.io.out_5.connectTo(oneShot_multi_multiTrack_1.io.trigger_5);
-    launchpad_1.io.out_6.connectTo(oneShot_multi_multiTrack_1.io.trigger_6);
-    launchpad_1.io.out_7.connectTo(oneShot_multi_multiTrack_1.io.trigger_7);
+    for(var a = 0; a < 8; a++){ launchpad_1.io['out_'+a].connectTo(oneShot_multi_multiTrack_1.io['trigger_'+a]); }
     oneShot_multi_multiTrack_1.io.outRight.connectTo( audio_sink_1.io.right );
     oneShot_multi_multiTrack_1.io.outLeft.connectTo( audio_sink_1.io.left );
 
 
-    document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[0].load('url',function(){
-        document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_0'].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[0].waveformSegment())
-    },'https://metasophiea.com/curve/sounds/bass.mp3');
-    document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[1].load('url',function(){
-        document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_1'].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[1].waveformSegment())
-    },'https://metasophiea.com/curve/sounds/snare.mp3');
-    document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[2].load('url',function(){
-        document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_2'].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[2].waveformSegment())
-    },'https://metasophiea.com/curve/sounds/openHiHat.mp3');
-    document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[3].load('url',function(){
-        document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_3'].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[3].waveformSegment())
-    },'https://metasophiea.com/curve/sounds/closeHiHat.mp3');
-    document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[4].load('url',function(){
-        document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_4'].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[4].waveformSegment())
-    },'https://metasophiea.com/curve/sounds/crash.mp3');
+    var sounds = [
+        'https://metasophiea.com/curve/sounds/bass.mp3',
+        'https://metasophiea.com/curve/sounds/snare.mp3',
+        'https://metasophiea.com/curve/sounds/openHiHat.mp3',
+        'https://metasophiea.com/curve/sounds/closeHiHat.mp3',
+        'https://metasophiea.com/curve/sounds/crash.mp3'
+    ];
+
+    for(var a = 0; a < sounds.length; a++){
+        document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[a].load('url',
+            function(a){
+                return function(){
+                    document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_'+a].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[a].waveformSegment());
+                };
+            }(a)
+        ,sounds[a]);
+    }
 
     document.getElementById('launchpad').importData({
         data:[

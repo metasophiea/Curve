@@ -45,14 +45,14 @@ this.reverbUnit = function(x,y){
             {type:'dial_continuous',name:'outGain',data:{
                 x: 20, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                onchange:function(){},
+                onchange:function(value){ obj.reverbCircuit.outGain(value); },
             }},
             {type:'label', name:'wetdry_1/2', data:{x:66.5, y:39, text:'wet', style:style.h2}},
             {type:'label', name:'wetdry_1',   data:{x:92.5, y:39, text:'dry', style:style.h2}},
             {type:'dial_continuous',name:'wetdry',data:{
                 x: 82.5, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                onchange:function(){},
+                onchange:function(value){ obj.reverbCircuit.wetdry(1-value); },
             }},
 
             {type:'button_rect',name:'raiseByOne',data:{

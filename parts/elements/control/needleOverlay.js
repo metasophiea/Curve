@@ -34,18 +34,17 @@ this.needleOverlay = function(
             object.append(controlObjectsGroup);
 
     //internal functions
-        function setGenericNeedle(number,location,specialStyle=''){
+        function setGenericNeedle(number,location,specialStyle={}){
             if(controlObjects.generic[number] && location != undefined){
                 __globals.utility.element.setTransform_XYonly( controlObjects.generic[number], location*width - width*needleWidth*location, 0);
             }else if(controlObjects.generic[number]){
                 controlObjects.generic[number].remove();
                 delete controlObjects.generic[number];
             }else{
-                controlObjects.generic[number] = __globals.utility.experimental.elementMaker('g','generic_'+number,{x:(location*width - needleWidth*width/2)})
+                controlObjects.generic[number] = __globals.utility.experimental.elementMaker('g','generic_'+number,{x:(location*width - needleWidth*width/2), style:specialStyle})
                 controlObjects.generic[number].append( __globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}) );
                 controlObjects.generic[number].append( __globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);'}) );
                 controlObjectsGroup.append( controlObjects.generic[number] );
-                if(specialStyle.length > 0){ __globals.utility.element.setStyle(controlObjects.generic[number],specialStyle); }
             }
         }
         //place the selected needle at the selected location

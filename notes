@@ -1,3 +1,16 @@
+Minification
+    https://closure-compiler.appspot.com/ (it might complain about one of the 'delete' commands, but if you appease it it'll work)
+
+
+
+
+
+
+
+
+
+
+
 working on smooth node transitions
     main curve types seem to be
         instant

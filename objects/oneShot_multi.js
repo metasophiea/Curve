@@ -45,30 +45,52 @@ this.oneShot_multi = function(x,y,debug=false){
                     down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
                 }, 
                 onclick:function(){
+                    var filePlayer = obj.oneShot;
+                    var waveport = design.grapher_waveWorkspace.grapher_waveWorkspace;
+                    
                     //no file = don't bother
-                        if(obj.oneShot.duration() < 0){return;}
-            
+                        if(filePlayer.duration() < 0){return;}
+
+                    //determind start, end and duration values
+                        var start = waveport.area().A != undefined ? waveport.area().A : 0;
+                        var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                        var duration = filePlayer.duration();
+
+                        var startTime = start*duration;
+                        var duration = end*duration - startTime;
+
                     //actualy start the audio
-                        obj.oneShot.fire();
+                        filePlayer.fire(startTime, duration);
 
                     //determine playhead number
                         var playheadNumber = 0;
                         while(playheadNumber in playheads){playheadNumber++;}
                         playheads[playheadNumber] = true;
 
+                    //flash light
+                        design.glowbox_rect.glowbox_rect.on();
+                        setTimeout(
+                            function(){
+                                design.glowbox_rect.glowbox_rect.off();
+                            }
+                        ,100);
+
                     //perform graphical movements
-                        var duration = obj.oneShot.duration();
-                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(playheadNumber,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
-                        setTimeout(function(){design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(playheadNumber,1);},1);
+                        waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
+                        setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
                         setTimeout(function(){
-                            design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(playheadNumber);
+                            waveport.genericNeedle(playheadNumber);
                             delete playheads[playheadNumber];
                         },duration*1000);
                 }
             }},
 
+            
+            {type:'glowbox_rect', name:'glowbox_rect', data:{
+                x:30, y:5, width:5, height:45,
+            }},
             {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false,
+                x:35, y:5, width:180, height:45, selectNeedle:false, selectionArea:true,
             }},
         ]
     };

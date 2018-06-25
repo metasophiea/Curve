@@ -1,8 +1,25 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-06-25
+  - added light feature to the multitrack and single track miltishot audio file
+    players
+  - also added the ability to select a region to use within the audio track
+  - forgot to hook up the fdail in the reverb object
+
+  bug update: I'm really not sure of how to fix this missing playhead thing..
+              it really seems like a processing issue; if you step through the
+              program manually, everything is set..It seems to work fine
+              sometimes and not others..I think I'll leave it for now. I've
+              added lights to the multi track object anyway.
+
+  future ideas
+  - multi track multi shot thing, should have a panic button
+  - zoom features on waveWorkspaces
+
+
 2018-06-23
   - updated demo1 to have sound and sequencing
   - launchpad object importData method updated to deal with missing values
-    (something) that sould be done everywhere probably
+    (something that sould be done everywhere probably)
   - oneShot_multi circuit load method callback protected against missing 
     function
   - launchpad circuit now runs the pageChange callback after importPage or 

@@ -686,19 +686,22 @@ __globals.utility = new function(){
             return styleString;
         };
         this.elementMaker = function(type,name,data){
-            if(!data.style){data.style={};}
-
+            if(!data.style){data.style='';}
             switch(type){
-                default: console.warn('Unknown element: '+ type); return null; break;
 
                 //basic
-                    case 'g':      return parts.elements.basic.g(name, data.x, data.y, data.r); break;
+                    case 'g':      return parts.elements.basic.g(name, data.x, data.y, data.r, data.style); break;
                     case 'line':   return parts.elements.basic.line(name, data.x1, data.y1, data.x2, data.y2, data.style); break;
                     case 'rect':   return parts.elements.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
                     case 'path':   return parts.elements.basic.path(name, data.path, data.lineType, data.style); break;
                     case 'text':   return parts.elements.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
                     case 'circle': return parts.elements.basic.circle(name, data.x, data.y, data.r, data.angle, data.style); break;
                     case 'canvas': return parts.elements.basic.canvas(name, data.x, data.y, data.width, data.height, data.angle, data.resolution);
+            }
+
+            if(data.style == ''){data.style={};}
+            switch(type){
+                default: console.warn('Unknown element: '+ type); return null; break;
 
                 //display
                     case 'label': return parts.elements.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;

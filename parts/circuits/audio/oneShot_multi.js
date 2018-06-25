@@ -50,13 +50,13 @@ this.oneShot_multi = function(context){
                 },
             type,url);
         };
-        this.fire = function(){
+        this.fire = function(from=0, duration){
             //check if we should play at all (the file must be loaded)
                 if(!state.fileLoaded){return;}
             //load buffer, enter settings and start from zero
                 flow.bufferSource = __globals.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
                 flow.bufferSource.playbackRate.value = state.rate;
-                flow.bufferSource.start(0,0);
+                flow.bufferSource.start(0,from,duration);
         };
         this.stop = function(){
             if(!state.fileLoaded){return;}

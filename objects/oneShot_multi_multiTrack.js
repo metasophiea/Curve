@@ -29,10 +29,17 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                 {type:'circle', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
             ]);
 
+            //activation light
+            design.elements.push(
+                {type:'glowbox_rect', name:'glowbox_rect_'+a, data:{
+                    x:30, y:5+a*(2+45), width:5, height:45,
+                }}
+            );
+
             //waveport
             design.elements.push(
                 {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_'+a, data:{
-                    x:30, y:5+a*(2+45), width:185, height:45, selectNeedle:false, selectionArea:false,
+                    x:35, y:5+a*(2+45), width:180, height:45, selectNeedle:false, selectionArea:true,
                 }}
             );
 
@@ -66,29 +73,48 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                         down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
                     }, 
                     onclick:function(){
-                        var filePlayer = obj.oneShot_multi_array[parseInt(this.id.split('_')[1])];
-                        var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+parseInt(this.id.split('_')[1])];
-                        var playheads = obj.playheads[parseInt(this.id.split('_')[1])];
+                        var instance = parseInt(this.id.split('_')[1]);
+                        var filePlayer = obj.oneShot_multi_array[instance];
+                        var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
+                        var playheads = obj.playheads[instance];
 
                         //no file = don't bother
                             if(filePlayer.duration() < 0){return;}
                 
+                        //determind start, end and duration values
+                            var start = waveport.area().A != undefined ? waveport.area().A : 0;
+                            var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                            if(start > end){var temp=start;start=end; end=temp;}
+                            var duration = filePlayer.duration();
+
+                            var startTime = start*duration;
+                            var duration = end*duration - startTime;
+
                         //actualy start the audio
-                            filePlayer.fire();
+                            filePlayer.fire(startTime, duration);
 
                         //determine playhead number
                             var playheadNumber = 0;
                             while(playheadNumber in playheads){playheadNumber++;}
                             playheads[playheadNumber] = true;
 
+                        //flash light
+                            design.glowbox_rect['glowbox_rect_'+instance].on();
+                            setTimeout(
+                                function(a){
+                                    return function(){
+                                        design.glowbox_rect['glowbox_rect_'+a].off();
+                                    }
+                                }(instance)
+                            ,100);
+
                         //perform graphical movements
-                            var duration = filePlayer.duration();
-                            waveport.genericNeedle(playheadNumber,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
-                            setTimeout(function(){waveport.genericNeedle(playheadNumber,1);},1);
-                            setTimeout(function(){
+                            waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
+                            setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
+                            setTimeout(function(playheadNumber){
                                 waveport.genericNeedle(playheadNumber);
                                 delete playheads[playheadNumber];
-                            },duration*1000);
+                            },duration*1000,playheadNumber);
                     }
                 }}
             );
