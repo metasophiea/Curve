@@ -7886,7 +7886,7 @@
                                         up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
                                         down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(220,220,220,1)'
                                     }, 
-                                    onchange:function(instance){
+                                    onclick:function(instance){
                                         return function(value){
                                             var filePlayer = obj.oneShot_multi_array[instance];
                                             var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
