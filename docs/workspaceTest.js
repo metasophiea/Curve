@@ -3087,7 +3087,7 @@
                                         else if(a == pageCount){a = 0;}
                                         else if(a >= pageCount){a = pageCount-1;}
                                         currentPage = a;
-                                        this.pageChange( currentPage );
+                                        if(this.pageChange != undefined){this.pageChange(currentPage);}
                                     };
                                     this.incPage = function(){ this.page(currentPage+1); };
                                     this.decPage = function(){ this.page(currentPage-1); };
@@ -3103,7 +3103,7 @@
                                     this.importPage = function(data,a){
                                         if(a == undefined){a = currentPage;}
                                         pages[a] = data;
-                                        this.pageChange(currentPage);
+                                        if(this.pageChange != undefined){this.pageChange(currentPage);}
                                     };
                                 
                         
@@ -7629,7 +7629,7 @@
                                 }},
                                 {type:'connectionNode_data', name:'prevPage', data:{ 
                                     x: 125, y: 35, width: 5, height: 10,
-                                    receive:function(){oobj.internalCircuits.decPage();}
+                                    receive:function(){obj.internalCircuits.decPage();}
                                 }},
                             //pulse
                                 {type:'button_rect',name:'pulse',data:{
@@ -7734,6 +7734,12 @@
                             }
                         };
                         obj.internalCircuits.pageChange = pageChange;
+                
+                    //interface
+                    obj.i = {
+                        importPage:obj.internalCircuits.importPage,
+                        setPage:function(a){obj.internalCircuits.page(a);}
+                    };
                 
                     //setup 
                         lightLine();

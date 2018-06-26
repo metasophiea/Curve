@@ -1,4 +1,4 @@
-objects.testAudioObject = function(x,y,debug=false){
+objects.testAudiobject = function(x,y,debug=false){
     var style = {
         background:'fill:rgba(200,200,200,1)',
 
@@ -15,7 +15,7 @@ objects.testAudioObject = function(x,y,debug=false){
         },
     };
     var design = {
-        type: 'testAudioObject',
+        type: 'testAudiobject',
         x: x, y: y,
         base: {
             points:[{x:0,y:0},{x:220,y:0},{x:220,y:110},{x:0,y:110}], 
@@ -99,7 +99,7 @@ objects.testAudioObject = function(x,y,debug=false){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.testAudioObject,design);
+        var obj = __globals.utility.experimental.objectBuilder(objects.testAudiobject,design);
 
     //circuitry
         //audioFilePlayer

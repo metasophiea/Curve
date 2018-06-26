@@ -60,7 +60,7 @@ this.launchpad = function(xCount,yCount){
                 else if(a == pageCount){a = 0;}
                 else if(a >= pageCount){a = pageCount-1;}
                 currentPage = a;
-                this.pageChange( currentPage );
+                if(this.pageChange != undefined){this.pageChange(currentPage);}
             };
             this.incPage = function(){ this.page(currentPage+1); };
             this.decPage = function(){ this.page(currentPage-1); };
@@ -76,7 +76,7 @@ this.launchpad = function(xCount,yCount){
             this.importPage = function(data,a){
                 if(a == undefined){a = currentPage;}
                 pages[a] = data;
-                this.pageChange(currentPage);
+                if(this.pageChange != undefined){this.pageChange(currentPage);}
             };
         
 

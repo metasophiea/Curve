@@ -15,15 +15,15 @@
     var audioDuplicator_2 = objects.audio_duplicator(300,130);
     __globals.panes.middleground.append( audioDuplicator_2 );
 
-    var testAudioObject_1 = objects.testAudioObject(400,50);
-    __globals.panes.middleground.append( testAudioObject_1 );
+    var testAudiobject_1 = objects.testAudiobject(400,50);
+    __globals.panes.middleground.append( testAudiobject_1 );
 
     var audioSink_1 = objects.audio_sink(150, 275);
     __globals.panes.middleground.append( audioSink_1 );
 
 //do connections
-    testAudioObject_1.io.outRight.connectTo( audioDuplicator_1.io.input );
-    testAudioObject_1.io.outLeft.connectTo( audioDuplicator_2.io.input );
+    testAudiobject_1.io.outRight.connectTo( audioDuplicator_1.io.input );
+    testAudiobject_1.io.outLeft.connectTo( audioDuplicator_2.io.input );
 
     audioDuplicator_1.io.output_1.connectTo( audioScope_1.io.input );
     audioDuplicator_2.io.output_1.connectTo( audioScope_2.io.input );;

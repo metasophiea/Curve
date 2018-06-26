@@ -42,7 +42,7 @@ this.launchpad = function(x,y,debug=false){
                 }},
                 {type:'connectionNode_data', name:'prevPage', data:{ 
                     x: 125, y: 35, width: 5, height: 10,
-                    receive:function(){oobj.internalCircuits.decPage();}
+                    receive:function(){obj.internalCircuits.decPage();}
                 }},
             //pulse
                 {type:'button_rect',name:'pulse',data:{
@@ -147,6 +147,12 @@ this.launchpad = function(x,y,debug=false){
             }
         };
         obj.internalCircuits.pageChange = pageChange;
+
+    //interface
+    obj.i = {
+        importPage:obj.internalCircuits.importPage,
+        setPage:function(a){obj.internalCircuits.page(a);}
+    };
 
     //setup 
         lightLine();
