@@ -28,7 +28,17 @@ def includer(location, parentFile, inputfileName, outputObject, spacer=''):
         if os.path.isdir(location+'/'+inputfileName):
             includer( location+'/'+inputfileName+'/', '', '*', outputObject, spacer)
         else:
-            inputFile = open(location+'/'+inputfileName)
+            try:
+                inputFile = open(location+'/'+inputfileName)
+            except FileNotFoundError:
+                print('Could not find file')
+                print('\tlocation:', location)
+                print('\tparentFile:', parentFile)
+                print('\tinputfileName:', inputfileName)
+                print()
+                print('\terror:', sys.exc_info())
+                exit()
+
             for line in inputFile:
                 start = line.find('{{')
                 end = line.find('}}')

@@ -31,7 +31,7 @@
 //    
 //    audio
 //        changeAudioParam                (audioParam,target,time,curve,cancelScheduledValues=true)
-//        loadAudioBuffer                 (callback,type='file',url)
+//        loadBuffer                      (callback,type='file',url)
 //        waveformSegment                 (audioBuffer, bounds={start:0,end:1})
 //    
 //    math
@@ -115,6 +115,10 @@ __globals.utility = new function(){
         };
         this.getViewportDimensions = function(){
             return {width:__globals.svgElement.width.baseVal.value, height:__globals.svgElement.height.baseVal.value};
+        };
+        this.placeAndReturnObject = function(object,pane='middleground'){
+            __globals.panes[pane].append( object );
+            return object;
         };
     };
     this.element = new function(){

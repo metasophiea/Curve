@@ -1,4 +1,4 @@
-this.oneShot_multi = function(x,y,debug=false){
+objects.oneShot_multi = function(x,y,debug=false){
     var style = {
         background:'fill:rgba(200,200,200,1)',
         markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
@@ -131,7 +131,7 @@ this.oneShot_multi = function(x,y,debug=false){
         var obj = __globals.utility.experimental.objectBuilder(objects.oneShot_multi,design);
 
     //circuitry
-            var playheads = {};
+        var playheads = {};
 
         //audioFilePlayer
             obj.oneShot = new parts.circuits.audio.oneShot_multi(__globals.audio.context);
@@ -146,6 +146,6 @@ this.oneShot_multi = function(x,y,debug=false){
                 if(callback != undefined){callback();}
             }, url);
         };
-        
+
     return obj;
 };

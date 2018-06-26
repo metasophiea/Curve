@@ -1,4 +1,18 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-06-26
+  - updated oneShot_multi circuit to have a panic and playback rate features
+  - added rate slider and panic button to oneShot_multi object
+  - added rate slider and panic button to oneShot_multi_multiTrack object (also
+    changed the 'dynamic design' section to use closures in functions instead of
+    parsing the IDs of their parents)
+  - accidentally left is possbible to set the playback to 0 in the oneShot_multi
+    circuit (which the browser did not like) the minimum is now set at 1/1000000
+  - loadURL interface added to the oneShot_multi object (these interfaces should
+    save time when doing scripted jobs)
+  - some more interface work on oneShot_multi_multiTrack and the pulse generator
+  - reworded demo 1 a little bit, what with all these interface changes
+
+
 2018-06-25
   - added light feature to the multitrack and single track miltishot audio file
     players

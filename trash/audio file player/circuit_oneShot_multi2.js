@@ -1,4 +1,4 @@
-this.oneShot_multi = function(context){
+parts.circuits.audio.oneShot_multi2 = function(context){
     //state
         var state = {
             itself:this,
@@ -86,7 +86,6 @@ this.oneShot_multi = function(context){
         //options
             this.rate = function(value){
                 if(value == undefined){return state.rate;}
-                if(value == 0){value = 1/1000000;}
                 state.rate = value;
             };
 

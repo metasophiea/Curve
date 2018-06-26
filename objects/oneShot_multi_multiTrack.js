@@ -29,10 +29,24 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                 {type:'circle', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
             ]);
 
+            //rate adjust
+            design.elements.push(
+                {type:'slide', name:'rate_'+a, data:{
+                    x:26.25, y:5+a*(2+45), width:5, height:45, value:0.5, resetValue:0.5,
+                    style:{handle:'fill:rgba(220,220,220,1)'},
+                    onchange:function(instance){
+                        return function(value){
+                            var filePlayer = obj.oneShot_multi_array[instance];
+                            filePlayer.rate((1-design.slide['rate_'+instance].get())*2);
+                        }
+                    }(a)
+                }}
+            );
+
             //activation light
             design.elements.push(
                 {type:'glowbox_rect', name:'glowbox_rect_'+a, data:{
-                    x:30, y:5+a*(2+45), width:5, height:45,
+                    x:32.5, y:5+a*(2+45), width:2.5, height:45,
                 }}
             );
 
@@ -51,16 +65,17 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                         up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
                         down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
                     },
-                    onclick: function(){
-                        var a = parseInt(this.id.split('_')[1]);
-                        obj.oneShot_multi_array[a].load('file',
-                            function(a){
-                                return function(data){
-                                    design.grapher_waveWorkspace['grapher_waveWorkspace_'+a].draw( obj.oneShot_multi_array[a].waveformSegment() );
-                                }
-                            }(a)
-                        );
-                    }
+                    onclick:function(instance){
+                        return function(){
+                            obj.oneShot_multi_array[instance].load('file',
+                                function(instance){
+                                    return function(data){
+                                        design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance].draw( obj.oneShot_multi_array[instance].waveformSegment() );
+                                    }
+                                }(instance)
+                            );
+                        }
+                    }(a)
                 }}
             );
 
@@ -72,50 +87,79 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                         up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
                         down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
                     }, 
-                    onclick:function(){
-                        var instance = parseInt(this.id.split('_')[1]);
-                        var filePlayer = obj.oneShot_multi_array[instance];
-                        var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
-                        var playheads = obj.playheads[instance];
+                    onclick:function(instance){
+                        return function(){
+                            var filePlayer = obj.oneShot_multi_array[instance];
+                            var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
+                            var playheads = obj.playheads[instance];
+    
+                            //no file = don't bother
+                                if(filePlayer.duration() < 0){return;}
+                    
+                            //determind start, end and duration values
+                                var start = waveport.area().A != undefined ? waveport.area().A : 0;
+                                var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                                if(start > end){var temp=start;start=end; end=temp;}
+                                var duration = filePlayer.duration();
+    
+                                var startTime = start*duration;
+                                var duration = end*duration - startTime;
+    
+                            //actualy start the audio
+                                filePlayer.fire(startTime, duration);
+    
+                            //determine playhead number
+                                var playheadNumber = 0;
+                                while(playheadNumber in playheads){playheadNumber++;}
+                                playheads[playheadNumber] = {};
+    
+                            //flash light
+                                design.glowbox_rect['glowbox_rect_'+instance].on();
+                                setTimeout(
+                                    function(a){
+                                        return function(){
+                                            design.glowbox_rect['glowbox_rect_'+a].off();
+                                        }
+                                    }(instance)
+                                ,100);
+    
+                            //perform graphical movements
+                                waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
+                                setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
+                                playheads[playheadNumber].timeout = setTimeout(function(playheadNumber){
+                                    waveport.genericNeedle(playheadNumber);
+                                    delete playheads[playheadNumber];
+                                },duration*1000,playheadNumber);
+                        }
+                    }(a)
+                }}
+            );
 
-                        //no file = don't bother
-                            if(filePlayer.duration() < 0){return;}
-                
-                        //determind start, end and duration values
-                            var start = waveport.area().A != undefined ? waveport.area().A : 0;
-                            var end = waveport.area().B != undefined ? waveport.area().B : 1;
-                            if(start > end){var temp=start;start=end; end=temp;}
-                            var duration = filePlayer.duration();
-
-                            var startTime = start*duration;
-                            var duration = end*duration - startTime;
-
-                        //actualy start the audio
-                            filePlayer.fire(startTime, duration);
-
-                        //determine playhead number
-                            var playheadNumber = 0;
-                            while(playheadNumber in playheads){playheadNumber++;}
-                            playheads[playheadNumber] = true;
-
-                        //flash light
-                            design.glowbox_rect['glowbox_rect_'+instance].on();
-                            setTimeout(
-                                function(a){
-                                    return function(){
-                                        design.glowbox_rect['glowbox_rect_'+a].off();
-                                    }
-                                }(instance)
-                            ,100);
-
-                        //perform graphical movements
-                            waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
-                            setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
-                            setTimeout(function(playheadNumber){
-                                waveport.genericNeedle(playheadNumber);
-                                delete playheads[playheadNumber];
-                            },duration*1000,playheadNumber);
-                    }
+            //panic button
+            design.elements.push(
+                {type:'button_rect',name:'panic_'+a,data:{
+                    x:15, y: 17.5+a*(2+45), width:10, height:10, 
+                    style:{
+                        up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
+                        down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(220,220,220,1)'
+                    }, 
+                    onchange:function(instance){
+                        return function(value){
+                            var filePlayer = obj.oneShot_multi_array[instance];
+                            var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
+                            var playheads = obj.playheads[instance];
+    
+                            filePlayer.panic();
+    
+                            var keys = Object.keys(playheads);
+                            for(var a = 0; a < keys.length; a++){
+                                if(playheads[a] == undefined){continue;}
+                                clearTimeout(playheads[a].timeout);
+                                waveport.genericNeedle(a);
+                                delete playheads[a];
+                            }
+                        }
+                    }(a)
                 }}
             );
 
@@ -123,9 +167,11 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
             design.elements.push(
                 {type:'connectionNode_data', name:'trigger_'+a, data:{
                     x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
-                    receive:function(address, data){
-                        design.button_rect['fire_'+parseInt(this.id.split('_')[1])].click();
-                    }
+                    receive:function(instance){
+                        return function(){
+                            design.button_rect['fire_'+instance].click();
+                        }
+                    }(a)
                 }}
             );
 
@@ -147,5 +193,21 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                 obj.playheads.push([]);
             }
 
+    //interface
+        obj.i = {
+            loadURL:function(trackNumber, url, callback){
+                obj.oneShot_multi_array[trackNumber].load('url', 
+                    function(a){
+                        return function(){
+                            document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_'+a].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[a].waveformSegment());
+                        };
+                    }(trackNumber)
+                ,url);
+            },
+            area:function(trackNumber,a,b){
+                design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);
+            }
+        };
+    
     return obj;
 };

@@ -1,4 +1,4 @@
-this.oneShot_multi = function(x,y,debug=false){
+objects.oneShot_multi = function(x,y,debug=false){
     var style = {
         background:'fill:rgba(200,200,200,1)',
         markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
@@ -134,18 +134,9 @@ this.oneShot_multi = function(x,y,debug=false){
             var playheads = {};
 
         //audioFilePlayer
-            obj.oneShot = new parts.circuits.audio.oneShot_multi(__globals.audio.context);
+            obj.oneShot = new parts.circuits.audio.oneShot_multi2(__globals.audio.context);
             obj.oneShot.out_right().connect( design.connectionNode_audio.outRight.in() );
             obj.oneShot.out_left().connect( design.connectionNode_audio.outLeft.in() );
 
-    //interface
-        obj.i = {};
-        obj.i.loadURL = function(url, callback){
-            obj.oneShot.load('url', function(){
-                design.grapher_waveWorkspace.grapher_waveWorkspace.draw(oneShot_multi_1.oneShot.waveformSegment());
-                if(callback != undefined){callback();}
-            }, url);
-        };
-        
     return obj;
 };

@@ -38,7 +38,7 @@
             //    
             //    audio
             //        changeAudioParam                (audioParam,target,time,curve,cancelScheduledValues=true)
-            //        loadAudioBuffer                 (callback,type='file',url)
+            //        loadBuffer                      (callback,type='file',url)
             //        waveformSegment                 (audioBuffer, bounds={start:0,end:1})
             //    
             //    math
@@ -121,6 +121,10 @@
                     };
                     this.getViewportDimensions = function(){
                         return {width:__globals.svgElement.width.baseVal.value, height:__globals.svgElement.height.baseVal.value};
+                    };
+                    this.placeAndReturnObject = function(object,pane='middleground'){
+                        __globals.panes[pane].append( object );
+                        return object;
                     };
                 };
                 this.element = new function(){
@@ -2304,6 +2308,7 @@
                                 var flow = {
                                     track:{},
                                     bufferSource:null,
+                                    bufferSourceArray:[],
                                     channelSplitter:{},
                                     leftOut:{}, rightOut:{}
                                 };
@@ -2323,18 +2328,31 @@
                                     flow.channelSplitter.connect(flow.rightOut.node, 1);
                         
                                 //output node
-                                    this.out_left  = function(){return flow.leftOut.node;}
-                                    this.out_right = function(){return flow.rightOut.node;}
+                                    this.audioOut = function(channel){
+                                        switch(channel){
+                                            case 'r': return flow.rightOut.node; break;
+                                            case 'l': return flow.leftOut.node; break;
+                                            default: console.error('"parts.circuits.audio.oneShot_multi2.audioOut" unknown channel "'+channel+'"'); break;
+                                        }
+                                    };
+                                    this.out_left  = function(){return this.audioOut('l');}
+                                    this.out_right = function(){return this.audioOut('r');}
                         
-                                    
-                            //controls
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                            //loading
                                 this.loadRaw = function(data){
-                                    state.itself.stop();
+                                    // state.itself.stop();
                                     flow.track = data;
                                     state.fileLoaded = true;
                                     state.needlePosition = 0.0;
                                 };
-                                this.load = function(type,callback,url=''){
+                                this.load = function(type,callback,url){
                                     state.fileLoaded = false;
                                     __globals.utility.audio.loadAudioFile(
                                         function(data){
@@ -2343,27 +2361,36 @@
                                         },
                                     type,url);
                                 };
-                                this.fire = function(from=0, duration){
-                                    //check if we should play at all (the file must be loaded)
-                                        if(!state.fileLoaded){return;}
-                                    //load buffer, enter settings and start from zero
-                                        flow.bufferSource = __globals.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
-                                        flow.bufferSource.playbackRate.value = state.rate;
-                                        flow.bufferSource.start(0,from,duration);
-                                };
-                                this.stop = function(){
-                                    if(!state.fileLoaded){return;}
-                                    flow.bufferSource.stop(0);
-                                    flow.bufferSource = undefined;
-                                };
-                                this.rate = function(){
-                                    state.rate = value;
-                                };
+                        
+                            //control
+                                //play
+                                    this.fire = function(start=0,duration){
+                                        //check if we should play at all (the file must be loaded)
+                                            if(!state.fileLoaded){return;}
+                                        //load buffer, add onend code, enter rate setting, start and add to the array
+                                            var temp = __globals.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
+                                                flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
+                                            });
+                                            temp.playbackRate.value = state.rate;
+                                            temp.start(0,start*state.rate,duration*state.rate);
+                                            flow.bufferSourceArray.push(temp);
+                                    };
+                                    this.panic = function(){
+                                        while(flow.bufferSourceArray.length > 0){
+                                            flow.bufferSourceArray.shift().stop(0);
+                                        }
+                                    };
+                                //options
+                                    this.rate = function(value){
+                                        if(value == undefined){return state.rate;}
+                                        if(value == 0){value = 1/1000000;}
+                                        state.rate = value;
+                                    };
                         
                             //info
                                 this.duration = function(){
                                     if(!state.fileLoaded){return -1;}
-                                    return flow.track.duration;
+                                    return flow.track.duration / state.rate;
                                 };
                                 this.title = function(){
                                     if(!state.fileLoaded){return '';}
@@ -2375,7 +2402,6 @@
                                     return __globals.utility.audio.waveformSegment(flow.track.buffer,data);
                                 };
                         };
-
                         this.audio2percentage = function(){
                             return new function(){
                                 var analyser = {
@@ -7112,86 +7138,118 @@
                             style:style.background
                         },
                         elements:[
-                            {type:'connectionNode_audio', name:'outRight', data:{ type: 1, x: -10, y: 5, width: 10, height: 20 }},
-                            {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
-                            {type:'connectionNode_data', name:'trigger', data:{
-                                x: 220, y: 17.5, width: 10, height: 20,
-                                receive:function(address, data){ design.button_rect.fire.click(); }
-                            }},
+                            //connection nodes
+                                {type:'connectionNode_audio', name:'outRight', data:{ type: 1, x: -10, y: 5, width: 10, height: 20 }},
+                                {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
+                                {type:'connectionNode_data', name:'trigger', data:{
+                                    x: 220, y: 17.5, width: 10, height: 20,
+                                    receive:function(address, data){ design.button_rect.fire.click(); }
+                                }},
                 
                             //symbol
-                            {type:'path', name:'symbol_arrow', data:{ path:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
-                            {type:'rect', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
-                            {type:'circle', name:'symbol_outterCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
-                            {type:'circle', name:'symbol_infCircle1', data:{ x:8.5, y:40, r:1.5, style:style.strokeMarkings }},
-                            {type:'circle', name:'symbol_infCircle2', data:{ x:11.5, y:40, r:1.5, style:style.strokeMarkings }},
+                                {type:'path', name:'symbol_arrow', data:{ path:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
+                                {type:'rect', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
+                                {type:'circle', name:'symbol_outterCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
+                                {type:'circle', name:'symbol_infCircle1', data:{ x:8.5, y:40, r:1.5, style:style.strokeMarkings }},
+                                {type:'circle', name:'symbol_infCircle2', data:{ x:11.5, y:40, r:1.5, style:style.strokeMarkings }},
                 
-                            {type:'button_rect', name:'loadFile', data: {
-                                x:5, y: 5, width:20, height:10,
-                                style:{
-                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
-                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
-                                },
-                                onclick: function(){
-                                    obj.oneShot.load('file',function(data){
-                                        design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.oneShot.waveformSegment() );
-                                    });
-                                }
-                            }},
-                            {type:'button_rect',name:'fire',data:{
-                                x:5, y: 17.5, width:20, height:10, 
-                                style:{
-                                    up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
-                                    down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
-                                }, 
-                                onclick:function(){
-                                    var filePlayer = obj.oneShot;
-                                    var waveport = design.grapher_waveWorkspace.grapher_waveWorkspace;
-                                    
-                                    //no file = don't bother
-                                        if(filePlayer.duration() < 0){return;}
+                            //load/fire/panic buttons
+                                {type:'button_rect', name:'loadFile', data: {
+                                    x:5, y: 5, width:20, height:10,
+                                    style:{
+                                        up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                        down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                                    },
+                                    onclick: function(){
+                                        obj.oneShot.load('file',function(data){
+                                            design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.oneShot.waveformSegment() );
+                                        });
+                                    }
+                                }},
+                                {type:'button_rect',name:'fire',data:{
+                                    x:5, y: 17.5, width:10, height:10, 
+                                    style:{
+                                        up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
+                                        down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
+                                    }, 
+                                    onclick:function(){
+                                        var filePlayer = obj.oneShot;
+                                        var waveport = design.grapher_waveWorkspace.grapher_waveWorkspace;
+                                        
+                                        //no file = don't bother
+                                            if(filePlayer.duration() < 0){return;}
                 
-                                    //determind start, end and duration values
-                                        var start = waveport.area().A != undefined ? waveport.area().A : 0;
-                                        var end = waveport.area().B != undefined ? waveport.area().B : 1;
-                                        var duration = filePlayer.duration();
+                                        //determind start, end and duration values
+                                            var start = waveport.area().A != undefined ? waveport.area().A : 0;
+                                            var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                                            var duration = filePlayer.duration();
                 
-                                        var startTime = start*duration;
-                                        var duration = end*duration - startTime;
+                                            var startTime = start*duration;
+                                            var duration = end*duration - startTime;
                 
-                                    //actualy start the audio
-                                        filePlayer.fire(startTime, duration);
+                                        //actualy start the audio
+                                            filePlayer.fire(startTime, duration);
                 
-                                    //determine playhead number
-                                        var playheadNumber = 0;
-                                        while(playheadNumber in playheads){playheadNumber++;}
-                                        playheads[playheadNumber] = true;
+                                        //determine playhead number
+                                            var playheadNumber = 0;
+                                            while(playheadNumber in playheads){playheadNumber++;}
+                                            playheads[playheadNumber] = {};
                 
-                                    //flash light
-                                        design.glowbox_rect.glowbox_rect.on();
-                                        setTimeout(
-                                            function(){
-                                                design.glowbox_rect.glowbox_rect.off();
-                                            }
-                                        ,100);
+                                        //flash light
+                                            design.glowbox_rect.glowbox_rect.on();
+                                            setTimeout(
+                                                function(){
+                                                    design.glowbox_rect.glowbox_rect.off();
+                                                }
+                                            ,100);
                 
-                                    //perform graphical movements
-                                        waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
-                                        setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
-                                        setTimeout(function(){
-                                            waveport.genericNeedle(playheadNumber);
-                                            delete playheads[playheadNumber];
-                                        },duration*1000);
-                                }
-                            }},
+                                        //perform graphical movements
+                                            waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
+                                            setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
+                                            playheads[playheadNumber].timeout = setTimeout(function(){
+                                                waveport.genericNeedle(playheadNumber);
+                                                delete playheads[playheadNumber];
+                                            },duration*1000);
+                                    }
+                                }},
+                                {type:'button_rect',name:'panic',data:{
+                                    x:15, y: 17.5, width:10, height:10, 
+                                    style:{
+                                        up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
+                                        down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(220,220,220,1)'
+                                    }, 
+                                    onclick:function(){
+                                        var filePlayer = obj.oneShot;
+                                        var waveport = design.grapher_waveWorkspace.grapher_waveWorkspace;
                 
-                            
-                            {type:'glowbox_rect', name:'glowbox_rect', data:{
-                                x:30, y:5, width:5, height:45,
-                            }},
-                            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                                x:35, y:5, width:180, height:45, selectNeedle:false, selectionArea:true,
-                            }},
+                                        filePlayer.panic();
+                
+                                        var keys = Object.keys(playheads);
+                                        for(var a = 0; a < keys.length; a++){
+                                            if(playheads[a] == undefined){continue;}
+                                            clearTimeout(playheads[a].timeout);
+                                            waveport.genericNeedle(a);
+                                            delete playheads[a];
+                                        }
+                                    }
+                                }},
+                
+                            //rate adjust
+                                {type:'slide', name:'rate', data:{
+                                    x:26.25, y:5, width:5, height:45, value:0.5, resetValue:0.5,
+                                    style:{handle:'fill:rgba(220,220,220,1)'},
+                                    onchange:function(value){obj.oneShot.rate((1-value)*2);}
+                                }},
+                
+                            //fire light
+                                {type:'glowbox_rect', name:'glowbox_rect', data:{
+                                    x:32.5, y:5, width:2.5, height:45,
+                                }},
+                
+                            //waveport
+                                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                                    x:35, y:5, width:180, height:45, selectNeedle:false, selectionArea:true,
+                                }},
                         ]
                     };
                 
@@ -7206,6 +7264,15 @@
                             obj.oneShot.out_right().connect( design.connectionNode_audio.outRight.in() );
                             obj.oneShot.out_left().connect( design.connectionNode_audio.outLeft.in() );
                 
+                    //interface
+                        obj.i = {};
+                        obj.i.loadURL = function(url, callback){
+                            obj.oneShot.load('url', function(){
+                                design.grapher_waveWorkspace.grapher_waveWorkspace.draw(oneShot_multi_1.oneShot.waveformSegment());
+                                if(callback != undefined){callback();}
+                            }, url);
+                        };
+                        
                     return obj;
                 };
 
@@ -7705,10 +7772,24 @@
                                 {type:'circle', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
                             ]);
                 
+                            //rate adjust
+                            design.elements.push(
+                                {type:'slide', name:'rate_'+a, data:{
+                                    x:26.25, y:5+a*(2+45), width:5, height:45, value:0.5, resetValue:0.5,
+                                    style:{handle:'fill:rgba(220,220,220,1)'},
+                                    onchange:function(instance){
+                                        return function(value){
+                                            var filePlayer = obj.oneShot_multi_array[instance];
+                                            filePlayer.rate((1-design.slide['rate_'+instance].get())*2);
+                                        }
+                                    }(a)
+                                }}
+                            );
+                
                             //activation light
                             design.elements.push(
                                 {type:'glowbox_rect', name:'glowbox_rect_'+a, data:{
-                                    x:30, y:5+a*(2+45), width:5, height:45,
+                                    x:32.5, y:5+a*(2+45), width:2.5, height:45,
                                 }}
                             );
                 
@@ -7727,16 +7808,17 @@
                                         up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
                                         down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
                                     },
-                                    onclick: function(){
-                                        var a = parseInt(this.id.split('_')[1]);
-                                        obj.oneShot_multi_array[a].load('file',
-                                            function(a){
-                                                return function(data){
-                                                    design.grapher_waveWorkspace['grapher_waveWorkspace_'+a].draw( obj.oneShot_multi_array[a].waveformSegment() );
-                                                }
-                                            }(a)
-                                        );
-                                    }
+                                    onclick:function(instance){
+                                        return function(){
+                                            obj.oneShot_multi_array[instance].load('file',
+                                                function(instance){
+                                                    return function(data){
+                                                        design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance].draw( obj.oneShot_multi_array[instance].waveformSegment() );
+                                                    }
+                                                }(instance)
+                                            );
+                                        }
+                                    }(a)
                                 }}
                             );
                 
@@ -7748,50 +7830,79 @@
                                         up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
                                         down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
                                     }, 
-                                    onclick:function(){
-                                        var instance = parseInt(this.id.split('_')[1]);
-                                        var filePlayer = obj.oneShot_multi_array[instance];
-                                        var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
-                                        var playheads = obj.playheads[instance];
+                                    onclick:function(instance){
+                                        return function(){
+                                            var filePlayer = obj.oneShot_multi_array[instance];
+                                            var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
+                                            var playheads = obj.playheads[instance];
+                    
+                                            //no file = don't bother
+                                                if(filePlayer.duration() < 0){return;}
+                                    
+                                            //determind start, end and duration values
+                                                var start = waveport.area().A != undefined ? waveport.area().A : 0;
+                                                var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                                                if(start > end){var temp=start;start=end; end=temp;}
+                                                var duration = filePlayer.duration();
+                    
+                                                var startTime = start*duration;
+                                                var duration = end*duration - startTime;
+                    
+                                            //actualy start the audio
+                                                filePlayer.fire(startTime, duration);
+                    
+                                            //determine playhead number
+                                                var playheadNumber = 0;
+                                                while(playheadNumber in playheads){playheadNumber++;}
+                                                playheads[playheadNumber] = {};
+                    
+                                            //flash light
+                                                design.glowbox_rect['glowbox_rect_'+instance].on();
+                                                setTimeout(
+                                                    function(a){
+                                                        return function(){
+                                                            design.glowbox_rect['glowbox_rect_'+a].off();
+                                                        }
+                                                    }(instance)
+                                                ,100);
+                    
+                                            //perform graphical movements
+                                                waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
+                                                setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
+                                                playheads[playheadNumber].timeout = setTimeout(function(playheadNumber){
+                                                    waveport.genericNeedle(playheadNumber);
+                                                    delete playheads[playheadNumber];
+                                                },duration*1000,playheadNumber);
+                                        }
+                                    }(a)
+                                }}
+                            );
                 
-                                        //no file = don't bother
-                                            if(filePlayer.duration() < 0){return;}
-                                
-                                        //determind start, end and duration values
-                                            var start = waveport.area().A != undefined ? waveport.area().A : 0;
-                                            var end = waveport.area().B != undefined ? waveport.area().B : 1;
-                                            if(start > end){var temp=start;start=end; end=temp;}
-                                            var duration = filePlayer.duration();
-                
-                                            var startTime = start*duration;
-                                            var duration = end*duration - startTime;
-                
-                                        //actualy start the audio
-                                            filePlayer.fire(startTime, duration);
-                
-                                        //determine playhead number
-                                            var playheadNumber = 0;
-                                            while(playheadNumber in playheads){playheadNumber++;}
-                                            playheads[playheadNumber] = true;
-                
-                                        //flash light
-                                            design.glowbox_rect['glowbox_rect_'+instance].on();
-                                            setTimeout(
-                                                function(a){
-                                                    return function(){
-                                                        design.glowbox_rect['glowbox_rect_'+a].off();
-                                                    }
-                                                }(instance)
-                                            ,100);
-                
-                                        //perform graphical movements
-                                            waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
-                                            setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
-                                            setTimeout(function(playheadNumber){
-                                                waveport.genericNeedle(playheadNumber);
-                                                delete playheads[playheadNumber];
-                                            },duration*1000,playheadNumber);
-                                    }
+                            //panic button
+                            design.elements.push(
+                                {type:'button_rect',name:'panic_'+a,data:{
+                                    x:15, y: 17.5+a*(2+45), width:10, height:10, 
+                                    style:{
+                                        up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
+                                        down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(220,220,220,1)'
+                                    }, 
+                                    onchange:function(instance){
+                                        return function(value){
+                                            var filePlayer = obj.oneShot_multi_array[instance];
+                                            var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
+                                            var playheads = obj.playheads[instance];
+                    
+                                            filePlayer.panic();
+                    
+                                            var keys = Object.keys(playheads);
+                                            for(var a = 0; a < keys.length; a++){
+                                                if(playheads[a] == undefined){continue;}
+                                                clearTimeout(playheads[a].timeout);
+                                                waveport.genericNeedle(a);
+                                                delete playheads[a];
+                                            }
+                                        }
+                                    }(a)
                                 }}
                             );
                 
@@ -7799,9 +7910,11 @@
                             design.elements.push(
                                 {type:'connectionNode_data', name:'trigger_'+a, data:{
                                     x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
-                                    receive:function(address, data){
-                                        design.button_rect['fire_'+parseInt(this.id.split('_')[1])].click();
-                                    }
+                                    receive:function(instance){
+                                        return function(){
+                                            design.button_rect['fire_'+instance].click();
+                                        }
+                                    }(a)
                                 }}
                             );
                 
@@ -7823,6 +7936,22 @@
                                 obj.playheads.push([]);
                             }
                 
+                    //interface
+                        obj.i = {
+                            loadURL:function(trackNumber, url, callback){
+                                obj.oneShot_multi_array[trackNumber].load('url', 
+                                    function(a){
+                                        return function(){
+                                            document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_'+a].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[a].waveformSegment());
+                                        };
+                                    }(trackNumber)
+                                ,url);
+                            },
+                            area:function(trackNumber,a,b){
+                                design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);
+                            }
+                        };
+                    
                     return obj;
                 };
 
@@ -8145,6 +8274,13 @@
                                     },1000*(60/tempo));
                                 }
                         }
+                
+                    //interface
+                        obj.i = {
+                            setTempo:function(value){
+                                design.dial_continuous.tempo.set(value);
+                            },
+                        };
                 
                     //setup
                         design.dial_continuous.tempo.set(0.5);

@@ -67,6 +67,13 @@ this.pulseGenerator = function(x,y,debug=false){
                 }
         }
 
+    //interface
+        obj.i = {
+            setTempo:function(value){
+                design.dial_continuous.tempo.set(value);
+            },
+        };
+
     //setup
         design.dial_continuous.tempo.set(0.5);
 

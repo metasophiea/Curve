@@ -1,4 +1,4 @@
-this.oneShot_multi = function(context){
+parts.circuits.audio.oneShot_multi = function(context){
     //state
         var state = {
             itself:this,
