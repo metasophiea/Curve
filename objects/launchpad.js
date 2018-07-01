@@ -150,7 +150,10 @@ this.launchpad = function(x,y,debug=false){
 
     //interface
     obj.i = {
-        importPage:obj.internalCircuits.importPage,
+        importPage:function(data,a){obj.internalCircuits.importPage(data,a);},
+        exportPage:function(a){return obj.internalCircuits.exportPage(a);},
+        importPages:function(data){obj.internalCircuits.importPages(data);},
+        exportPages:function(){return obj.internalCircuits.exportPages();},
         setPage:function(a){obj.internalCircuits.page(a);}
     };
 

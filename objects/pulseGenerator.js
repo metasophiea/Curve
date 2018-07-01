@@ -17,8 +17,8 @@ this.pulseGenerator = function(x,y,debug=false){
             type:'path',
             points:[
                 {x:0,y:10},{x:10,y:0},
-                {x:100,y:0},{x:110,y:10},
-                {x:110,y:30},{x:100,y:40},
+                {x:100,y:0},{x:115,y:10},
+                {x:115,y:30},{x:100,y:40},
                 {x:10,y:40},{x:0,y:30}
             ], 
             style:style.background
@@ -26,6 +26,18 @@ this.pulseGenerator = function(x,y,debug=false){
         elements:[
             {type:'connectionNode_data', name:'out', data:{
                 x: -5, y: 11.25, width: 5, height: 17.5,
+            }},
+            {type:'connectionNode_data', name:'sync', data:{
+                x: 115, y: 11.25, width: 5, height: 17.5,
+                receive:function(){design.button_rect.sync.click();},
+            }},
+            {type:'button_rect', name:'sync', data:{
+                x:102.5, y: 11.25, width:10, height: 17.5,
+                style:{
+                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                }, 
+                onclick:function(){updateTempo(tempo)},
             }},
             {type:'dial_continuous',name:'tempo',data:{
                 x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
@@ -51,20 +63,24 @@ this.pulseGenerator = function(x,y,debug=false){
 
     //internal functions
         var interval = null;
-        function updateTempo(tempo){
+        var tempo = 120;
+        function updateTempo(newTempo){
             //update readout
                 design.readout_sixteenSegmentDisplay.readout.text(
-                    __globals.utility.math.padString(tempo,3,' ')+'bpm'
+                    __globals.utility.math.padString(newTempo,3,' ')+'bpm'
                 );
                 design.readout_sixteenSegmentDisplay.readout.print();
 
             //update interval
                 if(interval){ clearInterval(interval); }
-                if(tempo > 0){
+                if(newTempo > 0){
                     interval = setInterval(function(){
                         obj.io.out.send('pulse');
-                    },1000*(60/tempo));
+                    },1000*(60/newTempo));
                 }
+
+            obj.io.out.send('pulse');
+            tempo = newTempo;
         }
 
     //interface

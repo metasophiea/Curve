@@ -1,2 +1,2 @@
-./gravity testMain.js docs/workspaceTest.js
-./gravity main.js docs/workspace.js
+./compilation/gravity testMain.js docs/workspaceTest.js
+./compilation/gravity main.js docs/workspace.js

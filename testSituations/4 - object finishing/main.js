@@ -47,6 +47,10 @@
     var recorder_1 = objects.recorder(355, 110);
     __globals.panes.middleground.append( recorder_1 );
 
+//audio input
+    var audioIn_1 = objects.audioIn(15, 275);
+    __globals.panes.middleground.append( audioIn_1 );
+
 //launchpad
     var launchpad_1 = objects.launchpad(270, 225);
     __globals.panes.middleground.append( launchpad_1 );
@@ -58,3 +62,15 @@
 //pulseGenerator
     var pulseGenerator_1 = objects.pulseGenerator(790, 110);
     __globals.panes.middleground.append( pulseGenerator_1 );
+
+//musical keyboard
+    var musicalkeyboard_1 = objects.musicalkeyboard(80, 330);
+    __globals.panes.middleground.append( musicalkeyboard_1 );
+
+
+
+
+
+
+
+

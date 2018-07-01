@@ -60,7 +60,7 @@ __globals.audio.context = new (window.AudioContext || window.webkitAudioContext)
 // __globals.audio.noteName_frequency = function(name, offsetOctave=0){
 //     return __globals.audio.names_frequencies[(parseInt(name.chatAt(0))+offsetOctave) + name.slice(1)];
 // };
-// __globals.audio.midiNumber_frequency = function(number, offsetOctave=0){
+// __globals.audio.midinumber_frequency = function(number, offsetOctave=0){
 //     return __globals.audio.names_frequencies[__globals.audio.midinumbers_names[number+offsetOctave*12]];
 // };
 

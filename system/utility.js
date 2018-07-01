@@ -100,9 +100,10 @@ __globals.utility = new function(){
             };
         };
         this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;',push=false){
-            var g = parts.basic.g(null, x, y);
-            var dot = parts.basic.circle(null, 0, 0, r, 0, style);
-            var textElement = parts.basic.text(null, r, 0, text, 0, style);
+            var g = __globals.utility.experimental.elementMaker('g',null,{x:x, y:y});//parts.basic.g(null, x, y);
+
+            var dot = __globals.utility.experimental.elementMaker('circle',null,{x:0, y:0, r:r, style:style});//parts.basic.circle(null, 0, 0, r, 0, style);
+            var textElement =  __globals.utility.experimental.elementMaker('text',null,{x:0, y:0, angle:r, text:text, style:style});//parts.basic.text(null, r, 0, text, 0, style);
             g.appendChild(dot);
             g.appendChild(textElement);
 

@@ -8,6 +8,7 @@ this.audio_duplicator = function(x,y){
         x:x, y:y,
         base:{
             points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+            style:'fill:rgba(200,200,200,0);'
         },
         elements:[
             {type:'connectionNode_audio', name:'input', data:{ type:0, x:45, y:5, width:20, height:20 }},

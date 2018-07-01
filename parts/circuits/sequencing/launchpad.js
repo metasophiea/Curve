@@ -5,6 +5,11 @@ this.launchpad = function(xCount,yCount){
     var position = 0;
     var previousPosition = xCount-1;
 
+    //internal functions
+        function makePage(xCount,yCount,fill){
+            return Array(xCount).fill(Array(yCount).fill(fill));
+        }
+
     //controls
         //getting/setting a square or a column
             this.square = function(x,y,value){
@@ -67,11 +72,17 @@ this.launchpad = function(xCount,yCount){
 
 
         //getting/setting the data ina page or all pages
-            this.exportPages = function(){return pages;};
-            this.importPages = function(data){pages = data;this.pageChange(currentPage);};
+            this.exportPages = function(){
+                return JSON.parse(JSON.stringify(pages));
+            };
+            this.importPages = function(data){
+                pages = data;
+                this.pageChange(currentPage);
+            };
             this.exportPage = function(a){
                 if(a == undefined){a = currentPage;}
-                return pages[a];
+                if(pages[a] == undefined){ return makePage(xCount,yCount,false); }
+                return JSON.parse(JSON.stringify(pages[a]));
             };
             this.importPage = function(data,a){
                 if(a == undefined){a = currentPage;}

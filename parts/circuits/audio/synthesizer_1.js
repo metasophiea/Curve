@@ -65,7 +65,7 @@ this.synthesizer_1 = function(
 
     //oscillator generator
         function makeOSC(
-            context, connection, midiNumber,
+            context, connection, midinumber,
             type, periodicWave, 
             gain, attack, release,
             detune, octave
@@ -78,7 +78,7 @@ this.synthesizer_1 = function(
                             context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
                         ); 
                     }else{ this.generator.type = type; }
-                    this.generator.frequency.setTargetAtTime(__globals.audio.num2freq(midiNumber,octave), context.currentTime, 0);
+                    this.generator.frequency.setTargetAtTime(__globals.audio.num2freq(midinumber,octave), context.currentTime, 0);
                     this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
                     this.generator.start(0);
 

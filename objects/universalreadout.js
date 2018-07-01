@@ -14,7 +14,7 @@ this.universalreadout = function(x,y,debug=false){
         elements:[
             {type:'connectionNode_data', name:'in', data:{
                 x: 0, y: 0, width: 20, height: 20,
-                receive: function(address,data){ print('address: '+address+' data: '+data); }
+                receive: function(address,data){ print('address: '+address+' data: '+JSON.stringify(data)); }
             }},
         ]
     };

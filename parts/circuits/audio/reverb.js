@@ -32,7 +32,7 @@ this.reverbUnit = function(
             ajaxRequest.open('GET', repoURL+type, true);
             ajaxRequest.responseType = 'arraybuffer';
             ajaxRequest.onload = function(){
-                context.decodeAudioData(ajaxRequest.response, function(buffer) {flow.reverbNode.node.buffer = buffer;}, function(e){"Error with decoding audio data" + e.err});
+                context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
                 if(callback){callback();}  
             };
             ajaxRequest.send();

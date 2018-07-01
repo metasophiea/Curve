@@ -21,7 +21,8 @@
 
 </html>
 
-<script type='text/javascript' src='../../workspace.js'></script>
+<!-- <script type='text/javascript' src='../../workspace.js'></script> -->
+<script type='text/javascript' src='../../workspace.min.js'></script>
 
 
 <script>
@@ -54,50 +55,52 @@
         reverbUnit_2.io.audioOut.connectTo( audio_sink.io.left );
 
     //load sounds from urls into the multi track
-        var libURL = 'https://metasophiea.com/curve/demos/1/sounds/';
-        var sounds = [ libURL+'bass.mp3', libURL+'snare.mp3', libURL+'openHiHat.mp3', libURL+'closeHiHat.mp3', libURL+'crash.mp3',
-            'https://metasophiea.com/apps/partyCalculator/tracks/1-bassSynth_08.wav',
-            'https://metasophiea.com/apps/partyCalculator/tracks/5-strings_09.wav',
-            'https://metasophiea.com/apps/partyCalculator/tracks/2-mallet_03.wav'
-
+        var libURLs = ['https://metasophiea.com/curve/demos/1/sounds/','https://metasophiea.com/apps/partyCalculator/tracks/'];
+        var sounds = [
+            libURLs[0]+'bass.mp3', 
+            libURLs[0]+'snare.mp3', 
+            libURLs[0]+'openHiHat.mp3', 
+            libURLs[0]+'closeHiHat.mp3', 
+            libURLs[0]+'crash.mp3',
+            libURLs[1]+'1-bassSynth_08.wav',
+            libURLs[1]+'5-strings_09.wav',
+            libURLs[1]+'2-mallet_03.wav'
         ];
         for(var a = 0; a < sounds.length; a++){ oneShot_multi_multiTrack.i.loadURL(a, sounds[a]); }
 
-    //load performance data into the launchpad_1
-        launchpad_1.importData({
-            data:[
-                [
-                    [true, false,false,true, false,true, false,false],
-                    [false,false,true, false,false,false,true, false],
-                    [false,false,false,false,false,false,false,true ],
-                    [false,true, true, false,true, true, false,false],
-                    [false,false,false,false,false,false,false,false],
-                    [false,false,false,false,false,false,false,false],
-                    [false,false,false,false,false,false,false,false],
-                    [true, false,false,false,false,false,false,false],
-                ],
-                [
-                    [true, false,false,true, true, false,false,false],
-                    [false,false,true, false,false,false,true, false],
-                    [false,false,false,false,false,false,false,false],
-                    [true, false,true, false,true, false,true, false],
-                    [false,false,false,false,false,false,false,false],
-                    [false,false,false,false,false,false,false,false],
-                    [false,false,false,false,false,false,false,false],
-                    [false,false,false,false,false,false,false,false],
-                ],
-                [
-                    [true, false,false,true, true, true, false,false],
-                    [false,false,true, false,false,true, false,false],
-                    [false,false,false,false,false,false,true, false],
-                    [false,false,false,false,false,false,false,false],
-                    [false,false,false,false,false,false,false,false],
-                    [false,false,false,false,false,false,false,false],
-                    [false,false,false,false,false,false,false,false],
-                    [false,false,false,false,false,false,false,false],
-                ],
-            ]
-        });
+    //load performance data into the launchpads and set their pages
+        launchpad_1.i.importPages([
+            [
+                [true, false,false,true, false,true, false,false],
+                [false,false,true, false,false,false,true, false],
+                [false,false,false,false,false,false,false,true ],
+                [false,true, true, false,true, true, false,false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [true, false,false,false,false,false,false,false],
+            ],
+            [
+                [true, false,false,true, true, false,false,false],
+                [false,false,true, false,false,false,true, false],
+                [false,false,false,false,false,false,false,false],
+                [true, false,true, false,true, false,true, false]
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [true, false,false,false,false,false,false,false],
+            ],
+            [
+                [true, false,false,true, true, true, false,false],
+                [false,false,true, false,false,true, false,false],
+                [false,false,false,false,false,false,true, false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [false,false,false,false,false,false,false,false],
+                [true, false,false,false,false,false,false,false],
+            ],
+        ]);
         launchpad_2.i.importPage([
             [true, false,true, false,true, false,true, false],
             [false,false,false,false,false,false,false,false],
@@ -113,7 +116,7 @@
         launchpad_3.i.importPage([
             [false,false,false,false,false,false,false,false],
             [false,false,false,false,false,true, false,false],
-            [false,true, false, false,false,false,false,false],
+            [false,true, false,false,false,false,false,false],
             [false,false,false,false,false,false,false,false],
             [false,false,false,false,false,false,false,false],
             [false,false,false,false,false,false,false,false],
@@ -131,7 +134,7 @@
             [true, false,false,false,false,false,false,false],
             [false,false,false,false,true, false,true, false],
             [true, false,true, false,true, false,true, false],
-        ],7);
+        ],0);
         launchpad_4.i.importPage([
             [false,false,false,false,false,false,false,false],
             [false,false,false,false,false,false,false,false],
@@ -141,8 +144,8 @@
             [true, false,true, false,true, false,true, false],
             [false,false,true, false,true, false,false,false],
             [true, false,true, false,false,false,false,false],
-        ],8);
-        launchpad_4.i.setPage(8);
+        ],1);
+        launchpad_4.i.setPage(1);
 
     //adjust the tempo of the pulse generator
         pulseGenerator.i.setTempo(1);

@@ -24,7 +24,7 @@ this.synthesizer2 = function(
         flow.OSCmaker.octave  = octave;
         flow.OSCmaker.detune  = detune;
         flow.OSCmaker.func = function(
-            context, connection, midiNumber,
+            context, connection, midinumber,
             type, periodicWave, 
             gain, attack, release,
             detune, octave
@@ -36,7 +36,7 @@ this.synthesizer2 = function(
                             context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
                         ); 
                     }else{ this.generator.type = type; }
-                    this.generator.frequency.setTargetAtTime(__globals.audio.num2freq(midiNumber,octave), context.currentTime, 0);
+                    this.generator.frequency.setTargetAtTime(__globals.audio.num2freq(midinumber+12*octave), context.currentTime, 0);
                     this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
                     this.generator.start(0);
 
@@ -49,6 +49,9 @@ this.synthesizer2 = function(
                 this.detune = function(target,time,curve){
                     __globals.utility.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
                 };
+                this.changeVelocity = function(a){
+                    __globals.utility.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
+                };
                 this.stop = function(){
                     __globals.utility.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve, false);
                     setTimeout(function(that){
@@ -57,8 +60,7 @@ this.synthesizer2 = function(
                         that.generator.disconnect(); 
                         that.gain=null; 
                         that.generator=null; 
-                        that=null; 
-                        delete that;
+                        that=null;
                     }, release.time*1000, this);
                 };
             };
@@ -148,7 +150,7 @@ this.synthesizer2 = function(
             }
             else{
                 //adjust tone
-                flow.liveOscillators[note.num].osc.changeVelocity(note.velocity);
+                flow.liveOscillators[note.num].changeVelocity(note.velocity);
             }
         };
         this.panic = function(){
