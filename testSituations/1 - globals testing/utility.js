@@ -102,22 +102,26 @@
     
     //detectOverlap (broken)
         // //totally separate shapes
-        // var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-        // var poly_b = [{x:15,y:15},{x:25,y:15},{x:25,y:25},{x:15,y:25}];
-        // var box_a = [{x:0,y:0},{x:10,y:10}];
-        // var box_b = [{x:15,y:15},{x:25,y:25}];
-        // p( __globals.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b) );
-        // //simple overlap
-        // var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-        // var poly_b = [{x:5,y:5},{x:15,y:5},{x:15,y:15},{x:5,y:15}];
-        // var box_a = [{x:0,y:0},{x:10,y:10}];
-        // var box_b = [{x:5,y:5},{x:15,y:15}];
-        // p( __globals.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b) );
-        // //the same shape twice, no bounding boxes
-        // var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-        // var poly_b = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-        // p( __globals.utility.math.detectOverlap(poly_a, poly_b) );
-        // p();
+        var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+        var poly_b = [{x:15,y:15},{x:25,y:15},{x:25,y:25},{x:15,y:25}];
+        var box_a = [{x:0,y:0},{x:10,y:10}];
+        var box_b = [{x:15,y:15},{x:25,y:25}];
+        p( __globals.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b) );
+        //simple overlap
+        var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+        var poly_b = [{x:5,y:5},{x:15,y:5},{x:15,y:15},{x:5,y:15}];
+        var box_a = [{x:0,y:0},{x:10,y:10}];
+        var box_b = [{x:5,y:5},{x:15,y:15}];
+        p( __globals.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b) );
+        //the same shape twice, with bounding boxes
+        var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+        var poly_b = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+        p( __globals.utility.math.detectOverlap(poly_a, poly_b, [poly_a[0],poly_a[2]], [poly_b[0],poly_b[2]]) );
+        //the same shape twice, no bounding boxes
+        var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+        var poly_b = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+        p( __globals.utility.math.detectOverlap(poly_a, poly_b) );
+        p();
     
     //intersectionOfTwoLineSegments
         //simple crossing

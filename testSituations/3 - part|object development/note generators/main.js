@@ -33,3 +33,4 @@
 
 
     __globals.utility.workspace.gotoPosition(-145.538, -306.003, 2.03767, 0);
+    // __globals.utility.workspace.gotoPosition(46.0541, 46.5064, 6.35268, 0);

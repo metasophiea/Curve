@@ -23,9 +23,9 @@ objects.pianoroll = function(x,y,debug=false){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.launchpad,design);
+        var obj = __globals.utility.experimental.objectBuilder(objects.pianoroll,design);
 
-        obj.appendChild( parts.elements.control.pianoroll_3('mainroll', 10, 10, 780, 130) );
+        obj.appendChild( parts.elements.control.pianoroll_5('mainroll', 10, 10, 780, 130) );
 
     return obj;
 };

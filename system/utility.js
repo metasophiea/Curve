@@ -433,18 +433,17 @@ __globals.utility = new function(){
             return string;
         };
         this.detectOverlap = function(poly_a, poly_b, box_a, box_b){
+            var debugMode = false;
+
             // Quick Judgement with bounding boxes
             // (when bounding boxes are provided)
             if(box_a && box_b){
-                // clearly separate shapes
                 if(
-                    (
-                        (box_a[0].x < box_b[0].x && box_a[0].x < box_b[1].x) ||
-                        (box_a[1].x > box_b[0].x && box_a[1].x > box_b[1].x) ||
-                        (box_a[0].y < box_b[0].y && box_a[0].y < box_b[1].y) ||
-                        (box_a[1].y > box_b[0].y && box_a[1].y > box_b[1].y) 
-                    )
-                ){console.log('clearly separate shapes');return false;}
+                    (box_a[0].y > box_b[1].y) || //a_0_y (a's highest point) is below b_1_y (b's lowest point)
+                    (box_a[1].y < box_b[0].y) || //a_1_y (a's lowest point) is above b_0_y (b's highest point)
+                    (box_a[0].x > box_b[1].x) || //a_0_x (a's leftest point) is right of b_1_x (b's rightest point)
+                    (box_a[1].x < box_b[0].x)    //a_1_x (a's rightest point) is left of b_0_x (b's leftest point)
+                ){if(debugMode){console.log('clearly separate shapes');}return false;}
             }
     
             // Detailed Judgement
@@ -479,7 +478,7 @@ __globals.utility = new function(){
                             //reformat data into line-segment points and the point of interest
     
                         var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
-                            if(dis==0){console.log('oh hay, collision - AinB');return true; }
+                            if(dis==0){if(debugMode){console.log('oh hay, collision - AinB');}return true; }
                             //get distance from point to line segment
                             //if zero, it's a collision and we can end early
     
@@ -489,7 +488,7 @@ __globals.utility = new function(){
                             tempSmallestDistance.side = sideOfLineSegment(point, linePoint_1, linePoint_2);
                         }
                     }
-                    if( tempSmallestDistance.side ){console.log('a point from A is in B');return true;}
+                    if( tempSmallestDistance.side ){if(debugMode){console.log('a point from A is in B');}return true;}
                 }
                 //a point from B is in A
                 // same as above, but the other way around
@@ -504,7 +503,7 @@ __globals.utility = new function(){
                             //reformat data into line-segment points and the point of interest
     
                         var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
-                            if(dis==0){console.log('oh hay, collision - BinA');return true; }
+                            if(dis==0){if(debugMode){console.log('oh hay, collision - BinA');}return true; }
                             //get distance from point to line segment
                             //if zero, it's a collision and we can end early
     
@@ -517,7 +516,7 @@ __globals.utility = new function(){
                             testTempB = linePoint_2;
                         }
                     }
-                    if( tempSmallestDistance.side ){console.log('a point from B is in A');return true;}
+                    if( tempSmallestDistance.side ){if(debugMode){console.log('a point from B is in A');}return true;}
                 }
     
                 //side intersection
@@ -527,7 +526,7 @@ __globals.utility = new function(){
                         for(var b = 0; b < poly_b_clone.length-1; b++){
                             var data = this.intersectionOfTwoLineSegments(poly_a_clone, poly_b_clone);
                             if(!data){continue;}
-                            if(data.inSeg1 && data.inSeg2){console.log('point intersection at ' + data.x + ' ' + data.y);return true;}
+                            if(data.inSeg1 && data.inSeg2){if(debugMode){console.log('point intersection at ' + data.x + ' ' + data.y);}return true;}
                         }
                     }
     
@@ -838,6 +837,14 @@ __globals.utility = new function(){
             //generate selection area
                 if(design.base.type == undefined){design.base.type = 'path';}
                 switch(design.base.type){
+                    case 'rect':
+                        //generate selection area
+                            design.base.points = [{x:design.x,y:design.y}, {x:design.width,y:design.y}, {x:design.width,y:design.height}, {x:design.x,y:design.height}];
+                            __globals.utility.object.generateSelectionArea(design.base.points, obj);
+                            
+                        //backing
+                            design.base = __globals.utility.experimental.elementMaker('rect',null,{x:design.base.x, y:design.base.y, width:design.base.width, height:design.base.height, angle:design.base.angle, style:design.base.style});
+                    break;
                     case 'circle': 
                         //generate selection area
                             var res = 12; //(number of sides generated)
@@ -864,7 +871,9 @@ __globals.utility = new function(){
                 obj.append(design.base);
 
                 //declare grapple
-                    __globals.mouseInteraction.declareObjectGrapple(design.base, obj, creatorMethod);
+                    if(!design.skipGrapple){
+                        __globals.mouseInteraction.declareObjectGrapple(design.base, obj, creatorMethod);
+                    }
 
             //generate elements
                 if(design.elements){

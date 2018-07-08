@@ -439,18 +439,17 @@
                         return string;
                     };
                     this.detectOverlap = function(poly_a, poly_b, box_a, box_b){
+                        var debugMode = false;
+            
                         // Quick Judgement with bounding boxes
                         // (when bounding boxes are provided)
                         if(box_a && box_b){
-                            // clearly separate shapes
                             if(
-                                (
-                                    (box_a[0].x < box_b[0].x && box_a[0].x < box_b[1].x) ||
-                                    (box_a[1].x > box_b[0].x && box_a[1].x > box_b[1].x) ||
-                                    (box_a[0].y < box_b[0].y && box_a[0].y < box_b[1].y) ||
-                                    (box_a[1].y > box_b[0].y && box_a[1].y > box_b[1].y) 
-                                )
-                            ){console.log('clearly separate shapes');return false;}
+                                (box_a[0].y > box_b[1].y) || //a_0_y (a's highest point) is below b_1_y (b's lowest point)
+                                (box_a[1].y < box_b[0].y) || //a_1_y (a's lowest point) is above b_0_y (b's highest point)
+                                (box_a[0].x > box_b[1].x) || //a_0_x (a's leftest point) is right of b_1_x (b's rightest point)
+                                (box_a[1].x < box_b[0].x)    //a_1_x (a's rightest point) is left of b_0_x (b's leftest point)
+                            ){if(debugMode){console.log('clearly separate shapes');}return false;}
                         }
                 
                         // Detailed Judgement
@@ -485,7 +484,7 @@
                                         //reformat data into line-segment points and the point of interest
                 
                                     var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
-                                        if(dis==0){console.log('oh hay, collision - AinB');return true; }
+                                        if(dis==0){if(debugMode){console.log('oh hay, collision - AinB');}return true; }
                                         //get distance from point to line segment
                                         //if zero, it's a collision and we can end early
                 
@@ -495,7 +494,7 @@
                                         tempSmallestDistance.side = sideOfLineSegment(point, linePoint_1, linePoint_2);
                                     }
                                 }
-                                if( tempSmallestDistance.side ){console.log('a point from A is in B');return true;}
+                                if( tempSmallestDistance.side ){if(debugMode){console.log('a point from A is in B');}return true;}
                             }
                             //a point from B is in A
                             // same as above, but the other way around
@@ -510,7 +509,7 @@
                                         //reformat data into line-segment points and the point of interest
                 
                                     var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
-                                        if(dis==0){console.log('oh hay, collision - BinA');return true; }
+                                        if(dis==0){if(debugMode){console.log('oh hay, collision - BinA');}return true; }
                                         //get distance from point to line segment
                                         //if zero, it's a collision and we can end early
                 
@@ -523,7 +522,7 @@
                                         testTempB = linePoint_2;
                                     }
                                 }
-                                if( tempSmallestDistance.side ){console.log('a point from B is in A');return true;}
+                                if( tempSmallestDistance.side ){if(debugMode){console.log('a point from B is in A');}return true;}
                             }
                 
                             //side intersection
@@ -533,7 +532,7 @@
                                     for(var b = 0; b < poly_b_clone.length-1; b++){
                                         var data = this.intersectionOfTwoLineSegments(poly_a_clone, poly_b_clone);
                                         if(!data){continue;}
-                                        if(data.inSeg1 && data.inSeg2){console.log('point intersection at ' + data.x + ' ' + data.y);return true;}
+                                        if(data.inSeg1 && data.inSeg2){if(debugMode){console.log('point intersection at ' + data.x + ' ' + data.y);}return true;}
                                     }
                                 }
                 
@@ -844,6 +843,14 @@
                         //generate selection area
                             if(design.base.type == undefined){design.base.type = 'path';}
                             switch(design.base.type){
+                                case 'rect':
+                                    //generate selection area
+                                        design.base.points = [{x:design.x,y:design.y}, {x:design.width,y:design.y}, {x:design.width,y:design.height}, {x:design.x,y:design.height}];
+                                        __globals.utility.object.generateSelectionArea(design.base.points, obj);
+                                        
+                                    //backing
+                                        design.base = __globals.utility.experimental.elementMaker('rect',null,{x:design.base.x, y:design.base.y, width:design.base.width, height:design.base.height, angle:design.base.angle, style:design.base.style});
+                                break;
                                 case 'circle': 
                                     //generate selection area
                                         var res = 12; //(number of sides generated)
@@ -870,7 +877,9 @@
                             obj.append(design.base);
             
                             //declare grapple
-                                __globals.mouseInteraction.declareObjectGrapple(design.base, obj, creatorMethod);
+                                if(!design.skipGrapple){
+                                    __globals.mouseInteraction.declareObjectGrapple(design.base, obj, creatorMethod);
+                                }
             
                         //generate elements
                             if(design.elements){
@@ -1818,6 +1827,54 @@
                                 //callbacks
                                     this.newValue = function(a){};
                             };
+                        };
+                        this.audioIn = function(
+                            context
+                        ){
+                            //flow chain
+                                var flow = {
+                                    audioDevice: null,
+                                    outAggregator: {}
+                                };
+                        
+                            //outAggregator
+                                flow.outAggregator.gain = 1;
+                                flow.outAggregator.node = context.createGain();
+                                __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
+                        
+                        
+                            //output node
+                                this.out = function(){return flow.outAggregator.node;}
+                        
+                            //methods
+                                this.listDevices = function(callback){
+                                    navigator.mediaDevices.enumerateDevices().then(
+                                        function(devices){
+                                            callback(devices.filter((d) => d.kind === 'audioinput'));
+                                        }
+                                    );
+                                };
+                                this.selectDevice = function(deviceId){
+                                    var promise = navigator.mediaDevices.getUserMedia({audio: { deviceId: deviceId}});
+                                    promise.then(
+                                        function(source){
+                                            audioDevice = source;
+                                            __globals.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
+                                        },
+                                        function(error){
+                                            console.warn('could not find audio input device: "' + deviceId + '"');
+                                            console.warn('\terror:',error);
+                                        }
+                                    );
+                                };
+                                this.gain = function(a){
+                                    if(a==null){return flow.outAggregator.gain;}
+                                    flow.outAggregator.gain = a;
+                                    __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
+                                };
+                        
+                            //setup
+                                this.selectDevice('default');
                         };
                         this.distortionUnit = function(
                             context,
@@ -3026,54 +3083,6 @@
                                     flow.wobbler_detune.start();
                                 };
                         };
-                        this.audioIn = function(
-                            context
-                        ){
-                            //flow chain
-                                var flow = {
-                                    audioDevice: null,
-                                    outAggregator: {}
-                                };
-                        
-                            //outAggregator
-                                flow.outAggregator.gain = 1;
-                                flow.outAggregator.node = context.createGain();
-                                __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
-                        
-                        
-                            //output node
-                                this.out = function(){return flow.outAggregator.node;}
-                        
-                            //methods
-                                this.listDevices = function(callback){
-                                    navigator.mediaDevices.enumerateDevices().then(
-                                        function(devices){
-                                            callback(devices.filter((d) => d.kind === 'audioinput'));
-                                        }
-                                    );
-                                };
-                                this.selectDevice = function(deviceId){
-                                    var promise = navigator.mediaDevices.getUserMedia({audio: { deviceId: deviceId}});
-                                    promise.then(
-                                        function(source){
-                                            audioDevice = source;
-                                            __globals.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
-                                        },
-                                        function(error){
-                                            console.warn('could not find audio input device: "' + deviceId + '"');
-                                            console.warn('\terror:',error);
-                                        }
-                                    );
-                                };
-                                this.gain = function(a){
-                                    if(a==null){return flow.outAggregator.gain;}
-                                    flow.outAggregator.gain = a;
-                                    __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
-                                };
-                        
-                            //setup
-                                this.selectDevice('default');
-                        };
                     };
                     this.sequencing = new function(){
                         this.launchpad = function(xCount,yCount){
@@ -3355,6 +3364,199 @@
                         
                             return object;
                         };
+                        this.grapher_audioScope = function(
+                            id='grapher_audioScope',
+                            x, y, width, height,
+                            graphType='Canvas',
+                            foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+                            foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
+                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                            backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                            backingStyle = 'fill:rgba(50,50,50,1)',
+                        ){
+                            //attributes
+                                var attributes = {
+                                    analyser:{
+                                        analyserNode: __globals.audio.context.createAnalyser(),
+                                        timeDomainDataArray: null,
+                                        frequencyData: null,
+                                        refreshRate: 30,
+                                        scopeRefreshInterval: null,
+                                        returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                    },
+                                    graph:{
+                                        resolution: 256
+                                    }
+                                };
+                                attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
+                                attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                                attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                        
+                            //elements 
+                                var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                                    object._data = {};
+                                    object._data.wave = {'sin':[],'cos':[]};
+                                    object._data.resolution = 500;
+                        
+                                //main graph
+                                    var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+                                        x:0, y:0, width:width, height:height,
+                                        style:{
+                                            foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
+                                            background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                            backing:backingStyle
+                                        }
+                                    });
+                                    object.append(grapher);
+                                    
+                            //methods
+                                object.start = function(){
+                                    if(attributes.analyser.scopeRefreshInterval == null){
+                                        attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
+                                    }
+                                };
+                                object.stop = function(){
+                                    clearInterval(attributes.analyser.scopeRefreshInterval);
+                                    attributes.analyser.scopeRefreshInterval = null;
+                                };
+                                object.getNode = function(){return attributes.analyser.analyserNode;};
+                                object.resolution = function(res=null){
+                                    if(res==null){return attributes.graph.resolution;}
+                                    attributes.graph.resolution = res;
+                                    this.stop();
+                                    this.start();
+                                };
+                                object.refreshRate = function(a){
+                                    if(a==null){return attributes.analyser.refreshRate;}
+                                    attributes.analyser.refreshRate = a;
+                                    this.stop();
+                                    this.start();
+                                };
+                        
+                            //internal functions
+                                function render(){
+                                    var numbers = [];
+                                    attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
+                                    for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
+                                        numbers.push(
+                                            attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
+                                        );
+                                    }
+                                    grapher.draw(numbers);
+                                }
+                                function setBackground(){
+                                    grapher.viewbox( {'l':-1.1,'h':1.1} );
+                                    grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+                                    grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
+                                    grapher.drawBackground();
+                                };
+                        
+                            //setup
+                                setBackground();
+                        
+                            return object;
+                        };
+                        this.grapher_periodicWave = function(
+                            id='grapher_periodicWave',
+                            x, y, width, height,
+                            graphType='Canvas',
+                            foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+                            foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
+                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                            backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                            backingStyle = 'fill:rgba(50,50,50,1)',
+                        ){
+                            //elements 
+                            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                                object._data = {};
+                                object._data.wave = {'sin':[],'cos':[]};
+                                object._data.resolution = 500;
+                        
+                            //main graph
+                                var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+                                    x:0, y:0, width:width, height:height,
+                                    style:{
+                                        foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
+                                        background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                        backing:backingStyle
+                                    }
+                                });
+                                object.append(grapher);
+                        
+                        
+                            //methods
+                            object.wave = function(a=null,type=null){
+                                if(a==null){
+                                    while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
+                                    while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
+                                    for(var a = 0; a < this._data.wave['sin'].length; a++){
+                                        if( !this._data.wave['sin'][a] ){ this._data.wave['sin'][a] = 0; }
+                                        if( !this._data.wave['cos'][a] ){ this._data.wave['cos'][a] = 0; }
+                                    }
+                                    return this._data.wave;
+                                }
+                        
+                                if(type==null){
+                                    this._data.wave = a;
+                                }
+                                switch(type){
+                                    case 'sin': this._data.wave.sin = a; break;
+                                    case 'cos': this._data.wave.cos = a; break;
+                                    default: break;
+                                }
+                            }
+                            object.waveElement = function(type, mux, a){
+                                if(a==null){return this._data.wave[type][mux];}
+                                this._data.wave[type][mux] = a;
+                            }
+                            object.resolution = function(a=null){
+                                if(a==null){return this._data.resolution;}
+                                this._data.resolution = a;
+                            }
+                            object.updateBackground = function(){
+                                grapher.viewbox( {'l':-1.1,'h':1.1} );
+                                grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+                                grapher.verticalMarkings({points:[0,'1/4','1/2','3/4'],printText:false});
+                                grapher.drawBackground();
+                            };
+                            object.draw = function(){
+                                var data = [];
+                                var temp = 0;
+                                for(var a = 0; a <= this._data.resolution; a++){
+                                    temp = 0;
+                                    for(var b = 0; b < this._data.wave['sin'].length; b++){
+                                        if(!this._data.wave['sin'][b]){this._data.wave['sin'][b]=0;} // cover missing elements
+                                        temp += Math.sin(b*(2*Math.PI*(a/this._data.resolution)))*this._data.wave['sin'][b]; 
+                                    }
+                                    for(var b = 0; b < this._data.wave['cos'].length; b++){
+                                        if(!this._data.wave['cos'][b]){this._data.wave['cos'][b]=0;} // cover missing elements
+                                        temp += Math.cos(b*(2*Math.PI*(a/this._data.resolution)) )*this._data.wave['cos'][b]; 
+                                    }
+                                    data.push(temp);
+                                }
+                        
+                                grapher.draw( data );
+                            }
+                            object.reset = function(){
+                                this.wave({'sin':[],'cos':[]});
+                                this.resolution(500);
+                                this.updateBackground();
+                                this.draw();
+                            }
+                        
+                        
+                            object.reset();
+                            return object;
+                        };
+                        // var grapher2 = parts.display.grapher(null, width/2, 0, width/2, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
+                        //     object.append(grapher2);
+                        
+                        // function setBackground(){
+                        //     // grapher2.viewbox( {'l':-1.1,'h':1.1} );
+                        //     // grapher2.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
+                        //     // grapher2.verticalMarkings([0,0.25,0.5,0.75]);
+                        //     // grapher2.drawBackground();
+                        // }
                         this.grapherCanvas = function(
                             id='grapherCanvas',
                             x, y, width, height,
@@ -3668,199 +3870,6 @@
                         
                             return object;
                         };
-                        this.grapher_audioScope = function(
-                            id='grapher_audioScope',
-                            x, y, width, height,
-                            graphType='Canvas',
-                            foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
-                            foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
-                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                            backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                            backingStyle = 'fill:rgba(50,50,50,1)',
-                        ){
-                            //attributes
-                                var attributes = {
-                                    analyser:{
-                                        analyserNode: __globals.audio.context.createAnalyser(),
-                                        timeDomainDataArray: null,
-                                        frequencyData: null,
-                                        refreshRate: 30,
-                                        scopeRefreshInterval: null,
-                                        returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                    },
-                                    graph:{
-                                        resolution: 256
-                                    }
-                                };
-                                attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
-                                attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                                attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                        
-                            //elements 
-                                var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
-                                    object._data = {};
-                                    object._data.wave = {'sin':[],'cos':[]};
-                                    object._data.resolution = 500;
-                        
-                                //main graph
-                                    var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
-                                        x:0, y:0, width:width, height:height,
-                                        style:{
-                                            foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
-                                            background:backgroundStyle, backgroundText:backgroundTextStyle, 
-                                            backing:backingStyle
-                                        }
-                                    });
-                                    object.append(grapher);
-                                    
-                            //methods
-                                object.start = function(){
-                                    if(attributes.analyser.scopeRefreshInterval == null){
-                                        attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
-                                    }
-                                };
-                                object.stop = function(){
-                                    clearInterval(attributes.analyser.scopeRefreshInterval);
-                                    attributes.analyser.scopeRefreshInterval = null;
-                                };
-                                object.getNode = function(){return attributes.analyser.analyserNode;};
-                                object.resolution = function(res=null){
-                                    if(res==null){return attributes.graph.resolution;}
-                                    attributes.graph.resolution = res;
-                                    this.stop();
-                                    this.start();
-                                };
-                                object.refreshRate = function(a){
-                                    if(a==null){return attributes.analyser.refreshRate;}
-                                    attributes.analyser.refreshRate = a;
-                                    this.stop();
-                                    this.start();
-                                };
-                        
-                            //internal functions
-                                function render(){
-                                    var numbers = [];
-                                    attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
-                                    for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
-                                        numbers.push(
-                                            attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
-                                        );
-                                    }
-                                    grapher.draw(numbers);
-                                }
-                                function setBackground(){
-                                    grapher.viewbox( {'l':-1.1,'h':1.1} );
-                                    grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
-                                    grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
-                                    grapher.drawBackground();
-                                };
-                        
-                            //setup
-                                setBackground();
-                        
-                            return object;
-                        };
-                        this.grapher_periodicWave = function(
-                            id='grapher_periodicWave',
-                            x, y, width, height,
-                            graphType='Canvas',
-                            foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
-                            foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
-                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                            backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                            backingStyle = 'fill:rgba(50,50,50,1)',
-                        ){
-                            //elements 
-                            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
-                                object._data = {};
-                                object._data.wave = {'sin':[],'cos':[]};
-                                object._data.resolution = 500;
-                        
-                            //main graph
-                                var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
-                                    x:0, y:0, width:width, height:height,
-                                    style:{
-                                        foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
-                                        background:backgroundStyle, backgroundText:backgroundTextStyle, 
-                                        backing:backingStyle
-                                    }
-                                });
-                                object.append(grapher);
-                        
-                        
-                            //methods
-                            object.wave = function(a=null,type=null){
-                                if(a==null){
-                                    while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
-                                    while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
-                                    for(var a = 0; a < this._data.wave['sin'].length; a++){
-                                        if( !this._data.wave['sin'][a] ){ this._data.wave['sin'][a] = 0; }
-                                        if( !this._data.wave['cos'][a] ){ this._data.wave['cos'][a] = 0; }
-                                    }
-                                    return this._data.wave;
-                                }
-                        
-                                if(type==null){
-                                    this._data.wave = a;
-                                }
-                                switch(type){
-                                    case 'sin': this._data.wave.sin = a; break;
-                                    case 'cos': this._data.wave.cos = a; break;
-                                    default: break;
-                                }
-                            }
-                            object.waveElement = function(type, mux, a){
-                                if(a==null){return this._data.wave[type][mux];}
-                                this._data.wave[type][mux] = a;
-                            }
-                            object.resolution = function(a=null){
-                                if(a==null){return this._data.resolution;}
-                                this._data.resolution = a;
-                            }
-                            object.updateBackground = function(){
-                                grapher.viewbox( {'l':-1.1,'h':1.1} );
-                                grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
-                                grapher.verticalMarkings({points:[0,'1/4','1/2','3/4'],printText:false});
-                                grapher.drawBackground();
-                            };
-                            object.draw = function(){
-                                var data = [];
-                                var temp = 0;
-                                for(var a = 0; a <= this._data.resolution; a++){
-                                    temp = 0;
-                                    for(var b = 0; b < this._data.wave['sin'].length; b++){
-                                        if(!this._data.wave['sin'][b]){this._data.wave['sin'][b]=0;} // cover missing elements
-                                        temp += Math.sin(b*(2*Math.PI*(a/this._data.resolution)))*this._data.wave['sin'][b]; 
-                                    }
-                                    for(var b = 0; b < this._data.wave['cos'].length; b++){
-                                        if(!this._data.wave['cos'][b]){this._data.wave['cos'][b]=0;} // cover missing elements
-                                        temp += Math.cos(b*(2*Math.PI*(a/this._data.resolution)) )*this._data.wave['cos'][b]; 
-                                    }
-                                    data.push(temp);
-                                }
-                        
-                                grapher.draw( data );
-                            }
-                            object.reset = function(){
-                                this.wave({'sin':[],'cos':[]});
-                                this.resolution(500);
-                                this.updateBackground();
-                                this.draw();
-                            }
-                        
-                        
-                            object.reset();
-                            return object;
-                        };
-                        // var grapher2 = parts.display.grapher(null, width/2, 0, width/2, height, middlegroundStyle, backgroundStyle, backgroundTextStyle, backingStyle);
-                        //     object.append(grapher2);
-                        
-                        // function setBackground(){
-                        //     // grapher2.viewbox( {'l':-1.1,'h':1.1} );
-                        //     // grapher2.horizontalMarkings([1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1]);
-                        //     // grapher2.verticalMarkings([0,0.25,0.5,0.75]);
-                        //     // grapher2.drawBackground();
-                        // }
                         this.label = function(
                             id='label',
                             x, y, text,
@@ -6564,6 +6573,102 @@
                     
                     return obj;
                 };
+                this.audioIn = function(x,y){
+                    var attributes = {
+                        deviceList:[],
+                        currentSelection: 0
+                    };
+                    var style = {
+                        background: 'fill:rgba(200,200,200,1); stroke:none;',
+                        marking:'fill:none; stroke:rgb(160,160,160); stroke-width:1;pointer-events: none;',
+                        h1:'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+                        h2:'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+                
+                        readout: {background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'},
+                        button: {up:'fill:rgba(180,180,180,1)', hover:'fill:rgba(220,220,220,1)', down:'fill:rgba(170,170,170,1)', glow:'fill:rgba(220,200,220,1)'},
+                        dial: {handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',needle: 'fill:rgba(250,150,150,1)',outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'},
+                    };
+                    var design = {
+                        type:'audioIn',
+                        x:x, y:y,
+                        base:{
+                            points:[
+                                {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
+                                {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                                {type:'connectionNode_audio', name:'audioOut', data:{type: 1, x: -10, y: 15, width: 20, height: 20}},
+                                {type:'readout_sixteenSegmentDisplay', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
+                                {type:'readout_sixteenSegmentDisplay', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
+                                {type:'button_rect', name:'up',   data:{x:225, y: 15, width:15, height:10, style:style.button, onclick:function(){incSelection();}}},
+                                {type:'button_rect', name:'down', data:{x:225, y: 25, width:15, height:10, style:style.button, onclick:function(){decSelection();}}},
+                                {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, style:style.dial, onchange:function(value){obj.circuitry.unit.gain(value*2);}}},
+                                {type:'label', name:'gainLabel_name', data:{x:21.25, y:44, text:'gain', style:style.h1, angle:0}},
+                                {type:'label', name:'gainLabel_0',    data:{x:15, y:40, text:'0', style:style.h2, angle:0}},
+                                {type:'label', name:'gainLabel_1',    data:{x:28.75, y:7, text:'1', style:style.h2, angle:0}},
+                                {type:'label', name:'gainLabel_2',    data:{x:42.5, y:40, text:'2', style:style.h2, angle:0}},
+                                {type:'path', name:'upArrow',   data:{path:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], style:style.marking}},
+                                {type:'path', name:'downArrow', data:{path:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], style:style.marking}},
+                                {type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.audioIn,design);
+                
+                        var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']});
+                            keycaptureObj.keyPress = function(key){
+                                switch(key){
+                                    case 'ArrowUp': design.button_rect.up.click();  break;
+                                    case 'ArrowDown': design.button_rect.down.click();  break;
+                                    case 'ArrowLeft': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()-0.1);  break;
+                                    case 'ArrowRight': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()+0.1);  break;
+                                }
+                            };
+                
+                
+                    //circuitry
+                        obj.circuitry = {
+                            unit: new parts.circuits.audio.audioIn(__globals.audio.context)
+                        };
+                        obj.circuitry.unit.out().connect( design.connectionNode_audio.audioOut.in() );
+                        obj.circuitry.unit.out().connect( design.audio_meter_level.audioIn.audioIn() );
+                
+                    //internal functions
+                        function selectDevice(a){
+                            if(attributes.deviceList.length == 0){
+                                design.readout_sixteenSegmentDisplay.index.text(' n/a');
+                                design.readout_sixteenSegmentDisplay.index.print();
+                                design.readout_sixteenSegmentDisplay.text.text('no devices');
+                                design.readout_sixteenSegmentDisplay.text.print('smart');
+                                return;
+                            }
+                            if( a < 0 || a >= attributes.deviceList.length ){return;}
+                            attributes.currentSelection = a;
+                
+                            selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
+                            totalNum=''+attributes.deviceList.length;while(totalNum.length < 2){ totalNum = '0'+totalNum;}
+                            design.readout_sixteenSegmentDisplay.index.text(selectionNum+'/'+totalNum);
+                            design.readout_sixteenSegmentDisplay.index.print();
+                
+                            var text = attributes.deviceList[a].deviceId;
+                            if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
+                            design.readout_sixteenSegmentDisplay.text.text(text);
+                            design.readout_sixteenSegmentDisplay.text.print('smart');
+                        }
+                        function incSelection(){ selectDevice(attributes.currentSelection+1); }
+                        function decSelection(){ selectDevice(attributes.currentSelection-1); }
+                
+                    //setup
+                        obj.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
+                        setTimeout(function(){selectDevice(0);},500);
+                        design.dial_continuous.outputGain.set(0.5);
+                        design.audio_meter_level.audioIn.start();
+                
+                    return obj;
+                };
                 this.audio_scope = function(x,y){
                     var attributes = {
                         framerateLimits: {min:1, max:30}
@@ -6625,6 +6730,69 @@
                         design.grapher_audioScope.waveport.start();
                         design.dial_continuous.framerate.set(0);
                 
+                    return obj;
+                };
+                this.audio_sink = function(x,y){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        level:{
+                            backing:'fill:rgb(10,10,10)', 
+                            levels:['fill:rgb(250,250,250);','fill:rgb(200,200,200);'],
+                            marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                        },
+                    };
+                    var design = {
+                        type:'audio_sink',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'right', data:{
+                                type:0, x:90, y:5, width:20, height:20
+                            }},
+                            {type:'connectionNode_audio', name:'left', data:{
+                                type:0, x:90, y:30, width:20, height:20
+                            }},
+                            {type:'audio_meter_level', name:'right', data:{
+                                x:10, y:5, width:5, height:45, 
+                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            }},
+                            {type:'audio_meter_level', name:'left', data:{
+                                x:5, y:5, width:5, height:45,
+                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            }},
+                        ],
+                    };
+                 
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_sink,design);
+                
+                    //circuitry
+                        var flow = {
+                            destination:null,
+                            stereoCombiner: null,
+                            pan_left:null, pan_right:null,
+                        };
+                        //destination
+                            flow._destination = __globals.audio.context.destination;
+                        //stereo channel combiner
+                            flow.stereoCombiner = new ChannelMergerNode(__globals.audio.context, {numberOfInputs:2});
+                
+                        //audio connections
+                            //inputs to meters
+                                design.connectionNode_audio.left.out().connect( design.audio_meter_level.left.audioIn() );
+                                design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
+                            //inputs to stereo combiner
+                                design.connectionNode_audio.left.out().connect(flow.stereoCombiner, 0, 0);
+                                design.connectionNode_audio.right.out().connect(flow.stereoCombiner, 0, 1);
+                            //stereo combiner to main output
+                                flow.stereoCombiner.connect(flow._destination);
+                
+                            //start audio meters
+                                design.audio_meter_level.left.start();
+                                design.audio_meter_level.right.start();
                     return obj;
                 };
                 this.basicSynthesizer = function(x,y){
@@ -6892,69 +7060,6 @@
                         design.dial_continuous.detune.set(0.5);
                         design.dial_discrete.octave.select(3);
                 
-                    return obj;
-                };
-                this.audio_sink = function(x,y){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        level:{
-                            backing:'fill:rgb(10,10,10)', 
-                            levels:['fill:rgb(250,250,250);','fill:rgb(200,200,200);'],
-                            marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                        },
-                    };
-                    var design = {
-                        type:'audio_sink',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'right', data:{
-                                type:0, x:90, y:5, width:20, height:20
-                            }},
-                            {type:'connectionNode_audio', name:'left', data:{
-                                type:0, x:90, y:30, width:20, height:20
-                            }},
-                            {type:'audio_meter_level', name:'right', data:{
-                                x:10, y:5, width:5, height:45, 
-                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
-                            }},
-                            {type:'audio_meter_level', name:'left', data:{
-                                x:5, y:5, width:5, height:45,
-                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
-                            }},
-                        ],
-                    };
-                 
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.audio_sink,design);
-                
-                    //circuitry
-                        var flow = {
-                            destination:null,
-                            stereoCombiner: null,
-                            pan_left:null, pan_right:null,
-                        };
-                        //destination
-                            flow._destination = __globals.audio.context.destination;
-                        //stereo channel combiner
-                            flow.stereoCombiner = new ChannelMergerNode(__globals.audio.context, {numberOfInputs:2});
-                
-                        //audio connections
-                            //inputs to meters
-                                design.connectionNode_audio.left.out().connect( design.audio_meter_level.left.audioIn() );
-                                design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
-                            //inputs to stereo combiner
-                                design.connectionNode_audio.left.out().connect(flow.stereoCombiner, 0, 0);
-                                design.connectionNode_audio.right.out().connect(flow.stereoCombiner, 0, 1);
-                            //stereo combiner to main output
-                                flow.stereoCombiner.connect(flow._destination);
-                
-                            //start audio meters
-                                design.audio_meter_level.left.start();
-                                design.audio_meter_level.right.start();
                     return obj;
                 };
                 this.distortionUnit = function(x,y){
@@ -7483,6 +7588,127 @@
                     return obj;
                 };
 
+                this.musicalkeyboard = function(x,y,debug=false){
+                    var state = {
+                        velocity:0.5,
+                    };
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        h1: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+                        dial:{
+                            handle: 'fill:rgba(220,220,220,1)',
+                            slot: 'fill:rgba(50,50,50,1)',
+                            needle: 'fill:rgba(250,150,150,1)',
+                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+                        },
+                        keys:{
+                            white:{
+                                off:'fill:rgba(250,250,250,1)',
+                                press:'fill:rgba(230,230,230,1)',
+                                glow:'fill:rgba(220,200,220,1)',
+                                pressAndGlow:'fill:rgba(200,150,200,1)',
+                            },
+                            black:{
+                                off:'fill:rgba(50,50,50,1)',
+                                press:'fill:rgba(100,100,100,1)',
+                                glow:'fill:rgba(220,200,220,1)',
+                                pressAndGlow:'fill:rgba(200,150,200,1)',
+                            }
+                        }
+                    };
+                    var design = {
+                        type: 'musicalkeyboard',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[ {x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5} ], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_data', name:'midiout', data:{ 
+                                x: -5, y: 5, width: 5, height: 10,
+                            }},
+                            {type:'connectionNode_data', name:'midiin', data:{ 
+                                x: 320, y: 5, width: 5, height: 10,
+                                receive:function(address,data){
+                                    if(address != 'midinumber'){return;}
+                                    if(data.velocity > 0){ design.key_rect[__globals.audio.num2name(data.num)].press();   }
+                                                     else{ design.key_rect[__globals.audio.num2name(data.num)].release(); }
+                                },
+                            }},
+                
+                            //velocity dial
+                            {type:'label', name:'velocity_title', data:{x:9,  y:59,  text:'velocity', style:style.h1}},
+                            {type:'label', name:'velocity_0',     data:{x:4,  y:55,  text:'0',        style:style.h1}},
+                            {type:'label', name:'velocity_1/2',   data:{x:14, y:26.5, text:'1/2',      style:style.h1}},
+                            {type:'label', name:'velocity_1',     data:{x:28, y:55,  text:'1',        style:style.h1}},
+                            {type:'dial_continuous',name:'velocity',data:{
+                                x:17.5, y:42, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){ state.velocity = value; }
+                            }},
+                        ]
+                    };
+                    //dynamic design
+                        //placement of keys
+                            var glyphs = [ '\\','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ];
+                            var noteNames = [ '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B', '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B', '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B', '7C' ];
+                            var whiteX = 35;
+                            var whiteKeyWidth = 12.5;
+                            var blackX = 45;
+                
+                            for(var a = 0; a < glyphs.length; a++){
+                                if( noteNames[a].slice(-1) != '#' ){
+                                    design.elements.push(
+                                        {type:'key_rect', name:noteNames[a], data:{
+                                            x:whiteX, y:12.5, width:whiteKeyWidth, height:50,
+                                            style:{
+                                                off:style.keys.white.off, press:style.keys.white.press,
+                                                glow:style.keys.white.glow, pressAndGlow:style.keys.white.pressAndGlow,
+                                            },
+                                            onkeydown:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:state.velocity } ); },
+                                            onkeyup:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
+                                        }}
+                                    );
+                                    whiteX += whiteKeyWidth;
+                                }
+                            }
+                
+                            var count = 0;
+                            for(var a = 0; a < glyphs.length; a++){
+                                if( noteNames[a].slice(-1) == '#' ){
+                                    design.elements.push(
+                                        {type:'key_rect', name:noteNames[a], data:{
+                                            x:blackX, y:12.5, width:5, height:30,
+                                            style:{
+                                                off:style.keys.black.off, press:style.keys.black.press,
+                                                glow:style.keys.black.glow, pressAndGlow:style.keys.black.pressAndGlow,
+                                            },
+                                            onkeydown:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:state.velocity } ); },
+                                            onkeyup:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
+                                        }}
+                                    );
+                                    blackX += whiteKeyWidth;
+                                    count = 0;
+                                }else{ count++; }
+                                
+                                if(count > 1){ blackX += whiteKeyWidth; }
+                            }
+                
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.launchpad,design);
+                
+                    //keycapture
+                        var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:glyphs});
+                        keycaptureObj.keyPress = function(key){ design.key_rect[noteNames[glyphs.indexOf(key)]].press(); };
+                        keycaptureObj.keyRelease = function(key){ design.key_rect[noteNames[glyphs.indexOf(key)]].release(); };
+                
+                    //setup
+                        design.dial_continuous.velocity.set(0.5);
+                
+                    return obj;
+                };
                 this.oneShot_multi = function(x,y,debug=false){
                     var style = {
                         background:'fill:rgba(200,200,200,1)',
@@ -8510,223 +8736,6 @@
                 
                     return obj;
                 };
-                this.musicalkeyboard = function(x,y,debug=false){
-                    var state = {
-                        velocity:0.5,
-                    };
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        h1: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
-                        dial:{
-                            handle: 'fill:rgba(220,220,220,1)',
-                            slot: 'fill:rgba(50,50,50,1)',
-                            needle: 'fill:rgba(250,150,150,1)',
-                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-                        },
-                        keys:{
-                            white:{
-                                off:'fill:rgba(250,250,250,1)',
-                                press:'fill:rgba(230,230,230,1)',
-                                glow:'fill:rgba(220,200,220,1)',
-                                pressAndGlow:'fill:rgba(200,150,200,1)',
-                            },
-                            black:{
-                                off:'fill:rgba(50,50,50,1)',
-                                press:'fill:rgba(100,100,100,1)',
-                                glow:'fill:rgba(220,200,220,1)',
-                                pressAndGlow:'fill:rgba(200,150,200,1)',
-                            }
-                        }
-                    };
-                    var design = {
-                        type: 'musicalkeyboard',
-                        x: x, y: y,
-                        base: {
-                            type:'path',
-                            points:[ {x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5} ], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_data', name:'midiout', data:{ 
-                                x: -5, y: 5, width: 5, height: 10,
-                            }},
-                            {type:'connectionNode_data', name:'midiin', data:{ 
-                                x: 320, y: 5, width: 5, height: 10,
-                                receive:function(address,data){
-                                    if(address != 'midinumber'){return;}
-                                    if(data.velocity > 0){ design.key_rect[__globals.audio.num2name(data.num)].press();   }
-                                                     else{ design.key_rect[__globals.audio.num2name(data.num)].release(); }
-                                },
-                            }},
-                
-                            //velocity dial
-                            {type:'label', name:'velocity_title', data:{x:9,  y:59,  text:'velocity', style:style.h1}},
-                            {type:'label', name:'velocity_0',     data:{x:4,  y:55,  text:'0',        style:style.h1}},
-                            {type:'label', name:'velocity_1/2',   data:{x:14, y:26.5, text:'1/2',      style:style.h1}},
-                            {type:'label', name:'velocity_1',     data:{x:28, y:55,  text:'1',        style:style.h1}},
-                            {type:'dial_continuous',name:'velocity',data:{
-                                x:17.5, y:42, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){ state.velocity = value; }
-                            }},
-                        ]
-                    };
-                    //dynamic design
-                        //placement of keys
-                            var glyphs = [ '\\','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ];
-                            var noteNames = [ '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B', '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B', '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B', '7C' ];
-                            var whiteX = 35;
-                            var whiteKeyWidth = 12.5;
-                            var blackX = 45;
-                
-                            for(var a = 0; a < glyphs.length; a++){
-                                if( noteNames[a].slice(-1) != '#' ){
-                                    design.elements.push(
-                                        {type:'key_rect', name:noteNames[a], data:{
-                                            x:whiteX, y:12.5, width:whiteKeyWidth, height:50,
-                                            style:{
-                                                off:style.keys.white.off, press:style.keys.white.press,
-                                                glow:style.keys.white.glow, pressAndGlow:style.keys.white.pressAndGlow,
-                                            },
-                                            onkeydown:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:state.velocity } ); },
-                                            onkeyup:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
-                                        }}
-                                    );
-                                    whiteX += whiteKeyWidth;
-                                }
-                            }
-                
-                            var count = 0;
-                            for(var a = 0; a < glyphs.length; a++){
-                                if( noteNames[a].slice(-1) == '#' ){
-                                    design.elements.push(
-                                        {type:'key_rect', name:noteNames[a], data:{
-                                            x:blackX, y:12.5, width:5, height:30,
-                                            style:{
-                                                off:style.keys.black.off, press:style.keys.black.press,
-                                                glow:style.keys.black.glow, pressAndGlow:style.keys.black.pressAndGlow,
-                                            },
-                                            onkeydown:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:state.velocity } ); },
-                                            onkeyup:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
-                                        }}
-                                    );
-                                    blackX += whiteKeyWidth;
-                                    count = 0;
-                                }else{ count++; }
-                                
-                                if(count > 1){ blackX += whiteKeyWidth; }
-                            }
-                
-                
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.launchpad,design);
-                
-                    //keycapture
-                        var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:glyphs});
-                        keycaptureObj.keyPress = function(key){ design.key_rect[noteNames[glyphs.indexOf(key)]].press(); };
-                        keycaptureObj.keyRelease = function(key){ design.key_rect[noteNames[glyphs.indexOf(key)]].release(); };
-                
-                    //setup
-                        design.dial_continuous.velocity.set(0.5);
-                
-                    return obj;
-                };
-                this.audioIn = function(x,y){
-                    var attributes = {
-                        deviceList:[],
-                        currentSelection: 0
-                    };
-                    var style = {
-                        background: 'fill:rgba(200,200,200,1); stroke:none;',
-                        marking:'fill:none; stroke:rgb(160,160,160); stroke-width:1;pointer-events: none;',
-                        h1:'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
-                        h2:'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
-                
-                        readout: {background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'},
-                        button: {up:'fill:rgba(180,180,180,1)', hover:'fill:rgba(220,220,220,1)', down:'fill:rgba(170,170,170,1)', glow:'fill:rgba(220,200,220,1)'},
-                        dial: {handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',needle: 'fill:rgba(250,150,150,1)',outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'},
-                    };
-                    var design = {
-                        type:'audioIn',
-                        x:x, y:y,
-                        base:{
-                            points:[
-                                {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
-                                {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
-                            ], 
-                            style:style.background
-                        },
-                        elements:[
-                                {type:'connectionNode_audio', name:'audioOut', data:{type: 1, x: -10, y: 15, width: 20, height: 20}},
-                                {type:'readout_sixteenSegmentDisplay', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
-                                {type:'readout_sixteenSegmentDisplay', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
-                                {type:'button_rect', name:'up',   data:{x:225, y: 15, width:15, height:10, style:style.button, onclick:function(){incSelection();}}},
-                                {type:'button_rect', name:'down', data:{x:225, y: 25, width:15, height:10, style:style.button, onclick:function(){decSelection();}}},
-                                {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, style:style.dial, onchange:function(value){obj.circuitry.unit.gain(value*2);}}},
-                                {type:'label', name:'gainLabel_name', data:{x:21.25, y:44, text:'gain', style:style.h1, angle:0}},
-                                {type:'label', name:'gainLabel_0',    data:{x:15, y:40, text:'0', style:style.h2, angle:0}},
-                                {type:'label', name:'gainLabel_1',    data:{x:28.75, y:7, text:'1', style:style.h2, angle:0}},
-                                {type:'label', name:'gainLabel_2',    data:{x:42.5, y:40, text:'2', style:style.h2, angle:0}},
-                                {type:'path', name:'upArrow',   data:{path:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], style:style.marking}},
-                                {type:'path', name:'downArrow', data:{path:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], style:style.marking}},
-                                {type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(arguments.callee,design);
-                
-                        var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']});
-                            keycaptureObj.keyPress = function(key){
-                                switch(key){
-                                    case 'ArrowUp': design.button_rect.up.click();  break;
-                                    case 'ArrowDown': design.button_rect.down.click();  break;
-                                    case 'ArrowLeft': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()-0.1);  break;
-                                    case 'ArrowRight': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()+0.1);  break;
-                                }
-                            };
-                
-                
-                    //circuitry
-                        obj.circuitry = {
-                            unit: new parts.circuits.audio.audioIn(__globals.audio.context)
-                        };
-                        obj.circuitry.unit.out().connect( design.connectionNode_audio.audioOut.in() );
-                        obj.circuitry.unit.out().connect( design.audio_meter_level.audioIn.audioIn() );
-                
-                    //internal functions
-                        function selectDevice(a){
-                            if(attributes.deviceList.length == 0){
-                                design.readout_sixteenSegmentDisplay.index.text(' n/a');
-                                design.readout_sixteenSegmentDisplay.index.print();
-                                design.readout_sixteenSegmentDisplay.text.text('no devices');
-                                design.readout_sixteenSegmentDisplay.text.print('smart');
-                                return;
-                            }
-                            if( a < 0 || a >= attributes.deviceList.length ){return;}
-                            attributes.currentSelection = a;
-                
-                            selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
-                            totalNum=''+attributes.deviceList.length;while(totalNum.length < 2){ totalNum = '0'+totalNum;}
-                            design.readout_sixteenSegmentDisplay.index.text(selectionNum+'/'+totalNum);
-                            design.readout_sixteenSegmentDisplay.index.print();
-                
-                            var text = attributes.deviceList[a].deviceId;
-                            if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
-                            design.readout_sixteenSegmentDisplay.text.text(text);
-                            design.readout_sixteenSegmentDisplay.text.print('smart');
-                        }
-                        function incSelection(){ selectDevice(attributes.currentSelection+1); }
-                        function decSelection(){ selectDevice(attributes.currentSelection-1); }
-                
-                    //setup
-                        obj.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
-                        setTimeout(function(){selectDevice(0);},500);
-                        design.dial_continuous.outputGain.set(0.5);
-                        design.audio_meter_level.audioIn.start();
-                
-                    return obj;
-                };
             };
             __globals.audio.context.resume().then(function(){
                 __globals.panes.menu.innerHTML = '';
@@ -8917,9 +8926,9 @@
                 };
             
                 //main object
-                    var obj = __globals.utility.experimental.objectBuilder(objects.launchpad,design);
+                    var obj = __globals.utility.experimental.objectBuilder(objects.pianoroll,design);
             
-                    obj.appendChild( parts.elements.control.pianoroll_3('mainroll', 10, 10, 780, 130) );
+                    obj.appendChild( parts.elements.control.pianoroll_5('mainroll', 10, 10, 780, 130) );
             
                 return obj;
             };
@@ -9243,15 +9252,21 @@
             ){
                 var state = {
                     snapping:!true,
-                    noteRegistry: new parts.elements.control.pianoroll_3.noteRegistry(),
+                    noteRegistry: new parts.elements.control.pianoroll_3.noteRegistry(xCount),
+                    selectedNotes:[],
+                    playrate:4, //every second, 'state.playrate' "lengths" pass by
+                    playInterval: null,
+                    playmark:0,
+                    playRefreshRate:0.1,
                 };
                 var style = {
                     backing:'fill:rgba(50,50,50,1);',
                     division:'stroke:rgba(120,120,120,1);stroke-width:0.5;pointer-events:none;',
                     emphasisDivision:'stroke:rgba(220,220,220,1);stroke-width:0.5;pointer-events:none;',
+                    selectionArea:'fill:rgba(100,100,150,0.75);stroke:rgba(100,100,200,1);stroke-width:0.5;pointer-events:none;',
                     block:{
                         body:'fill:rgba(150,100,100,0.75);stroke:rgba(200,100,100,1);stroke-width:0.5;',
-                        bodyGlow:'fill:rgba(150,100,100,0.9);stroke:rgba(200,100,100,1);stroke-width:0.5;',
+                        bodyGlow:'fill:rgba(200,100,100,0.9);stroke:rgba(200,100,100,1);stroke-width:0.5;',
                         handle:'fill:rgba(255,0,0,0.75);cursor:col-resize;',
                         handleWidth:2,
                     },
@@ -9267,6 +9282,165 @@
             
                         return {line:position.y, position:position.x};
                     }
+                    function deselectAll(){
+                        while(state.selectedNotes.length > 0){ state.selectedNotes[0].deselect(); }
+                    }
+                    function removeBlock(block){
+                        state.noteRegistry.remove(parseInt(block.id));
+                        state.selectedNotes.splice(state.selectedNotes.indexOf(block), 1);
+                        block.remove();
+                    }
+                    function makeBlock(positionData, that, event){
+                        if(positionData == undefined){
+                            positionData = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,that,width,height));
+                            positionData.length = 0;
+                        }
+            
+                        var selected = false;
+            
+                        var newBlock = parts.elements.control.pianoroll_3.noteBlock(
+                            {x:width/xCount,y:height/yCount},
+                            state.noteRegistry.add({line:positionData.line, position:positionData.position, length:positionData.length}),
+                            positionData.line, positionData.position, positionData.length, style.block
+                        );
+                        newBlock.ondblclick = function(event){
+                            if(!event.ctrlKey){return;}
+                            removeBlock(this);
+            
+                            while(state.selectedNotes.length > 0){
+                                removeBlock(state.selectedNotes[0]);
+                            }
+                        };
+                        newBlock.body.onmousedown = function(event){
+                            //strength adjustment
+                                if(event.shiftKey){
+                                    var initialPosition = {x:event.offsetX, y:event.offsetY};
+                                    __globals.svgElement.onmouseup = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                    __globals.svgElement.onmousemove = function(event){
+                                        var livePosition = {x:event.offsetX, y:event.offsetY};
+                                        var diff = {x:initialPosition.x-livePosition.x, y:initialPosition.y-livePosition.y};
+            
+                                        state.noteRegistry.changeStrengthBy(newBlock.id, diff.y/window.innerHeight);
+                                        for(var a = 0; a < state.selectedNotes.length; a++){
+                                            state.noteRegistry.changeStrengthBy(state.selectedNotes[a].id, diff.y/window.innerHeight);
+                                        }
+                                    };
+                                    return;
+                            }
+            
+                            //selecting
+                                if(event.ctrlKey && !selected){ newBlock.select(); }
+                                else if(event.ctrlKey && selected){newBlock.deselect();return;}
+                                else if(event.altKey){
+                                    //selecting
+                                        if(!selected){ deselectAll(); newBlock.select(); }
+                                    //the trick - the cloned note blocks take the place of the originals
+                                    for(var a = 0; a < state.selectedNotes.length; a++){
+                                        makeBlock(state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)));
+                                    }
+                                }
+                                else if(!selected){ deselectAll(); newBlock.select(); }
+            
+                            //general movement of all selected blocks
+                                var initialPosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                var activeBlocks = [];
+                                for(var a = 0; a < state.selectedNotes.length; a++){
+                                    activeBlocks.push({
+                                        blockID: parseInt(state.selectedNotes[a].id),
+                                        startingPosition: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
+                                    });
+                                }
+                                object.onmouseup = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                                object.onmouseleave = object.onmouseup;
+                                object.onmousemove = function(event){
+                                    var livePosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,this,width,height));
+                                    for(var a = 0; a < state.selectedNotes.length; a++){
+                                        activeBlocks[a].new = {
+                                            line: activeBlocks[a].startingPosition.line + (livePosition.line-initialPosition.line),
+                                            position: activeBlocks[a].startingPosition.position + (livePosition.position-initialPosition.position),
+                                        };
+                                        state.noteRegistry.update(activeBlocks[a].blockID,{ line:activeBlocks[a].new.line, position:activeBlocks[a].new.position });
+                                        var temp = state.noteRegistry.get_note(activeBlocks[a].blockID);
+                                        state.selectedNotes[a].location(temp.line, temp.position);
+                                    }
+                                };
+                        };
+                        newBlock.rightHandle.onmousedown = function(event){
+                            //selecting
+                                if(!selected){ deselectAll(); newBlock.select(); }
+            
+                            //general right handle adjustment of all selected blocks
+                                var initialPosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                var activeBlocks = [];
+                                for(var a = 0; a < state.selectedNotes.length; a++){
+                                    activeBlocks.push({
+                                        blockID: parseInt(state.selectedNotes[a].id),
+                                        startingPosition: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
+                                    });
+                                }
+                                object.onmouseup = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                                object.onmouseleave = object.onmouseup;
+                                object.onmousemove = function(event){
+                                    var livePosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,this,width,height));
+                                    for(var a = 0; a < state.selectedNotes.length; a++){
+                                        activeBlocks[a].newLength = activeBlocks[a].startingPosition.length + (livePosition.position-initialPosition.position);
+                                        if(activeBlocks[a].newLength < 0){activeBlocks[a].newLength = 0;}
+                                        state.noteRegistry.update(activeBlocks[a].blockID,{ length:activeBlocks[a].newLength });
+                                        var temp = state.noteRegistry.get_note(activeBlocks[a].blockID);
+                                        state.selectedNotes[a].length(temp.length);
+                                    }
+                                };
+                        };
+                        newBlock.leftHandle.onmousedown = function(event){
+                            //selecting
+                                if(!selected){ deselectAll(); newBlock.select(); }
+                            
+                            //general left handle adjustment of all selected blocks
+                                var initialPosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                var activeBlocks = [];
+                                for(var a = 0; a < state.selectedNotes.length; a++){
+                                    activeBlocks.push({
+                                        blockID: parseInt(state.selectedNotes[a].id),
+                                        startingPosition: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
+                                    });
+                                }
+                                object.onmouseup = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                                object.onmouseleave = object.onmouseup;
+                                object.onmousemove = function(event){
+                                    var livePosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,this,width,height));
+                                    for(var a = 0; a < state.selectedNotes.length; a++){
+                                        activeBlocks[a].new = {
+                                            length: activeBlocks[a].startingPosition.length - (livePosition.position-initialPosition.position),
+                                            position: activeBlocks[a].startingPosition.position + (livePosition.position-initialPosition.position),
+                                        };
+                                        if(activeBlocks[a].new.length < 0){ activeBlocks[a].new.position += activeBlocks[a].new.length; activeBlocks[a].new.length = 0; }
+                                        if( activeBlocks[a].new.position < 0 ){ continue; } //this stops a block from getting longer, when it is unable to move any further to the left
+                                        state.noteRegistry.update(activeBlocks[a].blockID,{ position:activeBlocks[a].new.position, length:activeBlocks[a].new.length });
+                                        var temp = state.noteRegistry.get_note(activeBlocks[a].blockID);
+                                        state.selectedNotes[a].length(temp.length);
+                                        state.selectedNotes[a].location(temp.line, temp.position);
+                                    }
+                                };
+                        };
+            
+                        newBlock.select = function(){
+                            newBlock.glow(true); 
+                            selected = true;
+                            state.selectedNotes.push(newBlock);
+                        };
+                        newBlock.deselect = function(){
+                            newBlock.glow(false); 
+                            selected = false;
+                            state.selectedNotes.splice(state.selectedNotes.indexOf(newBlock), 1);
+                        };
+            
+                        object.appendChild(newBlock);
+            
+                        if(event != undefined){
+                            newBlock.rightHandle.onmousedown(event);
+                        }
+                    }
             
             
                 //elements 
@@ -9276,65 +9450,77 @@
                     var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height, style:style.backing});
                     object.appendChild(backing);
                     backing.onmousedown = function(event){
-                        var positionData = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,this,width,height));
-                        positionData.length = 0;
+                        if(event.altKey){
+                            makeBlock(undefined,this,event);
+                        }else{ 
+                            //click-n-drag group select
+                            deselectAll();
             
-                        var newBlock = parts.elements.control.pianoroll_3.noteBlock(
-                            {x:width/xCount,y:height/yCount},
-                            state.noteRegistry.add(positionData.line, positionData.position, positionData.length),
-                            positionData.line, positionData.position, positionData.length, style.block
-                        );
-                        newBlock.ondblclick = function(){
-                            state.noteRegistry.remove(parseInt(this.id));
-                            this.remove();
-                        };
-                        newBlock.callback.body = function(event){
-                            var initialPosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
-                            var startingPosition = state.noteRegistry.info(parseInt(newBlock.id));
-                            object.onmouseup = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                            var initialPositionData = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                            var selectionArea = __globals.utility.experimental.elementMaker('rect','body',{
+                                x:initialPositionData.x*width, y:initialPositionData.y*height,
+                                width:0, height:0,
+                                style:style.selectionArea,
+                            });
+                            object.appendChild(selectionArea);
+                            object.onmouseup = function(event){
+                                this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;
+                                selectionArea.remove();
+                                var finishingPositionData = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+            
+                                var selectionBox = [{},{}];
+                                if( initialPositionData.x < finishingPositionData.x ){
+                                    selectionBox[0].x = initialPositionData.x*width;
+                                    selectionBox[1].x = finishingPositionData.x*width;
+                                }else{
+                                    selectionBox[0].x = finishingPositionData.x*width;
+                                    selectionBox[1].x = initialPositionData.x*width;
+                                }
+                                if( initialPositionData.y < finishingPositionData.y ){
+                                    selectionBox[0].y = initialPositionData.y*height;
+                                    selectionBox[1].y = finishingPositionData.y*height;
+                                }else{
+                                    selectionBox[0].y = finishingPositionData.y*height;
+                                    selectionBox[1].y = initialPositionData.y*height;
+                                }
+            
+                                var noteBlocks = object.getElementsByTagName('g');
+                                for(var a = 0; a < noteBlocks.length; a++){
+                                    var temp = state.noteRegistry.get_note(parseInt(noteBlocks[a].id));
+                                    var block = [
+                                            {x:temp.position*(width/xCount), y:temp.line*(height/yCount)},
+                                            {x:(temp.position+temp.length)*(width/xCount), y:(temp.line+1)*(height/yCount)},
+                                        ];
+            
+                                    if( __globals.utility.math.detectOverlap(selectionBox,block,selectionBox,block) ){ noteBlocks[a].select(); }
+                                }
+            
+            
+                            };
                             object.onmouseleave = object.onmouseup;
                             object.onmousemove = function(event){
-                                var livePosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,this,width,height));
-                                var newLocation = {
-                                    line: startingPosition.line + (livePosition.line-initialPosition.line),
-                                    position: startingPosition.position + (livePosition.position-initialPosition.position),
-                                };
-                                newBlock.location(newLocation.line, newLocation.position);
-                                state.noteRegistry.update(parseInt(newBlock.id),{ line:newLocation.line, position:newLocation.position });
-                            };
-                        };
-                        newBlock.callback.rightHandle = function(event){
-                            var initialPosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
-                            var startingPosition = state.noteRegistry.info(parseInt(newBlock.id));
-                            object.onmouseup = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
-                            object.onmouseleave = object.onmouseup;
-                            object.onmousemove = function(event){
-                                var livePosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,this,width,height));
-                                var length = startingPosition.length + (livePosition.position-initialPosition.position);
-                                if(length < 0){length = 0;}
-                                newBlock.length(length);
-                                state.noteRegistry.update(parseInt(newBlock.id),{ length:length });
-                            };
-                        };
-                        newBlock.callback.leftHandle = function(event){
-                            var initialPosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
-                            var startingPosition = state.noteRegistry.info(parseInt(newBlock.id));
-                            object.onmouseup = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
-                            object.onmouseleave = object.onmouseup;
-                            object.onmousemove = function(event){
-                                var livePosition = getCoordinates(__globals.utility.element.getPositionWithinFromMouse(event,this,width,height));
-                                var length = startingPosition.length - (livePosition.position-initialPosition.position);
-                                var newPosition = startingPosition.position + (livePosition.position-initialPosition.position);
-                                if(length < 0){ newPosition += length; length = 0; }
-                                newBlock.length(length);
-                                newBlock.location(startingPosition.line, newPosition);
-                                state.noteRegistry.update(parseInt(newBlock.id),{ position:newPosition, length:length });
-                            };
-                        };
+                                var livePositionData = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                                var diff = {x:livePositionData.x-initialPositionData.x, y:livePositionData.y-initialPositionData.y};
+                                var transform = {};
             
-                        object.appendChild(newBlock);
+                                if(diff.x < 0){ 
+                                    selectionArea.width.baseVal.value = -diff.x*width;
+                                    transform.x = initialPositionData.x+diff.x;
+                                }else{ 
+                                    selectionArea.width.baseVal.value = diff.x*width;
+                                    transform.x = initialPositionData.x;
+                                }
+                                if(diff.y < 0){ 
+                                    selectionArea.height.baseVal.value = -diff.y*height;
+                                    transform.y = initialPositionData.y+diff.y;
+                                }else{ 
+                                    selectionArea.height.baseVal.value = diff.y*height;
+                                    transform.y = initialPositionData.y;
+                                }
             
-                        newBlock.callback.rightHandle(event);
+                                __globals.utility.element.setTransform_XYonly(selectionArea, transform.x*width, transform.y*height);
+                            };
+                        }
                     };
             
                     //division lines
@@ -9357,6 +9543,42 @@
                             ));
                         }
             
+                //controls
+                    object.play = function(start,end,loop=false){
+                        state.playmark = start/state.playrate;
+            
+                        function playback(){
+                            var _start = state.playmark*state.playrate;
+                            var _end = (state.playmark+state.playRefreshRate)*state.playrate;
+                            if(object.signal){object.signal(state.noteRegistry.eventsBetween(_start,_end));}
+                            if(_end >= end){
+                                clearInterval(state.playInterval);
+                                if(loop){
+                                    setTimeout(
+                                        function(){
+                                            state.playmark = start/state.playrate;
+                                            playback();
+                                            state.playInterval = setInterval(playback,state.playRefreshRate*1000);
+                                        } ,state.playRefreshRate*1000
+                                    );
+                                }
+                            }
+            
+                            state.playmark += state.playRefreshRate;
+                        }
+            
+                        playback();
+                        state.playInterval = setInterval(playback,state.playRefreshRate*1000);
+                    };
+            
+                //callbacks
+                    object.signal = function(signal){console.log(signal);};
+            
+                //setup?
+                makeBlock({line:1, position:0.5, length:8});
+                makeBlock({line:3, position:2, length:8});
+                object.play(0,10);
+            
                 return object;
             };
             
@@ -9366,24 +9588,116 @@
             
             
             
-            parts.elements.control.pianoroll_3.noteRegistry = function(){
-                var registry = [];
-                this.info = function(id){
-                    return { line:registry[id].line, position:registry[id].position, length:registry[id].length };
+            
+            
+            
+            
+            
+            parts.elements.control.pianoroll_3.noteRegistry = function(rightLimit=-1,blockLengthLimit=-1){
+                var notes = [];  // eg. [{line:2, position:5.5, length:8, strength:0.6},{line:1, position:0, length:1, strength:0.01}]
+                var events = []; // eg. [{line:2, position:5.5, strength:0.6},{line:2, position:13.5, strength:0}]
+                var events_byID = []; //eg. [0,1],[2,3]
+                var events_byPosition = {}; //eg. [5.5:[0],13.5:[1]]
+                var positions = []; //eg. [5.5,13.5]
+            
+            
+                this.all_notes = function(){ return JSON.parse(JSON.stringify(notes)); };
+                this.all_events = function(){ return JSON.parse(JSON.stringify(events)); };
+                this.get_note = function(id){ return JSON.parse(JSON.stringify(notes[id])); };
+                this.get_event = function(i){ return JSON.parse(JSON.stringify(events[i])); };
+                this.eventsBetween = function(start=0,end=8){
+                    var compiledEvents = [];
+                    // console.log('events_byPosition',events_byPosition);
+                    // console.log('positions',positions);
+                    var eventNumbers = positions.filter(function(a){return a >= start && a < end;});
+            
+                    for(var a = 0; a < eventNumbers.length; a++){
+                        eventNumbers[a]= events_byPosition[String(eventNumbers[a])];
+                        for(var b = 0; b < eventNumbers[a].length; b++){
+                            compiledEvents.push(events[eventNumbers[a][b]]);
+                        }
+                    }
+                    return compiledEvents;
                 };
-                this.update = function(id,data){
-                    if('line' in data){ registry[id].line = data.line; }
-                    if('position' in data){ registry[id].position = data.position; }
-                    if('length' in data){ registry[id].length = data.length < 0 ? 0 : data.length; }
-                };
-                this.add = function(line,position,length){
-                    var newID = 0;
-                    while(registry[newID] != undefined){newID++;}
-                    registry[newID] = { line:line, position:position, length:length };
+            
+                this.add = function(data,forceID){
+                    //clean up into data
+                        if(data == undefined || !('line' in data) || !('position' in data) || !('length' in data)){return;}
+                        if(!('strength' in data)){data.strength = 1;}
+            
+                    //generate note ID
+                        var newID = 0;
+                        if(forceID == undefined){
+                            while(notes[newID] != undefined){newID++;}
+                        }else{newID = forceID;}
+            
+                    //add note to storage
+                        notes[newID] = JSON.parse(JSON.stringify(data));
+            
+                    //generate event data
+                        var newEvents = [
+                            {noteID:newID, line:data.line, position:data.position,             strength:data.strength},
+                            {noteID:newID, line:data.line, position:data.position+data.length, strength:0}
+                        ];
+            
+                    //add event data to storage
+                        var eventLocation = 0;
+                        //start event
+                            while(events[eventLocation] != undefined){eventLocation++;}
+                            events[eventLocation] = newEvents[0];
+                            events_byID[newID] = [eventLocation];
+                            if( events_byPosition[data.position] == undefined ){
+                                events_byPosition[data.position] = [eventLocation];
+                            }else{
+                                events_byPosition[data.position].push(eventLocation);
+                            }
+                            positions.push(data.position);
+                        //end event
+                            while(events[eventLocation] != undefined){eventLocation++;}
+                            events[eventLocation] = newEvents[1];
+                            events_byID[newID] = events_byID[newID].concat(eventLocation);
+                            if( events_byPosition[data.position+data.length] == undefined ){
+                                events_byPosition[data.position+data.length] = [eventLocation];
+                            }else{
+                                events_byPosition[data.position+data.length].push(eventLocation);
+                            }
+                            positions.push(data.position+data.length);
+            
                     return newID;
                 };
-                this.remove = function(id){ delete registry[id]; };
+                this.remove = function(id){
+                    delete notes[id];
+            
+                    for(var a = 0; a < events_byID[id].length; a++){
+                        var tmp = events_byID[id][a];
+                        events_byPosition[events[tmp].position].splice( events_byPosition[events[tmp].position].indexOf(tmp) ,1);
+                        positions.splice(positions.indexOf(events[tmp].position),1);
+                        if( events_byPosition[events[tmp].position].length == 0 ){delete events_byPosition[events[tmp].position];}
+                        delete events[tmp];
+                    }
+            
+                    delete events_byID[id];
+                };
+                this.update = function(id,data){
+                    //clean input
+                        if(data == undefined){return;}
+                        if(!('line' in data)){data.line = notes[id].line;}
+                        if(!('position' in data)){data.position = notes[id].position;}
+                        if(!('length' in data)){data.length = notes[id].length;}
+                        if(!('strength' in data)){data.strength = notes[id].strength;}
+                    
+                    this.remove(id);
+                    this.add(data,id);
+                };
             };
+            
+            
+            
+            
+            
+            
+            
+            
             
             
             
@@ -9395,45 +9709,902 @@
             parts.elements.control.pianoroll_3.noteBlock = function(basicUnit,id,line,position,length=0,style){
                 var obj = __globals.utility.experimental.elementMaker('g',id,{y:line*basicUnit.y, x:position*basicUnit.x});
             
-            
-                var body = __globals.utility.experimental.elementMaker('rect','body',{
+                obj.body = __globals.utility.experimental.elementMaker('rect','body',{
                     width:length*basicUnit.x, height:1*basicUnit.y,
                     style:style.body
                 });
-                obj.append(body);
+                obj.append(obj.body);
             
-                var leftHandle = __globals.utility.experimental.elementMaker('rect','leftHandle',{
+                obj.leftHandle = __globals.utility.experimental.elementMaker('rect','leftHandle',{
                     x:-style.handleWidth/2,
                     width:style.handleWidth, height:1*basicUnit.y,
                     style:style.handle
                 });
-                obj.append(leftHandle);
+                obj.append(obj.leftHandle);
             
-                var rightHandle = __globals.utility.experimental.elementMaker('rect','rightHandle',{
+                obj.rightHandle = __globals.utility.experimental.elementMaker('rect','rightHandle',{
                     x:length*basicUnit.x-style.handleWidth/2,
                     width:style.handleWidth, height:1*basicUnit.y,
                     style:style.handle
                 });
-                obj.append(rightHandle);
+                obj.append(obj.rightHandle);
             
                 obj.location = function(line,position){
                     __globals.utility.element.setTransform_XYonly(obj, position*basicUnit.x, line*basicUnit.y);
                 };
                 obj.length = function(length){
-                    if(length == undefined){return body.width.baseVal.value/basicUnit.x;}
-                    body.width.baseVal.value = length*basicUnit.x;
-                    __globals.utility.element.setTransform_XYonly(rightHandle, length*basicUnit.x-style.handleWidth/2, 0);
+                    if(length == undefined){return obj.body.width.baseVal.value/basicUnit.x;}
+                    obj.body.width.baseVal.value = length*basicUnit.x;
+                    __globals.utility.element.setTransform_XYonly(obj.rightHandle, length*basicUnit.x-style.handleWidth/2, 0);
                 };
-                obj.callback = {
-                    body:function(){},
-                    leftHandle:function(){},
-                    rightHandle:function(){},
+                obj.glowing = false;
+                obj.glow = function(state){
+                    obj.glowing = state;
+                    if(obj.glowing){ __globals.utility.element.setStyle(obj.body,style.bodyGlow); }
+                    else{ __globals.utility.element.setStyle(obj.body,style.body); }
                 };
-                body.onmousedown = function(event){ if(obj.callback.body != undefined){ obj.callback.body(event); } };
-                leftHandle.onmousedown = function(event){ if(obj.callback.leftHandle != undefined){ obj.callback.leftHandle(event); } };
-                rightHandle.onmousedown = function(event){ if(obj.callback.rightHandle != undefined){ obj.callback.rightHandle(event); } };
             
                 return obj;
+            };
+            parts.elements.control.pianoroll_4 = function(
+                id='pianoroll_4',
+                x, y, width, height, angle=0,
+                xCount=80, yCount=10,
+            ){
+                var style = {
+                    backing:'fill:rgba(50,50,50,1);',
+                };
+                var state = {
+                    snapping:false,
+                    noteRegistry: new parts.elements.control.pianoroll_4.noteRegistry(xCount),
+                    xCount:xCount,
+                    yCount:yCount,
+                };
+            
+                //elements 
+                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                //backing
+                    var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width, height:height, style:style.backing});
+                    object.appendChild(backing);
+            
+                    object.append(
+                        parts.elements.control.pianoroll_4.noteBlock(
+                            0,
+                            {x:780/80,y:130/10},
+                            {obj:object, element:backing, width:width, height:height, state:state},
+                            {line:0, position:0, length:2},
+                            {
+                                body:'fill:rgba(150,100,100,0.75);stroke:rgba(200,100,100,1);stroke-width:0.5;',
+                                bodyGlow:'fill:rgba(200,100,100,0.9);stroke:rgba(200,100,100,1);stroke-width:0.5;',
+                                handle:'fill:rgba(255,0,0,0.75);cursor:col-resize;',
+                                handleWidth:2,
+                            }
+                        )
+                    );
+            
+                return object;
+            };
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            parts.elements.control.pianoroll_4.noteRegistry = function(rightLimit=-1,blockLengthLimit=-1){
+                var notes = [];
+                var events = [];
+                var events_byID = [];
+                var events_byPosition = {};
+                var positions = [];
+            
+                this.__dump = function(){
+                    console.log('---- noteRegistry dump ----');
+            
+                    console.log('notes');
+                    for(var a = 0; a < notes.length; a++){ 
+                        console.log( '\t', a, ' ' + JSON.stringify(notes[a]) );
+                    }
+            
+                    console.log('events');
+                    for(var a = 0; a < events.length; a++){ 
+                        console.log( '\t', a, ' ' + JSON.stringify(events[a]) );
+                    }
+            
+                    console.log('events_byID');
+                    for(var a = 0; a < events_byID.length; a++){ 
+                        console.log( '\t', a, ' ' + JSON.stringify(events_byID[a]) );
+                    }
+            
+                    console.log('events_byPosition');
+                    var keys = Object.keys(events_byPosition);
+                    for(var a = 0; a < keys.length; a++){ 
+                        console.log( '\t', keys[a], ' ' + JSON.stringify(events_byPosition[keys[a]]) );
+                    }
+            
+                    console.log('positions');
+                    for(var a = 0; a < positions.length; a++){ 
+                        console.log( '\t', a, ' ' + JSON.stringify(positions[a]) );
+                    }
+                };
+                this.all_notes = function(){ return JSON.parse(JSON.stringify(notes)); };
+                this.all_events = function(){ return JSON.parse(JSON.stringify(events)); };
+                this.get_note = function(id){ return JSON.parse(JSON.stringify(notes[id])); };
+                this.get_event = function(i){ return JSON.parse(JSON.stringify(events[i])); };
+                this.eventsBetween = function(start=0,end=8){
+                    var compiledEvents = [];
+            
+                    //get all the events positions that lie between the start and end positions
+                    var eventNumbers = positions.filter(function(a){return a >= start && a < end;});
+            
+                    //for each position, convert the number to a string, and gather the associated event number arrays
+                    //then, for each array, get each event and place that into the output array
+                    for(var a = 0; a < eventNumbers.length; a++){
+                        eventNumbers[a] = events_byPosition[String(eventNumbers[a])];
+                        for(var b = 0; b < eventNumbers[a].length; b++){
+                            compiledEvents.push(events[eventNumbers[a][b]]);
+                        }
+                    }
+                    return compiledEvents;
+                };
+                this.add = function(data,forceID){
+                    //clean up into data
+                        if(data == undefined || !('line' in data) || !('position' in data) || !('length' in data)){return;}
+                        if(!('strength' in data)){data.strength = 1;}
+            
+                    //generate note ID
+                        var newID = 0;
+                        if(forceID == undefined){
+                            while(notes[newID] != undefined){newID++;}
+                        }else{newID = forceID;}
+            
+                    //add note to storage
+                        notes[newID] = JSON.parse(JSON.stringify(data));
+            
+                    //generate event data
+                        var newEvents = [
+                            {noteID:newID, line:data.line, position:data.position,             strength:data.strength},
+                            {noteID:newID, line:data.line, position:data.position+data.length, strength:0}
+                        ];
+            
+                    //add event data to storage
+                        var eventLocation = 0;
+                        //start event
+                            while(events[eventLocation] != undefined){eventLocation++;}
+                            events[eventLocation] = newEvents[0];
+                            events_byID[newID] = [eventLocation];
+                            if( events_byPosition[data.position] == undefined ){
+                                events_byPosition[data.position] = [eventLocation];
+                            }else{
+                                events_byPosition[data.position].push(eventLocation);
+                            }
+                            positions.push(data.position);
+                        //end event
+                            while(events[eventLocation] != undefined){eventLocation++;}
+                            events[eventLocation] = newEvents[1];
+                            events_byID[newID] = events_byID[newID].concat(eventLocation);
+                            if( events_byPosition[data.position+data.length] == undefined ){
+                                events_byPosition[data.position+data.length] = [eventLocation];
+                            }else{
+                                events_byPosition[data.position+data.length].push(eventLocation);
+                            }
+                            positions.push(data.position+data.length);
+            
+                    return newID;
+                };
+                this.remove = function(id){
+                    delete notes[id];
+            
+                    for(var a = 0; a < events_byID[id].length; a++){
+                        var tmp = events_byID[id][a];
+                        events_byPosition[events[tmp].position].splice( events_byPosition[events[tmp].position].indexOf(tmp) ,1);
+                        positions.splice(positions.indexOf(events[tmp].position),1);
+                        if( events_byPosition[events[tmp].position].length == 0 ){delete events_byPosition[events[tmp].position];}
+                        delete events[tmp];
+                    }
+            
+                    delete events_byID[id];
+                };
+                this.update = function(id,data){
+                    //clean input
+                        if(data == undefined){return;}
+                        if(!('line' in data)){data.line = notes[id].line;}
+                        if(!('position' in data)){data.position = notes[id].position;}
+                        if(!('length' in data)){data.length = notes[id].length;}
+                        if(!('strength' in data)){data.strength = notes[id].strength;}
+                    
+                    this.remove(id);
+                    this.add(data,id);
+                };
+            };
+            
+            
+            parts.elements.control.pianoroll_4.XY2coordinates = function(xy,xCount,yCount,snapping){
+                xy.y = Math.floor(xy.y*yCount);
+                if(xy.y >= yCount){xy.y = yCount-1;}
+            
+                xy.x = snapping ? Math.round(xy.x*xCount) : xy.x*xCount;
+                if(xy.x < 0){xy.x =0;}
+            
+                return {line:xy.y, position:xy.x};
+            };
+            
+            
+            parts.elements.control.pianoroll_4.noteBlock = function(id,basicUnit,worktopData/*={element:null,width:null,height:null}*/,data={line:0, position:0, length:0},style){
+                var state = {
+                    id:id,
+                    line:data.line,
+                    position:data.position,
+                    length:data.length,
+                    glowing:false,
+                };
+            
+                var design = {
+                    type:'noteBlock',
+                    skipGrapple:true,
+                    x:data.line*basicUnit.y, y:data.position*basicUnit.x,
+                    base:{
+                        type:'rect',
+                        x:0, y:0, width:data.length*basicUnit.x, height:basicUnit.y,
+                        style:style.body,
+                    },
+                    elements:[
+                        {type:'rect', name:'leftHandle', data:{
+                            x:-style.handleWidth/2, 
+                            width:style.handleWidth, height:basicUnit.y,
+                            style:style.handle
+                        }},
+                        {type:'rect', name:'rightHandle', data:{
+                            x:data.length*basicUnit.x-style.handleWidth/2, 
+                            width:style.handleWidth, height:basicUnit.y,
+                            style:style.handle
+                        }},
+                    ],
+                };
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(parts.elements.control.pianoroll_4.noteBlock,design);
+                    obj.id = id;
+            
+                //controls
+                    obj.line = function(a){
+                        if(a == undefined){return state.line;}
+                        state.line = a;
+                        __globals.utility.element.setTransform_XYonly(obj, state.position*basicUnit.x, state.line*basicUnit.y);
+                    };
+                    obj.position = function(a){
+                        if(a == undefined){return state.position;}
+                        state.position = a;
+                        __globals.utility.element.setTransform_XYonly(obj, state.position*basicUnit.x, state.line*basicUnit.y);};
+                    obj.length = function(a){
+                        if(a == undefined){return state.length;}
+                        state.length = a;
+                        design.base.width.baseVal.value = state.length*basicUnit.x;
+                        __globals.utility.element.setTransform_XYonly(design.rect.rightHandle, state.length*basicUnit.x-style.handleWidth/2, 0);
+                    };
+                    obj.glow = function(newState){
+                        if(newState == undefined){return state.glowing;}
+                        state.glowing = newState;
+                        if(state.glowing){ __globals.utility.element.setStyle(design.base,style.bodyGlow); }
+                        else{ __globals.utility.element.setStyle(design.base,style.body); }
+                    };
+            
+                //mouse control
+                    design.base.onmousedown = function(event){
+                        var initialPosition = parts.elements.control.pianoroll_4.XY2coordinates(__globals.utility.element.getPositionWithinFromMouse(event,worktopData.obj,worktopData.width,worktopData.height), worktopData.state.xCount, worktopData.state.yCount, worktopData.state.snapping);
+                        console.log(initialPosition);
+            
+                        worktopData.obj.onmouseup = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                        worktopData.obj.onmouseleave = worktopData.obj.onmouseup;
+                        worktopData.obj.onmousemove = function(event){
+                            var livePosition = parts.elements.control.pianoroll_4.XY2coordinates(__globals.utility.element.getPositionWithinFromMouse(event,worktopData.obj,worktopData.width,worktopData.height), worktopData.state.xCount, worktopData.state.yCount, worktopData.state.snapping);
+                            console.log(livePosition);
+                        };
+                    };
+                
+                //callbacks
+                    obj.onselect = function(){};
+                    obj.ondeselect = function(){};
+                    obj.onmove = function(){};
+                    obj.onleftadjust = function(){};
+                    obj.onrightadjust = function(){};
+                    obj.onstrengthadjust = function(){};
+                    obj.ondelete = function(){};
+            
+                return obj;
+            };
+            // //noteBlock test
+            // var temp = parts.elements.control.pianoroll_4.noteBlock(
+            //     undefined,
+            //     {x:780/80,y:130/10},
+            //     {element:},
+            //     {line:0, position:0, length:2},
+            //     {
+            //         body:'fill:rgba(150,100,100,0.75);stroke:rgba(200,100,100,1);stroke-width:0.5;',
+            //         bodyGlow:'fill:rgba(200,100,100,0.9);stroke:rgba(200,100,100,1);stroke-width:0.5;',
+            //         handle:'fill:rgba(255,0,0,0.75);cursor:col-resize;',
+            //         handleWidth:2,
+            //     }
+            // );
+            // __globals.panes.middleground.append(temp);
+            // // temp.glow(true);
+            // // temp.line(1);
+            // // temp.position(1);
+            // // temp.length(1);
+            parts.elements.control.pianoroll_5 = function(
+                id='pianoroll_5',
+                x, y, width, height, angle=0,
+                xCount=80, yCount=13, xStripPattern=[1,0,0,0], yStripPattern=[0,0,1,0,1,0,1,0,0,1,0,1],
+            ){
+                var style = {
+                    backing:'fill:rgba(20,20,20,1);',
+                    selectionArea:'fill:rgba(100,100,150,0.75);stroke:rgba(100,100,200,1);stroke-width:0.5;pointer-events:none;',
+                    background:{
+                        verticalStrip:[
+                            'stroke:rgba(120,120,120,1);stroke-width:0.5;fill:rgba(0,0,0,0);',
+                            'stroke:rgba(120,120,120,1);stroke-width:0.5;fill:rgba(30,30,30,0.5);',
+                            'stroke:rgba(120,120,120,1);stroke-width:0.5;fill:rgba(100,30,100,0.5);',
+                        ],
+                        horizontalStrip:[
+                            'stroke:rgba(120,120,120,1);stroke-width:0.5;fill:rgba(100,100,100,0);',
+                            'stroke:rgba(120,120,120,1);stroke-width:0.5;fill:rgba(120,120,120,0.5);'
+                        ],
+                    },
+                    block:{
+                        body:'fill:rgba(150,100,150,0.75);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+                        bodyGlow:'fill:rgba(200,100,200,0.9);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+                        handle:'fill:rgba(255,0,255,0.75);cursor:col-resize;',
+                        handleWidth:2,
+                    }
+                };
+                var state = {
+                    snapping:!false,
+                    noteRegistry: new parts.elements.control.pianoroll_5.noteRegistry(xCount,yCount),
+                    selectedNotes:[],
+                };
+            
+                //internal functions
+                    function cordinates2lineposition(xy){
+                        xy.y = Math.floor(xy.y*yCount);
+                        if(xy.y >= yCount){xy.y = yCount-1;}
+                    
+                        xy.x = state.snapping ? Math.round(xy.x*xCount) : xy.x*xCount;
+                        if(xy.x < 0){xy.x =0;}
+                    
+                        return {line:xy.y, position:xy.x};
+                    }
+                    function makeNote(line, position, length, strength=1){
+                        var freshID = state.noteRegistry.add({line:line, position:position, length:length, strength:strength});
+                        var graphicElement = parts.elements.control.pianoroll_5.noteBlock(
+                            freshID, {x:width/xCount,y:height/yCount},
+                            line, position, length, false,
+                            style.block,
+                        );
+                        object.append(graphicElement);
+            
+                        //augmenting the graphic element
+                            graphicElement.select = function(remainSelected=false){
+                                if(state.selectedNotes.indexOf(this) != -1){ if(!remainSelected){this.deselect();} return; }
+                                this.selected(true);
+                                state.selectedNotes.push(this);
+                                this.glow(true);
+                            };
+                            graphicElement.deselect = function(){
+                                state.selectedNotes.splice(state.selectedNotes.indexOf(this),1);
+                                this.selected(false);
+                                this.glow(false);
+                            };
+                            graphicElement.delete = function(){
+                                this.deselect();
+                                state.noteRegistry.remove(parseInt(this.id));
+                                this.remove();
+                            };
+                            graphicElement.ondblclick = function(event){
+                                if(!event.metaKey){return;}
+                                while(state.selectedNotes.length > 0){
+                                    state.selectedNotes[0].delete();
+                                }
+                            };
+                            graphicElement.body.onmousedown = function(event){
+                                if( !event.metaKey && !graphicElement.selected()){
+                                    while(state.selectedNotes.length > 0){
+                                        state.selectedNotes[0].deselect();
+                                    }
+                                }
+                                graphicElement.select(true);
+            
+                                if(event.altKey){
+                                    for(var a = 0; a < state.selectedNotes.length; a++){
+                                        var temp = state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id));
+                                        makeNote(temp.line, temp.position, temp.length, temp.strength);
+                                    }
+                                }
+                                
+                                var initialPosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                var activeBlocks = [];
+                                for(var a = 0; a < state.selectedNotes.length; a++){
+                                    activeBlocks.push({
+                                        id: parseInt(state.selectedNotes[a].id),
+                                        block: state.selectedNotes[a],
+                                        starting: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
+                                    });
+                                }
+                                object.onmousemove = function(event){
+                                    var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                    var diff = {
+                                        line: livePosition.line - initialPosition.line,
+                                        position: livePosition.position - initialPosition.position,
+                                    };
+            
+                                    for(var a = 0; a < activeBlocks.length; a++){
+                                        state.noteRegistry.update(activeBlocks[a].id, {
+                                            line:activeBlocks[a].starting.line+diff.line,
+                                            position:activeBlocks[a].starting.position+diff.position,
+                                        });
+            
+                                        var temp = state.noteRegistry.get_note(activeBlocks[a].id);
+            
+                                        activeBlocks[a].block.line( temp.line );
+                                        activeBlocks[a].block.position( temp.position );
+                                    }
+                                };
+                                object.onmouseleave = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                                object.onmouseup = object.onmouseleave;
+                            };
+                            graphicElement.leftHandle.onmousedown = function(event){
+                                if(!graphicElement.selected()){
+                                    while(state.selectedNotes.length > 0){
+                                        state.selectedNotes[0].deselect();
+                                    }
+                                }
+                                graphicElement.select(true);
+            
+                                var initialPosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                var activeBlocks = [];
+                                for(var a = 0; a < state.selectedNotes.length; a++){
+                                    activeBlocks.push({
+                                        id: parseInt(state.selectedNotes[a].id),
+                                        block: state.selectedNotes[a],
+                                        starting: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
+                                    });
+                                }
+                                object.onmousemove = function(event){
+                                    var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                    var diff = {position: initialPosition.position-livePosition.position};
+            
+                                    for(var a = 0; a < activeBlocks.length; a++){
+                                        if( activeBlocks[a].starting.position-diff.position < 0 ){ continue; } //this stops a block from getting longer, when it is unable to move any further to the left
+                                        
+                                        state.noteRegistry.update(activeBlocks[a].id, {
+                                            length: activeBlocks[a].starting.length+diff.position,
+                                            position: activeBlocks[a].starting.position-diff.position,
+                                        });
+                                        var temp = state.noteRegistry.get_note(activeBlocks[a].id);
+                                        activeBlocks[a].block.position( temp.position );
+                                        activeBlocks[a].block.length( temp.length );
+                                    }
+                                };
+                                object.onmouseleave = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                                object.onmouseup = object.onmouseleave;
+                            };
+                            graphicElement.rightHandle.onmousedown = function(event){
+                                if(!graphicElement.selected()){
+                                    while(state.selectedNotes.length > 0){
+                                        state.selectedNotes[0].deselect();
+                                    }
+                                }
+                                graphicElement.select(true);
+            
+                                var initialPosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                var activeBlocks = [];
+                                for(var a = 0; a < state.selectedNotes.length; a++){
+                                    activeBlocks.push({
+                                        id: parseInt(state.selectedNotes[a].id),
+                                        block: state.selectedNotes[a],
+                                        starting: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
+                                    });
+                                }
+                                object.onmousemove = function(event){
+                                    var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                    var diff = {position: livePosition.position - initialPosition.position};
+            
+                                    for(var a = 0; a < activeBlocks.length; a++){
+                                        state.noteRegistry.update(activeBlocks[a].id, {length: activeBlocks[a].starting.length+diff.position});
+                                        var temp = state.noteRegistry.get_note(activeBlocks[a].id);
+                                        activeBlocks[a].block.length( temp.length );
+                                    }
+                                };
+                                object.onmouseleave = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                                object.onmouseup = object.onmouseleave;
+                            };
+            
+                        return {id:freshID, element:graphicElement};
+                    }
+            
+                //elements 
+                    //main
+                        var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                    //background
+                        var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width, height:height, style:style.backing});
+                        object.appendChild(backing);
+            
+                        //background strips
+                            var backgroundStrips = {horizontal:[], vertical:[]};
+                            //horizontal strips
+                            for(var a = 0; a < yCount; a++){
+                                var temp = __globals.utility.experimental.elementMaker('rect','divisionstrip_horizontal_'+a,{
+                                    x1:0, y:a*(height/yCount),
+                                    width:width, height:height/yCount,
+                                    style:style.background.horizontalStrip[yStripPattern[a%yStripPattern.length]]
+                                });
+                                backgroundStrips.horizontal.push(temp);
+                                object.appendChild(temp);
+                            }
+                            //vertical strips
+                            for(var a = 0; a < xCount; a++){
+                                var temp = __globals.utility.experimental.elementMaker('rect','divisionstrip_vertical_'+a,{
+                                    x:a*(width/xCount), y:0,
+                                    width:width/xCount, height:height,
+                                    style:style.background.verticalStrip[xStripPattern[a%xStripPattern.length]]
+                                });
+                                backgroundStrips.vertical.push(temp);
+                                object.appendChild(temp);
+                            }
+                    //interactionPlane
+                        var interactionPlane = __globals.utility.experimental.elementMaker('rect','interactionPlane',{width:width, height:height, style:'fill:rgba(0,0,0,0);'});
+                        object.appendChild(interactionPlane);
+                        interactionPlane.onmousedown = function(event){
+                            if(event.altKey){ //note creation
+                                while(state.selectedNotes.length > 0){
+                                    state.selectedNotes[0].deselect();
+                                }
+                                var position = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height));
+                                var temp = makeNote(position.line,position.position,0);
+                                temp.element.select();
+                                temp.element.rightHandle.onmousedown(event);
+                            }else if(event.shiftKey){ //click-n-drag group select
+                                var initialPositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
+                                
+                                var selectionArea = __globals.utility.experimental.elementMaker('rect','body',{
+                                    x:initialPositionData.x*width, y:initialPositionData.y*height,
+                                    width:0, height:0,
+                                    style:style.selectionArea,
+                                });
+                                object.appendChild(selectionArea);
+                                
+                                object.onmousemove = function(event){
+                                    var livePositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
+                                    var diff = {x:livePositionData.x-initialPositionData.x, y:livePositionData.y-initialPositionData.y};
+            
+                                    var transform = {};
+                                    if(diff.x < 0){ 
+                                        selectionArea.width.baseVal.value = -diff.x*width;
+                                        transform.x = initialPositionData.x+diff.x;
+                                    }else{ 
+                                        selectionArea.width.baseVal.value = diff.x*width;
+                                        transform.x = initialPositionData.x;
+                                    }
+                                    if(diff.y < 0){ 
+                                        selectionArea.height.baseVal.value = -diff.y*height;
+                                        transform.y = initialPositionData.y+diff.y;
+                                    }else{ 
+                                        selectionArea.height.baseVal.value = diff.y*height;
+                                        transform.y = initialPositionData.y;
+                                    }
+            
+                                    __globals.utility.element.setTransform_XYonly(selectionArea, transform.x*width, transform.y*height);
+                                };
+                                object.onmouseup = function(event){
+                                    this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;
+                                    selectionArea.remove();
+                                    var finishingPositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
+            
+                                    var selectionBox = [{},{}];
+                                    if( initialPositionData.x < finishingPositionData.x ){
+                                        selectionBox[0].x = initialPositionData.x*width;
+                                        selectionBox[1].x = finishingPositionData.x*width;
+                                    }else{
+                                        selectionBox[0].x = finishingPositionData.x*width;
+                                        selectionBox[1].x = initialPositionData.x*width;
+                                    }
+                                    if( initialPositionData.y < finishingPositionData.y ){
+                                        selectionBox[0].y = initialPositionData.y*height;
+                                        selectionBox[1].y = finishingPositionData.y*height;
+                                    }else{
+                                        selectionBox[0].y = finishingPositionData.y*height;
+                                        selectionBox[1].y = initialPositionData.y*height;
+                                    }
+            
+                                    while(state.selectedNotes.length > 0){
+                                        state.selectedNotes[0].deselect();
+                                    }
+                                    var noteBlocks = object.getElementsByTagName('g');
+                                    for(var a = 0; a < noteBlocks.length; a++){
+                                        var temp = state.noteRegistry.get_note(parseInt(noteBlocks[a].id));
+                                        var block = [
+                                                {x:temp.position*(width/xCount), y:temp.line*(height/yCount)},
+                                                {x:(temp.position+temp.length)*(width/xCount), y:(temp.line+1)*(height/yCount)},
+                                            ];
+            
+                                        if( __globals.utility.math.detectOverlap(selectionBox,block,selectionBox,block) ){ noteBlocks[a].select(true); }
+                                    }
+                                };
+                                object.onmouseleave = object.onmouseup;
+                            }else{ //general panning
+                                while(state.selectedNotes.length > 0){
+                                    state.selectedNotes[0].deselect();
+                                }
+                            }
+                        };
+            
+                //controls
+                    object.allNotes = function(){ return state.noteRegistry.all_notes(); };
+                    object.eventsBetween = function(start,end){ return state.noteRegistry.eventsBetween(start,end); };
+                    object.light_vertical = function(state,a,b){
+                        for(var i = a; i < b; i++){
+                            __globals.utility.element.setStyle(
+                                backgroundStrips.vertical[i],
+                                style.background.verticalStrip[state]
+                            );
+                        }
+                    };
+                //callbacks
+            
+                //setup
+                    makeNote(5, 4, 4);
+                    makeNote(8, 8, 4);
+                    makeNote(7, 12, 4);
+                    // console.log(object.allNotes());
+                    console.log(object.eventsBetween(0,10));
+                    // object.light_vertical(2,2,5);
+            
+            
+                return object;
+            };
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            parts.elements.control.pianoroll_5.noteBlock = function(
+                id, basicUnit,
+                line, position, length, glow=false, 
+                style
+            ){
+                //elements
+                    var obj = __globals.utility.experimental.elementMaker('g',id,{y:line*basicUnit.y, x:position*basicUnit.x});
+                    obj.body = __globals.utility.experimental.elementMaker('rect','body',{width:length*basicUnit.x, height:1*basicUnit.y, style:style.body});
+                    obj.leftHandle = __globals.utility.experimental.elementMaker('rect','leftHandle',{x:-style.handleWidth/2, width:style.handleWidth, height:1*basicUnit.y,style:style.handle});
+                    obj.rightHandle = __globals.utility.experimental.elementMaker('rect','rightHandle',{x:length*basicUnit.x-style.handleWidth/2, width:style.handleWidth, height:1*basicUnit.y, style:style.handle});
+                    obj.append(obj.body);
+                    obj.append(obj.leftHandle);
+                    obj.append(obj.rightHandle);
+                
+                //controls
+                    var state = {line:line, position:position, length:length, glow:glow, selected:false};
+                    obj.basicUnit = function(a){
+                        if(a == undefined){return basicUnit;}
+                        basicUnit = a;
+                        obj.body.width.baseVal.value = state.length*basicUnit.x;
+                        __globals.utility.element.setTransform_XYonly(obj, state.position*basicUnit.x, state.line*basicUnit.y);
+                    };
+                    obj.line = function(a){
+                        if(a == undefined){return state.line;}
+                        state.line = a;
+                        __globals.utility.element.setTransform_XYonly(obj, state.position*basicUnit.x, state.line*basicUnit.y);
+                    };
+                    obj.position = function(a){
+                        if(a == undefined){return state.position;}
+                        state.position = a;
+                        __globals.utility.element.setTransform_XYonly(obj, state.position*basicUnit.x, state.line*basicUnit.y);
+                    };
+                    obj.length = function(a){
+                        if(a == undefined){return state.length;}
+                        state.length = a;
+                        obj.body.width.baseVal.value = state.length*basicUnit.x;
+                        __globals.utility.element.setTransform_XYonly(obj.rightHandle, state.length*basicUnit.x-style.handleWidth/2, 0);
+                    };
+                    obj.glow = function(a){
+                        if(a == undefined){return state.glowing;}
+                        state.glowing = a;
+                        if(state.glowing){ 
+                            __globals.utility.element.setStyle(obj.body,style.bodyGlow);
+                        }else{
+                            __globals.utility.element.setStyle(obj.body,style.body);
+                        }
+                    };
+                    obj.selected = function(a){
+                        if(a == undefined){return state.selected;}
+                        state.selected = a;
+                    };
+            
+                return obj;
+            };
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            parts.elements.control.pianoroll_5.noteRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
+                var notes = [];
+                var selectedNotes = [];
+                var events = [];
+                var events_byID = [];
+                var events_byPosition = {};
+                var positions = [];
+            
+                this.__dump = function(){
+                    console.log('---- noteRegistry dump ----');
+            
+                    console.log('notes');
+                    for(var a = 0; a < notes.length; a++){ 
+                        console.log( '\t', a, ' ' + JSON.stringify(notes[a]) );
+                    }
+            
+                    console.log('selectedNotes');
+                    for(var a = 0; a < selectedNotes.length; a++){ 
+                        console.log( '\t', a, ' ' + JSON.stringify(selectedNotes[a]) );
+                    }
+            
+                    console.log('events');
+                    for(var a = 0; a < events.length; a++){ 
+                        console.log( '\t', a, ' ' + JSON.stringify(events[a]) );
+                    }
+            
+                    console.log('events_byID');
+                    for(var a = 0; a < events_byID.length; a++){ 
+                        console.log( '\t', a, ' ' + JSON.stringify(events_byID[a]) );
+                    }
+            
+                    console.log('events_byPosition');
+                    var keys = Object.keys(events_byPosition);
+                    for(var a = 0; a < keys.length; a++){ 
+                        console.log( '\t', keys[a], ' ' + JSON.stringify(events_byPosition[keys[a]]) );
+                    }
+            
+                    console.log('positions');
+                    for(var a = 0; a < positions.length; a++){ 
+                        console.log( '\t', a, ' ' + JSON.stringify(positions[a]) );
+                    }
+                };
+                this.all_notes = function(){ return JSON.parse(JSON.stringify(notes)); };
+                this.all_events = function(){ return JSON.parse(JSON.stringify(events)); };
+                this.get_note = function(id){ return JSON.parse(JSON.stringify(notes[id])); };
+                this.get_event = function(i){ return JSON.parse(JSON.stringify(events[i])); };
+                this.eventsBetween = function(start=0,end=8){
+                    var compiledEvents = [];
+            
+                    //get all the events positions that lie between the start and end positions
+                    var eventNumbers = Array.from(new Set(positions.filter(function(a){return a >= start && a < end;})));
+            
+                    //for each position, convert the number to a string, and gather the associated event number arrays
+                    //then, for each array, get each event and place that into the output array
+                    for(var a = 0; a < eventNumbers.length; a++){
+                        eventNumbers[a] = events_byPosition[String(eventNumbers[a])];
+                        for(var b = 0; b < eventNumbers[a].length; b++){
+                            compiledEvents.push(events[eventNumbers[a][b]]);
+                        }
+                    }
+            
+                    return compiledEvents;
+                };
+                this.add = function(data,forceID){
+                    //clean up data
+                        if(data == undefined || !('line' in data) || !('position' in data) || !('length' in data)){return;}
+                        if(!('strength' in data)){data.strength = 1;}
+                    //check for disallowed data
+                        if(data.length < 0){data.length = 0;}
+                        else if(data.length+data.position > rightLimit){data.length = rightLimit-data.position;}
+                        if(data.line < 0){data.line = 0;}
+                        else if(data.line > bottomLimit-1){data.line = bottomLimit-1;}
+                        if(data.position < 0){data.position = 0;}
+                        else if(data.position+data.length > rightLimit){data.position = rightLimit-data.length;}
+            
+                    //generate note ID
+                        var newID = 0;
+                        if(forceID == undefined){
+                            while(notes[newID] != undefined){newID++;}
+                        }else{newID = forceID;}
+            
+                    //add note to storage
+                        notes[newID] = JSON.parse(JSON.stringify(data));
+            
+                    //generate event data
+                        var newEvents = [
+                            {noteID:newID, line:data.line, position:data.position,             strength:data.strength},
+                            {noteID:newID, line:data.line, position:data.position+data.length, strength:0}
+                        ];
+            
+                    //add event data to storage
+                        var eventLocation = 0;
+                        //start event
+                            while(events[eventLocation] != undefined){eventLocation++;}
+                            events[eventLocation] = newEvents[0];
+                            events_byID[newID] = [eventLocation];
+                            if( events_byPosition[data.position] == undefined ){
+                                events_byPosition[data.position] = [eventLocation];
+                            }else{
+                                events_byPosition[data.position].push(eventLocation);
+                            }
+                            positions.push(data.position);
+                        //end event
+                            while(events[eventLocation] != undefined){eventLocation++;}
+                            events[eventLocation] = newEvents[1];
+                            events_byID[newID] = events_byID[newID].concat(eventLocation);
+                            if( events_byPosition[data.position+data.length] == undefined ){
+                                events_byPosition[data.position+data.length] = [eventLocation];
+                            }else{
+                                events_byPosition[data.position+data.length].push(eventLocation);
+                            }
+                            positions.push(data.position+data.length);
+            
+                    return newID;
+                };
+                this.remove = function(id){
+                    delete notes[id];
+            
+                    for(var a = 0; a < events_byID[id].length; a++){
+                        var tmp = events_byID[id][a];
+                        events_byPosition[events[tmp].position].splice( events_byPosition[events[tmp].position].indexOf(tmp) ,1);
+                        positions.splice(positions.indexOf(events[tmp].position),1);
+                        if( events_byPosition[events[tmp].position].length == 0 ){delete events_byPosition[events[tmp].position];}
+                        delete events[tmp];
+                    }
+            
+                    delete events_byID[id];
+                };
+                this.update = function(id,data){
+                    //clean input
+                        if(data == undefined){return;}
+                        if(!('line' in data)){data.line = notes[id].line;}
+                        if(!('position' in data)){data.position = notes[id].position;}
+                        if(!('length' in data)){data.length = notes[id].length;}
+                        if(!('strength' in data)){data.strength = notes[id].strength;}
+                    
+                    this.remove(id);
+                    this.add(data,id);
+                };
             };
             
             //established objects
@@ -9469,6 +10640,7 @@
             
             
                 __globals.utility.workspace.gotoPosition(-145.538, -306.003, 2.03767, 0);
+                // __globals.utility.workspace.gotoPosition(46.0541, 46.5064, 6.35268, 0);
 
 
         }

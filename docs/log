@@ -1,4 +1,47 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2017-07-06
+  - fifth rewrite on the pianoroll, things are going pretty well this time. The
+    'noteBlock' element has gotten an upgrade and the mouse interaction is being
+    made a little nicer. So far there's alt-click to add, click-n-drag, 
+    shift-click-n-drag to group select, click anyway to deselect, alt-drag to
+    clone, right and left handle drag to lengthen, and all that springy
+    boundries thing. Still playing with the interaction logic of it all till it
+    feels natural.
+  - fixed duplicate events problem in noteRegistry
+
+
+2017-07-05
+  - another draft started of the pianoroll (4) this time I'm trying to split
+    more of the functionality into the block elements..we'll see how it goes
+
+
+2017-07-04
+  - re-wrote the pianoroll.noteRegistry for better storage and retrival
+  - created rudimentary playback for pianoroll (seems to work rather well,
+    there's no needle yet however)
+
+
+2018-07-03
+  - multi-delete note blocks in the piano roll editor
+  - fixed problem in detectOverlap bounding box judgement (which just didn't 
+    work)
+  - click-n-drag group selection note blocks in the piano roll editor
+
+
+2018-07-02
+  - single block ctrl-drag duplication on the piano-roll editor
+  - multi-block select, movement and length adjust
+  - multi-block alt-drag duplication on the piano-roll editor (changed from 
+    ctrl-drag)
+
+
+2018-07-01
+  - piano rool editor now uses the noteRegistry more vigorously, allowing it to
+    set limitations such as maximum note length and maximum limit to an event on
+    the right. Also added method that can return notes who have events between
+    two defined times
+
+
 2018-06-29
   - further development into the piano roll editor (which is starting life as an
     advanced launchpad)
