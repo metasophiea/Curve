@@ -23,6 +23,12 @@
   future ideas
   - slide needs to be rewritten. It's just old and rangeslide does things in a 
     nicer way
+  - audio mixer
+
+  Compliation Results
+  - workspace.js                        655 Kb  (100%)
+  - workspace.min.js                    231 Kb  ( 35%)
+  - workspace.min.js (web compressed)    46 Kb  (  7%)
 
 
 2018-07-12
