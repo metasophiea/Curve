@@ -1,5 +1,4 @@
-this.pulseGenerator = function(x,y,debug=false){
-    var maxTempo = 240;
+this.pulseGenerator_hyper = function(x,y,maxTempo=240,debug=false){
 
     var style = {
         background:'fill:rgba(200,200,200,1)',

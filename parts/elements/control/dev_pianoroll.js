@@ -1,5 +1,5 @@
-parts.elements.control.pianoroll_5 = function(
-    id='pianoroll_5',
+this.pianoroll = function(
+    id='pianoroll',
     x, y, width, height, angle=0,
     xCount=64, yCount=22, xStripPattern=[0], yStripPattern=[0,0,1,0,1,0,1,0,0,1,0,1],
 ){
@@ -26,7 +26,7 @@ parts.elements.control.pianoroll_5 = function(
     };
     var state = {
         snapping:!false,
-        noteRegistry: new parts.elements.control.pianoroll_5.noteRegistry(xCount,yCount),
+        noteRegistry: new parts.elements.control.pianoroll.noteRegistry(xCount,yCount),
         selectedNotes:[],
         activeNotes:[],
         position:0,
@@ -45,7 +45,7 @@ parts.elements.control.pianoroll_5 = function(
         }
         function makeNote(line, position, length, strength=1){
             var freshID = state.noteRegistry.add({line:line, position:position, length:length, strength:strength});
-            var graphicElement = parts.elements.control.pianoroll_5.noteBlock(
+            var graphicElement = parts.elements.control.pianoroll.noteBlock(
                 freshID, {x:width/xCount,y:height/yCount},
                 line, position, length, false,
                 style.block,
@@ -417,7 +417,7 @@ parts.elements.control.pianoroll_5 = function(
 
 
 
-parts.elements.control.pianoroll_5.noteBlock = function(
+this.pianoroll.noteBlock = function(
     id, basicUnit,
     line, position, length, glow=false, 
     style
@@ -487,7 +487,7 @@ parts.elements.control.pianoroll_5.noteBlock = function(
 
 
 
-parts.elements.control.pianoroll_5.noteRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
+this.pianoroll.noteRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
     var notes = [];
     var selectedNotes = [];
     var events = [];

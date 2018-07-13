@@ -1,5 +1,74 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
-2017-07-06
+2018-07-13
+  - pianoroll inner workings improved; now it keeps track of what notes are
+    playing. So when it's progression loops; it will insert the ends of those 
+    notes into the loop-start events. In effect; stopping notes that have end
+    events which are outside the loop from sounding forever. It also means I can
+    get rid off all that silly -1/100000 stuff, so things are sounding better
+  - key_rect callbacks 'onkeydown' and 'onkeyup' remaned to 'keydown' and 
+    'keyup', as the previous names were clashing with the keyboardInteraction 
+    system (this could be a wider problem, but probably only for this part (due
+    to it's name))
+  - fixed detectOverlap again; turns out the order that the boundingBox points
+    are in is very important. I've added sortation code, but have also tried to
+    make it so code that provides bounding boxes, always puts the higher-valued
+    point at the start of the array (the 'left/right'/'top/bottom' metaphore and
+    naming scheme I used is pretty mangled now)
+  - rushed pianoroll part and object through so that I could put together demo 2
+    The way things are, one can continue to develop those items without affecting
+    the demo, thus the demo can be updated at a leasurly pace.
+
+                * Workspace (unminified) surpasses 10,000 lines *
+
+  future ideas
+  - slide needs to be rewritten. It's just old and rangeslide does things in a 
+    nicer way
+
+
+2018-07-12
+  - added argument to the audio_in object and part, to make it not instantly try
+    to connect when it's created
+  - wrote up data-duplicator and pushed it into the 'finished' objects pile
+
+
+2018-07-11
+  - fixed the bug from yesterday; turned out, the number convertion is normal,
+    and it was my own 'getTransform' code that was not reading the produced style
+    string correctly. I redid the regex, things seem to be working better now 
+    (though it all seems a little inefficient)
+  - fixed smoothSet in rangeselector to actually work properly now (and get the
+    timings right)
+  - pushed rageslide to main parts
+  - replaced both slide in the pianoroll object with the new rangeslide
+
+
+2018-07-10
+  - wrote up rangeselector part (which allows one to select a range on a
+    slide-like area. Comes complete with handles that bumb off eachother, area
+    panning and expand/shrink mouse wheel)
+  
+  bug found
+  - __globals.utility.element.setTransform setting very small numbers 
+    (eg. 0.000097500000000) causes something somewhere to convert them to 
+    exponent notation (9.75e-05) which breaks the style string
+
+
+2018-07-09
+  - in light of the ctrl key not working on Mac, and the Meta key not working on
+    linux; I've created a "super globals" file which controls what key to watch
+    in an event. Hopefully this means the system can adjust depending on the
+    host
+  - faffed with the pianoroll a bit more, and managed to cobble together a basic 
+    "advanced launchpad" playing the guitar riff off Thunder Struck. Works
+    pretty alright too.
+  - added sorting section to the 'eventsBetween' function of the 'noteRegistry'
+    as there was a problem where notes that started and ended within the
+    selected range, weren't having their events performed in the correct order
+  - added way of selecting the looped region in the pianoroll object..it's a bit
+    terrible, but it works. I probably need to write a new control object for it
+
+
+2018-07-06
   - fifth rewrite on the pianoroll, things are going pretty well this time. The
     'noteBlock' element has gotten an upgrade and the mouse interaction is being
     made a little nicer. So far there's alt-click to add, click-n-drag, 
@@ -10,12 +79,12 @@
   - fixed duplicate events problem in noteRegistry
 
 
-2017-07-05
+2018-07-05
   - another draft started of the pianoroll (4) this time I'm trying to split
     more of the functionality into the block elements..we'll see how it goes
 
 
-2017-07-04
+2018-07-04
   - re-wrote the pianoroll.noteRegistry for better storage and retrival
   - created rudimentary playback for pianoroll (seems to work rather well,
     there's no needle yet however)

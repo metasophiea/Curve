@@ -3,7 +3,7 @@ this.audio_scope = function(x,y){
         framerateLimits: {min:1, max:30}
     };
     var style = {
-        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+        background:'fill:rgba(200,200,200,1);',
         text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;'
     };
     var design = {
@@ -26,8 +26,8 @@ this.audio_scope = function(x,y){
                 style:{
                     off:'fill:rgba(175,175,175,1)', press:'fill:rgba(220,220,220,1)', pressAndGlow:'fill:rgba(150,150,150,1)'
                 },
-                onkeydown:function(){design.grapher_audioScope.waveport.stop();},
-                onkeyup:function(){design.grapher_audioScope.waveport.start();},
+                keydown:function(){design.grapher_audioScope.waveport.stop();},
+                keyup:function(){design.grapher_audioScope.waveport.start();},
             }},
 
             {type:'text', name:'framerate_name', data:{x: 155+6.5, y: 30+40, text: 'framerate', style: style.text}},

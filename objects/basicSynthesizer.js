@@ -29,7 +29,7 @@ this.basicSynthesizer = function(x,y){
                 x: 12.5, y: -7.5, width: 15, height: 15,
                 receive: function(address,data){
                     switch(address){
-                        case '%': obj.dial.continuous.gain.set(data); break;
+                        case '%': design.dial_continuous.gain.set(data); break;
                         case '%t': 
                             obj.__synthesizer.gain(data.target,data.time,data.curve);
                             design.dial_continuous.gain.smoothSet(data.target,data.time,data.curve,false);

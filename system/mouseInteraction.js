@@ -62,7 +62,7 @@
     //duplication
     __globals.mouseInteraction.objectGrapple_functionList.onmousedown.push(
         {
-            'specialKeys':['altKey'],
+            'specialKeys':[__globals.super.keys.alt],
             'function':function(event){
                 // if mousedown occurs over an object that isn't selected; select it
                 if( !__globals.selection.selectedObjects.includes(__globals.svgElement.temp_onmousedown_originalObject) ){
@@ -92,7 +92,7 @@
                 // if mousedown occurs over an object that isn't selected
                 //  and if the shift key is not pressed
                 //   deselect everything
-                //  now, select the object we're working on is not selected
+                //  now, select the object we're working on if not selected
                 if( !__globals.selection.selectedObjects.includes(__globals.svgElement.temp_onmousedown_originalObject) ){
                     if(!event.shiftKey){ __globals.selection.deselectEverything(); }
                     __globals.selection.selectObject(__globals.svgElement.temp_onmousedown_originalObject);

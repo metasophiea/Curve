@@ -91,8 +91,8 @@ objects.testObject = function(x,y,debug=false){
                     off:'fill:rgba(200,200,200,1)', press:'fill:rgba(180,180,180,1)', 
                     glow:'fill:rgba(220,200,220,1)', pressAndGlow:'fill:rgba(200,190,200,1)'
                 }, 
-                onkeydown:function(){design.connectionNode_data.externalData_1.send('key_rect',true);}, 
-                onkeyup:function(){design.connectionNode_data.externalData_1.send('key_rect',false);}
+                keydown:function(){design.connectionNode_data.externalData_1.send('key_rect',true);}, 
+                keyup:function(){design.connectionNode_data.externalData_1.send('key_rect',false);}
             }},
             {type:'rastorgrid', name:'rastorgrid', data:{
                 x:125, y:135, width:100, height:100, xCount:4, yCount:4, 

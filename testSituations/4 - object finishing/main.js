@@ -1,6 +1,12 @@
+{{include:*}}
+
 //audio duplicator
     var audio_duplicator_1 = objects.audio_duplicator(50,50);
     __globals.panes.middleground.append( audio_duplicator_1 );
+
+//data duplicator
+    var data_duplicator_1 = objects.data_duplicator(875, 50);
+    __globals.panes.middleground.append( data_duplicator_1 );
 
 //audio_scope
     var audio_scope_1 = objects.audio_scope(150,50);
@@ -48,7 +54,7 @@
     __globals.panes.middleground.append( recorder_1 );
 
 //audio input
-    var audioIn_1 = objects.audioIn(15, 275);
+    var audioIn_1 = objects.audioIn(15, 275, false);
     __globals.panes.middleground.append( audioIn_1 );
 
 //launchpad

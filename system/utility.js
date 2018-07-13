@@ -11,6 +11,7 @@
 //        dotMaker                        (x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;')
 //        getGlobalScale                  (element)
 //        getViewportDimensions           ()
+//        placeAndReturnObject            (object,pane='middleground')
 //    
 //    element
 //        getTransform                    (element)
@@ -26,7 +27,7 @@
 //    
 //    object
 //        requestInteraction              (x,y,type) (browser position)
-//        disconnectEverything            (object)
+//        //disconnectEverything            (object)
 //        generateSelectionArea           (points:[{x:0,y:0},...], object)
 //    
 //    audio
@@ -103,7 +104,7 @@ __globals.utility = new function(){
             var g = __globals.utility.experimental.elementMaker('g',null,{x:x, y:y});//parts.basic.g(null, x, y);
 
             var dot = __globals.utility.experimental.elementMaker('circle',null,{x:0, y:0, r:r, style:style});//parts.basic.circle(null, 0, 0, r, 0, style);
-            var textElement =  __globals.utility.experimental.elementMaker('text',null,{x:0, y:0, angle:r, text:text, style:style});//parts.basic.text(null, r, 0, text, 0, style);
+            var textElement =  __globals.utility.experimental.elementMaker('text',null,{x:0, y:0, angle:0, text:text, style:style});//parts.basic.text(null, r, 0, text, 0, style);
             g.appendChild(dot);
             g.appendChild(textElement);
 
@@ -124,11 +125,13 @@ __globals.utility = new function(){
     };
     this.element = new function(){
         this.getTransform = function(element){
-            var pattern = /[-+]?[0-9]*\.?[0-9]+/g;
-            var result = element.style.transform.match( pattern ).map(Number);
-    
-            if(result.length < 4){ result[3] = 0; }
+            var pattern = /translate\((.*)px,| (.*)px|\) scale\((.*)\) |rotate\((.*)rad\)/g;
 
+            var result = [];
+            for(var a = 0; a < 4; a++){
+                result.push(Number(pattern.exec(element.style.transform)[a+1]));
+            }
+            
             return {x:result[0],y:result[1],s:result[2],r:result[3]};
         };
         this.getCumulativeTransform = function(element){
@@ -159,7 +162,7 @@ __globals.utility = new function(){
             return data;
         };
         this.setTransform = function(element, transform){
-            element.style.transform = 'translate('+transform.x+'px, '+transform.y+'px) scale('+transform.s+') rotate(' +transform.r+ 'rad)';
+            element.style.transform = 'translate('+transform.x.toFixed(16)+'px, '+(transform.y.toFixed(16))+'px) scale('+transform.s.toFixed(16)+') rotate(' +transform.r.toFixed(16)+ 'rad)';
         };
         this.setTransform_XYonly = function(element, x, y){
             var transformData = this.getTransform(element);
@@ -223,14 +226,15 @@ __globals.utility = new function(){
             
             return temp.getAttribute('pane')==globalName;
         };
-        this.disconnectEverything = function(object){
-            console.warn('you\'re using this?');
-            // var keys = Object.keys(object.io);
-            // for(var a = 0; a < keys.length; a++){
-            //     object.io[keys[a]].disconnect();
-            // }
-        };
+        // this.disconnectEverything = function(object){
+        //     console.warn('you\'re using this?');
+        //     // var keys = Object.keys(object.io);
+        //     // for(var a = 0; a < keys.length; a++){
+        //     //     object.io[keys[a]].disconnect();
+        //     // }
+        // };
         this.generateSelectionArea = function(points, object){
+            var debug = false;
             object.selectionArea = {};
             object.selectionArea.box = [];
             object.selectionArea.points = [];
@@ -255,6 +259,11 @@ __globals.utility = new function(){
             };
 
             object.updateSelectionArea();
+
+            if(debug){
+                for(var a = 0; a < object.selectionArea.box.length; a++){ __globals.panes.foreground.append( __globals.utility.workspace.dotMaker(object.selectionArea.box[a].x, object.selectionArea.box[a].y, a) ); }
+                for(var a = 0; a < object.selectionArea.points.length; a++){ __globals.panes.foreground.append( __globals.utility.workspace.dotMaker(object.selectionArea.points[a].x, object.selectionArea.points[a].y, a) ); }
+            }
         };
     };
     this.audio = new function(){
@@ -394,7 +403,7 @@ __globals.utility = new function(){
                 else if(points[a].y > bottom){ bottom = points[a].y; }
             }
     
-            return [{x:left,y:top},{x:right,y:bottom}];
+            return [{x:right,y:bottom},{x:left,y:top}];
         };
         this.intersectionOfTwoLineSegments = function(segment1, segment2){
             var denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
@@ -438,11 +447,26 @@ __globals.utility = new function(){
             // Quick Judgement with bounding boxes
             // (when bounding boxes are provided)
             if(box_a && box_b){
+
+                //sort boxes
+                    if(box_a[0].x < box_a[1].x){
+                        if(debugMode){console.log('bounding box a sorting required');}
+                        var temp = box_a[0];
+                        box_a[0] = box_a[1];
+                        box_a[1] = temp;
+                    }
+                    if(box_b[0].x < box_b[1].x){
+                        if(debugMode){console.log('bounding box b sorting required');}
+                        var temp = box_b[0];
+                        box_b[0] = box_b[1];
+                        box_b[1] = temp;
+                    }
+
                 if(
-                    (box_a[0].y > box_b[1].y) || //a_0_y (a's highest point) is below b_1_y (b's lowest point)
-                    (box_a[1].y < box_b[0].y) || //a_1_y (a's lowest point) is above b_0_y (b's highest point)
-                    (box_a[0].x > box_b[1].x) || //a_0_x (a's leftest point) is right of b_1_x (b's rightest point)
-                    (box_a[1].x < box_b[0].x)    //a_1_x (a's rightest point) is left of b_0_x (b's leftest point)
+                    (box_a[0].y < box_b[1].y) || //a_0_y (a's highest point) is below b_1_y (b's lowest point)
+                    (box_a[1].y > box_b[0].y) || //a_1_y (a's lowest point) is above b_0_y (b's highest point)
+                    (box_a[0].x < box_b[1].x) || //a_0_x (a's leftest point) is right of b_1_x (b's rightest point)
+                    (box_a[1].x > box_b[0].x)    //a_1_x (a's rightest point) is left of b_0_x (b's leftest point)
                 ){if(debugMode){console.log('clearly separate shapes');}return false;}
             }
     
@@ -503,7 +527,7 @@ __globals.utility = new function(){
                             //reformat data into line-segment points and the point of interest
     
                         var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
-                            if(dis==0){if(debugMode){console.log('oh hay, collision - BinA');}return true; }
+                            if(dis==0){if(debugMode){console.log('oh hay, line collision - BinA');}return true; }
                             //get distance from point to line segment
                             //if zero, it's a collision and we can end early
     
@@ -741,8 +765,8 @@ __globals.utility = new function(){
                     break;
                     case 'key_rect':
                         var temp = parts.elements.control.key_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.off, data.style.press, data.style.glow, data.style.pressAndGlow);
-                        temp.onkeyup =   data.onkeyup   ? data.onkeyup   : temp.onkeyup;
-                        temp.onkeydown = data.onkeydown ? data.onkeydown : temp.onkeydown;
+                        temp.keyup =   data.keyup   ? data.keyup   : temp.keyup;
+                        temp.keydown = data.keydown ? data.keydown : temp.keydown;
                         return temp;
                     break;
                     case 'slide':
@@ -753,6 +777,12 @@ __globals.utility = new function(){
                     break;
                     case 'slidePanel':
                         var temp = parts.elements.control.slidePanel(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot);
+                        temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                        return temp;
+                    break;
+                    case 'rangeslide':
+                        var temp = parts.elements.control.rangeslide(name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.spanWidth, data.values, data.resetValues, data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span);
                         temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
                         temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
                         return temp;

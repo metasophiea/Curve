@@ -124,7 +124,6 @@ __globals.selection = new function(){
                             var position = __globals.utility.workspace.pointConverter.browser2workspace(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
                     }
                     this.clipboard.forEach( function(element){
-                        console.log(element)
                         element[2].x += position.x - topLeft.x;
                         element[2].y += position.y - topLeft.y;
                     } );

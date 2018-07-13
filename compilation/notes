@@ -1,3 +1,8 @@
 closure-compiler download zip - https://dl.google.com/closure-compiler/compiler-latest.zip
 
 
+Compilation Performance
+2018-07-08
+    workspace.js                572kb           100%
+    workspace.min.js            200kb            34.96%
+    workspace.min.js zipped     38.8kb            6.78%

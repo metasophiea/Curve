@@ -1,4 +1,4 @@
-objects.pianoroll = function(x,y,debug=false){
+this.pianoroll = function(x,y,debug=false){
     var height = 37;
     var topNoteNumber = 108;
     var style = {
@@ -153,7 +153,7 @@ objects.pianoroll = function(x,y,debug=false){
         var obj = __globals.utility.experimental.objectBuilder(objects.pianoroll,design);
 
         //pianoroll
-            var pianoroll = parts.elements.control.pianoroll_5('mainroll', 35, 10, 780, 180, undefined, undefined, height) 
+            var pianoroll = parts.elements.control.pianoroll('mainroll', 35, 10, 780, 180, undefined, undefined, height) 
             obj.appendChild( pianoroll );
             pianoroll.loopPeriod({start:0,end:64});
             pianoroll.event = function(events){

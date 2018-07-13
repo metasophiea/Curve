@@ -71,12 +71,12 @@ parts.elements.control.pianoroll_2 = function(
                     var blockID = parseInt(block.id.split('_')[1]);
                     var info = blockInfo.info( blockID );
 
-                    if(event.ctrlKey){
+                    if(event[__globals.super.keys.ctrl]){
                         //cloning
                         var temp = makeBlock(info.position,info.line,info.length)
                         object.appendChild(temp);
                         temp.children.body.onmousedown({
-                            ctrlKey:false,
+                            [__globals.super.keys.ctrl]:false,
                             offsetX:event.offsetX,
                             offsetY:event.offsetY,
                         });

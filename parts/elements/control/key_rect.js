@@ -37,19 +37,19 @@ this.key_rect = function(
     rect.onmouseenter = function(event){ if(event.buttons == 1){object.press();} };
 
     //callbacks
-    object.onkeyup =    function(){ /*console.log('mouseup');    */ };
-    object.onkeydown =  function(){ /*console.log('mousedown');  */ };
+    object.keyup =    function(){ /*console.log('mouseup');    */ };
+    object.keydown =  function(){ /*console.log('mousedown');  */ };
 
     //methods;
     object.press =   function(){
         if( this.state%2 != 0 ){return;} //key already pressed 
         this.activateState(this.state+1);
-        if(this.onkeydown){this.onkeydown();}
+        if(this.keydown){this.keydown();}
     };
     object.release = function(){ 
         if( this.state%2 == 0 ){return;} //key not pressed 
         this.activateState(object.state-1); 
-        if(this.onkeyup){this.onkeyup();}
+        if(this.keyup){this.keyup();}
     };
     object.glow = function(){ this.activateState(this.state+2); };
     object.dim  = function(){ this.activateState(this.state-2); };

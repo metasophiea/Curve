@@ -16,16 +16,16 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
 
         modifiers = {
             shift:event.shiftKey,
-            control:event.ctrlKey,
+            control:event[__globals.super.keys.ctrl],
             meta:event.metaKey,
-            alt:event.altKey
+            alt:event[__globals.super.keys.alt]
         };
 
         if( 
-            (event.ctrlKey  && desiredKeys.control && ( desiredKeys.control=='all' || (Array.isArray(desiredKeys.control) && desiredKeys.control.includes(event.key)) )) ||
+            (event[__globals.super.keys.ctrl]  && desiredKeys.control && ( desiredKeys.control=='all' || (Array.isArray(desiredKeys.control) && desiredKeys.control.includes(event.key)) )) ||
             (event.shiftKey && desiredKeys.shift   && ( desiredKeys.shift=='all'   || (Array.isArray(desiredKeys.shift)   && desiredKeys.shift.includes(event.key))   )) ||
             (event.metaKey  && desiredKeys.meta    && ( desiredKeys.meta=='all'    || (Array.isArray(desiredKeys.meta)    && desiredKeys.meta.includes(event.key))    )) ||
-            (event.altKey   && desiredKeys.alt     && ( desiredKeys.alt=='all'     || (Array.isArray(desiredKeys.alt)     && desiredKeys.alt.includes(event.key))     )) ||
+            (event[__globals.super.keys.alt]   && desiredKeys.alt     && ( desiredKeys.alt=='all'     || (Array.isArray(desiredKeys.alt)     && desiredKeys.alt.includes(event.key))     )) ||
             (                  desiredKeys.none    && ( desiredKeys.none=='all'    || (Array.isArray(desiredKeys.none)    && desiredKeys.none.includes(event.key))    ))
         ){
             connectionObject[type](event.key,modifiers);
@@ -72,22 +72,22 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
         __globals.keyboardInteraction.onkeydown_functionList.Delete(event);
     };
     __globals.keyboardInteraction.onkeydown_functionList.x = function(event){
-        if(!event.ctrlKey){return;}
+        if(!event[__globals.super.keys.ctrl]){return;}
         console.log('cut!');
         __globals.selection.cut();
     };
     __globals.keyboardInteraction.onkeydown_functionList.c = function(event){
-        if(!event.ctrlKey){return;}
+        if(!event[__globals.super.keys.ctrl]){return;}
         console.log('copy!');
         __globals.selection.copy();
     };
     __globals.keyboardInteraction.onkeydown_functionList.b = function(event){
-        if(!event.ctrlKey){return;}
+        if(!event[__globals.super.keys.ctrl]){return;}
         console.log('duplicate!');
         __globals.selection.duplicate();
     };
     __globals.keyboardInteraction.onkeydown_functionList.v = function(event){
-        if(!event.ctrlKey){return;}
+        if(!event[__globals.super.keys.ctrl]){return;}
         console.log('paste!');
         __globals.selection.paste();
     };

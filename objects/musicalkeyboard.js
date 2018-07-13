@@ -76,8 +76,8 @@ this.musicalkeyboard = function(x,y,debug=false){
                                 off:style.keys.white.off, press:style.keys.white.press,
                                 glow:style.keys.white.glow, pressAndGlow:style.keys.white.pressAndGlow,
                             },
-                            onkeydown:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:state.velocity } ); },
-                            onkeyup:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
+                            keydown:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:state.velocity } ); },
+                            keyup:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
                         }}
                     );
                     whiteX += whiteKeyWidth;
@@ -94,8 +94,8 @@ this.musicalkeyboard = function(x,y,debug=false){
                                 off:style.keys.black.off, press:style.keys.black.press,
                                 glow:style.keys.black.glow, pressAndGlow:style.keys.black.pressAndGlow,
                             },
-                            onkeydown:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:state.velocity } ); },
-                            onkeyup:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
+                            keydown:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:state.velocity } ); },
+                            keyup:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
                         }}
                     );
                     blackX += whiteKeyWidth;

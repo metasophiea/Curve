@@ -1,5 +1,5 @@
 this.audioIn = function(
-    context
+    context, setupConnect=true
 ){
     //flow chain
         var flow = {
@@ -44,5 +44,5 @@ this.audioIn = function(
         };
 
     //setup
-        this.selectDevice('default');
+        if(setupConnect){this.selectDevice('default');}
 };

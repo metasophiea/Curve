@@ -1,4 +1,4 @@
-this.audioIn = function(x,y){
+this.audioIn = function(x,y,setupConnect=true){
     var attributes = {
         deviceList:[],
         currentSelection: 0
@@ -56,7 +56,7 @@ this.audioIn = function(x,y){
 
     //circuitry
         obj.circuitry = {
-            unit: new parts.circuits.audio.audioIn(__globals.audio.context)
+            unit: new parts.circuits.audio.audioIn(__globals.audio.context,setupConnect)
         };
         obj.circuitry.unit.out().connect( design.connectionNode_audio.audioOut.in() );
         obj.circuitry.unit.out().connect( design.audio_meter_level.audioIn.audioIn() );
@@ -82,13 +82,15 @@ this.audioIn = function(x,y){
             if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
             design.readout_sixteenSegmentDisplay.text.text(text);
             design.readout_sixteenSegmentDisplay.text.print('smart');
+
+            obj.circuitry.unit.selectDevice( attributes.deviceList[a].deviceId );
         }
         function incSelection(){ selectDevice(attributes.currentSelection+1); }
         function decSelection(){ selectDevice(attributes.currentSelection-1); }
 
     //setup
         obj.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
-        setTimeout(function(){selectDevice(0);},500);
+        if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
         design.dial_continuous.outputGain.set(0.5);
         design.audio_meter_level.audioIn.start();
 

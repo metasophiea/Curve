@@ -57,7 +57,7 @@ parts.elements.control.pianoroll_3 = function(
                 positionData.line, positionData.position, positionData.length, style.block
             );
             newBlock.ondblclick = function(event){
-                if(!event.ctrlKey){return;}
+                if(!event[__globals.super.keys.ctrl]){return;}
                 removeBlock(this);
 
                 while(state.selectedNotes.length > 0){
@@ -83,9 +83,9 @@ parts.elements.control.pianoroll_3 = function(
                 }
 
                 //selecting
-                    if(event.ctrlKey && !selected){ newBlock.select(); }
-                    else if(event.ctrlKey && selected){newBlock.deselect();return;}
-                    else if(event.altKey){
+                    if(event[__globals.super.keys.ctrl] && !selected){ newBlock.select(); }
+                    else if(event[__globals.super.keys.ctrl] && selected){newBlock.deselect();return;}
+                    else if(event[__globals.super.keys.alt]){
                         //selecting
                             if(!selected){ deselectAll(); newBlock.select(); }
                         //the trick - the cloned note blocks take the place of the originals
@@ -203,7 +203,7 @@ parts.elements.control.pianoroll_3 = function(
         var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height, style:style.backing});
         object.appendChild(backing);
         backing.onmousedown = function(event){
-            if(event.altKey){
+            if(event[__globals.super.keys.alt]){
                 makeBlock(undefined,this,event);
             }else{ 
                 //click-n-drag group select
