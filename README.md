@@ -20,5 +20,4 @@ Though I'd really like it to work everywhere, currently the only browser that se
 
 ## Demos
 [- Demo 1](https://metasophiea.com/curve/demos/1)
-
 [- Demo 2](https://metasophiea.com/curve/demos/2)
