@@ -130,6 +130,12 @@ this.reverbUnit = function(x,y){
             function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
             function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
 
+    //interface
+        obj.i = {
+            gain:function(a){design.dial_continuous.outGain.set(a);},
+            wetdry:function(a){design.dial_continuous.wetdry.set(a);},
+        };
+
     //setup
         design.dial_continuous.outGain.set(1/2);
         design.dial_continuous.wetdry.set(1/2);

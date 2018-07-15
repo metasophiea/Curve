@@ -1,5 +1,6 @@
 this.pianoroll = function(x,y,debug=false){
     var height = 37;
+    var width = 128;
     var topNoteNumber = 108;
     var style = {
         background:'fill:rgba(200,200,200,1)',
@@ -46,7 +47,7 @@ this.pianoroll = function(x,y,debug=false){
         },
         elements:[
             {type:'rangeslide',name:'loopSelect', data:{
-                x:35, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1,
+                x:35, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/width, spanWidth:1,
                 style:{
                     handle: style.rangeslide.handle,
                     backing: style.rangeslide.backing,
@@ -55,8 +56,8 @@ this.pianoroll = function(x,y,debug=false){
                     span: style.rangeslide.span,
                 },
                 onchange:function(values){
-                    var a = Math.round(values[0]*64);
-                    var b = Math.round(values[1]*64);
+                    var a = Math.round(values[0]*width);
+                    var b = Math.round(values[1]*width);
                     if(b == 0){b = 1;}
                     pianoroll.loopPeriod({start:a,end:b});
                 },
@@ -153,9 +154,9 @@ this.pianoroll = function(x,y,debug=false){
         var obj = __globals.utility.experimental.objectBuilder(objects.pianoroll,design);
 
         //pianoroll
-            var pianoroll = parts.elements.control.pianoroll('mainroll', 35, 10, 780, 180, undefined, undefined, height) 
+            var pianoroll = parts.elements.control.pianoroll('mainroll', 35, 10, 780, 180, 0, width, height) 
             obj.appendChild( pianoroll );
-            pianoroll.loopPeriod({start:0,end:64});
+            pianoroll.loopPeriod({start:0,end:width});
             pianoroll.event = function(events){
                 for(var a = 0; a < events.length; a++){ 
                     obj.io.midiout.send( 'midinumber', roll2midi(events[a]) ); 

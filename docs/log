@@ -1,4 +1,12 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-07-15
+  - updaed pianoroll a little to make it easuer to change the x count
+  - wrote different music into demo 2 and added reverb
+  - added bits of interface to the reverb object
+  - fixed rangeslide which had sloppy mouse-move code, which would replace the 
+    main system's mouse interaction code and never put it back
+
+
 2018-07-13
   - pianoroll inner workings improved; now it keeps track of what notes are
     playing. So when it's progression loops; it will insert the ends of those 

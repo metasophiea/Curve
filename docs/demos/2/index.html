@@ -21,7 +21,8 @@
 
 </html>
 
-<script type='text/javascript' src='../../workspace.min.js'></script>
+<script type='text/javascript' src='../../workspace.js'></script>
+<!-- <script type='text/javascript' src='../../workspace.min.js'></script> -->
 
 <script>
     //create objects
@@ -33,7 +34,9 @@
         var musicalkeyboard_2 = __globals.utility.workspace.placeAndReturnObject( objects.musicalkeyboard(-260, 390) );
         var basicSynthesizer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-520, 250) );
         var basicSynthesizer_2 = __globals.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-530, 360) );
-        var audio_sink_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_sink(-680, 295) );
+        var reverbUnit_1 = __globals.utility.workspace.placeAndReturnObject( objects.reverbUnit(-690, 270) );
+        var reverbUnit_2 = __globals.utility.workspace.placeAndReturnObject( objects.reverbUnit(-690, 330) );
+        var audio_sink_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_sink(-860, 295) );
 
     //connect objects
         pulseGenerator_1.io.out.connectTo(data_duplicator_1.io.input);
@@ -43,75 +46,383 @@
         pianoroll_2.io.midiout.connectTo(musicalkeyboard_2.io.midiin);
         musicalkeyboard_1.io.midiout.connectTo(basicSynthesizer_1.io.midiNote);
         musicalkeyboard_2.io.midiout.connectTo(basicSynthesizer_2.io.midiNote);
-        basicSynthesizer_1.io.audioOut.connectTo(audio_sink_1.io.right);
-        basicSynthesizer_2.io.audioOut.connectTo(audio_sink_1.io.left);
+        basicSynthesizer_1.io.audioOut.connectTo(reverbUnit_1.io.audioIn);
+        basicSynthesizer_2.io.audioOut.connectTo(reverbUnit_2.io.audioIn);
+        reverbUnit_1.io.audioOut.connectTo(audio_sink_1.io.right);
+        reverbUnit_2.io.audioOut.connectTo(audio_sink_1.io.left);
 
     //setup objects
-        pulseGenerator_1.i.setTempo(580/999);
 
-        basicSynthesizer_1.io.gain.receive('%',0.4);
-        basicSynthesizer_1.io.release.receive('%',0.2);
-        basicSynthesizer_1.io.octave.receive('discrete',4);
-        basicSynthesizer_1.io.waveType.receive('discrete',1);
+        reverbUnit_1.i.gain(1);
+        reverbUnit_2.i.gain(1);
+        reverbUnit_1.i.wetdry(0.2);
+        reverbUnit_2.i.wetdry(0.2);
 
-        basicSynthesizer_2.io.release.receive('%',0.3);
-        basicSynthesizer_2.io.octave.receive('discrete',1);
-        basicSynthesizer_2.io.waveType.receive('discrete',1);
+        //tubular bells
+            // basicSynthesizer_1.io.gain.receive('%',0.4);
+            // basicSynthesizer_1.io.release.receive('%',0.2);
+            // basicSynthesizer_1.io.octave.receive('discrete',4);
+            // basicSynthesizer_1.io.waveType.receive('discrete',1);
 
-        pianoroll_1.i.loopSelect({start:0,end:0.94});
-        pianoroll_2.i.loopSelect({start:0,end:0.94});
-        pianoroll_1.i.restart();
-        pianoroll_2.i.restart();
-        pianoroll_1.i.addNotes([
-            {"line":20,"position":28,"length":1,"strength":1},
-            {"line":15,"position":30,"length":1,"strength":1},
-            {"line":20,"position":32,"length":1,"strength":1},
-            {"line":13,"position":34,"length":1,"strength":1},
-            {"line":20,"position":36,"length":1,"strength":1},
-            {"line":17,"position":38,"length":1,"strength":1},
-            {"line":15,"position":40,"length":1,"strength":1},
-            {"line":20,"position":42,"length":1,"strength":1},
-            {"line":12,"position":44,"length":1,"strength":1},
-            {"line":20,"position":46,"length":1,"strength":1},
-            {"line":10,"position":48,"length":1,"strength":1},
-            {"line":20,"position":50,"length":1,"strength":1},
-            {"line":13,"position":52,"length":1,"strength":1},
-            {"line":12,"position":54,"length":1,"strength":1},
-            {"line":20,"position":0,"length":1,"strength":1},
-            {"line":15,"position":2,"length":1,"strength":1},
-            {"line":20,"position":4,"length":1,"strength":1},
-            {"line":13,"position":6,"length":1,"strength":1},
-            {"line":20,"position":8,"length":1,"strength":1},
-            {"line":17,"position":10,"length":1,"strength":1},
-            {"line":15,"position":12,"length":1,"strength":1},
-            {"line":20,"position":14,"length":1,"strength":1},
-            {"line":12,"position":16,"length":1,"strength":1},
-            {"line":20,"position":18,"length":1,"strength":1},
-            {"line":10,"position":20,"length":1,"strength":1},
-            {"line":20,"position":22,"length":1,"strength":1},
-            {"line":13,"position":24,"length":1,"strength":1},
-            {"line":12,"position":26,"length":1,"strength":1},
-            {"line":20,"position":56,"length":1,"strength":1},
-            {"line":13,"position":58,"length":1,"strength":1}
-        ]);
-        pianoroll_2.i.addNotes([
-            {"length":1,"line":27,"position":2,"strength":1},
-            {"length":4,"line":27,"position":6,"strength":1},
-            {"length":4,"line":27,"position":14,"strength":1},
-            {"line":27,"position":20,"length":1,"strength":1},
-            {"length":1,"line":25,"position":21,"strength":1},
-            {"line":24,"position":22,"length":1,"strength":1},
-            {"length":1,"line":20,"position":24,"strength":1},
-            {"length":1,"line":22,"position":26,"strength":1},
-            {"length":1,"line":20,"position":28,"strength":1},
-            {"length":1,"line":29,"position":30,"strength":1},
-            {"length":4,"line":29,"position":34,"strength":1},
-            {"length":6,"line":17,"position":42,"strength":1},
-            {"length":4,"line":22,"position":50,"strength":1},
-            {"line":24,"position":54,"length":2,"strength":1},
-            {"length":2,"line":25,"position":56,"strength":1},
-            {"line":29,"position":58,"length":2,"strength":1}
-        ]);
+            // basicSynthesizer_2.io.release.receive('%',0.3);
+            // basicSynthesizer_2.io.octave.receive('discrete',1);
+            // basicSynthesizer_2.io.waveType.receive('discrete',1);
+
+            // pulseGenerator_1.i.setTempo(580/999);
+            // pianoroll_1.i.loopSelect({start:0,end:0.47});
+            // pianoroll_2.i.loopSelect({start:0,end:0.47});
+            // pianoroll_1.i.restart();
+            // pianoroll_2.i.restart();
+
+            // pianoroll_1.i.addNotes([
+            //     {"line":20,"position":28,"length":1,"strength":1},
+            //     {"line":15,"position":30,"length":1,"strength":1},
+            //     {"line":20,"position":32,"length":1,"strength":1},
+            //     {"line":13,"position":34,"length":1,"strength":1},
+            //     {"line":20,"position":36,"length":1,"strength":1},
+            //     {"line":17,"position":38,"length":1,"strength":1},
+            //     {"line":15,"position":40,"length":1,"strength":1},
+            //     {"line":20,"position":42,"length":1,"strength":1},
+            //     {"line":12,"position":44,"length":1,"strength":1},
+            //     {"line":20,"position":46,"length":1,"strength":1},
+            //     {"line":10,"position":48,"length":1,"strength":1},
+            //     {"line":20,"position":50,"length":1,"strength":1},
+            //     {"line":13,"position":52,"length":1,"strength":1},
+            //     {"line":12,"position":54,"length":1,"strength":1},
+            //     {"line":20,"position":0,"length":1,"strength":1},
+            //     {"line":15,"position":2,"length":1,"strength":1},
+            //     {"line":20,"position":4,"length":1,"strength":1},
+            //     {"line":13,"position":6,"length":1,"strength":1},
+            //     {"line":20,"position":8,"length":1,"strength":1},
+            //     {"line":17,"position":10,"length":1,"strength":1},
+            //     {"line":15,"position":12,"length":1,"strength":1},
+            //     {"line":20,"position":14,"length":1,"strength":1},
+            //     {"line":12,"position":16,"length":1,"strength":1},
+            //     {"line":20,"position":18,"length":1,"strength":1},
+            //     {"line":10,"position":20,"length":1,"strength":1},
+            //     {"line":20,"position":22,"length":1,"strength":1},
+            //     {"line":13,"position":24,"length":1,"strength":1},
+            //     {"line":12,"position":26,"length":1,"strength":1},
+            //     {"line":20,"position":56,"length":1,"strength":1},
+            //     {"line":13,"position":58,"length":1,"strength":1}
+            // ]);
+            // pianoroll_2.i.addNotes([
+            //     {"length":1,"line":27,"position":2,"strength":1},
+            //     {"length":4,"line":27,"position":6,"strength":1},
+            //     {"length":4,"line":27,"position":14,"strength":1},
+            //     {"line":27,"position":20,"length":1,"strength":1},
+            //     {"length":1,"line":25,"position":21,"strength":1},
+            //     {"line":24,"position":22,"length":1,"strength":1},
+            //     {"length":1,"line":20,"position":24,"strength":1},
+            //     {"length":1,"line":22,"position":26,"strength":1},
+            //     {"length":1,"line":20,"position":28,"strength":1},
+            //     {"length":1,"line":29,"position":30,"strength":1},
+            //     {"length":4,"line":29,"position":34,"strength":1},
+            //     {"length":6,"line":17,"position":42,"strength":1},
+            //     {"length":4,"line":22,"position":50,"strength":1},
+            //     {"line":24,"position":54,"length":2,"strength":1},
+            //     {"length":2,"line":25,"position":56,"strength":1},
+            //     {"line":29,"position":58,"length":2,"strength":1}
+            // ]);
+
+        //the C waltz
+            pulseGenerator_1.i.setTempo(150/999);
+
+            basicSynthesizer_1.io.gain.receive('%',0.3);
+            basicSynthesizer_1.io.release.receive('%',0.3);
+            basicSynthesizer_1.io.octave.receive('discrete',4);
+            basicSynthesizer_1.io.waveType.receive('discrete',1);
+
+            basicSynthesizer_2.io.attack.receive('%',0.1);
+            basicSynthesizer_2.io.release.receive('%',0.3);
+            basicSynthesizer_2.io.octave.receive('discrete',1);
+            basicSynthesizer_2.io.waveType.receive('discrete',1);
+
+            pianoroll_1.i.addNotes([
+                {"line":32,"position":127,"length":0,"strength":1},
+                {"line":13,"position":7,"length":0,"strength":1},
+                {"line":20,"position":7,"length":0,"strength":1},
+                {"line":25,"position":7,"length":0,"strength":1},
+                {"line":27,"position":15,"length":0,"strength":1},
+                {"line":22,"position":15,"length":0,"strength":1},
+                {"line":18,"position":15,"length":0,"strength":1},
+                {"line":15,"position":15,"length":0,"strength":1},
+                {"line":15,"position":23,"length":0,"strength":1},
+                {"line":20,"position":23,"length":0,"strength":1},
+                {"line":22,"position":23,"length":0,"strength":1},
+                {"line":32,"position":23,"length":0,"strength":1},
+                {"line":18,"position":31,"length":0,"strength":1},
+                {"line":22,"position":31,"length":0,"strength":1},
+                {"line":25,"position":31,"length":0,"strength":1},
+                {"line":25,"position":39,"length":0,"strength":1},
+                {"line":20,"position":39,"length":0,"strength":1},
+                {"line":13,"position":39,"length":0,"strength":1},
+                {"line":10,"position":47,"length":0,"strength":1},
+                {"line":17,"position":47,"length":0,"strength":1},
+                {"line":22,"position":47,"length":0,"strength":1},
+                {"line":22,"position":55,"length":0,"strength":1},
+                {"line":15,"position":55,"length":0,"strength":1},
+                {"line":10,"position":55,"length":0,"strength":1},
+                {"line":12,"position":63,"length":0,"strength":1},
+                {"line":15,"position":63,"length":0,"strength":1},
+                {"line":20,"position":63,"length":0,"strength":1},
+                {"line":20,"position":71,"length":0,"strength":1},
+                {"line":17,"position":71,"length":0,"strength":1},
+                {"line":13,"position":71,"length":0,"strength":1},
+                {"line":24,"position":71,"length":0,"strength":1},
+                {"line":15,"position":79,"length":0,"strength":1},
+                {"line":18,"position":79,"length":0,"strength":1},
+                {"line":22,"position":79,"length":0,"strength":1},
+                {"line":15,"position":87,"length":0,"strength":1},
+                {"line":20,"position":87,"length":0,"strength":1},
+                {"line":22,"position":87,"length":0,"strength":1},
+                {"line":27,"position":87,"length":0,"strength":1},
+                {"line":27,"position":95,"length":0,"strength":1},
+                {"line":22,"position":95,"length":0,"strength":1},
+                {"line":20,"position":95,"length":0,"strength":1},
+                {"line":15,"position":95,"length":0,"strength":1},
+                {"line":13,"position":103,"length":0,"strength":1},
+                {"line":20,"position":103,"length":0,"strength":1},
+                {"line":32,"position":103,"length":0,"strength":1},
+                {"line":29,"position":111,"length":0,"strength":1},
+                {"line":17,"position":111,"length":0,"strength":1},
+                {"line":13,"position":111,"length":0,"strength":1},
+                {"line":15,"position":119,"length":0,"strength":1},
+                {"line":22,"position":119,"length":0,"strength":1},
+                {"line":27,"position":119,"length":0,"strength":1},
+                {"line":15,"position":127,"length":0,"strength":1},
+                {"line":13,"position":127,"length":0,"strength":1},
+                {"line":20,"position":127,"length":0,"strength":1},
+                {"line":32,"position":121,"length":0,"strength":1},
+                {"line":13,"position":1,"length":0,"strength":1},
+                {"line":20,"position":1,"length":0,"strength":1},
+                {"line":25,"position":1,"length":0,"strength":1},
+                {"line":27,"position":9,"length":0,"strength":1},
+                {"line":22,"position":9,"length":0,"strength":1},
+                {"line":18,"position":9,"length":0,"strength":1},
+                {"line":15,"position":9,"length":0,"strength":1},
+                {"line":15,"position":17,"length":0,"strength":1},
+                {"line":20,"position":17,"length":0,"strength":1},
+                {"line":22,"position":17,"length":0,"strength":1},
+                {"line":32,"position":17,"length":0,"strength":1},
+                {"line":18,"position":25,"length":0,"strength":1},
+                {"line":22,"position":25,"length":0,"strength":1},
+                {"line":25,"position":25,"length":0,"strength":1},
+                {"line":25,"position":33,"length":0,"strength":1},
+                {"line":20,"position":33,"length":0,"strength":1},
+                {"line":13,"position":33,"length":0,"strength":1},
+                {"line":10,"position":41,"length":0,"strength":1},
+                {"line":17,"position":41,"length":0,"strength":1},
+                {"line":22,"position":41,"length":0,"strength":1},
+                {"line":22,"position":49,"length":0,"strength":1},
+                {"line":15,"position":49,"length":0,"strength":1},
+                {"line":10,"position":49,"length":0,"strength":1},
+                {"line":12,"position":57,"length":0,"strength":1},
+                {"line":15,"position":57,"length":0,"strength":1},
+                {"line":20,"position":57,"length":0,"strength":1},
+                {"line":20,"position":65,"length":0,"strength":1},
+                {"line":17,"position":65,"length":0,"strength":1},
+                {"line":13,"position":65,"length":0,"strength":1},
+                {"line":24,"position":65,"length":0,"strength":1},
+                {"line":15,"position":73,"length":0,"strength":1},
+                {"line":18,"position":73,"length":0,"strength":1},
+                {"line":22,"position":73,"length":0,"strength":1},
+                {"line":15,"position":81,"length":0,"strength":1},
+                {"line":20,"position":81,"length":0,"strength":1},
+                {"line":22,"position":81,"length":0,"strength":1},
+                {"line":27,"position":81,"length":0,"strength":1},
+                {"line":27,"position":89,"length":0,"strength":1},
+                {"line":22,"position":89,"length":0,"strength":1},
+                {"line":20,"position":89,"length":0,"strength":1},
+                {"line":15,"position":89,"length":0,"strength":1},
+                {"line":13,"position":97,"length":0,"strength":1},
+                {"line":20,"position":97,"length":0,"strength":1},
+                {"line":32,"position":97,"length":0,"strength":1},
+                {"line":29,"position":105,"length":0,"strength":1},
+                {"line":17,"position":105,"length":0,"strength":1},
+                {"line":13,"position":105,"length":0,"strength":1},
+                {"line":15,"position":113,"length":0,"strength":1},
+                {"line":22,"position":113,"length":0,"strength":1},
+                {"line":27,"position":113,"length":0,"strength":1},
+                {"line":15,"position":121,"length":0,"strength":1},
+                {"line":13,"position":121,"length":0,"strength":1},
+                {"line":20,"position":121,"length":0,"strength":1},
+                {"line":32,"position":123,"length":0,"strength":1},
+                {"line":13,"position":3,"length":0,"strength":1},
+                {"line":20,"position":3,"length":0,"strength":1},
+                {"line":25,"position":3,"length":0,"strength":1},
+                {"line":27,"position":11,"length":0,"strength":1},
+                {"line":22,"position":11,"length":0,"strength":1},
+                {"line":18,"position":11,"length":0,"strength":1},
+                {"line":15,"position":11,"length":0,"strength":1},
+                {"line":15,"position":19,"length":0,"strength":1},
+                {"line":20,"position":19,"length":0,"strength":1},
+                {"line":22,"position":19,"length":0,"strength":1},
+                {"line":32,"position":19,"length":0,"strength":1},
+                {"line":18,"position":27,"length":0,"strength":1},
+                {"line":22,"position":27,"length":0,"strength":1},
+                {"line":25,"position":27,"length":0,"strength":1},
+                {"line":25,"position":35,"length":0,"strength":1},
+                {"line":20,"position":35,"length":0,"strength":1},
+                {"line":13,"position":35,"length":0,"strength":1},
+                {"line":10,"position":43,"length":0,"strength":1},
+                {"line":17,"position":43,"length":0,"strength":1},
+                {"line":22,"position":43,"length":0,"strength":1},
+                {"line":22,"position":51,"length":0,"strength":1},
+                {"line":15,"position":51,"length":0,"strength":1},
+                {"line":10,"position":51,"length":0,"strength":1},
+                {"line":12,"position":59,"length":0,"strength":1},
+                {"line":15,"position":59,"length":0,"strength":1},
+                {"line":20,"position":59,"length":0,"strength":1},
+                {"line":20,"position":67,"length":0,"strength":1},
+                {"line":17,"position":67,"length":0,"strength":1},
+                {"line":13,"position":67,"length":0,"strength":1},
+                {"line":24,"position":67,"length":0,"strength":1},
+                {"line":15,"position":75,"length":0,"strength":1},
+                {"line":18,"position":75,"length":0,"strength":1},
+                {"line":22,"position":75,"length":0,"strength":1},
+                {"line":15,"position":83,"length":0,"strength":1},
+                {"line":20,"position":83,"length":0,"strength":1},
+                {"line":22,"position":83,"length":0,"strength":1},
+                {"line":27,"position":83,"length":0,"strength":1},
+                {"line":27,"position":91,"length":0,"strength":1},
+                {"line":22,"position":91,"length":0,"strength":1},
+                {"line":20,"position":91,"length":0,"strength":1},
+                {"line":15,"position":91,"length":0,"strength":1},
+                {"line":13,"position":99,"length":0,"strength":1},
+                {"line":20,"position":99,"length":0,"strength":1},
+                {"line":32,"position":99,"length":0,"strength":1},
+                {"line":29,"position":107,"length":0,"strength":1},
+                {"line":17,"position":107,"length":0,"strength":1},
+                {"line":13,"position":107,"length":0,"strength":1},
+                {"line":15,"position":115,"length":0,"strength":1},
+                {"line":22,"position":115,"length":0,"strength":1},
+                {"line":27,"position":115,"length":0,"strength":1},
+                {"line":15,"position":123,"length":0,"strength":1},
+                {"line":13,"position":123,"length":0,"strength":1},
+                {"line":20,"position":123,"length":0,"strength":1},
+                {"line":32,"position":125,"length":0,"strength":1},
+                {"line":13,"position":5,"length":0,"strength":1},
+                {"line":20,"position":5,"length":0,"strength":1},
+                {"line":25,"position":5,"length":0,"strength":1},
+                {"line":27,"position":13,"length":0,"strength":1},
+                {"line":22,"position":13,"length":0,"strength":1},
+                {"line":18,"position":13,"length":0,"strength":1},
+                {"line":15,"position":13,"length":0,"strength":1},
+                {"line":15,"position":21,"length":0,"strength":1},
+                {"line":20,"position":21,"length":0,"strength":1},
+                {"line":22,"position":21,"length":0,"strength":1},
+                {"line":32,"position":21,"length":0,"strength":1},
+                {"line":18,"position":29,"length":0,"strength":1},
+                {"line":22,"position":29,"length":0,"strength":1},
+                {"line":25,"position":29,"length":0,"strength":1},
+                {"line":25,"position":37,"length":0,"strength":1},
+                {"line":20,"position":37,"length":0,"strength":1},
+                {"line":13,"position":37,"length":0,"strength":1},
+                {"line":10,"position":45,"length":0,"strength":1},
+                {"line":17,"position":45,"length":0,"strength":1},
+                {"line":22,"position":45,"length":0,"strength":1},
+                {"line":22,"position":53,"length":0,"strength":1},
+                {"line":15,"position":53,"length":0,"strength":1},
+                {"line":10,"position":53,"length":0,"strength":1},
+                {"line":12,"position":61,"length":0,"strength":1},
+                {"line":15,"position":61,"length":0,"strength":1},
+                {"line":20,"position":61,"length":0,"strength":1},
+                {"line":20,"position":69,"length":0,"strength":1},
+                {"line":17,"position":69,"length":0,"strength":1},
+                {"line":13,"position":69,"length":0,"strength":1},
+                {"line":24,"position":69,"length":0,"strength":1},
+                {"line":15,"position":77,"length":0,"strength":1},
+                {"line":18,"position":77,"length":0,"strength":1},
+                {"line":22,"position":77,"length":0,"strength":1},
+                {"line":15,"position":85,"length":0,"strength":1},
+                {"line":20,"position":85,"length":0,"strength":1},
+                {"line":22,"position":85,"length":0,"strength":1},
+                {"line":27,"position":85,"length":0,"strength":1},
+                {"line":27,"position":93,"length":0,"strength":1},
+                {"line":22,"position":93,"length":0,"strength":1},
+                {"line":20,"position":93,"length":0,"strength":1},
+                {"line":15,"position":93,"length":0,"strength":1},
+                {"line":13,"position":101,"length":0,"strength":1},
+                {"line":20,"position":101,"length":0,"strength":1},
+                {"line":32,"position":101,"length":0,"strength":1},
+                {"line":29,"position":109,"length":0,"strength":1},
+                {"line":17,"position":109,"length":0,"strength":1},
+                {"line":13,"position":109,"length":0,"strength":1},
+                {"line":15,"position":117,"length":0,"strength":1},
+                {"line":22,"position":117,"length":0,"strength":1},
+                {"line":27,"position":117,"length":0,"strength":1},
+                {"line":15,"position":125,"length":0,"strength":1},
+                {"line":13,"position":125,"length":0,"strength":1},
+                {"line":20,"position":125,"length":0,"strength":1}
+            ]);
+
+            pianoroll_2.i.addNotes([
+                {"line":25,"position":34,"length":1,"strength":1},
+                {"line":27,"position":18,"length":1,"strength":1},
+                {"line":25,"position":38,"length":1,"strength":1},
+                {"line":27,"position":22,"length":1,"strength":1},
+                {"line":20,"position":0,"length":1,"strength":1},
+                {"line":25,"position":2,"length":1,"strength":1},
+                {"line":20,"position":4,"length":1,"strength":1},
+                {"line":25,"position":6,"length":1,"strength":1},
+                {"line":22,"position":8,"length":1,"strength":1},
+                {"line":27,"position":10,"length":1,"strength":1},
+                {"line":22,"position":12,"length":1,"strength":1},
+                {"line":27,"position":14,"length":1,"strength":1},
+                {"line":20,"position":16,"length":1,"strength":1},
+                {"line":20,"position":20,"length":1,"strength":1},
+                {"line":25,"position":24,"length":1,"strength":1},
+                {"line":25,"position":28,"length":1,"strength":1},
+                {"line":30,"position":26,"length":1,"strength":1},
+                {"line":30,"position":30,"length":1,"strength":1},
+                {"line":22,"position":72,"length":1,"strength":1},
+                {"line":22,"position":76,"length":1,"strength":1},
+                {"line":20,"position":32,"length":1,"strength":1},
+                {"line":20,"position":36,"length":1,"strength":1},
+                {"line":17,"position":40,"length":1,"strength":1},
+                {"line":17,"position":44,"length":1,"strength":1},
+                {"line":22,"position":42,"length":1,"strength":1},
+                {"line":22,"position":46,"length":1,"strength":1},
+                {"line":22,"position":48,"length":1,"strength":1},
+                {"line":22,"position":52,"length":1,"strength":1},
+                {"line":27,"position":50,"length":1,"strength":1},
+                {"line":27,"position":54,"length":1,"strength":1},
+                {"line":20,"position":56,"length":1,"strength":1},
+                {"line":20,"position":60,"length":1,"strength":1},
+                {"line":25,"position":58,"length":1,"strength":1},
+                {"line":25,"position":62,"length":1,"strength":1},
+                {"line":24,"position":64,"length":1,"strength":1},
+                {"line":24,"position":68,"length":1,"strength":1},
+                {"line":29,"position":66,"length":1,"strength":1},
+                {"line":29,"position":70,"length":1,"strength":1},
+                {"line":32,"position":122,"length":1,"strength":1},
+                {"line":32,"position":126,"length":1,"strength":1},
+                {"line":27,"position":74,"length":1,"strength":1},
+                {"line":27,"position":78,"length":1,"strength":1},
+                {"line":27,"position":88,"length":1,"strength":1},
+                {"line":27,"position":92,"length":1,"strength":1},
+                {"line":20,"position":82,"length":1,"strength":1},
+                {"line":20,"position":86,"length":1,"strength":1},
+                {"line":27,"position":80,"length":1,"strength":1},
+                {"line":27,"position":84,"length":1,"strength":1},
+                {"line":20,"position":90,"length":1,"strength":1},
+                {"line":20,"position":94,"length":1,"strength":1},
+                {"line":20,"position":96,"length":1,"strength":1},
+                {"line":20,"position":100,"length":1,"strength":1},
+                {"line":25,"position":98,"length":1,"strength":1},
+                {"line":25,"position":102,"length":1,"strength":1},
+                {"line":17,"position":104,"length":1,"strength":1},
+                {"line":17,"position":108,"length":1,"strength":1},
+                {"line":22,"position":106,"length":1,"strength":1},
+                {"line":22,"position":110,"length":1,"strength":1},
+                {"line":22,"position":112,"length":1,"strength":1},
+                {"line":22,"position":116,"length":1,"strength":1},
+                {"line":27,"position":114,"length":1,"strength":1},
+                {"line":27,"position":118,"length":1,"strength":1},
+                {"line":25,"position":120,"length":1,"strength":1},
+                {"line":25,"position":124,"length":1,"strength":1}
+            ]);
 
     //setup view
         __globals.utility.workspace.gotoPosition(-80.5151, -162.899,1.1593, 0);

@@ -1651,10 +1651,10 @@
                     };
             
                     if( 
-                        (event[__globals.super.keys.ctrl]  && desiredKeys.control && ( desiredKeys.control=='all' || (Array.isArray(desiredKeys.control) && desiredKeys.control.includes(event.key)) )) ||
+                        (event.control  && desiredKeys.control && ( desiredKeys.control=='all' || (Array.isArray(desiredKeys.control) && desiredKeys.control.includes(event.key)) )) ||
                         (event.shiftKey && desiredKeys.shift   && ( desiredKeys.shift=='all'   || (Array.isArray(desiredKeys.shift)   && desiredKeys.shift.includes(event.key))   )) ||
                         (event.metaKey  && desiredKeys.meta    && ( desiredKeys.meta=='all'    || (Array.isArray(desiredKeys.meta)    && desiredKeys.meta.includes(event.key))    )) ||
-                        (event[__globals.super.keys.alt]   && desiredKeys.alt     && ( desiredKeys.alt=='all'     || (Array.isArray(desiredKeys.alt)     && desiredKeys.alt.includes(event.key))     )) ||
+                        (event.alt      && desiredKeys.alt     && ( desiredKeys.alt=='all'     || (Array.isArray(desiredKeys.alt)     && desiredKeys.alt.includes(event.key))     )) ||
                         (                  desiredKeys.none    && ( desiredKeys.none=='all'    || (Array.isArray(desiredKeys.none)    && desiredKeys.none.includes(event.key))    ))
                     ){
                         connectionObject[type](event.key,modifiers);
@@ -5294,6 +5294,645 @@
                         
                             return object;
                         };
+                        this.pianoroll = function(
+                            id='pianoroll',
+                            x, y, width, height, angle=0,
+                            xCount=64, yCount=22, xStripPattern=[0], yStripPattern=[0,0,1,0,1,0,1,0,0,1,0,1],
+                        ){
+                            var style = {
+                                backing:'fill:rgba(20,20,20,1);',
+                                selectionArea:'fill:rgba(100,100,150,0.75);stroke:rgba(100,100,200,1);stroke-width:0.5;pointer-events:none;',
+                                background:{
+                                    verticalStrip:[
+                                        'stroke:rgba(120,120,120,1);stroke-width:0.5;fill:rgba(30,30,30,0.5);',
+                                        'stroke:rgba(120,120,120,1);stroke-width:0.5;fill:rgba(0,0,0,0);',
+                                        'stroke:rgba(120,120,120,1);stroke-width:0.5;fill:rgba(100,30,100,0.5);',
+                                    ],
+                                    horizontalStrip:[
+                                        'stroke:rgba(120,120,120,1);stroke-width:0.5;fill:rgba(120,120,120,0.5);',
+                                        'stroke:rgba(120,120,120,1);stroke-width:0.5;fill:rgba(100,100,100,0);',
+                                    ],
+                                },
+                                block:{
+                                    body:'fill:rgba(150,100,150,0.75);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+                                    bodyGlow:'fill:rgba(200,100,200,0.9);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+                                    handle:'fill:rgba(255,0,255,0.75);cursor:col-resize;',
+                                    handleWidth:2,
+                                }
+                            };
+                            var state = {
+                                snapping:!false,
+                                noteRegistry: new parts.elements.control.pianoroll.noteRegistry(xCount,yCount),
+                                selectedNotes:[],
+                                activeNotes:[],
+                                position:0,
+                                loopPeriod:{start:0, end:xCount},
+                            };
+                        
+                            //internal functions
+                                function cordinates2lineposition(xy){
+                                    xy.y = Math.floor(xy.y*yCount);
+                                    if(xy.y >= yCount){xy.y = yCount-1;}
+                                
+                                    xy.x = state.snapping ? Math.round(xy.x*xCount) : xy.x*xCount;
+                                    if(xy.x < 0){xy.x =0;}
+                                
+                                    return {line:xy.y, position:xy.x};
+                                }
+                                function makeNote(line, position, length, strength=1){
+                                    var freshID = state.noteRegistry.add({line:line, position:position, length:length, strength:strength});
+                                    var graphicElement = parts.elements.control.pianoroll.noteBlock(
+                                        freshID, {x:width/xCount,y:height/yCount},
+                                        line, position, length, false,
+                                        style.block,
+                                    );
+                                    object.append(graphicElement);
+                        
+                                    //augmenting the graphic element
+                                        graphicElement.select = function(remainSelected=false){
+                                            if(state.selectedNotes.indexOf(this) != -1){ if(!remainSelected){this.deselect();} return; }
+                                            this.selected(true);
+                                            state.selectedNotes.push(this);
+                                            this.glow(true);
+                                        };
+                                        graphicElement.deselect = function(){
+                                            state.selectedNotes.splice(state.selectedNotes.indexOf(this),1);
+                                            this.selected(false);
+                                            this.glow(false);
+                                        };
+                                        graphicElement.delete = function(){
+                                            this.deselect();
+                                            state.noteRegistry.remove(parseInt(this.id));
+                                            this.remove();
+                                        };
+                                        graphicElement.ondblclick = function(event){
+                                            if(!event[__globals.super.keys.ctrl]){return;}
+                                            while(state.selectedNotes.length > 0){
+                                                state.selectedNotes[0].delete();
+                                            }
+                                        };
+                                        graphicElement.body.onmousedown = function(event){
+                                            if( !event[__globals.super.keys.ctrl] && !graphicElement.selected()){
+                                                while(state.selectedNotes.length > 0){
+                                                    state.selectedNotes[0].deselect();
+                                                }
+                                            }
+                                            graphicElement.select(true);
+                        
+                                            if(event[__globals.super.keys.alt]){
+                                                for(var a = 0; a < state.selectedNotes.length; a++){
+                                                    var temp = state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id));
+                                                    makeNote(temp.line, temp.position, temp.length, temp.strength);
+                                                }
+                                            }
+                                            
+                                            var initialPosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                            var activeBlocks = [];
+                                            for(var a = 0; a < state.selectedNotes.length; a++){
+                                                activeBlocks.push({
+                                                    id: parseInt(state.selectedNotes[a].id),
+                                                    block: state.selectedNotes[a],
+                                                    starting: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
+                                                });
+                                            }
+                                            object.onmousemove = function(event){
+                                                var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                                var diff = {
+                                                    line: livePosition.line - initialPosition.line,
+                                                    position: livePosition.position - initialPosition.position,
+                                                };
+                        
+                                                for(var a = 0; a < activeBlocks.length; a++){
+                                                    state.noteRegistry.update(activeBlocks[a].id, {
+                                                        line:activeBlocks[a].starting.line+diff.line,
+                                                        position:activeBlocks[a].starting.position+diff.position,
+                                                    });
+                        
+                                                    var temp = state.noteRegistry.get_note(activeBlocks[a].id);
+                        
+                                                    activeBlocks[a].block.line( temp.line );
+                                                    activeBlocks[a].block.position( temp.position );
+                                                }
+                                            };
+                                            object.onmouseleave = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                                            object.onmouseup = object.onmouseleave;
+                                        };
+                                        graphicElement.leftHandle.onmousedown = function(event){
+                                            if(!graphicElement.selected()){
+                                                while(state.selectedNotes.length > 0){
+                                                    state.selectedNotes[0].deselect();
+                                                }
+                                            }
+                                            graphicElement.select(true);
+                        
+                                            var initialPosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                            var activeBlocks = [];
+                                            for(var a = 0; a < state.selectedNotes.length; a++){
+                                                activeBlocks.push({
+                                                    id: parseInt(state.selectedNotes[a].id),
+                                                    block: state.selectedNotes[a],
+                                                    starting: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
+                                                });
+                                            }
+                                            object.onmousemove = function(event){
+                                                var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                                var diff = {position: initialPosition.position-livePosition.position};
+                        
+                                                for(var a = 0; a < activeBlocks.length; a++){
+                                                    if( activeBlocks[a].starting.position-diff.position < 0 ){ continue; } //this stops a block from getting longer, when it is unable to move any further to the left
+                                                    
+                                                    state.noteRegistry.update(activeBlocks[a].id, {
+                                                        length: activeBlocks[a].starting.length+diff.position,
+                                                        position: activeBlocks[a].starting.position-diff.position,
+                                                    });
+                                                    var temp = state.noteRegistry.get_note(activeBlocks[a].id);
+                                                    activeBlocks[a].block.position( temp.position );
+                                                    activeBlocks[a].block.length( temp.length );
+                                                }
+                                            };
+                                            object.onmouseleave = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                                            object.onmouseup = object.onmouseleave;
+                                        };
+                                        graphicElement.rightHandle.onmousedown = function(event){
+                                            if(!graphicElement.selected()){
+                                                while(state.selectedNotes.length > 0){
+                                                    state.selectedNotes[0].deselect();
+                                                }
+                                            }
+                                            graphicElement.select(true);
+                        
+                                            var initialPosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                            var activeBlocks = [];
+                                            for(var a = 0; a < state.selectedNotes.length; a++){
+                                                activeBlocks.push({
+                                                    id: parseInt(state.selectedNotes[a].id),
+                                                    block: state.selectedNotes[a],
+                                                    starting: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
+                                                });
+                                            }
+                                            object.onmousemove = function(event){
+                                                var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                                                var diff = {position: livePosition.position - initialPosition.position};
+                        
+                                                for(var a = 0; a < activeBlocks.length; a++){
+                                                    state.noteRegistry.update(activeBlocks[a].id, {length: activeBlocks[a].starting.length+diff.position});
+                                                    var temp = state.noteRegistry.get_note(activeBlocks[a].id);
+                                                    activeBlocks[a].block.length( temp.length );
+                                                }
+                                            };
+                                            object.onmouseleave = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
+                                            object.onmouseup = object.onmouseleave;
+                                        };
+                        
+                                    return {id:freshID, element:graphicElement};
+                                }
+                        
+                            //elements 
+                                //main
+                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                                //background
+                                    var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width, height:height, style:style.backing});
+                                    object.appendChild(backing);
+                        
+                                    //background strips
+                                        var backgroundStrips = {horizontal:[], vertical:[]};
+                                        //horizontal strips
+                                        for(var a = 0; a < yCount; a++){
+                                            var temp = __globals.utility.experimental.elementMaker('rect','divisionstrip_horizontal_'+a,{
+                                                x1:0, y:a*(height/yCount),
+                                                width:width, height:height/yCount,
+                                                style:style.background.horizontalStrip[yStripPattern[a%yStripPattern.length]]
+                                            });
+                                            backgroundStrips.horizontal.push(temp);
+                                            object.appendChild(temp);
+                                        }
+                                        //vertical strips
+                                        for(var a = 0; a < xCount; a++){
+                                            var temp = __globals.utility.experimental.elementMaker('rect','divisionstrip_vertical_'+a,{
+                                                x:a*(width/xCount), y:0,
+                                                width:width/xCount, height:height,
+                                                style:style.background.verticalStrip[xStripPattern[a%xStripPattern.length]]
+                                            });
+                                            backgroundStrips.vertical.push(temp);
+                                            object.appendChild(temp);
+                                        }
+                                //interactionPlane
+                                    var interactionPlane = __globals.utility.experimental.elementMaker('rect','interactionPlane',{width:width, height:height, style:'fill:rgba(0,0,0,0);'});
+                                    object.appendChild(interactionPlane);
+                                    interactionPlane.onmousedown = function(event){
+                                        if(event[__globals.super.keys.alt]){ //note creation
+                                            while(state.selectedNotes.length > 0){
+                                                state.selectedNotes[0].deselect();
+                                            }
+                                            var position = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height));
+                                            var temp = makeNote(position.line,position.position,0);
+                                            temp.element.select();
+                                            temp.element.rightHandle.onmousedown(event);
+                                        }else if(event.shiftKey){ //click-n-drag group select
+                                            var initialPositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
+                                            
+                                            var selectionArea = __globals.utility.experimental.elementMaker('rect','body',{
+                                                x:initialPositionData.x*width, y:initialPositionData.y*height,
+                                                width:0, height:0,
+                                                style:style.selectionArea,
+                                            });
+                                            object.appendChild(selectionArea);
+                                            
+                                            object.onmousemove = function(event){
+                                                var livePositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
+                                                var diff = {x:livePositionData.x-initialPositionData.x, y:livePositionData.y-initialPositionData.y};
+                        
+                                                var transform = {};
+                                                if(diff.x < 0){ 
+                                                    selectionArea.width.baseVal.value = -diff.x*width;
+                                                    transform.x = initialPositionData.x+diff.x;
+                                                }else{ 
+                                                    selectionArea.width.baseVal.value = diff.x*width;
+                                                    transform.x = initialPositionData.x;
+                                                }
+                                                if(diff.y < 0){ 
+                                                    selectionArea.height.baseVal.value = -diff.y*height;
+                                                    transform.y = initialPositionData.y+diff.y;
+                                                }else{ 
+                                                    selectionArea.height.baseVal.value = diff.y*height;
+                                                    transform.y = initialPositionData.y;
+                                                }
+                        
+                                                __globals.utility.element.setTransform_XYonly(selectionArea, transform.x*width, transform.y*height);
+                                            };
+                                            object.onmouseup = function(event){
+                                                this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;
+                                                selectionArea.remove();
+                                                var finishingPositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
+                        
+                                                var selectionBox = [{},{}];
+                                                if( initialPositionData.x < finishingPositionData.x ){
+                                                    selectionBox[0].x = initialPositionData.x*width;
+                                                    selectionBox[1].x = finishingPositionData.x*width;
+                                                }else{
+                                                    selectionBox[0].x = finishingPositionData.x*width;
+                                                    selectionBox[1].x = initialPositionData.x*width;
+                                                }
+                                                if( initialPositionData.y < finishingPositionData.y ){
+                                                    selectionBox[0].y = initialPositionData.y*height;
+                                                    selectionBox[1].y = finishingPositionData.y*height;
+                                                }else{
+                                                    selectionBox[0].y = finishingPositionData.y*height;
+                                                    selectionBox[1].y = initialPositionData.y*height;
+                                                }
+                        
+                                                while(state.selectedNotes.length > 0){
+                                                    state.selectedNotes[0].deselect();
+                                                }
+                                                var noteBlocks = object.getElementsByTagName('g');
+                                                for(var a = 0; a < noteBlocks.length; a++){
+                                                    var temp = state.noteRegistry.get_note(parseInt(noteBlocks[a].id));
+                                                    var block = [
+                                                            {x:temp.position*(width/xCount), y:temp.line*(height/yCount)},
+                                                            {x:(temp.position+temp.length)*(width/xCount), y:(temp.line+1)*(height/yCount)},
+                                                        ];
+                        
+                                                    if( __globals.utility.math.detectOverlap(selectionBox,block,selectionBox,block) ){ noteBlocks[a].select(true); }
+                                                }
+                                            };
+                                            object.onmouseleave = object.onmouseup;
+                                        }else{ //general panning
+                                            while(state.selectedNotes.length > 0){
+                                                state.selectedNotes[0].deselect();
+                                            }
+                                        }
+                                    };
+                        
+                            //controls
+                                object.allNotes = function(){ return state.noteRegistry.all_notes(); };
+                                object.eventsBetween = function(start,end){ return state.noteRegistry.eventsBetween(start,end); };
+                                object.light_vertical = function(state,a,b){
+                                    if(b == undefined){
+                                        __globals.utility.element.setStyle(
+                                            backgroundStrips.vertical[a],
+                                            style.background.verticalStrip[state]
+                                        );
+                                    }
+                        
+                                    for(var i = a; i < b; i++){
+                                        __globals.utility.element.setStyle(
+                                            backgroundStrips.vertical[i],
+                                            style.background.verticalStrip[state]
+                                        );
+                                    }
+                                };
+                                object.yCount = function(a){
+                                    if(a == undefined){return yCount;}
+                                    yCount = a;
+                                };
+                                object.loopPeriod = function(a){
+                                    if(a == undefined){return state.loopPeriod;}
+                                    if(a.start != undefined){ state.loopPeriod.start = a.start; }
+                                    if(a.end != undefined){ state.loopPeriod.end = a.end; }
+                        
+                                    if( state.loopPeriod.start > state.loopPeriod.end ){state.loopPeriod.end = state.loopPeriod.start;}
+                        
+                                    state.position = state.loopPeriod.start;
+                                    object.light_vertical(0,0,xCount);
+                                    object.light_vertical(1,state.loopPeriod.start,state.loopPeriod.end);
+                                };
+                                object.progress = function(step=1){
+                                    //light up the grid position
+                                    var temp = Math.floor(state.position);
+                                    object.light_vertical(2,temp);
+                                    object.light_vertical(1,(temp-step<state.loopPeriod.start ? state.loopPeriod.end-step : temp-1));
+                        
+                                    //gather together all the current events
+                                    var temp = object.eventsBetween(state.position, state.position+step);
+                        
+                                    //add newly started notes to and remove newly finished notes from 'activeNotes'
+                                    for(var a = 0; a < temp.length; a++){
+                                        var index = state.activeNotes.indexOf(temp[a].noteID);
+                                        if(index != -1 && temp[a].strength == 0){
+                                            state.activeNotes.splice(index);
+                                        }else{
+                                            if( temp[a].strength > 0 ){
+                                                state.activeNotes.push(temp[a].noteID);
+                                            }
+                                        }
+                                    }
+                        
+                                    //upon loop; any notes that are still active are to be ended
+                                    //(so create end events for them, and push those into the current events list)
+                                    if(state.position == state.loopPeriod.start){
+                                        for(var a = 0; a < state.activeNotes.length; a++){
+                                            var tmp = state.noteRegistry.get_note(state.activeNotes[a]); if(tmp == null){continue;}
+                                            temp.unshift( {noteID:state.activeNotes[a], line:tmp.line, position:state.loopPeriod.start, strength:0} );
+                                        }
+                                        state.activeNotes = [];
+                                    }
+                        
+                                    //progress position
+                                    if( state.position+step > state.loopPeriod.end-step ){
+                                        state.position = state.loopPeriod.start;
+                                    }else{
+                                        state.position = state.position+step;
+                                    }
+                        
+                                    //perform event callback
+                                    if(object.event && temp.length > 0){object.event(temp);}
+                                };
+                                object.position = function(a){
+                                    if(a==undefined){return state.position;}
+                                    var temp = Math.floor(state.position)-1;
+                                    if(temp < 0){temp = state.loopPeriod.end-1;}
+                                    object.light_vertical(1,temp);
+                                    state.position = a;
+                                };
+                                object.addNote = function(line, position, length, strength=1){makeNote(line, position, length, strength);};
+                                object.addNotes = function(noteData){
+                                    for(var a = 0; a < noteData.length; a++){this.addNote(noteData[a].line, noteData[a].position, noteData[a].length, noteData[a].strength);}
+                                };
+                                object.__dump = function(){state.noteRegistry.__dump();};
+                            //callbacks
+                                object.event = function(events){};
+                        
+                            //setup
+                                object.loopPeriod(0,xCount);
+                        
+                            return object;
+                        };
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        this.pianoroll.noteBlock = function(
+                            id, basicUnit,
+                            line, position, length, glow=false, 
+                            style
+                        ){
+                            //elements
+                                var obj = __globals.utility.experimental.elementMaker('g',id,{y:line*basicUnit.y, x:position*basicUnit.x});
+                                obj.body = __globals.utility.experimental.elementMaker('rect','body',{width:length*basicUnit.x, height:1*basicUnit.y, style:style.body});
+                                obj.leftHandle = __globals.utility.experimental.elementMaker('rect','leftHandle',{x:-style.handleWidth/2, width:style.handleWidth, height:1*basicUnit.y,style:style.handle});
+                                obj.rightHandle = __globals.utility.experimental.elementMaker('rect','rightHandle',{x:length*basicUnit.x-style.handleWidth/2, width:style.handleWidth, height:1*basicUnit.y, style:style.handle});
+                                obj.append(obj.body);
+                                obj.append(obj.leftHandle);
+                                obj.append(obj.rightHandle);
+                            
+                            //controls
+                                var state = {line:line, position:position, length:length, glow:glow, selected:false};
+                                obj.basicUnit = function(a){
+                                    if(a == undefined){return basicUnit;}
+                                    basicUnit = a;
+                                    obj.body.width.baseVal.value = state.length*basicUnit.x;
+                                    __globals.utility.element.setTransform_XYonly(obj, state.position*basicUnit.x, state.line*basicUnit.y);
+                                };
+                                obj.line = function(a){
+                                    if(a == undefined){return state.line;}
+                                    state.line = a;
+                                    __globals.utility.element.setTransform_XYonly(obj, state.position*basicUnit.x, state.line*basicUnit.y);
+                                };
+                                obj.position = function(a){
+                                    if(a == undefined){return state.position;}
+                                    state.position = a;
+                                    __globals.utility.element.setTransform_XYonly(obj, state.position*basicUnit.x, state.line*basicUnit.y);
+                                };
+                                obj.length = function(a){
+                                    if(a == undefined){return state.length;}
+                                    state.length = a;
+                                    obj.body.width.baseVal.value = state.length*basicUnit.x;
+                                    __globals.utility.element.setTransform_XYonly(obj.rightHandle, state.length*basicUnit.x-style.handleWidth/2, 0);
+                                };
+                                obj.glow = function(a){
+                                    if(a == undefined){return state.glowing;}
+                                    state.glowing = a;
+                                    if(state.glowing){ 
+                                        __globals.utility.element.setStyle(obj.body,style.bodyGlow);
+                                    }else{
+                                        __globals.utility.element.setStyle(obj.body,style.body);
+                                    }
+                                };
+                                obj.selected = function(a){
+                                    if(a == undefined){return state.selected;}
+                                    state.selected = a;
+                                };
+                        
+                            return obj;
+                        };
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        this.pianoroll.noteRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
+                            var notes = [];
+                            var selectedNotes = [];
+                            var events = [];
+                            var events_byID = [];
+                            var events_byPosition = {};
+                            var positions = [];
+                        
+                            this.__dump = function(){
+                                console.log('---- noteRegistry dump ----');
+                        
+                                console.log('notes');
+                                for(var a = 0; a < notes.length; a++){ 
+                                    console.log( '\t', a, ' ' + JSON.stringify(notes[a]) );
+                                }
+                        
+                                console.log('selectedNotes');
+                                for(var a = 0; a < selectedNotes.length; a++){ 
+                                    console.log( '\t', a, ' ' + JSON.stringify(selectedNotes[a]) );
+                                }
+                        
+                                console.log('events');
+                                for(var a = 0; a < events.length; a++){ 
+                                    console.log( '\t', a, ' ' + JSON.stringify(events[a]) );
+                                }
+                        
+                                console.log('events_byID');
+                                for(var a = 0; a < events_byID.length; a++){ 
+                                    console.log( '\t', a, ' ' + JSON.stringify(events_byID[a]) );
+                                }
+                        
+                                console.log('events_byPosition');
+                                var keys = Object.keys(events_byPosition);
+                                for(var a = 0; a < keys.length; a++){ 
+                                    console.log( '\t', keys[a], ' ' + JSON.stringify(events_byPosition[keys[a]]) );
+                                }
+                        
+                                console.log('positions');
+                                for(var a = 0; a < positions.length; a++){ 
+                                    console.log( '\t', a, ' ' + JSON.stringify(positions[a]) );
+                                }
+                            };
+                            this.all_notes = function(){ return JSON.parse(JSON.stringify(notes)); };
+                            this.all_events = function(){ return JSON.parse(JSON.stringify(events)); };
+                            this.get_note = function(id){ 
+                                if( notes[id] == undefined ){return null;}
+                                return JSON.parse(JSON.stringify(notes[id]));
+                            };
+                            this.get_event = function(i){ return JSON.parse(JSON.stringify(events[i])); };
+                            this.eventsBetween = function(start,end){
+                                //depending on whether theres an end position or not; get all the events positions that 
+                                //lie on the start positions, or get all the events positions that lie between the start
+                                //and end positions
+                                var eventNumbers = end == undefined ? 
+                                    Array.from(new Set(positions.filter(function(a){return a == start;}))) : 
+                                    Array.from(new Set(positions.filter(function(a){return a >= start && a < end;}))) ;
+                        
+                                //for each position, convert the number to a string, and gather the associated event number arrays
+                                //then, for each array, get each event and place that into the output array
+                                var compiledEvents = [];
+                                for(var a = 0; a < eventNumbers.length; a++){
+                                    eventNumbers[a] = events_byPosition[String(eventNumbers[a])];
+                                    for(var b = 0; b < eventNumbers[a].length; b++){
+                                        compiledEvents.push(events[eventNumbers[a][b]]);
+                                    }
+                                }
+                        
+                                //sort array by position
+                                return compiledEvents.sort(function(a, b){
+                                    if(a.position < b.position) return -1;
+                                    if(a.position > b.position) return 1;
+                                    return 0;
+                                });
+                            };
+                            this.add = function(data,forceID){
+                                //clean up data
+                                    if(data == undefined || !('line' in data) || !('position' in data) || !('length' in data)){return;}
+                                    if(!('strength' in data)){data.strength = 1;}
+                                //check for disallowed data
+                                    if(data.length < 0){data.length = 0;}
+                                    if(data.line < 0){data.line = 0;}
+                                    else if(data.line > bottomLimit-1){data.line = bottomLimit-1;}
+                                    if(data.position < 0){data.position = 0;}
+                                    else if(data.length+data.position > rightLimit){data.position = rightLimit-data.length;}
+                        
+                                //generate note ID
+                                    var newID = 0;
+                                    if(forceID == undefined){
+                                        while(notes[newID] != undefined){newID++;}
+                                    }else{newID = forceID;}
+                        
+                                //add note to storage
+                                    notes[newID] = JSON.parse(JSON.stringify(data));
+                        
+                                //generate event data
+                                    var newEvents = [
+                                        {noteID:newID, line:data.line, position:data.position,                       strength:data.strength},
+                                        {noteID:newID, line:data.line, position:(data.position+data.length), strength:0}
+                                    ];
+                        
+                                //add event data to storage
+                                    var eventLocation = 0;
+                                    //start event
+                                        while(events[eventLocation] != undefined){eventLocation++;}
+                                        events[eventLocation] = newEvents[0];
+                                        events_byID[newID] = [eventLocation];
+                                        if( events_byPosition[newEvents[0].position] == undefined ){
+                                            events_byPosition[newEvents[0].position] = [eventLocation];
+                                        }else{
+                                            events_byPosition[newEvents[0].position].push(eventLocation);
+                                        }
+                                        positions.push(newEvents[0].position);
+                                    //end event
+                                        while(events[eventLocation] != undefined){eventLocation++;}
+                                        events[eventLocation] = newEvents[1];
+                                        events_byID[newID] = events_byID[newID].concat(eventLocation);
+                                        if( events_byPosition[newEvents[1].position] == undefined ){
+                                            events_byPosition[newEvents[1].position] = [eventLocation];
+                                        }else{
+                                            events_byPosition[newEvents[1].position].push(eventLocation);
+                                        }
+                                        positions.push(newEvents[1].position);
+                        
+                                return newID;
+                            };
+                            this.remove = function(id){
+                                delete notes[id];
+                        
+                                for(var a = 0; a < events_byID[id].length; a++){
+                                    var tmp = events_byID[id][a];
+                                    events_byPosition[events[tmp].position].splice( events_byPosition[events[tmp].position].indexOf(tmp) ,1);
+                                    positions.splice(positions.indexOf(events[tmp].position),1);
+                                    if( events_byPosition[events[tmp].position].length == 0 ){delete events_byPosition[events[tmp].position];}
+                                    delete events[tmp];
+                                }
+                        
+                                delete events_byID[id];
+                            };
+                            this.update = function(id,data){
+                                //clean input
+                                    if(data == undefined){return;}
+                                    if(!('line' in data)){data.line = notes[id].line;}
+                                    if(!('position' in data)){data.position = notes[id].position;}
+                                    if(!('length' in data)){data.length = notes[id].length;}
+                                    if(!('strength' in data)){data.strength = notes[id].strength;}
+                                
+                                this.remove(id);
+                                this.add(data,id);
+                            };
+                        };
                         this.dial_continuous = function(
                             id='dial_continuous',
                             x, y, r,
@@ -5909,6 +6548,250 @@
                         
                             return object;
                         };
+                        this.rangeslide = function(
+                            id='rangeslide', 
+                            x, y, width, height, angle=0,
+                            handleHeight=0.025, spanWidth=0.75, values=[0,1], resetValues=[-1,-1],
+                            handleStyle='fill:rgba(200,200,200,1)',
+                            backingStyle='fill:rgba(150,150,150,1)',
+                            slotStyle='fill:rgba(50,50,50,1)',
+                            invisibleHandleStyle='fill:rgba(0,0,0,0);',
+                            spanStyle='fill:rgba(200,0,200,0.5);',
+                        ){
+                            var grappled = false;
+                        
+                            //elements
+                                //main
+                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
+                                //backing and slot group
+                                    var backingAndSlot = __globals.utility.experimental.elementMaker('g','backingAndSlotGroup',{});
+                                    object.appendChild(backingAndSlot);
+                                    //backing
+                                        var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
+                                        backingAndSlot.appendChild(backing);
+                                    //slot
+                                        var slot = __globals.utility.experimental.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
+                                        backingAndSlot.appendChild(slot);
+                        
+                                //span
+                                    var span = __globals.utility.experimental.elementMaker('rect','span',{
+                                        x:width*((1-spanWidth)/2), y:height*handleHeight,
+                                        width:width*spanWidth, height:height - 2*height*handleHeight, 
+                                        style:spanStyle
+                                    });
+                                    object.appendChild(span);
+                        
+                                //handles
+                                    var handleCount = 2;
+                                    var handles = [];
+                                    for(var a = 0; a < handleCount; a++){
+                                        //grouping
+                                            handles[a] = __globals.utility.experimental.elementMaker('g','handle_'+a,{})
+                                            object.appendChild(handles[a]);
+                                        //handle
+                                            var handle = __globals.utility.experimental.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
+                                            handles[a].appendChild(handle);
+                                        //invisible handle
+                                            var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                            var invisibleHandle = __globals.utility.experimental.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
+                                            handles[a].appendChild(invisibleHandle);
+                                    }
+                        
+                            //graphical adjust
+                                function set(a,handle,update=true){
+                                    a = (a>1 ? 1 : a);
+                                    a = (a<0 ? 0 : a);
+                        
+                                    //make sure the handle order is maintained
+                                    //if necessary, one handle should push the other, though not past the ends
+                                        switch(handle){
+                                            default: console.error('unknown handle to adjust'); break;
+                                            case 0:
+                                                if((values[1] - a + handleHeight*(a - values[1] - 1)) < 0){
+                                                    if( (a + handleHeight) > 1 ){ a = 1 - handleHeight; }
+                                                    values[0] = a;
+                                                    values[1] = a + handleHeight;
+                                                }
+                                            break;
+                                            case 1: 
+                                                if((a - values[0] + handleHeight*(values[0] - a - 1)) < 0){
+                                                    if( (a - handleHeight) < 0 ){ a = handleHeight; }
+                                                    values[0] = a - handleHeight;
+                                                    values[1] = a;
+                                                }
+                                            break;
+                                        }
+                        
+                                    //fill in data
+                                        values[handle] = a;
+                        
+                                    //adjust y positions
+                                        __globals.utility.element.setTransform_XYonly(handles[0],0,values[0]*height*(1-handleHeight));
+                                        __globals.utility.element.setTransform_XYonly(handles[1],0,values[1]*height*(1-handleHeight));
+                        
+                                    //adjust span height (with a little bit of padding so the span is under the handles a little)
+                                        __globals.utility.element.setTransform_XYonly(span, width*((1-spanWidth)/2), height*(handleHeight + values[0] - handleHeight*(values[0] + 0.1)));
+                                        span.height.baseVal.value = height*( values[1] - values[0] + handleHeight*(values[0] - values[1] - 1 + 0.2) );
+                        
+                                    if(update && object.onchange){object.onchange(values);}
+                                }
+                                function pan(a){
+                                    var diff = values[1] - values[0];
+                        
+                                    var newPositions = [ a, a+diff ];
+                                    if(newPositions[0] <= 0){
+                                        newPositions[1] = newPositions[1] - newPositions[0];
+                                        newPositions[0] = 0;
+                                    }
+                                    else if(newPositions[1] >= 1){
+                                        newPositions[0] = newPositions[0] - (newPositions[1]-1);
+                                        newPositions[1] = 1;
+                                    }
+                        
+                                    set( newPositions[0],0 );
+                                    set( newPositions[1],1 );
+                                }
+                        
+                            //methods
+                                object.get = function(){return values;};
+                                object.set = function(values,update){
+                                    if(grappled){return;}
+                                    if(values.start){set(values.start,0,update);}
+                                    if(values.end){set(values.end,1,update);}
+                                };
+                                object.smoothSet = function(targets,time,curve,update){
+                                    if(grappled){return;}
+                        
+                                    var startTime = __globals.audio.context.currentTime;
+                                    var startValues = JSON.parse(JSON.stringify(values));
+                                    var pointFunc = __globals.utility.math.curvePoint.linear;
+                        
+                                    switch(curve){
+                                        case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
+                                        case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
+                                        case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
+                                        case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
+                                        case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
+                                    }
+                        
+                                    object.smoothSet.interval = setInterval(function(){
+                                        var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
+                                        if(targets.start != undefined){set( pointFunc(progress, startValues[0], targets.start),0, update );}
+                                        if(targets.end != undefined){set( pointFunc(progress, startValues[1], targets.end),1, update );}
+                                        if( (__globals.audio.context.currentTime-startTime) >= time ){
+                                            if(object.onrelease){object.onrelease(values);}
+                                            clearInterval(object.smoothSet.interval);
+                                        }
+                                    }, 1000/30); 
+                                };
+                                
+                            //interaction
+                                //background click
+                                    backingAndSlot.onclick = function(event){
+                                        if(grappled){return;}
+                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                        var y = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
+                                        y = y + 0.5*handleHeight*((2*y)-1);
+                        
+                                        Math.abs(values[0]-y) < Math.abs(values[1]-y) ? set(y,0) : set(y,1);
+                                    };
+                        
+                                //double-click reset
+                                    object.ondblclick = function(){
+                                        if(resetValues[0]<0 || resetValues[1]<0){return;}
+                                        if(grappled){return;}
+                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                        set(resetValues[0],0);
+                                        set(resetValues[1],1);
+                                        object.onrelease(values);
+                                    };
+                        
+                                //span panning - expand/shrink
+                                    object.onwheel = function(){
+                                        if(grappled){return;}
+                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                        var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                                        var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                                        var val = move/(10*globalScale);
+                        
+                                        set(values[0]-val,0);
+                                        set(values[1]+val,1);
+                                    };
+                        
+                                //span panning - drag
+                                    span.onmousedown = function(event){
+                                        grappled = true;
+                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                        var initialValue = values[0];
+                                        var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                        __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                                        __globals.svgElement.onmousemove = function(event){
+                                            var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                            pan( initialValue+(livePosition.y-initialPosition.y) )
+                                            object.onchange(values);
+                                        };
+                                        __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
+                                        __globals.svgElement.onmouseup = function(event){
+                                            var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                            pan( initialValue+(livePosition.y-initialPosition.y) )
+                                            object.onrelease(values);
+                        
+                                            __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                                            __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+                                            grappled = false;
+                                        };
+                                        __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
+                                        __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                    };
+                        
+                                //handle movement
+                                    for(var a = 0; a < handles.length; a++){
+                                        handles[a].onmousedown = (function(a){
+                                            return function(event){
+                                                grappled = true;
+                                                if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                                    
+                                                var initialValue = values[a];
+                                                var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                                
+                                                __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                                                __globals.svgElement.onmousemove = function(event){
+                                                    var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                                    set( initialValue+(livePosition.y-initialPosition.y),a );
+                                                    object.onchange(values);
+                                                };
+                                                __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
+                                                __globals.svgElement.onmouseup = function(event){
+                                                    var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                                    set( initialValue+(livePosition.y-initialPosition.y),a );
+                                                    object.onrelease(values);
+                                    
+                                                    __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                                                    __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+                                                    grappled = false;
+                                                };
+                                                __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
+                                                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                            }
+                                        })(a);
+                                    }
+                              
+                            //callbacks
+                                object.onchange = function(){};
+                                object.onrelease = function(){};  
+                        
+                            //setup
+                                set(0,0);
+                                set(1,1);
+                        
+                            return object;
+                        };
                         this.rastorgrid = function(
                             id='rastorgrid', 
                             x, y, width, height,
@@ -6206,244 +7089,6 @@
                                 object.onchange = function(slide,value){};
                                 object.onrelease = function(slide,value){};
                             
-                            return object;
-                        };
-                        this.rangeslide = function(
-                            id='rangeslide', 
-                            x, y, width, height, angle=0,
-                            handleHeight=0.025, spanWidth=0.75, values=[0,1], resetValues=[-1,-1],
-                            handleStyle='fill:rgba(200,200,200,1)',
-                            backingStyle='fill:rgba(150,150,150,1)',
-                            slotStyle='fill:rgba(50,50,50,1)',
-                            invisibleHandleStyle='fill:rgba(0,0,0,0);',
-                            spanStyle='fill:rgba(200,0,200,0.5);',
-                        ){
-                            var grappled = false;
-                        
-                            //elements
-                                //main
-                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
-                                //backing and slot group
-                                    var backingAndSlot = __globals.utility.experimental.elementMaker('g','backingAndSlotGroup',{});
-                                    object.appendChild(backingAndSlot);
-                                    //backing
-                                        var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
-                                        backingAndSlot.appendChild(backing);
-                                    //slot
-                                        var slot = __globals.utility.experimental.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
-                                        backingAndSlot.appendChild(slot);
-                        
-                                //span
-                                    var span = __globals.utility.experimental.elementMaker('rect','span',{
-                                        x:width*((1-spanWidth)/2), y:height*handleHeight,
-                                        width:width*spanWidth, height:height - 2*height*handleHeight, 
-                                        style:spanStyle
-                                    });
-                                    object.appendChild(span);
-                        
-                                //handles
-                                    var handleCount = 2;
-                                    var handles = [];
-                                    for(var a = 0; a < handleCount; a++){
-                                        //grouping
-                                            handles[a] = __globals.utility.experimental.elementMaker('g','handle_'+a,{})
-                                            object.appendChild(handles[a]);
-                                        //handle
-                                            var handle = __globals.utility.experimental.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
-                                            handles[a].appendChild(handle);
-                                        //invisible handle
-                                            var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                            var invisibleHandle = __globals.utility.experimental.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
-                                            handles[a].appendChild(invisibleHandle);
-                                    }
-                        
-                            //graphical adjust
-                                function set(a,handle,update=true){
-                                    a = (a>1 ? 1 : a);
-                                    a = (a<0 ? 0 : a);
-                        
-                                    //make sure the handle order is maintained
-                                    //if necessary, one handle should push the other, though not past the ends
-                                        switch(handle){
-                                            default: console.error('unknown handle to adjust'); break;
-                                            case 0:
-                                                if((values[1] - a + handleHeight*(a - values[1] - 1)) < 0){
-                                                    if( (a + handleHeight) > 1 ){ a = 1 - handleHeight; }
-                                                    values[0] = a;
-                                                    values[1] = a + handleHeight;
-                                                }
-                                            break;
-                                            case 1: 
-                                                if((a - values[0] + handleHeight*(values[0] - a - 1)) < 0){
-                                                    if( (a - handleHeight) < 0 ){ a = handleHeight; }
-                                                    values[0] = a - handleHeight;
-                                                    values[1] = a;
-                                                }
-                                            break;
-                                        }
-                        
-                                    //fill in data
-                                        values[handle] = a;
-                        
-                                    //adjust y positions
-                                        __globals.utility.element.setTransform_XYonly(handles[0],0,values[0]*height*(1-handleHeight));
-                                        __globals.utility.element.setTransform_XYonly(handles[1],0,values[1]*height*(1-handleHeight));
-                        
-                                    //adjust span height (with a little bit of padding so the span is under the handles a little)
-                                        __globals.utility.element.setTransform_XYonly(span, width*((1-spanWidth)/2), height*(handleHeight + values[0] - handleHeight*(values[0] + 0.1)));
-                                        span.height.baseVal.value = height*( values[1] - values[0] + handleHeight*(values[0] - values[1] - 1 + 0.2) );
-                        
-                                    if(update && object.onchange){object.onchange(values);}
-                                }
-                                function pan(a){
-                                    var diff = values[1] - values[0];
-                        
-                                    var newPositions = [ a, a+diff ];
-                                    if(newPositions[0] <= 0){
-                                        newPositions[1] = newPositions[1] - newPositions[0];
-                                        newPositions[0] = 0;
-                                    }
-                                    else if(newPositions[1] >= 1){
-                                        newPositions[0] = newPositions[0] - (newPositions[1]-1);
-                                        newPositions[1] = 1;
-                                    }
-                        
-                                    set( newPositions[0],0 );
-                                    set( newPositions[1],1 );
-                                }
-                        
-                            //methods
-                                object.get = function(){return values;};
-                                object.set = function(values,update){
-                                    if(grappled){return;}
-                                    if(values.start){set(values.start,0,update);}
-                                    if(values.end){set(values.end,1,update);}
-                                };
-                                object.smoothSet = function(targets,time,curve,update){
-                                    if(grappled){return;}
-                        
-                                    var startTime = __globals.audio.context.currentTime;
-                                    var startValues = JSON.parse(JSON.stringify(values));
-                                    var pointFunc = __globals.utility.math.curvePoint.linear;
-                        
-                                    switch(curve){
-                                        case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
-                                        case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
-                                        case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
-                                        case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
-                                        case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
-                                    }
-                        
-                                    object.smoothSet.interval = setInterval(function(){
-                                        var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
-                                        if(targets.start != undefined){set( pointFunc(progress, startValues[0], targets.start),0, update );}
-                                        if(targets.end != undefined){set( pointFunc(progress, startValues[1], targets.end),1, update );}
-                                        if( (__globals.audio.context.currentTime-startTime) >= time ){
-                                            if(object.onrelease){object.onrelease(values);}
-                                            clearInterval(object.smoothSet.interval);
-                                        }
-                                    }, 1000/30); 
-                                };
-                                
-                            //interaction
-                                //background click
-                                    backingAndSlot.onclick = function(event){
-                                        if(grappled){return;}
-                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                        var y = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
-                                        y = y + 0.5*handleHeight*((2*y)-1);
-                        
-                                        Math.abs(values[0]-y) < Math.abs(values[1]-y) ? set(y,0) : set(y,1);
-                                    };
-                        
-                                //double-click reset
-                                    object.ondblclick = function(){
-                                        if(resetValues[0]<0 || resetValues[1]<0){return;}
-                                        if(grappled){return;}
-                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                        set(resetValues[0],0);
-                                        set(resetValues[1],1);
-                                        object.onrelease(values);
-                                    };
-                        
-                                //span panning - expand/shrink
-                                    object.onwheel = function(){
-                                        if(grappled){return;}
-                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                        var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                                        var globalScale = __globals.utility.workspace.getGlobalScale(object);
-                                        var val = move/(10*globalScale);
-                        
-                                        set(values[0]-val,0);
-                                        set(values[1]+val,1);
-                                    };
-                        
-                                //span panning - drag
-                                    span.onmousedown = function(event){
-                                        grappled = true;
-                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                        var initialValue = values[0];
-                                        var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                        __globals.svgElement.onmousemove = function(event){
-                                            var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                            pan( initialValue+(livePosition.y-initialPosition.y) )
-                                            object.onchange(values);
-                                        };
-                                        __globals.svgElement.onmouseup = function(event){
-                                            var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                            pan( initialValue+(livePosition.y-initialPosition.y) )
-                                            object.onrelease(values);
-                        
-                                            __globals.svgElement.onmousemove = undefined;
-                                            __globals.svgElement.onmouseleave = undefined;
-                                            __globals.svgElement.onmouseup = undefined;
-                                            grappled = false;
-                                        };
-                                        __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                                    };
-                        
-                                //handle movement
-                                    for(var a = 0; a < handles.length; a++){
-                                        handles[a].onmousedown = (function(a){
-                                            return function(event){
-                                                grappled = true;
-                                                if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                                    
-                                                var initialValue = values[a];
-                                                var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                                
-                                                __globals.svgElement.onmousemove = function(event){
-                                                    var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                                    set( initialValue+(livePosition.y-initialPosition.y),a );
-                                                    object.onchange(values);
-                                                };
-                                                __globals.svgElement.onmouseup = function(event){
-                                                    var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                                    set( initialValue+(livePosition.y-initialPosition.y),a );
-                                                    object.onrelease(values);
-                                    
-                                                    __globals.svgElement.onmousemove = undefined;
-                                                    __globals.svgElement.onmouseleave = undefined;
-                                                    __globals.svgElement.onmouseup = undefined;
-                                                    grappled = false;
-                                                };
-                                                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                                            }
-                                        })(a);
-                                    }
-                              
-                            //callbacks
-                                object.onchange = function(){};
-                                object.onrelease = function(){};  
-                        
-                            //setup
-                                set(0,0);
-                                set(1,1);
-                        
                             return object;
                         };
                     };
@@ -7341,6 +7986,67 @@
                 
                     return obj;
                 };
+                this.data_duplicator = function(x,y){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+                    };
+                    var design = {
+                        type:'data_duplicator',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                            style:'fill:rgba(200,200,200,0);'
+                        },
+                        elements:[
+                            {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
+                            {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
+                            {type:'connectionNode_data', name:'input', data:{ 
+                                x:45, y:5, width:20, height:20,
+                                receive:function(address,data){
+                                    obj.io.output_1.send(address,data);
+                                    obj.io.output_2.send(address,data);
+                                }
+                            }},
+                
+                            {type:'path', name:'backing', data:{
+                                path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                                style:style.background
+                            }},
+                
+                            {type:'path', name:'upperArrow', data:{
+                                path:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}],
+                                style:style.markings,
+                            }},
+                            {type:'path', name:'lowerArrow', data:{
+                                path:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}],
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'topHorizontal', data:{
+                                x:5, y:15, width:45, height:2, 
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'vertical', data:{
+                                x:27.5, y:15, width:2, height:25.5, 
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'bottomHorizontal', data:{
+                                x:5, y:40, width:24.5, height:2, 
+                                style:style.markings,
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.data_duplicator,design);
+                    
+                    return obj;
+                
+                };
+                //Operation Note:
+                //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
+                //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
+                //  then the 2nd port
                 this.distortionUnit = function(x,y){
                     var style = {
                         background: 'fill:rgba(200,200,200,1); stroke:none;',
@@ -8446,6 +9152,181 @@
                     return obj;
                 };
 
+                this.pianoroll = function(x,y,debug=false){
+                    var height = 37;
+                    var width = 128;
+                    var topNoteNumber = 108;
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        rangeslide:{
+                            handle:'fill:rgba(240,240,240,1)',
+                            backing:'fill:rgba(150,150,150,1)',
+                            slot:'fill:rgba(50,50,50,1)',
+                            invisibleHandle:'fill:rgba(0,0,0,0);',
+                            span:'fill:rgba(220,220,220,1)',
+                        },
+                        button:{
+                            up:'fill:rgba(220,220,220,1)',
+                            hover:'fill:rgba(240,240,240,1)',
+                            down:'fill:rgba(180,180,180,1)',
+                            glow:'fill:rgba(220,200,220,1)',
+                        },
+                        keys:{
+                            white:{
+                                off:'fill:rgba(250,250,250,1)',
+                                press:'fill:rgba(230,230,230,1)',
+                                glow:'fill:rgba(220,200,220,1)',
+                                pressAndGlow:'fill:rgba(200,150,200,1)',
+                            },
+                            black:{
+                                off:'fill:rgba(50,50,50,1)',
+                                press:'fill:rgba(100,100,100,1)',
+                                glow:'fill:rgba(220,200,220,1)',
+                                pressAndGlow:'fill:rgba(200,150,200,1)',
+                            }
+                        }
+                    };
+                    var design = {
+                        type: 'pianoroll',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[ 
+                                {x:0,y:0}, 
+                                {x:825,y:0}, 
+                                {x:825,y:210}, 
+                                {x:0,y:210}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'rangeslide',name:'loopSelect', data:{
+                                x:35, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/width, spanWidth:1,
+                                style:{
+                                    handle: style.rangeslide.handle,
+                                    backing: style.rangeslide.backing,
+                                    slot: style.rangeslide.slot,
+                                    invisibleHandle: style.rangeslide.invisibleHandle,
+                                    span: style.rangeslide.span,
+                                },
+                                onchange:function(values){
+                                    var a = Math.round(values[0]*width);
+                                    var b = Math.round(values[1]*width);
+                                    if(b == 0){b = 1;}
+                                    pianoroll.loopPeriod({start:a,end:b});
+                                },
+                            }},            
+                            {type:'button_rect', name:'restart', data:{
+                                x:10, y:190, width:25, height:10,
+                                style:{
+                                    up:style.button.up,
+                                    hover:style.button.hover,
+                                    down:style.button.down,
+                                    glow:style.button.glow,
+                                },
+                                onclick:function(){
+                                    pianoroll.position(0);
+                                },
+                            }},
+                            {type:'connectionNode_data', name:'midiout', data:{ 
+                                x: -5, y: 5, width: 5, height: 20,
+                            }},
+                            {type:'connectionNode_data', name:'pulse', data:{ 
+                                x: 825, y: 5, width: 5, height: 20,
+                                receive:function(){pianoroll.progress();}
+                            }},
+                        ]
+                    };
+                    //dynamic design
+                        var mux_1 = 180/height;
+                        function keyDown(keyID){
+                            obj.io.midiout.send( 'midinumber', { num: topNoteNumber-parseInt(keyID), velocity:1 } );
+                        }
+                        function keyUp(keyID){
+                            obj.io.midiout.send( 'midinumber', { num: topNoteNumber-parseInt(keyID), velocity:0 } );
+                        }
+                
+                        design.elements.push(
+                            {type:'key_rect', name:0, data:{
+                                x:10, y:10, width:25, height:mux_1,
+                                style:style.keys.white,
+                                keydown:function(){keyDown(this.id);},
+                                keyup:function(){keyUp(this.id);},
+                            }}
+                        );
+                        //white keys
+                            for(var a = 1; a < height; a++){
+                                var temp = [
+                                    {y:10+mux_1*a,       height:1.5*mux_1 },
+                                    null,
+                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
+                                    null,
+                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
+                                    null,
+                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
+                                    {y:10+mux_1*a,       height:1.5*mux_1 },
+                                    null,
+                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
+                                    null,
+                                    {y:10+mux_1*(a-0.5), height:1.5*mux_1 },
+                                ][(a-1)%12];
+                                if(temp == null){continue;}
+                                design.elements.push(
+                                    {type:'key_rect', name:a, data:{
+                                        x:10, y:temp.y, width:25, height:temp.height,
+                                        style:style.keys.white,
+                                        keydown:function(){keyDown(this.id);},
+                                        keyup:function(){keyUp(this.id);},
+                                    }}
+                                );
+                            }
+                        //black keys
+                            for(var a = 1; a < height; a++){
+                                var temp = [ false, true, false, true, false, true, false, false, true, false, true, false ];
+                                if(!temp[(a-1)%12]){continue;}
+                                design.elements.push(
+                                    {type:'key_rect', name:a, data:{
+                                        x:10, y:10+mux_1*a, width:15, height:mux_1,
+                                        style:style.keys.black,
+                                        keydown:function(){keyDown(this.id);},
+                                        keyup:function(){keyUp(this.id);},
+                                    }}
+                                );
+                            }
+                            
+                
+                
+                    //internal functions
+                        function roll2midi(event){
+                            return {
+                                num: topNoteNumber - event.line,
+                                velocity:event.strength,
+                            };
+                        }
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.pianoroll,design);
+                
+                        //pianoroll
+                            var pianoroll = parts.elements.control.pianoroll('mainroll', 35, 10, 780, 180, 0, width, height) 
+                            obj.appendChild( pianoroll );
+                            pianoroll.loopPeriod({start:0,end:width});
+                            pianoroll.event = function(events){
+                                for(var a = 0; a < events.length; a++){ 
+                                    obj.io.midiout.send( 'midinumber', roll2midi(events[a]) ); 
+                                }
+                            };
+                
+                    //interface
+                        obj.i = {
+                            addNotes:function(noteData){pianoroll.addNotes(noteData);},
+                            loopSelect:function(data={start:0,end:1}){design.rangeslide.loopSelect.set(data);},
+                            restart:function(){design.button_rect.restart.click();},
+                            dumpNotes:function(){return pianoroll.allNotes();},
+                        };
+                
+                    return obj;
+                };
                 this.player = function(x,y,debug=false){
                     var style = {
                         background:'fill:rgba(200,200,200,1)',
@@ -8582,6 +9463,104 @@
 
                 this.pulseGenerator = function(x,y,debug=false){
                     var maxTempo = 240;
+                
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
+                
+                        dial:{
+                            handle: 'fill:rgba(220,220,220,1)',
+                            slot: 'fill:rgba(50,50,50,1)',
+                            needle: 'fill:rgba(250,150,150,1)',
+                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+                        }
+                    };
+                    var design = {
+                        type: 'pulseGenerator',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[
+                                {x:0,y:10},{x:10,y:0},
+                                {x:100,y:0},{x:115,y:10},
+                                {x:115,y:30},{x:100,y:40},
+                                {x:10,y:40},{x:0,y:30}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_data', name:'out', data:{
+                                x: -5, y: 11.25, width: 5, height: 17.5,
+                            }},
+                            {type:'connectionNode_data', name:'sync', data:{
+                                x: 115, y: 11.25, width: 5, height: 17.5,
+                                receive:function(){design.button_rect.sync.click();},
+                            }},
+                            {type:'button_rect', name:'sync', data:{
+                                x:102.5, y: 11.25, width:10, height: 17.5,
+                                style:{
+                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                                }, 
+                                onclick:function(){updateTempo(tempo)},
+                            }},
+                            {type:'dial_continuous',name:'tempo',data:{
+                                x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){updateTempo(Math.round(value*maxTempo));}
+                            }},
+                            {type:'readout_sixteenSegmentDisplay',name:'readout',data:{
+                                x:40, y:10, width:60, height:20, count:6,
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.pulseGenerator,design);
+                
+                    //import/export
+                        obj.exportData = function(){
+                            return design.dial_continuous.tempo.get();
+                        };
+                        obj.importData = function(data){
+                            design.dial_continuous.tempo.set(data);
+                        };
+                
+                    //internal functions
+                        var interval = null;
+                        var tempo = 120;
+                        function updateTempo(newTempo){
+                            //update readout
+                                design.readout_sixteenSegmentDisplay.readout.text(
+                                    __globals.utility.math.padString(newTempo,3,' ')+'bpm'
+                                );
+                                design.readout_sixteenSegmentDisplay.readout.print();
+                
+                            //update interval
+                                if(interval){ clearInterval(interval); }
+                                if(newTempo > 0){
+                                    interval = setInterval(function(){
+                                        obj.io.out.send('pulse');
+                                    },1000*(60/newTempo));
+                                }
+                
+                            obj.io.out.send('pulse');
+                            tempo = newTempo;
+                        }
+                
+                    //interface
+                        obj.i = {
+                            setTempo:function(value){
+                                design.dial_continuous.tempo.set(value);
+                            },
+                        };
+                
+                    //setup
+                        design.dial_continuous.tempo.set(0.5);
+                
+                    return obj;
+                };
+                this.pulseGenerator_hyper = function(x,y,maxTempo=240,debug=false){
                 
                     var style = {
                         background:'fill:rgba(200,200,200,1)',
@@ -8963,6 +9942,12 @@
                             function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
                             function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
                 
+                    //interface
+                        obj.i = {
+                            gain:function(a){design.dial_continuous.outGain.set(a);},
+                            wetdry:function(a){design.dial_continuous.wetdry.set(a);},
+                        };
+                
                     //setup
                         design.dial_continuous.outGain.set(1/2);
                         design.dial_continuous.wetdry.set(1/2);
@@ -9017,165 +10002,6 @@
                 
                     return obj;
                 };
-                this.pulseGenerator_hyper = function(x,y,maxTempo=240,debug=false){
-                
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
-                
-                        dial:{
-                            handle: 'fill:rgba(220,220,220,1)',
-                            slot: 'fill:rgba(50,50,50,1)',
-                            needle: 'fill:rgba(250,150,150,1)',
-                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-                        }
-                    };
-                    var design = {
-                        type: 'pulseGenerator',
-                        x: x, y: y,
-                        base: {
-                            type:'path',
-                            points:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_data', name:'out', data:{
-                                x: -5, y: 11.25, width: 5, height: 17.5,
-                            }},
-                            {type:'connectionNode_data', name:'sync', data:{
-                                x: 115, y: 11.25, width: 5, height: 17.5,
-                                receive:function(){design.button_rect.sync.click();},
-                            }},
-                            {type:'button_rect', name:'sync', data:{
-                                x:102.5, y: 11.25, width:10, height: 17.5,
-                                style:{
-                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
-                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
-                                }, 
-                                onclick:function(){updateTempo(tempo)},
-                            }},
-                            {type:'dial_continuous',name:'tempo',data:{
-                                x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){updateTempo(Math.round(value*maxTempo));}
-                            }},
-                            {type:'readout_sixteenSegmentDisplay',name:'readout',data:{
-                                x:40, y:10, width:60, height:20, count:6,
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.pulseGenerator,design);
-                
-                    //import/export
-                        obj.exportData = function(){
-                            return design.dial_continuous.tempo.get();
-                        };
-                        obj.importData = function(data){
-                            design.dial_continuous.tempo.set(data);
-                        };
-                
-                    //internal functions
-                        var interval = null;
-                        var tempo = 120;
-                        function updateTempo(newTempo){
-                            //update readout
-                                design.readout_sixteenSegmentDisplay.readout.text(
-                                    __globals.utility.math.padString(newTempo,3,' ')+'bpm'
-                                );
-                                design.readout_sixteenSegmentDisplay.readout.print();
-                
-                            //update interval
-                                if(interval){ clearInterval(interval); }
-                                if(newTempo > 0){
-                                    interval = setInterval(function(){
-                                        obj.io.out.send('pulse');
-                                    },1000*(60/newTempo));
-                                }
-                
-                            obj.io.out.send('pulse');
-                            tempo = newTempo;
-                        }
-                
-                    //interface
-                        obj.i = {
-                            setTempo:function(value){
-                                design.dial_continuous.tempo.set(value);
-                            },
-                        };
-                
-                    //setup
-                        design.dial_continuous.tempo.set(0.5);
-                
-                    return obj;
-                };
-                this.data_duplicator = function(x,y){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
-                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
-                    };
-                    var design = {
-                        type:'data_duplicator',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                            style:'fill:rgba(200,200,200,0);'
-                        },
-                        elements:[
-                            {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
-                            {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
-                            {type:'connectionNode_data', name:'input', data:{ 
-                                x:45, y:5, width:20, height:20,
-                                receive:function(address,data){
-                                    obj.io.output_1.send(address,data);
-                                    obj.io.output_2.send(address,data);
-                                }
-                            }},
-                
-                            {type:'path', name:'backing', data:{
-                                path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                                style:style.background
-                            }},
-                
-                            {type:'path', name:'upperArrow', data:{
-                                path:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}],
-                                style:style.markings,
-                            }},
-                            {type:'path', name:'lowerArrow', data:{
-                                path:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}],
-                                style:style.markings,
-                            }},
-                            {type:'rect', name:'topHorizontal', data:{
-                                x:5, y:15, width:45, height:2, 
-                                style:style.markings,
-                            }},
-                            {type:'rect', name:'vertical', data:{
-                                x:27.5, y:15, width:2, height:25.5, 
-                                style:style.markings,
-                            }},
-                            {type:'rect', name:'bottomHorizontal', data:{
-                                x:5, y:40, width:24.5, height:2, 
-                                style:style.markings,
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.data_duplicator,design);
-                    
-                    return obj;
-                
-                };
-                //Operation Note:
-                //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
-                //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
-                //  then the 2nd port
             };
             __globals.audio.context.resume().then(function(){
                 __globals.panes.menu.innerHTML = '';

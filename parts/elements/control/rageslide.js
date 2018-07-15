@@ -178,21 +178,24 @@ this.rangeslide = function(
 
                 var initialValue = values[0];
                 var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
                 __globals.svgElement.onmousemove = function(event){
                     var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
                     pan( initialValue+(livePosition.y-initialPosition.y) )
                     object.onchange(values);
                 };
+                __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
                 __globals.svgElement.onmouseup = function(event){
                     var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
                     pan( initialValue+(livePosition.y-initialPosition.y) )
                     object.onrelease(values);
 
-                    __globals.svgElement.onmousemove = undefined;
-                    __globals.svgElement.onmouseleave = undefined;
-                    __globals.svgElement.onmouseup = undefined;
+                    __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                    __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
                     grappled = false;
                 };
+                __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
                 __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
             };
 
@@ -206,21 +209,24 @@ this.rangeslide = function(
                         var initialValue = values[a];
                         var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
                         
+                        __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
                         __globals.svgElement.onmousemove = function(event){
                             var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
                             set( initialValue+(livePosition.y-initialPosition.y),a );
                             object.onchange(values);
                         };
+                        __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
                         __globals.svgElement.onmouseup = function(event){
                             var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
                             set( initialValue+(livePosition.y-initialPosition.y),a );
                             object.onrelease(values);
             
-                            __globals.svgElement.onmousemove = undefined;
-                            __globals.svgElement.onmouseleave = undefined;
-                            __globals.svgElement.onmouseup = undefined;
+                            __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                            __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
                             grappled = false;
                         };
+                        __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
                         __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
                     }
                 })(a);

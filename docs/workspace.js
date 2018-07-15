@@ -1651,10 +1651,10 @@
                     };
             
                     if( 
-                        (event[__globals.super.keys.ctrl]  && desiredKeys.control && ( desiredKeys.control=='all' || (Array.isArray(desiredKeys.control) && desiredKeys.control.includes(event.key)) )) ||
+                        (event.control  && desiredKeys.control && ( desiredKeys.control=='all' || (Array.isArray(desiredKeys.control) && desiredKeys.control.includes(event.key)) )) ||
                         (event.shiftKey && desiredKeys.shift   && ( desiredKeys.shift=='all'   || (Array.isArray(desiredKeys.shift)   && desiredKeys.shift.includes(event.key))   )) ||
                         (event.metaKey  && desiredKeys.meta    && ( desiredKeys.meta=='all'    || (Array.isArray(desiredKeys.meta)    && desiredKeys.meta.includes(event.key))    )) ||
-                        (event[__globals.super.keys.alt]   && desiredKeys.alt     && ( desiredKeys.alt=='all'     || (Array.isArray(desiredKeys.alt)     && desiredKeys.alt.includes(event.key))     )) ||
+                        (event.alt      && desiredKeys.alt     && ( desiredKeys.alt=='all'     || (Array.isArray(desiredKeys.alt)     && desiredKeys.alt.includes(event.key))     )) ||
                         (                  desiredKeys.none    && ( desiredKeys.none=='all'    || (Array.isArray(desiredKeys.none)    && desiredKeys.none.includes(event.key))    ))
                     ){
                         connectionObject[type](event.key,modifiers);
@@ -5294,1158 +5294,6 @@
                         
                             return object;
                         };
-                        this.dial_continuous = function(
-                            id='dial_continuous',
-                            x, y, r,
-                            startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            handleStyle = 'fill:rgba(200,200,200,1)',
-                            slotStyle = 'fill:rgba(50,50,50,1)',
-                            needleStyle = 'fill:rgba(250,100,100,1)',
-                            arcDistance=1.35,
-                            outerArcStyle='fill:none; stroke:none;',
-                        ){
-                            // elements
-                                var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
-                                    object._value = 0;
-                                    object._data = {
-                                        'mux':r*4
-                                    };
-                        
-                                //arc
-                                    var points = 5;
-                                    var pushDistance = 1.11;
-                                    var arcPath = [];
-                                    for(var a = 0; a < points; a++){
-                                        var temp = __globals.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
-                                        arcPath.push( temp );
-                                        var temp = __globals.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
-                                        arcPath.push( temp );
-                                    }
-                                    var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
-                                    arcPath.push( temp );
-                        
-                                    var outerArc = __globals.utility.experimental.elementMaker('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
-                                    object.appendChild(outerArc);
-                        
-                                //slot
-                                    var slot = __globals.utility.experimental.elementMaker('circle','slot',{r:r*1.1, style:slotStyle});
-                                        object.appendChild(slot);
-                        
-                                //handle
-                                    var handle = __globals.utility.experimental.elementMaker('circle','slot',{r:r, style:handleStyle});
-                                        object.appendChild(handle);
-                        
-                                //needle
-                                    var needleWidth = r/5;
-                                    var needleLength = r;
-                                    var needle = __globals.utility.experimental.elementMaker('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
-                                        needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
-                                        needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
-                                        object.appendChild(needle);
-                        
-                        
-                            //methods
-                                object.get = function(){ return this._value; };
-                                object.set = function(value, live=false, update=true){
-                                    value = (value>1 ? 1 : value);
-                                    value = (value<0 ? 0 : value);
-                        
-                                    this._value = value;
-                                    if(update&&this.onchange){try{this.onchange(value);}catch(err){console.error('Error with dial_continuous:onchange\n',err);}}
-                                    if(update&&!live&&this.onrelease){try{this.onrelease(value);}catch(err){console.error('Error with dial_continuous:onrelease\n',err);}}
-                                    this.children['needle'].rotation(startAngle + maxAngle*value);
-                                };object.set(0);
-                                object.smoothSet = function(target,time,curve,update=true){
-                                    var startTime = __globals.audio.context.currentTime;
-                                    var startValue = value;
-                                    var pointFunc = __globals.utility.math.curvePoint.linear;
-                        
-                                    switch(curve){
-                                        case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
-                                        case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
-                                        case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
-                                        case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
-                                        case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
-                                    }
-                        
-                                    object.smoothSet.interval = setInterval(function(){
-                                        var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
-                                        object.set( pointFunc(progress, startValue, target), true, update );
-                                        if( (__globals.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
-                                    }, 1000/30);  
-                                };
-                                // object.smoothSet = function(target,time,curve,update=true){
-                                //     var start = this.get();
-                                //     var mux = target-start;
-                                //     var stepsPerSecond = Math.round(Math.abs(mux)*100);
-                                //     var totalSteps = stepsPerSecond*time;
-                        
-                                //     var steps = [1];
-                                //     switch(curve){
-                                //         case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-                                //         case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-                                //         case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
-                                //         case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
-                                //         case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
-                                //         case 'instant': default: break;
-                                //     }
-                        
-                                //     if(steps.length == 0){return;}
-                        
-                                //     if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                                //     object.smoothSet.interval = setInterval(function(){
-                                //         object.set( (start+(steps.shift()*mux)),true,update );
-                                //         if(steps.length == 0){clearInterval(object.smoothSet.interval);}
-                                //     },1000/stepsPerSecond);
-                                // };
-                                
-                        
-                            //callback
-                                object.onchange = function(){};
-                                object.onrelease = function(){};
-                        
-                        
-                            //mouse interaction
-                                object.ondblclick = function(){ this.set(0.5); };
-                                object.onwheel = function(event){
-                                    var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                                    var globalScale = __globals.utility.workspace.getGlobalScale(object);
-                        
-                                    this.set( this.get() - move/(10*globalScale) );
-                                };
-                                object.onmousedown = function(event){
-                                    __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
-                                    __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
-                                    __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
-                        
-                                    __globals.svgElement.tempRef = this;
-                                    __globals.svgElement.tempRef._data.initialValue = this.get();
-                                    __globals.svgElement.tempRef._data.initialY = event.y;
-                                    __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
-                                    __globals.svgElement.onmousemove = function(event){
-                                        var mux = __globals.svgElement.tempRef._data.mux;
-                                        var value = __globals.svgElement.tempRef._data.initialValue;
-                                        var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
-                                        var divider = __globals.utility.workspace.getGlobalScale(object);
-                        
-                                        __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
-                                    };
-                                    __globals.svgElement.onmouseup = function(){
-                                        this.tempRef.set(this.tempRef.get(),false);
-                                        delete this.tempRef;
-                        
-                                        __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
-                                        __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
-                                        __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
-                        
-                                        __globals.svgElement.onmousemove_old = null;
-                                        __globals.svgElement.onmouseleave_old = null;
-                                        __globals.svgElement.onmouseup_old = null;
-                                    };
-                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                                    __globals.svgElement.onmousemove(event);
-                                };
-                        
-                        
-                            return object;
-                        };
-                        this.dial_discrete = function(
-                            id='dial_discrete',
-                            x, y, r,
-                            optionCount=5,
-                            startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            handleStyle = 'fill:rgba(200,200,200,1)',
-                            slotStyle = 'fill:rgba(50,50,50,1)',
-                            needleStyle = 'fill:rgba(250,100,100,1)',
-                            arcDistance=1.35,
-                            outerArcStyle='fill:none; stroke:none;',
-                        ){
-                            // elements
-                            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
-                                object._value = 0;
-                                object._selection = 0;
-                                object._data = { 
-                                    'optionCount':optionCount,
-                                    'mux':r*4
-                                };
-                        
-                                //arc
-                                    var points = 5;
-                                    var pushDistance = 1.11;
-                                    var arcPath = [];
-                                    for(var a = 0; a < points; a++){
-                                        var temp = __globals.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
-                                        arcPath.push( temp );
-                                        var temp = __globals.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
-                                        arcPath.push( temp );
-                                    }
-                                    var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
-                                    arcPath.push( temp );
-                                    var outerArc = __globals.utility.experimental.elementMaker('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
-                                    object.appendChild(outerArc);
-                        
-                                //slot
-                                    var slot = __globals.utility.experimental.elementMaker('circle','slot',{r:r*1.1, style:slotStyle});
-                                        object.appendChild(slot);
-                        
-                                //handle
-                                    var handle = __globals.utility.experimental.elementMaker('circle','slot',{r:r, style:handleStyle});
-                                        object.appendChild(handle);
-                        
-                                //needle
-                                    var needleWidth = r/5;
-                                    var needleLength = r;
-                                    var needle = __globals.utility.experimental.elementMaker('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
-                                        needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
-                                        needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
-                                        object.appendChild(needle);
-                        
-                        
-                            //methods
-                                object.select = function(a=null, live=true, update=true){
-                                    if(a==null){return this._selection;}
-                        
-                                    a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
-                                    a = (a<0 ? 0 : a);
-                        
-                                    if(this._selection == a){/*nothings changed*/return;}
-                        
-                                    this._selection = a;
-                                    this._set( a/(this._data.optionCount-1) );
-                                    if(update&&this.onchange){ this.onchange(a); }
-                                    if(update&&!live&&this.onrelease){ this.onrelease(value); }
-                                };
-                                object._get = function(){ return this._value; };
-                                object._set = function(value){
-                                    value = (value>1 ? 1 : value);
-                                    value = (value<0 ? 0 : value);
-                        
-                                    this._value = value;
-                                    this.children['needle'].rotation(startAngle + maxAngle*value);
-                                };object._set(0);
-                          
-                        
-                            //callback
-                                object.onchange = function(){};
-                                object.onrelease = function(){};
-                        
-                            
-                            //mouse interaction
-                                object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
-                                object.onwheel = function(event){
-                                    var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                                    var globalScale = __globals.utility.workspace.getGlobalScale(object);
-                        
-                                    if(!object.onwheel.acc){object.onwheel.acc=0;}
-                                    object.onwheel.acc += move/globalScale;
-                                    if( Math.abs(object.onwheel.acc) >= 1 ){
-                                        this.select( this.select()-1*Math.sign(object.onwheel.acc) );
-                                        object.onwheel.acc = 0;
-                                    }
-                                };
-                                object.onmousedown = function(event){
-                                    __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
-                                    __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
-                                    __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
-                        
-                                    __globals.svgElement.tempRef = this;
-                                    __globals.svgElement.tempRef._data.initialValue = this._get();
-                                    __globals.svgElement.tempRef._data.initialY = event.y;
-                                    __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
-                                    __globals.svgElement.onmousemove = function(event){
-                                        var mux = __globals.svgElement.tempRef._data.mux;
-                                        var value = __globals.svgElement.tempRef._data.initialValue;
-                                        var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
-                                        var divider = __globals.utility.workspace.getGlobalScale(object);
-                        
-                                        __globals.svgElement.tempRef.select(
-                                            Math.round(
-                                                (__globals.svgElement.tempRef._data.optionCount-1)*(value - numerator/(divider*mux))
-                                            ) 
-                                        );
-                                    };
-                                    __globals.svgElement.onmouseup = function(){
-                                        this.tempRef.select(this.tempRef.select(),false);
-                                        this.tempRef = null;
-                                        
-                                        __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
-                                        __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
-                                        __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
-                        
-                                        __globals.svgElement.onmousemove_old = null;
-                                        __globals.svgElement.onmouseleave_old = null;
-                                        __globals.svgElement.onmouseup_old = null;
-                                    };
-                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                                    __globals.svgElement.onmousemove(event);
-                                };
-                                
-                        
-                          return object;
-                        };
-                        this.grapher_waveWorkspace = function(
-                            id='grapher_waveWorkspace',
-                            x, y, width, height, angle=0, graphType='Canvas', selectNeedle=true, selectionArea=true,
-                            foregroundStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
-                            foregroundTextStyles=['fill:rgba(0,255,255,1); font-size:3; font-family:Helvetica;'],
-                            middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.1; stroke-linecap:round;',
-                            middlegroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
-                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                            backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                            backingStyle='fill:rgba(50,50,50,1)',
-                        ){
-                            var needleWidth = 1/4;
-                        
-                            //elements
-                                //main
-                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
-                                //main graph
-                                    var graph = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
-                                        x:0, y:0, width:width, height:height,
-                                        style:{
-                                            foreground:middlegroundStyle, foregroundText:middlegroundTextStyle, 
-                                            background:backgroundStyle, backgroundText:backgroundTextStyle, 
-                                            backing:backingStyle
-                                        }
-                                    });
-                                    
-                                    object.append(graph);
-                                //needle overlay
-                                    var overlay = __globals.utility.experimental.elementMaker('needleOverlay', 'overlay', {
-                                        x:0, y:0, width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
-                                        needleStyles:foregroundStyles,
-                                    });
-                                    object.append(overlay);
-                        
-                            //controls
-                                object.select = overlay.select;
-                                object.area = overlay.area;
-                                object.draw = graph.draw;
-                                object.foregroundLineThickness = graph.foregroundLineThickness;
-                                object.drawBackground = graph.drawBackground;
-                                object.area = overlay.area;
-                                object._test = graph._test;
-                                object.genericNeedle = overlay.genericNeedle;
-                        
-                            //callbacks
-                                object.onchange = function(needle,value){};
-                                overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
-                                object.onrelease = function(needle,value){};
-                                overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
-                                object.selectionAreaToggle = function(toggle){};
-                                overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
-                        
-                            //setup
-                                object.drawBackground();
-                        
-                            return object;
-                        };
-                        this.key_rect = function(
-                            id='key_rect',
-                            x, y, width, height, angle=0,
-                            style_off = 'fill:rgba(200,200,200,1)',
-                            style_press = 'fill:rgba(180,180,180,1)',
-                            style_glow = 'fill:rgba(220,200,220,1)',
-                            style_pressAndGlow = 'fill:rgba(200,190,200,1)'
-                        ){
-                        
-                            // elements 
-                            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
-                        
-                            var rect = __globals.utility.experimental.elementMaker('rect',null,{width:width, height:height, angle:angle, style:style_off});
-                                object.appendChild(rect);
-                        
-                            //state
-                            object.state = 0;
-                            object.activateState = function(state){
-                                // 0 - off
-                                // 1 - pressed
-                                // 2 - glowing
-                                // 3 - pressed and glowing
-                                switch(state){
-                                    case 0: __globals.utility.element.setStyle(rect, style_off); break;
-                                    case 1: __globals.utility.element.setStyle(rect, style_press); break;
-                                    case 2: __globals.utility.element.setStyle(rect, style_glow); break;
-                                    case 3: __globals.utility.element.setStyle(rect, style_pressAndGlow); break;
-                                    default: /*console.error('Unknown state reached:', state);*/ return; break;
-                                }
-                                object.state = state;
-                            };
-                        
-                            //interactivity
-                            rect.onmousedown =  function(){ object.press();   };
-                            rect.onmouseup =    function(){ object.release(); };
-                            rect.onmouseleave = function(){ object.release(); };
-                            rect.onmouseenter = function(event){ if(event.buttons == 1){object.press();} };
-                        
-                            //callbacks
-                            object.keyup =    function(){ /*console.log('mouseup');    */ };
-                            object.keydown =  function(){ /*console.log('mousedown');  */ };
-                        
-                            //methods;
-                            object.press =   function(){
-                                if( this.state%2 != 0 ){return;} //key already pressed 
-                                this.activateState(this.state+1);
-                                if(this.keydown){this.keydown();}
-                            };
-                            object.release = function(){ 
-                                if( this.state%2 == 0 ){return;} //key not pressed 
-                                this.activateState(object.state-1); 
-                                if(this.keyup){this.keyup();}
-                            };
-                            object.glow = function(){ this.activateState(this.state+2); };
-                            object.dim  = function(){ this.activateState(this.state-2); };
-                        
-                            return object;
-                        };
-                        this.needleOverlay = function(
-                            id='needleOverlay',
-                            x, y, width, height, angle=0, needleWidth=0.00125, selectNeedle=true, selectionArea=true,
-                            needleStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
-                        ){
-                            var needleData = {};
-                        
-                            //elements
-                                //main
-                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
-                                //backing
-                                    var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height,style:'fill:rgba(100,100,100, 0);'});
-                                    object.appendChild(backing);
-                                //control objects
-                                    var invisibleHandleWidth = width*needleWidth + width*0.005;
-                                    var controlObjects = {};
-                                        //lead
-                                        controlObjects.lead = __globals.utility.experimental.elementMaker('g','lead',{});
-                                        controlObjects.lead.append(__globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}));
-                                        controlObjects.lead.append(__globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}));
-                                        //selection_A
-                                        controlObjects.selection_A = __globals.utility.experimental.elementMaker('g','selection_A',{});
-                                        controlObjects.selection_A.append(__globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
-                                        controlObjects.selection_A.append(__globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
-                                        //selection_B
-                                        controlObjects.selection_B = __globals.utility.experimental.elementMaker('g','selection_B',{});
-                                        controlObjects.selection_B.append(__globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
-                                        controlObjects.selection_B.append(__globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
-                                        //selection_area
-                                        controlObjects.selection_area = __globals.utility.experimental.elementMaker('rect','selection_area',{height:height,style:needleStyles[1]+'opacity:0.33; cursor: move;'});
-                                        //generic needles
-                                        controlObjects.generic = [];
-                                    var controlObjectsGroup = __globals.utility.experimental.elementMaker('g','controlObjectsGroup',{})
-                                    object.append(controlObjectsGroup);
-                        
-                            //internal functions
-                                function setGenericNeedle(number,location,specialStyle={}){
-                                    if(controlObjects.generic[number] && location != undefined){
-                                        __globals.utility.element.setTransform_XYonly( controlObjects.generic[number], location*width - width*needleWidth*location, 0);
-                                    }else if(controlObjects.generic[number]){
-                                        controlObjects.generic[number].remove();
-                                        delete controlObjects.generic[number];
-                                    }else{
-                                        controlObjects.generic[number] = __globals.utility.experimental.elementMaker('g','generic_'+number,{x:(location*width - needleWidth*width/2), style:specialStyle})
-                                        controlObjects.generic[number].append( __globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}) );
-                                        controlObjects.generic[number].append( __globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);'}) );
-                                        controlObjectsGroup.append( controlObjects.generic[number] );
-                                    }
-                                }
-                                //place the selected needle at the selected location
-                                function needleJumpTo(needle,location){
-                                    //if the location is wrong, remove the needle and return
-                                    if(location == undefined || location < 0 || location > 1){
-                                        controlObjects[needle].remove();
-                                        delete needleData[needle];
-                                        return;
-                                    }
-                        
-                                    //if the needle isn't in the scene, add it
-                                    if( !controlObjectsGroup.contains(controlObjects[needle]) ){
-                                        controlObjectsGroup.append(controlObjects[needle]);
-                                    }
-                        
-                                    //actualy set the location of the needle (adjusting for the size of needle)
-                                    __globals.utility.element.setTransform_XYonly( controlObjects[needle], location*width - width*needleWidth*location, 0);
-                                    //save this value
-                                    needleData[needle] = location;
-                                }
-                                function computeSelectionArea(){
-                                    //if the selection needles' data are missing (or they are the same position) remove the area element and return
-                                    if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
-                                        controlObjects.selection_area.remove();
-                                        object.selectionAreaToggle(false);
-                                        delete needleData.selection_area;
-                                        return;
-                                    }
-                        
-                                    //if the area isn't in the scene, add it
-                                    if( !controlObjectsGroup.contains(controlObjects.selection_area) ){
-                                        controlObjectsGroup.append(controlObjects.selection_area);
-                                        object.selectionAreaToggle(true);
-                                    }
-                        
-                                    //compute area position and size
-                                    if(needleData.selection_A < needleData.selection_B){
-                                        var A = needleData.selection_A;
-                                        var B = needleData.selection_B;
-                                    }else{
-                                        var A = needleData.selection_B;
-                                        var B = needleData.selection_A;
-                                    }
-                                    var start = A - needleWidth*A + needleWidth
-                                    var area = B - needleWidth*B - start; 
-                                    if(area < 0){area = 0}
-                        
-                                    __globals.utility.element.setTransform_XYonly(controlObjects.selection_area, width*start, 0);
-                                    controlObjects.selection_area.setAttribute('width',width*area);
-                                }
-                        
-                            //interaction
-                                //generic onmousedown code for interaction
-                                function needle_onmousedown(needleName,callback){
-                                    if(object.onchange){ object.onchange(needleName,__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x); }
-                                    __globals.svgElement.onmousemove = function(event){
-                                        var x = __globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
-                        
-                                        needleJumpTo(needleName,x);
-                                        if(object.onchange){ object.onchange(needleName,x); }
-                                        if(callback){callback();}
-                                    };
-                                    __globals.svgElement.onmouseup = function(event){
-                                        var x = __globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
-                                        needleJumpTo(needleName,x);
-                                        if(object.onrelease){ object.onrelease(needleName,x); }
-                                        if(callback){callback();}
-                                        __globals.svgElement.onmousemove = undefined;
-                                        __globals.svgElement.onmouseleave = undefined;
-                                        __globals.svgElement.onmouseup = undefined;
-                                    };
-                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                                }
-                        
-                                backing.onmousedown = function(event){
-                                    if(!event.shiftKey){
-                                        if(!selectNeedle){return;}
-                                        needleJumpTo('lead',__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
-                                        needle_onmousedown('lead');
-                                    }
-                                    else{
-                                        if(!selectionArea){return;}
-                                        needleJumpTo('selection_A',__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
-                                        needle_onmousedown('selection_B',computeSelectionArea);
-                                    }
-                                };
-                                controlObjects.lead.onmousedown = function(){ needle_onmousedown('lead'); };
-                                controlObjects.selection_A.onmousedown = function(){
-                                    needle_onmousedown('selection_A',computeSelectionArea); 
-                                };
-                                controlObjects.selection_B.onmousedown = function(){
-                                    needle_onmousedown('selection_B',computeSelectionArea); 
-                                };
-                                controlObjects.selection_area.onmousedown = function(){
-                                    __globals.svgElement.onmousemove = function(event){
-                                        var divider = __globals.utility.workspace.getGlobalScale(object);
-                                        var newAlocation = needleData['selection_A']+event.movementX/(width*divider);
-                                        var newBlocation = needleData['selection_B']+event.movementX/(width*divider);
-                        
-                                        if(newAlocation > 1 || newAlocation < 0 || newBlocation > 1 || newBlocation < 0){return;}
-                        
-                                        if(object.onchange){ object.onchange('selection_A',newAlocation); object.onchange('selection_B',newBlocation); }
-                                        needleJumpTo('selection_A',newAlocation);
-                                        needleJumpTo('selection_B',newBlocation);
-                                        computeSelectionArea();
-                                    };
-                                    __globals.svgElement.onmouseup = function(event){
-                                        if(object.onrelease){ object.onrelease('selection_A',needleData.selection_A); object.onrelease('selection_B',needleData.selection_B); }
-                                        __globals.svgElement.onmousemove = undefined;
-                                        __globals.svgElement.onmouseleave = undefined;
-                                        __globals.svgElement.onmouseup = undefined;
-                                    };
-                                };
-                                
-                                //doubleclick to destroy selection area
-                                controlObjects.selection_A.ondblclick = function(){
-                                    needleJumpTo('selection_A');
-                                    needleJumpTo('selection_B');
-                                    computeSelectionArea();
-                                };
-                                controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
-                                controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
-                        
-                            //controls
-                                object.select = function(position,update=true){
-                                    if(!selectNeedle){return;}
-                                    //if there's no input, return the value
-                                    //if input is out of bounds, remove the needle
-                                    //otherwise, set the position
-                                    if(position == undefined){ return needleData.lead; }
-                                    else if(position > 1 || position < 0){ needleJumpTo('lead'); }
-                                    else{ needleJumpTo('lead',position); }
-                                };
-                                object.area = function(positionA,positionB){
-                                    if(!selectionArea){return;}
-                        
-                                    //if there's no input, return the values
-                                    //if input is out of bounds, remove the needles
-                                    //otherwise, set the position
-                                    if(positionA == undefined || positionB == undefined){
-                                        return {A:needleData.selection_A, B:needleData.selection_B};
-                                    }else if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 ){
-                                        needleJumpTo('selection_A');
-                                        needleJumpTo('selection_B');
-                                    }else{
-                                        needleJumpTo('selection_A',positionA);
-                                        needleJumpTo('selection_B',positionB);
-                                    }
-                        
-                                    //you always gotta computer the selection area
-                                    computeSelectionArea();
-                                };
-                                object.genericNeedle = function(number,position,specialStyle=''){
-                                    setGenericNeedle(number,position,specialStyle);
-                                };
-                        
-                            //callbacks
-                                object.onchange = function(needle,value){};
-                                object.onrelease = function(needle,value){};
-                                object.selectionAreaToggle = function(bool){};
-                        
-                            return object;
-                        };
-                        this.rastorgrid = function(
-                            id='rastorgrid', 
-                            x, y, width, height,
-                            xcount, ycount,
-                            backingStyle = 'fill:rgba(200,200,200,1)',
-                            checkStyle = 'fill:rgba(150,150,150,1)',
-                            backingGlowStyle = 'fill:rgba(220,220,220,1)',
-                            checkGlowStyle = 'fill:rgba(220,220,220,1)',
-                        ){
-                            // elements
-                            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
-                            var rect = __globals.utility.experimental.elementMaker('rect',null,{width:width,height:height, style:backingStyle});
-                                object.appendChild(rect);
-                        
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    var temp = __globals.utility.experimental.elementMaker('checkbox_rect',y+'_'+x,{
-                                        x:x*(width/xcount), 
-                                        y:y*(height/ycount), 
-                                        width:width/xcount, 
-                                        height:height/ycount, 
-                                        style:{
-                                            check:checkStyle,
-                                            backing:backingStyle,
-                                            checkGlow:checkGlowStyle,
-                                            backingGlow:backingGlowStyle,
-                                        }
-                                    });
-                                    object.appendChild(temp);
-                                    temp.onchange = function(){ if(object.onchange){object.onchange(object.get());} };
-                                }
-                            }
-                        
-                        
-                            //methods
-                            object.box = function(x,y){ return object.children[y+'_'+x]; };
-                            object.get = function(){
-                                var outputArray = [];
-                        
-                                for(var y = 0; y < ycount; y++){
-                                    var temp = [];
-                                    for(var x = 0; x < xcount; x++){
-                                        temp.push(this.box(x,y).get());
-                                    }
-                                    outputArray.push(temp);
-                                }
-                        
-                                return outputArray;
-                            };
-                            object.set = function(value, update=true){
-                                for(var y = 0; y < ycount; y++){
-                                    for(var x = 0; x < xcount; x++){
-                                        object.box(x,y).set(value[y][x],false);
-                                    }
-                                }
-                            };
-                            object.clear = function(){
-                                for(var y = 0; y < ycount; y++){
-                                    for(var x = 0; x < xcount; x++){
-                                        object.box(x,y).set(false,false);
-                                    }
-                                }
-                            };
-                            object.light = function(x,y,state){
-                                object.box(x,y).light(state);
-                            };
-                        
-                        
-                            //callback
-                            object.onchange = function(){};
-                        
-                        
-                            return object;
-                        };
-                        this.slide = function(
-                            id='slide', 
-                            x, y, width, height, angle=0,
-                            handleHeight=0.1, value=0, resetValue=-1,
-                            handleStyle = 'fill:rgba(200,200,200,1)',
-                            backingStyle = 'fill:rgba(150,150,150,1)',
-                            slotStyle = 'fill:rgba(50,50,50,1)',
-                            invisibleHandleStyle = 'fill:rgba(0,0,0,0);',
-                        ){
-                            var grappled = false;
-                        
-                            //elements
-                                //main
-                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
-                                //backing and slot group
-                                    var backingAndSlot = __globals.utility.experimental.elementMaker('g','backingAndSlotGroup',{});
-                                    object.appendChild(backingAndSlot);
-                                    //backing
-                                        var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
-                                        backingAndSlot.appendChild(backing);
-                                    //slot
-                                        var slot = __globals.utility.experimental.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
-                                        backingAndSlot.appendChild(slot);
-                                //handle
-                                    var handle = __globals.utility.experimental.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
-                                    object.appendChild(handle);
-                                //invisible handle
-                                    var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                    var invisibleHandle = __globals.utility.experimental.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
-                                    object.appendChild(invisibleHandle);
-                        
-                            //graphical adjust
-                                function set(a,update=true){
-                                    a = (a>1 ? 1 : a);
-                                    a = (a<0 ? 0 : a);
-                        
-                                    if(update){object.onchange(a);}
-                                    
-                                    value = a;
-                                    handle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
-                                    invisibleHandle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
-                                }
-                                object.__calculationAngle = angle;
-                                function currentMousePosition(event){
-                                    return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
-                                }
-                            
-                            //methods
-                                object.set = function(value,update){
-                                    if(grappled){return;}
-                                    set(value,update);
-                                };
-                                object.smoothSet = function(target,time,curve,update){
-                                    if(grappled){return;}
-                        
-                                    var startTime = __globals.audio.context.currentTime;
-                                    var startValue = value;
-                                    var pointFunc = __globals.utility.math.curvePoint.linear;
-                        
-                                    switch(curve){
-                                        case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
-                                        case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
-                                        case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
-                                        case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
-                                        case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
-                                    }
-                        
-                                    object.smoothSet.interval = setInterval(function(){
-                                        var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
-                                        set( pointFunc(progress, startValue, target), update );
-                                        if( (__globals.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
-                                    }, 1000/30);            
-                                };
-                                object.smoothSet_old = function(target,time,curve,update){
-                                    object.smoothSet(target,time,curve,update);
-                                    // if(grappled){return;}
-                        
-                                    // var start = value;
-                                    // var mux = target - start;
-                                    // var stepsPerSecond = Math.round(Math.abs(mux)*100);
-                                    // var totalSteps = stepsPerSecond*time;
-                        
-                                    // var steps = [1];
-                                    // switch(curve){
-                                    //     case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-                                    //     case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
-                                    //     case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
-                                    //     case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-                                    //     case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
-                                    //     case 'instant': default: break;
-                                    // }
-                                    // if(steps.length == 0){return;}
-                        
-                                    // if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                                    // object.smoothSet.interval = setInterval(function(){
-                                    //     set( (start+(steps.shift()*mux)),update );
-                                    //     if(steps.length == 0){clearInterval(object.smoothSet.interval);}
-                                    // },1000/stepsPerSecond);
-                                };
-                                object.get = function(){return value;};
-                        
-                            //interaction
-                                object.ondblclick = function(){
-                                    if(resetValue<0){return;}
-                                    if(grappled){return;}
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    set(resetValue);
-                                    object.onrelease(value);
-                                };
-                                object.onwheel = function(){
-                                    if(grappled){return;}
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                                    var globalScale = __globals.utility.workspace.getGlobalScale(object);
-                                    set( value + move/(10*globalScale) );
-                                    object.onrelease(value);
-                                };
-                                backingAndSlot.onclick = function(event){
-                                    if(grappled){return;}
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    var y = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
-                        
-                                    var value = y + 0.5*handleHeight*((2*y)-1);
-                                    set(value);
-                                    object.onrelease(value);
-                                };
-                                invisibleHandle.onmousedown = function(event){
-                                    grappled = true;
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    var initialValue = value;
-                                    var initialY = currentMousePosition(event);
-                                    var mux = height - height*handleHeight;
-                        
-                                    __globals.svgElement.onmousemove = function(event){
-                                        var numerator = initialY-currentMousePosition(event);
-                                        var divider = __globals.utility.workspace.getGlobalScale(object);
-                                        set( initialValue - numerator/(divider*mux) );
-                                    };
-                                    __globals.svgElement.onmouseup = function(event){
-                                        var numerator = initialY-currentMousePosition(event);
-                                        var divider = __globals.utility.workspace.getGlobalScale(object);
-                                        object.onrelease(initialValue - numerator/(divider*mux));
-                        
-                                        __globals.svgElement.onmousemove = undefined;
-                                        __globals.svgElement.onmouseleave = undefined;
-                                        __globals.svgElement.onmouseup = undefined;
-                                        grappled = false;
-                                    };
-                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                                };
-                        
-                            //callbacks
-                                object.onchange = function(){};
-                                object.onrelease = function(){};
-                        
-                            //setup
-                                set(value);
-                        
-                            return object;
-                        };
-                        this.slidePanel = function(
-                            id='slidePanel', 
-                            x, y, width, height, count, angle=0,
-                            handleHeight=0.1, startValue=0, resetValue=0.5,
-                            handleStyle = 'fill:rgba(180,180,180,1)',
-                            backingStyle = 'fill:rgba(150,150,150,1)',
-                            slotStyle = 'fill:rgba(50,50,50,1)'
-                        ){
-                            //elements
-                                //main
-                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
-                                //slides
-                                    for(var a = 0; a < count; a++){
-                                        var temp = __globals.utility.experimental.elementMaker(
-                                            'slide',a,{
-                                                x:a*(width/count), y:0,
-                                                width:width/count, height:height,
-                                                value:startValue, resetValue:resetValue,
-                                                style:{handle:handleStyle, backing:backingStyle, slot:slotStyle}
-                                            }
-                                        );
-                                        temp.onchange = function(value){ object.onchange(this.id,value); };
-                                        temp.onrelease = function(value){ object.onrelease(this.id,value); };
-                                        temp.__calculationAngle = angle;
-                                        object.appendChild(temp);
-                                    }
-                        
-                            //methods
-                                object.slide = function(index){ return object.children[index]; };
-                                object.get = function(){
-                                    var outputArray = [];
-                                    for(var a = 0; a < count; a++){
-                                        outputArray.push(this.slide(a).get());
-                                    }
-                                    return outputArray;
-                                };
-                                object.set = function(values,update=true){
-                                    for(var a = 0; a < values.length; a++){
-                                        this.slide(a).set(values[a],update);
-                                    }
-                                };
-                                object.setAll = function(value,update=true){
-                                    this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value),false );
-                                    if(update){this.onchange('all',value);}
-                                };
-                                object.smoothSet = function(values,time,curve,update=true){
-                                    for(var a = 0; a < values.length; a++){
-                                        this.slide(a).smoothSet(values[a],time,curve,update);
-                                    }
-                                };
-                                object.smoothSetAll = function(value, time, curve, update=true){
-                                    this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value), time, curve, false );
-                                    if(update){this.onchange('all',value);}
-                                };
-                        
-                            //callbacks
-                                object.onchange = function(slide,value){};
-                                object.onrelease = function(slide,value){};
-                            
-                            return object;
-                        };
-                        this.rangeslide = function(
-                            id='rangeslide', 
-                            x, y, width, height, angle=0,
-                            handleHeight=0.025, spanWidth=0.75, values=[0,1], resetValues=[-1,-1],
-                            handleStyle='fill:rgba(200,200,200,1)',
-                            backingStyle='fill:rgba(150,150,150,1)',
-                            slotStyle='fill:rgba(50,50,50,1)',
-                            invisibleHandleStyle='fill:rgba(0,0,0,0);',
-                            spanStyle='fill:rgba(200,0,200,0.5);',
-                        ){
-                            var grappled = false;
-                        
-                            //elements
-                                //main
-                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
-                                //backing and slot group
-                                    var backingAndSlot = __globals.utility.experimental.elementMaker('g','backingAndSlotGroup',{});
-                                    object.appendChild(backingAndSlot);
-                                    //backing
-                                        var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
-                                        backingAndSlot.appendChild(backing);
-                                    //slot
-                                        var slot = __globals.utility.experimental.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
-                                        backingAndSlot.appendChild(slot);
-                        
-                                //span
-                                    var span = __globals.utility.experimental.elementMaker('rect','span',{
-                                        x:width*((1-spanWidth)/2), y:height*handleHeight,
-                                        width:width*spanWidth, height:height - 2*height*handleHeight, 
-                                        style:spanStyle
-                                    });
-                                    object.appendChild(span);
-                        
-                                //handles
-                                    var handleCount = 2;
-                                    var handles = [];
-                                    for(var a = 0; a < handleCount; a++){
-                                        //grouping
-                                            handles[a] = __globals.utility.experimental.elementMaker('g','handle_'+a,{})
-                                            object.appendChild(handles[a]);
-                                        //handle
-                                            var handle = __globals.utility.experimental.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
-                                            handles[a].appendChild(handle);
-                                        //invisible handle
-                                            var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                            var invisibleHandle = __globals.utility.experimental.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
-                                            handles[a].appendChild(invisibleHandle);
-                                    }
-                        
-                            //graphical adjust
-                                function set(a,handle,update=true){
-                                    a = (a>1 ? 1 : a);
-                                    a = (a<0 ? 0 : a);
-                        
-                                    //make sure the handle order is maintained
-                                    //if necessary, one handle should push the other, though not past the ends
-                                        switch(handle){
-                                            default: console.error('unknown handle to adjust'); break;
-                                            case 0:
-                                                if((values[1] - a + handleHeight*(a - values[1] - 1)) < 0){
-                                                    if( (a + handleHeight) > 1 ){ a = 1 - handleHeight; }
-                                                    values[0] = a;
-                                                    values[1] = a + handleHeight;
-                                                }
-                                            break;
-                                            case 1: 
-                                                if((a - values[0] + handleHeight*(values[0] - a - 1)) < 0){
-                                                    if( (a - handleHeight) < 0 ){ a = handleHeight; }
-                                                    values[0] = a - handleHeight;
-                                                    values[1] = a;
-                                                }
-                                            break;
-                                        }
-                        
-                                    //fill in data
-                                        values[handle] = a;
-                        
-                                    //adjust y positions
-                                        __globals.utility.element.setTransform_XYonly(handles[0],0,values[0]*height*(1-handleHeight));
-                                        __globals.utility.element.setTransform_XYonly(handles[1],0,values[1]*height*(1-handleHeight));
-                        
-                                    //adjust span height (with a little bit of padding so the span is under the handles a little)
-                                        __globals.utility.element.setTransform_XYonly(span, width*((1-spanWidth)/2), height*(handleHeight + values[0] - handleHeight*(values[0] + 0.1)));
-                                        span.height.baseVal.value = height*( values[1] - values[0] + handleHeight*(values[0] - values[1] - 1 + 0.2) );
-                        
-                                    if(update && object.onchange){object.onchange(values);}
-                                }
-                                function pan(a){
-                                    var diff = values[1] - values[0];
-                        
-                                    var newPositions = [ a, a+diff ];
-                                    if(newPositions[0] <= 0){
-                                        newPositions[1] = newPositions[1] - newPositions[0];
-                                        newPositions[0] = 0;
-                                    }
-                                    else if(newPositions[1] >= 1){
-                                        newPositions[0] = newPositions[0] - (newPositions[1]-1);
-                                        newPositions[1] = 1;
-                                    }
-                        
-                                    set( newPositions[0],0 );
-                                    set( newPositions[1],1 );
-                                }
-                        
-                            //methods
-                                object.get = function(){return values;};
-                                object.set = function(values,update){
-                                    if(grappled){return;}
-                                    if(values.start){set(values.start,0,update);}
-                                    if(values.end){set(values.end,1,update);}
-                                };
-                                object.smoothSet = function(targets,time,curve,update){
-                                    if(grappled){return;}
-                        
-                                    var startTime = __globals.audio.context.currentTime;
-                                    var startValues = JSON.parse(JSON.stringify(values));
-                                    var pointFunc = __globals.utility.math.curvePoint.linear;
-                        
-                                    switch(curve){
-                                        case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
-                                        case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
-                                        case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
-                                        case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
-                                        case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
-                                    }
-                        
-                                    object.smoothSet.interval = setInterval(function(){
-                                        var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
-                                        if(targets.start != undefined){set( pointFunc(progress, startValues[0], targets.start),0, update );}
-                                        if(targets.end != undefined){set( pointFunc(progress, startValues[1], targets.end),1, update );}
-                                        if( (__globals.audio.context.currentTime-startTime) >= time ){
-                                            if(object.onrelease){object.onrelease(values);}
-                                            clearInterval(object.smoothSet.interval);
-                                        }
-                                    }, 1000/30); 
-                                };
-                                
-                            //interaction
-                                //background click
-                                    backingAndSlot.onclick = function(event){
-                                        if(grappled){return;}
-                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                        var y = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
-                                        y = y + 0.5*handleHeight*((2*y)-1);
-                        
-                                        Math.abs(values[0]-y) < Math.abs(values[1]-y) ? set(y,0) : set(y,1);
-                                    };
-                        
-                                //double-click reset
-                                    object.ondblclick = function(){
-                                        if(resetValues[0]<0 || resetValues[1]<0){return;}
-                                        if(grappled){return;}
-                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                        set(resetValues[0],0);
-                                        set(resetValues[1],1);
-                                        object.onrelease(values);
-                                    };
-                        
-                                //span panning - expand/shrink
-                                    object.onwheel = function(){
-                                        if(grappled){return;}
-                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                        var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                                        var globalScale = __globals.utility.workspace.getGlobalScale(object);
-                                        var val = move/(10*globalScale);
-                        
-                                        set(values[0]-val,0);
-                                        set(values[1]+val,1);
-                                    };
-                        
-                                //span panning - drag
-                                    span.onmousedown = function(event){
-                                        grappled = true;
-                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                        var initialValue = values[0];
-                                        var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                        __globals.svgElement.onmousemove = function(event){
-                                            var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                            pan( initialValue+(livePosition.y-initialPosition.y) )
-                                            object.onchange(values);
-                                        };
-                                        __globals.svgElement.onmouseup = function(event){
-                                            var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                            pan( initialValue+(livePosition.y-initialPosition.y) )
-                                            object.onrelease(values);
-                        
-                                            __globals.svgElement.onmousemove = undefined;
-                                            __globals.svgElement.onmouseleave = undefined;
-                                            __globals.svgElement.onmouseup = undefined;
-                                            grappled = false;
-                                        };
-                                        __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                                    };
-                        
-                                //handle movement
-                                    for(var a = 0; a < handles.length; a++){
-                                        handles[a].onmousedown = (function(a){
-                                            return function(event){
-                                                grappled = true;
-                                                if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                                    
-                                                var initialValue = values[a];
-                                                var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                                
-                                                __globals.svgElement.onmousemove = function(event){
-                                                    var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                                    set( initialValue+(livePosition.y-initialPosition.y),a );
-                                                    object.onchange(values);
-                                                };
-                                                __globals.svgElement.onmouseup = function(event){
-                                                    var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                                    set( initialValue+(livePosition.y-initialPosition.y),a );
-                                                    object.onrelease(values);
-                                    
-                                                    __globals.svgElement.onmousemove = undefined;
-                                                    __globals.svgElement.onmouseleave = undefined;
-                                                    __globals.svgElement.onmouseup = undefined;
-                                                    grappled = false;
-                                                };
-                                                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
-                                            }
-                                        })(a);
-                                    }
-                              
-                            //callbacks
-                                object.onchange = function(){};
-                                object.onrelease = function(){};  
-                        
-                            //setup
-                                set(0,0);
-                                set(1,1);
-                        
-                            return object;
-                        };
                         this.pianoroll = function(
                             id='pianoroll',
                             x, y, width, height, angle=0,
@@ -7084,6 +5932,1164 @@
                                 this.remove(id);
                                 this.add(data,id);
                             };
+                        };
+                        this.dial_continuous = function(
+                            id='dial_continuous',
+                            x, y, r,
+                            startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            handleStyle = 'fill:rgba(200,200,200,1)',
+                            slotStyle = 'fill:rgba(50,50,50,1)',
+                            needleStyle = 'fill:rgba(250,100,100,1)',
+                            arcDistance=1.35,
+                            outerArcStyle='fill:none; stroke:none;',
+                        ){
+                            // elements
+                                var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                                    object._value = 0;
+                                    object._data = {
+                                        'mux':r*4
+                                    };
+                        
+                                //arc
+                                    var points = 5;
+                                    var pushDistance = 1.11;
+                                    var arcPath = [];
+                                    for(var a = 0; a < points; a++){
+                                        var temp = __globals.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
+                                        arcPath.push( temp );
+                                        var temp = __globals.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
+                                        arcPath.push( temp );
+                                    }
+                                    var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
+                                    arcPath.push( temp );
+                        
+                                    var outerArc = __globals.utility.experimental.elementMaker('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
+                                    object.appendChild(outerArc);
+                        
+                                //slot
+                                    var slot = __globals.utility.experimental.elementMaker('circle','slot',{r:r*1.1, style:slotStyle});
+                                        object.appendChild(slot);
+                        
+                                //handle
+                                    var handle = __globals.utility.experimental.elementMaker('circle','slot',{r:r, style:handleStyle});
+                                        object.appendChild(handle);
+                        
+                                //needle
+                                    var needleWidth = r/5;
+                                    var needleLength = r;
+                                    var needle = __globals.utility.experimental.elementMaker('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
+                                        needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
+                                        needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
+                                        object.appendChild(needle);
+                        
+                        
+                            //methods
+                                object.get = function(){ return this._value; };
+                                object.set = function(value, live=false, update=true){
+                                    value = (value>1 ? 1 : value);
+                                    value = (value<0 ? 0 : value);
+                        
+                                    this._value = value;
+                                    if(update&&this.onchange){try{this.onchange(value);}catch(err){console.error('Error with dial_continuous:onchange\n',err);}}
+                                    if(update&&!live&&this.onrelease){try{this.onrelease(value);}catch(err){console.error('Error with dial_continuous:onrelease\n',err);}}
+                                    this.children['needle'].rotation(startAngle + maxAngle*value);
+                                };object.set(0);
+                                object.smoothSet = function(target,time,curve,update=true){
+                                    var startTime = __globals.audio.context.currentTime;
+                                    var startValue = value;
+                                    var pointFunc = __globals.utility.math.curvePoint.linear;
+                        
+                                    switch(curve){
+                                        case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
+                                        case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
+                                        case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
+                                        case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
+                                        case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
+                                    }
+                        
+                                    object.smoothSet.interval = setInterval(function(){
+                                        var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
+                                        object.set( pointFunc(progress, startValue, target), true, update );
+                                        if( (__globals.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
+                                    }, 1000/30);  
+                                };
+                                // object.smoothSet = function(target,time,curve,update=true){
+                                //     var start = this.get();
+                                //     var mux = target-start;
+                                //     var stepsPerSecond = Math.round(Math.abs(mux)*100);
+                                //     var totalSteps = stepsPerSecond*time;
+                        
+                                //     var steps = [1];
+                                //     switch(curve){
+                                //         case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                                //         case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                                //         case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
+                                //         case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
+                                //         case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
+                                //         case 'instant': default: break;
+                                //     }
+                        
+                                //     if(steps.length == 0){return;}
+                        
+                                //     if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                                //     object.smoothSet.interval = setInterval(function(){
+                                //         object.set( (start+(steps.shift()*mux)),true,update );
+                                //         if(steps.length == 0){clearInterval(object.smoothSet.interval);}
+                                //     },1000/stepsPerSecond);
+                                // };
+                                
+                        
+                            //callback
+                                object.onchange = function(){};
+                                object.onrelease = function(){};
+                        
+                        
+                            //mouse interaction
+                                object.ondblclick = function(){ this.set(0.5); };
+                                object.onwheel = function(event){
+                                    var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                                    var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                        
+                                    this.set( this.get() - move/(10*globalScale) );
+                                };
+                                object.onmousedown = function(event){
+                                    __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                                    __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
+                                    __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
+                        
+                                    __globals.svgElement.tempRef = this;
+                                    __globals.svgElement.tempRef._data.initialValue = this.get();
+                                    __globals.svgElement.tempRef._data.initialY = event.y;
+                                    __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
+                                    __globals.svgElement.onmousemove = function(event){
+                                        var mux = __globals.svgElement.tempRef._data.mux;
+                                        var value = __globals.svgElement.tempRef._data.initialValue;
+                                        var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
+                                        var divider = __globals.utility.workspace.getGlobalScale(object);
+                        
+                                        __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
+                                    };
+                                    __globals.svgElement.onmouseup = function(){
+                                        this.tempRef.set(this.tempRef.get(),false);
+                                        delete this.tempRef;
+                        
+                                        __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                                        __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                                        __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+                        
+                                        __globals.svgElement.onmousemove_old = null;
+                                        __globals.svgElement.onmouseleave_old = null;
+                                        __globals.svgElement.onmouseup_old = null;
+                                    };
+                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                    __globals.svgElement.onmousemove(event);
+                                };
+                        
+                        
+                            return object;
+                        };
+                        this.dial_discrete = function(
+                            id='dial_discrete',
+                            x, y, r,
+                            optionCount=5,
+                            startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            handleStyle = 'fill:rgba(200,200,200,1)',
+                            slotStyle = 'fill:rgba(50,50,50,1)',
+                            needleStyle = 'fill:rgba(250,100,100,1)',
+                            arcDistance=1.35,
+                            outerArcStyle='fill:none; stroke:none;',
+                        ){
+                            // elements
+                            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                                object._value = 0;
+                                object._selection = 0;
+                                object._data = { 
+                                    'optionCount':optionCount,
+                                    'mux':r*4
+                                };
+                        
+                                //arc
+                                    var points = 5;
+                                    var pushDistance = 1.11;
+                                    var arcPath = [];
+                                    for(var a = 0; a < points; a++){
+                                        var temp = __globals.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
+                                        arcPath.push( temp );
+                                        var temp = __globals.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
+                                        arcPath.push( temp );
+                                    }
+                                    var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
+                                    arcPath.push( temp );
+                                    var outerArc = __globals.utility.experimental.elementMaker('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
+                                    object.appendChild(outerArc);
+                        
+                                //slot
+                                    var slot = __globals.utility.experimental.elementMaker('circle','slot',{r:r*1.1, style:slotStyle});
+                                        object.appendChild(slot);
+                        
+                                //handle
+                                    var handle = __globals.utility.experimental.elementMaker('circle','slot',{r:r, style:handleStyle});
+                                        object.appendChild(handle);
+                        
+                                //needle
+                                    var needleWidth = r/5;
+                                    var needleLength = r;
+                                    var needle = __globals.utility.experimental.elementMaker('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
+                                        needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
+                                        needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
+                                        object.appendChild(needle);
+                        
+                        
+                            //methods
+                                object.select = function(a=null, live=true, update=true){
+                                    if(a==null){return this._selection;}
+                        
+                                    a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
+                                    a = (a<0 ? 0 : a);
+                        
+                                    if(this._selection == a){/*nothings changed*/return;}
+                        
+                                    this._selection = a;
+                                    this._set( a/(this._data.optionCount-1) );
+                                    if(update&&this.onchange){ this.onchange(a); }
+                                    if(update&&!live&&this.onrelease){ this.onrelease(value); }
+                                };
+                                object._get = function(){ return this._value; };
+                                object._set = function(value){
+                                    value = (value>1 ? 1 : value);
+                                    value = (value<0 ? 0 : value);
+                        
+                                    this._value = value;
+                                    this.children['needle'].rotation(startAngle + maxAngle*value);
+                                };object._set(0);
+                          
+                        
+                            //callback
+                                object.onchange = function(){};
+                                object.onrelease = function(){};
+                        
+                            
+                            //mouse interaction
+                                object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
+                                object.onwheel = function(event){
+                                    var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                                    var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                        
+                                    if(!object.onwheel.acc){object.onwheel.acc=0;}
+                                    object.onwheel.acc += move/globalScale;
+                                    if( Math.abs(object.onwheel.acc) >= 1 ){
+                                        this.select( this.select()-1*Math.sign(object.onwheel.acc) );
+                                        object.onwheel.acc = 0;
+                                    }
+                                };
+                                object.onmousedown = function(event){
+                                    __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                                    __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
+                                    __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
+                        
+                                    __globals.svgElement.tempRef = this;
+                                    __globals.svgElement.tempRef._data.initialValue = this._get();
+                                    __globals.svgElement.tempRef._data.initialY = event.y;
+                                    __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
+                                    __globals.svgElement.onmousemove = function(event){
+                                        var mux = __globals.svgElement.tempRef._data.mux;
+                                        var value = __globals.svgElement.tempRef._data.initialValue;
+                                        var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
+                                        var divider = __globals.utility.workspace.getGlobalScale(object);
+                        
+                                        __globals.svgElement.tempRef.select(
+                                            Math.round(
+                                                (__globals.svgElement.tempRef._data.optionCount-1)*(value - numerator/(divider*mux))
+                                            ) 
+                                        );
+                                    };
+                                    __globals.svgElement.onmouseup = function(){
+                                        this.tempRef.select(this.tempRef.select(),false);
+                                        this.tempRef = null;
+                                        
+                                        __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                                        __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                                        __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+                        
+                                        __globals.svgElement.onmousemove_old = null;
+                                        __globals.svgElement.onmouseleave_old = null;
+                                        __globals.svgElement.onmouseup_old = null;
+                                    };
+                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                    __globals.svgElement.onmousemove(event);
+                                };
+                                
+                        
+                          return object;
+                        };
+                        this.grapher_waveWorkspace = function(
+                            id='grapher_waveWorkspace',
+                            x, y, width, height, angle=0, graphType='Canvas', selectNeedle=true, selectionArea=true,
+                            foregroundStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
+                            foregroundTextStyles=['fill:rgba(0,255,255,1); font-size:3; font-family:Helvetica;'],
+                            middlegroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.1; stroke-linecap:round;',
+                            middlegroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
+                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                            backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                            backingStyle='fill:rgba(50,50,50,1)',
+                        ){
+                            var needleWidth = 1/4;
+                        
+                            //elements
+                                //main
+                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                                //main graph
+                                    var graph = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+                                        x:0, y:0, width:width, height:height,
+                                        style:{
+                                            foreground:middlegroundStyle, foregroundText:middlegroundTextStyle, 
+                                            background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                            backing:backingStyle
+                                        }
+                                    });
+                                    
+                                    object.append(graph);
+                                //needle overlay
+                                    var overlay = __globals.utility.experimental.elementMaker('needleOverlay', 'overlay', {
+                                        x:0, y:0, width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                                        needleStyles:foregroundStyles,
+                                    });
+                                    object.append(overlay);
+                        
+                            //controls
+                                object.select = overlay.select;
+                                object.area = overlay.area;
+                                object.draw = graph.draw;
+                                object.foregroundLineThickness = graph.foregroundLineThickness;
+                                object.drawBackground = graph.drawBackground;
+                                object.area = overlay.area;
+                                object._test = graph._test;
+                                object.genericNeedle = overlay.genericNeedle;
+                        
+                            //callbacks
+                                object.onchange = function(needle,value){};
+                                overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
+                                object.onrelease = function(needle,value){};
+                                overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
+                                object.selectionAreaToggle = function(toggle){};
+                                overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
+                        
+                            //setup
+                                object.drawBackground();
+                        
+                            return object;
+                        };
+                        this.key_rect = function(
+                            id='key_rect',
+                            x, y, width, height, angle=0,
+                            style_off = 'fill:rgba(200,200,200,1)',
+                            style_press = 'fill:rgba(180,180,180,1)',
+                            style_glow = 'fill:rgba(220,200,220,1)',
+                            style_pressAndGlow = 'fill:rgba(200,190,200,1)'
+                        ){
+                        
+                            // elements 
+                            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                        
+                            var rect = __globals.utility.experimental.elementMaker('rect',null,{width:width, height:height, angle:angle, style:style_off});
+                                object.appendChild(rect);
+                        
+                            //state
+                            object.state = 0;
+                            object.activateState = function(state){
+                                // 0 - off
+                                // 1 - pressed
+                                // 2 - glowing
+                                // 3 - pressed and glowing
+                                switch(state){
+                                    case 0: __globals.utility.element.setStyle(rect, style_off); break;
+                                    case 1: __globals.utility.element.setStyle(rect, style_press); break;
+                                    case 2: __globals.utility.element.setStyle(rect, style_glow); break;
+                                    case 3: __globals.utility.element.setStyle(rect, style_pressAndGlow); break;
+                                    default: /*console.error('Unknown state reached:', state);*/ return; break;
+                                }
+                                object.state = state;
+                            };
+                        
+                            //interactivity
+                            rect.onmousedown =  function(){ object.press();   };
+                            rect.onmouseup =    function(){ object.release(); };
+                            rect.onmouseleave = function(){ object.release(); };
+                            rect.onmouseenter = function(event){ if(event.buttons == 1){object.press();} };
+                        
+                            //callbacks
+                            object.keyup =    function(){ /*console.log('mouseup');    */ };
+                            object.keydown =  function(){ /*console.log('mousedown');  */ };
+                        
+                            //methods;
+                            object.press =   function(){
+                                if( this.state%2 != 0 ){return;} //key already pressed 
+                                this.activateState(this.state+1);
+                                if(this.keydown){this.keydown();}
+                            };
+                            object.release = function(){ 
+                                if( this.state%2 == 0 ){return;} //key not pressed 
+                                this.activateState(object.state-1); 
+                                if(this.keyup){this.keyup();}
+                            };
+                            object.glow = function(){ this.activateState(this.state+2); };
+                            object.dim  = function(){ this.activateState(this.state-2); };
+                        
+                            return object;
+                        };
+                        this.needleOverlay = function(
+                            id='needleOverlay',
+                            x, y, width, height, angle=0, needleWidth=0.00125, selectNeedle=true, selectionArea=true,
+                            needleStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
+                        ){
+                            var needleData = {};
+                        
+                            //elements
+                                //main
+                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                                //backing
+                                    var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height,style:'fill:rgba(100,100,100, 0);'});
+                                    object.appendChild(backing);
+                                //control objects
+                                    var invisibleHandleWidth = width*needleWidth + width*0.005;
+                                    var controlObjects = {};
+                                        //lead
+                                        controlObjects.lead = __globals.utility.experimental.elementMaker('g','lead',{});
+                                        controlObjects.lead.append(__globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}));
+                                        controlObjects.lead.append(__globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}));
+                                        //selection_A
+                                        controlObjects.selection_A = __globals.utility.experimental.elementMaker('g','selection_A',{});
+                                        controlObjects.selection_A.append(__globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
+                                        controlObjects.selection_A.append(__globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
+                                        //selection_B
+                                        controlObjects.selection_B = __globals.utility.experimental.elementMaker('g','selection_B',{});
+                                        controlObjects.selection_B.append(__globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
+                                        controlObjects.selection_B.append(__globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
+                                        //selection_area
+                                        controlObjects.selection_area = __globals.utility.experimental.elementMaker('rect','selection_area',{height:height,style:needleStyles[1]+'opacity:0.33; cursor: move;'});
+                                        //generic needles
+                                        controlObjects.generic = [];
+                                    var controlObjectsGroup = __globals.utility.experimental.elementMaker('g','controlObjectsGroup',{})
+                                    object.append(controlObjectsGroup);
+                        
+                            //internal functions
+                                function setGenericNeedle(number,location,specialStyle={}){
+                                    if(controlObjects.generic[number] && location != undefined){
+                                        __globals.utility.element.setTransform_XYonly( controlObjects.generic[number], location*width - width*needleWidth*location, 0);
+                                    }else if(controlObjects.generic[number]){
+                                        controlObjects.generic[number].remove();
+                                        delete controlObjects.generic[number];
+                                    }else{
+                                        controlObjects.generic[number] = __globals.utility.experimental.elementMaker('g','generic_'+number,{x:(location*width - needleWidth*width/2), style:specialStyle})
+                                        controlObjects.generic[number].append( __globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}) );
+                                        controlObjects.generic[number].append( __globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);'}) );
+                                        controlObjectsGroup.append( controlObjects.generic[number] );
+                                    }
+                                }
+                                //place the selected needle at the selected location
+                                function needleJumpTo(needle,location){
+                                    //if the location is wrong, remove the needle and return
+                                    if(location == undefined || location < 0 || location > 1){
+                                        controlObjects[needle].remove();
+                                        delete needleData[needle];
+                                        return;
+                                    }
+                        
+                                    //if the needle isn't in the scene, add it
+                                    if( !controlObjectsGroup.contains(controlObjects[needle]) ){
+                                        controlObjectsGroup.append(controlObjects[needle]);
+                                    }
+                        
+                                    //actualy set the location of the needle (adjusting for the size of needle)
+                                    __globals.utility.element.setTransform_XYonly( controlObjects[needle], location*width - width*needleWidth*location, 0);
+                                    //save this value
+                                    needleData[needle] = location;
+                                }
+                                function computeSelectionArea(){
+                                    //if the selection needles' data are missing (or they are the same position) remove the area element and return
+                                    if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
+                                        controlObjects.selection_area.remove();
+                                        object.selectionAreaToggle(false);
+                                        delete needleData.selection_area;
+                                        return;
+                                    }
+                        
+                                    //if the area isn't in the scene, add it
+                                    if( !controlObjectsGroup.contains(controlObjects.selection_area) ){
+                                        controlObjectsGroup.append(controlObjects.selection_area);
+                                        object.selectionAreaToggle(true);
+                                    }
+                        
+                                    //compute area position and size
+                                    if(needleData.selection_A < needleData.selection_B){
+                                        var A = needleData.selection_A;
+                                        var B = needleData.selection_B;
+                                    }else{
+                                        var A = needleData.selection_B;
+                                        var B = needleData.selection_A;
+                                    }
+                                    var start = A - needleWidth*A + needleWidth
+                                    var area = B - needleWidth*B - start; 
+                                    if(area < 0){area = 0}
+                        
+                                    __globals.utility.element.setTransform_XYonly(controlObjects.selection_area, width*start, 0);
+                                    controlObjects.selection_area.setAttribute('width',width*area);
+                                }
+                        
+                            //interaction
+                                //generic onmousedown code for interaction
+                                function needle_onmousedown(needleName,callback){
+                                    if(object.onchange){ object.onchange(needleName,__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x); }
+                                    __globals.svgElement.onmousemove = function(event){
+                                        var x = __globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
+                        
+                                        needleJumpTo(needleName,x);
+                                        if(object.onchange){ object.onchange(needleName,x); }
+                                        if(callback){callback();}
+                                    };
+                                    __globals.svgElement.onmouseup = function(event){
+                                        var x = __globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
+                                        needleJumpTo(needleName,x);
+                                        if(object.onrelease){ object.onrelease(needleName,x); }
+                                        if(callback){callback();}
+                                        __globals.svgElement.onmousemove = undefined;
+                                        __globals.svgElement.onmouseleave = undefined;
+                                        __globals.svgElement.onmouseup = undefined;
+                                    };
+                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                }
+                        
+                                backing.onmousedown = function(event){
+                                    if(!event.shiftKey){
+                                        if(!selectNeedle){return;}
+                                        needleJumpTo('lead',__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
+                                        needle_onmousedown('lead');
+                                    }
+                                    else{
+                                        if(!selectionArea){return;}
+                                        needleJumpTo('selection_A',__globals.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
+                                        needle_onmousedown('selection_B',computeSelectionArea);
+                                    }
+                                };
+                                controlObjects.lead.onmousedown = function(){ needle_onmousedown('lead'); };
+                                controlObjects.selection_A.onmousedown = function(){
+                                    needle_onmousedown('selection_A',computeSelectionArea); 
+                                };
+                                controlObjects.selection_B.onmousedown = function(){
+                                    needle_onmousedown('selection_B',computeSelectionArea); 
+                                };
+                                controlObjects.selection_area.onmousedown = function(){
+                                    __globals.svgElement.onmousemove = function(event){
+                                        var divider = __globals.utility.workspace.getGlobalScale(object);
+                                        var newAlocation = needleData['selection_A']+event.movementX/(width*divider);
+                                        var newBlocation = needleData['selection_B']+event.movementX/(width*divider);
+                        
+                                        if(newAlocation > 1 || newAlocation < 0 || newBlocation > 1 || newBlocation < 0){return;}
+                        
+                                        if(object.onchange){ object.onchange('selection_A',newAlocation); object.onchange('selection_B',newBlocation); }
+                                        needleJumpTo('selection_A',newAlocation);
+                                        needleJumpTo('selection_B',newBlocation);
+                                        computeSelectionArea();
+                                    };
+                                    __globals.svgElement.onmouseup = function(event){
+                                        if(object.onrelease){ object.onrelease('selection_A',needleData.selection_A); object.onrelease('selection_B',needleData.selection_B); }
+                                        __globals.svgElement.onmousemove = undefined;
+                                        __globals.svgElement.onmouseleave = undefined;
+                                        __globals.svgElement.onmouseup = undefined;
+                                    };
+                                };
+                                
+                                //doubleclick to destroy selection area
+                                controlObjects.selection_A.ondblclick = function(){
+                                    needleJumpTo('selection_A');
+                                    needleJumpTo('selection_B');
+                                    computeSelectionArea();
+                                };
+                                controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
+                                controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
+                        
+                            //controls
+                                object.select = function(position,update=true){
+                                    if(!selectNeedle){return;}
+                                    //if there's no input, return the value
+                                    //if input is out of bounds, remove the needle
+                                    //otherwise, set the position
+                                    if(position == undefined){ return needleData.lead; }
+                                    else if(position > 1 || position < 0){ needleJumpTo('lead'); }
+                                    else{ needleJumpTo('lead',position); }
+                                };
+                                object.area = function(positionA,positionB){
+                                    if(!selectionArea){return;}
+                        
+                                    //if there's no input, return the values
+                                    //if input is out of bounds, remove the needles
+                                    //otherwise, set the position
+                                    if(positionA == undefined || positionB == undefined){
+                                        return {A:needleData.selection_A, B:needleData.selection_B};
+                                    }else if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 ){
+                                        needleJumpTo('selection_A');
+                                        needleJumpTo('selection_B');
+                                    }else{
+                                        needleJumpTo('selection_A',positionA);
+                                        needleJumpTo('selection_B',positionB);
+                                    }
+                        
+                                    //you always gotta computer the selection area
+                                    computeSelectionArea();
+                                };
+                                object.genericNeedle = function(number,position,specialStyle=''){
+                                    setGenericNeedle(number,position,specialStyle);
+                                };
+                        
+                            //callbacks
+                                object.onchange = function(needle,value){};
+                                object.onrelease = function(needle,value){};
+                                object.selectionAreaToggle = function(bool){};
+                        
+                            return object;
+                        };
+                        this.rangeslide = function(
+                            id='rangeslide', 
+                            x, y, width, height, angle=0,
+                            handleHeight=0.025, spanWidth=0.75, values=[0,1], resetValues=[-1,-1],
+                            handleStyle='fill:rgba(200,200,200,1)',
+                            backingStyle='fill:rgba(150,150,150,1)',
+                            slotStyle='fill:rgba(50,50,50,1)',
+                            invisibleHandleStyle='fill:rgba(0,0,0,0);',
+                            spanStyle='fill:rgba(200,0,200,0.5);',
+                        ){
+                            var grappled = false;
+                        
+                            //elements
+                                //main
+                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
+                                //backing and slot group
+                                    var backingAndSlot = __globals.utility.experimental.elementMaker('g','backingAndSlotGroup',{});
+                                    object.appendChild(backingAndSlot);
+                                    //backing
+                                        var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
+                                        backingAndSlot.appendChild(backing);
+                                    //slot
+                                        var slot = __globals.utility.experimental.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
+                                        backingAndSlot.appendChild(slot);
+                        
+                                //span
+                                    var span = __globals.utility.experimental.elementMaker('rect','span',{
+                                        x:width*((1-spanWidth)/2), y:height*handleHeight,
+                                        width:width*spanWidth, height:height - 2*height*handleHeight, 
+                                        style:spanStyle
+                                    });
+                                    object.appendChild(span);
+                        
+                                //handles
+                                    var handleCount = 2;
+                                    var handles = [];
+                                    for(var a = 0; a < handleCount; a++){
+                                        //grouping
+                                            handles[a] = __globals.utility.experimental.elementMaker('g','handle_'+a,{})
+                                            object.appendChild(handles[a]);
+                                        //handle
+                                            var handle = __globals.utility.experimental.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
+                                            handles[a].appendChild(handle);
+                                        //invisible handle
+                                            var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                            var invisibleHandle = __globals.utility.experimental.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
+                                            handles[a].appendChild(invisibleHandle);
+                                    }
+                        
+                            //graphical adjust
+                                function set(a,handle,update=true){
+                                    a = (a>1 ? 1 : a);
+                                    a = (a<0 ? 0 : a);
+                        
+                                    //make sure the handle order is maintained
+                                    //if necessary, one handle should push the other, though not past the ends
+                                        switch(handle){
+                                            default: console.error('unknown handle to adjust'); break;
+                                            case 0:
+                                                if((values[1] - a + handleHeight*(a - values[1] - 1)) < 0){
+                                                    if( (a + handleHeight) > 1 ){ a = 1 - handleHeight; }
+                                                    values[0] = a;
+                                                    values[1] = a + handleHeight;
+                                                }
+                                            break;
+                                            case 1: 
+                                                if((a - values[0] + handleHeight*(values[0] - a - 1)) < 0){
+                                                    if( (a - handleHeight) < 0 ){ a = handleHeight; }
+                                                    values[0] = a - handleHeight;
+                                                    values[1] = a;
+                                                }
+                                            break;
+                                        }
+                        
+                                    //fill in data
+                                        values[handle] = a;
+                        
+                                    //adjust y positions
+                                        __globals.utility.element.setTransform_XYonly(handles[0],0,values[0]*height*(1-handleHeight));
+                                        __globals.utility.element.setTransform_XYonly(handles[1],0,values[1]*height*(1-handleHeight));
+                        
+                                    //adjust span height (with a little bit of padding so the span is under the handles a little)
+                                        __globals.utility.element.setTransform_XYonly(span, width*((1-spanWidth)/2), height*(handleHeight + values[0] - handleHeight*(values[0] + 0.1)));
+                                        span.height.baseVal.value = height*( values[1] - values[0] + handleHeight*(values[0] - values[1] - 1 + 0.2) );
+                        
+                                    if(update && object.onchange){object.onchange(values);}
+                                }
+                                function pan(a){
+                                    var diff = values[1] - values[0];
+                        
+                                    var newPositions = [ a, a+diff ];
+                                    if(newPositions[0] <= 0){
+                                        newPositions[1] = newPositions[1] - newPositions[0];
+                                        newPositions[0] = 0;
+                                    }
+                                    else if(newPositions[1] >= 1){
+                                        newPositions[0] = newPositions[0] - (newPositions[1]-1);
+                                        newPositions[1] = 1;
+                                    }
+                        
+                                    set( newPositions[0],0 );
+                                    set( newPositions[1],1 );
+                                }
+                        
+                            //methods
+                                object.get = function(){return values;};
+                                object.set = function(values,update){
+                                    if(grappled){return;}
+                                    if(values.start){set(values.start,0,update);}
+                                    if(values.end){set(values.end,1,update);}
+                                };
+                                object.smoothSet = function(targets,time,curve,update){
+                                    if(grappled){return;}
+                        
+                                    var startTime = __globals.audio.context.currentTime;
+                                    var startValues = JSON.parse(JSON.stringify(values));
+                                    var pointFunc = __globals.utility.math.curvePoint.linear;
+                        
+                                    switch(curve){
+                                        case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
+                                        case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
+                                        case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
+                                        case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
+                                        case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
+                                    }
+                        
+                                    object.smoothSet.interval = setInterval(function(){
+                                        var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
+                                        if(targets.start != undefined){set( pointFunc(progress, startValues[0], targets.start),0, update );}
+                                        if(targets.end != undefined){set( pointFunc(progress, startValues[1], targets.end),1, update );}
+                                        if( (__globals.audio.context.currentTime-startTime) >= time ){
+                                            if(object.onrelease){object.onrelease(values);}
+                                            clearInterval(object.smoothSet.interval);
+                                        }
+                                    }, 1000/30); 
+                                };
+                                
+                            //interaction
+                                //background click
+                                    backingAndSlot.onclick = function(event){
+                                        if(grappled){return;}
+                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                        var y = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
+                                        y = y + 0.5*handleHeight*((2*y)-1);
+                        
+                                        Math.abs(values[0]-y) < Math.abs(values[1]-y) ? set(y,0) : set(y,1);
+                                    };
+                        
+                                //double-click reset
+                                    object.ondblclick = function(){
+                                        if(resetValues[0]<0 || resetValues[1]<0){return;}
+                                        if(grappled){return;}
+                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                        set(resetValues[0],0);
+                                        set(resetValues[1],1);
+                                        object.onrelease(values);
+                                    };
+                        
+                                //span panning - expand/shrink
+                                    object.onwheel = function(){
+                                        if(grappled){return;}
+                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                        var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                                        var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                                        var val = move/(10*globalScale);
+                        
+                                        set(values[0]-val,0);
+                                        set(values[1]+val,1);
+                                    };
+                        
+                                //span panning - drag
+                                    span.onmousedown = function(event){
+                                        grappled = true;
+                                        if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                        var initialValue = values[0];
+                                        var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                        __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                                        __globals.svgElement.onmousemove = function(event){
+                                            var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                            pan( initialValue+(livePosition.y-initialPosition.y) )
+                                            object.onchange(values);
+                                        };
+                                        __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
+                                        __globals.svgElement.onmouseup = function(event){
+                                            var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                            pan( initialValue+(livePosition.y-initialPosition.y) )
+                                            object.onrelease(values);
+                        
+                                            __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                                            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                                            __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+                                            grappled = false;
+                                        };
+                                        __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
+                                        __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                    };
+                        
+                                //handle movement
+                                    for(var a = 0; a < handles.length; a++){
+                                        handles[a].onmousedown = (function(a){
+                                            return function(event){
+                                                grappled = true;
+                                                if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                                    
+                                                var initialValue = values[a];
+                                                var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                                
+                                                __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                                                __globals.svgElement.onmousemove = function(event){
+                                                    var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                                    set( initialValue+(livePosition.y-initialPosition.y),a );
+                                                    object.onchange(values);
+                                                };
+                                                __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
+                                                __globals.svgElement.onmouseup = function(event){
+                                                    var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
+                                                    set( initialValue+(livePosition.y-initialPosition.y),a );
+                                                    object.onrelease(values);
+                                    
+                                                    __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                                                    __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+                                                    grappled = false;
+                                                };
+                                                __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
+                                                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                            }
+                                        })(a);
+                                    }
+                              
+                            //callbacks
+                                object.onchange = function(){};
+                                object.onrelease = function(){};  
+                        
+                            //setup
+                                set(0,0);
+                                set(1,1);
+                        
+                            return object;
+                        };
+                        this.rastorgrid = function(
+                            id='rastorgrid', 
+                            x, y, width, height,
+                            xcount, ycount,
+                            backingStyle = 'fill:rgba(200,200,200,1)',
+                            checkStyle = 'fill:rgba(150,150,150,1)',
+                            backingGlowStyle = 'fill:rgba(220,220,220,1)',
+                            checkGlowStyle = 'fill:rgba(220,220,220,1)',
+                        ){
+                            // elements
+                            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+                            var rect = __globals.utility.experimental.elementMaker('rect',null,{width:width,height:height, style:backingStyle});
+                                object.appendChild(rect);
+                        
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    var temp = __globals.utility.experimental.elementMaker('checkbox_rect',y+'_'+x,{
+                                        x:x*(width/xcount), 
+                                        y:y*(height/ycount), 
+                                        width:width/xcount, 
+                                        height:height/ycount, 
+                                        style:{
+                                            check:checkStyle,
+                                            backing:backingStyle,
+                                            checkGlow:checkGlowStyle,
+                                            backingGlow:backingGlowStyle,
+                                        }
+                                    });
+                                    object.appendChild(temp);
+                                    temp.onchange = function(){ if(object.onchange){object.onchange(object.get());} };
+                                }
+                            }
+                        
+                        
+                            //methods
+                            object.box = function(x,y){ return object.children[y+'_'+x]; };
+                            object.get = function(){
+                                var outputArray = [];
+                        
+                                for(var y = 0; y < ycount; y++){
+                                    var temp = [];
+                                    for(var x = 0; x < xcount; x++){
+                                        temp.push(this.box(x,y).get());
+                                    }
+                                    outputArray.push(temp);
+                                }
+                        
+                                return outputArray;
+                            };
+                            object.set = function(value, update=true){
+                                for(var y = 0; y < ycount; y++){
+                                    for(var x = 0; x < xcount; x++){
+                                        object.box(x,y).set(value[y][x],false);
+                                    }
+                                }
+                            };
+                            object.clear = function(){
+                                for(var y = 0; y < ycount; y++){
+                                    for(var x = 0; x < xcount; x++){
+                                        object.box(x,y).set(false,false);
+                                    }
+                                }
+                            };
+                            object.light = function(x,y,state){
+                                object.box(x,y).light(state);
+                            };
+                        
+                        
+                            //callback
+                            object.onchange = function(){};
+                        
+                        
+                            return object;
+                        };
+                        this.slide = function(
+                            id='slide', 
+                            x, y, width, height, angle=0,
+                            handleHeight=0.1, value=0, resetValue=-1,
+                            handleStyle = 'fill:rgba(200,200,200,1)',
+                            backingStyle = 'fill:rgba(150,150,150,1)',
+                            slotStyle = 'fill:rgba(50,50,50,1)',
+                            invisibleHandleStyle = 'fill:rgba(0,0,0,0);',
+                        ){
+                            var grappled = false;
+                        
+                            //elements
+                                //main
+                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
+                                //backing and slot group
+                                    var backingAndSlot = __globals.utility.experimental.elementMaker('g','backingAndSlotGroup',{});
+                                    object.appendChild(backingAndSlot);
+                                    //backing
+                                        var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
+                                        backingAndSlot.appendChild(backing);
+                                    //slot
+                                        var slot = __globals.utility.experimental.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
+                                        backingAndSlot.appendChild(slot);
+                                //handle
+                                    var handle = __globals.utility.experimental.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
+                                    object.appendChild(handle);
+                                //invisible handle
+                                    var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                    var invisibleHandle = __globals.utility.experimental.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
+                                    object.appendChild(invisibleHandle);
+                        
+                            //graphical adjust
+                                function set(a,update=true){
+                                    a = (a>1 ? 1 : a);
+                                    a = (a<0 ? 0 : a);
+                        
+                                    if(update){object.onchange(a);}
+                                    
+                                    value = a;
+                                    handle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
+                                    invisibleHandle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
+                                }
+                                object.__calculationAngle = angle;
+                                function currentMousePosition(event){
+                                    return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
+                                }
+                            
+                            //methods
+                                object.set = function(value,update){
+                                    if(grappled){return;}
+                                    set(value,update);
+                                };
+                                object.smoothSet = function(target,time,curve,update){
+                                    if(grappled){return;}
+                        
+                                    var startTime = __globals.audio.context.currentTime;
+                                    var startValue = value;
+                                    var pointFunc = __globals.utility.math.curvePoint.linear;
+                        
+                                    switch(curve){
+                                        case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
+                                        case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
+                                        case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
+                                        case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
+                                        case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
+                                    }
+                        
+                                    object.smoothSet.interval = setInterval(function(){
+                                        var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
+                                        set( pointFunc(progress, startValue, target), update );
+                                        if( (__globals.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
+                                    }, 1000/30);            
+                                };
+                                object.smoothSet_old = function(target,time,curve,update){
+                                    object.smoothSet(target,time,curve,update);
+                                    // if(grappled){return;}
+                        
+                                    // var start = value;
+                                    // var mux = target - start;
+                                    // var stepsPerSecond = Math.round(Math.abs(mux)*100);
+                                    // var totalSteps = stepsPerSecond*time;
+                        
+                                    // var steps = [1];
+                                    // switch(curve){
+                                    //     case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
+                                    //     case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
+                                    //     case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
+                                    //     case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
+                                    //     case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
+                                    //     case 'instant': default: break;
+                                    // }
+                                    // if(steps.length == 0){return;}
+                        
+                                    // if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                                    // object.smoothSet.interval = setInterval(function(){
+                                    //     set( (start+(steps.shift()*mux)),update );
+                                    //     if(steps.length == 0){clearInterval(object.smoothSet.interval);}
+                                    // },1000/stepsPerSecond);
+                                };
+                                object.get = function(){return value;};
+                        
+                            //interaction
+                                object.ondblclick = function(){
+                                    if(resetValue<0){return;}
+                                    if(grappled){return;}
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    set(resetValue);
+                                    object.onrelease(value);
+                                };
+                                object.onwheel = function(){
+                                    if(grappled){return;}
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                                    var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                                    set( value + move/(10*globalScale) );
+                                    object.onrelease(value);
+                                };
+                                backingAndSlot.onclick = function(event){
+                                    if(grappled){return;}
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    var y = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
+                        
+                                    var value = y + 0.5*handleHeight*((2*y)-1);
+                                    set(value);
+                                    object.onrelease(value);
+                                };
+                                invisibleHandle.onmousedown = function(event){
+                                    grappled = true;
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    var initialValue = value;
+                                    var initialY = currentMousePosition(event);
+                                    var mux = height - height*handleHeight;
+                        
+                                    __globals.svgElement.onmousemove = function(event){
+                                        var numerator = initialY-currentMousePosition(event);
+                                        var divider = __globals.utility.workspace.getGlobalScale(object);
+                                        set( initialValue - numerator/(divider*mux) );
+                                    };
+                                    __globals.svgElement.onmouseup = function(event){
+                                        var numerator = initialY-currentMousePosition(event);
+                                        var divider = __globals.utility.workspace.getGlobalScale(object);
+                                        object.onrelease(initialValue - numerator/(divider*mux));
+                        
+                                        __globals.svgElement.onmousemove = undefined;
+                                        __globals.svgElement.onmouseleave = undefined;
+                                        __globals.svgElement.onmouseup = undefined;
+                                        grappled = false;
+                                    };
+                                    __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+                                };
+                        
+                            //callbacks
+                                object.onchange = function(){};
+                                object.onrelease = function(){};
+                        
+                            //setup
+                                set(value);
+                        
+                            return object;
+                        };
+                        this.slidePanel = function(
+                            id='slidePanel', 
+                            x, y, width, height, count, angle=0,
+                            handleHeight=0.1, startValue=0, resetValue=0.5,
+                            handleStyle = 'fill:rgba(180,180,180,1)',
+                            backingStyle = 'fill:rgba(150,150,150,1)',
+                            slotStyle = 'fill:rgba(50,50,50,1)'
+                        ){
+                            //elements
+                                //main
+                                    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
+                                //slides
+                                    for(var a = 0; a < count; a++){
+                                        var temp = __globals.utility.experimental.elementMaker(
+                                            'slide',a,{
+                                                x:a*(width/count), y:0,
+                                                width:width/count, height:height,
+                                                value:startValue, resetValue:resetValue,
+                                                style:{handle:handleStyle, backing:backingStyle, slot:slotStyle}
+                                            }
+                                        );
+                                        temp.onchange = function(value){ object.onchange(this.id,value); };
+                                        temp.onrelease = function(value){ object.onrelease(this.id,value); };
+                                        temp.__calculationAngle = angle;
+                                        object.appendChild(temp);
+                                    }
+                        
+                            //methods
+                                object.slide = function(index){ return object.children[index]; };
+                                object.get = function(){
+                                    var outputArray = [];
+                                    for(var a = 0; a < count; a++){
+                                        outputArray.push(this.slide(a).get());
+                                    }
+                                    return outputArray;
+                                };
+                                object.set = function(values,update=true){
+                                    for(var a = 0; a < values.length; a++){
+                                        this.slide(a).set(values[a],update);
+                                    }
+                                };
+                                object.setAll = function(value,update=true){
+                                    this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value),false );
+                                    if(update){this.onchange('all',value);}
+                                };
+                                object.smoothSet = function(values,time,curve,update=true){
+                                    for(var a = 0; a < values.length; a++){
+                                        this.slide(a).smoothSet(values[a],time,curve,update);
+                                    }
+                                };
+                                object.smoothSetAll = function(value, time, curve, update=true){
+                                    this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value), time, curve, false );
+                                    if(update){this.onchange('all',value);}
+                                };
+                        
+                            //callbacks
+                                object.onchange = function(slide,value){};
+                                object.onrelease = function(slide,value){};
+                            
+                            return object;
                         };
                     };
                     this.dynamic = new function(){
@@ -7980,6 +7986,67 @@
                 
                     return obj;
                 };
+                this.data_duplicator = function(x,y){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+                    };
+                    var design = {
+                        type:'data_duplicator',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                            style:'fill:rgba(200,200,200,0);'
+                        },
+                        elements:[
+                            {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
+                            {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
+                            {type:'connectionNode_data', name:'input', data:{ 
+                                x:45, y:5, width:20, height:20,
+                                receive:function(address,data){
+                                    obj.io.output_1.send(address,data);
+                                    obj.io.output_2.send(address,data);
+                                }
+                            }},
+                
+                            {type:'path', name:'backing', data:{
+                                path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                                style:style.background
+                            }},
+                
+                            {type:'path', name:'upperArrow', data:{
+                                path:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}],
+                                style:style.markings,
+                            }},
+                            {type:'path', name:'lowerArrow', data:{
+                                path:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}],
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'topHorizontal', data:{
+                                x:5, y:15, width:45, height:2, 
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'vertical', data:{
+                                x:27.5, y:15, width:2, height:25.5, 
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'bottomHorizontal', data:{
+                                x:5, y:40, width:24.5, height:2, 
+                                style:style.markings,
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.data_duplicator,design);
+                    
+                    return obj;
+                
+                };
+                //Operation Note:
+                //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
+                //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
+                //  then the 2nd port
                 this.distortionUnit = function(x,y){
                     var style = {
                         background: 'fill:rgba(200,200,200,1); stroke:none;',
@@ -9085,6 +9152,181 @@
                     return obj;
                 };
 
+                this.pianoroll = function(x,y,debug=false){
+                    var height = 37;
+                    var width = 128;
+                    var topNoteNumber = 108;
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        rangeslide:{
+                            handle:'fill:rgba(240,240,240,1)',
+                            backing:'fill:rgba(150,150,150,1)',
+                            slot:'fill:rgba(50,50,50,1)',
+                            invisibleHandle:'fill:rgba(0,0,0,0);',
+                            span:'fill:rgba(220,220,220,1)',
+                        },
+                        button:{
+                            up:'fill:rgba(220,220,220,1)',
+                            hover:'fill:rgba(240,240,240,1)',
+                            down:'fill:rgba(180,180,180,1)',
+                            glow:'fill:rgba(220,200,220,1)',
+                        },
+                        keys:{
+                            white:{
+                                off:'fill:rgba(250,250,250,1)',
+                                press:'fill:rgba(230,230,230,1)',
+                                glow:'fill:rgba(220,200,220,1)',
+                                pressAndGlow:'fill:rgba(200,150,200,1)',
+                            },
+                            black:{
+                                off:'fill:rgba(50,50,50,1)',
+                                press:'fill:rgba(100,100,100,1)',
+                                glow:'fill:rgba(220,200,220,1)',
+                                pressAndGlow:'fill:rgba(200,150,200,1)',
+                            }
+                        }
+                    };
+                    var design = {
+                        type: 'pianoroll',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[ 
+                                {x:0,y:0}, 
+                                {x:825,y:0}, 
+                                {x:825,y:210}, 
+                                {x:0,y:210}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'rangeslide',name:'loopSelect', data:{
+                                x:35, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/width, spanWidth:1,
+                                style:{
+                                    handle: style.rangeslide.handle,
+                                    backing: style.rangeslide.backing,
+                                    slot: style.rangeslide.slot,
+                                    invisibleHandle: style.rangeslide.invisibleHandle,
+                                    span: style.rangeslide.span,
+                                },
+                                onchange:function(values){
+                                    var a = Math.round(values[0]*width);
+                                    var b = Math.round(values[1]*width);
+                                    if(b == 0){b = 1;}
+                                    pianoroll.loopPeriod({start:a,end:b});
+                                },
+                            }},            
+                            {type:'button_rect', name:'restart', data:{
+                                x:10, y:190, width:25, height:10,
+                                style:{
+                                    up:style.button.up,
+                                    hover:style.button.hover,
+                                    down:style.button.down,
+                                    glow:style.button.glow,
+                                },
+                                onclick:function(){
+                                    pianoroll.position(0);
+                                },
+                            }},
+                            {type:'connectionNode_data', name:'midiout', data:{ 
+                                x: -5, y: 5, width: 5, height: 20,
+                            }},
+                            {type:'connectionNode_data', name:'pulse', data:{ 
+                                x: 825, y: 5, width: 5, height: 20,
+                                receive:function(){pianoroll.progress();}
+                            }},
+                        ]
+                    };
+                    //dynamic design
+                        var mux_1 = 180/height;
+                        function keyDown(keyID){
+                            obj.io.midiout.send( 'midinumber', { num: topNoteNumber-parseInt(keyID), velocity:1 } );
+                        }
+                        function keyUp(keyID){
+                            obj.io.midiout.send( 'midinumber', { num: topNoteNumber-parseInt(keyID), velocity:0 } );
+                        }
+                
+                        design.elements.push(
+                            {type:'key_rect', name:0, data:{
+                                x:10, y:10, width:25, height:mux_1,
+                                style:style.keys.white,
+                                keydown:function(){keyDown(this.id);},
+                                keyup:function(){keyUp(this.id);},
+                            }}
+                        );
+                        //white keys
+                            for(var a = 1; a < height; a++){
+                                var temp = [
+                                    {y:10+mux_1*a,       height:1.5*mux_1 },
+                                    null,
+                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
+                                    null,
+                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
+                                    null,
+                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
+                                    {y:10+mux_1*a,       height:1.5*mux_1 },
+                                    null,
+                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
+                                    null,
+                                    {y:10+mux_1*(a-0.5), height:1.5*mux_1 },
+                                ][(a-1)%12];
+                                if(temp == null){continue;}
+                                design.elements.push(
+                                    {type:'key_rect', name:a, data:{
+                                        x:10, y:temp.y, width:25, height:temp.height,
+                                        style:style.keys.white,
+                                        keydown:function(){keyDown(this.id);},
+                                        keyup:function(){keyUp(this.id);},
+                                    }}
+                                );
+                            }
+                        //black keys
+                            for(var a = 1; a < height; a++){
+                                var temp = [ false, true, false, true, false, true, false, false, true, false, true, false ];
+                                if(!temp[(a-1)%12]){continue;}
+                                design.elements.push(
+                                    {type:'key_rect', name:a, data:{
+                                        x:10, y:10+mux_1*a, width:15, height:mux_1,
+                                        style:style.keys.black,
+                                        keydown:function(){keyDown(this.id);},
+                                        keyup:function(){keyUp(this.id);},
+                                    }}
+                                );
+                            }
+                            
+                
+                
+                    //internal functions
+                        function roll2midi(event){
+                            return {
+                                num: topNoteNumber - event.line,
+                                velocity:event.strength,
+                            };
+                        }
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.pianoroll,design);
+                
+                        //pianoroll
+                            var pianoroll = parts.elements.control.pianoroll('mainroll', 35, 10, 780, 180, 0, width, height) 
+                            obj.appendChild( pianoroll );
+                            pianoroll.loopPeriod({start:0,end:width});
+                            pianoroll.event = function(events){
+                                for(var a = 0; a < events.length; a++){ 
+                                    obj.io.midiout.send( 'midinumber', roll2midi(events[a]) ); 
+                                }
+                            };
+                
+                    //interface
+                        obj.i = {
+                            addNotes:function(noteData){pianoroll.addNotes(noteData);},
+                            loopSelect:function(data={start:0,end:1}){design.rangeslide.loopSelect.set(data);},
+                            restart:function(){design.button_rect.restart.click();},
+                            dumpNotes:function(){return pianoroll.allNotes();},
+                        };
+                
+                    return obj;
+                };
                 this.player = function(x,y,debug=false){
                     var style = {
                         background:'fill:rgba(200,200,200,1)',
@@ -9221,6 +9463,104 @@
 
                 this.pulseGenerator = function(x,y,debug=false){
                     var maxTempo = 240;
+                
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
+                
+                        dial:{
+                            handle: 'fill:rgba(220,220,220,1)',
+                            slot: 'fill:rgba(50,50,50,1)',
+                            needle: 'fill:rgba(250,150,150,1)',
+                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+                        }
+                    };
+                    var design = {
+                        type: 'pulseGenerator',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[
+                                {x:0,y:10},{x:10,y:0},
+                                {x:100,y:0},{x:115,y:10},
+                                {x:115,y:30},{x:100,y:40},
+                                {x:10,y:40},{x:0,y:30}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_data', name:'out', data:{
+                                x: -5, y: 11.25, width: 5, height: 17.5,
+                            }},
+                            {type:'connectionNode_data', name:'sync', data:{
+                                x: 115, y: 11.25, width: 5, height: 17.5,
+                                receive:function(){design.button_rect.sync.click();},
+                            }},
+                            {type:'button_rect', name:'sync', data:{
+                                x:102.5, y: 11.25, width:10, height: 17.5,
+                                style:{
+                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                                }, 
+                                onclick:function(){updateTempo(tempo)},
+                            }},
+                            {type:'dial_continuous',name:'tempo',data:{
+                                x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){updateTempo(Math.round(value*maxTempo));}
+                            }},
+                            {type:'readout_sixteenSegmentDisplay',name:'readout',data:{
+                                x:40, y:10, width:60, height:20, count:6,
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.pulseGenerator,design);
+                
+                    //import/export
+                        obj.exportData = function(){
+                            return design.dial_continuous.tempo.get();
+                        };
+                        obj.importData = function(data){
+                            design.dial_continuous.tempo.set(data);
+                        };
+                
+                    //internal functions
+                        var interval = null;
+                        var tempo = 120;
+                        function updateTempo(newTempo){
+                            //update readout
+                                design.readout_sixteenSegmentDisplay.readout.text(
+                                    __globals.utility.math.padString(newTempo,3,' ')+'bpm'
+                                );
+                                design.readout_sixteenSegmentDisplay.readout.print();
+                
+                            //update interval
+                                if(interval){ clearInterval(interval); }
+                                if(newTempo > 0){
+                                    interval = setInterval(function(){
+                                        obj.io.out.send('pulse');
+                                    },1000*(60/newTempo));
+                                }
+                
+                            obj.io.out.send('pulse');
+                            tempo = newTempo;
+                        }
+                
+                    //interface
+                        obj.i = {
+                            setTempo:function(value){
+                                design.dial_continuous.tempo.set(value);
+                            },
+                        };
+                
+                    //setup
+                        design.dial_continuous.tempo.set(0.5);
+                
+                    return obj;
+                };
+                this.pulseGenerator_hyper = function(x,y,maxTempo=240,debug=false){
                 
                     var style = {
                         background:'fill:rgba(200,200,200,1)',
@@ -9602,6 +9942,12 @@
                             function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
                             function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
                 
+                    //interface
+                        obj.i = {
+                            gain:function(a){design.dial_continuous.outGain.set(a);},
+                            wetdry:function(a){design.dial_continuous.wetdry.set(a);},
+                        };
+                
                     //setup
                         design.dial_continuous.outGain.set(1/2);
                         design.dial_continuous.wetdry.set(1/2);
@@ -9653,339 +9999,6 @@
                                 obj.append( lineElements[a] );
                             }
                         }
-                
-                    return obj;
-                };
-                this.pulseGenerator_hyper = function(x,y,maxTempo=240,debug=false){
-                
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
-                
-                        dial:{
-                            handle: 'fill:rgba(220,220,220,1)',
-                            slot: 'fill:rgba(50,50,50,1)',
-                            needle: 'fill:rgba(250,150,150,1)',
-                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-                        }
-                    };
-                    var design = {
-                        type: 'pulseGenerator',
-                        x: x, y: y,
-                        base: {
-                            type:'path',
-                            points:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_data', name:'out', data:{
-                                x: -5, y: 11.25, width: 5, height: 17.5,
-                            }},
-                            {type:'connectionNode_data', name:'sync', data:{
-                                x: 115, y: 11.25, width: 5, height: 17.5,
-                                receive:function(){design.button_rect.sync.click();},
-                            }},
-                            {type:'button_rect', name:'sync', data:{
-                                x:102.5, y: 11.25, width:10, height: 17.5,
-                                style:{
-                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
-                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
-                                }, 
-                                onclick:function(){updateTempo(tempo)},
-                            }},
-                            {type:'dial_continuous',name:'tempo',data:{
-                                x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){updateTempo(Math.round(value*maxTempo));}
-                            }},
-                            {type:'readout_sixteenSegmentDisplay',name:'readout',data:{
-                                x:40, y:10, width:60, height:20, count:6,
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.pulseGenerator,design);
-                
-                    //import/export
-                        obj.exportData = function(){
-                            return design.dial_continuous.tempo.get();
-                        };
-                        obj.importData = function(data){
-                            design.dial_continuous.tempo.set(data);
-                        };
-                
-                    //internal functions
-                        var interval = null;
-                        var tempo = 120;
-                        function updateTempo(newTempo){
-                            //update readout
-                                design.readout_sixteenSegmentDisplay.readout.text(
-                                    __globals.utility.math.padString(newTempo,3,' ')+'bpm'
-                                );
-                                design.readout_sixteenSegmentDisplay.readout.print();
-                
-                            //update interval
-                                if(interval){ clearInterval(interval); }
-                                if(newTempo > 0){
-                                    interval = setInterval(function(){
-                                        obj.io.out.send('pulse');
-                                    },1000*(60/newTempo));
-                                }
-                
-                            obj.io.out.send('pulse');
-                            tempo = newTempo;
-                        }
-                
-                    //interface
-                        obj.i = {
-                            setTempo:function(value){
-                                design.dial_continuous.tempo.set(value);
-                            },
-                        };
-                
-                    //setup
-                        design.dial_continuous.tempo.set(0.5);
-                
-                    return obj;
-                };
-                this.data_duplicator = function(x,y){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
-                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
-                    };
-                    var design = {
-                        type:'data_duplicator',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                            style:'fill:rgba(200,200,200,0);'
-                        },
-                        elements:[
-                            {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
-                            {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
-                            {type:'connectionNode_data', name:'input', data:{ 
-                                x:45, y:5, width:20, height:20,
-                                receive:function(address,data){
-                                    obj.io.output_1.send(address,data);
-                                    obj.io.output_2.send(address,data);
-                                }
-                            }},
-                
-                            {type:'path', name:'backing', data:{
-                                path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                                style:style.background
-                            }},
-                
-                            {type:'path', name:'upperArrow', data:{
-                                path:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}],
-                                style:style.markings,
-                            }},
-                            {type:'path', name:'lowerArrow', data:{
-                                path:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}],
-                                style:style.markings,
-                            }},
-                            {type:'rect', name:'topHorizontal', data:{
-                                x:5, y:15, width:45, height:2, 
-                                style:style.markings,
-                            }},
-                            {type:'rect', name:'vertical', data:{
-                                x:27.5, y:15, width:2, height:25.5, 
-                                style:style.markings,
-                            }},
-                            {type:'rect', name:'bottomHorizontal', data:{
-                                x:5, y:40, width:24.5, height:2, 
-                                style:style.markings,
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.data_duplicator,design);
-                    
-                    return obj;
-                
-                };
-                //Operation Note:
-                //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
-                //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
-                //  then the 2nd port
-                this.pianoroll = function(x,y,debug=false){
-                    var height = 37;
-                    var topNoteNumber = 108;
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        rangeslide:{
-                            handle:'fill:rgba(240,240,240,1)',
-                            backing:'fill:rgba(150,150,150,1)',
-                            slot:'fill:rgba(50,50,50,1)',
-                            invisibleHandle:'fill:rgba(0,0,0,0);',
-                            span:'fill:rgba(220,220,220,1)',
-                        },
-                        button:{
-                            up:'fill:rgba(220,220,220,1)',
-                            hover:'fill:rgba(240,240,240,1)',
-                            down:'fill:rgba(180,180,180,1)',
-                            glow:'fill:rgba(220,200,220,1)',
-                        },
-                        keys:{
-                            white:{
-                                off:'fill:rgba(250,250,250,1)',
-                                press:'fill:rgba(230,230,230,1)',
-                                glow:'fill:rgba(220,200,220,1)',
-                                pressAndGlow:'fill:rgba(200,150,200,1)',
-                            },
-                            black:{
-                                off:'fill:rgba(50,50,50,1)',
-                                press:'fill:rgba(100,100,100,1)',
-                                glow:'fill:rgba(220,200,220,1)',
-                                pressAndGlow:'fill:rgba(200,150,200,1)',
-                            }
-                        }
-                    };
-                    var design = {
-                        type: 'pianoroll',
-                        x: x, y: y,
-                        base: {
-                            type:'path',
-                            points:[ 
-                                {x:0,y:0}, 
-                                {x:825,y:0}, 
-                                {x:825,y:210}, 
-                                {x:0,y:210}
-                            ], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'rangeslide',name:'loopSelect', data:{
-                                x:35, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1,
-                                style:{
-                                    handle: style.rangeslide.handle,
-                                    backing: style.rangeslide.backing,
-                                    slot: style.rangeslide.slot,
-                                    invisibleHandle: style.rangeslide.invisibleHandle,
-                                    span: style.rangeslide.span,
-                                },
-                                onchange:function(values){
-                                    var a = Math.round(values[0]*64);
-                                    var b = Math.round(values[1]*64);
-                                    if(b == 0){b = 1;}
-                                    pianoroll.loopPeriod({start:a,end:b});
-                                },
-                            }},            
-                            {type:'button_rect', name:'restart', data:{
-                                x:10, y:190, width:25, height:10,
-                                style:{
-                                    up:style.button.up,
-                                    hover:style.button.hover,
-                                    down:style.button.down,
-                                    glow:style.button.glow,
-                                },
-                                onclick:function(){
-                                    pianoroll.position(0);
-                                },
-                            }},
-                            {type:'connectionNode_data', name:'midiout', data:{ 
-                                x: -5, y: 5, width: 5, height: 20,
-                            }},
-                            {type:'connectionNode_data', name:'pulse', data:{ 
-                                x: 825, y: 5, width: 5, height: 20,
-                                receive:function(){pianoroll.progress();}
-                            }},
-                        ]
-                    };
-                    //dynamic design
-                        var mux_1 = 180/height;
-                        function keyDown(keyID){
-                            obj.io.midiout.send( 'midinumber', { num: topNoteNumber-parseInt(keyID), velocity:1 } );
-                        }
-                        function keyUp(keyID){
-                            obj.io.midiout.send( 'midinumber', { num: topNoteNumber-parseInt(keyID), velocity:0 } );
-                        }
-                
-                        design.elements.push(
-                            {type:'key_rect', name:0, data:{
-                                x:10, y:10, width:25, height:mux_1,
-                                style:style.keys.white,
-                                keydown:function(){keyDown(this.id);},
-                                keyup:function(){keyUp(this.id);},
-                            }}
-                        );
-                        //white keys
-                            for(var a = 1; a < height; a++){
-                                var temp = [
-                                    {y:10+mux_1*a,       height:1.5*mux_1 },
-                                    null,
-                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
-                                    null,
-                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
-                                    null,
-                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
-                                    {y:10+mux_1*a,       height:1.5*mux_1 },
-                                    null,
-                                    {y:10+mux_1*(a-0.5), height:2*mux_1   },
-                                    null,
-                                    {y:10+mux_1*(a-0.5), height:1.5*mux_1 },
-                                ][(a-1)%12];
-                                if(temp == null){continue;}
-                                design.elements.push(
-                                    {type:'key_rect', name:a, data:{
-                                        x:10, y:temp.y, width:25, height:temp.height,
-                                        style:style.keys.white,
-                                        keydown:function(){keyDown(this.id);},
-                                        keyup:function(){keyUp(this.id);},
-                                    }}
-                                );
-                            }
-                        //black keys
-                            for(var a = 1; a < height; a++){
-                                var temp = [ false, true, false, true, false, true, false, false, true, false, true, false ];
-                                if(!temp[(a-1)%12]){continue;}
-                                design.elements.push(
-                                    {type:'key_rect', name:a, data:{
-                                        x:10, y:10+mux_1*a, width:15, height:mux_1,
-                                        style:style.keys.black,
-                                        keydown:function(){keyDown(this.id);},
-                                        keyup:function(){keyUp(this.id);},
-                                    }}
-                                );
-                            }
-                            
-                
-                
-                    //internal functions
-                        function roll2midi(event){
-                            return {
-                                num: topNoteNumber - event.line,
-                                velocity:event.strength,
-                            };
-                        }
-                
-                    //main object
-                        var obj = __globals.utility.experimental.objectBuilder(objects.pianoroll,design);
-                
-                        //pianoroll
-                            var pianoroll = parts.elements.control.pianoroll('mainroll', 35, 10, 780, 180, undefined, undefined, height) 
-                            obj.appendChild( pianoroll );
-                            pianoroll.loopPeriod({start:0,end:64});
-                            pianoroll.event = function(events){
-                                for(var a = 0; a < events.length; a++){ 
-                                    obj.io.midiout.send( 'midinumber', roll2midi(events[a]) ); 
-                                }
-                            };
-                
-                    //interface
-                        obj.i = {
-                            addNotes:function(noteData){pianoroll.addNotes(noteData);},
-                            loopSelect:function(data={start:0,end:1}){design.rangeslide.loopSelect.set(data);},
-                            restart:function(){design.button_rect.restart.click();},
-                            dumpNotes:function(){return pianoroll.allNotes();},
-                        };
                 
                     return obj;
                 };
