@@ -21,8 +21,7 @@
 
 </html>
 
-<script type='text/javascript' src='../../workspace.js'></script>
-<!-- <script type='text/javascript' src='../../workspace.min.js'></script> -->
+<script type='text/javascript' src='../../workspace.min.js'></script>
 
 <script>
     //create objects
@@ -128,12 +127,14 @@
         //the C waltz
             pulseGenerator_1.i.setTempo(150/999);
 
+            musicalkeyboard_1.i.velocity(1);
+            musicalkeyboard_2.i.velocity(1);
+
             basicSynthesizer_1.io.gain.receive('%',0.3);
             basicSynthesizer_1.io.release.receive('%',0.3);
             basicSynthesizer_1.io.octave.receive('discrete',4);
             basicSynthesizer_1.io.waveType.receive('discrete',1);
 
-            basicSynthesizer_2.io.attack.receive('%',0.1);
             basicSynthesizer_2.io.release.receive('%',0.3);
             basicSynthesizer_2.io.octave.receive('discrete',1);
             basicSynthesizer_2.io.waveType.receive('discrete',1);

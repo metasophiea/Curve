@@ -1,5 +1,5 @@
-parts.elements.control.pianoroll_5 = function(
-    id='pianoroll_5',
+parts.elements.control.pianoroll = function(
+    id='pianoroll',
     x, y, width, height, angle=0,
     xCount=64, yCount=22, xStripPattern=[0], yStripPattern=[0,0,1,0,1,0,1,0,0,1,0,1],
 ){
@@ -26,7 +26,7 @@ parts.elements.control.pianoroll_5 = function(
     };
     var state = {
         snapping:!false,
-        noteRegistry: new parts.elements.control.pianoroll_5.noteRegistry(xCount,yCount),
+        noteRegistry: new parts.elements.control.pianoroll.noteRegistry(xCount,yCount),
         selectedNotes:[],
         activeNotes:[],
         position:0,
@@ -45,7 +45,7 @@ parts.elements.control.pianoroll_5 = function(
         }
         function makeNote(line, position, length, strength=1){
             var freshID = state.noteRegistry.add({line:line, position:position, length:length, strength:strength});
-            var graphicElement = parts.elements.control.pianoroll_5.noteBlock(
+            var graphicElement = parts.elements.control.pianoroll.noteBlock(
                 freshID, {x:width/xCount,y:height/yCount},
                 line, position, length, false,
                 style.block,
@@ -99,27 +99,28 @@ parts.elements.control.pianoroll_5 = function(
                             starting: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
                         });
                     }
-                    object.onmousemove = function(event){
-                        var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
-                        var diff = {
-                            line: livePosition.line - initialPosition.line,
-                            position: livePosition.position - initialPosition.position,
-                        };
 
-                        for(var a = 0; a < activeBlocks.length; a++){
-                            state.noteRegistry.update(activeBlocks[a].id, {
-                                line:activeBlocks[a].starting.line+diff.line,
-                                position:activeBlocks[a].starting.position+diff.position,
-                            });
-
-                            var temp = state.noteRegistry.get_note(activeBlocks[a].id);
-
-                            activeBlocks[a].block.line( temp.line );
-                            activeBlocks[a].block.position( temp.position );
+                    __globals.utility.workspace.mouseInteractionHandler(
+                        function(event){
+                            var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                            var diff = {
+                                line: livePosition.line - initialPosition.line,
+                                position: livePosition.position - initialPosition.position,
+                            };
+    
+                            for(var a = 0; a < activeBlocks.length; a++){
+                                state.noteRegistry.update(activeBlocks[a].id, {
+                                    line:activeBlocks[a].starting.line+diff.line,
+                                    position:activeBlocks[a].starting.position+diff.position,
+                                });
+    
+                                var temp = state.noteRegistry.get_note(activeBlocks[a].id);
+    
+                                activeBlocks[a].block.line( temp.line );
+                                activeBlocks[a].block.position( temp.position );
+                            }
                         }
-                    };
-                    object.onmouseleave = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
-                    object.onmouseup = object.onmouseleave;
+                    );
                 };
                 graphicElement.leftHandle.onmousedown = function(event){
                     if(!graphicElement.selected()){
@@ -138,24 +139,25 @@ parts.elements.control.pianoroll_5 = function(
                             starting: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
                         });
                     }
-                    object.onmousemove = function(event){
-                        var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
-                        var diff = {position: initialPosition.position-livePosition.position};
 
-                        for(var a = 0; a < activeBlocks.length; a++){
-                            if( activeBlocks[a].starting.position-diff.position < 0 ){ continue; } //this stops a block from getting longer, when it is unable to move any further to the left
-                            
-                            state.noteRegistry.update(activeBlocks[a].id, {
-                                length: activeBlocks[a].starting.length+diff.position,
-                                position: activeBlocks[a].starting.position-diff.position,
-                            });
-                            var temp = state.noteRegistry.get_note(activeBlocks[a].id);
-                            activeBlocks[a].block.position( temp.position );
-                            activeBlocks[a].block.length( temp.length );
+                    __globals.utility.workspace.mouseInteractionHandler(
+                        function(event){
+                            var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                            var diff = {position: initialPosition.position-livePosition.position};
+    
+                            for(var a = 0; a < activeBlocks.length; a++){
+                                if( activeBlocks[a].starting.position-diff.position < 0 ){ continue; } //this stops a block from getting longer, when it is unable to move any further to the left
+                                
+                                state.noteRegistry.update(activeBlocks[a].id, {
+                                    length: activeBlocks[a].starting.length+diff.position,
+                                    position: activeBlocks[a].starting.position-diff.position,
+                                });
+                                var temp = state.noteRegistry.get_note(activeBlocks[a].id);
+                                activeBlocks[a].block.position( temp.position );
+                                activeBlocks[a].block.length( temp.length );
+                            }
                         }
-                    };
-                    object.onmouseleave = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
-                    object.onmouseup = object.onmouseleave;
+                    );
                 };
                 graphicElement.rightHandle.onmousedown = function(event){
                     if(!graphicElement.selected()){
@@ -174,18 +176,19 @@ parts.elements.control.pianoroll_5 = function(
                             starting: state.noteRegistry.get_note(parseInt(state.selectedNotes[a].id)),
                         });
                     }
-                    object.onmousemove = function(event){
-                        var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
-                        var diff = {position: livePosition.position - initialPosition.position};
 
-                        for(var a = 0; a < activeBlocks.length; a++){
-                            state.noteRegistry.update(activeBlocks[a].id, {length: activeBlocks[a].starting.length+diff.position});
-                            var temp = state.noteRegistry.get_note(activeBlocks[a].id);
-                            activeBlocks[a].block.length( temp.length );
+                    __globals.utility.workspace.mouseInteractionHandler(
+                        function(event){
+                            var livePosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,object,width,height));
+                            var diff = {position: livePosition.position - initialPosition.position};
+    
+                            for(var a = 0; a < activeBlocks.length; a++){
+                                state.noteRegistry.update(activeBlocks[a].id, {length: activeBlocks[a].starting.length+diff.position});
+                                var temp = state.noteRegistry.get_note(activeBlocks[a].id);
+                                activeBlocks[a].block.length( temp.length );
+                            }
                         }
-                    };
-                    object.onmouseleave = function(){this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;};
-                    object.onmouseup = object.onmouseleave;
+                    );
                 };
 
             return {id:freshID, element:graphicElement};
@@ -224,7 +227,8 @@ parts.elements.control.pianoroll_5 = function(
             var interactionPlane = __globals.utility.experimental.elementMaker('rect','interactionPlane',{width:width, height:height, style:'fill:rgba(0,0,0,0);'});
             object.appendChild(interactionPlane);
             interactionPlane.onmousedown = function(event){
-                if(event[__globals.super.keys.alt]){ //note creation
+                if(event[__globals.super.keys.alt]){
+                //note creation
                     while(state.selectedNotes.length > 0){
                         state.selectedNotes[0].deselect();
                     }
@@ -232,7 +236,8 @@ parts.elements.control.pianoroll_5 = function(
                     var temp = makeNote(position.line,position.position,0);
                     temp.element.select();
                     temp.element.rightHandle.onmousedown(event);
-                }else if(event.shiftKey){ //click-n-drag group select
+                }else if(event.shiftKey){
+                //click-n-drag group select
                     var initialPositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
                     
                     var selectionArea = __globals.utility.experimental.elementMaker('rect','body',{
@@ -241,66 +246,67 @@ parts.elements.control.pianoroll_5 = function(
                         style:style.selectionArea,
                     });
                     object.appendChild(selectionArea);
-                    
-                    object.onmousemove = function(event){
-                        var livePositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
-                        var diff = {x:livePositionData.x-initialPositionData.x, y:livePositionData.y-initialPositionData.y};
 
-                        var transform = {};
-                        if(diff.x < 0){ 
-                            selectionArea.width.baseVal.value = -diff.x*width;
-                            transform.x = initialPositionData.x+diff.x;
-                        }else{ 
-                            selectionArea.width.baseVal.value = diff.x*width;
-                            transform.x = initialPositionData.x;
-                        }
-                        if(diff.y < 0){ 
-                            selectionArea.height.baseVal.value = -diff.y*height;
-                            transform.y = initialPositionData.y+diff.y;
-                        }else{ 
-                            selectionArea.height.baseVal.value = diff.y*height;
-                            transform.y = initialPositionData.y;
-                        }
+                    __globals.utility.workspace.mouseInteractionHandler(
+                        function(event){
+                            var livePositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
+                            var diff = {x:livePositionData.x-initialPositionData.x, y:livePositionData.y-initialPositionData.y};
+    
+                            var transform = {};
+                            if(diff.x < 0){ 
+                                selectionArea.width.baseVal.value = -diff.x*width;
+                                transform.x = initialPositionData.x+diff.x;
+                            }else{ 
+                                selectionArea.width.baseVal.value = diff.x*width;
+                                transform.x = initialPositionData.x;
+                            }
+                            if(diff.y < 0){ 
+                                selectionArea.height.baseVal.value = -diff.y*height;
+                                transform.y = initialPositionData.y+diff.y;
+                            }else{ 
+                                selectionArea.height.baseVal.value = diff.y*height;
+                                transform.y = initialPositionData.y;
+                            }
+    
+                            __globals.utility.element.setTransform_XYonly(selectionArea, transform.x*width, transform.y*height);
+                        },
+                        function(event){
+                            selectionArea.remove();
+                            var finishingPositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
 
-                        __globals.utility.element.setTransform_XYonly(selectionArea, transform.x*width, transform.y*height);
-                    };
-                    object.onmouseup = function(event){
-                        this.onmousemove = null; this.onmouseleave = null; this.onmouseup = null;
-                        selectionArea.remove();
-                        var finishingPositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
+                            var selectionBox = [{},{}];
+                            if( initialPositionData.x < finishingPositionData.x ){
+                                selectionBox[0].x = initialPositionData.x*width;
+                                selectionBox[1].x = finishingPositionData.x*width;
+                            }else{
+                                selectionBox[0].x = finishingPositionData.x*width;
+                                selectionBox[1].x = initialPositionData.x*width;
+                            }
+                            if( initialPositionData.y < finishingPositionData.y ){
+                                selectionBox[0].y = initialPositionData.y*height;
+                                selectionBox[1].y = finishingPositionData.y*height;
+                            }else{
+                                selectionBox[0].y = finishingPositionData.y*height;
+                                selectionBox[1].y = initialPositionData.y*height;
+                            }
 
-                        var selectionBox = [{},{}];
-                        if( initialPositionData.x < finishingPositionData.x ){
-                            selectionBox[0].x = initialPositionData.x*width;
-                            selectionBox[1].x = finishingPositionData.x*width;
-                        }else{
-                            selectionBox[0].x = finishingPositionData.x*width;
-                            selectionBox[1].x = initialPositionData.x*width;
-                        }
-                        if( initialPositionData.y < finishingPositionData.y ){
-                            selectionBox[0].y = initialPositionData.y*height;
-                            selectionBox[1].y = finishingPositionData.y*height;
-                        }else{
-                            selectionBox[0].y = finishingPositionData.y*height;
-                            selectionBox[1].y = initialPositionData.y*height;
-                        }
+                            while(state.selectedNotes.length > 0){
+                                state.selectedNotes[0].deselect();
+                            }
+                            var noteBlocks = object.getElementsByTagName('g');
+                            for(var a = 0; a < noteBlocks.length; a++){
+                                var temp = state.noteRegistry.get_note(parseInt(noteBlocks[a].id));
+                                var block = [
+                                        {x:temp.position*(width/xCount), y:temp.line*(height/yCount)},
+                                        {x:(temp.position+temp.length)*(width/xCount), y:(temp.line+1)*(height/yCount)},
+                                    ];
 
-                        while(state.selectedNotes.length > 0){
-                            state.selectedNotes[0].deselect();
+                                if( __globals.utility.math.detectOverlap(selectionBox,block,selectionBox,block) ){ noteBlocks[a].select(true); }
+                            }
                         }
-                        var noteBlocks = object.getElementsByTagName('g');
-                        for(var a = 0; a < noteBlocks.length; a++){
-                            var temp = state.noteRegistry.get_note(parseInt(noteBlocks[a].id));
-                            var block = [
-                                    {x:temp.position*(width/xCount), y:temp.line*(height/yCount)},
-                                    {x:(temp.position+temp.length)*(width/xCount), y:(temp.line+1)*(height/yCount)},
-                                ];
-
-                            if( __globals.utility.math.detectOverlap(selectionBox,block,selectionBox,block) ){ noteBlocks[a].select(true); }
-                        }
-                    };
-                    object.onmouseleave = object.onmouseup;
-                }else{ //general panning
+                    );
+                }else{
+                //general panning
                     while(state.selectedNotes.length > 0){
                         state.selectedNotes[0].deselect();
                     }
@@ -393,6 +399,7 @@ parts.elements.control.pianoroll_5 = function(
             for(var a = 0; a < noteData.length; a++){this.addNote(noteData[a].line, noteData[a].position, noteData[a].length, noteData[a].strength);}
         };
         object.__dump = function(){state.noteRegistry.__dump();};
+        
     //callbacks
         object.event = function(events){};
 
@@ -417,7 +424,7 @@ parts.elements.control.pianoroll_5 = function(
 
 
 
-parts.elements.control.pianoroll_5.noteBlock = function(
+parts.elements.control.pianoroll.noteBlock = function(
     id, basicUnit,
     line, position, length, glow=false, 
     style
@@ -487,7 +494,7 @@ parts.elements.control.pianoroll_5.noteBlock = function(
 
 
 
-parts.elements.control.pianoroll_5.noteRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
+parts.elements.control.pianoroll.noteRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
     var notes = [];
     var selectedNotes = [];
     var events = [];
@@ -538,8 +545,8 @@ parts.elements.control.pianoroll_5.noteRegistry = function(rightLimit=-1,bottomL
     this.get_event = function(i){ return JSON.parse(JSON.stringify(events[i])); };
     this.eventsBetween = function(start,end){
         //depending on whether theres an end position or not; get all the events positions that 
-        //lie on the start positions, or get all the events positions that lie between the start
-        //and end positions
+        //lie on the start positions, or get all the events that how positions which lie between
+        //the start and end positions
         var eventNumbers = end == undefined ? 
             Array.from(new Set(positions.filter(function(a){return a == start;}))) : 
             Array.from(new Set(positions.filter(function(a){return a >= start && a < end;}))) ;
@@ -554,7 +561,7 @@ parts.elements.control.pianoroll_5.noteRegistry = function(rightLimit=-1,bottomL
             }
         }
 
-        //sort array by position
+        //sort array by position (soonest first)
         return compiledEvents.sort(function(a, b){
             if(a.position < b.position) return -1;
             if(a.position > b.position) return 1;

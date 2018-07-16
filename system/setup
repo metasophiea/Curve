@@ -1,4 +1,4 @@
-{{include:superglobals.js}}
+{{include:misc.js}}
 {{include:utility.js}}
 {{include:paneSetup.js}}
 {{include:selection.js}}

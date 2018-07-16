@@ -14,6 +14,14 @@ objects.testObject = function(x,y,debug=false){
         glow:'fill:rgba(240,240,240,1)',
         dim:'fill:rgba(80,80,80,1)',
 
+        rangeslide:{
+            handle:'fill:rgba(240,240,240,1)',
+            backing:'fill:rgba(150,150,150,1)',
+            slot:'fill:rgba(50,50,50,1)',
+            invisibleHandle:'fill:rgba(0,0,0,0);',
+            span:'fill:rgba(220,220,220,0.75)',
+        },
+
         level:{
             backing: 'fill:rgb(10,10,10)', 
             levels:['fill:rgb(250,250,250)','fill:rgb(200,200,200)'],
@@ -58,6 +66,17 @@ objects.testObject = function(x,y,debug=false){
                     style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
                     onchange:function(slide,value){ design.connectionNode_data.externalData_1.send('slidePanel_horizontal',{slide:slide,value:value}); },
                 }},
+                {type:'rangeslide',name:'rangeslide', data:{
+                    x:185, y:272.5, height: 100, width: 10, angle:-Math.PI/2, handleHeight:1/10, spanWidth:1,
+                    style:{
+                        handle: style.rangeslide.handle,
+                        backing: style.rangeslide.backing,
+                        slot: style.rangeslide.slot,
+                        invisibleHandle: style.rangeslide.invisibleHandle,
+                        span: style.rangeslide.span,
+                    },
+                    onchange:function(values){ design.connectionNode_data.externalData_1.send('rangeslide',{values:values}); },
+                }},  
 
             //dials
                 {type:'dial_continuous',name:'dial_continuous',data:{
@@ -171,6 +190,7 @@ objects.testObject = function(x,y,debug=false){
                                 case 'slide_horizontal':      design.slide.slide_horizontal.set(data,false);           break;
                                 case 'slidePanel_vertical':   design.slidePanel.slidePanel_vertical.slide(data.slide).set(data.value,false); break;
                                 case 'slidePanel_horizontal': design.slidePanel.slidePanel_horizontal.slide(data.slide).set(data.value,false); break;
+                                case 'rangeslide':            design.rangeslide.rangeslide.set(data.values,false); break;
                                 case 'dial_continuous':       design.dial_continuous.dial_continuous.set(data,false);  break;
                                 case 'dial_discrete':         design.dial_discrete.dial_discrete.select(data,false);   break;
                                 case 'button_rect': 

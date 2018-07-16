@@ -12,6 +12,7 @@
 //        getGlobalScale                  (element)
 //        getViewportDimensions           ()
 //        placeAndReturnObject            (object,pane='middleground')
+//        mouseInteractionHandler         (moveCode, stopCode)
 //    
 //    element
 //        getTransform                    (element)
@@ -121,6 +122,22 @@ __globals.utility = new function(){
         this.placeAndReturnObject = function(object,pane='middleground'){
             __globals.panes[pane].append( object );
             return object;
+        };
+        this.mouseInteractionHandler = function(moveCode, stopCode){
+            if(moveCode == undefined){return;}
+
+            __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+            __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
+            __globals.svgElement.onmouseleave_old = __globals.svgElement.onmouseleave;
+
+            __globals.svgElement.onmousemove = function(event){ moveCode(event); };
+            __globals.svgElement.onmouseup = function(event){
+                if(stopCode != undefined){ stopCode(event); }
+                __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
+                __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
+                __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
+            };
+            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
         };
     };
     this.element = new function(){

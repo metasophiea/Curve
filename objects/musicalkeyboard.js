@@ -48,10 +48,10 @@ this.musicalkeyboard = function(x,y,debug=false){
             }},
 
             //velocity dial
-            {type:'label', name:'velocity_title', data:{x:9,  y:59,  text:'velocity', style:style.h1}},
-            {type:'label', name:'velocity_0',     data:{x:4,  y:55,  text:'0',        style:style.h1}},
+            {type:'label', name:'velocity_title', data:{x:9,  y:59,   text:'velocity', style:style.h1}},
+            {type:'label', name:'velocity_0',     data:{x:4,  y:55,   text:'0',        style:style.h1}},
             {type:'label', name:'velocity_1/2',   data:{x:14, y:26.5, text:'1/2',      style:style.h1}},
-            {type:'label', name:'velocity_1',     data:{x:28, y:55,  text:'1',        style:style.h1}},
+            {type:'label', name:'velocity_1',     data:{x:28, y:55,   text:'1',        style:style.h1}},
             {type:'dial_continuous',name:'velocity',data:{
                 x:17.5, y:42, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
@@ -113,6 +113,11 @@ this.musicalkeyboard = function(x,y,debug=false){
         var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:glyphs});
         keycaptureObj.keyPress = function(key){ design.key_rect[noteNames[glyphs.indexOf(key)]].press(); };
         keycaptureObj.keyRelease = function(key){ design.key_rect[noteNames[glyphs.indexOf(key)]].release(); };
+
+    //interface
+        obj.i = {
+            velocity:function(a){design.dial_continuous.velocity.set(a);},
+        };
 
     //setup
         design.dial_continuous.velocity.set(0.5);

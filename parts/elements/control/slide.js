@@ -71,32 +71,6 @@ this.slide = function(
                 if( (__globals.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
             }, 1000/30);            
         };
-        object.smoothSet_old = function(target,time,curve,update){
-            object.smoothSet(target,time,curve,update);
-            // if(grappled){return;}
-
-            // var start = value;
-            // var mux = target - start;
-            // var stepsPerSecond = Math.round(Math.abs(mux)*100);
-            // var totalSteps = stepsPerSecond*time;
-
-            // var steps = [1];
-            // switch(curve){
-            //     case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-            //     case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
-            //     case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
-            //     case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-            //     case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
-            //     case 'instant': default: break;
-            // }
-            // if(steps.length == 0){return;}
-
-            // if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-            // object.smoothSet.interval = setInterval(function(){
-            //     set( (start+(steps.shift()*mux)),update );
-            //     if(steps.length == 0){clearInterval(object.smoothSet.interval);}
-            // },1000/stepsPerSecond);
-        };
         object.get = function(){return value;};
 
     //interaction
@@ -135,22 +109,19 @@ this.slide = function(
             var initialY = currentMousePosition(event);
             var mux = height - height*handleHeight;
 
-            __globals.svgElement.onmousemove = function(event){
-                var numerator = initialY-currentMousePosition(event);
-                var divider = __globals.utility.workspace.getGlobalScale(object);
-                set( initialValue - numerator/(divider*mux) );
-            };
-            __globals.svgElement.onmouseup = function(event){
-                var numerator = initialY-currentMousePosition(event);
-                var divider = __globals.utility.workspace.getGlobalScale(object);
-                object.onrelease(initialValue - numerator/(divider*mux));
-
-                __globals.svgElement.onmousemove = undefined;
-                __globals.svgElement.onmouseleave = undefined;
-                __globals.svgElement.onmouseup = undefined;
-                grappled = false;
-            };
-            __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+            __globals.utility.workspace.mouseInteractionHandler(
+                function(event){
+                    var numerator = initialY-currentMousePosition(event);
+                    var divider = __globals.utility.workspace.getGlobalScale(object);
+                    set( initialValue - numerator/(divider*mux) );
+                },
+                function(event){
+                    var numerator = initialY-currentMousePosition(event);
+                    var divider = __globals.utility.workspace.getGlobalScale(object);
+                    object.onrelease(initialValue - numerator/(divider*mux));
+                    grappled = false;
+                }
+            );
         };
 
     //callbacks

@@ -1,4 +1,20 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-07-16
+  - added code to stand in the way of a page unload (just the standard "are you 
+    sure" box that comes built in with the browser)(commented out for dev 
+    purposes. It's (currerntly) the first line in system/misc.js)
+  - added workspace.mouseInteractionHandler to utiltiy (so now hopefully we don't
+    have another one of those rangeslide incidents)(perhaps change everything to
+    use this?)
+  - added veloticy interface to musicalkeybaord
+  - updated rangeslide so that the values are stored only as 'start' and 'end'
+    (instead of having mixed in array indexes)
+  - changed some of the pianoroll interaction, to make mousing around easier
+
+  future ideas
+  - adjustable keyboard mapping (when switching between mac or linux or windows)
+
+
 2018-07-15
   - updaed pianoroll a little to make it easuer to change the x count
   - wrote different music into demo 2 and added reverb
