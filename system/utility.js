@@ -465,7 +465,7 @@ __globals.utility = new function(){
             // (when bounding boxes are provided)
             if(box_a && box_b){
 
-                //sort boxes
+                //sort boxes ("largest points" should be first)
                     if(box_a[0].x < box_a[1].x){
                         if(debugMode){console.log('bounding box a sorting required');}
                         var temp = box_a[0];
@@ -691,6 +691,8 @@ __globals.utility = new function(){
                     outputArray.push( (Math.exp(sharpness*(a/stepCount))-1)/(Math.E-1) ); // Math.E == Math.exp(1)
                 }
 
+                outputArray = __globals.utility.math.normalizeStretchArray(outputArray);
+
                 var mux = end-start;
                 for(var a = 0 ; a < outputArray.length; a++){
                     outputArray[a] = outputArray[a]*mux + start;
@@ -840,6 +842,32 @@ __globals.utility = new function(){
                             data.style.checkGlow
                         );
                         temp.onchange = data.onchange ? data.onchange  : temp.onchange  ;
+                        return temp;
+                    break;
+                    case 'pianoroll':
+                        console.warn('parts.control.pianoroll is depreciated and will be deleted soon enough. You should use parts.control.sequencer instead');
+                        var temp = parts.elements.control.pianoroll(
+                            name,
+                            data.x, data.y, data.width, data.height, data.angle,
+                            data.xCount, data.yCount, 
+                            data.xStripPattern, data.yStripPattern
+                        );
+                        temp.event = data.event ? data.event : temp.event;
+                        return temp;
+                    break;
+                    case 'sequencer':
+                        var temp = parts.elements.control.sequencer(
+                            name,
+                            data.x, data.y, data.width, data.height, data.angle,
+                            data.xCount, data.yCount, 
+                            data.style.horizontalStrip_pattern, data.style.horizontalStrip_glow, data.style.horizontalStrip_styles,
+                            data.style.verticalStrip_pattern,   data.style.verticalStrip_glow,   data.style.verticalStrip_styles,
+                            data.style.backing,
+                            data.style.selectionArea,
+                            data.style.block_body, data.style.block_bodyGlow, data.style.block_handle, data.style.block_handleWidth,
+                            data.style.playhead,
+                        );
+                        temp.event = data.event ? data.event : temp.event;
                         return temp;
                     break;
                     case 'needleOverlay':

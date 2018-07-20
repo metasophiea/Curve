@@ -107,7 +107,7 @@ this.musicalkeyboard = function(x,y,debug=false){
 
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.launchpad,design);
+        var obj = __globals.utility.experimental.objectBuilder(objects.musicalkeyboard,design);
 
     //keycapture
         var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:glyphs});

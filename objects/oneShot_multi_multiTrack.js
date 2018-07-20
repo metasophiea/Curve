@@ -168,8 +168,11 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                 {type:'connectionNode_data', name:'trigger_'+a, data:{
                     x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
                     receive:function(instance){
-                        return function(){
-                            design.button_rect['fire_'+instance].click();
+                        return function(address,data){
+                            if(address == 'pulse'){ design.button_rect['fire_'+instance].click(); }
+                            else if(address == 'hit'){
+                                if(data.velocity > 0.5){ design.button_rect['fire_'+instance].click(); }
+                            }
                         }
                     }(a)
                 }}

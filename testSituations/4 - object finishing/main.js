@@ -16,6 +16,9 @@
     var audio_sink_1 = objects.audio_sink(400,50);
     __globals.panes.middleground.append( audio_sink_1 );
 
+//basic audio mixer
+    var audio_mixer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicMixer(925, 110) );
+
 //basicSynthesizer
     var basicSynthesizer_1 = objects.basicSynthesizer(550,50);
     __globals.panes.middleground.append( basicSynthesizer_1 );
@@ -61,6 +64,9 @@
     var launchpad_1 = objects.launchpad(270, 225);
     __globals.panes.middleground.append( launchpad_1 );
 
+//basic audio mixer
+    var basicSequencer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer(925, 325) );
+
 //universalreadout
     var universalreadout_1 = objects.universalreadout(820, 60);
     __globals.panes.middleground.append( universalreadout_1 );
@@ -72,10 +78,6 @@
 //musical keyboard
     var musicalkeyboard_1 = objects.musicalkeyboard(80, 330);
     __globals.panes.middleground.append( musicalkeyboard_1 );
-
-
-
-
 
 
 

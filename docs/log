@@ -1,4 +1,35 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-07-20
+  - pushed pianoroll part into main parts (now called sequencer)
+  - shipped all the sequencer testing code over into testSituation 1, and then
+    redid the testing code that was already there to use the snazzy new test
+    checker function thing (it all looks very nice now)
+  - wrote together a nice new basic sequencer object (and pushed it)
+  - updated oneShot_multi_multiTrack to accept 'pulse' and 'hit' data signals
+  - removed 'trash folder' (have it saved elsewhere for now, but will probably 
+    delete fully later)
+
+  bugs found
+  - rangeslide handle movement is a bit weird
+
+
+2018-07-19
+  - continued work on pianoroll, slowly adding features back in, in a nice way 
+
+
+2018-07-18
+  - added code that checks the URL for a dev parameter. If it is present, the
+    page unload code won't be activated
+  - started on the next verion of the pianoroll part..starting with testing the
+    sub parts
+
+
+2018-07-17
+  - wrote up rudimentary 8 channel audio mixer and channelMultiplier part (both
+    pushed)
+  - fixed musical keyboard cloner, which was trying to make a launchpad
+
+
 2018-07-16
   - added code to stand in the way of a page unload (just the standard "are you 
     sure" box that comes built in with the browser)(commented out for dev 

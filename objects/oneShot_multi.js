@@ -142,9 +142,12 @@ this.oneShot_multi = function(x,y,debug=false){
         obj.i = {};
         obj.i.loadURL = function(url, callback){
             obj.oneShot.load('url', function(){
-                design.grapher_waveWorkspace.grapher_waveWorkspace.draw(oneShot_multi_1.oneShot.waveformSegment());
+                design.grapher_waveWorkspace.grapher_waveWorkspace.draw(obj.oneShot.waveformSegment());
                 if(callback != undefined){callback();}
             }, url);
+        };
+        obj.i.area = function(a,b){
+            design.grapher_waveWorkspace.grapher_waveWorkspace.area(a,b);
         };
         
     return obj;
