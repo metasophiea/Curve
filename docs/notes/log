@@ -11,6 +11,11 @@
     left disconnected)
   - cleaned up notes file into notes folder
 
+  Compliation Results
+  - workspace.js                        688 Kb (100%)
+  - workspace.min.js                    242 Kb (35.25%)
+  - workspace.min.js (web compressed)  
+
 
 2018-07-20
   - pushed pianoroll part into main parts (now called sequencer)
