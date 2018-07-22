@@ -9,6 +9,7 @@
   - added interface methods to basicSynthesizer object
   - redid demo 2 to have drum and bass sections (and a chord section that is
     left disconnected)
+  - cleaned up notes file into notes folder
 
 
 2018-07-20

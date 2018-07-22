@@ -1,0 +1,14 @@
+pulse
+    address: 'pulse'
+    data: null
+hit
+    address: 'hit'
+    data: {
+        velocity: 0, (number between 0 and 1)
+    }
+midi number
+    address: 'midinumber'
+    data: {
+        num: 0, (any midi number)
+        velocity: 0, (number between 0 and 1)
+}
