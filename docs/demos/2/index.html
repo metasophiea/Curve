@@ -21,17 +21,39 @@
 
 </html>
 
-<!-- <script type='text/javascript' src='../../workspace.js'></script> -->
-<script type='text/javascript' src='../../workspace.min.js'></script>
+<script type='text/javascript' src='../../workspace.js'></script>
+<!-- <script type='text/javascript' src='../../workspace.min.js'></script> -->
 
 <script>
     //create objects
-        var pulseGenerator_1 = __globals.utility.workspace.placeAndReturnObject( objects.pulseGenerator_hyper(1100, 155, 999) );
+        var pulseGenerator_1 = __globals.utility.workspace.placeAndReturnObject( objects.pulseGenerator_hyper(1320, 275, 999) );
+        var data_duplicator_1 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(1170, 320) );
+        var data_duplicator_3 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(1160, 420) );
+        var data_duplicator_4 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(1250, 360) );
+
         var basicSequencer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer(280, 160) );
-        var oneShot_multi_multiTrack = __globals.utility.workspace.placeAndReturnObject( objects.oneShot_multi_multiTrack(-20, 95) );
-        var audio_sink = __globals.utility.workspace.placeAndReturnObject( objects.audio_sink(-265, 100) );
+        var basicSequencer_midiOut_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer_midiOut(280, 400) );
+        var basicSequencer_midiOut_2 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer_midiOut(320, 700) );
+
+        var data_duplicator_2 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(180, 505) );
+        var basicSynthesizer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-10, 400) );
+        var basicSynthesizer_2 = __globals.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-90, 510) );
+        var oneShot_multi_multiTrack = __globals.utility.workspace.placeAndReturnObject( objects.oneShot_multi_multiTrack(-10, 0) );
+
+        var musicalkeyboard_1 = __globals.utility.workspace.placeAndReturnObject( objects.musicalkeyboard(-30, 750) );
+        var basicSynthesizer_3 = __globals.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-290, 675) );
+
+        var audio_mixer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicMixer(-455, 295) );    
+        var audio_sink = __globals.utility.workspace.placeAndReturnObject( objects.audio_sink(-640, 260) );
+
     //connect objects
-        pulseGenerator_1.io.out.connectTo(basicSequencer_1.io.progress);
+        pulseGenerator_1.io.out.connectTo(data_duplicator_4.io.input);
+        data_duplicator_4.io.output_1.connectTo(data_duplicator_1.io.input);
+        data_duplicator_4.io.output_2.connectTo(data_duplicator_3.io.input);
+        data_duplicator_1.io.output_1.connectTo(basicSequencer_1.io.progress);
+        data_duplicator_1.io.output_2.connectTo(basicSequencer_midiOut_1.io.progress);
+        data_duplicator_3.io.output_2.connectTo(basicSequencer_midiOut_2.io.progress);
+
         basicSequencer_1.io.output_0.connectTo( oneShot_multi_multiTrack.io.trigger_0 );
         basicSequencer_1.io.output_1.connectTo( oneShot_multi_multiTrack.io.trigger_1 );
         basicSequencer_1.io.output_2.connectTo( oneShot_multi_multiTrack.io.trigger_2 );
@@ -40,31 +62,184 @@
         basicSequencer_1.io.output_5.connectTo( oneShot_multi_multiTrack.io.trigger_5 );
         basicSequencer_1.io.output_6.connectTo( oneShot_multi_multiTrack.io.trigger_6 );
         basicSequencer_1.io.output_7.connectTo( oneShot_multi_multiTrack.io.trigger_7 );
-        oneShot_multi_multiTrack.io.outRight.connectTo( audio_sink.io.right );
-        oneShot_multi_multiTrack.io.outLeft.connectTo( audio_sink.io.left );
+        oneShot_multi_multiTrack.io.outRight.connectTo( audio_mixer_1.io.input_0 );
+        oneShot_multi_multiTrack.io.outLeft.connectTo( audio_mixer_1.io.input_1 );
+
+        basicSequencer_midiOut_1.io.midiout.connectTo( data_duplicator_2.io.input );
+        data_duplicator_2.io.output_1.connectTo(basicSynthesizer_1.io.midiNote);
+        data_duplicator_2.io.output_2.connectTo(basicSynthesizer_2.io.midiNote);
+        basicSynthesizer_1.io.audioOut.connectTo( audio_mixer_1.io.input_2 );
+        basicSynthesizer_2.io.audioOut.connectTo( audio_mixer_1.io.input_3 );
+
+        basicSequencer_midiOut_2.io.midiout.connectTo(musicalkeyboard_1.io.midiin);
+        // musicalkeyboard_1.io.midiout.connectTo(basicSynthesizer_3.io.midiNote);
+        basicSynthesizer_3.io.audioOut.connectTo( audio_mixer_1.io.input_4 );
+
+        audio_mixer_1.io.output_0.connectTo( audio_sink.io.right );
+        audio_mixer_1.io.output_1.connectTo( audio_sink.io.left );
+
     //setup objects
         basicSequencer_1.i.loopActive(true);
         basicSequencer_1.i.addNotes([
-            {"line":0,"position":0,"length":1,"strength":1},
-            {"line":3,"position":0,"length":1,"strength":1},
-            {"line":3,"position":2,"length":1,"strength":1},
-            {"line":1,"position":4,"length":1,"strength":1},
-            {"line":0,"position":6,"length":1,"strength":1},
-            {"line":0,"position":9,"length":1,"strength":1},
-            {"line":3,"position":9,"length":1,"strength":1},
-            {"line":1,"position":12,"length":1,"strength":1},
-            {"line":0,"position":14,"length":1,"strength":1},
-            {"line":0,"position":16,"length":1,"strength":1},
+            {"line":3,"position":56,"length":1,"strength":1},
+            {"line":3,"position":60,"length":1,"strength":1},
+            {"line":3,"position":48,"length":1,"strength":1},
+            {"line":3,"position":52,"length":1,"strength":1},
+            {"line":3,"position":40,"length":1,"strength":1},
+            {"line":3,"position":44,"length":1,"strength":1},
+            {"line":3,"position":32,"length":1,"strength":1},
+            {"line":3,"position":36,"length":1,"strength":1},
+            {"line":3,"position":24,"length":1,"strength":1},
+            {"line":3,"position":28,"length":1,"strength":1},
             {"line":3,"position":16,"length":1,"strength":1},
-            {"line":3,"position":18,"length":1,"strength":1},
-            {"line":1,"position":20,"length":1,"strength":1},
-            {"line":2,"position":25,"length":1,"strength":1},
-            {"line":1,"position":28,"length":1,"strength":1},
-            {"line":2,"position":28,"length":1,"strength":1},
-            {"line":1,"position":31,"length":1,"strength":1}
+            {"line":3,"position":20,"length":1,"strength":1},
+            {"line":3,"position":8,"length":1,"strength":1},
+            {"line":3,"position":12,"length":1,"strength":1},
+            {"line":3,"position":0,"length":1,"strength":1},
+            {"line":3,"position":4,"length":1,"strength":1},
+            {"length":1,"line":0,"position":0,"strength":1},
+            {"line":0,"position":55,"length":1,"strength":1},
+            {"line":0,"position":56,"length":1,"strength":1},
+            {"line":0,"position":58,"length":1,"strength":1},
+            {"length":1,"line":1,"position":60,"strength":1},
+            {"length":1,"line":1,"position":61,"strength":1},
+            {"line":0,"position":7,"length":1,"strength":1},
+            {"line":0,"position":8,"length":1,"strength":1},
+            {"line":0,"position":10,"length":1,"strength":1},
+            {"line":0,"position":16,"length":1,"strength":1},
+            {"line":0,"position":14,"length":1,"strength":1},
+            {"line":0,"position":23,"length":1,"strength":1},
+            {"line":0,"position":24,"length":1,"strength":1},
+            {"line":0,"position":26,"length":1,"strength":1},
+            {"line":0,"position":32,"length":1,"strength":1},
+            {"line":0,"position":30,"length":1,"strength":1},
+            {"line":0,"position":39,"length":1,"strength":1},
+            {"line":0,"position":40,"length":1,"strength":1},
+            {"line":0,"position":42,"length":1,"strength":1},
+            {"line":0,"position":48,"length":1,"strength":1},
+            {"line":0,"position":46,"length":1,"strength":1},
+            {"length":1,"line":1,"position":62,"strength":1},
+            {"length":1,"line":1,"position":63,"strength":1},
+            {"length":1,"line":1,"position":4,"strength":1},
+            {"line":1,"position":12,"length":1,"strength":1},
+            {"length":1,"line":1,"position":20,"strength":1},
+            {"length":1,"line":1,"position":28,"strength":1},
+            {"line":1,"position":31,"length":1,"strength":1},
+            {"length":1,"line":1,"position":36,"strength":1},
+            {"length":1,"line":1,"position":44,"strength":1},
+            {"length":1,"line":1,"position":52,"strength":1},
+            {"length":1,"line":1,"position":25,"strength":1}
         ]);
 
-        //load sounds from urls into the multi track
+        basicSequencer_midiOut_1.i.loopActive(true);
+        basicSequencer_midiOut_1.i.addNotes([
+            {"line":22,"position":0,"length":2,"strength":1},
+            {"line":22,"position":3,"length":1,"strength":1},
+            {"line":27,"position":5,"length":1,"strength":1},
+            {"line":24,"position":6,"length":1,"strength":1},
+            {"line":22,"position":8,"length":1,"strength":1},
+            {"line":22,"position":10,"length":1,"strength":1},
+            {"line":24,"position":12,"length":1,"strength":1},
+            {"line":24,"position":14,"length":1,"strength":1},
+            {"line":26,"position":16,"length":2,"strength":1},
+            {"line":26,"position":19,"length":1,"strength":1},
+            {"line":27,"position":21,"length":1,"strength":1},
+            {"line":26,"position":22,"length":1,"strength":1},
+            {"line":26,"position":24,"length":1,"strength":1},
+            {"line":24,"position":26,"length":1,"strength":1},
+            {"line":26,"position":28,"length":1,"strength":1},
+            {"line":27,"position":30,"length":1,"strength":1},
+            {"line":29,"position":32,"length":2,"strength":1},
+            {"line":29,"position":35,"length":1,"strength":1},
+            {"line":31,"position":37,"length":1,"strength":1},
+            {"line":29,"position":38,"length":1,"strength":1},
+            {"line":29,"position":40,"length":1,"strength":1},
+            {"line":29,"position":42,"length":1,"strength":1},
+            {"line":27,"position":44,"length":1,"strength":1},
+            {"line":29,"position":46,"length":1,"strength":1},
+            {"line":26,"position":48,"length":2,"strength":1},
+            {"line":26,"position":51,"length":1,"strength":1},
+            {"line":27,"position":53,"length":1,"strength":1},
+            {"line":26,"position":54,"length":1,"strength":1},
+            {"line":26,"position":56,"length":1,"strength":1},
+            {"line":26,"position":58,"length":1,"strength":1},
+            {"line":24,"position":60,"length":1,"strength":1},
+            {"line":27,"position":62,"length":1,"strength":1}
+        ]);
+
+        basicSequencer_midiOut_2.i.loopActive(true);
+        basicSequencer_midiOut_2.i.addNotes([
+            {"line":15,"position":26,"length":1,"strength":1},
+            {"line":22,"position":58,"length":1,"strength":1},
+            {"line":9,"position":30,"length":1,"strength":1},
+            {"line":15,"position":30,"length":1,"strength":1},
+            {"line":22,"position":62,"length":1,"strength":1},
+            {"line":9,"position":26,"length":1,"strength":1},
+            {"line":15,"position":22,"length":1,"strength":1},
+            {"line":22,"position":54,"length":1,"strength":1},
+            {"line":9,"position":22,"length":1,"strength":1},
+            {"line":15,"position":18,"length":1,"strength":1},
+            {"line":22,"position":50,"length":1,"strength":1},
+            {"line":9,"position":18,"length":1,"strength":1},
+            {"line":14,"position":14,"length":1,"strength":1},
+            {"line":10,"position":14,"length":1,"strength":1},
+            {"line":17,"position":14,"length":1,"strength":1},
+            {"line":14,"position":10,"length":1,"strength":1},
+            {"line":10,"position":10,"length":1,"strength":1},
+            {"line":17,"position":10,"length":1,"strength":1},
+            {"line":14,"position":6,"length":1,"strength":1},
+            {"line":10,"position":6,"length":1,"strength":1},
+            {"line":17,"position":6,"length":1,"strength":1},
+            {"line":14,"position":2,"length":1,"strength":1},
+            {"line":10,"position":2,"length":1,"strength":1},
+            {"line":17,"position":2,"length":1,"strength":1},
+            {"line":7,"position":46,"length":1,"strength":1},
+            {"line":7,"position":42,"length":1,"strength":1},
+            {"line":7,"position":38,"length":1,"strength":1},
+            {"line":7,"position":34,"length":1,"strength":1},
+            {"line":12,"position":46,"length":1,"strength":1},
+            {"line":12,"position":42,"length":1,"strength":1},
+            {"line":12,"position":38,"length":1,"strength":1},
+            {"line":12,"position":34,"length":1,"strength":1},
+            {"line":10,"position":62,"length":1,"strength":1},
+            {"line":10,"position":58,"length":1,"strength":1},
+            {"line":10,"position":54,"length":1,"strength":1},
+            {"line":10,"position":50,"length":1,"strength":1},
+            {"line":7,"position":62,"length":1,"strength":1},
+            {"line":7,"position":58,"length":1,"strength":1},
+            {"line":7,"position":54,"length":1,"strength":1},
+            {"line":7,"position":50,"length":1,"strength":1},
+            {"line":17,"position":62,"length":1,"strength":1},
+            {"line":17,"position":58,"length":1,"strength":1},
+            {"line":17,"position":54,"length":1,"strength":1},
+            {"line":17,"position":50,"length":1,"strength":1},
+            {"line":21,"position":30,"length":1,"strength":1},
+            {"line":21,"position":26,"length":1,"strength":1},
+            {"line":21,"position":22,"length":1,"strength":1},
+            {"line":21,"position":18,"length":1,"strength":1},
+            {"line":19,"position":46,"length":1,"strength":1},
+            {"line":19,"position":42,"length":1,"strength":1},
+            {"line":19,"position":38,"length":1,"strength":1},
+            {"line":19,"position":34,"length":1,"strength":1}
+        ]);
+
+        basicSynthesizer_1.i.gain(1);
+        basicSynthesizer_1.i.octave(1);
+        basicSynthesizer_1.i.waveType(3);
+        
+        basicSynthesizer_2.i.octave(4);
+        basicSynthesizer_2.i.waveType(1);
+
+        basicSynthesizer_3.i.gain(1);
+        basicSynthesizer_3.i.release(0.4);
+        basicSynthesizer_3.i.waveType(1);
+
+        audio_mixer_1.i.pan(0,0.4);
+        audio_mixer_1.i.pan(1,0.4);
+        audio_mixer_1.i.pan(2,0.6);
+        audio_mixer_1.i.pan(3,0.6);
+
+        //load sounds from urls into the multi track (and select their regions)
         var libURL = 'https://metasophiea.com/curve/demos/1/sounds/';
         var sounds = [
             libURL+'bass.mp3', 
@@ -72,12 +247,14 @@
             libURL+'openHiHat.mp3', 
             libURL+'closeHiHat.mp3', 
             libURL+'crash.mp3',
+            libURL+'shaker.mp3',
         ];
         for(var a = 0; a < sounds.length; a++){ oneShot_multi_multiTrack.i.loadURL(a, sounds[a]); }
         oneShot_multi_multiTrack.i.area(0,0.022635858200536246, 0.3112601773120755);
         oneShot_multi_multiTrack.i.area(1,0.024827894657491516, 0.14734331790792068);
         oneShot_multi_multiTrack.i.area(2,0.008972957530965352, 0.18193590800215986);
         oneShot_multi_multiTrack.i.area(3,0.01041431545155863,  0.12139887533724177);
+
     //setup view
         // __globals.utility.workspace.gotoPosition(-80.5151, -162.899,1.1593, 0);
 

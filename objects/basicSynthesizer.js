@@ -258,6 +258,22 @@ this.basicSynthesizer = function(x,y){
         obj.__synthesizer = new parts.circuits.audio.synthesizer2(__globals.audio.context);
         obj.__synthesizer.out().connect( design.connectionNode_audio.audioOut.in() );
 
+    //interface
+        obj.i = {
+            gain:function(value){design.dial_continuous.gain.set(value);},
+            attack:function(value){design.dial_continuous.attack.set(value);},
+            release:function(value){design.dial_continuous.release.set(value);},
+            detune:function(value){design.dial_continuous.detune.set(value);},
+            octave:function(value){design.dial_discrete.octave.select(value);},
+            waveType:function(value){design.dial_discrete.waveType.select(value);},
+            periodicWave:function(data){obj.__synthesizer.periodicWave(data);},
+            midiNote:function(data){obj.__synthesizer.perform(data);},
+            gainWobblePeriod:function(value){design.dial_continuous.gainWobblePeriod.set(value);},
+            gainWobbleDepth:function(value){design.dial_continuous.gainWobbleDepth.set(value);},
+            detuneWobblePeriod:function(value){design.dial_continuous.detuneWobblePeriod.set(value);},
+            detuneWobbleDepth:function(value){design.dial_continuous.detuneWobbleDepth.set(value);},
+        };
+
     //setup
         design.dial_continuous.gain.set(0.5);
         design.dial_continuous.detune.set(0.5);

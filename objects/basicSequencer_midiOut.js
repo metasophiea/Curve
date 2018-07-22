@@ -1,7 +1,7 @@
-this.basicSequencer = function(x,y,debug=false){
+this.basicSequencer_midiOut = function(x,y,debug=false){
     var vals = {
         sequencer:{
-            width:64, height:10,
+            width:64, height:37, topMidiNumber:108
         }
     };
 
@@ -31,7 +31,7 @@ this.basicSequencer = function(x,y,debug=false){
     };
 
     var design = {
-        type: 'basicSequencer',
+        type: 'basicSequencer_midiOut',
         x: x, y: y,
         base: {
             type:'path',
@@ -46,14 +46,23 @@ this.basicSequencer = function(x,y,debug=false){
             style:style.background
         },
         elements:[
+            //midi out
+                {type:'connectionNode_data', name:'midiout', data:{
+                    x: -5, y: 11.25, width: 5, height: 17.5,
+                }},
+
+
             //main sequencer
                 {type:'sequencer', name:'main', data:{
                     x:10, y:10, width:780, height:180, 
                     xCount:vals.sequencer.width, yCount:vals.sequencer.height,
                     event:function(event){
                         for(var a = 0; a < event.length; a++){
-                            design.connectionNode_data['output_'+event[a].line].send('hit',{velocity:event[a].strength});
+                            design.connectionNode_data.midiout.send('midinumber',{num:roll2midi(event[a].line), velocity:event[a].strength});
                         }
+                    },
+                    style:{
+                        horizontalStrip_pattern:[0,0,1,0,1,0,1,0,0,1,0,1]
                     }
                 }},
 
@@ -128,19 +137,14 @@ this.basicSequencer = function(x,y,debug=false){
                 {type:'path', name:'reset_line', data:{ path:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
         ]
     };
-    //dynamic design
-        for(var a = 0; a < vals.sequencer.height; a++){
-            design.elements.push(
-                {type:'connectionNode_data', name:'output_'+a, data:{ 
-                    x: -5, y: 11+a*(180/vals.sequencer.height), width: 5, height:(180/vals.sequencer.height)-2,
-                    receive:function(){design.sequencer.main.playheadPosition(0);}
-                }},
-            );
+
+    //internal functions
+        function roll2midi(num){
+            return vals.sequencer.topMidiNumber - num;
         }
 
-
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.basicSequencer,design);
+        var obj = __globals.utility.experimental.objectBuilder(objects.basicSequencer_midiOut,design);
 
     //interface
         obj.i = {

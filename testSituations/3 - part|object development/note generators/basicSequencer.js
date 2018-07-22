@@ -1,7 +1,7 @@
-this.basicSequencer = function(x,y,debug=false){
+objects.basicSequencer = function(x,y,debug=false){
     var vals = {
         sequencer:{
-            width:64, height:10,
+            width:32, height:10,
         }
     };
 

@@ -7414,7 +7414,7 @@
                                             if( obj.children.playhead ){ obj.children.playhead.remove(); }
                                         }else{ //within vilible bounds
                                             if( !obj.children.playhead ){ makePlayhead(); }
-                                            __globals.utility.element.setTransform_XYonly(playhead, state.playhead.position*(width/xCount), 0);
+                                            __globals.utility.element.setTransform_XYonly(obj.children.playhead, state.playhead.position*(width/xCount), 0);
                                         }
                                 };
                                 obj.step = function(a){
@@ -8696,7 +8696,7 @@
                 this.basicSequencer = function(x,y,debug=false){
                     var vals = {
                         sequencer:{
-                            width:32, height:10,
+                            width:64, height:10,
                         }
                     };
                 
@@ -8795,7 +8795,7 @@
                                 //connection node
                                 {type:'connectionNode_data', name:'progress', data:{ 
                                     x: 800, y: 5, width: 5, height: 20,
-                                    receive:function(){design.button_rect.progress.click();}
+                                    receive:function(){design.sequencer.main.progress();}
                                 }},
                                 //symbol
                                 {type:'path', name:'progress_arrow', data:{ path:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
@@ -8816,7 +8816,7 @@
                                 //connection node
                                 {type:'connectionNode_data', name:'reset', data:{ 
                                     x: 800, y: 30, width: 5, height: 20,
-                                    receive:function(){design.button_rect.reset.click();}
+                                    receive:function(){design.sequencer.main.playheadPosition(0);}
                                 }},
                                 //symbol
                                 {type:'path', name:'reset_arrow', data:{ path:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
@@ -8836,6 +8836,164 @@
                 
                     //main object
                         var obj = __globals.utility.experimental.objectBuilder(objects.basicSequencer,design);
+                
+                    //interface
+                        obj.i = {
+                            addNote:function(line, position, length, strength=1){design.sequencer.main.addNote(line, position, length, strength);},
+                            addNotes:function(data){design.sequencer.main.addNotes(data);},
+                            getNotes:function(){return design.sequencer.main.getAllNotes();},
+                            loopActive:function(a){design.checkbox_rect.loopActive.set(a);},
+                        };
+                
+                    return obj;
+                };
+                this.basicSequencer_midiOut = function(x,y,debug=false){
+                    var vals = {
+                        sequencer:{
+                            width:64, height:37, topMidiNumber:108
+                        }
+                    };
+                
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        markings: {
+                            fill:'fill:rgba(150,150,150,1); pointer-events: none;',
+                            stroke:'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
+                        },
+                        rangeslide:{
+                            handle:'fill:rgba(240,240,240,1)',
+                            backing:'fill:rgba(150,150,150,1)',
+                            slot:'fill:rgba(50,50,50,1)',
+                            invisibleHandle:'fill:rgba(0,0,0,0);',
+                            span:'fill:rgba(220,220,220,1)',
+                        },
+                        button:{
+                            up:'fill:rgba(220,220,220,1)',
+                            hover:'fill:rgba(240,240,240,1)',
+                            down:'fill:rgba(180,180,180,1)',
+                            glow:'fill:rgba(220,200,220,1)',
+                        },
+                        checkbox:{
+                            backing:'fill:rgba(229, 221, 112,1)',
+                            check:'fill:rgba(252,244,128,1)',
+                        },
+                    };
+                
+                    var design = {
+                        type: 'basicSequencer_midiOut',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[ 
+                                {x:0,y:0}, 
+                                {x:800,y:0}, 
+                                {x:800,y:210}, 
+                                {x:130,y:210},
+                                {x:105,y:225},
+                                {x:0,y:225}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                            //midi out
+                                {type:'connectionNode_data', name:'midiout', data:{
+                                    x: -5, y: 11.25, width: 5, height: 17.5,
+                                }},
+                
+                
+                            //main sequencer
+                                {type:'sequencer', name:'main', data:{
+                                    x:10, y:10, width:780, height:180, 
+                                    xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                                    event:function(event){
+                                        for(var a = 0; a < event.length; a++){
+                                            design.connectionNode_data.midiout.send('midinumber',{num:roll2midi(event[a].line), velocity:event[a].strength});
+                                        }
+                                    },
+                                    style:{
+                                        horizontalStrip_pattern:[0,0,1,0,1,0,1,0,0,1,0,1]
+                                    }
+                                }},
+                
+                            //loop control   
+                                //activation
+                                {type:'checkbox_rect', name:'loopActive',data:{
+                                    x:70, y:205, width:25, height:15,
+                                    style:{
+                                        backing:style.checkbox.backing,
+                                        check:style.checkbox.check,
+                                    },
+                                    onchange:function(value){design.sequencer.main.loopActive(value);}
+                                }},
+                                //range
+                                {type:'rangeslide', name:'loopSelect', data:{
+                                    x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:1,
+                                    style:{
+                                        handle: style.rangeslide.handle,
+                                        backing: style.rangeslide.backing,
+                                        slot: style.rangeslide.slot,
+                                        invisibleHandle: style.rangeslide.invisibleHandle,
+                                        span: style.rangeslide.span,
+                                    },
+                                    onchange:function(values){ 
+                                        var a = Math.round(values.start*vals.sequencer.width);
+                                        var b = Math.round(values.end*vals.sequencer.width);
+                                        if(b == 0){b = 1;}
+                                        design.sequencer.main.loopPeriod(a,b);
+                                    },
+                                }},    
+                
+                            //progression
+                                //button
+                                {type:'button_rect', name:'progress', data:{
+                                    x:10, y:205, width:25, height:15,
+                                    style:{
+                                        up:style.button.up,
+                                        hover:style.button.hover,
+                                        down:style.button.down,
+                                        glow:style.button.glow,
+                                    },
+                                    onclick:function(){design.sequencer.main.progress();},
+                                }},     
+                                //connection node
+                                {type:'connectionNode_data', name:'progress', data:{ 
+                                    x: 800, y: 5, width: 5, height: 20,
+                                    receive:function(){design.sequencer.main.progress();}
+                                }},
+                                //symbol
+                                {type:'path', name:'progress_arrow', data:{ path:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
+                
+                
+                            //reset
+                                //button
+                                {type:'button_rect', name:'reset', data:{
+                                    x:40, y:205, width:25, height:15,
+                                    style:{
+                                        up:style.button.up,
+                                        hover:style.button.hover,
+                                        down:style.button.down,
+                                        glow:style.button.glow,
+                                    },
+                                    onclick:function(){design.sequencer.main.playheadPosition(0);},
+                                }},
+                                //connection node
+                                {type:'connectionNode_data', name:'reset', data:{ 
+                                    x: 800, y: 30, width: 5, height: 20,
+                                    receive:function(){design.sequencer.main.playheadPosition(0);}
+                                }},
+                                //symbol
+                                {type:'path', name:'reset_arrow', data:{ path:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
+                                {type:'path', name:'reset_line', data:{ path:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
+                        ]
+                    };
+                
+                    //internal functions
+                        function roll2midi(num){
+                            return vals.sequencer.topMidiNumber - num;
+                        }
+                
+                    //main object
+                        var obj = __globals.utility.experimental.objectBuilder(objects.basicSequencer_midiOut,design);
                 
                     //interface
                         obj.i = {
@@ -9106,6 +9264,22 @@
                     //circuitry
                         obj.__synthesizer = new parts.circuits.audio.synthesizer2(__globals.audio.context);
                         obj.__synthesizer.out().connect( design.connectionNode_audio.audioOut.in() );
+                
+                    //interface
+                        obj.i = {
+                            gain:function(value){design.dial_continuous.gain.set(value);},
+                            attack:function(value){design.dial_continuous.attack.set(value);},
+                            release:function(value){design.dial_continuous.release.set(value);},
+                            detune:function(value){design.dial_continuous.detune.set(value);},
+                            octave:function(value){design.dial_discrete.octave.select(value);},
+                            waveType:function(value){design.dial_discrete.waveType.select(value);},
+                            periodicWave:function(data){obj.__synthesizer.periodicWave(data);},
+                            midiNote:function(data){obj.__synthesizer.perform(data);},
+                            gainWobblePeriod:function(value){design.dial_continuous.gainWobblePeriod.set(value);},
+                            gainWobbleDepth:function(value){design.dial_continuous.gainWobbleDepth.set(value);},
+                            detuneWobblePeriod:function(value){design.dial_continuous.detuneWobblePeriod.set(value);},
+                            detuneWobbleDepth:function(value){design.dial_continuous.detuneWobbleDepth.set(value);},
+                        };
                 
                     //setup
                         design.dial_continuous.gain.set(0.5);
@@ -11185,89 +11359,324 @@
                     }));
             },1);
             
+            objects.basicSequencer = function(x,y,debug=false){
+                var vals = {
+                    sequencer:{
+                        width:32, height:10,
+                    }
+                };
             
-            //audio duplicator
-                var audio_duplicator_1 = objects.audio_duplicator(50,50);
-                __globals.panes.middleground.append( audio_duplicator_1 );
+                var style = {
+                    background:'fill:rgba(200,200,200,1)',
+                    markings: {
+                        fill:'fill:rgba(150,150,150,1); pointer-events: none;',
+                        stroke:'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
+                    },
+                    rangeslide:{
+                        handle:'fill:rgba(240,240,240,1)',
+                        backing:'fill:rgba(150,150,150,1)',
+                        slot:'fill:rgba(50,50,50,1)',
+                        invisibleHandle:'fill:rgba(0,0,0,0);',
+                        span:'fill:rgba(220,220,220,1)',
+                    },
+                    button:{
+                        up:'fill:rgba(220,220,220,1)',
+                        hover:'fill:rgba(240,240,240,1)',
+                        down:'fill:rgba(180,180,180,1)',
+                        glow:'fill:rgba(220,200,220,1)',
+                    },
+                    checkbox:{
+                        backing:'fill:rgba(229, 221, 112,1)',
+                        check:'fill:rgba(252,244,128,1)',
+                    },
+                };
             
-            //data duplicator
-                var data_duplicator_1 = objects.data_duplicator(875, 50);
-                __globals.panes.middleground.append( data_duplicator_1 );
+                var design = {
+                    type: 'basicSequencer',
+                    x: x, y: y,
+                    base: {
+                        type:'path',
+                        points:[ 
+                            {x:0,y:0}, 
+                            {x:800,y:0}, 
+                            {x:800,y:210}, 
+                            {x:130,y:210},
+                            {x:105,y:225},
+                            {x:0,y:225}
+                        ], 
+                        style:style.background
+                    },
+                    elements:[
+                        //main sequencer
+                            {type:'sequencer', name:'main', data:{
+                                x:10, y:10, width:780, height:180, 
+                                xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                                event:function(event){
+                                    for(var a = 0; a < event.length; a++){
+                                        design.connectionNode_data['output_'+event[a].line].send('hit',{velocity:event[a].strength});
+                                    }
+                                }
+                            }},
             
-            //audio_scope
-                var audio_scope_1 = objects.audio_scope(150,50);
-                __globals.panes.middleground.append( audio_scope_1 );
+                        //loop control   
+                            //activation
+                            {type:'checkbox_rect', name:'loopActive',data:{
+                                x:70, y:205, width:25, height:15,
+                                style:{
+                                    backing:style.checkbox.backing,
+                                    check:style.checkbox.check,
+                                },
+                                onchange:function(value){design.sequencer.main.loopActive(value);}
+                            }},
+                            //range
+                            {type:'rangeslide', name:'loopSelect', data:{
+                                x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:1,
+                                style:{
+                                    handle: style.rangeslide.handle,
+                                    backing: style.rangeslide.backing,
+                                    slot: style.rangeslide.slot,
+                                    invisibleHandle: style.rangeslide.invisibleHandle,
+                                    span: style.rangeslide.span,
+                                },
+                                onchange:function(values){ 
+                                    var a = Math.round(values.start*vals.sequencer.width);
+                                    var b = Math.round(values.end*vals.sequencer.width);
+                                    if(b == 0){b = 1;}
+                                    design.sequencer.main.loopPeriod(a,b);
+                                },
+                            }},    
             
-            //audio_sink
-                var audio_sink_1 = objects.audio_sink(400,50);
-                __globals.panes.middleground.append( audio_sink_1 );
-            
-            //basic audio mixer
-                var audio_mixer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicMixer(925, 110) );
-            
-            //basicSynthesizer
-                var basicSynthesizer_1 = objects.basicSynthesizer(550,50);
-                __globals.panes.middleground.append( basicSynthesizer_1 );
-            
-            //audio effect objects
-                //distortionUnit
-                    var distortionUnit_1 = objects.distortionUnit(25, 120);
-                    __globals.panes.middleground.append( distortionUnit_1 );
-                //filterUnit
-                    var filterUnit_1 = objects.filterUnit(150, 175);
-                    __globals.panes.middleground.append( filterUnit_1 );
-                //reverbUnit
-                    var reverbUnit_1 = objects.reverbUnit(280, 170);
-                    __globals.panes.middleground.append( reverbUnit_1 );
-            
-            //audio player objects
-                //oneShot_single
-                    var oneShot_single_1 = objects.oneShot_single(425, 160);
-                    __globals.panes.middleground.append( oneShot_single_1 );
-                //oneShot_multi
-                    var oneShot_multi_1 = objects.oneShot_multi(425, 220);
-                    __globals.panes.middleground.append( oneShot_multi_1 );
-                //looper
-                    var looper_1 = objects.looper(425,280);
-                    __globals.panes.middleground.append( looper_1 );
-                //standard player
-                    var player_1 = objects.player(425,340);
-                    __globals.panes.middleground.append( player_1 );
-                //oneShot_multi_multiTrack
-                    var oneShot_multi_multiTrack_1 = objects.oneShot_multi_multiTrack(675, 160);
-                    __globals.panes.middleground.append( oneShot_multi_multiTrack_1 );
-            
-            
-            //audio recorder
-                var recorder_1 = objects.recorder(355, 110);
-                __globals.panes.middleground.append( recorder_1 );
-            
-            //audio input
-                var audioIn_1 = objects.audioIn(15, 275, false);
-                __globals.panes.middleground.append( audioIn_1 );
-            
-            //launchpad
-                var launchpad_1 = objects.launchpad(270, 225);
-                __globals.panes.middleground.append( launchpad_1 );
-            
-            //basic audio mixer
-                var basicSequencer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer(925, 325) );
-            
-            //universalreadout
-                var universalreadout_1 = objects.universalreadout(820, 60);
-                __globals.panes.middleground.append( universalreadout_1 );
-            
-            //pulseGenerator
-                var pulseGenerator_1 = objects.pulseGenerator(790, 110);
-                __globals.panes.middleground.append( pulseGenerator_1 );
-            
-            //musical keyboard
-                var musicalkeyboard_1 = objects.musicalkeyboard(80, 330);
-                __globals.panes.middleground.append( musicalkeyboard_1 );
-            
-            
+                        //progression
+                            //button
+                            {type:'button_rect', name:'progress', data:{
+                                x:10, y:205, width:25, height:15,
+                                style:{
+                                    up:style.button.up,
+                                    hover:style.button.hover,
+                                    down:style.button.down,
+                                    glow:style.button.glow,
+                                },
+                                onclick:function(){design.sequencer.main.progress();},
+                            }},     
+                            //connection node
+                            {type:'connectionNode_data', name:'progress', data:{ 
+                                x: 800, y: 5, width: 5, height: 20,
+                                receive:function(){design.sequencer.main.progress();}
+                            }},
+                            //symbol
+                            {type:'path', name:'progress_arrow', data:{ path:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
             
             
+                        //reset
+                            //button
+                            {type:'button_rect', name:'reset', data:{
+                                x:40, y:205, width:25, height:15,
+                                style:{
+                                    up:style.button.up,
+                                    hover:style.button.hover,
+                                    down:style.button.down,
+                                    glow:style.button.glow,
+                                },
+                                onclick:function(){design.sequencer.main.playheadPosition(0);},
+                            }},
+                            //connection node
+                            {type:'connectionNode_data', name:'reset', data:{ 
+                                x: 800, y: 30, width: 5, height: 20,
+                                receive:function(){design.sequencer.main.playheadPosition(0);}
+                            }},
+                            //symbol
+                            {type:'path', name:'reset_arrow', data:{ path:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
+                            {type:'path', name:'reset_line', data:{ path:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
+                    ]
+                };
+                //dynamic design
+                    for(var a = 0; a < vals.sequencer.height; a++){
+                        design.elements.push(
+                            {type:'connectionNode_data', name:'output_'+a, data:{ 
+                                x: -5, y: 11+a*(180/vals.sequencer.height), width: 5, height:(180/vals.sequencer.height)-2,
+                                receive:function(){design.sequencer.main.playheadPosition(0);}
+                            }},
+                        );
+                    }
+            
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(objects.basicSequencer,design);
+            
+                //interface
+                    obj.i = {
+                        addNote:function(line, position, length, strength=1){design.sequencer.main.addNote(line, position, length, strength);},
+                        addNotes:function(data){design.sequencer.main.addNotes(data);},
+                        getNotes:function(){return design.sequencer.main.getAllNotes();},
+                        loopActive:function(a){design.checkbox_rect.loopActive.set(a);},
+                    };
+            
+                return obj;
+            };
+            objects.basicSequencer_midiOut = function(x,y,debug=false){
+                var vals = {
+                    sequencer:{
+                        width:32, height:37, topMidiNumber:108
+                    }
+                };
+            
+                var style = {
+                    background:'fill:rgba(200,200,200,1)',
+                    markings: {
+                        fill:'fill:rgba(150,150,150,1); pointer-events: none;',
+                        stroke:'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
+                    },
+                    rangeslide:{
+                        handle:'fill:rgba(240,240,240,1)',
+                        backing:'fill:rgba(150,150,150,1)',
+                        slot:'fill:rgba(50,50,50,1)',
+                        invisibleHandle:'fill:rgba(0,0,0,0);',
+                        span:'fill:rgba(220,220,220,1)',
+                    },
+                    button:{
+                        up:'fill:rgba(220,220,220,1)',
+                        hover:'fill:rgba(240,240,240,1)',
+                        down:'fill:rgba(180,180,180,1)',
+                        glow:'fill:rgba(220,200,220,1)',
+                    },
+                    checkbox:{
+                        backing:'fill:rgba(229, 221, 112,1)',
+                        check:'fill:rgba(252,244,128,1)',
+                    },
+                };
+            
+                var design = {
+                    type: 'basicSequencer',
+                    x: x, y: y,
+                    base: {
+                        type:'path',
+                        points:[ 
+                            {x:0,y:0}, 
+                            {x:800,y:0}, 
+                            {x:800,y:210}, 
+                            {x:130,y:210},
+                            {x:105,y:225},
+                            {x:0,y:225}
+                        ], 
+                        style:style.background
+                    },
+                    elements:[
+                        //midi out
+                            {type:'connectionNode_data', name:'midiout', data:{
+                                x: -5, y: 11.25, width: 5, height: 17.5,
+                            }},
+            
+            
+                        //main sequencer
+                            {type:'sequencer', name:'main', data:{
+                                x:10, y:10, width:780, height:180, 
+                                xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                                event:function(event){
+                                    for(var a = 0; a < event.length; a++){
+                                        design.connectionNode_data.midiout.send('midinumber',{num:roll2midi(event[a].line), velocity:event[a].strength});
+                                    }
+                                },
+                                style:{
+                                    horizontalStrip_pattern:[0,0,1,0,1,0,1,0,0,1,0,1]
+                                }
+                            }},
+            
+                        //loop control   
+                            //activation
+                            {type:'checkbox_rect', name:'loopActive',data:{
+                                x:70, y:205, width:25, height:15,
+                                style:{
+                                    backing:style.checkbox.backing,
+                                    check:style.checkbox.check,
+                                },
+                                onchange:function(value){design.sequencer.main.loopActive(value);}
+                            }},
+                            //range
+                            {type:'rangeslide', name:'loopSelect', data:{
+                                x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:1,
+                                style:{
+                                    handle: style.rangeslide.handle,
+                                    backing: style.rangeslide.backing,
+                                    slot: style.rangeslide.slot,
+                                    invisibleHandle: style.rangeslide.invisibleHandle,
+                                    span: style.rangeslide.span,
+                                },
+                                onchange:function(values){ 
+                                    var a = Math.round(values.start*vals.sequencer.width);
+                                    var b = Math.round(values.end*vals.sequencer.width);
+                                    if(b == 0){b = 1;}
+                                    design.sequencer.main.loopPeriod(a,b);
+                                },
+                            }},    
+            
+                        //progression
+                            //button
+                            {type:'button_rect', name:'progress', data:{
+                                x:10, y:205, width:25, height:15,
+                                style:{
+                                    up:style.button.up,
+                                    hover:style.button.hover,
+                                    down:style.button.down,
+                                    glow:style.button.glow,
+                                },
+                                onclick:function(){design.sequencer.main.progress();},
+                            }},     
+                            //connection node
+                            {type:'connectionNode_data', name:'progress', data:{ 
+                                x: 800, y: 5, width: 5, height: 20,
+                                receive:function(){design.sequencer.main.progress();}
+                            }},
+                            //symbol
+                            {type:'path', name:'progress_arrow', data:{ path:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
+            
+            
+                        //reset
+                            //button
+                            {type:'button_rect', name:'reset', data:{
+                                x:40, y:205, width:25, height:15,
+                                style:{
+                                    up:style.button.up,
+                                    hover:style.button.hover,
+                                    down:style.button.down,
+                                    glow:style.button.glow,
+                                },
+                                onclick:function(){design.sequencer.main.playheadPosition(0);},
+                            }},
+                            //connection node
+                            {type:'connectionNode_data', name:'reset', data:{ 
+                                x: 800, y: 30, width: 5, height: 20,
+                                receive:function(){design.sequencer.main.playheadPosition(0);}
+                            }},
+                            //symbol
+                            {type:'path', name:'reset_arrow', data:{ path:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
+                            {type:'path', name:'reset_line', data:{ path:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
+                    ]
+                };
+            
+                //internal functions
+                    function roll2midi(num){
+                        return vals.sequencer.topMidiNumber - num;
+                    }
+            
+                //main object
+                    var obj = __globals.utility.experimental.objectBuilder(objects.basicSequencer,design);
+            
+                //interface
+                    obj.i = {
+                        addNote:function(line, position, length, strength=1){design.sequencer.main.addNote(line, position, length, strength);},
+                        addNotes:function(data){design.sequencer.main.addNotes(data);},
+                        getNotes:function(){return design.sequencer.main.getAllNotes();},
+                        loopActive:function(a){design.checkbox_rect.loopActive.set(a);},
+                    };
+            
+                return obj;
+            };
+            
+            var basicSequencer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer(280, 10) );
+            var basicSequencer_midiOut_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer_midiOut(280, 245) );
+            
+            var universalreadout_1 = __globals.utility.workspace.placeAndReturnObject( objects.universalreadout(10, 60) );
+
 
 
         }

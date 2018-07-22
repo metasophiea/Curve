@@ -1,4 +1,16 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-07-22
+  - created new 'basicSequencer_midiOut' object, which is like a sequencer, but
+    outputs midi commands
+  - fixed bug where sequencer playhead wasn't being accessed properly, thus was
+    causing problems when multiple sequencers were in a scene. Just had to
+    change 'playheadPosition' to use 'obj.children.playhead' instead of just
+    'playhead' for the 'setTransform_XYonly'
+  - added interface methods to basicSynthesizer object
+  - redid demo 2 to have drum and bass sections (and a chord section that is
+    left disconnected)
+
+
 2018-07-20
   - pushed pianoroll part into main parts (now called sequencer)
   - shipped all the sequencer testing code over into testSituation 1, and then
@@ -11,6 +23,12 @@
 
   bugs found
   - rangeslide handle movement is a bit weird
+
+  Compliation Results
+  - workspace.js                        733 Kb (100%)
+  - workspace.min.js                    254 Kb (34.76%)
+  - workspace.min.js (web compressed)  49.6 Kb (6.76%)
+  
 
 
 2018-07-19

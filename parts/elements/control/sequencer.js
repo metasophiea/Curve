@@ -463,7 +463,7 @@ this.sequencer = function(
                     if( obj.children.playhead ){ obj.children.playhead.remove(); }
                 }else{ //within vilible bounds
                     if( !obj.children.playhead ){ makePlayhead(); }
-                    __globals.utility.element.setTransform_XYonly(playhead, state.playhead.position*(width/xCount), 0);
+                    __globals.utility.element.setTransform_XYonly(obj.children.playhead, state.playhead.position*(width/xCount), 0);
                 }
         };
         obj.step = function(a){
