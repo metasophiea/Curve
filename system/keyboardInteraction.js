@@ -91,8 +91,17 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
         console.log('paste!');
         __globals.selection.paste();
     };
-
-
+    __globals.keyboardInteraction.onkeydown_functionList.F1 = function(event){
+        console.log('help!');
+        var temp = __globals.utility.workspace.objectUnderPoint(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
+        if(temp){ window.open('https://metasophiea.com/curve/help/object/'+temp.id, '_blank'); }
+    };
+    __globals.keyboardInteraction.onkeydown_functionList.F2 = function(event){
+        console.log('save!');
+    };
+    __globals.keyboardInteraction.onkeydown_functionList.F3 = function(event){
+        console.log('open!');
+    };
 
 // onkeyup functions
     __globals.keyboardInteraction.onkeyup_functionList = {};

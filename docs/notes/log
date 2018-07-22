@@ -13,6 +13,9 @@
   - fixed bug in 'sequencer.noteRegistry' where the updating of note positions
     wasn't being delt with properly and things were ending up off the side. The
     logic has been re-written to be better now (new tests for it too)
+  - added help/save/load function keys (F1, F2 and F3)
+  - began help folder, which can be linked to from the app by pressing F1 ove an
+    object
 
   Compliation Results
   - workspace.js                        688 Kb  (100%)

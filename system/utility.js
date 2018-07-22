@@ -82,6 +82,8 @@ __globals.utility = new function(){
             return element;
         };
         this.objectUnderPoint = function(x,y){
+            if(x == undefined || y == undefined){return;}
+
             var temp = document.elementFromPoint(x,y);
             if(temp.hasAttribute('workspace')){return null;}
     

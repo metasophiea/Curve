@@ -139,9 +139,7 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
     };
 
     //internal functions
-        function roll2midi(num){
-            return vals.sequencer.topMidiNumber - num;
-        }
+        function roll2midi(num){ return vals.sequencer.topMidiNumber - num; }
 
     //main object
         var obj = __globals.utility.experimental.objectBuilder(objects.basicSequencer_midiOut,design);
