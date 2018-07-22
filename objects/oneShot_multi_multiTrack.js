@@ -208,7 +208,7 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                 ,url);
             },
             area:function(trackNumber,a,b){
-                design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);
+                return design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);
             }
         };
     

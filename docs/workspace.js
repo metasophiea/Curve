@@ -6628,7 +6628,7 @@
                                         needleJumpTo('selection_B',positionB);
                                     }
                         
-                                    //you always gotta computer the selection area
+                                    //you always gotta compute the selection area
                                     computeSelectionArea();
                                 };
                                 object.genericNeedle = function(number,position,specialStyle=''){
@@ -10366,7 +10366,7 @@
                                 ,url);
                             },
                             area:function(trackNumber,a,b){
-                                design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);
+                                return design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);
                             }
                         };
                     
