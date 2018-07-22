@@ -1,83 +1,67 @@
 {{include:*}}
 
 //audio duplicator
-    var audio_duplicator_1 = objects.audio_duplicator(50,50);
-    __globals.panes.middleground.append( audio_duplicator_1 );
+    var audio_duplicator_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(50,50) );
 
 //data duplicator
-    var data_duplicator_1 = objects.data_duplicator(875, 50);
-    __globals.panes.middleground.append( data_duplicator_1 );
+    var data_duplicator_1 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(875, 50) );
 
 //audio_scope
-    var audio_scope_1 = objects.audio_scope(150,50);
-    __globals.panes.middleground.append( audio_scope_1 );
+    var audio_scope_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_scope(150,50) );
 
 //audio_sink
-    var audio_sink_1 = objects.audio_sink(400,50);
-    __globals.panes.middleground.append( audio_sink_1 );
+    var audio_sink_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_sink(400,50) );
 
 //basic audio mixer
     var audio_mixer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicMixer(925, 110) );
 
 //basicSynthesizer
-    var basicSynthesizer_1 = objects.basicSynthesizer(550,50);
-    __globals.panes.middleground.append( basicSynthesizer_1 );
+    var basicSynthesizer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(550,50) );
 
 //audio effect objects
     //distortionUnit
-        var distortionUnit_1 = objects.distortionUnit(25, 120);
-        __globals.panes.middleground.append( distortionUnit_1 );
+        var distortionUnit_1 = __globals.utility.workspace.placeAndReturnObject( objects.distortionUnit(25, 120) );
     //filterUnit
-        var filterUnit_1 = objects.filterUnit(150, 175);
-        __globals.panes.middleground.append( filterUnit_1 );
+        var filterUnit_1 = __globals.utility.workspace.placeAndReturnObject( objects.filterUnit(150, 175) );
     //reverbUnit
-        var reverbUnit_1 = objects.reverbUnit(280, 170);
-        __globals.panes.middleground.append( reverbUnit_1 );
+        var reverbUnit_1 = __globals.utility.workspace.placeAndReturnObject( objects.reverbUnit(280, 170) );
 
 //audio player objects
     //oneShot_single
-        var oneShot_single_1 = objects.oneShot_single(425, 160);
-        __globals.panes.middleground.append( oneShot_single_1 );
+        var oneShot_single_1 = __globals.utility.workspace.placeAndReturnObject( objects.oneShot_single(425, 160) );
     //oneShot_multi
-        var oneShot_multi_1 = objects.oneShot_multi(425, 220);
-        __globals.panes.middleground.append( oneShot_multi_1 );
+        var oneShot_multi_1 = __globals.utility.workspace.placeAndReturnObject( objects.oneShot_multi(425, 220) );
     //looper
-        var looper_1 = objects.looper(425,280);
-        __globals.panes.middleground.append( looper_1 );
+        var looper_1 = __globals.utility.workspace.placeAndReturnObject( objects.looper(425,280) );
     //standard player
-        var player_1 = objects.player(425,340);
-        __globals.panes.middleground.append( player_1 );
+        var player_1 = __globals.utility.workspace.placeAndReturnObject( objects.player(425,340) );
     //oneShot_multi_multiTrack
-        var oneShot_multi_multiTrack_1 = objects.oneShot_multi_multiTrack(675, 160);
-        __globals.panes.middleground.append( oneShot_multi_multiTrack_1 );
+        var oneShot_multi_multiTrack_1 = __globals.utility.workspace.placeAndReturnObject( objects.oneShot_multi_multiTrack(675, 160) );
 
 
 //audio recorder
-    var recorder_1 = objects.recorder(355, 110);
-    __globals.panes.middleground.append( recorder_1 );
+    var recorder_1 = __globals.utility.workspace.placeAndReturnObject( objects.recorder(355, 110) );
 
 //audio input
-    var audioIn_1 = objects.audioIn(15, 275, false);
-    __globals.panes.middleground.append( audioIn_1 );
+    var audioIn_1 = __globals.utility.workspace.placeAndReturnObject( objects.audioIn(15, 275, false) );
 
 //launchpad
-    var launchpad_1 = objects.launchpad(270, 225);
-    __globals.panes.middleground.append( launchpad_1 );
+    var launchpad_1 = __globals.utility.workspace.placeAndReturnObject( objects.launchpad(270, 225) );
 
-//basic audio mixer
+//basic sequencer
     var basicSequencer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer(925, 325) );
 
+//basic sequencer (midi output)
+    var basicSequencer_midiOut_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer_midiOut(925, 560) );
+
 //universalreadout
-    var universalreadout_1 = objects.universalreadout(820, 60);
-    __globals.panes.middleground.append( universalreadout_1 );
+    var universalreadout_1 = __globals.utility.workspace.placeAndReturnObject( objects.universalreadout(820, 60) );
 
 //pulseGenerator
-    var pulseGenerator_1 = objects.pulseGenerator(790, 110);
-    __globals.panes.middleground.append( pulseGenerator_1 );
+    var pulseGenerator_1 = __globals.utility.workspace.placeAndReturnObject( objects.pulseGenerator(790, 110) );
 
 //musical keyboard
-    var musicalkeyboard_1 = objects.musicalkeyboard(80, 330);
-    __globals.panes.middleground.append( musicalkeyboard_1 );
+    var musicalkeyboard_1 = __globals.utility.workspace.placeAndReturnObject( objects.musicalkeyboard(80, 330) );
 
 
 

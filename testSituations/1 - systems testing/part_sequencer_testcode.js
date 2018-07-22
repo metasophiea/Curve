@@ -222,3 +222,25 @@ console.log('%c- getting events (out of range)', 'font-weight: bold;');
         {noteID: 2, line: 2, position: 6, strength: 0.25},
         {noteID: 2, line: 2, position: 16, strength: 0},
     ]);
+    
+console.log('%c- updating a note (wrong position)', 'font-weight: bold;');
+    //(note should be provented from moving too far to the right)
+    var noteRegistry = new parts.elements.control.sequencer.noteRegistry(64, 10, 10);
+    noteRegistry.add({ line:0, position:0, length:5, strength:1 });
+    noteRegistry.update(0,{position:100});
+    tester(noteRegistry.getAllNotes(), [{line:0, position:59, length:5, strength:1}]);
+    tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 0, position: 59, strength: 1},{noteID: 0, line: 0, position: 64, strength: 0}]);
+console.log('%c- updating a note (wrong length)', 'font-weight: bold;');
+    //(note should be provented from extending past the right limit)
+    var noteRegistry = new parts.elements.control.sequencer.noteRegistry(64, 10);
+    noteRegistry.add({ line:0, position:7, length:5, strength:1 });
+    noteRegistry.update(0,{length:100});
+    tester(noteRegistry.getAllNotes(), [{line:0, position:7, length:57, strength:1}]);
+    tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 0, position: 7, strength: 1},{noteID: 0, line: 0, position: 64, strength: 0}]);
+console.log('%c- updating a note (wrong length and position)', 'font-weight: bold;');
+    //(note should be provented from extending past the right limit)
+    var noteRegistry = new parts.elements.control.sequencer.noteRegistry(64, 10);
+    noteRegistry.add({ line:0, position:7, length:5, strength:1 });
+    noteRegistry.update(0,{position:100,length:100});
+    tester(noteRegistry.getAllNotes(), [{line:0, position:64, length:0, strength:1}]);
+    tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 0, position: 64, strength: 1},{noteID: 0, line: 0, position: 64, strength: 0}]);

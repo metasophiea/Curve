@@ -788,14 +788,25 @@ this.sequencer.noteRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthL
         //clean input
             if(data == undefined){return;}
             if(!('line' in data)){data.line = notes[id].line;}
-            if(!('position' in data)){data.position = notes[id].position;}
-            if(!('length' in data)){ data.length = notes[id].length; } 
-            else{ 
-                //special case; the note gets longer than the rightLimit will allow
-                //can't really put this in the 'add' code, because it's only really 
-                //a problem that turns up during an update
-                if(data.length+data.position > rightLimit){ data.length = rightLimit-data.position; }
+
+            //Special cases where either by movement or lengthening, the note stretches further than the rightLimit
+            //will allow. In these cases the note either has to be clipped, or prevented from moving further to the
+            //right. In the case where a note is being lengthened and moved to the right; the system should opt to
+            //clip it's length
+            //Obviously, if there's no right limit don't bother
+            if(rightLimit > -1){
+                if('position' in data && 'length' in data){//clip length
+                    if(data.length+data.position > rightLimit){ data.length = rightLimit-data.position; }
+                }else{
+                    if('position' in data){//prevent movement
+                        if(notes[id].length+data.position >= rightLimit){ data.position = rightLimit - notes[id].length; }
+                    }else{ data.position = notes[id].position; }
+                    if('length' in data){//clip length
+                        if(data.length+data.position > rightLimit){ data.length = rightLimit-data.position; }
+                    }else{ data.length = notes[id].length; }
+                }
             }
+
             if(!('strength' in data)){data.strength = notes[id].strength;}
         
         this.remove(id);

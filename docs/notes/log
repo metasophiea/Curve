@@ -10,6 +10,9 @@
   - redid demo 2 to have drum and bass sections (and a chord section that is
     left disconnected)
   - cleaned up notes file into notes folder
+  - fixed bug in 'sequencer.noteRegistry' where the updating of note positions
+    wasn't being delt with properly and things were ending up off the side. The
+    logic has been re-written to be better now (new tests for it too)
 
   Compliation Results
   - workspace.js                        688 Kb  (100%)
