@@ -58,10 +58,10 @@
         basicSequencer_1.io.output_1.connectTo( oneShot_multi_multiTrack.io.trigger_1 );
         basicSequencer_1.io.output_2.connectTo( oneShot_multi_multiTrack.io.trigger_2 );
         basicSequencer_1.io.output_3.connectTo( oneShot_multi_multiTrack.io.trigger_3 );
-        basicSequencer_1.io.output_4.connectTo( oneShot_multi_multiTrack.io.trigger_4 );
-        basicSequencer_1.io.output_5.connectTo( oneShot_multi_multiTrack.io.trigger_5 );
-        basicSequencer_1.io.output_6.connectTo( oneShot_multi_multiTrack.io.trigger_6 );
-        basicSequencer_1.io.output_7.connectTo( oneShot_multi_multiTrack.io.trigger_7 );
+        // basicSequencer_1.io.output_4.connectTo( oneShot_multi_multiTrack.io.trigger_4 );
+        // basicSequencer_1.io.output_5.connectTo( oneShot_multi_multiTrack.io.trigger_5 );
+        // basicSequencer_1.io.output_6.connectTo( oneShot_multi_multiTrack.io.trigger_6 );
+        // basicSequencer_1.io.output_7.connectTo( oneShot_multi_multiTrack.io.trigger_7 );
         oneShot_multi_multiTrack.io.outRight.connectTo( audio_mixer_1.io.input_0 );
         oneShot_multi_multiTrack.io.outLeft.connectTo( audio_mixer_1.io.input_1 );
 
@@ -311,6 +311,7 @@
             libURL+'openHiHat.mp3', 
             libURL+'closeHiHat.mp3', 
             libURL+'crash.mp3',
+            libURL+'shaker.mp3',
             libURL+'shaker.mp3',
         ];
         for(var a = 0; a < sounds.length; a++){ oneShot_multi_multiTrack.i.loadURL(a, sounds[a]); }
