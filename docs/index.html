@@ -21,4 +21,11 @@
 
 </html>
 
-<script type='text/javascript' src='workspace.js'></script>
+<script type='text/javascript' src='workspace.min.js'></script>
+
+<script>
+    //detect demo request
+    if(Number.isInteger(parseInt((new URL(window.location.href)).searchParams.get("demo")))){
+        __globals.utility.workspace.saveload.loadFromURL('https://metasophiea.com/curve/demos/'+parseInt((new URL(window.location.href)).searchParams.get("demo"))+'.crv');
+    }
+</script>
