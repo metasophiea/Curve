@@ -11,12 +11,12 @@ this.readout_sixteenSegmentDisplay = function(
 
     //elements
         //main
-            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
 
         //display units
             var units = [];
             for(var a = 0; a < count; a++){
-                var temp = __globals.utility.experimental.elementMaker('sixteenSegmentDisplay', a, {
+                var temp = __globals.utility.misc.elementMaker('sixteenSegmentDisplay', a, {
                     x:(width/count)*a, width:width/count, height:height, 
                     style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
                 });

@@ -13,23 +13,23 @@ this.meter_level = function(
         var mostRecentSetting = 0;
 
     //elements
-        var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+        var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
 
     //level
         levelStyles[0] += 'transition: height 0s;';
         levelStyles[1] += 'transition: height 0.01s;';
 
-        var level = __globals.utility.experimental.elementMaker('level','mainlevel',{width:width,height:height,angle:angle,style:{backing:backingStyle,levels:levelStyles}});
+        var level = __globals.utility.misc.elementMaker('level','mainlevel',{width:width,height:height,angle:angle,style:{backing:backingStyle,levels:levelStyles}});
         object.append(level);
 
     //markings
         function makeMark(y){
             var markThickness = 0.2;
             var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-            return __globals.utility.experimental.elementMaker('path', null, {path:path, lineType:'L', style:markingStyle});
+            return __globals.utility.misc.elementMaker('path', null, {path:path, lineType:'L', style:markingStyle});
         }
         function insertText(y,text){
-            return __globals.utility.experimental.elementMaker('label', null, {y:y+0.3, text:text, style:markingStyle});
+            return __globals.utility.misc.elementMaker('label', null, {y:y+0.3, text:text, style:markingStyle});
         }
 
         for(var a = 0; a < markings.length; a++){

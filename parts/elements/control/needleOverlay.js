@@ -7,30 +7,30 @@ this.needleOverlay = function(
 
     //elements
         //main
-            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
         //backing
-            var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height,style:'fill:rgba(100,100,100, 0);'});
+            var backing = __globals.utility.misc.elementMaker('rect','backing',{width:width,height:height,style:'fill:rgba(100,100,100, 0);'});
             object.appendChild(backing);
         //control objects
             var invisibleHandleWidth = width*needleWidth + width*0.005;
             var controlObjects = {};
                 //lead
-                controlObjects.lead = __globals.utility.experimental.elementMaker('g','lead',{});
-                controlObjects.lead.append(__globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}));
-                controlObjects.lead.append(__globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}));
+                controlObjects.lead = __globals.utility.misc.elementMaker('g','lead',{});
+                controlObjects.lead.append(__globals.utility.misc.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}));
+                controlObjects.lead.append(__globals.utility.misc.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}));
                 //selection_A
-                controlObjects.selection_A = __globals.utility.experimental.elementMaker('g','selection_A',{});
-                controlObjects.selection_A.append(__globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
-                controlObjects.selection_A.append(__globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
+                controlObjects.selection_A = __globals.utility.misc.elementMaker('g','selection_A',{});
+                controlObjects.selection_A.append(__globals.utility.misc.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
+                controlObjects.selection_A.append(__globals.utility.misc.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
                 //selection_B
-                controlObjects.selection_B = __globals.utility.experimental.elementMaker('g','selection_B',{});
-                controlObjects.selection_B.append(__globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
-                controlObjects.selection_B.append(__globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
+                controlObjects.selection_B = __globals.utility.misc.elementMaker('g','selection_B',{});
+                controlObjects.selection_B.append(__globals.utility.misc.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
+                controlObjects.selection_B.append(__globals.utility.misc.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
                 //selection_area
-                controlObjects.selection_area = __globals.utility.experimental.elementMaker('rect','selection_area',{height:height,style:needleStyles[1]+'opacity:0.33; cursor: move;'});
+                controlObjects.selection_area = __globals.utility.misc.elementMaker('rect','selection_area',{height:height,style:needleStyles[1]+'opacity:0.33; cursor: move;'});
                 //generic needles
                 controlObjects.generic = [];
-            var controlObjectsGroup = __globals.utility.experimental.elementMaker('g','controlObjectsGroup',{})
+            var controlObjectsGroup = __globals.utility.misc.elementMaker('g','controlObjectsGroup',{})
             object.append(controlObjectsGroup);
 
     //internal functions
@@ -41,9 +41,9 @@ this.needleOverlay = function(
                 controlObjects.generic[number].remove();
                 delete controlObjects.generic[number];
             }else{
-                controlObjects.generic[number] = __globals.utility.experimental.elementMaker('g','generic_'+number,{x:(location*width - needleWidth*width/2), style:specialStyle})
-                controlObjects.generic[number].append( __globals.utility.experimental.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}) );
-                controlObjects.generic[number].append( __globals.utility.experimental.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);'}) );
+                controlObjects.generic[number] = __globals.utility.misc.elementMaker('g','generic_'+number,{x:(location*width - needleWidth*width/2), style:specialStyle})
+                controlObjects.generic[number].append( __globals.utility.misc.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}) );
+                controlObjects.generic[number].append( __globals.utility.misc.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);'}) );
                 controlObjectsGroup.append( controlObjects.generic[number] );
             }
         }

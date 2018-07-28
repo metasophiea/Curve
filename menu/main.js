@@ -12,7 +12,7 @@ var timeout = setTimeout(function(){
     //blocking screen
         __globals.panes.menu.append(parts.basic.rect(null, 0, 0, viewportDimensions.width, viewportDimensions.height, 0, 'fill:rgba(255,255,255,0.9)'));
     //explanation text
-        var text = __globals.utility.experimental.elementMaker('text','explanation',{
+        var text = __globals.utility.misc.elementMaker('text','explanation',{
             x:10, y:30, 
             text:'because of the \'no autoplay\' feature in browsers; this site needs you to allow it to produce sound',
             style:'fill:rgba(0,0,0,1); font-size:15px; font-family:Courier New; pointer-events:none;'
@@ -25,7 +25,7 @@ var timeout = setTimeout(function(){
             s:1, r:0
         });
     //activation button
-        __globals.panes.menu.append(__globals.utility.experimental.elementMaker('button_rect','audioOn',{
+        __globals.panes.menu.append(__globals.utility.misc.elementMaker('button_rect','audioOn',{
             x:(viewportDimensions.width-100)/2, y:(viewportDimensions.height-50)/2,
             width:100, height:50,
             onclick:function(){
@@ -34,7 +34,7 @@ var timeout = setTimeout(function(){
             }
         }));
     //button text
-        __globals.panes.menu.append(__globals.utility.experimental.elementMaker('text','explanation',{
+        __globals.panes.menu.append(__globals.utility.misc.elementMaker('text','explanation',{
             x:(viewportDimensions.width/2)-22.5, y:(viewportDimensions.height/2)+5, 
             text:'allow',
             style:'fill:rgba(0,0,0,1); font-size:15px; font-family:Courier New; pointer-events:none;'

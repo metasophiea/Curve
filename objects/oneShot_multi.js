@@ -128,7 +128,7 @@ this.oneShot_multi = function(x,y,debug=false){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.oneShot_multi,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.oneShot_multi,design);
 
     //circuitry
             var playheads = {};

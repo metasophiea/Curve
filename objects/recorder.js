@@ -106,7 +106,7 @@ this.recorder = function(x,y,debug=false){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.recorder,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.recorder,design);
 
     //circuitry
         //update functions
@@ -117,10 +117,10 @@ this.recorder = function(x,y,debug=false){
                     time = __globals.utility.math.seconds2time( Math.round(time) );
 
                     design.readout_sixteenSegmentDisplay.time.text(
-                        __globals.utility.math.padString(time.h,2,'0')+':'+
-                        __globals.utility.math.padString(time.m,2,'0')+':'+
-                        __globals.utility.math.padString(time.s,2,'0')+'.'+
-                        __globals.utility.math.padString((''+decimalValues).slice(2),2,'0')
+                        __globals.utility.misc.padString(time.h,2,'0')+':'+
+                        __globals.utility.misc.padString(time.m,2,'0')+':'+
+                        __globals.utility.misc.padString(time.s,2,'0')+'.'+
+                        __globals.utility.misc.padString((''+decimalValues).slice(2),2,'0')
                     );
                     design.readout_sixteenSegmentDisplay.time.print();
                 },100);

@@ -92,15 +92,22 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
         __globals.selection.paste();
     };
     __globals.keyboardInteraction.onkeydown_functionList.F1 = function(event){
+        if(!event[__globals.super.keys.ctrl]){return;}
         console.log('help!');
         var temp = __globals.utility.workspace.objectUnderPoint(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
-        if(temp){ window.open('https://metasophiea.com/curve/help/object/'+temp.id, '_blank'); }
+        if(temp){ window.open(__globals.super.helpFolderLocation+'object/'+temp.id, '_blank'); }
     };
     __globals.keyboardInteraction.onkeydown_functionList.F2 = function(event){
+        if(!event[__globals.super.keys.ctrl]){return;}
         console.log('save!');
+        if(!__globals.super.enableSaveload){return;}
+        __globals.utility.workspace.saveload.save();
     };
     __globals.keyboardInteraction.onkeydown_functionList.F3 = function(event){
-        console.log('open!');
+        if(!event[__globals.super.keys.ctrl]){return;}
+        console.log('load!');
+        if(!__globals.super.enableSaveload){return;}
+        __globals.utility.workspace.saveload.load();
     };
 
 // onkeyup functions

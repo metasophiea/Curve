@@ -11,8 +11,17 @@
 //        dotMaker                        (x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;')
 //        getGlobalScale                  (element)
 //        getViewportDimensions           ()
-//        placeAndReturnObject            (object,pane='middleground')
+//        placeAndReturnObject            (object, pane='middleground')
 //        mouseInteractionHandler         (moveCode, stopCode)
+//        clear                           (pane='middleground')
+//        exportScene                     (bundleConstructorFunctions=false)
+//        importScene                     (data, bundleConstructorFunctions=false, constructorFunctions)
+//        saveload
+//            save                        (compress=true, sceneName='project', bundleConstructorFunctions=false)
+//            __loadProcess               (data, compressed)
+//            load                        (compressed=true)
+//            loadFromURL                 (url, compressed=true)
+//        setStaticBackgroundStyle        (style)
 //    
 //    element
 //        getTransform                    (element)
@@ -25,15 +34,17 @@
 //        getBoundingBox                  (element)
 //        makeUnselectable                (element)
 //        getPositionWithinFromMouse      (event, element, elementWidth, elementHeight)
+//        styleExtractor                  (string)
+//        stylePacker                     (object)
 //    
 //    object
 //        requestInteraction              (x,y,type) (browser position)
-//        //disconnectEverything            (object)
+//        //disconnectEverything          (object)
 //        generateSelectionArea           (points:[{x:0,y:0},...], object)
 //    
 //    audio
-//        changeAudioParam                (audioParam,target,time,curve,cancelScheduledValues=true)
-//        loadBuffer                      (callback,type='file',url)
+//        changeAudioParam                (audioParam, target, time, curve, cancelScheduledValues=true)
+//        loadBuffer                      (callback, type='file', url)
 //        waveformSegment                 (audioBuffer, bounds={start:0,end:1})
 //    
 //    math
@@ -44,7 +55,6 @@
 //        boundingBoxFromPoints           (points:[{x:0,y:0},...])
 //        intersectionOfTwoLineSegments   (segment1:{{x:0,y:0},{x:0,y:0}}, segment2:{{x:0,y:0},{x:0,y:0}})
 //        seconds2time                    (seconds)
-//        padString                       (string,length)
 //        detectOverlap                   (poly_a:[{x:0,y:0},...], poly_b:[{x:0,y:0},...], box_a:[{x:0,y:0},{x:0,y:0}]=null, box_b:[{x:0,y:0},{x:0,y:0}]=null)
 //        normalizeStretchArray           (array)
 //        curvePoint
@@ -58,12 +68,22 @@
 //            cos                         (stepCount, start=0, end=1)
 //            s                           (stepCount, start=0, end=1, sharpness=8)
 //            exponential                 (stepCount, start=0, end=1)
+//
+//    misc
+//        padString                      (string, length)
+//        compressString                 (string)
+//        decompressString               (string)
+//        serialize                      (data, compress=true)
+//        unserialize                    (data, compressed=true)
+//        printFile                      (filename, data)
+//        openFile                       (callback)
+//        elementMaker                   (type, name, data)
+//        objectBuilder                  (creatorMethod, design)
+//
+//    thirdparty
+//        lzString (contains code for compressing and decompressing strings)
 //    
 //    experimental
-//         styleExtractor                 (string)
-//         elementMaker                   (type,name,data)
-//         objectBuilder                  (creatorMethod,design)
-//         stylePacker                    (object)
 
 __globals.utility = new function(){
     this.workspace = new function(){
@@ -104,10 +124,10 @@ __globals.utility = new function(){
             };
         };
         this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;',push=false){
-            var g = __globals.utility.experimental.elementMaker('g',null,{x:x, y:y});//parts.basic.g(null, x, y);
+            var g = __globals.utility.misc.elementMaker('g',null,{x:x, y:y});//parts.basic.g(null, x, y);
 
-            var dot = __globals.utility.experimental.elementMaker('circle',null,{x:0, y:0, r:r, style:style});//parts.basic.circle(null, 0, 0, r, 0, style);
-            var textElement =  __globals.utility.experimental.elementMaker('text',null,{x:0, y:0, angle:0, text:text, style:style});//parts.basic.text(null, r, 0, text, 0, style);
+            var dot = __globals.utility.misc.elementMaker('circle',null,{x:0, y:0, r:r, style:style});//parts.basic.circle(null, 0, 0, r, 0, style);
+            var textElement =  __globals.utility.misc.elementMaker('text',null,{x:0, y:0, angle:0, text:text, style:style});//parts.basic.text(null, r, 0, text, 0, style);
             g.appendChild(dot);
             g.appendChild(textElement);
 
@@ -122,8 +142,7 @@ __globals.utility = new function(){
             return {width:__globals.svgElement.width.baseVal.value, height:__globals.svgElement.height.baseVal.value};
         };
         this.placeAndReturnObject = function(object,pane='middleground'){
-            __globals.panes[pane].append( object );
-            return object;
+            return __globals.panes[pane].appendChild( object );
         };
         this.mouseInteractionHandler = function(moveCode, stopCode){
             if(moveCode == undefined){return;}
@@ -140,6 +159,175 @@ __globals.utility = new function(){
                 __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
             };
             __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
+        };
+        this.clear = function(pane='middleground'){
+            __globals.panes[pane].innerHTML = '';
+        };
+        this.exportScene = function(bundleConstructorFunctions=false){
+            var outputData = [];
+            var constructorFunctions = {};
+        
+            //create array of all objects to be saved
+                var objectsArray = Array.from(__globals.panes.middleground.children);
+        
+            //strip out all the cable objects (they have the id 'null')
+                var temp = [];
+                for(var a = 0; a < objectsArray.length; a++){
+                    if(objectsArray[a].id != 'null'){
+                        temp.push(objectsArray[a]);
+                    }
+                }
+                objectsArray = temp;
+        
+            //cycle through this array, and create the scene data
+                for(var a = 0; a < objectsArray.length; a++){
+                    var entry = {};
+        
+                    //save the object's constructor
+                        //(if the object doesn't have a constructor, don't bother with any of this)
+                        if( !objectsArray[a].creatorMethod ){continue;}
+                        //if bundleConstructorFunctions is true, save all the constructor functions 
+                        //in constructorFunctions, then add the constructor name to the entry
+                        if(bundleConstructorFunctions){
+                            constructorFunctions[objectsArray[a].id] = objectsArray[a].creatorMethod;
+                        }
+                        //if it's not set, just add the constructor name to the entry
+                        entry.objectConstructorName = objectsArray[a].id
+                        
+                    //get the objects position
+                        entry.position = __globals.utility.element.getTransform(objectsArray[a]);
+        
+                    //export the object's state
+                        if( objectsArray[a].exportData ){
+                            entry.data = objectsArray[a].exportData();
+                        }
+        
+                    //log all connections
+                        if(objectsArray[a].io){
+                            var connections = [];
+                            var keys = Object.keys(objectsArray[a].io);
+                            for(var b = 0; b < keys.length; b++){
+                                var connection = {};
+        
+                                //originPort
+                                    connection.originPort = keys[b];
+                                //destinationPort and indexOfDestinationObject
+                                    if(!objectsArray[a].io[keys[b]].foreignNode){continue;}
+        
+                                    var destinationPorts = Object.keys(objectsArray[a].io[keys[b]].foreignNode.parentElement.io);
+                                    for(var c = 0; c < destinationPorts.length; c++){
+                                        if(objectsArray[a].io[keys[b]].foreignNode.parentElement.io[destinationPorts[c]] === objectsArray[a].io[keys[b]].foreignNode){
+                                            connection.destinationPorts = destinationPorts[c];
+                                            connection.destinationIndex = objectsArray.indexOf(objectsArray[a].io[keys[b]].foreignNode.parentElement);
+                                            break;
+                                        }
+                                    }
+                                    if( connection.destinationIndex >= 0 ){ connections.push(connection); }
+                            }
+                            entry.connections = connections;
+                        }
+        
+                    //add this entry to the save data list
+                        outputData.push(entry);
+                }
+        
+            return {scene:outputData, constructorFunctions:constructorFunctions};
+        };
+        this.importScene = function(data,bundleConstructorFunctions=false,constructorFunctions){
+            //print objects to scene
+                var producedObjects = [];
+                for(var a = 0; a < data.length; a++){
+                    var entry = data[a];
+        
+                    //get the creator function
+                        //if bundleConstructorFunctions is set to true, look through the constructorFunctions
+                        //to find the one that matches this object's objectConstructorName
+                        //otherwise; look through the system's object constructor list to find it
+                        var constructor = bundleConstructorFunctions ? constructorFunctions[entry.objectConstructorName] : objects[entry.objectConstructorName];
+        
+                    //create the object and place
+                        var newObject = __globals.utility.workspace.placeAndReturnObject( constructor(entry.position.x,entry.position.y) );
+        
+                    //import object's state
+                        if(newObject.importData){
+                            newObject.importData(entry.data);
+                        }
+        
+                    //perform connections
+                        if(entry.connections){
+                            entry.connections.forEach(function(conn){
+                                if( conn.destinationIndex < producedObjects.length ){
+                                    newObject.io[conn.originPort].connectTo( producedObjects[conn.destinationIndex].io[conn.destinationPorts] );
+                                }
+                            });
+                        }
+                    //add object to produced list (for the connection handler to use in future)
+                        producedObjects.push(newObject);
+                }
+        };
+        this.saveload = new function(){
+            this.save = function(compress=true,sceneName='project',bundleConstructorFunctions=false){
+                var outputData = {
+                    sceneName:sceneName,
+                    bundleConstructorFunctions:bundleConstructorFunctions,
+                    viewportLocation:__globals.utility.workspace.currentPosition(),
+                    constructorFunctions:{},
+                    objects:[],
+                };
+                var sceneName = outputData.sceneName;
+            
+                //stopping audio
+                    __globals.audio.destination.masterGain(0);
+
+                //gather the scene data
+                    var temp = __globals.utility.workspace.exportScene(outputData.bundleConstructorFunctions);
+                    outputData.objects = temp.scene;
+                    outputData.constructorFunctions = temp.constructorFunctions;
+            
+                //serialize data
+                    outputData = __globals.utility.misc.serialize(outputData,compress);
+            
+                //print to file
+                    __globals.utility.misc.printFile(sceneName+'.crv',outputData);
+                
+                //restarting audio
+                    __globals.audio.destination.masterGain(1);
+            };
+            this.__loadProcess = function(data,compressed){
+                //stopping audio
+                    __globals.audio.destination.masterGain(0);
+                    
+                //clear current scene
+                    __globals.utility.workspace.clear()
+    
+                //unserialize data
+                    data = __globals.utility.misc.unserialize(data,compressed);
+        
+                //import scene
+                    __globals.utility.workspace.importScene(data.objects, data.bundleConstructorFunctions, data.constructorFunctions);
+
+                //set viewport position
+                    __globals.utility.workspace.gotoPosition(data.viewportLocation.x, data.viewportLocation.y, data.viewportLocation.s, data.viewportLocation.r);
+                
+                //restarting audio
+                    __globals.audio.destination.masterGain(1);
+            
+                console.log('scene "'+data.sceneName+'" has been loaded');
+            };
+            this.load = function(compressed=true){
+                __globals.utility.misc.openFile(function(data){__globals.utility.workspace.saveload.__loadProcess(data,compressed);});
+            };
+            this.loadFromURL = function(url,compressed=true){
+                var request = new XMLHttpRequest();
+                request.open('GET', url, true);
+                request.responseType = 'text';
+                request.onload = function(){ __globals.utility.workspace.saveload.__loadProcess(this.response,compressed); };
+                request.send();
+            };
+        };
+        this.setStaticBackgroundStyle = function(style){
+            __globals.panes.staticBackground.innerHTML = '';
+            __globals.utility.workspace.placeAndReturnObject( __globals.utility.misc.elementMaker('rect',null,{width:'100%',height:'100%',style:style+'pointer-events:none;'}), 'staticBackground' );    
         };
     };
     this.element = new function(){
@@ -231,6 +419,35 @@ __globals.utility = new function(){
             if(ans.y < 0){ans.y = 0;}else if(ans.y > 1){ans.y = 1;}
             return ans;
         };
+        this.styleExtractor = function(string){
+            var outputObject= {};
+
+            //split style string into individual settings (and filter out any empty strings)
+                var array = string.split(';').filter(function(n){ return n.length != 0 });
+
+            //create the object
+            try{
+                for(var a = 0; a < array.length; a++){
+                    //split on colon
+                        var temp = array[a].split(':');
+                    //strip whitespace
+                        temp[0] = temp[0].replace(/^\s+|\s+$/g, '');
+                        temp[1] = temp[1].replace(/^\s+|\s+$/g, '');
+                    //push into object
+                        outputObject[temp[0]] = temp[1];
+                }
+            }catch(e){console.error('styleExtractor was unable to parse the string "'+string+'"');return {};}
+            
+            return outputObject;
+        };
+        this.stylePacker = function(object){
+            var styleString = '';
+            var keys = Object.keys(object);
+            for(var a = 0; a < keys.length; a++){
+                styleString += keys[a] +':'+ object[keys[a]] +';';
+            }
+            return styleString;
+        };
     };
     this.object = new function(){
         this.requestInteraction = function(x,y,type,globalName){
@@ -239,6 +456,8 @@ __globals.utility = new function(){
     
             if(temp.hasAttribute('workspace')){return true;}
             while(!temp.hasAttribute('global')){
+                if(temp == document.body){ return false; }
+
                 if(temp[type] || temp.hasAttribute(type)){return false;}
                 temp = temp.parentElement;
             }
@@ -449,16 +668,6 @@ __globals.utility = new function(){
             result.s = seconds;
 
             return result;
-        };
-        this.padString = function(string,length,padding=' '){
-            if(padding.length<1){return string;}
-            string = ''+string;
-
-            while(string.length < length){
-                string = padding + string;
-            }
-
-            return string;
         };
         this.detectOverlap = function(poly_a, poly_b, box_a, box_b){
             var debugMode = false;
@@ -704,35 +913,109 @@ __globals.utility = new function(){
             };
         };
     };
-    this.experimental = new function(){
-        this.styleExtractor = function(string){
-            var outputObject= {};
+    this.misc = new function(){
+        this.padString = function(string,length,padding=' '){
+            if(padding.length<1){return string;}
+            string = ''+string;
 
-            //split style string into individual settings (and filter out any empty strings)
-                var array = string.split(';').filter(function(n){ return n.length != 0 });
-
-            //create the object
-            try{
-                for(var a = 0; a < array.length; a++){
-                    //split on colon
-                        var temp = array[a].split(':');
-                    //strip whitespace
-                        temp[0] = temp[0].replace(/^\s+|\s+$/g, '');
-                        temp[1] = temp[1].replace(/^\s+|\s+$/g, '');
-                    //push into object
-                        outputObject[temp[0]] = temp[1];
-                }
-            }catch(e){console.error('styleExtractor was unable to parse the string "'+string+'"');return {};}
-            
-            return outputObject;
-        };
-        this.stylePacker = function(object){
-            var styleString = '';
-            var keys = Object.keys(object);
-            for(var a = 0; a < keys.length; a++){
-                styleString += keys[a] +':'+ object[keys[a]] +';';
+            while(string.length < length){
+                string = padding + string;
             }
-            return styleString;
+
+            return string;
+        };
+        this.compressString = function(string){return __globals.utility.thirdparty.lzString.compress(string);};
+        this.decompressString = function(string){return __globals.utility.thirdparty.lzString.decompress(string);};
+        this.serialize = function(data,compress=true){
+            function getType(obj){
+                return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+            }
+        
+            var data = JSON.stringify(data, function(key, value){
+        
+                //preserve types that JSON.stringify can't handle as "unique types"
+                switch(getType(value)){
+                    case 'function':
+                        return {__uniqueType:'function', __value:value.toString(), __name:value.name};
+                    case 'arraybuffer': 
+                        return {__uniqueType:'arraybuffer', __value:btoa(String.fromCharCode(new Uint8Array(value)))}
+                    case 'audiobuffer':
+                        var channelData = [];
+                        for(var a = 0; a < value.numberOfChannels; a++){
+                            channelData.push( Array.from(value.getChannelData(a)) );
+                        }
+                        return {
+                            __uniqueType:'audiobuffer', 
+                            __channelData:channelData, 
+                            __sampleRate:value.sampleRate,
+                            __numberOfChannels:value.numberOfChannels,
+                            __length:value.length
+                        };
+                    break;
+                    default: return value;
+                }
+        
+            });
+        
+            if(compress){ data = __globals.utility.misc.compressString(data); }
+            return data;
+        };
+        this.unserialize = function(data,compressed=true){
+            if(data === undefined){return undefined;}
+        
+            if(compressed){ data = __globals.utility.misc.decompressString(data); }
+        
+            return JSON.parse(data, function(key, value){
+        
+                //recover unique types
+                if(typeof value == 'object' && value != null && '__uniqueType' in value){
+                    switch(value.__uniqueType){
+                        case 'function':
+                            var functionHead = value.__value.substring(0,value.__value.indexOf('{'));
+                            functionHead = functionHead.substring(functionHead.indexOf('(')+1, functionHead.lastIndexOf(')'));
+                            var functionBody = value.__value.substring(value.__value.indexOf('{')+1, value.__value.lastIndexOf('}'));
+        
+                            value = Function(functionHead,functionBody);
+                        break;
+                        case 'arraybuffer':
+                            value = atob(value.__value);
+                            for(var a = 0; a < value.length; a++){ value[a] = value[a].charCodeAt(0); }
+                            value = new ArrayBuffer(value);
+                        break;
+                        case 'audiobuffer':
+                            var audioBuffer = __globals.audio.context.createBuffer(value.__numberOfChannels, value.__length, value.__sampleRate);
+        
+                            for(var a = 0; a < audioBuffer.numberOfChannels; a++){
+                                workingBuffer = audioBuffer.getChannelData(a);
+                                for(var i = 0; i < audioBuffer.length; i++){
+                                    workingBuffer[i] = value.__channelData[a][i];
+                                }
+                            }
+        
+                            value = audioBuffer;
+                        break;
+                        default: value = value.__value;
+                    }
+                }
+        
+                return value;
+            });
+        };
+        this.openFile = function(callback){
+            var i = document.createElement('input');
+            i.type = 'file';
+            i.onchange = function(){
+                var f = new FileReader();
+                f.readAsBinaryString(this.files[0]);
+                f.onloadend = function(){ if(callback){callback(f.result);} }
+            };
+            i.click();
+        };
+        this.printFile = function(filename,data){
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([data]));
+            a.download = filename;
+            a.click();
         };
         this.elementMaker = function(type,name,data){
             if(!data.style){data.style='';}
@@ -745,7 +1028,7 @@ __globals.utility = new function(){
                     case 'path':   return parts.elements.basic.path(name, data.path, data.lineType, data.style); break;
                     case 'text':   return parts.elements.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
                     case 'circle': return parts.elements.basic.circle(name, data.x, data.y, data.r, data.angle, data.style); break;
-                    case 'canvas': return parts.elements.basic.canvas(name, data.x, data.y, data.width, data.height, data.angle, data.resolution);
+                    case 'canvas': return parts.elements.basic.canvas(name, data.x, data.y, data.width, data.height, data.angle, data.resolution); break;
             }
 
             if(data.style == ''){data.style={};}
@@ -909,7 +1192,7 @@ __globals.utility = new function(){
         }; 
         this.objectBuilder = function(creatorMethod,design){
             //main
-                var obj = __globals.utility.experimental.elementMaker('g',design.type,{x:design.x, y:design.y});
+                var obj = __globals.utility.misc.elementMaker('g',design.type,{x:design.x, y:design.y});
 
             //generate selection area
                 if(design.base.type == undefined){design.base.type = 'path';}
@@ -920,7 +1203,7 @@ __globals.utility = new function(){
                             __globals.utility.object.generateSelectionArea(design.base.points, obj);
                             
                         //backing
-                            design.base = __globals.utility.experimental.elementMaker('rect',null,{x:design.base.x, y:design.base.y, width:design.base.width, height:design.base.height, angle:design.base.angle, style:design.base.style});
+                            design.base = __globals.utility.misc.elementMaker('rect',null,{x:design.base.x, y:design.base.y, width:design.base.width, height:design.base.height, angle:design.base.angle, style:design.base.style});
                     break;
                     case 'circle': 
                         //generate selection area
@@ -935,13 +1218,13 @@ __globals.utility = new function(){
                             __globals.utility.object.generateSelectionArea(design.base.points, obj);
                             
                         //backing
-                            design.base = __globals.utility.experimental.elementMaker('circle',null,{x:design.base.x, y:design.base.y, r:design.base.r, angle:design.base.angle, style:design.base.style});
+                            design.base = __globals.utility.misc.elementMaker('circle',null,{x:design.base.x, y:design.base.y, r:design.base.r, angle:design.base.angle, style:design.base.style});
                     break;
                     case 'path': 
                         //generate selection area
                             __globals.utility.object.generateSelectionArea(design.base.points, obj);
                         //backing
-                            design.base = __globals.utility.experimental.elementMaker('path',null,{path:design.base.points, lineType:'L', style:design.base.style});
+                            design.base = __globals.utility.misc.elementMaker('path',null,{path:design.base.points, lineType:'L', style:design.base.style});
                     break;
                     default: console.error('Unknown base type:',design.base.type,'when creating object "'+design.type+'"'); return; break;
                 };
@@ -957,7 +1240,7 @@ __globals.utility = new function(){
                     for(var a = 0; a < design.elements.length; a++){
                         if(!design[design.elements[a].type]){design[design.elements[a].type]={};}
                         if(design.elements[a].name in design[design.elements[a].type]){console.warn('error: element with the name "'+design.elements[a].name+'" already exists. Element:',design.elements[a],'will not be added');continue;}
-                        design[design.elements[a].type][design.elements[a].name] = __globals.utility.experimental.elementMaker(design.elements[a].type,design.elements[a].name,design.elements[a].data);
+                        design[design.elements[a].type][design.elements[a].name] = __globals.utility.misc.elementMaker(design.elements[a].type,design.elements[a].name,design.elements[a].data);
                         obj.append(design[design.elements[a].type][design.elements[a].name]);
                     }
                 }
@@ -981,5 +1264,429 @@ __globals.utility = new function(){
 
             return obj;
         };
+    };
+    this.thirdparty = new function(){
+        this.lzString = (function(){
+            // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
+            // This work is free. You can redistribute it and/or modify it
+            // under the terms of the WTFPL, Version 2
+            // For more information see LICENSE.txt or http://www.wtfpl.net/
+            //
+            // For more information, the home page:
+            // http://pieroxy.net/blog/pages/lz-string/testing.html
+            //
+            // LZ-based compression algorithm, version 1.4.4
+            var f = String.fromCharCode;
+            var keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+            var baseReverseDic = {};
+          
+            function getBaseValue(alphabet, character) {
+                if(!baseReverseDic[alphabet]){
+                    baseReverseDic[alphabet] = {};
+                    for(var i = 0 ; i < alphabet.length; i++){
+                        baseReverseDic[alphabet][alphabet.charAt(i)] = i;
+                    }
+                }	
+                return baseReverseDic[alphabet][character];
+            }
+            
+            var LZString = {
+                //compress into a string that is URI encoded
+                compress: function (input) {
+                    if(input == null){return "";}
+                    return LZString._compress(input, 6, function(a){return keyStrUriSafe.charAt(a);});
+                },
+                
+                //decompress from an output of compress which was URI encoded
+                decompress:function (input) {
+                    if(input == null){return "";}
+                    if(input == ""){return null;}
+                    input = input.replace(/ /g, "+");
+                    return LZString._decompress(input.length, 32, function(index){ return getBaseValue(keyStrUriSafe, input.charAt(index)); });
+                },
+                
+                _compress: function(uncompressed, bitsPerChar, getCharFromInt){
+                    if (uncompressed == null) return "";
+                    var i, value,
+                        context_dictionary= {},
+                        context_dictionaryToCreate= {},
+                        context_c="",
+                        context_wc="",
+                        context_w="",
+                        context_enlargeIn= 2, // Compensate for the first entry which should not count
+                        context_dictSize= 3,
+                        context_numBits= 2,
+                        context_data=[],
+                        context_data_val=0,
+                        context_data_position=0,
+                        ii;
+                
+                    for (ii = 0; ii < uncompressed.length; ii += 1) {
+                    context_c = uncompressed.charAt(ii);
+                    if (!Object.prototype.hasOwnProperty.call(context_dictionary,context_c)) {
+                        context_dictionary[context_c] = context_dictSize++;
+                        context_dictionaryToCreate[context_c] = true;
+                    }
+                
+                    context_wc = context_w + context_c;
+                    if (Object.prototype.hasOwnProperty.call(context_dictionary,context_wc)) {
+                        context_w = context_wc;
+                    } else {
+                        if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+                        if (context_w.charCodeAt(0)<256) {
+                            for (i=0 ; i<context_numBits ; i++) {
+                            context_data_val = (context_data_val << 1);
+                            if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                            } else {
+                                context_data_position++;
+                            }
+                            }
+                            value = context_w.charCodeAt(0);
+                            for (i=0 ; i<8 ; i++) {
+                            context_data_val = (context_data_val << 1) | (value&1);
+                            if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                            } else {
+                                context_data_position++;
+                            }
+                            value = value >> 1;
+                            }
+                        } else {
+                            value = 1;
+                            for (i=0 ; i<context_numBits ; i++) {
+                            context_data_val = (context_data_val << 1) | value;
+                            if (context_data_position ==bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                            } else {
+                                context_data_position++;
+                            }
+                            value = 0;
+                            }
+                            value = context_w.charCodeAt(0);
+                            for (i=0 ; i<16 ; i++) {
+                            context_data_val = (context_data_val << 1) | (value&1);
+                            if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                            } else {
+                                context_data_position++;
+                            }
+                            value = value >> 1;
+                            }
+                        }
+                        context_enlargeIn--;
+                        if (context_enlargeIn == 0) {
+                            context_enlargeIn = Math.pow(2, context_numBits);
+                            context_numBits++;
+                        }
+                        delete context_dictionaryToCreate[context_w];
+                        } else {
+                        value = context_dictionary[context_w];
+                        for (i=0 ; i<context_numBits ; i++) {
+                            context_data_val = (context_data_val << 1) | (value&1);
+                            if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                            } else {
+                            context_data_position++;
+                            }
+                            value = value >> 1;
+                        }
+                
+                
+                        }
+                        context_enlargeIn--;
+                        if (context_enlargeIn == 0) {
+                        context_enlargeIn = Math.pow(2, context_numBits);
+                        context_numBits++;
+                        }
+                        // Add wc to the dictionary.
+                        context_dictionary[context_wc] = context_dictSize++;
+                        context_w = String(context_c);
+                    }
+                    }
+                
+                    // Output the code for w.
+                    if (context_w !== "") {
+                    if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+                        if (context_w.charCodeAt(0)<256) {
+                        for (i=0 ; i<context_numBits ; i++) {
+                            context_data_val = (context_data_val << 1);
+                            if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                            } else {
+                            context_data_position++;
+                            }
+                        }
+                        value = context_w.charCodeAt(0);
+                        for (i=0 ; i<8 ; i++) {
+                            context_data_val = (context_data_val << 1) | (value&1);
+                            if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                            } else {
+                            context_data_position++;
+                            }
+                            value = value >> 1;
+                        }
+                        } else {
+                        value = 1;
+                        for (i=0 ; i<context_numBits ; i++) {
+                            context_data_val = (context_data_val << 1) | value;
+                            if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                            } else {
+                            context_data_position++;
+                            }
+                            value = 0;
+                        }
+                        value = context_w.charCodeAt(0);
+                        for (i=0 ; i<16 ; i++) {
+                            context_data_val = (context_data_val << 1) | (value&1);
+                            if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                            } else {
+                            context_data_position++;
+                            }
+                            value = value >> 1;
+                        }
+                        }
+                        context_enlargeIn--;
+                        if (context_enlargeIn == 0) {
+                        context_enlargeIn = Math.pow(2, context_numBits);
+                        context_numBits++;
+                        }
+                        delete context_dictionaryToCreate[context_w];
+                    } else {
+                        value = context_dictionary[context_w];
+                        for (i=0 ; i<context_numBits ; i++) {
+                        context_data_val = (context_data_val << 1) | (value&1);
+                        if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                        } else {
+                            context_data_position++;
+                        }
+                        value = value >> 1;
+                        }
+                
+                
+                    }
+                    context_enlargeIn--;
+                    if (context_enlargeIn == 0) {
+                        context_enlargeIn = Math.pow(2, context_numBits);
+                        context_numBits++;
+                    }
+                    }
+                
+                    // Mark the end of the stream
+                    value = 2;
+                    for (i=0 ; i<context_numBits ; i++) {
+                    context_data_val = (context_data_val << 1) | (value&1);
+                    if (context_data_position == bitsPerChar-1) {
+                        context_data_position = 0;
+                        context_data.push(getCharFromInt(context_data_val));
+                        context_data_val = 0;
+                    } else {
+                        context_data_position++;
+                    }
+                    value = value >> 1;
+                    }
+                
+                    // Flush the last char
+                    while (true) {
+                    context_data_val = (context_data_val << 1);
+                    if (context_data_position == bitsPerChar-1) {
+                        context_data.push(getCharFromInt(context_data_val));
+                        break;
+                    }
+                    else context_data_position++;
+                    }
+                    return context_data.join('');
+                },
+                
+                _decompress: function(length, resetValue, getNextValue){
+                    var dictionary = [],
+                        next,
+                        enlargeIn = 4,
+                        dictSize = 4,
+                        numBits = 3,
+                        entry = "",
+                        result = [],
+                        i,
+                        w,
+                        bits, resb, maxpower, power,
+                        c,
+                        data = {val:getNextValue(0), position:resetValue, index:1};
+                
+                    for (i = 0; i < 3; i += 1) {
+                    dictionary[i] = i;
+                    }
+                
+                    bits = 0;
+                    maxpower = Math.pow(2,2);
+                    power=1;
+                    while (power!=maxpower) {
+                    resb = data.val & data.position;
+                    data.position >>= 1;
+                    if (data.position == 0) {
+                        data.position = resetValue;
+                        data.val = getNextValue(data.index++);
+                    }
+                    bits |= (resb>0 ? 1 : 0) * power;
+                    power <<= 1;
+                    }
+                
+                    switch (next = bits) {
+                    case 0:
+                        bits = 0;
+                        maxpower = Math.pow(2,8);
+                        power=1;
+                        while (power!=maxpower) {
+                            resb = data.val & data.position;
+                            data.position >>= 1;
+                            if (data.position == 0) {
+                            data.position = resetValue;
+                            data.val = getNextValue(data.index++);
+                            }
+                            bits |= (resb>0 ? 1 : 0) * power;
+                            power <<= 1;
+                        }
+                        c = f(bits);
+                        break;
+                    case 1:
+                        bits = 0;
+                        maxpower = Math.pow(2,16);
+                        power=1;
+                        while (power!=maxpower) {
+                            resb = data.val & data.position;
+                            data.position >>= 1;
+                            if (data.position == 0) {
+                            data.position = resetValue;
+                            data.val = getNextValue(data.index++);
+                            }
+                            bits |= (resb>0 ? 1 : 0) * power;
+                            power <<= 1;
+                        }
+                        c = f(bits);
+                        break;
+                    case 2:
+                        return "";
+                    }
+                    dictionary[3] = c;
+                    w = c;
+                    result.push(c);
+                    while (true) {
+                    if (data.index > length) {
+                        return "";
+                    }
+                
+                    bits = 0;
+                    maxpower = Math.pow(2,numBits);
+                    power=1;
+                    while (power!=maxpower) {
+                        resb = data.val & data.position;
+                        data.position >>= 1;
+                        if (data.position == 0) {
+                        data.position = resetValue;
+                        data.val = getNextValue(data.index++);
+                        }
+                        bits |= (resb>0 ? 1 : 0) * power;
+                        power <<= 1;
+                    }
+                
+                    switch (c = bits) {
+                        case 0:
+                        bits = 0;
+                        maxpower = Math.pow(2,8);
+                        power=1;
+                        while (power!=maxpower) {
+                            resb = data.val & data.position;
+                            data.position >>= 1;
+                            if (data.position == 0) {
+                            data.position = resetValue;
+                            data.val = getNextValue(data.index++);
+                            }
+                            bits |= (resb>0 ? 1 : 0) * power;
+                            power <<= 1;
+                        }
+                
+                        dictionary[dictSize++] = f(bits);
+                        c = dictSize-1;
+                        enlargeIn--;
+                        break;
+                        case 1:
+                        bits = 0;
+                        maxpower = Math.pow(2,16);
+                        power=1;
+                        while (power!=maxpower) {
+                            resb = data.val & data.position;
+                            data.position >>= 1;
+                            if (data.position == 0) {
+                            data.position = resetValue;
+                            data.val = getNextValue(data.index++);
+                            }
+                            bits |= (resb>0 ? 1 : 0) * power;
+                            power <<= 1;
+                        }
+                        dictionary[dictSize++] = f(bits);
+                        c = dictSize-1;
+                        enlargeIn--;
+                        break;
+                        case 2:
+                        return result.join('');
+                    }
+                
+                    if (enlargeIn == 0) {
+                        enlargeIn = Math.pow(2, numBits);
+                        numBits++;
+                    }
+                
+                    if (dictionary[c]) {
+                        entry = dictionary[c];
+                    } else {
+                        if (c === dictSize) {
+                        entry = w + w.charAt(0);
+                        } else {
+                        return null;
+                        }
+                    }
+                    result.push(entry);
+                
+                    // Add w+entry[0] to the dictionary.
+                    dictionary[dictSize++] = w + entry.charAt(0);
+                    enlargeIn--;
+                
+                    w = entry;
+                
+                    if (enlargeIn == 0) {
+                        enlargeIn = Math.pow(2, numBits);
+                        numBits++;
+                    }
+                
+                    }
+                }
+            };
+            return LZString;
+        })();
+    };
+    this.experimental = new function(){
     };
 };

@@ -1,7 +1,7 @@
 this.data_duplicator = function(x,y){
     var style = {
         background:'fill:rgba(200,200,200,1);pointer-events:none;',
-        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+        markings: 'fill:rgba(150,150,150,1); pointer-events:none;',
     };
     var design = {
         type:'data_duplicator',
@@ -50,7 +50,7 @@ this.data_duplicator = function(x,y){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.data_duplicator,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.data_duplicator,design);
     
     return obj;
 

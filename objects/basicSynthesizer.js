@@ -3,7 +3,11 @@ this.basicSynthesizer = function(x,y){
         detuneLimits: {min:-100, max:100}
     };
     var style = {
-        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+        background:'fill:rgba(200,200,200,1);',
+        selectionGlow:{
+            off:'pointer-events:none; fill:none; ',
+            on: 'pointer-events:none; fill:none; stroke:rgb(255, 237, 147); stroke-width:2; stroke-linecap:round;',
+        },
         h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
         h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
 
@@ -18,15 +22,15 @@ this.basicSynthesizer = function(x,y){
         type:'basicSynthesizer',
         x:x, y:y,
         base:{
-            points:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90}], 
-            style:'fill:rgba(200,200,200,0);'
+            points:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
+            style:style.background,
         },
         elements:[
             {type:'connectionNode_audio', name:'audioOut', data: {
-                type: 1, x: -15, y: 5, width: 30, height: 30
+                type: 1, x: -15, y: 5, width: 15, height: 30
             }},
             {type:'connectionNode_data', name:'gain', data:{
-                x: 12.5, y: -7.5, width: 15, height: 15,
+                x: 12.5, y: -7.5, width: 15, height: 7.5,
                 receive: function(address,data){
                     switch(address){
                         case '%': design.dial_continuous.gain.set(data); break;
@@ -39,21 +43,21 @@ this.basicSynthesizer = function(x,y){
                 }
             }},
             {type:'connectionNode_data', name:'attack', data:{
-                x: 52.5, y: -7.5, width: 15, height: 15,
+                x: 52.5, y: -7.5, width: 15, height: 7.5,
                 receive: function(address,data){
                     if(address != '%'){return;}
                     design.dial_continuous.attack.set(data);
                 } 
             }},
             {type:'connectionNode_data', name:'release', data:{
-                x: 92.5, y: -7.5, width: 15, height: 15,
+                x: 92.5, y: -7.5, width: 15, height: 7.5,
                 receive: function(address,data){
                     if(address != '%'){return;}
                     design.dial_continuous.release.set(data);
                 } 
             }},
             {type:'connectionNode_data', name:'detune', data:{
-                x: 132.5, y: -7.5, width: 15, height: 15,
+                x: 132.5, y: -7.5, width: 15, height: 7.5,
                 receive: function(address,data){ 
                     switch(address){
                         case '%': design.dial_continuous.detune.set(data); break;
@@ -66,65 +70,60 @@ this.basicSynthesizer = function(x,y){
                 }
             }},
             {type:'connectionNode_data', name:'octave', data:{
-                x: 170.5, y: -7.5, width: 15, height: 15,
+                x: 170.5, y: -7.5, width: 15, height: 7.5,
                 receive: function(address,data){
                     if(address != 'discrete'){return;}
                     design.dial_discrete.octave.select(data);
                 } 
             }},
             {type:'connectionNode_data', name:'waveType', data:{
-                x: 210.5, y: -7.5, width: 15, height: 15,
+                x: 210.5, y: -7.5, width: 15, height: 7.5,
                 receive: function(address,data){
                     if(address != 'discrete'){return;}
                     design.dial_discrete.waveType.select(data);
                 }
             }},
             {type:'connectionNode_data', name:'periodicWave', data:{
-                x: 232.5, y: 12.5, width: 15, height: 15,
+                x: 240, y: 12.5, width: 7.5, height: 15,
                 receive: function(address,data){
                     if(address != 'periodicWave'){return;}
                     obj.__synthesizer.periodicWave(data);
                 }
             }},
             {type:'connectionNode_data', name:'midiNote', data:{
-                x: 217.5, y: 37.5, width: 30, height: 30, angle:Math.PI/4,
+                x:225, y:55, width: 15, height: 30, angle:Math.PI/4,
                 receive: function(address,data){
                     if(address != 'midinumber'){return;}
                     obj.__synthesizer.perform(data);
                 }
             }},
             {type:'connectionNode_data', name:'gainWobblePeriod', data:{
-                x: 22.5, y: 82.5, width: 15, height: 15,
+                x: 22.5, y: 90, width: 15, height: 7.5,
                 receive: function(address,data){
                     if(address != '%'){return;}
                     design.dial_continuous.gainWobblePeriod.set(data);
                 }
             }},
             {type:'connectionNode_data', name:'gainWobbleDepth', data:{
-                x: 57.5, y: 82.5, width: 15, height: 15,
+                x: 57.5, y: 90, width: 15, height: 7.5,
                 receive: function(address,data){
                     if(address != '%'){return;}
                     design.dial_continuous.gainWobbleDepth.set(data);
                 }
             }},
             {type:'connectionNode_data', name:'detuneWobblePeriod', data:{
-                x: 107.5, y: 82.5, width: 15, height: 15,
+                x: 107.5, y: 90, width: 15, height: 7.5,
                 receive: function(address,data){
                     if(address != '%'){return;}
                     design.dial_continuous.detuneWobblePeriod.set(data);
                 }
             }},
             {type:'connectionNode_data', name:'detuneWobbleDepth', data:{
-                x: 142.5, y: 82.5, width: 15, height: 15,
+                x: 142.5, y: 90, width: 15, height: 7.5,
                 receive: function(address,data){
                     if(address != '%'){return;}
                     design.dial_continuous.detuneWobbleDepth.set(data);
                 }
-            }},
-
-            {type:'path', name:'backing', data:{
-                path:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90}],
-                style:style.background
             }},
 
             //gain dial
@@ -248,11 +247,56 @@ this.basicSynthesizer = function(x,y){
                 }, 
                 onclick:function(){ obj.__synthesizer.panic(); },
             }},
+
+            {type:'path', name:'selectionGlow', data:{
+                path:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}],
+                style:style.selectionGlow.off,
+            }},
         ]
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.basicSynthesizer,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.basicSynthesizer,design);
+
+    //import/export
+        obj.exportData = function(){
+            return {
+                gain:design.dial_continuous.gain.get(),
+                attack:design.dial_continuous.attack.get()*10,
+                release:design.dial_continuous.release.get()*10,
+                detune:100*((design.dial_continuous.detune.get()*2)-1),
+                octave:design.dial_discrete.octave.select()-3,
+                waveType:['sine','triangle','square','sawtooth','custom'][design.dial_discrete.waveType.select()],
+                gainWobble:{
+                    rate:design.dial_continuous.gainWobblePeriod.get()*100,
+                    depth:design.dial_continuous.gainWobbleDepth.get()
+                },
+                detuneWobble:{
+                    rate:design.dial_continuous.detuneWobblePeriod.get()*100,
+                    depth:design.dial_continuous.detuneWobbleDepth.get()
+                },
+            };
+        };
+        obj.importData = function(data){
+            design.dial_continuous.gain.set(data.gain);
+            design.dial_continuous.attack.set(data.attack/10);
+            design.dial_continuous.release.set(data.release/10);
+            design.dial_continuous.detune.set( (1+(data.detune/100))/2 );
+            design.dial_discrete.octave.select(data.octave+3);
+            design.dial_discrete.waveType.select( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
+            design.dial_continuous.gainWobblePeriod.set(data.gainWobble.rate/100);
+            design.dial_continuous.gainWobbleDepth.set(data.gainWobble.depth);
+            design.dial_continuous.detuneWobblePeriod.set(data.detuneWobble.rate/100);
+            design.dial_continuous.detuneWobbleDepth.set(data.detuneWobble.depth);
+        };
+
+    //selection
+        obj.onSelect = function(){
+            __globals.utility.element.setStyle(design.path.selectionGlow,style.selectionGlow.on);
+        };
+        obj.onDeselect = function(){
+            __globals.utility.element.setStyle(design.path.selectionGlow,style.selectionGlow.off);
+        };
 
     //circuitry
         obj.__synthesizer = new parts.circuits.audio.synthesizer2(__globals.audio.context);

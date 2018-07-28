@@ -97,7 +97,7 @@ this.looper = function(x,y,debug=false){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.looper,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.looper,design);
 
     //circuitry
             var needle = undefined;

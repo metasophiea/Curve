@@ -60,7 +60,7 @@ this.sequencer = function(
                 //horizontal strips
                 for(var a = 0; a < yCount; a++){
                     backingDrawArea.appendChild(
-                        __globals.utility.experimental.elementMaker('rect','strip_horizontal_'+a,{
+                        __globals.utility.misc.elementMaker('rect','strip_horizontal_'+a,{
                             x1:0, y:a*(height/yCount),
                             width:width, height:height/yCount,
                             style:horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]],
@@ -70,7 +70,7 @@ this.sequencer = function(
                 //vertical strips
                 for(var a = 0; a < xCount; a++){
                     backingDrawArea.appendChild(
-                        __globals.utility.experimental.elementMaker('rect','strip_vertical_'+a,{
+                        __globals.utility.misc.elementMaker('rect','strip_vertical_'+a,{
                             x:a*(width/xCount), y:0,
                             width:width/xCount, height:height,
                             style:verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]],
@@ -79,7 +79,7 @@ this.sequencer = function(
                 }
         }
         function makePlayhead(){
-            var playhead = __globals.utility.experimental.elementMaker('g','playhead',{});
+            var playhead = __globals.utility.misc.elementMaker('g','playhead',{});
             obj.appendChild(playhead);
             playhead.onmousedown = function(event){
                 // var initialPosition = cordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,obj,width,height));
@@ -93,14 +93,14 @@ this.sequencer = function(
                 );
             };
 
-            playhead.main = __globals.utility.experimental.elementMaker('line','main',{
+            playhead.main = __globals.utility.misc.elementMaker('line','main',{
                 x1:0, y1:0,
                 x2:0, y2:height,
                 style:playheadStyle + 'stroke-width:'+state.playhead.width+';'
             });
             playhead.appendChild(playhead.main);
 
-            playhead.main = __globals.utility.experimental.elementMaker('line','invisibleHandle',{
+            playhead.main = __globals.utility.misc.elementMaker('line','invisibleHandle',{
                 x1:0, y1:0, x2:0, y2:height,
                 style:'stroke:rgba(0,0,0,0); cursor: col-resize; stroke-width:'+state.playhead.width*state.playhead.invisibleHandleMux+';'
             });
@@ -274,21 +274,21 @@ this.sequencer = function(
 
     //elements 
         //main
-            var obj = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
+            var obj = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
         //background
-            var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width, height:height, style:backingStyle});
+            var backing = __globals.utility.misc.elementMaker('rect','backing',{width:width, height:height, style:backingStyle});
             obj.appendChild(backing);
-            var backingDrawArea = __globals.utility.experimental.elementMaker('g','backingDrawArea',{});
+            var backingDrawArea = __globals.utility.misc.elementMaker('g','backingDrawArea',{});
             obj.appendChild(backingDrawArea);
             drawBackground();
         //interaction pane
-            var interactionPlane = __globals.utility.experimental.elementMaker('rect','interactionPlane',{width:width, height:height, style:'fill:rgba(0,0,0,0);'});
+            var interactionPlane = __globals.utility.misc.elementMaker('rect','interactionPlane',{width:width, height:height, style:'fill:rgba(0,0,0,0);'});
             obj.appendChild(interactionPlane);
             interactionPlane.onmousedown = function(event){
                 if(event.shiftKey){ //click-n-drag group select
                     var initialPositionData = __globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,width,height);
                     
-                    var selectionArea = __globals.utility.experimental.elementMaker('rect','selectionArea',{
+                    var selectionArea = __globals.utility.misc.elementMaker('rect','selectionArea',{
                         x:initialPositionData.x*width, y:initialPositionData.y*height,
                         width:0, height:0,
                         style:selectionAreaStyle,
@@ -383,7 +383,7 @@ this.sequencer = function(
                 }
             };
         //note pane
-            var notePane = __globals.utility.experimental.elementMaker('g','notePane',{});
+            var notePane = __globals.utility.misc.elementMaker('g','notePane',{});
             obj.append(notePane);
             
     //controls
@@ -550,10 +550,10 @@ this.sequencer.noteBlock = function(
     var selected = false;
     
     //elements
-        var obj = __globals.utility.experimental.elementMaker('g',id,{y:line*unit_y, x:position*unit_x});
-        obj.body = __globals.utility.experimental.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:bodyStyle});
-        obj.leftHandle = __globals.utility.experimental.elementMaker('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
-        obj.rightHandle = __globals.utility.experimental.elementMaker('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
+        var obj = __globals.utility.misc.elementMaker('g',id,{y:line*unit_y, x:position*unit_x});
+        obj.body = __globals.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:bodyStyle});
+        obj.leftHandle = __globals.utility.misc.elementMaker('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
+        obj.rightHandle = __globals.utility.misc.elementMaker('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
         obj.append(obj.body);
         obj.append(obj.leftHandle);
         obj.append(obj.rightHandle);

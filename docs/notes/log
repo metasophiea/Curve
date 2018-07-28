@@ -1,4 +1,59 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-07-27
+  - added 'staticBackground' pane to very back of hmtl strucure, plus a
+    'setStaticBackgroundStyle' utility which creates a 100% rect in it. Thus,
+    you can now set the background with a solid colour
+
+
+2018-07-26
+  - the viewport position is now saved in a save file
+  - scene loading now runs the clear command to wash out the pervious scene
+  - during saving and loading a scene, master volume is set to zero (to stop
+    hanging notes ringing out as the machine is busy)
+  - added super global interaction switches /enable/disable mouse wheel zoom
+    "mouseWheelZoomEnabled", mouseGripPanningEnabled" and "readOnlyMode"
+  - started on a help site for the basicSynthesizer, using a windowed version of
+    workspace (group select doesn't work (the mouse point is off) but I disable
+    that anyway)
+
+  future ideas
+  - some kind of function that can fill the background with a solid colour
+  - better windowed mouse selection
+
+
+2018-07-25
+  - 'tester' can now compare function code
+  - importScene/exportScene now uses a slightly mroe efficient way of storing 
+    constructor functions in file (and the option to not store them at all)
+  - got a compression library (first thirdparty code) for saveload.serialize
+    (it's in tests still, but currently we're getting 61.7% removed)
+  - all kinds of funy new functionality added to utility (along with a little
+    rearranging)(is utility getting too big? ~1600 lines..it's just a collection
+    of functions...)
+  - saveload has been completely moved to utility.workspace
+  - added the ability to load scenes from files from the internet (should
+    simplify demos alot)
+
+  future ideas
+  - have the ability to adjust master volume, independent of any object. Shut
+    sound off during a save or load operation (where the machine will hang from
+    all the processing) 
+
+
+2018-07-24
+  - more work on saving and loading (moved the file into a test area)(also tests
+    are being made)(also removed some things from utility, that were put there
+    yesterday related to all this) going pretty well though
+
+  future ideas
+  - add string compression to saveload.serialize
+
+
+2018-07-23
+  - added "saveData" and "loadData" to utility
+  - began work on a way to save scenes (the 'saveload.js' system file)
+
+
 2018-07-22
   - created new 'basicSequencer_midiOut' object, which is like a sequencer, but
     outputs midi commands
@@ -64,9 +119,9 @@
   - added code to stand in the way of a page unload (just the standard "are you 
     sure" box that comes built in with the browser)(commented out for dev 
     purposes. It's (currerntly) the first line in system/misc.js)
-  - added workspace.mouseInteractionHandler to utiltiy (so now hopefully we don't
-    have another one of those rangeslide incidents)(perhaps change everything to
-    use this?)
+  - added workspace.mouseInteractionHandler to utiltiy (so now hopefully we
+    don't have another one of those rangeslide incidents)(perhaps change
+    everything to use this?)
   - added veloticy interface to musicalkeybaord
   - updated rangeslide so that the values are stored only as 'start' and 'end'
     (instead of having mixed in array indexes)
@@ -100,8 +155,8 @@
     point at the start of the array (the 'left/right'/'top/bottom' metaphore and
     naming scheme I used is pretty mangled now)
   - rushed pianoroll part and object through so that I could put together demo 2
-    The way things are, one can continue to develop those items without affecting
-    the demo, thus the demo can be updated at a leasurly pace.
+    The way things are, one can continue to develop those items without
+    affecting the demo, thus the demo can be updated at a leasurly pace.
 
                 * Workspace (unminified) surpasses 10,000 lines *
 
@@ -124,9 +179,9 @@
 
 2018-07-11
   - fixed the bug from yesterday; turned out, the number convertion is normal,
-    and it was my own 'getTransform' code that was not reading the produced style
-    string correctly. I redid the regex, things seem to be working better now 
-    (though it all seems a little inefficient)
+    and it was my own 'getTransform' code that was not reading the produced 
+    style string correctly. I redid the regex, things seem to be working better
+    now (though it all seems a little inefficient)
   - fixed smoothSet in rangeselector to actually work properly now (and get the
     timings right)
   - pushed rageslide to main parts
@@ -149,8 +204,8 @@
     linux; I've created a "super globals" file which controls what key to watch
     in an event. Hopefully this means the system can adjust depending on the
     host
-  - faffed with the pianoroll a bit more, and managed to cobble together a basic 
-    "advanced launchpad" playing the guitar riff off Thunder Struck. Works
+  - faffed with the pianoroll a bit more, and managed to cobble together a 
+    basic "advanced launchpad" playing the guitar riff off Thunder Struck. Works
     pretty alright too.
   - added sorting section to the 'eventsBetween' function of the 'noteRegistry'
     as there was a problem where notes that started and ended within the
@@ -260,7 +315,8 @@
     and extra launchpads
 
   bug found
-  - copying launchpads duplicates the internal sequence data, but doesn't copy it
+  - copying launchpads duplicates the internal sequence data, but doesn't copy 
+    it
 
 
 2018-06-25
@@ -307,16 +363,17 @@
     situation code. In this way I can now test and develop like normal, while
     having demo pages that are unaffected. Both still don't have the wrapping
     enabled, so, there's work to be done still.
-  - created demo file of the multi-track audio file player hooked into a launchpad
-    and pulse generator..still needs audio files ofcourse
+  - created demo file of the multi-track audio file player hooked into a 
+    launchpad and pulse generator..still needs audio files ofcourse
 
   bug found
   - odd bug in audio file player looper, where hitting the play button
     repeatidly would always restart the audio, but sometimes the play head would
     disappear. Seems to be caused by the style of the needle not being set in 
     time before the request to move the needle to the other side of the viewbox
-    occurs (the style has a transition setting). The commands are being performed
-    in the correct order..it might be the browser not computing the style in time
+    occurs (the style has a transition setting). The commands are being 
+    performed in the correct order..it might be the browser not computing the
+    style in time
 
 
 2018-06-21
@@ -333,8 +390,8 @@
     graphs, labels, lights, etc) and 'circuitry' are parts of pure code that do
     work (like distortion units and data processors)
       Right now, 'parts' is almost entirely 'elements', so I'll wait till the 
-    circuitry parts come out of development more. I'd have to rewrite the element
-    maker..though it's name and function is already correct
+    circuitry parts come out of development more. I'd have to rewrite the 
+    element maker..though it's name and function is already correct
 
 
 2018-06-20
@@ -374,8 +431,8 @@
 2018-06-13
   - developed audio recording object and circuitry to include pause/resume
     functionality, along with the ability to get the recording length at any 
-    time. I've also simplified the input/output audio nodes somewhat. The object 
-    is pretty sparse at current however.
+    time. I've also simplified the input/output audio nodes somewhat. The 
+    object is pretty sparse at current however.
   - worked on simplifing audio channels; turns out things are already pretty
     simple as they are (I was worried that the audio streams were mixing channel
     counts, and didn't know how that was effecting things. Seems only the audio
@@ -399,8 +456,8 @@
   - wrote up looper circuitry and object. It just takes a file and always loops
     it while playing. The circuitry has the ability to loop a sub-section of the
     file, but the object doesn't have that feature
-  - wrote up new verison of the generic audio file player, which is written a bit
-    nicer, with some small changes
+  - wrote up new verison of the generic audio file player, which is written a 
+    bit nicer, with some small changes
   - test situation 10 / 2 / 2 is looking good, now with each player type in an
     object (and labels)
 
@@ -418,8 +475,8 @@
   - turns out there was a flaw in how 'positionFromMousePoint' was being used.
     'getCumulativeTransform' doesn't do a great job in getting the actual X/Y
     point, so 'getTruePoint' has been created which does much better
-  - 'positionFromMousePoint' replaced with 'getPositionWithinFromMouse' which has
-    the same functionality, but a nicer interface
+  - 'positionFromMousePoint' replaced with 'getPositionWithinFromMouse' which 
+    has the same functionality, but a nicer interface
   - updated grapher_audioScope and grapher_PeriodicWave to the new way of
     selecting what type of graph you want
   - updated testObject to have all the latest graphers
@@ -430,10 +487,10 @@
 2018-06-04
   - needleOverlay work complete, seems pretty solid now
   - worked on integrating the needleOverlay with the audioFilePlayer object. You
-    can now select the loop region, move it around and disactivate it. It's a bit
-    rickity, but it works (you might want to check up on the 'loopCompute' and 
-    anything to do with getting the current time in the audioFilePlayer audio 
-    part. It works on my machine!)
+    can now select the loop region, move it around and disactivate it. It's a 
+    bit rickity, but it works (you might want to check up on the 'loopCompute'
+    and anything to do with getting the current time in the audioFilePlayer
+    audio part. It works on my machine!)
   - cleaned things up a bit in test situation 10 - 2
 
 
@@ -447,14 +504,16 @@
     subsequently made it possible (and easy) to switch between the two. Parts
     that use a grapher part, now give the ability to chose which you want to use
     (canvas is default)
-  - upgraded the slider to to have 'click to go to this position' functionality. 
-    Also the handle has a little more grapple area than is visible
+  - upgraded the slider to to have 'click to go to this position' 
+    functionality. Also the handle has a little more grapple area than is
+    visible
   - began on overlay control object (which will be used with the waveWorkspace
     later)
 
 
 2018-05-31
-  - finished off canvas-based grapher, and put it into the audioFilePlayer object
+  - finished off canvas-based grapher, and put it into the audioFilePlayer 
+    object
     this move better now (as expected)
   - created wave form workspace with grapherCanvas. It's pretty nice too.
   - added rudimentary selection-area to grapher_waveWorkspace (need to work
@@ -466,25 +525,26 @@
     known bug on chrome, but no-one has dealt with it since 2015. There's a note
     on the bug reporting site that's from 2018-02-14 that seems to claim that 
     they'll be able to fix this bug..nothing after this though.
-      It seems I can hack together a fix where an image element is actually used,
-    and a canvas element is hidden. The canvas is drawn to, and then a 'print'
-    command can be run which prints the canvas data to the image element. It's 
-    essentially the same (I think). Problems now are to do with detail, but I think
-    that can be fixed...probably user selected
+      It seems I can hack together a fix where an image element is actually 
+    used, and a canvas element is hidden. The canvas is drawn to, and then a
+    'print' command can be run which prints the canvas data to the image
+    element. It's essentially the same (I think). Problems now are to do with
+    detail, but I think that can be fixed...probably user selected
 
 
 2018-05-29
   - current time in audioFilePlayer now accounts for playback rate (but not
     detune, which is just a different way of changing the playback rate, so I've
     removed that feature)
-  - developed rudimentary waveform viewer; but its causing a lot of strain of then
-    browser. I'm working on integrating a canvas element to deal with this. There's
-    still a lot of time spent on gathering the points to graph though..
+  - developed rudimentary waveform viewer; but its causing a lot of strain of 
+    then browser. I'm working on integrating a canvas element to deal with
+    this. There's still a lot of time spent on gathering the points to graph
+    though..
 
 
 2018-05-28
-  - redid the slider and slider panel; things are simpler now and I've thrown out
-    the horizontal and vertical versions of both, in favour of just using an
+  - redid the slider and slider panel; things are simpler now and I've thrown   
+    out the horizontal and vertical versions of both, in favour of just using an
     angle value.
   - wrote up new version of the audioFilePlayer (developing with a new object)
     (the 'currentTime' method doesn't account for playback rate changes..need to
@@ -668,11 +728,11 @@
     (like the warbler sending the correct gain adjust signals fast enough, and
     the dial being able to keep up..slow moves are pretty much fine)
       It goes slightly against my desire to do everything in atomic parts (or at
-    least, have the option to) but here we are. Audiotool is contained like that.
-    Logic, Acid, etc. all the same. I suppose its a battle between wanting to
-    make things as open as possible, which led me to this everything-atomic way,
-    but I think I can provide the same level of control with a more integrated
-    (and efficient) units.
+    least, have the option to) but here we are. Audiotool is contained like 
+    that. Logic, Acid, etc. all the same. I suppose its a battle between
+    wanting to make things as open as possible, which led me to this
+    everything-atomic way, but I think I can provide the same level of control
+    with a more integrated (and efficient) units.
 
 
 2018-04-27

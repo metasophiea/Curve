@@ -1,7 +1,7 @@
 this.audio_duplicator = function(x,y){
     var style = {
         background:'fill:rgba(200,200,200,1);pointer-events:none;',
-        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+        markings: 'fill:rgba(150,150,150,1); pointer-events:none;',
     };
     var design = {
         type:'audio_duplicator',
@@ -44,7 +44,7 @@ this.audio_duplicator = function(x,y){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.audio_duplicator,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.audio_duplicator,design);
 
     //circuitry
         design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_1.in() );

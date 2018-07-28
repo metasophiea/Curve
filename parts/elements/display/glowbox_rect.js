@@ -6,8 +6,8 @@ this.glowbox_rect = function(
 ){
 
     // elements 
-    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
-    var rect = __globals.utility.experimental.elementMaker('rect',null,{width:width,height:height,sngle:angle,style:dimStyle});
+    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
+    var rect = __globals.utility.misc.elementMaker('rect',null,{width:width,height:height,sngle:angle,style:dimStyle});
         object.appendChild(rect);
 
     //methods

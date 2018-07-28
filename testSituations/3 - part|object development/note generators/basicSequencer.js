@@ -140,7 +140,7 @@ objects.basicSequencer = function(x,y,debug=false){
 
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.basicSequencer,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.basicSequencer,design);
 
     //interface
         obj.i = {

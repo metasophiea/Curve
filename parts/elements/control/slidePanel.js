@@ -8,10 +8,10 @@ this.slidePanel = function(
 ){
     //elements
         //main
-            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
+            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
         //slides
             for(var a = 0; a < count; a++){
-                var temp = __globals.utility.experimental.elementMaker(
+                var temp = __globals.utility.misc.elementMaker(
                     'slide',a,{
                         x:a*(width/count), y:0,
                         width:width/count, height:height,

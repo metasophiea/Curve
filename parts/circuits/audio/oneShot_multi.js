@@ -48,9 +48,9 @@ this.oneShot_multi = function(context){
 
 
 
-    //loading
+    //loading/unloading
         this.loadRaw = function(data){
-            // state.itself.stop();
+            if(Object.keys(data).length === 0){return;}
             flow.track = data;
             state.fileLoaded = true;
             state.needlePosition = 0.0;
@@ -63,6 +63,9 @@ this.oneShot_multi = function(context){
                     if(callback != undefined){ callback(data); }
                 },
             type,url);
+        };
+        this.unloadRaw = function(){
+            return flow.track;
         };
 
     //control

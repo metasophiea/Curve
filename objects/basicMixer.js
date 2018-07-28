@@ -82,7 +82,7 @@ this.basicMixer = function(x,y){
     }
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.basicMixer,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.basicMixer,design);
 
     //internal circuitry
         for(var a = 0; a < 8; a++){

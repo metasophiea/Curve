@@ -4,7 +4,7 @@ this.connectionNode_audio = function(
     style='fill:rgba(255, 220, 220,1)'
 ){
     //elements
-    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:rotation});
+    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:rotation});
         object._type = 'audio';
         object._cable = null;
         object._cableStyle = 'fill:none; stroke:rgb(242, 119, 84); stroke-width:4;';
@@ -12,7 +12,7 @@ this.connectionNode_audio = function(
         object._boundary = {'width':width, 'height':height};
         object._audioNode = audioContext.createAnalyser();
         object._portType = type; if(type!=0&&type!=1){type=0;}
-    var rect = __globals.utility.experimental.elementMaker('rect','tab',{x:0, y:0, width:width, height:height,style:style});
+    var rect = __globals.utility.misc.elementMaker('rect','tab',{x:0, y:0, width:width, height:height,style:style});
         object.appendChild(rect);
 
 
@@ -85,7 +85,7 @@ this.connectionNode_audio = function(
 
     //cabling
     object._add_cable = function(){
-        this._cable = __globals.utility.experimental.elementMaker('cable',null,{style:{unactive:this._cableStyle, active:this._cableActiveStyle}});
+        this._cable = __globals.utility.misc.elementMaker('cable',null,{style:{unactive:this._cableStyle, active:this._cableActiveStyle}});
         this.foreignNode._receive_cable(this._cable);
         __globals.utility.workspace.getPane(this).appendChild(this._cable); // <-- should probably make prepend
         this.draw();

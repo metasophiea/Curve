@@ -5,10 +5,10 @@ this.rastorDisplay = function(
 ){
     //elements
         //main
-            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
 
         //backing
-        var rect = __globals.utility.experimental.elementMaker('rect',null,{width:width,height:height, style:'fill:rgb(0,0,0)'});
+        var rect = __globals.utility.misc.elementMaker('rect',null,{width:width,height:height, style:'fill:rgb(0,0,0)'});
             object.appendChild(rect);
 
         //pixels
@@ -21,7 +21,7 @@ this.rastorDisplay = function(
                 var temp_pixels = [];
                 var temp_pixelValues = [];
                 for(var y = 0; y < yCount; y++){
-                    var rect = __globals.utility.experimental.elementMaker('rect',null,{ x:(x*pixWidth)+xGappage/2, y:(y*pixHeight)+yGappage/2, width:pixWidth-xGappage, height:pixHeight-yGappage, style:'fill:rgb(0,0,0)' });
+                    var rect = __globals.utility.misc.elementMaker('rect',null,{ x:(x*pixWidth)+xGappage/2, y:(y*pixHeight)+yGappage/2, width:pixWidth-xGappage, height:pixHeight-yGappage, style:'fill:rgb(0,0,0)' });
                         temp_pixels.push(rect);
                         temp_pixelValues.push([0,0,0]);
                         object.appendChild(rect);

@@ -86,7 +86,7 @@ this.reverbUnit = function(x,y){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.reverbUnit,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.reverbUnit,design);
 
     //import/export
         obj.importData = function(data){

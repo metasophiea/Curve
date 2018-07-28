@@ -5,13 +5,13 @@ this.cable = function(
     activeStyle='fill:none; stroke:rgb(255,100,100); stroke-width:4;'
 ){
     //elements
-    var object = __globals.utility.experimental.elementMaker('g',id,{x:x1, y:y1});
+    var object = __globals.utility.misc.elementMaker('g',id,{x:x1, y:y1});
         object.points = [{x:x1,y:y1},{x:x2,y:y2}];
         object.styles = {
             'normal':style,
             'active':activeStyle
         };
-    var line = __globals.utility.experimental.elementMaker('path',null,{path:object.points, lineType:'L', style:style});
+    var line = __globals.utility.misc.elementMaker('path',null,{path:object.points, lineType:'L', style:style});
         object.appendChild(line);
 
 

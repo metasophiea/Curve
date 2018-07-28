@@ -8,13 +8,13 @@ this.rastorgrid = function(
     checkGlowStyle = 'fill:rgba(220,220,220,1)',
 ){
     // elements
-    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
-    var rect = __globals.utility.experimental.elementMaker('rect',null,{width:width,height:height, style:backingStyle});
+    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
+    var rect = __globals.utility.misc.elementMaker('rect',null,{width:width,height:height, style:backingStyle});
         object.appendChild(rect);
 
     for(var y = 0; y < ycount; y++){
         for(var x = 0; x < xcount; x++){
-            var temp = __globals.utility.experimental.elementMaker('checkbox_rect',y+'_'+x,{
+            var temp = __globals.utility.misc.elementMaker('checkbox_rect',y+'_'+x,{
                 x:x*(width/xcount), 
                 y:y*(height/ycount), 
                 width:width/xcount, 

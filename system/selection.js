@@ -33,7 +33,7 @@ __globals.selection = new function(){
     };
     this.deselectObject = function(object){
         __globals.selection.selectedObjects.splice(__globals.selection.selectedObjects.indexOf(object),1);
-        object.onDeselect();
+        if(object.onDeselect){object.onDeselect();}
     };
 
 

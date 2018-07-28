@@ -12,22 +12,22 @@ this.grapherCanvas = function(
     var verticalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printText:false};
 
     //convert the style info
-        var tempStyleInfo = __globals.utility.experimental.styleExtractor(foregroundStyle);
+        var tempStyleInfo = __globals.utility.element.styleExtractor(foregroundStyle);
         foregroundStyle = tempStyleInfo.stroke;
         var foregroundLineThickness = tempStyleInfo['stroke-width'] * 8;
 
-        var tempStyleInfo = __globals.utility.experimental.styleExtractor(backgroundStyle);
+        var tempStyleInfo = __globals.utility.element.styleExtractor(backgroundStyle);
         backgroundStyle = tempStyleInfo.stroke;
         var backgroundLineThickness = tempStyleInfo['stroke-width'] * 4;
 
-        var tempStyleInfo = __globals.utility.experimental.styleExtractor(backingStyle);
+        var tempStyleInfo = __globals.utility.element.styleExtractor(backingStyle);
         backingStyle = tempStyleInfo['fill'];
 
     //elements
         //main
-            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
         //canvas
-            var canvas = __globals.utility.experimental.elementMaker('canvas',id,{width:width, height:height, resolution:7});
+            var canvas = __globals.utility.misc.elementMaker('canvas',id,{width:width, height:height, resolution:7});
             object.appendChild(canvas.element);
 
     //internal methods

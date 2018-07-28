@@ -140,7 +140,23 @@ this.basicSequencer = function(x,y,debug=false){
 
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.basicSequencer,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.basicSequencer,design);
+
+    //import/export
+        obj.exportData = function(){
+            return {
+                loop:{
+                    active:design.checkbox_rect.loopActive.get(),
+                    range:design.sequencer.main.loopPeriod(),
+                },
+                notes:design.sequencer.main.getAllNotes(),
+            };
+        };
+        obj.importData = function(data){
+            design.sequencer.main.addNotes(data.notes);
+            obj.i.loopActive(data.loop.active);
+            design.rangeslide.loopSelect.set(data.loop.range);
+        };
 
     //interface
         obj.i = {

@@ -64,6 +64,8 @@
         {
             'specialKeys':[__globals.super.keys.alt],
             'function':function(event){
+                if(__globals.super.readOnlyMode){return;}
+
                 // if mousedown occurs over an object that isn't selected; select it
                 if( !__globals.selection.selectedObjects.includes(__globals.svgElement.temp_onmousedown_originalObject) ){
                     __globals.selection.selectObject(__globals.svgElement.temp_onmousedown_originalObject);
@@ -89,6 +91,8 @@
         {
             'specialKeys':[],
             'function':function(event){
+                if(__globals.super.readOnlyMode){return;}
+
                 // if mousedown occurs over an object that isn't selected
                 //  and if the shift key is not pressed
                 //   deselect everything
@@ -162,7 +166,6 @@
         {
             'specialKeys':[],
             'function':function(event){
-
                 //if mouse-up occurs over an object that is selected
                 // and if the shift key is pressed
                 // and if the object we're working on is not the most recently selected
@@ -243,92 +246,94 @@
         {
             'specialKeys':['shiftKey'],
             'function':function(event,globalPane){
-                    //setup
-                    __globals.svgElement.tempData = {};
-                    __globals.svgElement.tempElements = [];
-                    __globals.svgElement.tempData.start = {'x':event.x, 'y':event.y};
+                // if(__globals.super.readOnlyMode){return;}
 
-                    //create 'selection box' graphic and add it to the menu pane
-                    __globals.svgElement.tempElements.push(
-                        __globals.utility.experimental.elementMaker(
-                            'path',null,{
-                                path:[
-                                    __globals.svgElement.tempData.start,
-                                    __globals.svgElement.tempData.start,
-                                    __globals.svgElement.tempData.start,
-                                    __globals.svgElement.tempData.start
-                                ], type:'L', style:'fill:rgba(120,120,255,0.25)'
-                            }
-                        )
+                //setup
+                __globals.svgElement.tempData = {};
+                __globals.svgElement.tempElements = [];
+                __globals.svgElement.tempData.start = {'x':event.x, 'y':event.y};
+
+                //create 'selection box' graphic and add it to the menu pane
+                __globals.svgElement.tempElements.push(
+                    __globals.utility.misc.elementMaker(
+                        'path',null,{
+                            path:[
+                                __globals.svgElement.tempData.start,
+                                __globals.svgElement.tempData.start,
+                                __globals.svgElement.tempData.start,
+                                __globals.svgElement.tempData.start
+                            ], type:'L', style:'fill:rgba(120,120,255,0.25)'
+                        }
+                    )
+                );
+                for(var a = 0; a < __globals.svgElement.tempElements.length; a++){ __globals.panes.menu.append(__globals.svgElement.tempElements[a]); }
+
+                //adjust selection box when the mouse moves
+                __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
+                __globals.svgElement.onmousemove = function(event){
+                    __globals.svgElement.tempData.end = {'x':event.x, 'y':event.y};
+
+                    __globals.svgElement.tempElements[0].path(
+                        [
+                            {x:__globals.svgElement.tempData.start.x, y:__globals.svgElement.tempData.start.y},
+                            {x:__globals.svgElement.tempData.end.x,   y:__globals.svgElement.tempData.start.y},
+                            {x:__globals.svgElement.tempData.end.x,   y:__globals.svgElement.tempData.end.y},
+                            {x:__globals.svgElement.tempData.start.x, y:__globals.svgElement.tempData.end.y}
+                        ]
                     );
-                    for(var a = 0; a < __globals.svgElement.tempElements.length; a++){ __globals.panes.menu.append(__globals.svgElement.tempElements[a]); }
+                    
+                };
 
-                    //adjust selection box when the mouse moves
-                    __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
-                    __globals.svgElement.onmousemove = function(event){
-                        __globals.svgElement.tempData.end = {'x':event.x, 'y':event.y};
-
-                        __globals.svgElement.tempElements[0].path(
-                            [
-                                {x:__globals.svgElement.tempData.start.x, y:__globals.svgElement.tempData.start.y},
-                                {x:__globals.svgElement.tempData.end.x,   y:__globals.svgElement.tempData.start.y},
-                                {x:__globals.svgElement.tempData.end.x,   y:__globals.svgElement.tempData.end.y},
-                                {x:__globals.svgElement.tempData.start.x, y:__globals.svgElement.tempData.end.y}
-                            ]
-                        );
+                //when the mouse is raised; 
+                //  find the objects that are selected
+                //  tell them they are selected (tell the rest they aren't)
+                //  add the selected to the 'selected objects list'
+                __globals.svgElement.onmouseup = function(){
+                    //set up
+                        __globals.selection.deselectEverything();
+                        var start = __globals.utility.workspace.pointConverter.browser2workspace(__globals.svgElement.tempData.start.x,__globals.svgElement.tempData.start.y);
+                        var end = __globals.utility.workspace.pointConverter.browser2workspace(__globals.svgElement.tempData.end.x,__globals.svgElement.tempData.end.y);
+                        var selectionArea = {};
+                    
+                    //create selection box (correcting negative values along the way)
+                        selectionArea.box = [{},{}];
+                        if(start.x > end.x){ selectionArea.box[0].x = start.x; selectionArea.box[1].x = end.x; }
+                        else{ selectionArea.box[0].x = end.x; selectionArea.box[1].x = start.x; }
+                        if(start.y > end.y){ selectionArea.box[0].y = start.y; selectionArea.box[1].y = end.y; }
+                        else{ selectionArea.box[0].y = end.y; selectionArea.box[1].y = start.y; }
+                        //create poly of this box with clockwise wind
+                        if( Math.sign(start.x-end.x) != Math.sign(start.y-end.y) ){
+                            selectionArea.points = [start, {x:start.x, y:end.y}, end, {x:end.x, y:start.y}];
+                        }else{ 
+                            selectionArea.points = [start, {x:end.x, y:start.y}, end, {x:start.x, y:end.y}];
+                        };
                         
-                    };
-
-                    //when the mouse is raised; 
-                    //  find the objects that are selected
-                    //  tell them they are selected (tell the rest they aren't)
-                    //  add the selected to the 'selected objects list'
-                    __globals.svgElement.onmouseup = function(){
-                        //set up
-                            __globals.selection.deselectEverything();
-                            var start = __globals.utility.workspace.pointConverter.browser2workspace(__globals.svgElement.tempData.start.x,__globals.svgElement.tempData.start.y);
-                            var end = __globals.utility.workspace.pointConverter.browser2workspace(__globals.svgElement.tempData.end.x,__globals.svgElement.tempData.end.y);
-                            var selectionArea = {};
-                        
-                        //create selection box (correcting negative values along the way)
-                            selectionArea.box = [{},{}];
-                            if(start.x > end.x){ selectionArea.box[0].x = start.x; selectionArea.box[1].x = end.x; }
-                            else{ selectionArea.box[0].x = end.x; selectionArea.box[1].x = start.x; }
-                            if(start.y > end.y){ selectionArea.box[0].y = start.y; selectionArea.box[1].y = end.y; }
-                            else{ selectionArea.box[0].y = end.y; selectionArea.box[1].y = start.y; }
-                            //create poly of this box with clockwise wind
-                            if( Math.sign(start.x-end.x) != Math.sign(start.y-end.y) ){
-                                selectionArea.points = [start, {x:start.x, y:end.y}, end, {x:end.x, y:start.y}];
-                            }else{ 
-                                selectionArea.points = [start, {x:end.x, y:start.y}, end, {x:start.x, y:end.y}];
-                            };
-                            
-                        //run though all middleground objects to see if they are selected in this box
-                        //  tell them they are selected (or not) and add the selected to the selected list
-                            var objects = __globals.panes.middleground.children;
-                            for(var a = 0; a < objects.length; a++){
-                                if(objects[a].selectionArea){
-                                    if(__globals.utility.math.detectOverlap(selectionArea.points, objects[a].selectionArea.points, selectionArea.box, objects[a].selectionArea.box)){
-                                        __globals.selection.selectObject(objects[a]);
-                                    }
+                    //run though all middleground objects to see if they are selected in this box
+                    //  tell them they are selected (or not) and add the selected to the selected list
+                        var objects = __globals.panes.middleground.children;
+                        for(var a = 0; a < objects.length; a++){
+                            if(objects[a].selectionArea){
+                                if(__globals.utility.math.detectOverlap(selectionArea.points, objects[a].selectionArea.points, selectionArea.box, objects[a].selectionArea.box)){
+                                    __globals.selection.selectObject(objects[a]);
                                 }
                             }
+                        }
 
-                        //delete all temporary elements and attributes
-                            delete __globals.svgElement.tempData;
-                            for(var a = 0; a < __globals.svgElement.tempElements.length; a++){
-                                __globals.panes.menu.removeChild( __globals.svgElement.tempElements[a] ); 
-                                __globals.svgElement.tempElements[a] = null;
-                            }
-                            delete __globals.svgElement.tempElements;
-                            this.onmousemove = __globals.svgElement.onmousemove_old;
-                            delete __globals.svgElement.onmousemove_old;
-                            this.onmouseleave = null;
-                            globalPane.removeAttribute('oldPosition');
-                            globalPane.removeAttribute('clickPosition');
-                            this.onmouseleave = null;
-                            this.onmouseup = null;
-                    };
+                    //delete all temporary elements and attributes
+                        delete __globals.svgElement.tempData;
+                        for(var a = 0; a < __globals.svgElement.tempElements.length; a++){
+                            __globals.panes.menu.removeChild( __globals.svgElement.tempElements[a] ); 
+                            __globals.svgElement.tempElements[a] = null;
+                        }
+                        delete __globals.svgElement.tempElements;
+                        this.onmousemove = __globals.svgElement.onmousemove_old;
+                        delete __globals.svgElement.onmousemove_old;
+                        this.onmouseleave = null;
+                        globalPane.removeAttribute('oldPosition');
+                        globalPane.removeAttribute('clickPosition');
+                        this.onmouseleave = null;
+                        this.onmouseup = null;
+                };
 
                 __globals.svgElement.onmouseleave = __globals.svgElement.onmouseup;
 
@@ -342,6 +347,8 @@
         {
             'specialKeys':[],
             'function':function(event,globalPane){
+                if(!__globals.super.mouseGripPanningEnabled){return;}
+
                 __globals.selection.deselectEverything();
                 __globals.svgElement.temp_oldPosition = __globals.utility.element.getTransform(globalPane);
                 __globals.panes.workspace.setAttribute('clickPosition','['+event.x +','+ event.y+']');
@@ -403,6 +410,8 @@
         {
             'specialKeys':[],
             'function':function(event){
+                if(!__globals.super.mouseWheelZoomEnabled){return;}
+
                 var zoomLimits = {'max':10, 'min':0.1};
                 var position = __globals.utility.element.getTransform(__globals.panes.workspace);
 

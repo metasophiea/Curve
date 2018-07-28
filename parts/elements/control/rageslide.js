@@ -13,19 +13,19 @@ this.rangeslide = function(
 
     //elements
         //main
-            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
+            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
         //backing and slot group
-            var backingAndSlot = __globals.utility.experimental.elementMaker('g','backingAndSlotGroup',{});
+            var backingAndSlot = __globals.utility.misc.elementMaker('g','backingAndSlotGroup',{});
             object.appendChild(backingAndSlot);
             //backing
-                var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
+                var backing = __globals.utility.misc.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
                 backingAndSlot.appendChild(backing);
             //slot
-                var slot = __globals.utility.experimental.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
+                var slot = __globals.utility.misc.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
                 backingAndSlot.appendChild(slot);
 
         //span
-            var span = __globals.utility.experimental.elementMaker('rect','span',{
+            var span = __globals.utility.misc.elementMaker('rect','span',{
                 x:width*((1-spanWidth)/2), y:height*handleHeight,
                 width:width*spanWidth, height:height - 2*height*handleHeight, 
                 style:spanStyle
@@ -36,14 +36,14 @@ this.rangeslide = function(
             var handles = {}
             for(var a = 0; a < handleNames.length; a++){
                 //grouping
-                    handles[handleNames[a]] = __globals.utility.experimental.elementMaker('g','handle_'+a,{})
+                    handles[handleNames[a]] = __globals.utility.misc.elementMaker('g','handle_'+a,{})
                     object.appendChild(handles[handleNames[a]]);
                 //handle
-                    var handle = __globals.utility.experimental.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
+                    var handle = __globals.utility.misc.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
                     handles[handleNames[a]].appendChild(handle);
                 //invisible handle
                     var invisibleHandleHeight = height*handleHeight + height*0.01;
-                    var invisibleHandle = __globals.utility.experimental.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
+                    var invisibleHandle = __globals.utility.misc.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
                     handles[handleNames[a]].appendChild(invisibleHandle);
             }
 
@@ -57,20 +57,49 @@ this.rangeslide = function(
                 switch(handle){
                     default: console.error('unknown handle to adjust'); break;
                     case 'start':
-                        if((values.end - a + handleHeight*(a - values.end - 1)) < 0){
-                            if( (a + handleHeight) > 1 ){ a = 1 - handleHeight; }
+                        var start = {
+                            leftEdge:  a - (a)*handleHeight,
+                            rightEdge: a + (1-a)*handleHeight,
+                        };
+                        var end = {
+                            leftEdge: values.end - (values.end)*handleHeight,
+                            rightEdge: values.end + (1-values.end)*handleHeight,
+                        };
+                        if( start.rightEdge >= end.leftEdge ){
                             values.start = a;
-                            values.end = a + handleHeight;
+                            values.end = start.rightEdge/(1-handleHeight);
                         }
                     break;
-                    case 'end': 
-                        if((a - values.start + handleHeight*(values.start - a - 1)) < 0){
-                            if( (a - handleHeight) < 0 ){ a = handleHeight; }
-                            values.start = a - handleHeight;
+                    case 'end':
+                        var start = {
+                            leftEdge:  values.start - (values.start)*handleHeight,
+                            rightEdge: values.start + (1-values.start)*handleHeight,
+                        };
+                        var end = {
+                            leftEdge:  a - (a)*handleHeight,
+                            rightEdge: a + (1-a)*handleHeight,
+                        };
+                        if( start.rightEdge >= end.leftEdge ){
+                            values.start = (end.leftEdge - handleHeight)/(1-handleHeight);
                             values.end = a;
                         }
                     break;
                 }
+            //         case 'start':
+            //             if((values.end - a + handleHeight*(a - values.end - 1)) < 0){
+            //                 if( (a + handleHeight) > 1 ){ a = 1 - handleHeight; }
+            //                 values.start = a;
+            //                 values.end = a + handleHeight;
+            //             }
+            //         break;
+            //         case 'end': 
+            //             if((a - values.start + handleHeight*(values.start - a - 1)) < 0){
+            //                 if( (a - handleHeight) < 0 ){ a = handleHeight; }
+            //                 values.start = a - handleHeight;
+            //                 values.end = a;
+            //             }
+            //         break;
+            //     }
 
             //fill in data
                 values[handle] = a;
@@ -206,13 +235,14 @@ this.rangeslide = function(
                         
                         __globals.utility.workspace.mouseInteractionHandler(
                             function(event){
-                                var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                set( initialValue+(livePosition.y-initialPosition.y),handleNames[a] );
+                                var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot, width, height);
+
+                                set( initialValue+(livePosition.y-initialPosition.y)/(1-handleHeight), handleNames[a] );
                                 object.onchange(values);
                             },
                             function(event){
                                 var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                set( initialValue+(livePosition.y-initialPosition.y),handleNames[a] );
+                                set( initialValue+(livePosition.y-initialPosition.y)/(1-handleHeight), handleNames[a] );
                                 object.onrelease(values);
                                 grappled = false;
                             }

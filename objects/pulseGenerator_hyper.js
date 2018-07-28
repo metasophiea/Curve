@@ -1,4 +1,4 @@
-this.pulseGenerator_hyper = function(x,y,maxTempo=240,debug=false){
+this.pulseGenerator_hyper = function(x,y,maxTempo=999,debug=false){
 
     var style = {
         background:'fill:rgba(200,200,200,1)',
@@ -12,7 +12,7 @@ this.pulseGenerator_hyper = function(x,y,maxTempo=240,debug=false){
         }
     };
     var design = {
-        type: 'pulseGenerator',
+        type: 'pulseGenerator_hyper',
         x: x, y: y,
         base: {
             type:'path',
@@ -52,7 +52,7 @@ this.pulseGenerator_hyper = function(x,y,maxTempo=240,debug=false){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.pulseGenerator,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.pulseGenerator_hyper,design);
 
     //import/export
         obj.exportData = function(){
@@ -68,7 +68,7 @@ this.pulseGenerator_hyper = function(x,y,maxTempo=240,debug=false){
         function updateTempo(newTempo){
             //update readout
                 design.readout_sixteenSegmentDisplay.readout.text(
-                    __globals.utility.math.padString(newTempo,3,' ')+'bpm'
+                    __globals.utility.misc.padString(newTempo,3,' ')+'bpm'
                 );
                 design.readout_sixteenSegmentDisplay.readout.print();
 

@@ -1,6 +1,17 @@
 __globals.audio = {};
 __globals.audio.context = new (window.AudioContext || window.webkitAudioContext)();
 
+//master output
+    __globals.audio.destination = __globals.audio.context.createGain();
+    __globals.audio.destination.connect(__globals.audio.context.destination);
+    __globals.audio.destination._gain = 1;
+    __globals.audio.destination.masterGain = function(value){
+        if(value == undefined){return __globals.audio.destination._gain;}
+        __globals.audio.destination._gain = value;
+        __globals.utility.audio.changeAudioParam(__globals.audio.context,__globals.audio.destination.gain, __globals.audio.destination._gain, 0.01, 'instant', true);
+    };
+    __globals.audio.destination.masterGain(1);
+
 //frequencies index
     __globals.audio.names_frequencies_split = {
         0:{ 'C':16.35, 'C#':17.32, 'D':18.35, 'D#':19.45, 'E':20.60, 'F':21.83, 'F#':23.12, 'G':24.50, 'G#':25.96, 'A':27.50, 'A#':29.14, 'B':30.87  },
@@ -56,14 +67,7 @@ __globals.audio.context = new (window.AudioContext || window.webkitAudioContext)
     for(var a = 0; a < temp.length; a++){ 
         __globals.audio.names_midinumbers[temp[a][1]] = parseInt(temp[a][0]);
     }
-
-// __globals.audio.noteName_frequency = function(name, offsetOctave=0){
-//     return __globals.audio.names_frequencies[(parseInt(name.chatAt(0))+offsetOctave) + name.slice(1)];
-// };
-// __globals.audio.midinumber_frequency = function(number, offsetOctave=0){
-//     return __globals.audio.names_frequencies[__globals.audio.midinumbers_names[number+offsetOctave*12]];
-// };
-
+    
 __globals.audio.num2name = function(num){ return __globals.audio.midinumbers_names[num]; };
 __globals.audio.num2freq = function(num){ return __globals.audio.names_frequencies[__globals.audio.midinumbers_names[num]]; };
 

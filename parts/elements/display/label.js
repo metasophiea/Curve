@@ -5,9 +5,9 @@ this.label = function(
     angle=0
 ){
     //elements 
-    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
 
-    var textElement = __globals.utility.experimental.elementMaker('text',id,{text:text, angle:angle, style:style});
+    var textElement = __globals.utility.misc.elementMaker('text',id,{text:text, angle:angle, style:style});
         object.appendChild(textElement);
 
 

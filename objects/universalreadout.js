@@ -20,7 +20,7 @@ this.universalreadout = function(x,y,debug=false){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.universalreadout,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.universalreadout,design);
 
     //internal functions
         var lines = [];
@@ -37,7 +37,7 @@ this.universalreadout = function(x,y,debug=false){
 
             //write in the new list
             for(var a = 0; a < lines.length; a++){
-                lineElements[a] = __globals.utility.experimental.elementMaker('text','universalreadout_'+a,{ x:40, y:a*5, text:lines[a], style:style.text })
+                lineElements[a] = __globals.utility.misc.elementMaker('text','universalreadout_'+a,{ x:40, y:a*5, text:lines[a], style:style.text })
                 obj.append( lineElements[a] );
             }
         }

@@ -79,7 +79,7 @@ this.filterUnit = function(x,y){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.filterUnit,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.filterUnit,design);
 
     //import/export
         obj.importData = function(data){

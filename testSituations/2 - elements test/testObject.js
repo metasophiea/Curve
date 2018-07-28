@@ -67,7 +67,7 @@ objects.testObject = function(x,y,debug=false){
                     onchange:function(slide,value){ design.connectionNode_data.externalData_1.send('slidePanel_horizontal',{slide:slide,value:value}); },
                 }},
                 {type:'rangeslide',name:'rangeslide', data:{
-                    x:185, y:272.5, height: 100, width: 10, angle:-Math.PI/2, handleHeight:1/10, spanWidth:1,
+                    x:185, y:272.5, height: 100, width: 10, angle:-Math.PI/2, handleHeight:1/4, spanWidth:1,
                     style:{
                         handle: style.rangeslide.handle,
                         backing: style.rangeslide.backing,
@@ -246,37 +246,40 @@ objects.testObject = function(x,y,debug=false){
     };
  
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.testObject,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.testObject,design);
 
     //setup
-        setTimeout(function(){
-            for(var a = 0; a < 10; a++){ design.slidePanel.slidePanel_vertical.slide(a).set( 1-1/(a+1)  ); }
-            for(var a = 0; a < 10; a++){ design.slidePanel.slidePanel_horizontal.slide(a).set( 1-1/(a+1)  ); }
+        design.grapher_audioScope.grapher_audioScope_SVG.refreshRate(1);
+        design.grapher_audioScope.grapher_audioScope_canvas.refreshRate(1);
 
-            setInterval(function(){
-                design.sevenSegmentDisplay.sevenSegmentDisplay.enterCharacter( ''+Math.round(Math.random()*9) ); 
-                design.sixteenSegmentDisplay.sixteenSegmentDisplay.enterCharacter(
-                    '0123456789abcdefghijklmnopqrstuvwxyz'.split('')[Math.round(Math.random()*35)]
-                ); 
-            },500);
-            design.readout_sixteenSegmentDisplay.readout_sixteenSegmentDisplay.test();
-            design.rastorDisplay.rastorDisplay.test();
+        for(var a = 0; a < 10; a++){ design.slidePanel.slidePanel_vertical.slide(a).set( 1-1/(a+1)  ); }
+        for(var a = 0; a < 10; a++){ design.slidePanel.slidePanel_horizontal.slide(a).set( 1-1/(a+1)  ); }
 
-            design.grapherSVG.grapherSVG._test();
-            design.grapher_waveWorkspace.grapher_waveWorkspace_SVG._test();
-            design.grapher_audioScope.grapher_audioScope_SVG.start();
-            design.grapherCanvas.grapherCanvas._test();
-            design.grapher_waveWorkspace.grapher_waveWorkspace_canvas._test();
-            design.grapher_audioScope.grapher_audioScope_canvas.start();
+        setInterval(function(){
+            design.sevenSegmentDisplay.sevenSegmentDisplay.enterCharacter( ''+Math.round(Math.random()*9) ); 
+            design.sixteenSegmentDisplay.sixteenSegmentDisplay.enterCharacter(
+                '0123456789abcdefghijklmnopqrstuvwxyz'.split('')[Math.round(Math.random()*35)]
+            ); 
+        },500);
+        design.readout_sixteenSegmentDisplay.readout_sixteenSegmentDisplay.test();
+        design.rastorDisplay.rastorDisplay.test();
 
-            design.level.level.set(0.5,0);
-            design.level.level.set(0.75,1);
+        design.grapherSVG.grapherSVG._test();
+        design.grapher_waveWorkspace.grapher_waveWorkspace_SVG._test();
+        design.grapher_audioScope.grapher_audioScope_SVG.start();
+        design.grapherCanvas.grapherCanvas._test();
+        design.grapher_waveWorkspace.grapher_waveWorkspace_canvas._test();
+        design.grapher_audioScope.grapher_audioScope_canvas.start();
 
-            setInterval(function(){ design.meter_level.meter_level.set( Math.random() ); },1000);
+        design.level.level.set(0.5,0);
+        design.level.level.set(0.75,1);
 
+        setInterval(function(){ design.meter_level.meter_level.set( Math.random() ); },1000);
+
+        setTimeout(function(){ //must wait until object has been added to scene
             design.connectionNode_audio.internalAudio_1.connectTo(design.connectionNode_audio.internalAudio_2);
             design.connectionNode_data.internalData_1.connectTo(design.connectionNode_data.internalData_2);
-        },1);
+        },0);
 
     return obj;
 }

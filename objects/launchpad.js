@@ -107,7 +107,7 @@ this.launchpad = function(x,y,debug=false){
 
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.launchpad,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.launchpad,design);
 
     //import/export
         obj.exportData = function(){
@@ -149,13 +149,13 @@ this.launchpad = function(x,y,debug=false){
         obj.internalCircuits.pageChange = pageChange;
 
     //interface
-    obj.i = {
-        importPage:function(data,a){obj.internalCircuits.importPage(data,a);},
-        exportPage:function(a){return obj.internalCircuits.exportPage(a);},
-        importPages:function(data){obj.internalCircuits.importPages(data);},
-        exportPages:function(){return obj.internalCircuits.exportPages();},
-        setPage:function(a){obj.internalCircuits.page(a);}
-    };
+        obj.i = {
+            importPage:function(data,a){obj.internalCircuits.importPage(data,a);},
+            exportPage:function(a){return obj.internalCircuits.exportPage(a);},
+            importPages:function(data){obj.internalCircuits.importPages(data);},
+            exportPages:function(){return obj.internalCircuits.exportPages();},
+            setPage:function(a){obj.internalCircuits.page(a);}
+        };
 
     //setup 
         lightLine();

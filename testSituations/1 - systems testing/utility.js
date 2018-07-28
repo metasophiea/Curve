@@ -1,11 +1,135 @@
 console.log('%cTesting - __globals.utility', 'font-size:15px; font-weight:bold;');
 
+
+console.log('%c--- workspace', 'font-weight: bold;');
+    console.log('%c- exporting a scene', 'font-weight: bold;');
+        __globals.utility.workspace.clear();
+        __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(50,50) );
+        __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(200,50) );
+        tester(__globals.utility.workspace.exportScene(),{
+            scene:[
+                {objectConstructorName:"audio_duplicator", position:{x:50, y:50, s:1, r:0}, connections:[]},
+                {objectConstructorName:"audio_duplicator", position:{x:200, y:50, s:1, r:0}, connections:[]}
+            ],
+            constructorFunctions:{}
+        });
+
+    console.log('%c- exporting a scene (with code bundling turned on)', 'font-weight: bold;');
+        //this test could easily break if the code is reformatted (here or over where audio_duplicator in defined)
+        __globals.utility.workspace.clear();
+        __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(50,50) );
+        __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(200,50) );
+        tester(__globals.utility.workspace.exportScene(true),{
+            scene: [
+                {objectConstructorName:"audio_duplicator", position:{x:50, y:50, s:1, r:0}, connections:[]},
+                {objectConstructorName:"audio_duplicator", position:{x:200, y:50, s:1, r:0}, connections:[]}
+            ],
+            constructorFunctions:{
+                audio_duplicator:function(x,y){
+            var style = {
+            background:'fill:rgba(200,200,200,1);pointer-events:none;',
+            markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+        };
+        var design = {
+            type:'audio_duplicator',
+            x:x, y:y,
+            base:{
+                points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                style:'fill:rgba(200,200,200,0);'
+            },
+            elements:[
+                {type:'connectionNode_audio', name:'input', data:{ type:0, x:45, y:5, width:20, height:20 }},
+                {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:20, height:20 }},
+                {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:20, height:20 }},
+    
+                {type:'path', name:'backing', data:{
+                    path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                    style:style.background
+                }},
+    
+                {type:'path', name:'upperArrow', data:{
+                    path:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}],
+                    style:style.markings,
+                }},
+                {type:'path', name:'lowerArrow', data:{
+                    path:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}],
+                    style:style.markings,
+                }},
+                {type:'rect', name:'topHorizontal', data:{
+                    x:5, y:15, width:45, height:2, 
+                    style:style.markings,
+                }},
+                {type:'rect', name:'vertical', data:{
+                    x:27.5, y:15, width:2, height:25.5, 
+                    style:style.markings,
+                }},
+                {type:'rect', name:'bottomHorizontal', data:{
+                    x:5, y:40, width:24.5, height:2, 
+                    style:style.markings,
+                }},
+            ]
+        };
+    
+        //main object
+            var obj = __globals.utility.misc.objectBuilder(objects.audio_duplicator,design);
+    
+        //circuitry
+            design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_1.in() );
+            design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_2.in() );
+        
+        return obj;
+            }
+            }
+        });
+
+    console.log('%c- exporting a scene and then importing it', 'font-weight: bold;');
+        __globals.utility.workspace.clear();
+        __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(50,50) );
+        __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(200,50) );
+        var temp = __globals.utility.workspace.exportScene();
+        __globals.utility.workspace.clear();
+        __globals.utility.workspace.importScene(temp.scene);
+
+        tester(__globals.panes.middleground.innerHTML,'<g id="audio_duplicator" style="transform: translate(50px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g><g id="audio_duplicator" style="transform: translate(200px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g>');
+
+        __globals.utility.workspace.clear();
+
+    console.log('%c- exporting a scene (with code bundling turned on) and then importing it', 'font-weight: bold;');
+        __globals.utility.workspace.clear();
+        __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(50,50) );
+        __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(200,50) );
+        var temp = __globals.utility.workspace.exportScene(true);
+        __globals.utility.workspace.clear();
+        __globals.utility.workspace.importScene(temp.scene,true,temp.constructorFunctions);
+
+        tester(__globals.panes.middleground.innerHTML,'<g id="audio_duplicator" style="transform: translate(50px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g><g id="audio_duplicator" style="transform: translate(200px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g>');
+
+        
+        __globals.utility.workspace.clear();
+
+
+
+
+
+
+
 console.log('%c--- element', 'font-weight: bold;');
     console.log('%c-- getTransform', 'font-weight: bold;');
     var sudoElement = {style:{transform:'translate(-1.25px, 2.5px) scale(1) rotate(0rad)'}};
     tester(__globals.utility.element.getTransform(sudoElement),{x: -1.25, y: 2.5, s: 1, r: 0});
     var sudoElement = {style:{transform:'translate(0px, 9.75e-05px) scale(1) rotate(0rad)'}};
     tester(__globals.utility.element.getTransform(sudoElement),{x: 0, y: 0.0000975, s: 1, r: 0});
+
+    console.log('%c-- styleExtractor', 'font-weight: bold;');
+    tester(__globals.utility.element.styleExtractor('stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;'),{stroke:"rgba(0,255,0,1)", 'stroke-width': "0.5", 'stroke-linecap': "round"});
+    tester(__globals.utility.element.styleExtractor('stroke:rgba(0,255,0,1);stroke-width:0.5;stroke-linecap:round;'),{stroke:"rgba(0,255,0,1)", 'stroke-width': "0.5", 'stroke-linecap': "round"});
+
+
+
+
+
+
+
 
 console.log('%c--- math', 'font-weight: bold;');
     console.log('%c-- normalizeStretchArray', 'font-weight: bold;');
@@ -286,7 +410,77 @@ console.log('%c--- math', 'font-weight: bold;');
         var y = 2.5;
         tester(__globals.utility.math.cartesian2polar(x,y),{dis: 3.5355339059327378, ang: 0.7853981633974483});
 
+
+
+
+
+
+
+
+console.log('%c--- misc', 'font-weight: bold;');
+    console.log('%c-- serialize/unserialize (no compression)', 'font-weight: bold;');
+        function doBoth(data,ser_data,un_data){
+            var s_data = __globals.utility.misc.serialize(data,false);
+            tester(s_data,ser_data);
+            var u_data = __globals.utility.misc.unserialize(s_data,false);
+            tester(u_data,un_data);
+        }
+    
+        var org_data;
+        var ser_data;
+        doBoth(org_data,ser_data,org_data);
+        var org_data = 1;
+        var ser_data = '1';
+        doBoth(org_data,ser_data,org_data);
+        var org_data = 5;
+        var ser_data = '5';
+        doBoth(org_data,ser_data,org_data);
+        var org_data = 546544494849;
+        var ser_data = '546544494849';
+        doBoth(org_data,ser_data,org_data);
+    
+        var org_data = '';
+        var ser_data = '""';
+        doBoth(org_data,ser_data,org_data);
+        var org_data = 'hello\n';
+        var ser_data = JSON.stringify('hello\n');
+        doBoth(org_data,ser_data,org_data);
+        var org_data = '546544494849';
+        var ser_data = '"546544494849"';
+        doBoth(org_data,ser_data,org_data);
+    
+        var org_data = [1,2,3];
+        var ser_data = '[1,2,3]';
+        doBoth(org_data,ser_data,org_data);
+        var org_data = [1,2,3];
+        var ser_data = '[1,2,3]';
+        doBoth(org_data,ser_data,org_data);
+        var org_data = ['hello','there','my','friend'];
+        var ser_data = JSON.stringify(['hello','there','my','friend']);
+        doBoth(org_data,ser_data,org_data);
+        var org_data = ['hello',1,'my',76];
+        var ser_data = JSON.stringify(['hello',1,'my',76]);
+        doBoth(org_data,ser_data,org_data);
+    
+        var org_data = {item:0,thing:'hello',null:null};
+        var ser_data = JSON.stringify({item:0,thing:'hello',null:null});
+        doBoth(org_data,ser_data,org_data);
+        var org_data = {item:0,thing:function(){console.log('hello');},null:null};
+        var ser_data = JSON.stringify({"item":0,"thing":{"__uniqueType":"function","__value":"function(){console.log('hello');}","__name":"thing"},"null":null});
+        doBoth(org_data,ser_data,org_data);
+    
+        var org_data = new ArrayBuffer(8);
+        var ser_data = JSON.stringify({"__uniqueType":"arraybuffer","__value":"AA=="});
+        doBoth(org_data,ser_data,org_data);
+        var org_data = [new ArrayBuffer(8),new ArrayBuffer(8),new ArrayBuffer(8)]
+        var ser_data = JSON.stringify([{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="}]);
+        doBoth(org_data,ser_data,org_data);
+
+
+
+
+
+
+
+        
 console.log('%c--- experimental', 'font-weight: bold;');
-    console.log('%c-- styleExtractor', 'font-weight: bold;');
-        tester(__globals.utility.experimental.styleExtractor('stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;'),{stroke:"rgba(0,255,0,1)", 'stroke-width': "0.5", 'stroke-linecap': "round"});
-        tester(__globals.utility.experimental.styleExtractor('stroke:rgba(0,255,0,1);stroke-width:0.5;stroke-linecap:round;'),{stroke:"rgba(0,255,0,1)", 'stroke-width': "0.5", 'stroke-linecap': "round"});

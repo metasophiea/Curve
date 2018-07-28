@@ -1,8 +1,25 @@
 function tester(item1,item2){
+    function getType(obj){
+        return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+    }
     function comparer(item1,item2){
-        if(typeof item1 != typeof item2){ return false; }
+        if(getType(item1) != getType(item2)){ return false; }
         if(typeof item1 == 'boolean' || typeof item1 == 'number' || typeof item1 == 'string'){ return item1 === item2; }
-        if(item1 === null || item2 === null){ return item1 === item2;  }
+        if(typeof item1 === 'undefined' || typeof item2 === 'undefined' || item1 === null || item2 === null){ return item1 === item2;  }
+        if(getType(item1) == 'function'){
+            item1 = item1.toString();
+            item2 = item2.toString();
+
+            var item1_functionHead = item1.substring(0,item1.indexOf('{'));
+            item1_functionHead = item1_functionHead.substring(item1_functionHead.indexOf('(')+1, item1_functionHead.lastIndexOf(')'));
+            var item1_functionBody = item1.substring(item1.indexOf('{')+1, item1.lastIndexOf('}'));
+
+            var item2_functionHead = item2.substring(0,item2.indexOf('{'));
+            item2_functionHead = item2_functionHead.substring(item2_functionHead.indexOf('(')+1, item2_functionHead.lastIndexOf(')'));
+            var item2_functionBody = item2.substring(item2.indexOf('{')+1, item2.lastIndexOf('}'));
+
+            return item1_functionHead.trim() == item2_functionHead.trim() && item1_functionBody.trim() == item2_functionBody.trim();
+        }
         if(typeof item1 == 'object'){
             var keys = Object.keys(item1);
             var result = true;

@@ -7,7 +7,7 @@ this.checkbox_rect = function(
     backingGlowStyle = 'fill:rgba(220,220,220,1)',
 ){
     // elements 
-    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
+    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
         object._checked = false;
         object.styles = {
             'check':checkStyle,
@@ -15,9 +15,9 @@ this.checkbox_rect = function(
             'backing':backingStyle
         };
 
-    var rect = __globals.utility.experimental.elementMaker('rect',null,{width:width,height:height, style:backingStyle});
+    var rect = __globals.utility.misc.elementMaker('rect',null,{width:width,height:height, style:backingStyle});
         object.appendChild(rect);
-    var checkrect = __globals.utility.experimental.elementMaker('rect',null,{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:object.styles.uncheck});
+    var checkrect = __globals.utility.misc.elementMaker('rect',null,{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:object.styles.uncheck});
         object.appendChild(checkrect);
 
 

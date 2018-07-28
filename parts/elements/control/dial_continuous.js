@@ -9,7 +9,7 @@ this.dial_continuous = function(
     outerArcStyle='fill:none; stroke:none;',
 ){
     // elements
-        var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+        var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
             object._value = 0;
             object._data = {
                 'mux':r*4
@@ -28,21 +28,21 @@ this.dial_continuous = function(
             var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
             arcPath.push( temp );
 
-            var outerArc = __globals.utility.experimental.elementMaker('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
+            var outerArc = __globals.utility.misc.elementMaker('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
             object.appendChild(outerArc);
 
         //slot
-            var slot = __globals.utility.experimental.elementMaker('circle','slot',{r:r*1.1, style:slotStyle});
+            var slot = __globals.utility.misc.elementMaker('circle','slot',{r:r*1.1, style:slotStyle});
                 object.appendChild(slot);
 
         //handle
-            var handle = __globals.utility.experimental.elementMaker('circle','slot',{r:r, style:handleStyle});
+            var handle = __globals.utility.misc.elementMaker('circle','slot',{r:r, style:handleStyle});
                 object.appendChild(handle);
 
         //needle
             var needleWidth = r/5;
             var needleLength = r;
-            var needle = __globals.utility.experimental.elementMaker('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
+            var needle = __globals.utility.misc.elementMaker('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
                 needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
                 needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
                 object.appendChild(needle);

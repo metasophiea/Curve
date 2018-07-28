@@ -8,9 +8,9 @@ this.button_rect = function(
 ){
 
     // elements 
-    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
 
-    var rect = __globals.utility.experimental.elementMaker('rect',null,{width:width, height:height, angle:angle, style:upStyle});
+    var rect = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, angle:angle, style:upStyle});
         object.appendChild(rect);
 
     //interactivity

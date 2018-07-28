@@ -11,22 +11,22 @@ this.slide = function(
 
     //elements
         //main
-            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y, r:angle});
+            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
         //backing and slot group
-            var backingAndSlot = __globals.utility.experimental.elementMaker('g','backingAndSlotGroup',{});
+            var backingAndSlot = __globals.utility.misc.elementMaker('g','backingAndSlotGroup',{});
             object.appendChild(backingAndSlot);
             //backing
-                var backing = __globals.utility.experimental.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
+                var backing = __globals.utility.misc.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
                 backingAndSlot.appendChild(backing);
             //slot
-                var slot = __globals.utility.experimental.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
+                var slot = __globals.utility.misc.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
                 backingAndSlot.appendChild(slot);
         //handle
-            var handle = __globals.utility.experimental.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
+            var handle = __globals.utility.misc.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
             object.appendChild(handle);
         //invisible handle
             var invisibleHandleHeight = height*handleHeight + height*0.01;
-            var invisibleHandle = __globals.utility.experimental.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
+            var invisibleHandle = __globals.utility.misc.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
             object.appendChild(invisibleHandle);
 
     //graphical adjust

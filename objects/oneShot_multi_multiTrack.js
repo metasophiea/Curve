@@ -181,7 +181,32 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
         }
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.oneShot_multi_multiTrack,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.oneShot_multi_multiTrack,design);
+
+    //import/export
+        obj.exportData = function(){
+            var data = {
+                tracks:[],
+                areas:[],
+            };
+
+            for(var a = 0; a < trackCount; a++){
+                data.tracks.push(
+                    obj.oneShot_multi_array[a].unloadRaw()
+                );
+                data.areas.push(
+                    obj.i.area(a)
+                );
+            }
+
+            return data;
+        };
+        obj.importData = function(data){
+            for(var a = 0; a < trackCount; a++){
+                obj.i.loadRaw(a,data.tracks[a]);
+                obj.i.area(a,data.areas[a].A,data.areas[a].B);
+            }
+        };
 
     //circuitry
         //audioFilePlayers
@@ -206,6 +231,12 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                         };
                     }(trackNumber)
                 ,url);
+            },
+            loadRaw:function(trackNumber, data){
+                obj.oneShot_multi_array[trackNumber].loadRaw(data);
+                design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].draw(
+                    obj.oneShot_multi_array[trackNumber].waveformSegment()
+                );
             },
             area:function(trackNumber,a,b){
                 return design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);

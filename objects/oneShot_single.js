@@ -76,7 +76,7 @@ this.oneShot_single = function(x,y,debug=false){
     };
 
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.oneShot_single,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.oneShot_single,design);
 
     //circuitry
             var playhead = undefined;

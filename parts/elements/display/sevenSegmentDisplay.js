@@ -60,10 +60,10 @@ this.sevenSegmentDisplay = function(
 
     //elements
         //main
-            var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
 
         //backing
-            var rect = __globals.utility.experimental.elementMaker('rect',null,{width:width,height:height,style:backgroundStyle});
+            var rect = __globals.utility.misc.elementMaker('rect',null,{width:width,height:height,style:backgroundStyle});
                 object.appendChild(rect);
 
         //segments
@@ -128,7 +128,7 @@ this.sevenSegmentDisplay = function(
             ];
             for(var a = 0; a < points.length; a++){
                 var temp = {
-                    segment: __globals.utility.experimental.elementMaker('path','arc',{path:points[a], lineType:'L', style:dimStyle}),
+                    segment: __globals.utility.misc.elementMaker('path','arc',{path:points[a], lineType:'L', style:dimStyle}),
                     state: false
                 };
                 segments.push( temp );

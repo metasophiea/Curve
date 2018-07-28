@@ -33,7 +33,7 @@ this.audio_sink = function(x,y){
     };
  
     //main object
-        var obj = __globals.utility.experimental.objectBuilder(objects.audio_sink,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.audio_sink,design);
 
     //circuitry
         var flow = {
@@ -42,7 +42,8 @@ this.audio_sink = function(x,y){
             pan_left:null, pan_right:null,
         };
         //destination
-            flow._destination = __globals.audio.context.destination;
+            flow._destination = __globals.audio.destination;
+
         //stereo channel combiner
             flow.stereoCombiner = new ChannelMergerNode(__globals.audio.context, {numberOfInputs:2});
 

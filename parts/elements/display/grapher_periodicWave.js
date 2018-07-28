@@ -9,13 +9,13 @@ this.grapher_periodicWave = function(
     backingStyle = 'fill:rgba(50,50,50,1)',
 ){
     //elements 
-    var object = __globals.utility.experimental.elementMaker('g',id,{x:x, y:y});
+    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
         object._data = {};
         object._data.wave = {'sin':[],'cos':[]};
         object._data.resolution = 500;
 
     //main graph
-        var grapher = __globals.utility.experimental.elementMaker('grapher'+graphType, 'graph', {
+        var grapher = __globals.utility.misc.elementMaker('grapher'+graphType, 'graph', {
             x:0, y:0, width:width, height:height,
             style:{
                 foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
