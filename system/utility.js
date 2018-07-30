@@ -307,7 +307,6 @@ __globals.utility = new function(){
                     __globals.utility.workspace.importScene(data.objects, data.bundleConstructorFunctions, data.constructorFunctions);
 
                 //set viewport position
-                    console.log(data.viewportLocation);
                     __globals.utility.workspace.gotoPosition(data.viewportLocation.x, data.viewportLocation.y, data.viewportLocation.s, data.viewportLocation.r);
                 
                 //restarting audio
