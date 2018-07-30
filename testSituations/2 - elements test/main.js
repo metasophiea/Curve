@@ -10,5 +10,5 @@
     testObject_1.io.externalData_1.connectTo(testObject_2.io.externalData_1);
 
 // auto position viewpoint
-    __globals.utility.workspace.gotoPosition(-1533.02, -2161.7, 8.38412, 0);
+    // __globals.utility.workspace.gotoPosition(-1533.02, -2161.7, 8.38412, 0);
 //     console.log(__globals.utility.workspace.currentPosition());

@@ -1,4 +1,8 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-07-28
+  - fixed rageslide
+
+
 2018-07-27
   - added 'staticBackground' pane to very back of hmtl strucure, plus a
     'setStaticBackgroundStyle' utility which creates a 100% rect in it. Thus,

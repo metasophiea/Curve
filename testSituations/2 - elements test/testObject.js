@@ -67,7 +67,7 @@ objects.testObject = function(x,y,debug=false){
                     onchange:function(slide,value){ design.connectionNode_data.externalData_1.send('slidePanel_horizontal',{slide:slide,value:value}); },
                 }},
                 {type:'rangeslide',name:'rangeslide', data:{
-                    x:185, y:272.5, height: 100, width: 10, angle:-Math.PI/2, handleHeight:1/4, spanWidth:1,
+                    x:185, y:272.5, height: 100, width: 10, angle:-Math.PI/2, handleHeight:1/5, spanWidth:1,
                     style:{
                         handle: style.rangeslide.handle,
                         backing: style.rangeslide.backing,

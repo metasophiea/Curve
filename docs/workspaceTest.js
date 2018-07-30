@@ -6839,49 +6839,28 @@
                                         switch(handle){
                                             default: console.error('unknown handle to adjust'); break;
                                             case 'start':
-                                                var start = {
-                                                    leftEdge:  a - (a)*handleHeight,
-                                                    rightEdge: a + (1-a)*handleHeight,
-                                                };
-                                                var end = {
-                                                    leftEdge: values.end - (values.end)*handleHeight,
-                                                    rightEdge: values.end + (1-values.end)*handleHeight,
-                                                };
-                                                if( start.rightEdge >= end.leftEdge ){
-                                                    values.start = a;
-                                                    values.end = start.rightEdge/(1-handleHeight);
+                                                //don't allow start slide to encrouch on end slider's space
+                                                if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                        
+                                                //if start slide bumps up against end slide; move end slide accordingly
+                                                var start_rightEdge = a + (1-a)*handleHeight;
+                                                var end_leftEdge = values.end - (values.end)*handleHeight;
+                                                if( start_rightEdge >= end_leftEdge ){
+                                                    values.end = start_rightEdge/(1-handleHeight);
                                                 }
                                             break;
                                             case 'end':
-                                                var start = {
-                                                    leftEdge:  values.start - (values.start)*handleHeight,
-                                                    rightEdge: values.start + (1-values.start)*handleHeight,
-                                                };
-                                                var end = {
-                                                    leftEdge:  a - (a)*handleHeight,
-                                                    rightEdge: a + (1-a)*handleHeight,
-                                                };
-                                                if( start.rightEdge >= end.leftEdge ){
-                                                    values.start = (end.leftEdge - handleHeight)/(1-handleHeight);
-                                                    values.end = a;
+                                                //don't allow end slide to encrouch on start slider's space
+                                                if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                        
+                                                //if end slide bumps up against start slide; move start slide accordingly
+                                                var start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                                var end_leftEdge = a - (a)*handleHeight;
+                                                if( start_rightEdge >= end_leftEdge ){
+                                                    values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
                                                 }
                                             break;
                                         }
-                                    //         case 'start':
-                                    //             if((values.end - a + handleHeight*(a - values.end - 1)) < 0){
-                                    //                 if( (a + handleHeight) > 1 ){ a = 1 - handleHeight; }
-                                    //                 values.start = a;
-                                    //                 values.end = a + handleHeight;
-                                    //             }
-                                    //         break;
-                                    //         case 'end': 
-                                    //             if((a - values.start + handleHeight*(values.start - a - 1)) < 0){
-                                    //                 if( (a - handleHeight) < 0 ){ a = handleHeight; }
-                                    //                 values.start = a - handleHeight;
-                                    //                 values.end = a;
-                                    //             }
-                                    //         break;
-                                    //     }
                         
                                     //fill in data
                                         values[handle] = a;
@@ -7018,13 +6997,10 @@
                                                 __globals.utility.workspace.mouseInteractionHandler(
                                                     function(event){
                                                         var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot, width, height);
-                        
                                                         set( initialValue+(livePosition.y-initialPosition.y)/(1-handleHeight), handleNames[a] );
                                                         object.onchange(values);
                                                     },
                                                     function(event){
-                                                        var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                                        set( initialValue+(livePosition.y-initialPosition.y)/(1-handleHeight), handleNames[a] );
                                                         object.onrelease(values);
                                                         grappled = false;
                                                     }
@@ -11557,7 +11533,7 @@
                                 onchange:function(slide,value){ design.connectionNode_data.externalData_1.send('slidePanel_horizontal',{slide:slide,value:value}); },
                             }},
                             {type:'rangeslide',name:'rangeslide', data:{
-                                x:185, y:272.5, height: 100, width: 10, angle:-Math.PI/2, handleHeight:1/4, spanWidth:1,
+                                x:185, y:272.5, height: 100, width: 10, angle:-Math.PI/2, handleHeight:1/5, spanWidth:1,
                                 style:{
                                     handle: style.rangeslide.handle,
                                     backing: style.rangeslide.backing,
@@ -11784,7 +11760,7 @@
                 testObject_1.io.externalData_1.connectTo(testObject_2.io.externalData_1);
             
             // auto position viewpoint
-                __globals.utility.workspace.gotoPosition(-1533.02, -2161.7, 8.38412, 0);
+                // __globals.utility.workspace.gotoPosition(-1533.02, -2161.7, 8.38412, 0);
             //     console.log(__globals.utility.workspace.currentPosition());
 
         }
