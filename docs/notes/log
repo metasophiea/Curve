@@ -1,4 +1,107 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-08-03
+  - rejiggered the system testing folder a little 
+  - added 'blendColours' and 'multiBlendColours' to utility.misc (also added 
+    tests for them)
+  - added colour change effects to the sequencer note blocks (depending on their
+    strength)
+  - click-control dragging on sequencer note blocks changes their strength
+  - did up the colours on the sequencer note blocks
+  - sequencer note blocks now ignore mouse clicks when spacebar is pressed (
+    redirecting to the interaction pane)
+  - sequencer note blocks now have a minimum length (so that they don't just
+    disappear when their length is zero)
+  - changed "double click on sequencer note block body" from 'delete' to 'reset
+    strength to default' (also added a default strength variable)
+
+  Compliation Results
+  - workspace.js                        768 Kb  (100%)
+  - workspace.min.js                    261 Kb  (34.04%)
+    (almost a megabyte on the raw version. Crazy crazy crazy. ~12,000 lines)
+
+  bug update
+  - things from yesterday continues; seems to also happen in the "elements test"
+    test situation, but only sometimes.
+
+  future ideas
+  - need to look into better filters, which puts us on route for more advanced
+    synthesizers
+
+
+2018-08-02
+  - added zooming method to the new sequencer (its a 'select view area' thing)
+  - pushed updated sequencer, and did-up the sequencer objects (it now has a
+    second rangeslide just for moving around and zooming, and a check box that
+    when checked will try to keep the playhead in view by moving the rangeslide
+    (ish..it's moves the view then tells the rangeslide ot move))
+
+  bug found
+  - seems that sometimes, the sequencer's viewport clip-path is not cutting
+    correctly, resulting in the notes and backing and such leaking out the left
+    side, and leaving a little black line on the right. It's recreatable
+    currently in the second demo on the top two sequencers, but not the bottom
+    one. The bottom one is the same object as the middle. Even copying the
+    objects perserves the glitch in the new objects. Recreating the scene isn't
+    helping. I can't find anything different between the objects in the elements
+    listing.
+      One can manually change the clip-path from
+    polygon(0px 0px, 0px 170px, 780px 170px, 780px 0px)
+    to
+    polygon(1.5px 0px, 781.5px 0px, 781.5px 170px, 1.5px 170px) which will fix
+    things, but ofcourse, using the objects view adjust undos all this. It 
+    appears as though the clip-path itself is missaligned by 1.5px to the left.
+    Shifting the element that contains this attribute doesn't help, it just the
+    problem with it.
+                    As it is; I've no idea what is causing this.
+
+
+
+2018-08-01
+  - updated keyboard interaction further; so that it now checks every element
+    for an event handler.
+  - finishing up on the unlimited-length sequencer (delete/backspace key to
+    erase, now with kinda-sorta zoom functionality)
+  - pushed the new sequencer, replacing old one (the change seems to havae gone
+    well, though it seems the right side of the loop is missing in demo 2...
+    curious. Stranger still; one of the three objects is fine, and it has the
+    same sequencer dimentions as another ):/ )
+
+  future ideas
+  - package workspace up into a proper little package thing. Currently there's
+    three globals '__globals', 'parts' and 'objects' Which causes problems when
+    one tried to have multiple workspace elements in a page (though frankly, the
+    system was never designed to have multiple instances of itself)
+      One could use the old Presenter idea, and bundle things up into the main 
+    SVG element. I'm also thinking about expanding the production line, so that
+    there's 'stable' versions and 'dev' versions, instead of hoping that my
+    updates don't break the demos.
+
+      With a cursoury test, it's clear that two or more workspace elements won't
+    work, the way things are now. Moreover, the sealing I tried ages ago and
+    commented out for 'dev' purposes, also breaks things when uncommented, when
+    there's two or more instances. It seems to work alright when there's only
+    one.
+
+
+2018-07-31
+  - updated keyboard interaction to allow for individual elements to accept key
+    events. It currently prioritizes object input over individual elements,
+    though I could change that if necessary.
+  - further work on the unlimited-length sequencer (there's panning now, and you
+    can create notes)
+
+
+2018-07-30
+  - started into unlimited-length sequencer
+  
+  future ideas
+  - slide: click to empty area then drag
+
+
+2018-07-28
+  - fixed rageslide
+
+
 2018-07-27
   - added 'staticBackground' pane to very back of hmtl strucure, plus a
     'setStaticBackgroundStyle' utility which creates a 100% rect in it. Thus,
@@ -27,7 +130,7 @@
     constructor functions in file (and the option to not store them at all)
   - got a compression library (first thirdparty code) for saveload.serialize
     (it's in tests still, but currently we're getting 61.7% removed)
-  - all kinds of funy new functionality added to utility (along with a little
+  - all kinds of funky new functionality added to utility (along with a little
     rearranging)(is utility getting too big? ~1600 lines..it's just a collection
     of functions...)
   - saveload has been completely moved to utility.workspace

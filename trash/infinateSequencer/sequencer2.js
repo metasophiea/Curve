@@ -1,30 +1,16 @@
-this.sequencer = function(
-    id='sequencer',
+var sequencer2 = function(
+    id='sequencer2',
     x, y, width, height, angle,
     
-    xCount=64, yCount=16,
-    zoomLevel_x=1/1, zoomLevel_y=1/1,
+    count_totalX=64, count_totalY=12,
+    zoomLevel_x=1/2, zoomLevel_y=10/12,
 
     backingStyle='fill:rgba(20,20,20,1);',
-    selectionAreaStyle='fill:rgba(209, 189, 222, 0.5);stroke:rgba(225, 217, 234,1);stroke-width:0.5;pointer-events:none;',
+    selectionAreaStyle='fill:rgba(150,100,100,0.75);stroke:rgba(200,100,100,1);stroke-width:0.5;pointer-events:none;',
 
-    blockStyle_body=[
-        'fill:rgba(138,138,138,0.6);stroke:rgba(175,175,175,0.8);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.6);stroke:rgba(130,199,208,0.8);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.6);stroke:rgba(129,209,173,0.8);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.6);stroke:rgba(234,238,110,0.8);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.6);stroke:rgba(249,178,103,0.8);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.6);stroke:rgba(255, 69, 69,0.8);stroke-width:0.5;',
-    ],
-    blockStyle_bodyGlow=[
-        'fill:rgba(138,138,138,0.8);stroke:rgba(175,175,175,1);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.8);stroke:rgba(130,199,208,1);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.8);stroke:rgba(129,209,173,1);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.8);stroke:rgba(234,238,110,1);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.8);stroke:rgba(249,178,103,1);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.8);stroke:rgba(255, 69, 69,1);stroke-width:0.5;',
-    ],    
-    blockStyle_handle=['fill:rgba(0,0,0,0);cursor:col-resize;'],
+    blockStyle_body='fill:rgba(150,100,150,0.75);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+    blockStyle_bodyGlow='fill:rgba(200,100,200,0.9);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+    blockStyle_handle='fill:rgba(255,0,255,0.75);cursor:col-resize;',
     blockStyle_handleWidth=3,
 
     horizontalStripStyle_pattern=[0,1],
@@ -47,17 +33,12 @@ this.sequencer = function(
             height: height/zoomLevel_y,
         };
         var viewposition = {x:0,y:0};
-        var viewArea = {
-            left:0, right:1,
-            top:0, bottom:1,
-        };
-        var noteRegistry = new parts.circuits.sequencing.noteRegistry(xCount,yCount);
+        var noteRegistry = new parts.circuits.sequencing.noteRegistry(count_totalX,count_totalY);
         var selectedNotes = [];
         var activeNotes = [];
         var snapping = true;
         var step = 1/1;
-        var defualtStrength = 0.5;
-        var loop = {active:false, period:{start:0, end:xCount}};
+        var loop = {active:false, period:{start:0, end:count_totalX}};
         var playhead = {
             width:0.75,
             invisibleHandleMux:6,
@@ -67,130 +48,58 @@ this.sequencer = function(
         };
 
     //internal functions
-        function setViewArea(d,update=true){
-            if(d == undefined || (d.left == undefined && d.right == undefined && d.top == undefined && d.bottom == undefined)){return viewArea;}
-            if(d.left == undefined){d.left = viewArea.left;} if(d.right == undefined){d.right = viewArea.right;}
-            if(d.top == undefined){d.top = viewArea.top;}    if(d.bottom == undefined){d.bottom = viewArea.bottom;}
-
-            adjustZoom( (d.right-d.left),(d.bottom-d.top) );
-            viewArea = { top:d.top, bottom:d.bottom, left:d.left, right:d.right };
-            var newX = 0; var newY = 0;
-            if( (1-(d.right-d.left)) != 0 ){ newX = d.left + d.left*((d.right-d.left)/(1-(d.right-d.left))); }
-            if( (1-(d.bottom-d.top)) != 0 ){ newY = d.top  +  d.top*((d.bottom-d.top)/(1-(d.bottom-d.top))); }
-            setViewposition(newX,newY,update);
-        }
-        function adjustZoom(x,y){
-            if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
-            if(x == undefined){ x = zoomLevel_x; }
-            if(y == undefined){ y = zoomLevel_y; }
-
-            //make sure things are between 0.01 and 1
-                var maxZoom = 0.1;
-                x = x<maxZoom?maxZoom:x; x = x>1?1:x;
-                y = y<maxZoom?maxZoom:y; y = y>1?1:y;
-
-            //update state
-                zoomLevel_x = x;
-                zoomLevel_y = y;
-                totalSize.width = width/zoomLevel_x;
-                totalSize.height = height/zoomLevel_y;
-
-            //update interactionPlane
-                interactionPlane.width.baseVal.value = totalSize.width;
-                interactionPlane.height.baseVal.value = totalSize.height;
-
-            //update background strips
-                for(var a = 0; a < yCount; a++){
-                    __globals.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_horizontal_'+a], 0, a*(height/(yCount*zoomLevel_y)));
-                    backgroundDrawArea.children['strip_horizontal_'+a].height.baseVal.value = height/(yCount*zoomLevel_y);
-                    backgroundDrawArea.children['strip_horizontal_'+a].width.baseVal.value = totalSize.width;
-                }
-                for(var a = 0; a < xCount; a++){
-                    __globals.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_vertical_'+a], a*(width/(xCount*zoomLevel_x)), 0);
-                    backgroundDrawArea.children['strip_vertical_'+a].width.baseVal.value = width/(xCount*zoomLevel_x);
-                    backgroundDrawArea.children['strip_vertical_'+a].height.baseVal.value = totalSize.height;
-                }
-
-            //udpate note blocks
-                for(var a = 0; a < notePane.children.length; a++){
-                    notePane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
-                }
-
-            //udpate playhead
-                //check for playhead
-                if(playhead.position >= 0){
-                    workarea.children.playhead.main.y2.baseVal.value = totalSize.height;
-                    workarea.children.playhead.invisibleHandle.y2.baseVal.value = totalSize.height;
-                    __globals.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/xCount), 0);
-                }
-        }
         function drawBackground(){
             backgroundDrawArea.innerHTML = '';
 
             //background stipes
                 //horizontal strips
-                for(var a = 0; a < yCount; a++){
+                for(var a = 0; a < count_totalY; a++){
                     backgroundDrawArea.appendChild(
                         __globals.utility.misc.elementMaker('rect','strip_horizontal_'+a,{
-                            x1:0, y:a*(height/(yCount*zoomLevel_y)),
-                            width:totalSize.width, height:height/(yCount*zoomLevel_y),
+                            x1:0, y:a*(height/(count_totalY*zoomLevel_y)),
+                            width:totalSize.width, height:height/(count_totalY*zoomLevel_y),
                             style:horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]],
                         })
                     );
                 }
                 //vertical strips
-                for(var a = 0; a < xCount; a++){
+                for(var a = 0; a < count_totalX; a++){
                     backgroundDrawArea.appendChild(
                         __globals.utility.misc.elementMaker('rect','strip_vertical_'+a,{
-                            x:a*(width/(xCount*zoomLevel_x)), y:0,
-                            width:width/(xCount*zoomLevel_x), height:totalSize.height,
+                            x:a*(width/(count_totalX*zoomLevel_x)), y:0,
+                            width:width/(count_totalX*zoomLevel_x), height:totalSize.height,
                             style:verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]],
                         })
                     );
                 }
         }
-        function setViewposition(x,y,update=true){
+        function setViewposition(x,y){
             if(x == undefined && y == undefined){return viewposition;}
-            if(x == undefined || isNaN(x)){ x = viewposition.x; }
-            if(y == undefined || isNaN(y)){ y = viewposition.y; }
+            if(x == undefined){ x = viewposition.x; }
+            if(y == undefined){ y = viewposition.y; }
 
             //make sure things are between 0 and 1
-                x = x<0?0:x; x = x>1?1:x;
-                y = y<0?0:y; y = y>1?1:y;
+            x = x<0?0:x; x = x>1?1:x;
+            y = y<0?0:y; y = y>1?1:y;
 
-            //perform transform
-                viewposition.x = x;
-                viewposition.y = y;
-                __globals.utility.element.setTransform_XYonly(
-                    workarea,
-                    -viewposition.x*(totalSize.width - width),
-                    -viewposition.y*(totalSize.height - height)
-                );
+            viewposition.x = x;
+            viewposition.y = y;
+            __globals.utility.element.setTransform_XYonly(
+                workarea,
+                -viewposition.x*(totalSize.width - width),
+                -viewposition.y*(totalSize.height - height)
+            );
 
             //adjust clipping box to follow where the viewport is looking
-                var x_offSet = (totalSize.width - width) * viewposition.x;
-                var y_offSet = (totalSize.height - height) * viewposition.y;
-                var q = {
-                    tl:{x:x_offSet,       y:y_offSet},
-                    br:{x:x_offSet+width, y:y_offSet+height},
-                };
-                viewport.setAttribute('clip-path','polygon('+q.tl.x+'px '+q.tl.y+'px, '+q.tl.x+'px '+q.br.y+'px, '+q.br.x+'px '+q.br.y+'px, '+q.br.x+'px '+q.tl.y+'px)');
+            var x_offSet = (totalSize.width - width) * viewposition.x;
+            var y_offSet = (totalSize.height - height) * viewposition.y;
+            var q = {
+                tl:{x:x_offSet,       y:y_offSet},
+                br:{x:x_offSet+width, y:y_offSet+height},
+            };
+            viewport.setAttribute('clip-path','polygon('+q.tl.x+'px '+q.tl.y+'px, '+q.tl.x+'px '+q.br.y+'px, '+q.br.x+'px '+q.br.y+'px, '+q.br.x+'px '+q.tl.y+'px)');
 
-            //update viewArea
-                var offsetX = (1-(viewArea.right-viewArea.left))*x;
-                var offsetY = (1-(viewArea.bottom-viewArea.top))*y;
-                viewArea = {
-                    left:   offsetX, 
-                    right:  offsetX+(viewArea.right-viewArea.left),
-                    top:    offsetY,   
-                    bottom: offsetY+(viewArea.bottom-viewArea.top),
-                };
-
-            //callbacks
-                if(update){
-                    obj.onpan({x:x,y:y});
-                    obj.onchangeviewarea(viewArea);
-                }
+            obj.onpan({x:x,y:y});
         };
         function visible2coordinates(xy){
             return {
@@ -199,18 +108,18 @@ this.sequencer = function(
             };
         }
         function coordinates2lineposition(xy){
-            xy.y = Math.floor(xy.y*yCount);
-            if(xy.y >= yCount){xy.y = yCount-1;}
+            xy.y = Math.floor(xy.y*count_totalY);
+            if(xy.y >= count_totalY){xy.y = count_totalY-1;}
         
-            xy.x = snapping ? Math.round((xy.x*xCount)/step)*step : xy.x*xCount;
+            xy.x = snapping ? Math.round((xy.x*count_totalX)/step)*step : xy.x*count_totalX;
             if(xy.x < 0){xy.x =0;}
         
             return {line:xy.y, position:xy.x};
         }
-        function makeNote(line, position, length, strength=defualtStrength){
+        function makeNote(line, position, length, strength=1){
             var newID = noteRegistry.add({ line:line, position:position, length:length, strength:strength });
             var approvedData = noteRegistry.getNote(newID);
-            var newNoteBlock = parts.elements.control.sequencer.noteBlock(newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), approvedData.line, approvedData.position, approvedData.length, approvedData.strength, false, blockStyle_body, blockStyle_bodyGlow, blockStyle_handle, blockStyle_handleWidth);
+            var newNoteBlock = parts.elements.control.sequencer.noteBlock(newID, width/(count_totalX*zoomLevel_x), height/(count_totalY*zoomLevel_y), approvedData.line, approvedData.position, approvedData.length, false, blockStyle_body, blockStyle_bodyGlow, blockStyle_handle, blockStyle_handleWidth);
             notePane.append(newNoteBlock);
 
             //augmenting the graphic element
@@ -232,24 +141,18 @@ this.sequencer = function(
                 };
                 newNoteBlock.ondblclick = function(event){
                     if(!event[__globals.super.keys.ctrl]){return;}
-                    selectedNotes.map(function(a){
-                        a.strength(defualtStrength);
-                        noteRegistry.update(a.id, { strength: defualtStrength });
-                    });
+                    while(selectedNotes.length > 0){
+                        selectedNotes[0].delete();
+                    }
                 };
                 newNoteBlock.body.onmousedown = function(event){
-                    //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
-                    if(__globals.keyboardInteraction.pressedKeys.hasOwnProperty('Space') && __globals.keyboardInteraction.pressedKeys.Space){
-                        interactionPlane.onmousedown(event); return;
-                    }
-
                     //if the shift key is not pressed and this note is not already selected; deselect everything
                         if(!event.shiftKey && !newNoteBlock.selected()){
                             while(selectedNotes.length > 0){
                                 selectedNotes[0].deselect();
                             }
                         }
-
+                    
                     //select this block
                         newNoteBlock.select(true);
 
@@ -263,33 +166,19 @@ this.sequencer = function(
                             });
                         }
 
-                    //if control key is pressed; this is a strength-change operation
-                        if(event[__globals.super.keys.ctrl]){
-                            var initialStrengths = activeBlocks.map(a => a.block.strength());
-                            var initial = event.offsetY;
-                            __globals.utility.workspace.mouseInteractionHandler(function(event){
-                                var diff = (initial - event.offsetY)/__globals.svgElement.clientHeight;
-                                for(var a = 0; a < activeBlocks.length; a++){
-                                    activeBlocks[a].block.strength(initialStrengths[a] + diff);
-                                    noteRegistry.update(activeBlocks[a].id, { strength: initialStrengths[a] + diff });
-                                }
-                            });
-                            return;
-                        }
-
                     //if the alt key is pressed, clone the block
                     //(but don't select it, this is 'alt-click-and-drag to clone' trick)
                     //this function isn't run until the first sign of movement
-                        var cloned = false;
-                        function cloneFunc(){
-                            if(cloned){return;} cloned = true;
-                            if(event[__globals.super.keys.alt]){
-                                for(var a = 0; a < selectedNotes.length; a++){
-                                    var temp = noteRegistry.getNote(parseInt(selectedNotes[a].id));
-                                    makeNote(temp.line, temp.position, temp.length, temp.strength);
-                                }
+                    var cloned = false;
+                    function cloneFunc(){
+                        if(cloned){return;} cloned = true;
+                        if(event[__globals.super.keys.alt]){
+                            for(var a = 0; a < selectedNotes.length; a++){
+                                var temp = noteRegistry.getNote(parseInt(selectedNotes[a].id));
+                                makeNote(temp.line, temp.position, temp.length, temp.strength);
                             }
                         }
+                    }
 
                     //block movement
                         var initialPosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
@@ -531,8 +420,8 @@ this.sequencer = function(
                                     for(var a = 0; a < noteBlocks.length; a++){
                                         var temp = noteRegistry.getNote(parseInt(noteBlocks[a].id));
                                         var block = [
-                                                {x:temp.position*(totalSize.width/xCount), y:temp.line*(totalSize.height/yCount)},
-                                                {x:(temp.position+temp.length)*(totalSize.width/xCount), y:(temp.line+1)*(totalSize.height/yCount)},
+                                                {x:temp.position*(totalSize.width/count_totalX), y:temp.line*(totalSize.height/count_totalY)},
+                                                {x:(temp.position+temp.length)*(totalSize.width/count_totalX), y:(temp.line+1)*(totalSize.height/count_totalY)},
                                             ];    
                                         if( __globals.utility.math.detectOverlap(selectionBox,block,selectionBox,block) ){ noteBlocks[a].select(true); }
                                     }
@@ -559,8 +448,8 @@ this.sequencer = function(
                                 var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                                 var diffPosition = {x:initialPosition.x-livePosition.x, y:initialPosition.y-livePosition.y};
                                 setViewposition(
-                                    old_viewposition.x + (diffPosition.x*(xCount*zoomLevel_x))/(xCount-(xCount*zoomLevel_x)),
-                                    old_viewposition.y + (diffPosition.y*(yCount*zoomLevel_y))/(yCount-(yCount*zoomLevel_y)),
+                                    old_viewposition.x + (diffPosition.x*(count_totalX*zoomLevel_x))/(count_totalX-(count_totalX*zoomLevel_x)),
+                                    old_viewposition.y + (diffPosition.y*(count_totalY*zoomLevel_y))/(count_totalY-(count_totalY*zoomLevel_y)),
                                 );
                             },
                             function(event){}
@@ -603,12 +492,11 @@ this.sequencer = function(
         //step
         obj.step = function(a){
             if(a == undefined){return step;}
-            step = a;
+            state.step = a;
         };
 
         //viewport position
         obj.viewposition = setViewposition;
-        obj.viewArea = setViewArea;
 
         //note interaction
         obj.export = function(){return noteRegistry.export();};
@@ -623,11 +511,11 @@ this.sequencer = function(
             if(a == undefined){return loop.active;}
             loop.active = a;
 
-            obj.glowVertical(false,0,xCount);
+            obj.glowVertical(false,0,count_totalX);
             if( loop.active ){
                 obj.glowVertical(true, 
                     loop.period.start < 0 ? 0 : loop.period.start, 
-                    loop.period.end > xCount ? xCount : loop.period.end,
+                    loop.period.end > count_totalX ? count_totalX : loop.period.end,
                 );
             }
         };
@@ -638,19 +526,15 @@ this.sequencer = function(
             loop.period = {start:start, end:end};
 
             if( loop.active ){
-                obj.glowVertical(false,0,xCount);
+                obj.glowVertical(false,0,count_totalX);
                 obj.glowVertical(true,
                     start < 0 ? 0 : start, 
-                    end > xCount ? xCount : end,
+                    end > count_totalX ? count_totalX : end,
                 );
             }
         };
 
         //playhead
-        obj.automove = function(a){
-            if(a == undefined){return playhead.automoveViewposition;}
-            playhead.automoveViewposition = a;
-        };
         obj.playheadPosition = function(val,stopActive=true){
             if(val == undefined){return playhead.position;}
 
@@ -668,19 +552,19 @@ this.sequencer = function(
                 }
 
             //reposition graphical playhead
-                if(playhead.position < 0 || playhead.position > xCount){
+                if(playhead.position < 0 || playhead.position > count_totalX){
                     //outside vilible bounds, so remove
                     if( workarea.children.playhead ){ workarea.children.playhead.remove(); }
                 }else{ 
                     //within vilible bounds, so either create or adjust
                     if( !workarea.children.playhead ){ makePlayhead(); }
-                    __globals.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/xCount), 0);
+                    __globals.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/count_totalX), 0);
                     //if the new position is beyond the view in the viewport, adjust the viewport (putting the playhead on the leftmost side)
                     //(assuming automoveViewposition is set)
                     if(playhead.automoveViewposition){
-                        var remainderSpace = xCount-(xCount*zoomLevel_x);
+                        var remainderSpace = count_totalX-(count_totalX*zoomLevel_x);
                         if( playhead.position < Math.floor(viewposition.x*remainderSpace)   || 
-                            playhead.position > Math.floor(viewposition.x*remainderSpace) + (xCount*zoomLevel_x)  
+                            playhead.position > Math.floor(viewposition.x*remainderSpace) + (count_totalX*zoomLevel_x)  
                         ){ obj.viewposition( (playhead.position > remainderSpace ? remainderSpace : playhead.position)/remainderSpace ); }
                     }
                 }
@@ -733,7 +617,6 @@ this.sequencer = function(
         
     //callbacks
         obj.onpan = function(data){};
-        obj.onchangeviewarea = function(data){};
         obj.event = function(events){};
 
     return obj;
@@ -754,38 +637,19 @@ this.sequencer = function(
 
 
 
-this.sequencer.noteBlock = function(
+sequencer2.noteBlock = function(
     id, unit_x, unit_y,
-    line, position, length, strength=1, glow=false, 
-    bodyStyle=[
-        'fill:rgba(138,138,138,0.6);stroke:rgba(175,175,175,0.8);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.6);stroke:rgba(130,199,208,0.8);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.6);stroke:rgba(129,209,173,0.8);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.6);stroke:rgba(234,238,110,0.8);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.6);stroke:rgba(249,178,103,0.8);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.6);stroke:rgba(255, 69, 69,0.8);stroke-width:0.5;',
-    ],
-    bodyGlowStyle=[
-        'fill:rgba(138,138,138,0.8);stroke:rgba(175,175,175,1);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.8);stroke:rgba(130,199,208,1);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.8);stroke:rgba(129,209,173,1);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.8);stroke:rgba(234,238,110,1);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.8);stroke:rgba(249,178,103,1);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.8);stroke:rgba(255, 69, 69,1);stroke-width:0.5;',
-    ],
-    handleStyle=['fill:rgba(255,0,255,0.75);cursor:col-resize;'],
+    line, position, length, glow=false, 
+    bodyStyle='fill:rgba(150,100,150,0.75);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+    bodyGlowStyle='fill:rgba(200,100,200,0.9);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+    handleStyle='fill:rgba(255,0,255,0.75);cursor:col-resize;',
     handleWidth=5,
 ){
     var selected = false;
-    var minLength = handleWidth/4;
-    var currentStyles = {
-        body:getBlendedColour(bodyStyle,strength),
-        glow:getBlendedColour(bodyGlowStyle,strength),
-    };
     
     //elements
         var obj = __globals.utility.misc.elementMaker('g',id,{y:line*unit_y, x:position*unit_x});
-        obj.body = __globals.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:currentStyles.body});
+        obj.body = __globals.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:bodyStyle});
         obj.leftHandle = __globals.utility.misc.elementMaker('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
         obj.rightHandle = __globals.utility.misc.elementMaker('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
         obj.append(obj.body);
@@ -804,27 +668,6 @@ this.sequencer.noteBlock = function(
         }
         function updateLineAndPosition(){
             __globals.utility.element.setTransform_XYonly(obj,position*unit_x, line*unit_y);
-        }
-        function getBlendedColour(swatch,ratio){
-            //extract stlyes and get an output template
-                var tempSwatch = [];
-                for(var a = 0; a < swatch.length; a++){
-                    tempSwatch[a] = __globals.utility.element.styleExtractor(swatch[a]);
-                }
-                var outputStyle = tempSwatch[0];
-
-            //if there's a fill attribute; blend it and add it to the template
-                if( tempSwatch[0].hasOwnProperty('fill') ){
-                    outputStyle.fill = __globals.utility.misc.multiBlendColours(tempSwatch.map(a => a.fill),ratio);
-                }
-
-            //if there's a stroke attribute; blend it and add it to the template
-                if( tempSwatch[0].hasOwnProperty('stroke') ){
-                    outputStyle.stroke = __globals.utility.misc.multiBlendColours(tempSwatch.map(a => a.stroke),ratio);
-                }
-
-            //pack up the template and return
-                return __globals.utility.element.stylePacker(outputStyle);
         }
 
     //controls
@@ -848,24 +691,14 @@ this.sequencer.noteBlock = function(
         };
         obj.length = function(a){
             if(a == undefined){return length;}
-            length = a < (minLength/unit_x) ? (minLength/unit_x) : a;
+            length = a;
             updateLength();
-        };
-        obj.strength = function(a){
-            if(a == undefined){return strength;}
-            a = a > 1 ? 1 : a; a = a < 0 ? 0 : a;
-            strength = a;
-            currentStyles = {
-                body:getBlendedColour(bodyStyle,strength),
-                glow:getBlendedColour(bodyGlowStyle,strength),
-            };
-            obj.glow(glow);
         };
         obj.glow = function(a){
             if(a == undefined){return glow;}
             glow = a;
-            if(glow){ __globals.utility.element.setStyle(obj.body, currentStyles.glow); }
-            else{     __globals.utility.element.setStyle(obj.body, currentStyles.body); }
+            if(glow){ __globals.utility.element.setStyle(obj.body, bodyGlowStyle); }
+            else{     __globals.utility.element.setStyle(obj.body, bodyStyle);     }
         };
         obj.selected = function(a){
             if(a == undefined){return selected;}
@@ -874,3 +707,23 @@ this.sequencer.noteBlock = function(
 
     return obj;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var testElement = __globals.utility.workspace.placeAndReturnObject( sequencer2(undefined, 50, 50, 500, 150, 0) );
+testElement.loopActive(true);
+testElement.loopPeriod(0,64);
+setInterval(testElement.progress, 100);

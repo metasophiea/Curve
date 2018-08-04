@@ -1,4 +1,4 @@
-this.sequencer = function(
+var sequencer = function(
     id='sequencer',
     x, y, width, height, angle,
     
@@ -6,25 +6,11 @@ this.sequencer = function(
     zoomLevel_x=1/1, zoomLevel_y=1/1,
 
     backingStyle='fill:rgba(20,20,20,1);',
-    selectionAreaStyle='fill:rgba(209, 189, 222, 0.5);stroke:rgba(225, 217, 234,1);stroke-width:0.5;pointer-events:none;',
+    selectionAreaStyle='fill:rgba(150,100,100,0.75);stroke:rgba(200,100,100,1);stroke-width:0.5;pointer-events:none;',
 
-    blockStyle_body=[
-        'fill:rgba(138,138,138,0.6);stroke:rgba(175,175,175,0.8);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.6);stroke:rgba(130,199,208,0.8);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.6);stroke:rgba(129,209,173,0.8);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.6);stroke:rgba(234,238,110,0.8);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.6);stroke:rgba(249,178,103,0.8);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.6);stroke:rgba(255, 69, 69,0.8);stroke-width:0.5;',
-    ],
-    blockStyle_bodyGlow=[
-        'fill:rgba(138,138,138,0.8);stroke:rgba(175,175,175,1);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.8);stroke:rgba(130,199,208,1);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.8);stroke:rgba(129,209,173,1);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.8);stroke:rgba(234,238,110,1);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.8);stroke:rgba(249,178,103,1);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.8);stroke:rgba(255, 69, 69,1);stroke-width:0.5;',
-    ],    
-    blockStyle_handle=['fill:rgba(0,0,0,0);cursor:col-resize;'],
+    blockStyle_body='fill:rgba(150,100,150,0.75);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+    blockStyle_bodyGlow='fill:rgba(200,100,200,0.9);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+    blockStyle_handle='fill:rgba(255,0,255,0.75);cursor:col-resize;',
     blockStyle_handleWidth=3,
 
     horizontalStripStyle_pattern=[0,1],
@@ -56,7 +42,6 @@ this.sequencer = function(
         var activeNotes = [];
         var snapping = true;
         var step = 1/1;
-        var defualtStrength = 0.5;
         var loop = {active:false, period:{start:0, end:xCount}};
         var playhead = {
             width:0.75,
@@ -67,17 +52,14 @@ this.sequencer = function(
         };
 
     //internal functions
-        function setViewArea(d,update=true){
-            if(d == undefined || (d.left == undefined && d.right == undefined && d.top == undefined && d.bottom == undefined)){return viewArea;}
-            if(d.left == undefined){d.left = viewArea.left;} if(d.right == undefined){d.right = viewArea.right;}
-            if(d.top == undefined){d.top = viewArea.top;}    if(d.bottom == undefined){d.bottom = viewArea.bottom;}
-
-            adjustZoom( (d.right-d.left),(d.bottom-d.top) );
-            viewArea = { top:d.top, bottom:d.bottom, left:d.left, right:d.right };
+        function setViewArea(left,right,top,bottom){
+            if(left == undefined || right == undefined || top == undefined || bottom == undefined){return viewArea;}
+            adjustZoom( (right-left),(bottom-top) );
+            viewArea = { top:top, bottom:bottom, left:left, right:right };
             var newX = 0; var newY = 0;
-            if( (1-(d.right-d.left)) != 0 ){ newX = d.left + d.left*((d.right-d.left)/(1-(d.right-d.left))); }
-            if( (1-(d.bottom-d.top)) != 0 ){ newY = d.top  +  d.top*((d.bottom-d.top)/(1-(d.bottom-d.top))); }
-            setViewposition(newX,newY,update);
+            if( (1-(right-left)) != 0 ){ newX = left + left*((right-left)/(1-(right-left))); }
+            if( (1-(bottom-top)) != 0 ){ newY = top  +  top*((bottom-top)/(1-(bottom-top))); }
+            setViewposition(newX,newY);
         }
         function adjustZoom(x,y){
             if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
@@ -121,7 +103,6 @@ this.sequencer = function(
                 if(playhead.position >= 0){
                     workarea.children.playhead.main.y2.baseVal.value = totalSize.height;
                     workarea.children.playhead.invisibleHandle.y2.baseVal.value = totalSize.height;
-                    __globals.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/xCount), 0);
                 }
         }
         function drawBackground(){
@@ -149,7 +130,7 @@ this.sequencer = function(
                     );
                 }
         }
-        function setViewposition(x,y,update=true){
+        function setViewposition(x,y){
             if(x == undefined && y == undefined){return viewposition;}
             if(x == undefined || isNaN(x)){ x = viewposition.x; }
             if(y == undefined || isNaN(y)){ y = viewposition.y; }
@@ -187,10 +168,7 @@ this.sequencer = function(
                 };
 
             //callbacks
-                if(update){
-                    obj.onpan({x:x,y:y});
-                    obj.onchangeviewarea(viewArea);
-                }
+                obj.onpan({x:x,y:y});
         };
         function visible2coordinates(xy){
             return {
@@ -207,10 +185,10 @@ this.sequencer = function(
         
             return {line:xy.y, position:xy.x};
         }
-        function makeNote(line, position, length, strength=defualtStrength){
+        function makeNote(line, position, length, strength=1){
             var newID = noteRegistry.add({ line:line, position:position, length:length, strength:strength });
             var approvedData = noteRegistry.getNote(newID);
-            var newNoteBlock = parts.elements.control.sequencer.noteBlock(newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), approvedData.line, approvedData.position, approvedData.length, approvedData.strength, false, blockStyle_body, blockStyle_bodyGlow, blockStyle_handle, blockStyle_handleWidth);
+            var newNoteBlock = parts.elements.control.sequencer.noteBlock(newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), approvedData.line, approvedData.position, approvedData.length, false, blockStyle_body, blockStyle_bodyGlow, blockStyle_handle, blockStyle_handleWidth);
             notePane.append(newNoteBlock);
 
             //augmenting the graphic element
@@ -232,24 +210,18 @@ this.sequencer = function(
                 };
                 newNoteBlock.ondblclick = function(event){
                     if(!event[__globals.super.keys.ctrl]){return;}
-                    selectedNotes.map(function(a){
-                        a.strength(defualtStrength);
-                        noteRegistry.update(a.id, { strength: defualtStrength });
-                    });
+                    while(selectedNotes.length > 0){
+                        selectedNotes[0].delete();
+                    }
                 };
                 newNoteBlock.body.onmousedown = function(event){
-                    //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
-                    if(__globals.keyboardInteraction.pressedKeys.hasOwnProperty('Space') && __globals.keyboardInteraction.pressedKeys.Space){
-                        interactionPlane.onmousedown(event); return;
-                    }
-
                     //if the shift key is not pressed and this note is not already selected; deselect everything
                         if(!event.shiftKey && !newNoteBlock.selected()){
                             while(selectedNotes.length > 0){
                                 selectedNotes[0].deselect();
                             }
                         }
-
+                    
                     //select this block
                         newNoteBlock.select(true);
 
@@ -263,33 +235,19 @@ this.sequencer = function(
                             });
                         }
 
-                    //if control key is pressed; this is a strength-change operation
-                        if(event[__globals.super.keys.ctrl]){
-                            var initialStrengths = activeBlocks.map(a => a.block.strength());
-                            var initial = event.offsetY;
-                            __globals.utility.workspace.mouseInteractionHandler(function(event){
-                                var diff = (initial - event.offsetY)/__globals.svgElement.clientHeight;
-                                for(var a = 0; a < activeBlocks.length; a++){
-                                    activeBlocks[a].block.strength(initialStrengths[a] + diff);
-                                    noteRegistry.update(activeBlocks[a].id, { strength: initialStrengths[a] + diff });
-                                }
-                            });
-                            return;
-                        }
-
                     //if the alt key is pressed, clone the block
                     //(but don't select it, this is 'alt-click-and-drag to clone' trick)
                     //this function isn't run until the first sign of movement
-                        var cloned = false;
-                        function cloneFunc(){
-                            if(cloned){return;} cloned = true;
-                            if(event[__globals.super.keys.alt]){
-                                for(var a = 0; a < selectedNotes.length; a++){
-                                    var temp = noteRegistry.getNote(parseInt(selectedNotes[a].id));
-                                    makeNote(temp.line, temp.position, temp.length, temp.strength);
-                                }
+                    var cloned = false;
+                    function cloneFunc(){
+                        if(cloned){return;} cloned = true;
+                        if(event[__globals.super.keys.alt]){
+                            for(var a = 0; a < selectedNotes.length; a++){
+                                var temp = noteRegistry.getNote(parseInt(selectedNotes[a].id));
+                                makeNote(temp.line, temp.position, temp.length, temp.strength);
                             }
                         }
+                    }
 
                     //block movement
                         var initialPosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
@@ -733,7 +691,6 @@ this.sequencer = function(
         
     //callbacks
         obj.onpan = function(data){};
-        obj.onchangeviewarea = function(data){};
         obj.event = function(events){};
 
     return obj;
@@ -754,38 +711,19 @@ this.sequencer = function(
 
 
 
-this.sequencer.noteBlock = function(
+sequencer.noteBlock = function(
     id, unit_x, unit_y,
-    line, position, length, strength=1, glow=false, 
-    bodyStyle=[
-        'fill:rgba(138,138,138,0.6);stroke:rgba(175,175,175,0.8);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.6);stroke:rgba(130,199,208,0.8);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.6);stroke:rgba(129,209,173,0.8);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.6);stroke:rgba(234,238,110,0.8);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.6);stroke:rgba(249,178,103,0.8);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.6);stroke:rgba(255, 69, 69,0.8);stroke-width:0.5;',
-    ],
-    bodyGlowStyle=[
-        'fill:rgba(138,138,138,0.8);stroke:rgba(175,175,175,1);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.8);stroke:rgba(130,199,208,1);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.8);stroke:rgba(129,209,173,1);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.8);stroke:rgba(234,238,110,1);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.8);stroke:rgba(249,178,103,1);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.8);stroke:rgba(255, 69, 69,1);stroke-width:0.5;',
-    ],
-    handleStyle=['fill:rgba(255,0,255,0.75);cursor:col-resize;'],
+    line, position, length, glow=false, 
+    bodyStyle='fill:rgba(150,100,150,0.75);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+    bodyGlowStyle='fill:rgba(200,100,200,0.9);stroke:rgba(200,100,200,1);stroke-width:0.5;',
+    handleStyle='fill:rgba(255,0,255,0.75);cursor:col-resize;',
     handleWidth=5,
 ){
     var selected = false;
-    var minLength = handleWidth/4;
-    var currentStyles = {
-        body:getBlendedColour(bodyStyle,strength),
-        glow:getBlendedColour(bodyGlowStyle,strength),
-    };
     
     //elements
         var obj = __globals.utility.misc.elementMaker('g',id,{y:line*unit_y, x:position*unit_x});
-        obj.body = __globals.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:currentStyles.body});
+        obj.body = __globals.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:bodyStyle});
         obj.leftHandle = __globals.utility.misc.elementMaker('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
         obj.rightHandle = __globals.utility.misc.elementMaker('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
         obj.append(obj.body);
@@ -804,27 +742,6 @@ this.sequencer.noteBlock = function(
         }
         function updateLineAndPosition(){
             __globals.utility.element.setTransform_XYonly(obj,position*unit_x, line*unit_y);
-        }
-        function getBlendedColour(swatch,ratio){
-            //extract stlyes and get an output template
-                var tempSwatch = [];
-                for(var a = 0; a < swatch.length; a++){
-                    tempSwatch[a] = __globals.utility.element.styleExtractor(swatch[a]);
-                }
-                var outputStyle = tempSwatch[0];
-
-            //if there's a fill attribute; blend it and add it to the template
-                if( tempSwatch[0].hasOwnProperty('fill') ){
-                    outputStyle.fill = __globals.utility.misc.multiBlendColours(tempSwatch.map(a => a.fill),ratio);
-                }
-
-            //if there's a stroke attribute; blend it and add it to the template
-                if( tempSwatch[0].hasOwnProperty('stroke') ){
-                    outputStyle.stroke = __globals.utility.misc.multiBlendColours(tempSwatch.map(a => a.stroke),ratio);
-                }
-
-            //pack up the template and return
-                return __globals.utility.element.stylePacker(outputStyle);
         }
 
     //controls
@@ -848,24 +765,14 @@ this.sequencer.noteBlock = function(
         };
         obj.length = function(a){
             if(a == undefined){return length;}
-            length = a < (minLength/unit_x) ? (minLength/unit_x) : a;
+            length = a;
             updateLength();
-        };
-        obj.strength = function(a){
-            if(a == undefined){return strength;}
-            a = a > 1 ? 1 : a; a = a < 0 ? 0 : a;
-            strength = a;
-            currentStyles = {
-                body:getBlendedColour(bodyStyle,strength),
-                glow:getBlendedColour(bodyGlowStyle,strength),
-            };
-            obj.glow(glow);
         };
         obj.glow = function(a){
             if(a == undefined){return glow;}
             glow = a;
-            if(glow){ __globals.utility.element.setStyle(obj.body, currentStyles.glow); }
-            else{     __globals.utility.element.setStyle(obj.body, currentStyles.body); }
+            if(glow){ __globals.utility.element.setStyle(obj.body, bodyGlowStyle); }
+            else{     __globals.utility.element.setStyle(obj.body, bodyStyle);     }
         };
         obj.selected = function(a){
             if(a == undefined){return selected;}
@@ -874,3 +781,6 @@ this.sequencer.noteBlock = function(
 
     return obj;
 };
+
+
+

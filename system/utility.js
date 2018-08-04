@@ -124,10 +124,10 @@ __globals.utility = new function(){
             };
         };
         this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;',push=false){
-            var g = __globals.utility.misc.elementMaker('g',null,{x:x, y:y});//parts.basic.g(null, x, y);
+            var g = __globals.utility.misc.elementMaker('g',null,{x:x, y:y});
 
-            var dot = __globals.utility.misc.elementMaker('circle',null,{x:0, y:0, r:r, style:style});//parts.basic.circle(null, 0, 0, r, 0, style);
-            var textElement =  __globals.utility.misc.elementMaker('text',null,{x:0, y:0, angle:0, text:text, style:style});//parts.basic.text(null, r, 0, text, 0, style);
+            var dot = __globals.utility.misc.elementMaker('circle',null,{x:0, y:0, r:r, style:style});
+            var textElement =  __globals.utility.misc.elementMaker('text',null,{x:0, y:0, angle:0, text:text, style:style});
             g.appendChild(dot);
             g.appendChild(textElement);
 
@@ -307,7 +307,6 @@ __globals.utility = new function(){
                     __globals.utility.workspace.importScene(data.objects, data.bundleConstructorFunctions, data.constructorFunctions);
 
                 //set viewport position
-                    console.log(data.viewportLocation);
                     __globals.utility.workspace.gotoPosition(data.viewportLocation.x, data.viewportLocation.y, data.viewportLocation.s, data.viewportLocation.r);
                 
                 //restarting audio
@@ -925,6 +924,34 @@ __globals.utility = new function(){
 
             return string;
         };
+        this.blendColours = function(rgba_1,rgba_2,ratio){
+            //extract
+                function extract(rgba){
+                    rgba = rgba.split(',');
+                    rgba[0] = rgba[0].replace('rgba(', '');
+                    rgba[3] = rgba[3].replace(')', '');
+                    return rgba.map(function(a){return parseFloat(a);})
+                }
+                rgba_1 = extract(rgba_1);
+                rgba_2 = extract(rgba_2);
+
+            //blend
+                var rgba_out = [];
+                for(var a = 0; a < rgba_1.length; a++){
+                    rgba_out[a] = (1-ratio)*rgba_1[a] + ratio*rgba_2[a];
+                }
+
+            //pack
+                return 'rgba('+rgba_out[0]+','+rgba_out[1]+','+rgba_out[2]+','+rgba_out[3]+')';            
+        };
+        this.multiBlendColours = function(rgbaList,ratio){
+            //special cases
+                if(ratio == 0){return rgbaList[0];}
+                if(ratio == 1){return rgbaList[rgbaList.length-1];}
+            //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
+                var p = ratio*(rgbaList.length-1);
+                return __globals.utility.misc.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+        };
         this.compressString = function(string){return __globals.utility.thirdparty.lzString.compress(string);};
         this.decompressString = function(string){return __globals.utility.thirdparty.lzString.decompress(string);};
         this.serialize = function(data,compress=true){
@@ -1130,29 +1157,21 @@ __globals.utility = new function(){
                         temp.onchange = data.onchange ? data.onchange  : temp.onchange  ;
                         return temp;
                     break;
-                    case 'pianoroll':
-                        console.warn('parts.control.pianoroll is depreciated and will be deleted soon enough. You should use parts.control.sequencer instead');
-                        var temp = parts.elements.control.pianoroll(
-                            name,
-                            data.x, data.y, data.width, data.height, data.angle,
-                            data.xCount, data.yCount, 
-                            data.xStripPattern, data.yStripPattern
-                        );
-                        temp.event = data.event ? data.event : temp.event;
-                        return temp;
-                    break;
                     case 'sequencer':
                         var temp = parts.elements.control.sequencer(
                             name,
                             data.x, data.y, data.width, data.height, data.angle,
-                            data.xCount, data.yCount, 
-                            data.style.horizontalStrip_pattern, data.style.horizontalStrip_glow, data.style.horizontalStrip_styles,
-                            data.style.verticalStrip_pattern,   data.style.verticalStrip_glow,   data.style.verticalStrip_styles,
+                            data.xCount, data.yCount,
+                            data.zoomLevel_x, data.zoomLevel_y,
                             data.style.backing,
                             data.style.selectionArea,
                             data.style.block_body, data.style.block_bodyGlow, data.style.block_handle, data.style.block_handleWidth,
+                            data.style.horizontalStrip_pattern, data.style.horizontalStrip_glow, data.style.horizontalStrip_styles,
+                            data.style.verticalStrip_pattern,   data.style.verticalStrip_glow,   data.style.verticalStrip_styles,
                             data.style.playhead,
                         );
+                        temp.onpan = data.onpan ? data.onpan : temp.onpan;
+                        temp.onchangeviewarea = data.onchangeviewarea ? data.onchangeviewarea : temp.onchangeviewarea;
                         temp.event = data.event ? data.event : temp.event;
                         return temp;
                     break;
@@ -1277,6 +1296,8 @@ __globals.utility = new function(){
             // http://pieroxy.net/blog/pages/lz-string/testing.html
             //
             // LZ-based compression algorithm, version 1.4.4
+            //
+            // Modified by Metasophiea <metasophiea@gmail.com>
             var f = String.fromCharCode;
             var keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
             var baseReverseDic = {};

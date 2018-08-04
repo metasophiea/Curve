@@ -57,49 +57,28 @@ this.rangeslide = function(
                 switch(handle){
                     default: console.error('unknown handle to adjust'); break;
                     case 'start':
-                        var start = {
-                            leftEdge:  a - (a)*handleHeight,
-                            rightEdge: a + (1-a)*handleHeight,
-                        };
-                        var end = {
-                            leftEdge: values.end - (values.end)*handleHeight,
-                            rightEdge: values.end + (1-values.end)*handleHeight,
-                        };
-                        if( start.rightEdge >= end.leftEdge ){
-                            values.start = a;
-                            values.end = start.rightEdge/(1-handleHeight);
+                        //don't allow start slide to encrouch on end slider's space
+                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+
+                        //if start slide bumps up against end slide; move end slide accordingly
+                        var start_rightEdge = a + (1-a)*handleHeight;
+                        var end_leftEdge = values.end - (values.end)*handleHeight;
+                        if( start_rightEdge >= end_leftEdge ){
+                            values.end = start_rightEdge/(1-handleHeight);
                         }
                     break;
                     case 'end':
-                        var start = {
-                            leftEdge:  values.start - (values.start)*handleHeight,
-                            rightEdge: values.start + (1-values.start)*handleHeight,
-                        };
-                        var end = {
-                            leftEdge:  a - (a)*handleHeight,
-                            rightEdge: a + (1-a)*handleHeight,
-                        };
-                        if( start.rightEdge >= end.leftEdge ){
-                            values.start = (end.leftEdge - handleHeight)/(1-handleHeight);
-                            values.end = a;
+                        //don't allow end slide to encrouch on start slider's space
+                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+
+                        //if end slide bumps up against start slide; move start slide accordingly
+                        var start_rightEdge= values.start + (1-values.start)*handleHeight;
+                        var end_leftEdge = a - (a)*handleHeight;
+                        if( start_rightEdge >= end_leftEdge ){
+                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
                         }
                     break;
                 }
-            //         case 'start':
-            //             if((values.end - a + handleHeight*(a - values.end - 1)) < 0){
-            //                 if( (a + handleHeight) > 1 ){ a = 1 - handleHeight; }
-            //                 values.start = a;
-            //                 values.end = a + handleHeight;
-            //             }
-            //         break;
-            //         case 'end': 
-            //             if((a - values.start + handleHeight*(values.start - a - 1)) < 0){
-            //                 if( (a - handleHeight) < 0 ){ a = handleHeight; }
-            //                 values.start = a - handleHeight;
-            //                 values.end = a;
-            //             }
-            //         break;
-            //     }
 
             //fill in data
                 values[handle] = a;
@@ -135,8 +114,8 @@ this.rangeslide = function(
         object.get = function(){return values;};
         object.set = function(values,update){
             if(grappled){return;}
-            if(values.start){set(values.start,'start',update);}
-            if(values.end){set(values.end,'end',update);}
+            if(values.start != undefined){set(values.start,'start',update);}
+            if(values.end != undefined){set(values.end,'end',update);}
         };
         object.smoothSet = function(targets,time,curve,update){
             if(grappled){return;}
@@ -236,13 +215,10 @@ this.rangeslide = function(
                         __globals.utility.workspace.mouseInteractionHandler(
                             function(event){
                                 var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot, width, height);
-
                                 set( initialValue+(livePosition.y-initialPosition.y)/(1-handleHeight), handleNames[a] );
                                 object.onchange(values);
                             },
                             function(event){
-                                var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width, height);
-                                set( initialValue+(livePosition.y-initialPosition.y)/(1-handleHeight), handleNames[a] );
                                 object.onrelease(values);
                                 grappled = false;
                             }

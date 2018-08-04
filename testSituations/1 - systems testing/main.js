@@ -39,5 +39,19 @@ function tester(item1,item2){
     }
 }
 
-{{include:utility.js}}
-{{include:part_sequencer_testcode.js}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{{include:*}}

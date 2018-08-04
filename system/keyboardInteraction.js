@@ -49,12 +49,24 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
         if(__globals.keyboardInteraction.pressedKeys[event.code]){return;}
         __globals.keyboardInteraction.pressedKeys[event.code] = true;
 
-        //discover what the mouse is pointing at; if it's pointing at something that can accept
-        //keyboard input, direct the keyboard input to it. If the object doesn't care about this
-        //key or if input is not accepted; use the global functions
+        //discover what the mouse is pointing at and if that thing accepts keyboard input. First check whether the
+        //object overall accepts input, and if it doesn't check if any element accepts it. If neither do, or either
+        //function returns 'false';  use the global functions
         var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
         if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeydown','workspace')){
-            if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown(event)){ return; }
+            if( __globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown != undefined ){
+                if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown(event)){ return; }
+            }else{
+                //start from the most bottom element and work up until a pane is reached; checking for 
+                //onkeydown attributes. If one is found and it returns 'false', continue climbing. 
+                var element = document.elementFromPoint(temp[0],temp[1]);
+                while(!element.hasAttribute('pane')){
+                    if( element.onkeydown != undefined ){
+                        if(element.onkeydown(event)){ return; }
+                    }
+                    element = element.parentElement;
+                }
+            }
         }
 
         //global function
@@ -117,14 +129,26 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
         if(!__globals.keyboardInteraction.pressedKeys[event.code]){return;}
         delete __globals.keyboardInteraction.pressedKeys[event.code];
 
-        //discover what the mouse is pointing at; if it's pointing at something that can accept
-        //keyboard input, direct the keyboard input to it. If the object doesn't care about this
-        //key or if input is not accepted; use the global functions
+        //discover what the mouse is pointing at and if that thing accepts keyboard input. First check whether the
+        //object overall accepts input, and if it doesn't check if the element accepts it. If neither do, or either
+        //function returns 'false';  use the global functions
         var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
         if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeyup','workspace')){
-            if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup(event)){ return; }
+            if( __globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup != undefined ){
+                if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup(event)){ return; }
+            }else{
+                //start from the most bottom element and work up until a pane is reached; checking for 
+                //onkeyup attributes. If one is found and it returns 'false', continue climbing. 
+                var element = document.elementFromPoint(temp[0],temp[1]);
+                while(!element.hasAttribute('pane')){
+                    if( element.onkeyup != undefined ){
+                        if(element.onkeyup(event)){ return; }
+                    }
+                    element = element.parentElement;
+                }
+            }
         }
-                            
+
         //global function
         if( __globals.keyboardInteraction.onkeyup_functionList[event.key] ){
             __globals.keyboardInteraction.onkeyup_functionList[event.key](event);

@@ -1,4 +1,4 @@
-this.sequencer = function(
+var sequencer = function(
     id='sequencer',
     x, y, width, height, angle,
     
@@ -8,22 +8,8 @@ this.sequencer = function(
     backingStyle='fill:rgba(20,20,20,1);',
     selectionAreaStyle='fill:rgba(209, 189, 222, 0.5);stroke:rgba(225, 217, 234,1);stroke-width:0.5;pointer-events:none;',
 
-    blockStyle_body=[
-        'fill:rgba(138,138,138,0.6);stroke:rgba(175,175,175,0.8);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.6);stroke:rgba(130,199,208,0.8);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.6);stroke:rgba(129,209,173,0.8);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.6);stroke:rgba(234,238,110,0.8);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.6);stroke:rgba(249,178,103,0.8);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.6);stroke:rgba(255, 69, 69,0.8);stroke-width:0.5;',
-    ],
-    blockStyle_bodyGlow=[
-        'fill:rgba(138,138,138,0.8);stroke:rgba(175,175,175,1);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.8);stroke:rgba(130,199,208,1);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.8);stroke:rgba(129,209,173,1);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.8);stroke:rgba(234,238,110,1);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.8);stroke:rgba(249,178,103,1);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.8);stroke:rgba(255, 69, 69,1);stroke-width:0.5;',
-    ],    
+    blockStyle_body=[    'fill:rgba(150,100,150,0.4);stroke:rgba(200,100,200,0.6);stroke-width:0.5;','fill:rgba(255,255,255,0.8);stroke:rgba(255,255,255,1);stroke-width:0.5;'],
+    blockStyle_bodyGlow=['fill:rgba(200,100,200,0.4);stroke:rgba(200,100,200,1)  ;stroke-width:0.5;','fill:rgba(255,255,255,0.9);stroke:rgba(255,255,255,1);stroke-width:0.5;'],
     blockStyle_handle=['fill:rgba(0,0,0,0);cursor:col-resize;'],
     blockStyle_handleWidth=3,
 
@@ -56,10 +42,9 @@ this.sequencer = function(
         var activeNotes = [];
         var snapping = true;
         var step = 1/1;
-        var defualtStrength = 0.5;
         var loop = {active:false, period:{start:0, end:xCount}};
         var playhead = {
-            width:0.75,
+            width:0,
             invisibleHandleMux:6,
             position:-1,
             held:false,
@@ -207,7 +192,7 @@ this.sequencer = function(
         
             return {line:xy.y, position:xy.x};
         }
-        function makeNote(line, position, length, strength=defualtStrength){
+        function makeNote(line, position, length, strength=0.8){
             var newID = noteRegistry.add({ line:line, position:position, length:length, strength:strength });
             var approvedData = noteRegistry.getNote(newID);
             var newNoteBlock = parts.elements.control.sequencer.noteBlock(newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), approvedData.line, approvedData.position, approvedData.length, approvedData.strength, false, blockStyle_body, blockStyle_bodyGlow, blockStyle_handle, blockStyle_handleWidth);
@@ -232,17 +217,11 @@ this.sequencer = function(
                 };
                 newNoteBlock.ondblclick = function(event){
                     if(!event[__globals.super.keys.ctrl]){return;}
-                    selectedNotes.map(function(a){
-                        a.strength(defualtStrength);
-                        noteRegistry.update(a.id, { strength: defualtStrength });
-                    });
+                    while(selectedNotes.length > 0){
+                        selectedNotes[0].delete();
+                    }
                 };
                 newNoteBlock.body.onmousedown = function(event){
-                    //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
-                    if(__globals.keyboardInteraction.pressedKeys.hasOwnProperty('Space') && __globals.keyboardInteraction.pressedKeys.Space){
-                        interactionPlane.onmousedown(event); return;
-                    }
-
                     //if the shift key is not pressed and this note is not already selected; deselect everything
                         if(!event.shiftKey && !newNoteBlock.selected()){
                             while(selectedNotes.length > 0){
@@ -754,30 +733,15 @@ this.sequencer = function(
 
 
 
-this.sequencer.noteBlock = function(
+parts.elements.control.sequencer.noteBlock = function(
     id, unit_x, unit_y,
     line, position, length, strength=1, glow=false, 
-    bodyStyle=[
-        'fill:rgba(138,138,138,0.6);stroke:rgba(175,175,175,0.8);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.6);stroke:rgba(130,199,208,0.8);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.6);stroke:rgba(129,209,173,0.8);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.6);stroke:rgba(234,238,110,0.8);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.6);stroke:rgba(249,178,103,0.8);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.6);stroke:rgba(255, 69, 69,0.8);stroke-width:0.5;',
-    ],
-    bodyGlowStyle=[
-        'fill:rgba(138,138,138,0.8);stroke:rgba(175,175,175,1);stroke-width:0.5;',
-        'fill:rgba(130,199,208,0.8);stroke:rgba(130,199,208,1);stroke-width:0.5;',
-        'fill:rgba(129,209,173,0.8);stroke:rgba(129,209,173,1);stroke-width:0.5;',
-        'fill:rgba(234,238,110,0.8);stroke:rgba(234,238,110,1);stroke-width:0.5;',
-        'fill:rgba(249,178,103,0.8);stroke:rgba(249,178,103,1);stroke-width:0.5;',
-        'fill:rgba(255, 69, 69,0.8);stroke:rgba(255, 69, 69,1);stroke-width:0.5;',
-    ],
+    bodyStyle=[    'fill:rgba(150,100,150,0.4);stroke:rgba(200,100,200,0.6);stroke-width:0.5;','fill:rgba(255,255,255,0.8);stroke:rgba(255,255,255,1);stroke-width:0.5;'],
+    bodyGlowStyle=['fill:rgba(200,100,200,0.4);stroke:rgba(200,100,200,1)  ;stroke-width:0.5;','fill:rgba(255,255,255,0.9);stroke:rgba(255,255,255,1);stroke-width:0.5;'],
     handleStyle=['fill:rgba(255,0,255,0.75);cursor:col-resize;'],
     handleWidth=5,
 ){
     var selected = false;
-    var minLength = handleWidth/4;
     var currentStyles = {
         body:getBlendedColour(bodyStyle,strength),
         glow:getBlendedColour(bodyGlowStyle,strength),
@@ -848,7 +812,7 @@ this.sequencer.noteBlock = function(
         };
         obj.length = function(a){
             if(a == undefined){return length;}
-            length = a < (minLength/unit_x) ? (minLength/unit_x) : a;
+            length = a;
             updateLength();
         };
         obj.strength = function(a){
@@ -874,3 +838,6 @@ this.sequencer.noteBlock = function(
 
     return obj;
 };
+
+
+parts.elements.control.noteBlock = null;

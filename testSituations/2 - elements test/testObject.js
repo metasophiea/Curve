@@ -39,7 +39,7 @@ objects.testObject = function(x,y,debug=false){
         type: 'testObject2',
         x: x, y: y,
         base: {
-            points:[{x:0,y:0},{x:510,y:0},{x:510,y:285},{x:0,y:285}], 
+            points:[{x:0,y:0},{x:510,y:0},{x:510,y:340},{x:0,y:340}], 
             style:style.background
         },
         elements:[
@@ -67,7 +67,7 @@ objects.testObject = function(x,y,debug=false){
                     onchange:function(slide,value){ design.connectionNode_data.externalData_1.send('slidePanel_horizontal',{slide:slide,value:value}); },
                 }},
                 {type:'rangeslide',name:'rangeslide', data:{
-                    x:185, y:272.5, height: 100, width: 10, angle:-Math.PI/2, handleHeight:1/4, spanWidth:1,
+                    x:185, y:272.5, height: 100, width: 10, angle:-Math.PI/2, handleHeight:1/5, spanWidth:1,
                     style:{
                         handle: style.rangeslide.handle,
                         backing: style.rangeslide.backing,
@@ -127,6 +127,12 @@ objects.testObject = function(x,y,debug=false){
                     onchange:function(){design.connectionNode_data.externalData_1.send('rastorgrid', design.rastorgrid.rastorgrid.get());}
                 }},
             
+            //sequencers
+                {type:'sequencer', name:'sequencer', data:{
+                    x:5, y:285, width:300, height:50, 
+                    xCount:30, yCount:20, zoomLevel_x:0.5, zoomLevel_y:0.5,
+                }},
+
             //display
                 {type:'glowbox_rect', name:'glowbox_rect', data:{
                     x:120, y:5, width: 10, height:10, angle:0, 
@@ -275,6 +281,18 @@ objects.testObject = function(x,y,debug=false){
         design.level.level.set(0.75,1);
 
         setInterval(function(){ design.meter_level.meter_level.set( Math.random() ); },1000);
+
+        design.sequencer.sequencer.addNote(0,0,10, 10/10);
+        design.sequencer.sequencer.addNote(1,1,10, 9/10);
+        design.sequencer.sequencer.addNote(2,2,10, 8/10);
+        design.sequencer.sequencer.addNote(3,3,10, 7/10);
+        design.sequencer.sequencer.addNote(4,4,10, 6/10);
+        design.sequencer.sequencer.addNote(5,5,10, 5/10);
+        design.sequencer.sequencer.addNote(6,6,10, 4/10);
+        design.sequencer.sequencer.addNote(7,7,10, 3/10);
+        design.sequencer.sequencer.addNote(8,8,10, 2/10);
+        design.sequencer.sequencer.addNote(9,9,10, 1/10);
+        design.sequencer.sequencer.addNote(10,10,10,  0);
 
         setTimeout(function(){ //must wait until object has been added to scene
             design.connectionNode_audio.internalAudio_1.connectTo(design.connectionNode_audio.internalAudio_2);
