@@ -1,4 +1,5 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+<<<<<<< HEAD
 2018-08-03
   - rejiggered the system testing folder a little 
   - added 'blendColours' and 'multiBlendColours' to utility.misc (also added 
@@ -98,6 +99,8 @@
   - slide: click to empty area then drag
 
 
+=======
+>>>>>>> b0efefdb8881383e223b29fce1c59ba19d41116c
 2018-07-28
   - fixed rageslide
 
