@@ -7342,202 +7342,6 @@
                         
                             return object;
                         };
-                        this.slide = function(
-                            id='slide', 
-                            x, y, width, height, angle=0,
-                            handleHeight=0.1, value=0, resetValue=-1,
-                            handleStyle = 'fill:rgba(200,200,200,1)',
-                            backingStyle = 'fill:rgba(150,150,150,1)',
-                            slotStyle = 'fill:rgba(50,50,50,1)',
-                            invisibleHandleStyle = 'fill:rgba(0,0,0,0);',
-                        ){
-                            var grappled = false;
-                        
-                            //elements
-                                //main
-                                    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
-                                //backing and slot group
-                                    var backingAndSlot = __globals.utility.misc.elementMaker('g','backingAndSlotGroup',{});
-                                    object.appendChild(backingAndSlot);
-                                    //backing
-                                        var backing = __globals.utility.misc.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
-                                        backingAndSlot.appendChild(backing);
-                                    //slot
-                                        var slot = __globals.utility.misc.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
-                                        backingAndSlot.appendChild(slot);
-                                //handle
-                                    var handle = __globals.utility.misc.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
-                                    object.appendChild(handle);
-                                //invisible handle
-                                    var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                    var invisibleHandle = __globals.utility.misc.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
-                                    object.appendChild(invisibleHandle);
-                        
-                            //graphical adjust
-                                function set(a,update=true){
-                                    a = (a>1 ? 1 : a);
-                                    a = (a<0 ? 0 : a);
-                        
-                                    if(update){object.onchange(a);}
-                                    
-                                    value = a;
-                                    handle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
-                                    invisibleHandle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
-                                }
-                                object.__calculationAngle = angle;
-                                function currentMousePosition(event){
-                                    return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
-                                }
-                            
-                            //methods
-                                object.set = function(value,update){
-                                    if(grappled){return;}
-                                    set(value,update);
-                                };
-                                object.smoothSet = function(target,time,curve,update){
-                                    if(grappled){return;}
-                        
-                                    var startTime = __globals.audio.context.currentTime;
-                                    var startValue = value;
-                                    var pointFunc = __globals.utility.math.curvePoint.linear;
-                        
-                                    switch(curve){
-                                        case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
-                                        case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
-                                        case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
-                                        case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
-                                        case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
-                                    }
-                        
-                                    object.smoothSet.interval = setInterval(function(){
-                                        var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
-                                        set( pointFunc(progress, startValue, target), update );
-                                        if( (__globals.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
-                                    }, 1000/30);            
-                                };
-                                object.get = function(){return value;};
-                        
-                            //interaction
-                                object.ondblclick = function(){
-                                    if(resetValue<0){return;}
-                                    if(grappled){return;}
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    set(resetValue);
-                                    object.onrelease(value);
-                                };
-                                object.onwheel = function(){
-                                    if(grappled){return;}
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
-                                    var globalScale = __globals.utility.workspace.getGlobalScale(object);
-                                    set( value + move/(10*globalScale) );
-                                    object.onrelease(value);
-                                };
-                                backingAndSlot.onclick = function(event){
-                                    if(grappled){return;}
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    var y = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
-                        
-                                    var value = y + 0.5*handleHeight*((2*y)-1);
-                                    set(value);
-                                    object.onrelease(value);
-                                };
-                                invisibleHandle.onmousedown = function(event){
-                                    grappled = true;
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    var initialValue = value;
-                                    var initialY = currentMousePosition(event);
-                                    var mux = height - height*handleHeight;
-                        
-                                    __globals.utility.workspace.mouseInteractionHandler(
-                                        function(event){
-                                            var numerator = initialY-currentMousePosition(event);
-                                            var divider = __globals.utility.workspace.getGlobalScale(object);
-                                            set( initialValue - numerator/(divider*mux) );
-                                        },
-                                        function(event){
-                                            var numerator = initialY-currentMousePosition(event);
-                                            var divider = __globals.utility.workspace.getGlobalScale(object);
-                                            object.onrelease(initialValue - numerator/(divider*mux));
-                                            grappled = false;
-                                        }
-                                    );
-                                };
-                        
-                            //callbacks
-                                object.onchange = function(){};
-                                object.onrelease = function(){};
-                        
-                            //setup
-                                set(value);
-                        
-                            return object;
-                        };
-                        this.slidePanel = function(
-                            id='slidePanel', 
-                            x, y, width, height, count, angle=0,
-                            handleHeight=0.1, startValue=0, resetValue=0.5,
-                            handleStyle = 'fill:rgba(180,180,180,1)',
-                            backingStyle = 'fill:rgba(150,150,150,1)',
-                            slotStyle = 'fill:rgba(50,50,50,1)'
-                        ){
-                            //elements
-                                //main
-                                    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
-                                //slides
-                                    for(var a = 0; a < count; a++){
-                                        var temp = __globals.utility.misc.elementMaker(
-                                            'slide',a,{
-                                                x:a*(width/count), y:0,
-                                                width:width/count, height:height,
-                                                value:startValue, resetValue:resetValue,
-                                                style:{handle:handleStyle, backing:backingStyle, slot:slotStyle}
-                                            }
-                                        );
-                                        temp.onchange = function(value){ object.onchange(this.id,value); };
-                                        temp.onrelease = function(value){ object.onrelease(this.id,value); };
-                                        temp.__calculationAngle = angle;
-                                        object.appendChild(temp);
-                                    }
-                        
-                            //methods
-                                object.slide = function(index){ return object.children[index]; };
-                                object.get = function(){
-                                    var outputArray = [];
-                                    for(var a = 0; a < count; a++){
-                                        outputArray.push(this.slide(a).get());
-                                    }
-                                    return outputArray;
-                                };
-                                object.set = function(values,update=true){
-                                    for(var a = 0; a < values.length; a++){
-                                        this.slide(a).set(values[a],update);
-                                    }
-                                };
-                                object.setAll = function(value,update=true){
-                                    this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value),false );
-                                    if(update){this.onchange('all',value);}
-                                };
-                                object.smoothSet = function(values,time,curve,update=true){
-                                    for(var a = 0; a < values.length; a++){
-                                        this.slide(a).smoothSet(values[a],time,curve,update);
-                                    }
-                                };
-                                object.smoothSetAll = function(value, time, curve, update=true){
-                                    this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value), time, curve, false );
-                                    if(update){this.onchange('all',value);}
-                                };
-                        
-                            //callbacks
-                                object.onchange = function(slide,value){};
-                                object.onrelease = function(slide,value){};
-                            
-                            return object;
-                        };
                         this.sequencer = function(
                             id='sequencer',
                             x, y, width, height, angle,
@@ -8413,6 +8217,202 @@
                                 };
                         
                             return obj;
+                        };
+                        this.slide = function(
+                            id='slide', 
+                            x, y, width, height, angle=0,
+                            handleHeight=0.1, value=0, resetValue=-1,
+                            handleStyle = 'fill:rgba(200,200,200,1)',
+                            backingStyle = 'fill:rgba(150,150,150,1)',
+                            slotStyle = 'fill:rgba(50,50,50,1)',
+                            invisibleHandleStyle = 'fill:rgba(0,0,0,0);',
+                        ){
+                            var grappled = false;
+                        
+                            //elements
+                                //main
+                                    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
+                                //backing and slot group
+                                    var backingAndSlot = __globals.utility.misc.elementMaker('g','backingAndSlotGroup',{});
+                                    object.appendChild(backingAndSlot);
+                                    //backing
+                                        var backing = __globals.utility.misc.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
+                                        backingAndSlot.appendChild(backing);
+                                    //slot
+                                        var slot = __globals.utility.misc.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
+                                        backingAndSlot.appendChild(slot);
+                                //handle
+                                    var handle = __globals.utility.misc.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
+                                    object.appendChild(handle);
+                                //invisible handle
+                                    var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                    var invisibleHandle = __globals.utility.misc.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
+                                    object.appendChild(invisibleHandle);
+                        
+                            //graphical adjust
+                                function set(a,update=true){
+                                    a = (a>1 ? 1 : a);
+                                    a = (a<0 ? 0 : a);
+                        
+                                    if(update){object.onchange(a);}
+                                    
+                                    value = a;
+                                    handle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
+                                    invisibleHandle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
+                                }
+                                object.__calculationAngle = angle;
+                                function currentMousePosition(event){
+                                    return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
+                                }
+                            
+                            //methods
+                                object.set = function(value,update){
+                                    if(grappled){return;}
+                                    set(value,update);
+                                };
+                                object.smoothSet = function(target,time,curve,update){
+                                    if(grappled){return;}
+                        
+                                    var startTime = __globals.audio.context.currentTime;
+                                    var startValue = value;
+                                    var pointFunc = __globals.utility.math.curvePoint.linear;
+                        
+                                    switch(curve){
+                                        case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
+                                        case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
+                                        case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
+                                        case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
+                                        case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
+                                    }
+                        
+                                    object.smoothSet.interval = setInterval(function(){
+                                        var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
+                                        set( pointFunc(progress, startValue, target), update );
+                                        if( (__globals.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
+                                    }, 1000/30);            
+                                };
+                                object.get = function(){return value;};
+                        
+                            //interaction
+                                object.ondblclick = function(){
+                                    if(resetValue<0){return;}
+                                    if(grappled){return;}
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    set(resetValue);
+                                    object.onrelease(value);
+                                };
+                                object.onwheel = function(){
+                                    if(grappled){return;}
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                                    var globalScale = __globals.utility.workspace.getGlobalScale(object);
+                                    set( value + move/(10*globalScale) );
+                                    object.onrelease(value);
+                                };
+                                backingAndSlot.onclick = function(event){
+                                    if(grappled){return;}
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    var y = __globals.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
+                        
+                                    var value = y + 0.5*handleHeight*((2*y)-1);
+                                    set(value);
+                                    object.onrelease(value);
+                                };
+                                invisibleHandle.onmousedown = function(event){
+                                    grappled = true;
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    var initialValue = value;
+                                    var initialY = currentMousePosition(event);
+                                    var mux = height - height*handleHeight;
+                        
+                                    __globals.utility.workspace.mouseInteractionHandler(
+                                        function(event){
+                                            var numerator = initialY-currentMousePosition(event);
+                                            var divider = __globals.utility.workspace.getGlobalScale(object);
+                                            set( initialValue - numerator/(divider*mux) );
+                                        },
+                                        function(event){
+                                            var numerator = initialY-currentMousePosition(event);
+                                            var divider = __globals.utility.workspace.getGlobalScale(object);
+                                            object.onrelease(initialValue - numerator/(divider*mux));
+                                            grappled = false;
+                                        }
+                                    );
+                                };
+                        
+                            //callbacks
+                                object.onchange = function(){};
+                                object.onrelease = function(){};
+                        
+                            //setup
+                                set(value);
+                        
+                            return object;
+                        };
+                        this.slidePanel = function(
+                            id='slidePanel', 
+                            x, y, width, height, count, angle=0,
+                            handleHeight=0.1, startValue=0, resetValue=0.5,
+                            handleStyle = 'fill:rgba(180,180,180,1)',
+                            backingStyle = 'fill:rgba(150,150,150,1)',
+                            slotStyle = 'fill:rgba(50,50,50,1)'
+                        ){
+                            //elements
+                                //main
+                                    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
+                                //slides
+                                    for(var a = 0; a < count; a++){
+                                        var temp = __globals.utility.misc.elementMaker(
+                                            'slide',a,{
+                                                x:a*(width/count), y:0,
+                                                width:width/count, height:height,
+                                                value:startValue, resetValue:resetValue,
+                                                style:{handle:handleStyle, backing:backingStyle, slot:slotStyle}
+                                            }
+                                        );
+                                        temp.onchange = function(value){ object.onchange(this.id,value); };
+                                        temp.onrelease = function(value){ object.onrelease(this.id,value); };
+                                        temp.__calculationAngle = angle;
+                                        object.appendChild(temp);
+                                    }
+                        
+                            //methods
+                                object.slide = function(index){ return object.children[index]; };
+                                object.get = function(){
+                                    var outputArray = [];
+                                    for(var a = 0; a < count; a++){
+                                        outputArray.push(this.slide(a).get());
+                                    }
+                                    return outputArray;
+                                };
+                                object.set = function(values,update=true){
+                                    for(var a = 0; a < values.length; a++){
+                                        this.slide(a).set(values[a],update);
+                                    }
+                                };
+                                object.setAll = function(value,update=true){
+                                    this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value),false );
+                                    if(update){this.onchange('all',value);}
+                                };
+                                object.smoothSet = function(values,time,curve,update=true){
+                                    for(var a = 0; a < values.length; a++){
+                                        this.slide(a).smoothSet(values[a],time,curve,update);
+                                    }
+                                };
+                                object.smoothSetAll = function(value, time, curve, update=true){
+                                    this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value), time, curve, false );
+                                    if(update){this.onchange('all',value);}
+                                };
+                        
+                            //callbacks
+                                object.onchange = function(slide,value){};
+                                object.onrelease = function(slide,value){};
+                            
+                            return object;
                         };
                     };
                     this.dynamic = new function(){
@@ -11825,150 +11825,8 @@
             //audio duplicator
                 var audio_duplicator_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(50,50) );
             
-<<<<<<< HEAD
             //data duplicator
                 var data_duplicator_1 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(875, 50) );
-=======
-                return obj;
-            }
-            objects.testObject = function(x,y,debug=false){
-                var style = {
-                    background: 'fill:rgba(255,100,255,0.75); stroke:none;',
-                    h1: 'fill:rgba(0,0,0,1); font-size:14px; font-family:Courier New;',
-                    text: 'fill:rgba(0,0,0,1); font-size:10px; font-family:Courier New; pointer-events: none;',
-            
-                    markings: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-            
-                    handle: 'fill:rgba(200,200,200,1)',
-                    backing: 'fill:rgba(150,150,150,1)',
-                    slot: 'fill:rgba(50,50,50,1)',
-                    needle: 'fill:rgba(250,150,150,1)',
-            
-                    glow:'fill:rgba(240,240,240,1)',
-                    dim:'fill:rgba(80,80,80,1)',
-            
-                    rangeslide:{
-                        handle:'fill:rgba(240,240,240,1)',
-                        backing:'fill:rgba(150,150,150,1)',
-                        slot:'fill:rgba(50,50,50,1)',
-                        invisibleHandle:'fill:rgba(0,0,0,0);',
-                        span:'fill:rgba(220,220,220,0.75)',
-                    },
-            
-                    level:{
-                        backing: 'fill:rgb(10,10,10)', 
-                        levels:['fill:rgb(250,250,250)','fill:rgb(200,200,200)'],
-                        marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                    },
-            
-                    grapher:{
-                        middleground:'stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;', 
-                        background:'stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                        backgroundText:'fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                        backing:'fill:rgba(50,50,50,1)'
-                    },
-                };
-                var design = {
-                    type: 'testObject2',
-                    x: x, y: y,
-                    base: {
-                        points:[{x:0,y:0},{x:510,y:0},{x:510,y:285},{x:0,y:285}], 
-                        style:style.background
-                    },
-                    elements:[
-                        //slides
-                            {type:'slide',name:'slide_vertical',data:{
-                                x:5, y:40, width: 10, height: 120, angle:0,
-                                style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
-                                onchange:function(data){design.connectionNode_data.externalData_1.send('slide_vertical',data);}, 
-                                onrelease:function(){console.log('slide_vertical onrelease');}
-                            }},
-                            {type:'slide',name:'slide_horizontal',data:{
-                                x:5, y:175, height: 115, width: 10, angle:-Math.PI/2,
-                                style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
-                                onchange:function(data){design.connectionNode_data.externalData_1.send('slide_horizontal',data);}, 
-                                onrelease:function(){console.log('slide_horizontal onrelease');}
-                            }},
-                            {type:'slidePanel',name:'slidePanel_vertical',data:{
-                                x:20, y:40, width: 100, height: 120, count: 10, 
-                                style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
-                                onchange:function(slide,value){ design.connectionNode_data.externalData_1.send('slidePanel_vertical',{slide:slide,value:value}); },
-                            }},
-                            {type:'slidePanel',name:'slidePanel_horizontal',data:{
-                                x:5, y:280, width: 100, height: 115, count: 10, angle:-Math.PI/2,
-                                style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
-                                onchange:function(slide,value){ design.connectionNode_data.externalData_1.send('slidePanel_horizontal',{slide:slide,value:value}); },
-                            }},
-                            {type:'rangeslide',name:'rangeslide', data:{
-                                x:185, y:272.5, height: 100, width: 10, angle:-Math.PI/2, handleHeight:1/5, spanWidth:1,
-                                style:{
-                                    handle: style.rangeslide.handle,
-                                    backing: style.rangeslide.backing,
-                                    slot: style.rangeslide.slot,
-                                    invisibleHandle: style.rangeslide.invisibleHandle,
-                                    span: style.rangeslide.span,
-                                },
-                                onchange:function(values){ design.connectionNode_data.externalData_1.send('rangeslide',{values:values}); },
-                            }},  
-            
-                        //dials
-                            {type:'dial_continuous',name:'dial_continuous',data:{
-                                x: 70, y: 22.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, 
-                                style:{handle:style.handle, slot:style.slot, needle:style.needle, outerArc:style.markings},
-                                onchange:function(){console.log('dial_continuous onchange');},
-                                onrelease:function(){console.log('dial_continuous onrelease');}
-                            }},
-                            {type:'dial_discrete',name:'dial_discrete',data:{
-                                x: 105, y: 22.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, optionCount: 8,
-                                style:{handle:style.handle, slot:style.slot, needle:style.needle, outerArc:style.markings}, 
-                                onchange:function(){console.log('dial_discrete onchange');},
-                                onrelease:function(){console.log('dial_discrete onrelease');}
-                            }},
-                        
-                        //button-like
-                            {type:'button_rect',name:'button_rect',data:{
-                                x:220, y: 5, width:20, height:20, 
-                                style:{
-                                    up:'fill:rgba(200,200,200,1)', hover:'fill:rgba(220,220,220,1)', 
-                                    down:'fill:rgba(180,180,180,1)', glow:'fill:rgba(220,200,220,1)'
-                                }, 
-                                onclick:function(){design.connectionNode_data.externalData_1.send('button_rect');}
-                            }},
-                            {type:'checkbox_rect', name:'checkbox_rect', data:{
-                                x:245, y: 5, width:20, height:20, angle:0, 
-                                style:{
-                                    check:'fill:rgba(150,150,150,1)', backing:'fill:rgba(200,200,200,1)', 
-                                    checkGlow:'fill:rgba(220,220,220,1)', backingGlow:'fill:rgba(220,220,220,1)'
-                                }, 
-                                onchange:function(){design.connectionNode_data.externalData_1.send('checkbox_rect', design.checkbox_rect.checkbox_rect.get());}
-                            }},
-                            {type:'key_rect', name:'key_rect', data:{
-                                x:270, y:5, width:20, height:20, angle:0, 
-                                style:{
-                                    off:'fill:rgba(200,200,200,1)', press:'fill:rgba(180,180,180,1)', 
-                                    glow:'fill:rgba(220,200,220,1)', pressAndGlow:'fill:rgba(200,190,200,1)'
-                                }, 
-                                keydown:function(){design.connectionNode_data.externalData_1.send('key_rect',true);}, 
-                                keyup:function(){design.connectionNode_data.externalData_1.send('key_rect',false);}
-                            }},
-                            {type:'rastorgrid', name:'rastorgrid', data:{
-                                x:125, y:135, width:100, height:100, xCount:4, yCount:4, 
-                                style:{
-                                    backing:'fill:rgba(200,200,200,1)', check:'fill:rgba(150,150,150,1)',
-                                    backingGlow:'fill:rgba(220,220,220,1)', checkGlow:'fill:rgba(220,220,220,1)'
-                                }, 
-                                onchange:function(){design.connectionNode_data.externalData_1.send('rastorgrid', design.rastorgrid.rastorgrid.get());}
-                            }},
-                        
-                        //display
-                            {type:'glowbox_rect', name:'glowbox_rect', data:{
-                                x:120, y:5, width: 10, height:10, angle:0, 
-                                style:{glow:'fill:rgba(240,240,240,1)', dim:'fill:rgba(80,80,80,1)'}
-                            }},
-                            {type:'label', name:'label', data:{
-                                x:125, y:20, text:'_mainObject', style:style.h1, angle:0
-                            }},
->>>>>>> b0efefdb8881383e223b29fce1c59ba19d41116c
             
             //audio_scope
                 var audio_scope_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_scope(150,50) );
@@ -12030,13 +11888,7 @@
             
             
             
-<<<<<<< HEAD
             // __globals.utility.workspace.gotoPosition(-1597.19, -596.058, 1.92284, 0);
-=======
-            // auto position viewpoint
-                // __globals.utility.workspace.gotoPosition(-1533.02, -2161.7, 8.38412, 0);
-            //     console.log(__globals.utility.workspace.currentPosition());
->>>>>>> b0efefdb8881383e223b29fce1c59ba19d41116c
 
         }
     }
