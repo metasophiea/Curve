@@ -126,6 +126,20 @@ this.player = function(x,y,debug=false){
             }
             setInterval(refresh,1000/30);
 
+    //interface
+        obj.i = {
+            loadByURL:function(url){
+                obj.player.load('url',function(data){
+                    design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.player.waveformSegment() );                   
+                    design.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
+                    design.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
+                
+                    design.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
+                    design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
+                },url);
+            },
+        };
+
     //setup
         design.dial_continuous.rate.set(0.5);
 

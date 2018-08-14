@@ -1,5 +1,5 @@
 this.sequencer = function(
-    id='sequencer',
+    id='svg_sequencer',
     x, y, width, height, angle,
     
     xCount=64, yCount=16,
@@ -24,7 +24,7 @@ this.sequencer = function(
         'fill:rgba(249,178,103,0.8);stroke:rgba(249,178,103,1);stroke-width:0.5;',
         'fill:rgba(255, 69, 69,0.8);stroke:rgba(255, 69, 69,1);stroke-width:0.5;',
     ],    
-    blockStyle_handle=['fill:rgba(0,0,0,0);cursor:col-resize;'],
+    blockStyle_handle='fill:rgba(200,0,0,0);cursor:col-resize;',
     blockStyle_handleWidth=3,
 
     horizontalStripStyle_pattern=[0,1],
@@ -48,8 +48,8 @@ this.sequencer = function(
         };
         var viewposition = {x:0,y:0};
         var viewArea = {
-            left:0, right:1,
-            top:0, bottom:1,
+            left:0, right:zoomLevel_x,
+            top:0, bottom:zoomLevel_y,
         };
         var noteRegistry = new parts.circuits.sequencing.noteRegistry(xCount,yCount);
         var selectedNotes = [];
@@ -68,61 +68,131 @@ this.sequencer = function(
 
     //internal functions
         function setViewArea(d,update=true){
-            if(d == undefined || (d.left == undefined && d.right == undefined && d.top == undefined && d.bottom == undefined)){return viewArea;}
-            if(d.left == undefined){d.left = viewArea.left;} if(d.right == undefined){d.right = viewArea.right;}
-            if(d.top == undefined){d.top = viewArea.top;}    if(d.bottom == undefined){d.bottom = viewArea.bottom;}
+            //clean off input
+                if(d == undefined || (d.left == undefined && d.right == undefined && d.top == undefined && d.bottom == undefined)){return viewArea;}
+                if(d.left == undefined){d.left = viewArea.left;} if(d.right == undefined){d.right = viewArea.right;}
+                if(d.top == undefined){d.top = viewArea.top;}    if(d.bottom == undefined){d.bottom = viewArea.bottom;}
 
-            adjustZoom( (d.right-d.left),(d.bottom-d.top) );
-            viewArea = { top:d.top, bottom:d.bottom, left:d.left, right:d.right };
-            var newX = 0; var newY = 0;
-            if( (1-(d.right-d.left)) != 0 ){ newX = d.left + d.left*((d.right-d.left)/(1-(d.right-d.left))); }
-            if( (1-(d.bottom-d.top)) != 0 ){ newY = d.top  +  d.top*((d.bottom-d.top)/(1-(d.bottom-d.top))); }
-            setViewposition(newX,newY,update);
+            //only adjust the zoom, if the distance between the areas changed
+                var x = (viewArea.right-viewArea.left)==(d.right-d.left);
+                var y = (d.bottom-d.top)==(viewArea.bottom-viewArea.top);
+                if(x && y){ adjustZoom( (d.right-d.left),(d.bottom-d.top) ); }
+                else if(x){ adjustZoom( (d.right-d.left),undefined ); }
+                else if(y){ adjustZoom( undefined,(d.bottom-d.top) ); }
+
+            //update pan
+                var newX = 0; var newY = 0;
+                if( (1-(d.right-d.left)) != 0 ){ newX = d.left + d.left*((d.right-d.left)/(1-(d.right-d.left))); }
+                if( (1-(d.bottom-d.top)) != 0 ){ newY = d.top  +  d.top*((d.bottom-d.top)/(1-(d.bottom-d.top))); }
+                setViewposition(newX,newY,update);
+
+            //update state
+                viewArea = { top:d.top, bottom:d.bottom, left:d.left, right:d.right };
         }
         function adjustZoom(x,y){
             if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
-            if(x == undefined){ x = zoomLevel_x; }
-            if(y == undefined){ y = zoomLevel_y; }
+            var maxZoom = 0.01;
+            
+            //(awkward bid for speed)
+            if(x != undefined && x != zoomLevel_x && y != undefined && y != zoomLevel_y ){
+                //make sure things are between 0.01 and 1
+                    var maxZoom = 0.01;
+                    x = x<maxZoom?maxZoom:x; x = x>1?1:x;
+                    y = y<maxZoom?maxZoom:y; y = y>1?1:y;
 
-            //make sure things are between 0.01 and 1
-                var maxZoom = 0.1;
-                x = x<maxZoom?maxZoom:x; x = x>1?1:x;
-                y = y<maxZoom?maxZoom:y; y = y>1?1:y;
+                //update state
+                    zoomLevel_x = x;
+                    zoomLevel_y = y;
+                    totalSize.width = width/zoomLevel_x;
+                    totalSize.height = height/zoomLevel_y;
 
-            //update state
-                zoomLevel_x = x;
-                zoomLevel_y = y;
-                totalSize.width = width/zoomLevel_x;
-                totalSize.height = height/zoomLevel_y;
+                //update interactionPlane
+                    interactionPlane.width.baseVal.value = totalSize.width;
+                    interactionPlane.height.baseVal.value = totalSize.height;
 
-            //update interactionPlane
-                interactionPlane.width.baseVal.value = totalSize.width;
-                interactionPlane.height.baseVal.value = totalSize.height;
+                //update background strips
+                    for(var a = 0; a < xCount; a++){
+                        __globals.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_vertical_'+a], a*(width/(xCount*zoomLevel_x)), 0);
+                        backgroundDrawArea.children['strip_vertical_'+a].width.baseVal.value = width/(xCount*zoomLevel_x);
+                        backgroundDrawArea.children['strip_vertical_'+a].height.baseVal.value = totalSize.height;
+                    }
+                    for(var a = 0; a < yCount; a++){
+                        __globals.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_horizontal_'+a], 0, a*(height/(yCount*zoomLevel_y)));
+                        backgroundDrawArea.children['strip_horizontal_'+a].height.baseVal.value = height/(yCount*zoomLevel_y);
+                        backgroundDrawArea.children['strip_horizontal_'+a].width.baseVal.value = totalSize.width;
+                    }
 
-            //update background strips
-                for(var a = 0; a < yCount; a++){
-                    __globals.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_horizontal_'+a], 0, a*(height/(yCount*zoomLevel_y)));
-                    backgroundDrawArea.children['strip_horizontal_'+a].height.baseVal.value = height/(yCount*zoomLevel_y);
-                    backgroundDrawArea.children['strip_horizontal_'+a].width.baseVal.value = totalSize.width;
+                //update note blocks
+                    for(var a = 0; a < notePane.children.length; a++){
+                        notePane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
+                    }
+
+                //update playhead (if there is one)
+                    if(playhead.position >= 0){
+                        workarea.children.playhead.main.y2.baseVal.value = totalSize.height;
+                        workarea.children.playhead.invisibleHandle.y2.baseVal.value = totalSize.height;
+                        __globals.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/xCount), 0);
                 }
-                for(var a = 0; a < xCount; a++){
-                    __globals.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_vertical_'+a], a*(width/(xCount*zoomLevel_x)), 0);
-                    backgroundDrawArea.children['strip_vertical_'+a].width.baseVal.value = width/(xCount*zoomLevel_x);
-                    backgroundDrawArea.children['strip_vertical_'+a].height.baseVal.value = totalSize.height;
-                }
+            }else if( x != undefined && x != zoomLevel_x ){
+                //make sure things are between maxZoom and 1
+                    x = x<maxZoom?maxZoom:x; x = x>1?1:x;
 
-            //udpate note blocks
-                for(var a = 0; a < notePane.children.length; a++){
-                    notePane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
-                }
+                //update state
+                    zoomLevel_x = x;
+                    totalSize.width = width/zoomLevel_x;
 
-            //udpate playhead
-                //check for playhead
-                if(playhead.position >= 0){
-                    workarea.children.playhead.main.y2.baseVal.value = totalSize.height;
-                    workarea.children.playhead.invisibleHandle.y2.baseVal.value = totalSize.height;
-                    __globals.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/xCount), 0);
-                }
+                //update interactionPlane
+                    interactionPlane.width.baseVal.value = totalSize.width;
+
+                //update background strips
+                    for(var a = 0; a < xCount; a++){
+                        __globals.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_vertical_'+a], a*(width/(xCount*zoomLevel_x)), 0);
+                        backgroundDrawArea.children['strip_vertical_'+a].width.baseVal.value = width/(xCount*zoomLevel_x);
+                    }
+                    for(var a = 0; a < yCount; a++){
+                        backgroundDrawArea.children['strip_horizontal_'+a].width.baseVal.value = totalSize.width;
+                    }
+
+                //update note blocks
+                    for(var a = 0; a < notePane.children.length; a++){
+                        notePane.children[a].unit(width/(xCount*zoomLevel_x), undefined);
+                    }
+
+                //update playhead (if there is one)
+                    if(playhead.position >= 0){
+                        __globals.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/xCount), 0);
+                    }
+            }else if( y != undefined && y != zoomLevel_y ){
+                //make sure things are between maxZoom and 1
+                    y = y<maxZoom?maxZoom:y; y = y>1?1:y;
+
+                //update state
+                    zoomLevel_y = y;
+                    totalSize.height = height/zoomLevel_y;
+
+                //update interactionPlane
+                    interactionPlane.height.baseVal.value = totalSize.height;
+                
+                //update background strips
+                    for(var a = 0; a < xCount; a++){
+                        backgroundDrawArea.children['strip_vertical_'+a].height.baseVal.value = totalSize.height;
+                    }
+                    for(var a = 0; a < yCount; a++){
+                        __globals.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_horizontal_'+a], 0, a*(height/(yCount*zoomLevel_y)));
+                        backgroundDrawArea.children['strip_horizontal_'+a].height.baseVal.value = height/(yCount*zoomLevel_y);
+                    }
+
+                //update note blocks
+                    for(var a = 0; a < notePane.children.length; a++){
+                        notePane.children[a].unit(undefined, height/(yCount*zoomLevel_y));
+                    }
+
+                //update playhead (if there is one)
+                    if(playhead.position >= 0){
+                        workarea.children.playhead.main.y2.baseVal.value = totalSize.height;
+                        workarea.children.playhead.invisibleHandle.y2.baseVal.value = totalSize.height;
+                    }
+            }
         }
         function drawBackground(){
             backgroundDrawArea.innerHTML = '';
@@ -773,7 +843,7 @@ this.sequencer.noteBlock = function(
         'fill:rgba(249,178,103,0.8);stroke:rgba(249,178,103,1);stroke-width:0.5;',
         'fill:rgba(255, 69, 69,0.8);stroke:rgba(255, 69, 69,1);stroke-width:0.5;',
     ],
-    handleStyle=['fill:rgba(255,0,255,0.75);cursor:col-resize;'],
+    handleStyle='fill:rgba(255,0,255,0);cursor:col-resize;',
     handleWidth=5,
 ){
     var selected = false;
@@ -802,9 +872,9 @@ this.sequencer.noteBlock = function(
             obj.body.width.baseVal.value = length*unit_x;
             __globals.utility.element.setTransform_XYonly(obj.rightHandle, length*unit_x-handleWidth/2, 0);
         }
-        function updateLineAndPosition(){
-            __globals.utility.element.setTransform_XYonly(obj,position*unit_x, line*unit_y);
-        }
+        function updateLineAndPosition(){ __globals.utility.element.setTransform_XYonly(obj, position*unit_x, line*unit_y); }
+        function updateLine(){ __globals.utility.element.setTransform_XYonly(obj, undefined, line*unit_y); }
+        function updatePosition(){ __globals.utility.element.setTransform_XYonly(obj, position*unit_x, undefined); }
         function getBlendedColour(swatch,ratio){
             //extract stlyes and get an output template
                 var tempSwatch = [];
@@ -829,22 +899,33 @@ this.sequencer.noteBlock = function(
 
     //controls
         obj.unit = function(x,y){
-            if(x == undefined || y == undefined){return {x:unit_x,y:unit_y};}
-            unit_x = x;
-            unit_y = y;
-            updateHeight();
-            updateLength();
-            updateLineAndPosition();
+            if(x == undefined && y == undefined){return {x:unit_x,y:unit_y};}
+            //(awkard bid for speed)
+            else if( x == undefined ){
+                unit_y = y;
+                updateHeight();
+                updateLine();
+            }else if( y == undefined ){
+                unit_x = x;
+                updateLength();
+                updatePosition();
+            }else{
+                unit_x = x;
+                unit_y = y;
+                updateHeight();
+                updateLength();
+                updateLineAndPosition();
+            }
         };
         obj.line = function(a){
             if(a == undefined){return line;}
             line = a;
-            updateLineAndPosition();
+            updateLine();
         };
         obj.position = function(a){
             if(a == undefined){return position;}
             position = a;
-            updateLineAndPosition();
+            updatePosition();
         };
         obj.length = function(a){
             if(a == undefined){return length;}

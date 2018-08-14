@@ -43,6 +43,9 @@ this.filterUnit = function(
             var frequencyArray = [];
             for(var a = start; a < end; a += step){frequencyArray.push(a);}
         
+            return this.measureFrequencyResponse_values(frequencyArray);
+        };
+        this.measureFrequencyResponse_values = function(frequencyArray){
             var Float32_frequencyArray = new Float32Array(frequencyArray);
             var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
             var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);

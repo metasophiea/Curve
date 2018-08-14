@@ -1,4 +1,65 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-08-14
+  - (you're going to have to fix the viewbox thing in graphSVG (and probably 
+    grapherCanvas too))
+  - developed the grapherSVG and filder obejct further. Filter now has a freq 
+    range of 0 to 20000, and the graph is logarithmic. Needs more detail though.
+    (Grapher part needs development overall)
+
+  future ideas
+  - the filter object's dials should glow and unglow when they become active and
+    unactive
+
+  Compliation Results
+  - workspace.js                        783 Kb  (100%)
+  - workspace.min.js                    265 Kb  (33.83%)
+  (there seems to be a nice consistancy of removing 2/3 of the original size)
+
+
+2018-08-13
+  - tried rewriting the sequencer in canvas, but it's way way too slow. The fix
+    I made for the canvas in forignObject bug thing, causes hugh lag when the
+    pixels are transfered into the image. I think that things will get much
+    faster when the bug is fixed in Chrome. Until then...
+  - updated how things are done in the sequencer and in the get and set
+    transform utilities, which seems to have sped things up a bit..its still not
+    enough though. Alot of time is being spent on recalculation and rendering,
+    so that canvas equilivent is becoming a requirement :/
+  - fixed grapherSVG to do background lines and text better (no drawing outside
+    the box (mostly), more control of what the text is)
+
+
+2018-08-09
+  issues:
+  - sequencer is very slow when alot of notes are added. Panning is fine, global
+    panning is fine; but zooming causes huge lag. Removing the background 
+    doesn't help, it seems most time is spent recalculating the size of the 
+    note blocks. I'm not sure that converting it to canvas would help.
+
+
+2018-08-08
+  - corrected small thing in noteRegistry where a judegment was being done when
+    'rightLimit' was set to -1. Fixed so that the judegment is ignored in this
+    case
+  - 'generateSelectionArea' was using 'temp' as a global instead of a local.
+    Changed that
+  - working on midi import; the direct conversion to noteRegistry seems to work
+    pretty well. I'll have to rewrite the sequencer object though.
+  - updated 'basicSequencer_midiOut' object to deal with midi numbers better.
+    Also added a viewArea attribute to the import/export functions. Also added
+    Vertical zoom/scroll rangeslide
+  - updated demo 2 to use new midi sequencer better
+    
+
+2018-08-07
+  - further experimentation with parsing midi files
+
+
+2018-08-06
+  - updated utilirt.misc.openFile to have an argument for "readAsType". One can 
+    select between 'readAsBinaryString' (the default) and 'readAsArrayBuffer'
+
+
 2018-08-03
   - rejiggered the system testing folder a little 
   - added 'blendColours' and 'multiBlendColours' to utility.misc (also added 

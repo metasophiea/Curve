@@ -2,14 +2,14 @@ this.grapherSVG = function(
     id='grapherSVG',
     x, y, width, height,
     foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
-    foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
+    foregroundTextStyle='fill:rgba(100,255,100,1); font-size:3; font-family:Helvetica;',
     backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-    backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+    backgroundTextStyle='fill:rgba(0,150,0,1); font-size:2; font-family:Helvetica;',
     backingStyle = 'fill:rgba(50,50,50,1)',
 ){
     var viewbox = {'l':-1,'h':1};
-    var horizontalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printText:false};
-    var verticalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printText:false};
+    var horizontalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printingValues:[],printText:false};
+    var verticalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],  printingValues:[],printText:false};
     var backgroundLineThickness = 2;
     var foregroundLineThickness = 2;
 
@@ -29,7 +29,11 @@ this.grapherSVG = function(
     //internal methods
         function pointConverter(realHeight, viewbox, y){
             var viewboxDistance = Math.abs( viewbox.h - viewbox.l );
-            var y_graphingDistance = realHeight * (viewbox.h-y)/viewboxDistance
+
+            var mux = (viewbox.h-y)/viewboxDistance;
+            if(mux > 1){return realHeight;} if(mux < 0){return 0;}
+
+            var y_graphingDistance = realHeight * (viewbox.h-y)/viewboxDistance;
             return !isNaN(y_graphingDistance) ? y_graphingDistance : 0;
         }
         function lineCorrecter(points, maxheight){
@@ -86,14 +90,15 @@ this.grapherSVG = function(
                     //text
                     if(horizontalMarkings.printText){
                         backgroundElements.append(
-                            parts.basic.text(
+                            __globals.utility.misc.elementMaker(
+                                'text', 
                                 'horizontalMarkings_text_'+horizontalMarkings.points[a],
-                                0.5,
-                                pointConverter(height, viewbox, horizontalMarkings.points[a]-0.075 ),
-                                horizontalMarkings.points[a],
-                                0,
-                                backgroundTextStyle,
-                                0.5
+                                {   
+                                    x:0.5, 
+                                    y:pointConverter(height, viewbox, horizontalMarkings.points[a]-0.05 ),
+                                    text: (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                                    style:backgroundTextStyle,
+                                }
                             )
                         );
                     }
@@ -101,7 +106,7 @@ this.grapherSVG = function(
     
             //vertical lines
                 for(var a = 0; a < verticalMarkings.points.length; a++){
-                    var x = pointConverter(width, viewbox, verticalMarkings.points[a]);
+                    var x = pointConverter(width, {'l':0,'h':1}, 1-verticalMarkings.points[a]);
 
                     //lines
                     backgroundElements.append(
@@ -111,14 +116,15 @@ this.grapherSVG = function(
                     //text
                     if(verticalMarkings.printText){
                         backgroundElements.append(
-                            parts.basic.text(
+                            __globals.utility.misc.elementMaker(
+                                'text', 
                                 'verticalMarkings_text_'+verticalMarkings.points[a],
-                                pointConverter(width, viewbox, verticalMarkings.points[a]-0.01),
-                                pointConverter(height, viewbox, -0.065),
-                                verticalMarkings.points[a],
-                                0,
-                                backgroundTextStyle,
-                                0.5
+                                {   
+                                    x:pointConverter(width, {'l':0,'h':1}, 1-verticalMarkings.points[a]-0.01),
+                                    y:pointConverter(height, viewbox, 0.025),
+                                    text: (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                                    style:backgroundTextStyle,
+                                }
                             )
                         );
                     }
@@ -129,8 +135,8 @@ this.grapherSVG = function(
 
             for(var a = 0; a < y.length-1; a++){
                 var points = lineCorrecter({
-                    'x1': (a+0)*(width/(y.length-1)),
-                    'x2': (a+1)*(width/(y.length-1)),
+                    'x1': x==undefined ? (a+0)*(width/(y.length-1)) : x[a+0]*width,
+                    'x2': x==undefined ? (a+1)*(width/(y.length-1)) : x[a+1]*width,
                     'y1': pointConverter(height, viewbox, y[a+0]),
                     'y2': pointConverter(height, viewbox, y[a+1])
                 }, height);

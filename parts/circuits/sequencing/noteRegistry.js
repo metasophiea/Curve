@@ -107,7 +107,7 @@ this.noteRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
             if(blockLengthLimit > -1 && (data.length > blockLengthLimit)){data.length = blockLengthLimit;}
             if(rightLimit > -1 && (data.position > rightLimit) ){data.position = rightLimit-data.length;}
             if(rightLimit > -1 && (data.position+data.length > rightLimit)){ data.length = rightLimit-data.position; }
-            if(data.position+data.length > rightLimit){data.position = rightLimit-data.length;}
+            if(rightLimit > -1 && (data.position+data.length > rightLimit)){data.position = rightLimit-data.length;}
             if(data.strength > 1){data.strength = 1;}
 
         //generate note ID

@@ -1,9 +1,14 @@
 this.basicSequencer_midiOut = function(x,y,debug=false){
     var vals = {
         sequencer:{
-            width:64, height:37, topMidiNumber:108
+            width:64, //height:100,
+            midiRange:{ bottom:24, top:131 },
+            pattern:[0,0,1,0,1,0,1,0,0,1,0,1],
         }
     };
+    //calculate pattern basied on midi range
+    var temp = vals.sequencer.pattern.length - ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(__globals.audio.num2name(vals.sequencer.midiRange.top).slice(1))
+    vals.sequencer.pattern = vals.sequencer.pattern.slice(temp).concat(vals.sequencer.pattern.slice(0,temp));
 
     var style = {
         background:'fill:rgba(200,200,200,1)',
@@ -65,22 +70,23 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
 
             //main sequencer
                 {type:'sequencer', name:'main', data:{
-                    x:10, y:20, width:780, height:170, 
-                    xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                    x:20, y:20, width:770, height:170, 
+                    xCount:vals.sequencer.width, yCount:vals.sequencer.midiRange.top-vals.sequencer.midiRange.bottom+1,
                     event:function(event){
                         for(var a = 0; a < event.length; a++){
-                            design.connectionNode_data.midiout.send('midinumber',{num:roll2midi(event[a].line), velocity:event[a].strength});
+                            design.connectionNode_data.midiout.send('midinumber',{num:midiNumber_line_converter(event[a].line), velocity:event[a].strength});
                         }
                     },
                     style:{
-                        horizontalStrip_pattern:[0,0,1,0,1,0,1,0,0,1,0,1]
+                        horizontalStrip_pattern:vals.sequencer.pattern
                     },
                     onchangeviewarea:function(data){
-                        design.rangeslide.viewselect.set( {start:data.left, end:data.right}, false );
+                        design.rangeslide.viewselect_x.set( {start:data.left, end:data.right}, false );
+                        design.rangeslide.viewselect_y.set( {start:data.top, end:data.bottom}, false );
                     },
                 }},
-                {type:'rangeslide', name:'viewselect', data:{
-                    x:10, y:20, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:1,
+                {type:'rangeslide', name:'viewselect_y', data:{
+                    x:10, y:20, height:170, width: 10, angle:0, handleHeight:1/16, spanWidth:1,
                     style:{
                         handle: style.rangeslide.handle,
                         backing: style.rangeslide.backing,
@@ -88,7 +94,18 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
                         invisibleHandle: style.rangeslide.invisibleHandle,
                         span: style.rangeslide.span,
                     },
-                    onchange:function(values){ design.sequencer.main.viewArea({left:values.start,right:values.end}); },
+                    onchange:function(values){ design.sequencer.main.viewArea({top:values.start,bottom:values.end},false); },
+                }},
+                {type:'rangeslide', name:'viewselect_x', data:{
+                    x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:1,
+                    style:{
+                        handle: style.rangeslide.handle,
+                        backing: style.rangeslide.backing,
+                        slot: style.rangeslide.slot,
+                        invisibleHandle: style.rangeslide.invisibleHandle,
+                        span: style.rangeslide.span,
+                    },
+                    onchange:function(values){ design.sequencer.main.viewArea({left:values.start,right:values.end},false); },
                 }},
 
             //follow playhead
@@ -113,7 +130,7 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
                 }},
                 //range
                 {type:'rangeslide', name:'loopSelect', data:{
-                    x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:0.75,
+                    x:20, y:200, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75,
                     style:{
                         handle: style.rangeslide_loop.handle,
                         backing: style.rangeslide_loop.backing,
@@ -174,7 +191,7 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
     };
 
     //internal functions
-        function roll2midi(num){ return vals.sequencer.topMidiNumber - num; }
+        function midiNumber_line_converter(num){ return vals.sequencer.midiRange.top - num; }
 
     //main object
         var obj = __globals.utility.misc.objectBuilder(objects.basicSequencer_midiOut,design);
@@ -188,6 +205,7 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
                 },
                 autofollow:design.checkbox_rect.followPlayhead.get(),
                 notes:design.sequencer.main.getAllNotes(),
+                viewArea:design.sequencer.main.viewArea(),
             };
         };
         obj.importData = function(data){
@@ -195,15 +213,20 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
             obj.i.loopActive(data.loop.active);
             design.rangeslide.loopSelect.set(data.loop.range);
             design.checkbox_rect.followPlayhead.set(data.autofollow);
+            design.sequencer.main.viewArea(data.viewArea);
         };
 
     //interface
         obj.i = {
-            addNote:function(line, position, length, strength=1){design.sequencer.main.addNote(line, position, length, strength);},
-            addNotes:function(data){design.sequencer.main.addNotes(data);},
+            addNote:function(number, position, length, strength=1){design.sequencer.main.addNote(midiNumber_line_converter(number), position, length, strength);},
+            addNotes:function(data){ for(var a = 0; a < data.length; a++){ this.addNote(data[a].line, data[a].position, data[a].length, data[a].strength); } },
             getNotes:function(){return design.sequencer.main.getAllNotes();},
             loopActive:function(a){design.checkbox_rect.loopActive.set(a);},
+            stepSize:design.sequencer.main.step,
         };
+
+    //setup
+        design.rangeslide.viewselect_y.set({start:0.3, end:0.7});
 
     return obj;
 };

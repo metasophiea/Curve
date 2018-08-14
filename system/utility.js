@@ -332,14 +332,40 @@ __globals.utility = new function(){
     };
     this.element = new function(){
         this.getTransform = function(element){
-            var pattern = /translate\((.*)px,| (.*)px|\) scale\((.*)\) |rotate\((.*)rad\)/g;
+            // //pure js
+            //     var end_1 = element.style.transform.indexOf('px');
+            //     var end_2 = element.style.transform.indexOf('px) scale(');
+            //     var end_3 = element.style.transform.indexOf(') rotate(');
+            //     var end_4 = element.style.transform.indexOf('rad)');
 
-            var result = [];
-            for(var a = 0; a < 4; a++){
-                result.push(Number(pattern.exec(element.style.transform)[a+1]));
-            }
-            
-            return {x:result[0],y:result[1],s:result[2],r:result[3]};
+            //     return {
+            //         x: Number( element.style.transform.substring(10,end_1)),
+            //         y: Number( element.style.transform.substring(end_1+4,end_2)),
+            //         s: Number( element.style.transform.substring(end_2+10,end_3)),
+            //         r: Number( element.style.transform.substring(end_3+9,end_4))
+            //     };
+
+            //pure js 2 
+                var text = element.style.transform;
+                text = text.slice(10).split('px, ',2);
+                var num1 = Number(text[0]);
+                text = text[1].split('px) scale(',2);
+                var num2 = Number(text[0]);
+                text = text[1].split(') rotate(',2);
+                var num3 = Number(text[0]);
+                var num4 = Number(text[1].slice(0,-4));
+
+                return { x: num1, y: num2, s: num3, r: num4 };
+
+            // //regex
+            //     var pattern = /translate\((.*)px,| (.*)px|\) scale\((.*)\) |rotate\((.*)rad\)/g;
+
+            //     var result = [];
+            //     for(var a = 0; a < 4; a++){
+            //         result.push(Number(pattern.exec(element.style.transform)[a+1]));
+            //     }
+                
+            //     return {x:result[0],y:result[1],s:result[2],r:result[3]};
         };
         this.getCumulativeTransform = function(element){
             data = this.getTransform(element);
@@ -369,9 +395,13 @@ __globals.utility = new function(){
             return data;
         };
         this.setTransform = function(element, transform){
-            element.style.transform = 'translate('+transform.x.toFixed(16)+'px, '+(transform.y.toFixed(16))+'px) scale('+transform.s.toFixed(16)+') rotate(' +transform.r.toFixed(16)+ 'rad)';
+            //(code removed for speed, but I remember it was solving some formatting problem somewhere)
+            // element.style.transform = 'translate('+transform.x.toFixed(16)+'px, '+(transform.y.toFixed(16))+'px) scale('+transform.s.toFixed(16)+') rotate(' +transform.r.toFixed(16)+ 'rad)';
+            element.style.transform = 'translate('+transform.x+'px, '+transform.y+'px) scale('+transform.s+') rotate(' +transform.r+ 'rad)';
         };
         this.setTransform_XYonly = function(element, x, y){
+            if(x == null && y == null){return;}
+
             var transformData = this.getTransform(element);
             if(x!=null){transformData.x = x;}
             if(y!=null){transformData.y = y;}
@@ -485,7 +515,7 @@ __globals.utility = new function(){
                 object.selectionArea.box = __globals.utility.math.boundingBoxFromPoints(object.selectionArea.points);
 
                 //adjusting it for the object's position in space
-                temp = __globals.utility.element.getTransform(object);
+                var temp = __globals.utility.element.getTransform(object);
                 object.selectionArea.box.forEach(function(element) {
                     element.x += temp.x;
                     element.y += temp.y;
@@ -1029,12 +1059,15 @@ __globals.utility = new function(){
                 return value;
             });
         };
-        this.openFile = function(callback){
+        this.openFile = function(callback,readAsType='readAsBinaryString'){
             var i = document.createElement('input');
             i.type = 'file';
             i.onchange = function(){
                 var f = new FileReader();
-                f.readAsBinaryString(this.files[0]);
+                switch(readAsType){
+                    case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
+                    case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
+                }
                 f.onloadend = function(){ if(callback){callback(f.result);} }
             };
             i.click();
