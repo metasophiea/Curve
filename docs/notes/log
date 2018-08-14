@@ -13,6 +13,8 @@
   Compliation Results
   - workspace.js                        783 Kb  (100%)
   - workspace.min.js                    265 Kb  (33.83%)
+  - workspace.min.js (web compressed)   94.4 Kb (12%)
+
   (there seems to be a nice consistancy of removing 2/3 of the original size)
 
 
