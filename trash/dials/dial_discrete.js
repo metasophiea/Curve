@@ -1,4 +1,4 @@
-this.dial_discrete = function(
+parts.elements.control.dial_discrete = function(
     id='dial_discrete',
     x, y, r,
     optionCount=5,

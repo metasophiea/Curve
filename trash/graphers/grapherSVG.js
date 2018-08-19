@@ -1,4 +1,4 @@
-this.grapherSVG = function(
+parts.elements.display.grapherSVG = function(
     id='grapherSVG',
     x, y, width, height,
     foregroundStyles=['stroke:rgba(0,255,0,1); stroke-width:0.75; stroke-linecap:round;','stroke:rgba(255,255,0,1); stroke-width:0.75; stroke-linecap:round;'],
@@ -41,24 +41,24 @@ this.grapherSVG = function(
         };
         object.viewbox = function(a){
             if(a==null){return viewbox;}
-            if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
-            if( a.top != undefined ){viewbox.top = a.top;}
-            if( a.left != undefined ){viewbox.left = a.left;}
-            if( a.right != undefined ){viewbox.right = a.right;}
+            if( a.bottom ){viewbox.bottom = a.bottom;}
+            if( a.top ){viewbox.top = a.top;}
+            if( a.left ){viewbox.left = a.left;}
+            if( a.right ){viewbox.right = a.right;}
         };
         object.horizontalMarkings = function(a){
             if(a==null){return horizontalMarkings;}
-            if( a.points != undefined ){horizontalMarkings.points = a.points;}
-            if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
-            if( a.textPosition != undefined ){horizontalMarkings.textPosition = a.textPosition;}
-            if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
+            if( a.points ){horizontalMarkings.points = a.points;}
+            if( a.printingValues ){horizontalMarkings.printingValues = a.printingValues;}
+            if( a.textPosition ){horizontalMarkings.textPosition = a.textPosition;}
+            if( a.printText ){horizontalMarkings.printText = a.printText;}
         };
         object.verticalMarkings = function(a){
             if(a==null){return verticalMarkings;}
-            if( a.points != undefined ){verticalMarkings.points = a.points;}
-            if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
-            if( a.textPosition != undefined ){verticalMarkings.textPosition = a.textPosition;}
-            if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
+            if( a.points ){verticalMarkings.points = a.points;}
+            if( a.printingValues ){verticalMarkings.printingValues = a.printingValues;}
+            if( a.textPosition ){verticalMarkings.textPosition = a.textPosition;}
+            if( a.printText ){verticalMarkings.printText = a.printText;}
         };
         object.drawBackground = function(){
             backgroundElements.innerHTML = '';

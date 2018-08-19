@@ -6,6 +6,7 @@ console.log('%cTesting - __globals.utility.math', 'font-size:15px; font-weight:b
         tester(__globals.utility.math.normalizeStretchArray([0.9,0.99,0.999]),[0, 0.9090909090909088, 1]);
         tester(__globals.utility.math.normalizeStretchArray([0,0.0001,1.9]),[0, 0.000052631578947368424, 1]);
         tester(__globals.utility.math.normalizeStretchArray([-1,-0.9999,0.9]),[0, 0.000052631578947397684, 1]);
+
     console.log('%c-- curvePoint', 'font-weight: bold;');
         console.log('%c- linear', 'font-weight: bold;');
             tester(__globals.utility.math.curvePoint.linear(),0.5);
@@ -61,6 +62,7 @@ console.log('%cTesting - __globals.utility.math', 'font-size:15px; font-weight:b
             tester(__globals.utility.math.curvePoint.exponential(0.8),  0.6187193167793194 );
             tester(__globals.utility.math.curvePoint.exponential(0.9),  0.7903589178467405 );
             tester(__globals.utility.math.curvePoint.exponential(1),    1 );
+
     console.log('%c-- curveGenerator', 'font-weight: bold;');
         console.log('%c- linear', 'font-weight: bold;');
             tester(__globals.utility.math.curveGenerator.linear(),       [0, 1]);
@@ -87,6 +89,7 @@ console.log('%cTesting - __globals.utility.math', 'font-size:15px; font-weight:b
             tester(__globals.utility.math.curveGenerator.exponential(10),      [0, 0.03894923837706363, 0.08759095067273646, 0.1483370980594927, 0.2241998555196527, 0.3189409743731226, 0.4372583135012321, 0.5850187886546604, 0.7695492909331704, 1] );
             tester(__globals.utility.math.curveGenerator.exponential(10,5,10), [5, 5.194746191885318, 5.437954753363682, 5.7416854902974634, 6.120999277598264, 6.594704871865613, 7.18629156750616, 7.925093943273302, 8.847746454665852, 10] );
             tester(__globals.utility.math.curveGenerator.exponential(10,8),    [8, 7.727355331360554, 7.386863345290845, 6.961640313583551, 6.430601011362431, 5.767413179388142, 4.939191805491375, 3.9048684794173774, 2.6131549634678075, 1] );
+    
     console.log('%c-- detectOverlap', 'font-weight: bold;');
         console.log('%c- totally separate shapes', 'font-weight: bold;');
             var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
@@ -222,6 +225,7 @@ console.log('%cTesting - __globals.utility.math', 'font-size:15px; font-weight:b
             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
             var box_b = [{"x":80,"y":330},{"x":400,"y":392.5}];
             tester(__globals.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+
     console.log('%c-- intersectionOfTwoLineSegments', 'font-weight: bold;');
         //the function tells where the lines would intersect if they were infinatly long in both directions,
         //the next two bools reveal if this point if within the segment given (you need two 'true's for an intersectionOfTwoLineSegments)
@@ -237,6 +241,7 @@ console.log('%cTesting - __globals.utility.math', 'font-size:15px; font-weight:b
             var segment1 = [{x:0,y:0},{x:5,y:5}];
             var segment2 = [{x:2.5,y:2.5},{x:0,y:5}];
             tester(__globals.utility.math.intersectionOfTwoLineSegments(segment1, segment2),{x: 2.5, y: 2.5, inSeg1: true, inSeg2: true} );
+
     console.log('%c-- boundingBoxFromPoints', 'font-weight: bold;');
         console.log('%c- simple box', 'font-weight: bold;');
             var poly = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
@@ -244,6 +249,7 @@ console.log('%cTesting - __globals.utility.math', 'font-size:15px; font-weight:b
         console.log('%c- triangle', 'font-weight: bold;');
             var poly = [{x:0,y:0},{x:10,y:0},{x:5,y:10}];
             tester(__globals.utility.math.boundingBoxFromPoints(poly),[{x: 10, y: 10},{x: 0, y: 0}]);
+
     console.log('%c-- polar2cartesian', 'font-weight: bold;');
         var distance = 10;
         var angle = 0;
@@ -260,6 +266,7 @@ console.log('%cTesting - __globals.utility.math', 'font-size:15px; font-weight:b
         var distance = 3.5355339059327378;
         var angle = Math.PI/4;
         tester(__globals.utility.math.polar2cartesian(angle,distance),{x: 2.5000000000000004, y: 2.5});
+
     console.log('%c-- cartesian2polar', 'font-weight: bold;');
         var x = 10;
         var y = 0;
@@ -276,3 +283,18 @@ console.log('%cTesting - __globals.utility.math', 'font-size:15px; font-weight:b
         var x = 2.5;
         var y = 2.5;
         tester(__globals.utility.math.cartesian2polar(x,y),{dis: 3.5355339059327378, ang: 0.7853981633974483});
+
+    console.log('%c-- relativeDistance', 'font-weight: bold;');
+        tester(__globals.utility.math.relativeDistance(100, 0,1, 0),0);
+        tester(__globals.utility.math.relativeDistance(100, 0,1, 1),100);
+        tester(__globals.utility.math.relativeDistance(100, 0,1, 0.1),10);
+        tester(__globals.utility.math.relativeDistance(100, 0,1, 0.5),50);
+        tester(__globals.utility.math.relativeDistance(100, -1,1, 0),50);
+        tester(__globals.utility.math.relativeDistance(100, -1,0, 0),100);
+        tester(__globals.utility.math.relativeDistance(100, -1,0, 0.5),100);
+        tester(__globals.utility.math.relativeDistance(100, -1,0, 0.5, true),150);
+            
+    console.log('%c-- lineCorrecter', 'font-weight: bold;');
+        tester(__globals.utility.math.lineCorrecter({x1:0,y1:0,x2:10,y2:10}, 100, 100),{x1: 0, y1: 0, x2: 10, y2: 10});
+        tester(__globals.utility.math.lineCorrecter({x1:0,y1:0,x2:10,y2:10}, 100, 1),undefined);
+        tester(__globals.utility.math.lineCorrecter({x1:0,y1:0,x2:10,y2:10}, 1, 100),{x1: 0, y1: 0, x2: 1, y2: 1});

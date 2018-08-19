@@ -2,11 +2,15 @@ this.dial_continuous = function(
     id='dial_continuous',
     x, y, r,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-    handleStyle = 'fill:rgba(200,200,200,1)',
+    handleStyle = 'fill:rgba(175,175,175,1)',
     slotStyle = 'fill:rgba(50,50,50,1)',
     needleStyle = 'fill:rgba(250,100,100,1)',
+    handleStyle_glow = 'fill:rgba(175,175,175,1)',
+    slotStyle_glow = 'fill:rgba(254,255,219,1)',
+    needleStyle_glow = 'fill:rgba(250,100,100,1)',
     arcDistance=1.35,
     outerArcStyle='fill:none; stroke:none;',
+    outerArcStyle_glow='fill:none; stroke:none;',
 ){
     // elements
         var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
@@ -58,7 +62,7 @@ this.dial_continuous = function(
             if(update&&this.onchange){try{this.onchange(value);}catch(err){console.error('Error with dial_continuous:onchange\n',err);}}
             if(update&&!live&&this.onrelease){try{this.onrelease(value);}catch(err){console.error('Error with dial_continuous:onrelease\n',err);}}
             this.children['needle'].rotation(startAngle + maxAngle*value);
-        };object.set(0);
+        };
         object.smoothSet = function(target,time,curve,update=true){
             var startTime = __globals.audio.context.currentTime;
             var startValue = value;
@@ -78,30 +82,19 @@ this.dial_continuous = function(
                 if( (__globals.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
             }, 1000/30);  
         };
-        // object.smoothSet = function(target,time,curve,update=true){
-        //     var start = this.get();
-        //     var mux = target-start;
-        //     var stepsPerSecond = Math.round(Math.abs(mux)*100);
-        //     var totalSteps = stepsPerSecond*time;
-
-        //     var steps = [1];
-        //     switch(curve){
-        //         case 'linear': steps = __globals.utility.math.curveGenerator.linear(totalSteps); break;
-        //         case 'exponential': steps = __globals.utility.math.curveGenerator.exponential(totalSteps); break;
-        //         case 'sin': steps = __globals.utility.math.curveGenerator.sin(totalSteps); break;
-        //         case 'cos': steps = __globals.utility.math.curveGenerator.cos(totalSteps); break;
-        //         case 's': steps = __globals.utility.math.curveGenerator.s(totalSteps); break;
-        //         case 'instant': default: break;
-        //     }
-
-        //     if(steps.length == 0){return;}
-
-        //     if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-        //     object.smoothSet.interval = setInterval(function(){
-        //         object.set( (start+(steps.shift()*mux)),true,update );
-        //         if(steps.length == 0){clearInterval(object.smoothSet.interval);}
-        //     },1000/stepsPerSecond);
-        // };
+        object.glow = function(state){
+            if(state){
+                __globals.utility.element.setStyle(outerArc,outerArcStyle_glow);
+                __globals.utility.element.setStyle(slot,slotStyle_glow);
+                __globals.utility.element.setStyle(handle,handleStyle_glow);
+                __globals.utility.element.setStyle(needle,needleStyle_glow);
+            }else{
+                __globals.utility.element.setStyle(outerArc,outerArcStyle);
+                __globals.utility.element.setStyle(slot,slotStyle);
+                __globals.utility.element.setStyle(handle,handleStyle);
+                __globals.utility.element.setStyle(needle,needleStyle);
+            }
+        };
         
 
     //callback
@@ -150,6 +143,8 @@ this.dial_continuous = function(
             __globals.svgElement.onmousemove(event);
         };
 
+    //setup
+        object.set(0);
 
     return object;
 };

@@ -2,9 +2,9 @@ this.grapher_periodicWave = function(
     id='grapher_periodicWave',
     x, y, width, height,
     graphType='Canvas',
-    foregroundStyle=['stroke:rgba(0,255,0,1); stroke-width:0.75; stroke-linecap:round;'],
-    foregroundTextStyle=['fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;'],
-    backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:1;',
+    foregroundStyle='stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;',
+    foregroundTextStyle='fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;',
+    backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
     backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
     backingStyle = 'fill:rgba(50,50,50,1)',
 ){
@@ -56,9 +56,9 @@ this.grapher_periodicWave = function(
         this._data.resolution = a;
     }
     object.updateBackground = function(){
-        grapher.viewbox( {'bottom':-1.1,'top':1.1} );
-        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
-        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
+        grapher.viewbox( {'l':-1.1,'h':1.1} );
+        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+        grapher.verticalMarkings({points:[0,'1/4','1/2','3/4'],printText:false});
         grapher.drawBackground();
     };
     object.draw = function(){
@@ -83,8 +83,9 @@ this.grapher_periodicWave = function(
         this.wave({'sin':[],'cos':[]});
         this.resolution(500);
         this.updateBackground();
-        // this.draw();
+        this.draw();
     }
+
 
     object.reset();
     return object;

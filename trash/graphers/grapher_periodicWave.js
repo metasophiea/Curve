@@ -1,4 +1,4 @@
-this.grapher_periodicWave = function(
+parts.elements.display.grapher_periodicWave = function(
     id='grapher_periodicWave',
     x, y, width, height,
     graphType='Canvas',

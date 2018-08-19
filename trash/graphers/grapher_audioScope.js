@@ -1,4 +1,4 @@
-this.grapher_audioScope = function(
+parts.elements.display.grapher_audioScope = function(
     id='grapher_audioScope',
     x, y, width, height,
     graphType='Canvas',

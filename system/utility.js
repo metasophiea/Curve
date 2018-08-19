@@ -68,6 +68,8 @@
 //            cos                         (stepCount, start=0, end=1)
 //            s                           (stepCount, start=0, end=1, sharpness=8)
 //            exponential                 (stepCount, start=0, end=1)
+//        relativeDistance                (realLength, start,end, d, allowOverflow=false
+//        lineCorrecter                   (points, maxheight, maxwidth)
 //
 //    misc
 //        padString                      (string, length)
@@ -942,6 +944,30 @@ __globals.utility = new function(){
                 return outputArray;
             };
         };
+        this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
+            var mux = (d - start)/(end - start);
+            if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
+            return mux*realLength;
+        };
+        this.lineCorrecter = function(points, maxheight, maxwidth){
+            //this function detects line points that would exceed the view area, then replaces them with clipped points
+            //(only corrects points that exceed the y limits. Those that exceed the X limits are simply dropped)
+
+            if( points.x1 < 0 || points.x2 < 0 ){ return; }
+            if( points.x1 > maxwidth || points.x2 > maxwidth ){ return; }
+
+            if( points.y1 < 0 && points.y2 < 0 ){ return; }
+            if( points.y1 > maxheight && points.y2 > maxheight ){ return; }
+    
+            var slope = (points.y2 - points.y1)/(points.x2 - points.x1);
+    
+            if( points.y1 < 0 ){ points.x1 = (0 - points.y1 + slope*points.x1)/slope; points.y1 = 0; }
+            else if( points.y2 < 0 ){ points.x2 = (0 - points.y2 + slope*points.x2)/slope; points.y2 = 0; }
+            if( points.y1 > maxheight ){ points.x1 = (maxheight - points.y1 + slope*points.x1)/slope; points.y1 = maxheight; }
+            else if( points.y2 > maxheight ){ points.x2 = (maxheight - points.y2 + slope*points.x2)/slope; points.y2 = maxheight; }
+    
+            return points;
+        };
     };
     this.misc = new function(){
         this.padString = function(string,length,padding=' '){
@@ -1158,7 +1184,8 @@ __globals.utility = new function(){
                             data.x, data.y, data.r,
                             data.startAngle, data.maxAngle,
                             data.style.handle, data.style.slot, data.style.needle,
-                            data.arcDistance, data.style.outerArc
+                            data.style.handle_glow, data.style.slot_glow, data.style.needle_glow,
+                            data.arcDistance, data.style.outerArc, data.style.outerArc_glow,
                         );
                         temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
                         temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
@@ -1171,7 +1198,8 @@ __globals.utility = new function(){
                             data.optionCount,
                             data.startAngle, data.maxAngle,
                             data.style.handle, data.style.slot, data.style.needle,
-                            data.arcDistance, data.style.outerArc
+                            data.style.handle_glow, data.style.slot_glow, data.style.needle_glow,
+                            data.arcDistance, data.style.outerArc, data.style.outerArc_glow,
                         );
                         temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
                         temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;

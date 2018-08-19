@@ -1,4 +1,4 @@
-this.grapherCanvas = function(
+parts.elements.display.grapherCanvas = function(
     id='grapherCanvas',
     x, y, width, height,
     foregroundStyles=['stroke:rgba(0,255,0,1); stroke-width:0.75; stroke-linecap:round;','stroke:rgba(255,255,0,1); stroke-width:0.75; stroke-linecap:round;'],
@@ -15,14 +15,14 @@ this.grapherCanvas = function(
     //convert the style info
         var tempStyleInfo = foregroundStyles.map(a => __globals.utility.element.styleExtractor(a));
         foregroundStyles = tempStyleInfo.map(a => a.stroke);
-        var foregroundLineThicknesses = tempStyleInfo.map(a => a['stroke-width']*10);
+        var foregroundLineThicknesses = tempStyleInfo.map(a => a['stroke-width']*8);
 
         var tempStyleInfo = __globals.utility.element.styleExtractor(backgroundTextStyle);
         backgroundTextStyle = (12*tempStyleInfo['font-size'])+'px ' + tempStyleInfo['font-family'];
 
         var tempStyleInfo = __globals.utility.element.styleExtractor(backgroundStyle);
         backgroundStyle = tempStyleInfo.stroke;
-        var backgroundLineThickness = tempStyleInfo['stroke-width']*10;
+        var backgroundLineThickness = tempStyleInfo['stroke-width'] * 8;
 
         var tempStyleInfo = __globals.utility.element.styleExtractor(backingStyle);
         backingStyle = tempStyleInfo['fill'];
@@ -31,7 +31,7 @@ this.grapherCanvas = function(
         //main
             var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
         //canvas
-            var canvas = __globals.utility.misc.elementMaker('canvas',id,{width:width, height:height, resolution:10});
+            var canvas = __globals.utility.misc.elementMaker('canvas',id,{width:width, height:height, resolution:7});
             object.appendChild(canvas.element);
 
     //controls
@@ -50,24 +50,24 @@ this.grapherCanvas = function(
         };
         object.viewbox = function(a){
             if(a==null){return viewbox;}
-            if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
-            if( a.top != undefined ){viewbox.top = a.top;}
-            if( a.left != undefined ){viewbox.left = a.left;}
-            if( a.right != undefined ){viewbox.right = a.right;}
+            if( a.bottom ){viewbox.bottom = a.bottom;}
+            if( a.top ){viewbox.top = a.top;}
+            if( a.left ){viewbox.left = a.left;}
+            if( a.right ){viewbox.right = a.right;}
         };
         object.horizontalMarkings = function(a){
             if(a==null){return horizontalMarkings;}
-            if( a.points != undefined ){horizontalMarkings.points = a.points;}
-            if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
-            if( a.textPosition != undefined ){horizontalMarkings.textPosition = a.textPosition;}
-            if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
+            if( a.points ){horizontalMarkings.points = a.points;}
+            if( a.printingValues ){horizontalMarkings.printingValues = a.printingValues;}
+            if( a.textPosition ){horizontalMarkings.textPosition = a.textPosition;}
+            if( a.printText ){horizontalMarkings.printText = a.printText;}
         };
         object.verticalMarkings = function(a){
             if(a==null){return verticalMarkings;}
-            if( a.points != undefined ){verticalMarkings.points = a.points;}
-            if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
-            if( a.textPosition != undefined ){verticalMarkings.textPosition = a.textPosition;}
-            if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
+            if( a.points ){verticalMarkings.points = a.points;}
+            if( a.printingValues ){verticalMarkings.printingValues = a.printingValues;}
+            if( a.textPosition ){verticalMarkings.textPosition = a.textPosition;}
+            if( a.printText ){verticalMarkings.printText = a.printText;}
         };
         object.drawBackground = function(){
             //backing
@@ -92,7 +92,7 @@ this.grapherCanvas = function(
                         canvas.context.fillStyle = backgroundStyle;
                         canvas.context.font = backgroundTextStyle;
                         canvas.context.fillText(
-                            (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                            horizontalMarkings.points[a],
                             canvas.c(horizontalMarkings.textPosition == undefined || horizontalMarkings.textPosition.x == undefined ? 0.5 : 
                                 __globals.utility.math.relativeDistance(
                                     width, viewbox.left,viewbox.right, 
@@ -127,7 +127,7 @@ this.grapherCanvas = function(
                         canvas.context.fillStyle = backgroundStyle;
                         canvas.context.font = backgroundTextStyle;
                         canvas.context.fillText(
-                            (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                            verticalMarkings.points[a],
                             canvas.c(verticalMarkings.textPosition == undefined || verticalMarkings.textPosition.x == undefined ? 0.5 : 
                                 __globals.utility.math.relativeDistance(
                                     width, viewbox.left,viewbox.right, 

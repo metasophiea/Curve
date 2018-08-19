@@ -1,7 +1,6 @@
-this.dial_discrete = function(
-    id='dial_discrete',
+parts.elements.control.dial_continuous = function(
+    id='dial_continuous',
     x, y, r,
-    optionCount=5,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
     handleStyle = 'fill:rgba(175,175,175,1)',
     slotStyle = 'fill:rgba(50,50,50,1)',
@@ -14,13 +13,11 @@ this.dial_discrete = function(
     outerArcStyle_glow='fill:none; stroke:none;',
 ){
     // elements
-    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
-        object._value = 0;
-        object._selection = 0;
-        object._data = { 
-            'optionCount':optionCount,
-            'mux':r*4
-        };
+        var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
+            object._value = 0;
+            object._data = {
+                'mux':r*4
+            };
 
         //arc
             var points = 5;
@@ -34,6 +31,7 @@ this.dial_discrete = function(
             }
             var temp = __globals.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
             arcPath.push( temp );
+
             var outerArc = __globals.utility.misc.elementMaker('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
             object.appendChild(outerArc);
 
@@ -55,26 +53,34 @@ this.dial_discrete = function(
 
 
     //methods
-        object.select = function(a=null, live=true, update=true){
-            if(a==null){return this._selection;}
-
-            a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
-            a = (a<0 ? 0 : a);
-
-            if(this._selection == a){/*nothings changed*/return;}
-
-            this._selection = a;
-            this._set( a/(this._data.optionCount-1) );
-            if(update&&this.onchange){ this.onchange(a); }
-            if(update&&!live&&this.onrelease){ this.onrelease(value); }
-        };
-        object._get = function(){ return this._value; };
-        object._set = function(value){
+        object.get = function(){ return this._value; };
+        object.set = function(value, live=false, update=true){
             value = (value>1 ? 1 : value);
             value = (value<0 ? 0 : value);
 
             this._value = value;
+            if(update&&this.onchange){try{this.onchange(value);}catch(err){console.error('Error with dial_continuous:onchange\n',err);}}
+            if(update&&!live&&this.onrelease){try{this.onrelease(value);}catch(err){console.error('Error with dial_continuous:onrelease\n',err);}}
             this.children['needle'].rotation(startAngle + maxAngle*value);
+        };
+        object.smoothSet = function(target,time,curve,update=true){
+            var startTime = __globals.audio.context.currentTime;
+            var startValue = value;
+            var pointFunc = __globals.utility.math.curvePoint.linear;
+
+            switch(curve){
+                case 'linear': pointFunc = __globals.utility.math.curvePoint.linear; break;
+                case 'sin': pointFunc = __globals.utility.math.curvePoint.sin; break;
+                case 'cos': pointFunc = __globals.utility.math.curvePoint.cos; break;
+                case 'exponential': pointFunc = __globals.utility.math.curvePoint.exponential; break;
+                case 's': pointFunc = __globals.utility.math.curvePoint.s; break;
+            }
+
+            object.smoothSet.interval = setInterval(function(){
+                var progress = (__globals.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
+                object.set( pointFunc(progress, startValue, target), true, update );
+                if( (__globals.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
+            }, 1000/30);  
         };
         object.glow = function(state){
             if(state){
@@ -89,25 +95,20 @@ this.dial_discrete = function(
                 __globals.utility.element.setStyle(needle,needleStyle);
             }
         };
-  
+        
 
     //callback
         object.onchange = function(){};
         object.onrelease = function(){};
 
-    
+
     //mouse interaction
-        object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
+        object.ondblclick = function(){ this.set(0.5); };
         object.onwheel = function(event){
             var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
             var globalScale = __globals.utility.workspace.getGlobalScale(object);
 
-            if(!object.onwheel.acc){object.onwheel.acc=0;}
-            object.onwheel.acc += move/globalScale;
-            if( Math.abs(object.onwheel.acc) >= 1 ){
-                this.select( this.select()-1*Math.sign(object.onwheel.acc) );
-                object.onwheel.acc = 0;
-            }
+            this.set( this.get() - move/(10*globalScale) );
         };
         object.onmousedown = function(event){
             __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
@@ -115,7 +116,7 @@ this.dial_discrete = function(
             __globals.svgElement.onmouseup_old = __globals.svgElement.onmouseup;
 
             __globals.svgElement.tempRef = this;
-            __globals.svgElement.tempRef._data.initialValue = this._get();
+            __globals.svgElement.tempRef._data.initialValue = this.get();
             __globals.svgElement.tempRef._data.initialY = event.y;
             __globals.svgElement.tempRef._data.mux = __globals.svgElement.tempRef._data.mux;
             __globals.svgElement.onmousemove = function(event){
@@ -124,16 +125,12 @@ this.dial_discrete = function(
                 var numerator = event.y-__globals.svgElement.tempRef._data.initialY;
                 var divider = __globals.utility.workspace.getGlobalScale(object);
 
-                __globals.svgElement.tempRef.select(
-                    Math.round(
-                        (__globals.svgElement.tempRef._data.optionCount-1)*(value - numerator/(divider*mux))
-                    ) 
-                );
+                __globals.svgElement.tempRef.set( value - numerator/(divider*mux), true );
             };
             __globals.svgElement.onmouseup = function(){
-                this.tempRef.select(this.tempRef.select(),false);
-                this.tempRef = null;
-                
+                this.tempRef.set(this.tempRef.get(),false);
+                delete this.tempRef;
+
                 __globals.svgElement.onmousemove = __globals.svgElement.onmousemove_old;
                 __globals.svgElement.onmouseleave = __globals.svgElement.onmouseleave_old;
                 __globals.svgElement.onmouseup = __globals.svgElement.onmouseup_old;
@@ -147,7 +144,7 @@ this.dial_discrete = function(
         };
 
     //setup
-        object._set(0);
-        
-  return object;
+        object.set(0);
+
+    return object;
 };

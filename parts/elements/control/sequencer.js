@@ -74,8 +74,8 @@ this.sequencer = function(
                 if(d.top == undefined){d.top = viewArea.top;}    if(d.bottom == undefined){d.bottom = viewArea.bottom;}
 
             //only adjust the zoom, if the distance between the areas changed
-                var x = (viewArea.right-viewArea.left)==(d.right-d.left);
-                var y = (d.bottom-d.top)==(viewArea.bottom-viewArea.top);
+                var x = (viewArea.right-viewArea.left)!=(d.right-d.left);
+                var y = (d.bottom-d.top)!=(viewArea.bottom-viewArea.top);
                 if(x && y){ adjustZoom( (d.right-d.left),(d.bottom-d.top) ); }
                 else if(x){ adjustZoom( (d.right-d.left),undefined ); }
                 else if(y){ adjustZoom( undefined,(d.bottom-d.top) ); }

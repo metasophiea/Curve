@@ -1,4 +1,17 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-08-19
+  - pushed the new filter to the main objects list
+  - fixed some backwards logic in the sequencer
+  - added glow options to the dials
+  - began work on the super adjustable equaliser
+  
+
+2018-08-15
+  - added 'relativeDistance' and 'lineCorrecter' to utility.math (added some
+    tests)
+  - redid graphers (pulled some of the functionality out into utility)
+
+
 2018-08-14
   - (you're going to have to fix the viewbox thing in graphSVG (and probably 
     grapherCanvas too))
