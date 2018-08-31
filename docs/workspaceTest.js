@@ -12161,6 +12161,9 @@
                         style:style.background
                     },
                     elements:[
+                        {type:'connectionNode_audio', name:'audioIn', data:{ type: 0, x: 120, y: 16, width: 10, height: 20, angle:-0.14}},
+                        {type:'connectionNode_audio', name:'audioOut', data:{ type: 1, x: -2.3, y: 16, width: 10, height: 20, angle:0.144 }},
+            
                         {type:'rect', name:'vertical_0', data:{
                             x:25, y:15, width:30, height:242.5, 
                             style:style.markings,
@@ -12169,9 +12172,14 @@
                             x:57.5, y:15, width:30, height:242.5, 
                             style:style.markings,
                         }},
-                        {type:'label', name:'frequency_title', data:{x:33, y:11,    text:'Freq',  style:style.h1}},
-                        {type:'label', name:'Q_title', data:{x:68,   y:11,    text:'Q',   style:style.h1}},
-                        {type:'grapherSVG', name:'graph', data:{x:152.5, y:5, width:120, height:75, style:{foreground:style.graph.foregroundlines, background:style.graph.backgroundlines, backgroundText:style.graph.backgroundtext}}},
+                        {type:'rect', name:'vertical_2', data:{
+                            x:90, y:15, width:30, height:242.5, 
+                            style:style.markings,
+                        }},
+                        {type:'label', name:'frequency_title', data:{x:33, y:11, text:'Freq', style:style.h1}},
+                        {type:'label', name:'Q_title', data:{x:68, y:11, text:'Q', style:style.h1}},
+                        {type:'label', name:'gain_title', data:{x:98, y:11, text:'Gain', style:style.h1}},
+                        {type:'grapherSVG', name:'graph', data:{x:185, y:5, width:120, height:75, style:{foreground:style.graph.foregroundlines, background:style.graph.backgroundlines, backgroundText:style.graph.backgroundtext}}},
                     ]
                 };
                 //dynamic design
@@ -12185,23 +12193,35 @@
                                 return function(value){
                                     design.readout_sixteenSegmentDisplay['readout_'+a].text( __globals.utility.misc.padString( __globals.utility.math.curvePoint.exponential(value,0,20000,10.5866095).toFixed(2), 8) );
                                     design.readout_sixteenSegmentDisplay['readout_'+a].print('smart');
-                                    updateGraph();
+                                    obj.filterCircuit.frequency(a, __globals.utility.math.curvePoint.exponential(value,0,20000,10.5866095));
+                                    updateGraph(a);
                                 }
                             }(a)
                         }},
                         {type:'label', name:'qLabel_'+a+'_0',     data:{x:2.5+59,    y: 30*a+43,    text:'0',   style:style.h3}},
                         {type:'label', name:'qLabel_'+a+'_1/2',   data:{x:2.5+68.25, y: 30*a+18.25, text:'1/2', style:style.h3}},
                         {type:'label', name:'qLabel_'+a+'_1',     data:{x:2.5+80,    y: 30*a+43,    text:'1',   style:style.h3}},
-                        {type:'dial_continuous',name:'q_'+a,   data:{ x: 2.5+70, y: 30*a+32.5,  r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                        {type:'dial_continuous',name:'q_'+a,   data:{ x:  2.5+70, y: 30*a+32.5,  r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
                             onchange:function(a){
                                 return function(value){
-                                    // console.log(a,value);
-                                    updateGraph();
+                                    obj.filterCircuit.Q(a, value*10);
+                                    updateGraph(a);
+                                }
+                            }(a)
+                        }},
+                        {type:'label', name:'gainLabel_'+a+'_0', data:{x:35+59,    y: 30*a+43,    text:'0',   style:style.h3}},
+                        {type:'label', name:'gainLabel_'+a+'_2', data:{x:35+69.5, y: 30*a+18.25, text:'1',   style:style.h3}},
+                        {type:'label', name:'gainLabel_'+a+'_1', data:{x:35+80,    y: 30*a+43,    text:'2',   style:style.h3}},
+                        {type:'dial_continuous',name:'gain_'+a,  data:{x:35+70, y: 30*a+32.5,  r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                            onchange:function(a){
+                                return function(value){
+                                    obj.filterCircuit.gain(a, value*2);
+                                    updateGraph(a);
                                 }
                             }(a)
                         }},
                         {type:'readout_sixteenSegmentDisplay',name:'readout_'+a,data:{
-                            x:90, y:30*a+22.5, width:60, height:20, count:8,
+                            x:122.5, y:30*a+22.5, width:60, height:20, count:8,
                         }},
                     );
                 }
@@ -12209,26 +12229,40 @@
                 //main object
                     var obj = __globals.utility.misc.objectBuilder(objects.distortionUnit,design);
             
-                //internal functions
-                    function getFrequencyAndLocationArray(){
-                        var locationArray = [];
-                        var frequencyArray = [];
-                        for(var a = 0; a <= Math.floor(Math.log10(vars.freqRange.high))+1; a++){
-                            for(var b = 1; b < 10; b+=1/Math.pow(2,vars.graphDetail)){
-                                if( Math.pow(10,a)*(b/10) >= vars.freqRange.high){break;}
-                                locationArray.push( Math.log10(Math.pow(10,a)*b) );
-                                frequencyArray.push( Math.pow(10,a)*(b/10) );
+                //import/export
+                //circuitry
+                    //multiband filter
+                        obj.filterCircuit = new parts.circuits.audio.multibandFilter(__globals.audio.context,vars.channels);
+                        design.connectionNode_audio.audioIn.out().connect( obj.filterCircuit.in() );
+                        obj.filterCircuit.out().connect( design.connectionNode_audio.audioOut.in() );
+            
+                    //internal functions
+                        function getFrequencyAndLocationArray(){
+                            var locationArray = [];
+                            var frequencyArray = [];
+                            for(var a = 0; a <= Math.floor(Math.log10(vars.freqRange.high))+1; a++){
+                                for(var b = 1; b < 10; b+=1/Math.pow(2,vars.graphDetail)){
+                                    if( Math.pow(10,a)*(b/10) >= vars.freqRange.high){break;}
+                                    locationArray.push( Math.log10(Math.pow(10,a)*b) );
+                                    frequencyArray.push( Math.pow(10,a)*(b/10) );
+                                }
+                            }
+                            return {frequency:frequencyArray, location:__globals.utility.math.normalizeStretchArray(locationArray)};
+                        }
+                        function updateGraph(specificBand){
+                            //if no band has been specified, gather the data for all of them and draw the whole thing. Otherwise, just gather 
+                            //and redraw the data for the one band
+            
+                            var frequencyAndLocationArray = getFrequencyAndLocationArray();
+                            if(specificBand == undefined){
+                                var result = obj.filterCircuit.measureFrequencyResponse_values_allBands(frequencyAndLocationArray.frequency);
+                                for(var a = 0; a < vars.channels; a++){ design.grapherSVG.graph.draw( result[a][0], frequencyAndLocationArray.location, a ); }
+                            }else{
+                                var result = obj.filterCircuit.measureFrequencyResponse_values(specificBand, frequencyAndLocationArray.frequency);
+                                design.grapherSVG.graph.draw( result[0], frequencyAndLocationArray.location, specificBand);
                             }
                         }
-                        return {frequency:frequencyArray, location:__globals.utility.math.normalizeStretchArray(locationArray)};
-                    }
-                    function updateGraph(){
             
-                        for(var a = 0; a < vars.channels; a++){
-                            design.grapherSVG.graph.draw([design.dial_continuous['freq_'+a].get()*2,design.dial_continuous['q_'+a].get()*2],undefined,a);
-                        }
-                    }
-                    
                 //setup
                     var arrays = getFrequencyAndLocationArray();
                     arrays.frequency = arrays.frequency.filter(function(a,i){return i%Math.pow(2,vars.graphDetail)==0;});
@@ -12242,17 +12276,120 @@
                             printText:true,
                         });
                     design.grapherSVG.graph.drawBackground();
-                    setTimeout(updateGraph,100);
             
                     for(var a = 0; a < vars.channels; a++){
-                        design.dial_continuous['freq_'+a].set(Math.random());
-                        design.dial_continuous['q_'+a].set(Math.random());
+                        design.dial_continuous['freq_'+a].set( a/vars.channels );
+                        design.dial_continuous['q_'+a].set(0.15);
+                        design.dial_continuous['gain_'+a].set(0.5);
                     }
+                    design.dial_continuous['freq_'+0].set( 0.4/vars.channels );
+                    updateGraph();
             
                 return obj;
             };
+            parts.circuits.audio.multibandFilter = function(
+                context, bandcount
+            ){
+                //flow chain
+                    var flow = {
+                        inAggregator: {},
+                        filterNodes: [],
+                        outAggregator: {},
+                    };
+            
+                //inAggregator
+                    flow.inAggregator.gain = 1;
+                    flow.inAggregator.node = context.createGain();
+                    __globals.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+            
+                //filterNodes
+                    for(var a = 0; a < bandcount; a++){
+                        var temp = { frequency:110, q:0.1, gain:1, filterNode:context.createBiquadFilter(), gainNode:context.createGain() };
+                        temp.filterNode.connect(temp.gainNode);
+                        temp.filterNode.type = 'bandpass';
+                        __globals.utility.audio.changeAudioParam(context, temp.filterNode.frequency,110,0.01,'instant',true);
+                        __globals.utility.audio.changeAudioParam(context, temp.filterNode.Q,0.1,0.01,'instant',true);
+                        __globals.utility.audio.changeAudioParam(context, temp.gainNode.gain, temp.gain, 0.01, 'instant', true);
+                        flow.filterNodes.push(temp);
+                    }
+            
+                //outAggregator
+                    flow.outAggregator.gain = 1;
+                    flow.outAggregator.node = context.createGain();
+                    __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+            
+            
+            
+                //do connections
+                    for(var a = 0; a < bandcount; a++){
+                        flow.inAggregator.node.connect(flow.filterNodes[a].filterNode);
+                        flow.filterNodes[a].gainNode.connect(flow.outAggregator.node);
+                    }
+            
+                //input/output node
+                    this.in = function(){return flow.inAggregator.node;}
+                    this.out = function(){return flow.outAggregator.node;}
+            
+                //controls
+                    this.masterGain = function(value){
+                        if(value == undefined){return flow.outAggregator.gain;}
+                        flow.outAggregator.gain = value;
+                        __globals.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                    };
+                    this.gain = function(band, value){
+                        if(value == undefined){return flow.filterNodes[band].gain;}
+                        flow.filterNodes[band].gain = value;
+                        __globals.utility.audio.changeAudioParam(context, flow.filterNodes[band].gainNode.gain, flow.filterNodes[band].gain, 0.01, 'instant', true);
+                    };
+                    this.frequency = function(band, value){
+                        if(value == undefined){return flow.filterNodes[band].frequency;}
+                        flow.filterNodes[band].frequency = value;
+                        __globals.utility.audio.changeAudioParam(context, flow.filterNodes[band].filterNode.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
+                    };
+                    this.Q = function(band, value){ 
+                        if(value == undefined){return flow.filterNodes[band].Q;}
+                        flow.filterNodes[band].Q = value;
+                        __globals.utility.audio.changeAudioParam(context, flow.filterNodes[band].filterNode.Q,value,0.01,'instant',true);
+                    };
+                    this.measureFrequencyResponse = function(band, start,end,step){
+                        var frequencyArray = [];
+                        for(var a = start; a < end; a += step){frequencyArray.push(a);}
+                    
+                        return this.measureFrequencyResponse_values(band, frequencyArray);
+                    };
+                    this.measureFrequencyResponse_allBands = function(start,end,step){
+                        var frequencyArray = [];
+                        for(var a = start; a < end; a += step){frequencyArray.push(a);}
+                    
+                        var outputArray = [];
+                        for(var a = 0; a < bandcount; a++){
+                            outputArray.push(this.measureFrequencyResponse_values(a, frequencyArray));
+                        }
+                        return outputArray;
+                    };
+                    this.measureFrequencyResponse_values = function(band, frequencyArray){
+                        var Float32_frequencyArray = new Float32Array(frequencyArray);
+                        var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                        var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+            
+                        flow.filterNodes[band].filterNode.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+                        
+                        return [magResponseOutput.map(a => a*flow.filterNodes[band].gain*flow.outAggregator.gain),frequencyArray];
+                    };
+                    this.measureFrequencyResponse_values_allBands = function(frequencyArray){
+                        var outputArray = [];
+                        for(var a = 0; a < bandcount; a++){ outputArray.push(this.measureFrequencyResponse_values(a,frequencyArray)); }
+                        return outputArray;
+                    };
+            };
             
             var eq = __globals.utility.workspace.placeAndReturnObject( equalizer(undefined,50,50) );
+            
+            
+            
+            var audio_sink_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_sink(400,50) );
+            var player_1 = __globals.utility.workspace.placeAndReturnObject( objects.player(425,340) );
+            var audio_duplicator_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(-50,50) );
 
 
         }

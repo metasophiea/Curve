@@ -1,4 +1,14 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-08-31
+  - fixed demo 1
+  - more work on the super adjustable equaliser (weird thing where auto setting 
+    values isn't pushing the changes through to the actual filter circuit. Also 
+    the frequency spread is nice, but for a human it's kinda silly)
+
+  bug found
+  - it seems the BiquadFilter's "getFrequencyResponse" method doesn't always
+    work. Sometimes it just returns an array of just zeros.
+
 2018-08-19
   - pushed the new filter to the main objects list
   - fixed some backwards logic in the sequencer
