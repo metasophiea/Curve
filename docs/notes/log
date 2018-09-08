@@ -16,6 +16,10 @@
   future ideas
   - drop shadows
 
+  Compliation Results
+  - workspace.js                        825 Kb  (100%)
+  - workspace.min.js                    281 Kb  (34.15%)
+
 2018-09-01
   - further work on the equaliser, things are going well; it's got a nicer
     object with colour coded channels, manually selected channel frequencies
