@@ -32,8 +32,17 @@ this.reverbUnit = function(
             ajaxRequest.open('GET', repoURL+type, true);
             ajaxRequest.responseType = 'arraybuffer';
             ajaxRequest.onload = function(){
-                context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
-                if(callback){callback();}  
+                //undo connections
+                    flow.reverbNode.node.disconnect();
+                //create new convolver
+                    flow.reverbNode.node = context.createConvolver();
+                //redo connections
+                    flow.reverbGain.node.connect(flow.reverbNode.node);
+                    flow.reverbNode.node.connect(flow.outAggregator.node);
+                //load in new buffer
+                    context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
+                //run any callbacks
+                    if(callback){callback();}  
             };
             ajaxRequest.send();
         }

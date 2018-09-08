@@ -27,9 +27,17 @@ __globals.selection = new function(){
         __globals.selection.selectedObjects = newList;
     };
     this.selectObject = function(object){
-        if(object.onSelect){object.onSelect();}
-        __globals.selection.selectedObjects.push(object);
-        __globals.selection.lastSelectedObject = object;
+        //check if obbject is already selected
+            if( __globals.selection.selectedObjects.indexOf(object) != -1 ){return;}
+
+        //shift object to front of view
+            __globals.panes.middleground.removeChild(object);
+            __globals.panes.middleground.append(object);
+
+        //perform selection
+            if(object.onSelect){object.onSelect();}
+            __globals.selection.selectedObjects.push(object);
+            __globals.selection.lastSelectedObject = object;
     };
     this.deselectObject = function(object){
         __globals.selection.selectedObjects.splice(__globals.selection.selectedObjects.indexOf(object),1);

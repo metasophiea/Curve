@@ -1,4 +1,21 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-09-08
+  - equaliser levels fixed (along with that update problem)
+  - multiband filter v2 now has a more advanced frequency response updater (it 
+    tries no not do recalculations when it's not necessary)
+  - multiband filter v2 creation has option to select between having high/low
+    pass filters for the highest and lowest bands ("frames"), or just band 
+    passes everywhere
+  - multiband filter (object and circuit) pushed to main objects and circuits
+    lists (removed the 'v2')
+  - selecting an object now pulls it to the front of the view order
+
+  bugs found
+  - looper symbol isn't allowing mouse clicks through
+
+  future ideas
+  - drop shadows
+
 2018-09-01
   - further work on the equaliser, things are going well; it's got a nicer
     object with colour coded channels, manually selected channel frequencies

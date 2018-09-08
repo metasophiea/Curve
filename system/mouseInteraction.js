@@ -308,16 +308,20 @@
                             selectionArea.points = [start, {x:end.x, y:start.y}, end, {x:start.x, y:end.y}];
                         };
                         
-                    //run though all middleground objects to see if they are selected in this box
-                    //  tell them they are selected (or not) and add the selected to the selected list
+                    //run though all middleground objects to see if they are selected in this box add the objects 
+                    //that overlap with the selection area to a temporary array, then select them all in one go
+                    //(this is to ease the object reordering that happens in the "__globals.selection.selectObject"
+                    //function)
                         var objects = __globals.panes.middleground.children;
+                        var tempHolder = [];
                         for(var a = 0; a < objects.length; a++){
                             if(objects[a].selectionArea){
                                 if(__globals.utility.math.detectOverlap(selectionArea.points, objects[a].selectionArea.points, selectionArea.box, objects[a].selectionArea.box)){
-                                    __globals.selection.selectObject(objects[a]);
+                                    tempHolder.push( objects[a] );
                                 }
                             }
                         }
+                        for(var a = 0; a < tempHolder.length; a++){ __globals.selection.selectObject(tempHolder[a]); }
 
                     //delete all temporary elements and attributes
                         delete __globals.svgElement.tempData;

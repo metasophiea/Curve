@@ -1111,7 +1111,6 @@ __globals.utility = new function(){
         this.elementMaker = function(type,name,data){
             if(!data.style){data.style='';}
             switch(type){
-
                 //basic
                     case 'g':      return parts.elements.basic.g(name, data.x, data.y, data.r, data.style); break;
                     case 'line':   return parts.elements.basic.line(name, data.x1, data.y1, data.x2, data.y2, data.style); break;
@@ -1266,9 +1265,13 @@ __globals.utility = new function(){
 
                 //dynamic
                     case 'cable': return parts.elements.dynamic.cable(name, data.x1, data.y1, data.x2, data.y2, data.style.unactive, data.style.active); break;
-                    case 'connectionNode_audio': return parts.elements.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, data.angle, __globals.audio.context); break;
-                    case 'connectionNode_data': 
-                        var temp = parts.elements.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle);
+                    case 'connectionNode_audio': 
+                        if(Object.keys(data.style).length == 0){data.style = undefined;}
+                        return parts.elements.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, data.angle, __globals.audio.context, data.style);
+                    break;
+                    case 'connectionNode_data':
+                        if(Object.keys(data.style).length == 0){data.style = undefined;}
+                        var temp = parts.elements.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle, data.style);
                         temp.receive = data.receive ? data.receive : temp.receive;
                         temp.give = data.give ? data.give : temp.give;
                         return temp;
@@ -1278,9 +1281,9 @@ __globals.utility = new function(){
         this.objectBuilder = function(creatorMethod,design){
             //main
                 var obj = __globals.utility.misc.elementMaker('g',design.type,{x:design.x, y:design.y});
-
-            //generate selection area
                 if(design.base.type == undefined){design.base.type = 'path';}
+            
+            //generate selection area
                 switch(design.base.type){
                     case 'rect':
                         //generate selection area

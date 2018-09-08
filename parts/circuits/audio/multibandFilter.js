@@ -1,6 +1,12 @@
-parts.circuits.audio.multibandFilter = function(
-    context, bandcount
+this.multibandFilter = function(
+    context, bandcount, frames=false
 ){
+    //saved values
+        var saved = {
+            settings:[], //{Q, gain, frequency, fresh(bool)}
+            responses:[], //{magResponse, phaseResponse, frequencyArray}
+        };
+
     //flow chain
         var flow = {
             inAggregator: {},
@@ -15,12 +21,25 @@ parts.circuits.audio.multibandFilter = function(
             __globals.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
 
         //filterNodes
-            for(var a = 0; a < bandcount; a++){
+            function makeGenericFilter(type){
                 var temp = { frequency:110, Q:0.1, node:context.createBiquadFilter() };
-                temp.node.type = 'bandpass';
+                temp.node.type = type;
                 __globals.utility.audio.changeAudioParam(context, temp.node.frequency,110,0.01,'instant',true);
                 __globals.utility.audio.changeAudioParam(context, temp.node.Q,0.1,0.01,'instant',true);
-                flow.filterNodes.push(temp);
+                return temp;
+            }
+
+            if(frames){
+                if(bandcount < 2){bandcount = 2;}
+                //lowpass
+                    flow.filterNodes.push(makeGenericFilter('lowpass'));
+                //bands
+                    for(var a = 1; a < bandcount-1; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
+                //highpass
+                    flow.filterNodes.push(makeGenericFilter('highpass'));
+            }else{
+                //bands
+                    for(var a = 0; a < bandcount; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
             }
 
         //gainNodes
@@ -28,6 +47,7 @@ parts.circuits.audio.multibandFilter = function(
                 var temp = { gain:1, node:context.createGain() };
                 __globals.utility.audio.changeAudioParam(context, temp.node.gain, temp.gain, 0.01, 'instant', true);
                 flow.gainNodes.push(temp);
+                saved.settings[a] = { Q:0.1, gain:1, frequency:110, fresh:true };
             }
 
         //outAggregator
@@ -59,34 +79,48 @@ parts.circuits.audio.multibandFilter = function(
             if(value == undefined){return flow.gainNodes[band].gain;}
             flow.gainNodes[band].gain = value;
             __globals.utility.audio.changeAudioParam(context, flow.gainNodes[band].node.gain, flow.gainNodes[band].gain, 0.01, 'instant', true);
+
+            saved.settings[band].gain = value;
+            saved.settings[band].fresh = true;
         };
         this.frequency = function(band,value){
             if(value == undefined){return flow.filterNodes[band].frequency;}
             flow.filterNodes[band].frequency = value;
             __globals.utility.audio.changeAudioParam(context, flow.filterNodes[band].node.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
+
+            saved.settings[band].frequency = value;
+            saved.settings[band].fresh = true;
         };
         this.Q = function(band,value){
             if(value == undefined){return flow.filterNodes[band].Q;}
             flow.filterNodes[band].Q = value;
             __globals.utility.audio.changeAudioParam(context, flow.filterNodes[band].node.Q,flow.filterNodes[band].Q,0.01,'instant',true);
-        };
 
-        this.kick = function(band){
-            console.log(band);
-            if(band == undefined){for(var a = 0; a < bandcount; a++){this.kick(a);}return;}
-            __globals.utility.audio.changeAudioParam(context, flow.gainNodes[band].node.gain, flow.gainNodes[band].gain, 0.01, 'instant', true);
-            __globals.utility.audio.changeAudioParam(context, flow.filterNodes[band].node.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
-            __globals.utility.audio.changeAudioParam(context, flow.filterNodes[band].node.Q,flow.filterNodes[band].Q,0.01,'instant',true);
+            saved.settings[band].Q = value;
+            saved.settings[band].fresh = true;
         };
     
         this.measureFrequencyResponse = function(band, frequencyArray){
             //if band is undefined, gather the response for all bands
-            if(band == undefined){ return Array(bandcount).fill(0).map((a,i) => this.measureFrequencyResponse(i,frequencyArray)); }
+                if(band == undefined){ return Array(bandcount).fill(0).map((a,i) => this.measureFrequencyResponse(i,frequencyArray)); }
 
-            var Float32_frequencyArray = new Float32Array(frequencyArray);
-            var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
-            var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
-            flow.filterNodes[band].node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
-            return [magResponseOutput.map(a => a*flow.gainNodes[band].gain*flow.outAggregator.gain),frequencyArray];
+            //if band hasn't had it's setttings changed since last time, just return the last values (multiplied by the master gain)
+                if(!saved.settings[band].fresh){
+                    return [ saved.responses[band].magResponse.map(a => a*flow.outAggregator.gain), saved.responses[band].requencyArray ];
+                }
+
+            //do full calculation of band, save and return
+                var Float32_frequencyArray = new Float32Array(frequencyArray);
+                var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                flow.filterNodes[band].node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+
+                saved.responses[band] = {
+                    magResponse:magResponseOutput.map(a => a*flow.gainNodes[band].gain), 
+                    phaseResponse:phaseResponseOutput, 
+                    frequencyArray:frequencyArray,
+                };
+                saved.settings[band].fresh = false;
+                return [magResponseOutput.map(a => a*flow.gainNodes[band].gain*flow.outAggregator.gain),frequencyArray];
         };
 };

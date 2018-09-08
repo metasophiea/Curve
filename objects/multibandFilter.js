@@ -1,10 +1,10 @@
-var multibandFilter_object_v2 = function(
-    id='multibandFilter_object_v2',
+this.multibandFilter = function(
     x, y, angle,
 ){
     var vars = {
+        allowUpdate:false,
         freqRange:{ low: 0.1, high: 20000, },
-        graphDetail: 3, //factor of the number of points a graphed line is drawn with
+        graphDetail: 2, //factor of the number of points a graphed line is drawn with
         channelCount: 8,
         masterGain:1,
         gain:[],
@@ -66,7 +66,7 @@ var multibandFilter_object_v2 = function(
     var width = 195;
     var height = 255;
     var design = {
-        type: 'multibandFilterUnit_v2',
+        type: 'multibandFilter',
         x: x, y: y,
         base: {
             points:[
@@ -154,7 +154,7 @@ var multibandFilter_object_v2 = function(
     }
 
     //main object
-        var obj = __globals.utility.misc.objectBuilder(objects.distortionUnit,design);
+        var obj = __globals.utility.misc.objectBuilder(objects.multibandFilter,design);
 
     //import/export
         obj.exportData = function(){
@@ -170,8 +170,8 @@ var multibandFilter_object_v2 = function(
         obj.importData = function(data){};
 
     //circuitry
-        obj.filterCircuit_0 = new parts.circuits.audio.multibandFilter_v2(__globals.audio.context,vars.channelCount);
-        obj.filterCircuit_1 = new parts.circuits.audio.multibandFilter_v2(__globals.audio.context,vars.channelCount);
+        obj.filterCircuit_0 = new parts.circuits.audio.multibandFilter(__globals.audio.context, vars.channelCount, true);
+        obj.filterCircuit_1 = new parts.circuits.audio.multibandFilter(__globals.audio.context, vars.channelCount, true);
         design.connectionNode_audio.audioIn_0.out().connect( obj.filterCircuit_0.in() );
         design.connectionNode_audio.audioIn_1.out().connect( obj.filterCircuit_1.in() );
         obj.filterCircuit_0.out().connect( design.connectionNode_audio.audioOut_0.in() );
@@ -191,13 +191,14 @@ var multibandFilter_object_v2 = function(
             return {frequency:frequencyArray, location:__globals.utility.math.normalizeStretchArray(locationArray)};
         }
         function updateGraph(specificBand){
+            if(!vars.allowUpdate){return;}
             //if no band has been specified, gather the data for all of them and draw the whole thing. Otherwise, just gather 
             //and redraw the data for the one band
 
             var frequencyAndLocationArray = getFrequencyAndLocationArray();
                 if(specificBand == undefined){
                     var result = obj.filterCircuit_0.measureFrequencyResponse(undefined, frequencyAndLocationArray.frequency);
-                    for(var a = 0; a < vars.channels; a++){ design.grapherSVG.graph.draw( result[a][0], frequencyAndLocationArray.location, a ); }
+                    for(var a = 0; a < vars.channelCount; a++){ design.grapherSVG.graph.draw( result[a][0], frequencyAndLocationArray.location, a ); }
                 }else{
                     var result = obj.filterCircuit_0.measureFrequencyResponse(specificBand, frequencyAndLocationArray.frequency);
                     design.grapherSVG.graph.draw( result[0], frequencyAndLocationArray.location, specificBand);
@@ -206,9 +207,6 @@ var multibandFilter_object_v2 = function(
 
     //interface
         obj.i = {
-            kick:function(){//a silly solution to the problem of the circuit and graph not setting up properly
-                for(var a = 0; a < vars.channelCount; a++){ design.slide['gainSlide_'+a].set(design.slide['gainSlide_'+a].get()); }
-            },
             gain:function(band,value){ if(value == undefined){return design.slide['gainSlide_'+band].get(value);} design.slide['gainSlide_'+band].set(value); },
             Q:function(band,value){ if(value == undefined){return design.dial_continuous['qDial_'+band].get(value);} design.dial_continuous['qDial_'+band].set(value); },
             frequency:function(band,value){ if(value == undefined){return design.dial_continuous['frequencyDial_'+band].get(value);} design.dial_continuous['frequencyDial_'+band].set(value); },
@@ -241,10 +239,10 @@ var multibandFilter_object_v2 = function(
                     printText:true,
                 });
             design.grapherSVG.graph.drawBackground();
-        //setup default settings
+        // setup default settings, allow graphical updates to occur and update graph
             obj.i.reset();
-        //a gentle kick
-            setTimeout(obj.i.kick,100);
+            vars.allowUpdate = true;
+            updateGraph();
     
     return obj;
 };

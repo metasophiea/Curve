@@ -25,6 +25,8 @@
         var filterUnit_1 = __globals.utility.workspace.placeAndReturnObject( objects.filterUnit(150, 175) );
     //reverbUnit
         var reverbUnit_1 = __globals.utility.workspace.placeAndReturnObject( objects.reverbUnit(280, 170) );
+    //multiband filter
+        var multibandFilter = __globals.utility.workspace.placeAndReturnObject( objects.multibandFilter(200,410) );
 
 //audio player objects
     //oneShot_single
@@ -62,7 +64,6 @@
 
 //musical keyboard
     var musicalkeyboard_1 = __globals.utility.workspace.placeAndReturnObject( objects.musicalkeyboard(80, 330) );
-
 
 
 
