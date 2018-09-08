@@ -615,7 +615,11 @@
                                     audioParam.setTargetAtTime(target, context.currentTime, 0.001);
                                 break;
                             }
-                        }catch(e){console.log('could not change param (probably due to an overlap)');console.log(e);}
+                        }catch(e){
+                            console.log('could not change param (possibly due to an overlap, or bad target value)');
+                            console.log('audioParam:',audioParam,'target:',target,'time:',time,'curve:',curve,'cancelScheduledValues:',cancelScheduledValues);
+                            console.log(e);
+                        }
                     };
                     this.loadAudioFile = function(callback,type='file',url=''){
                         switch(type){
@@ -1180,7 +1184,7 @@
                                 case 'audio_meter_level': return parts.elements.display.audio_meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
                                 case 'sevenSegmentDisplay': return parts.elements.display.sevenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
                                 case 'sixteenSegmentDisplay': return parts.elements.display.sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
-                                case 'readout_sixteenSegmentDisplay': return parts.elements.display.readout_sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.count, data.style.background, data.style.glow, data.style.dime); break;
+                                case 'readout_sixteenSegmentDisplay': return parts.elements.display.readout_sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.style.background, data.style.glow, data.style.dime); break;
                                 case 'rastorDisplay': return parts.elements.display.rastorDisplay(name, data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage); break;
                                 case 'glowbox_rect': return parts.elements.display.glowbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim); break;
                                 case 'grapherSVG': return parts.elements.display.grapherSVG(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
@@ -5353,7 +5357,7 @@
                         };
                         this.readout_sixteenSegmentDisplay = function(
                             id='readout_sixteenSegmentDisplay',
-                            x, y, width, height, count,
+                            x, y, width, height, count, angle=0,
                             backgroundStyle='fill:rgb(0,0,0)',
                             glowStyle='fill:rgb(200,200,200)',
                             dimStyle='fill:rgb(20,20,20)'
@@ -5364,7 +5368,7 @@
                         
                             //elements
                                 //main
-                                    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
+                                    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
                         
                                 //display units
                                     var units = [];
@@ -5414,9 +5418,6 @@
                                         break;
                                     }
                                 };
-                        
-                        
-                        
                         
                             return object;
                         };

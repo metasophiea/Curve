@@ -1,4 +1,12 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-09-01
+  - further work on the equaliser, things are going well; it's got a nicer
+    object with colour coded channels, manually selected channel frequencies
+    and a master out (still working on getting the 'zero' levels correct)
+
+  future ideas
+  - slide panel spacing argument, handle width, slot width
+
 2018-08-31
   - fixed demo 1
   - more work on the super adjustable equaliser (weird thing where auto setting 

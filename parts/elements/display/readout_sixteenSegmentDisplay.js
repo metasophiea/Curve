@@ -1,6 +1,6 @@
 this.readout_sixteenSegmentDisplay = function(
     id='readout_sixteenSegmentDisplay',
-    x, y, width, height, count,
+    x, y, width, height, count, angle=0,
     backgroundStyle='fill:rgb(0,0,0)',
     glowStyle='fill:rgb(200,200,200)',
     dimStyle='fill:rgb(20,20,20)'
@@ -11,7 +11,7 @@ this.readout_sixteenSegmentDisplay = function(
 
     //elements
         //main
-            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
+            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
 
         //display units
             var units = [];
@@ -61,9 +61,6 @@ this.readout_sixteenSegmentDisplay = function(
                 break;
             }
         };
-
-
-
 
     return object;
 };
