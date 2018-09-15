@@ -163,3 +163,8 @@ this.launchpad = function(x,y,debug=false){
 
     return obj;
 };
+
+this.launchpad.metadata = {
+    name:'Launchpad',
+    helpurl:'https://metasophiea.com/curve/help/object/launchpad/'
+};

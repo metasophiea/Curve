@@ -96,3 +96,8 @@ this.pulseGenerator_hyper = function(x,y,maxTempo=999,debug=false){
 
     return obj;
 };
+
+this.pulseGenerator_hyper.metadata = {
+    name:'Pulse Generator (hyper)',
+    helpurl:'https://metasophiea.com/curve/help/object/pulseGenerator_hyper/'
+};

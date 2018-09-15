@@ -41,12 +41,11 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
 };
 
 
-
 // onkeydown functions
     __globals.keyboardInteraction.onkeydown_functionList = {};
     document.onkeydown = function(event){
         //if key is already pressed, don't press it again
-        if(__globals.keyboardInteraction.pressedKeys[event.code]){return;}
+        if(__globals.keyboardInteraction.pressedKeys[event.code]){ return; }
         __globals.keyboardInteraction.pressedKeys[event.code] = true;
 
         //discover what the mouse is pointing at and if that thing accepts keyboard input. First check whether the
@@ -104,10 +103,16 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
         __globals.selection.paste();
     };
     __globals.keyboardInteraction.onkeydown_functionList.F1 = function(event){
-        if(!event[__globals.super.keys.ctrl]){return;}
-        console.log('help!');
         var temp = __globals.utility.workspace.objectUnderPoint(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
-        if(temp){ window.open(__globals.super.helpFolderLocation+'object/'+temp.id, '_blank'); }
+        if(temp){
+            if( objects[temp.id].metadata ){
+                window.open( objects[temp.id].metadata.helpurl, '_blank');
+            }else{
+                window.open(__globals.super.helpFolderLocation+'object/'+temp.id, '_blank');
+                console.warn('bad help url, please add metadata to your object file ->',temp.id);
+            }
+            __globals.keyboardInteraction.releaseAll();
+        }
     };
     __globals.keyboardInteraction.onkeydown_functionList.F2 = function(event){
         if(!event[__globals.super.keys.ctrl]){return;}
@@ -152,5 +157,12 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
         //global function
         if( __globals.keyboardInteraction.onkeyup_functionList[event.key] ){
             __globals.keyboardInteraction.onkeyup_functionList[event.key](event);
+        }
+    };
+
+// additional utilities
+    __globals.keyboardInteraction.releaseAll = function(){
+        for(key in __globals.keyboardInteraction.pressedKeys){
+            document.onkeyup( new KeyboardEvent('keyup',{'key':key}) );
         }
     };

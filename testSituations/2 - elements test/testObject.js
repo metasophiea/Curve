@@ -47,7 +47,10 @@ objects.testObject = function(x,y,debug=false){
                 {type:'slide',name:'slide_vertical',data:{
                     x:5, y:40, width: 10, height: 120, angle:0,
                     style:{handle:style.handle, backing:style.backing, slot:style.slot}, 
-                    onchange:function(data){design.connectionNode_data.externalData_1.send('slide_vertical',data);}, 
+                    onchange:function(data){
+                        design.connectionNode_data.externalData_1.send('slide_vertical',data);
+                        design.list.list.position(data);
+                    }, 
                     onrelease:function(){console.log('slide_vertical onrelease');}
                 }},
                 {type:'slide',name:'slide_horizontal',data:{
@@ -100,6 +103,14 @@ objects.testObject = function(x,y,debug=false){
                         down:'fill:rgba(180,180,180,1)', glow:'fill:rgba(220,200,220,1)'
                     }, 
                     onclick:function(){design.connectionNode_data.externalData_1.send('button_rect');}
+                }},
+                {type:'button_rect_2',name:'button_rect_2',data:{
+                    x:5, y: 5, width:20, height:20, 
+                    style:{
+                        up:'fill:rgba(200,200,200,1)', hover:'fill:rgba(220,220,220,1)', 
+                        down:'fill:rgba(180,180,180,1)', glow:'fill:rgba(220,200,220,1)'
+                    }, 
+                    onclick:function(){}
                 }},
                 {type:'checkbox_rect', name:'checkbox_rect', data:{
                     x:245, y: 5, width:20, height:20, angle:0, 
@@ -248,6 +259,10 @@ objects.testObject = function(x,y,debug=false){
                     {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_canvas', data:{
                         x:405, y:170, width:100, height:50, graphType:'Canvas'
                     }},
+            //list
+                {type:'list', name:'list', data:{
+                    x:230, y:30, width:60, height:90,
+                }},
         ]
     };
  

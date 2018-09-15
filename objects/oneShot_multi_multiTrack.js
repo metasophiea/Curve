@@ -245,3 +245,8 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
     
     return obj;
 };
+
+this.oneShot_multi_multiTrack.metadata = {
+    name:'One Shot (Multi)(8 Track)',
+    helpurl:'https://metasophiea.com/curve/help/object/oneShot_multi_multiTrack/'
+};

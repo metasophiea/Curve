@@ -91,8 +91,9 @@
             //    
             //    object
             //        requestInteraction              (x,y,type) (browser position)
-            //        //disconnectEverything          (object)
+            //        disconnectEverything            (object)
             //        generateSelectionArea           (points:[{x:0,y:0},...], object)
+            //        deteleObject                    (object)
             //    
             //    audio
             //        changeAudioParam                (audioParam, target, time, curve, cancelScheduledValues=true)
@@ -189,12 +190,13 @@
                         return g;
                     };
                     this.getGlobalScale = function(element){
-                        return __globals.utility.element.getTransform(__globals.utility.workspace.getGlobal(element)).s
+                        return __globals.utility.element.getTransform(__globals.utility.workspace.getGlobal(element)).s;
                     };
                     this.getViewportDimensions = function(){
                         return {width:__globals.svgElement.width.baseVal.value, height:__globals.svgElement.height.baseVal.value};
                     };
                     this.placeAndReturnObject = function(object,pane='middleground'){
+                        if(object == undefined){return;}
                         return __globals.panes[pane].appendChild( object );
                     };
                     this.mouseInteractionHandler = function(moveCode, stopCode){
@@ -320,6 +322,9 @@
                     };
                     this.saveload = new function(){
                         this.save = function(compress=true,sceneName='project',bundleConstructorFunctions=false){
+                            //alert user
+                                menu.control.report('saving');
+            
                             var outputData = {
                                 sceneName:sceneName,
                                 bundleConstructorFunctions:bundleConstructorFunctions,
@@ -345,6 +350,9 @@
                             
                             //restarting audio
                                 __globals.audio.destination.masterGain(1);
+            
+                            //alert user
+                                menu.control.report('');
                         };
                         this.__loadProcess = function(data,compressed){
                             //stopping audio
@@ -536,6 +544,7 @@
                     this.requestInteraction = function(x,y,type,globalName){
                         if(!x || !y){return true;}
                         var temp = document.elementFromPoint(x,y);
+                        if(temp == null){return false;}
                 
                         if(temp.hasAttribute('workspace')){return true;}
                         while(!temp.hasAttribute('global')){
@@ -547,13 +556,19 @@
                         
                         return temp.getAttribute('pane')==globalName;
                     };
-                    // this.disconnectEverything = function(object){
-                    //     console.warn('you\'re using this?');
-                    //     // var keys = Object.keys(object.io);
-                    //     // for(var a = 0; a < keys.length; a++){
-                    //     //     object.io[keys[a]].disconnect();
-                    //     // }
-                    // };
+                    this.disconnectEverything = function(object){
+                        var keys = Object.keys(object.io);
+                        for( var a = 0; a < keys.length; a++){
+                            //account for node arrays
+                            if( Array.isArray(object.io[keys[a]]) ){
+                                for(var c = 0; c < object.io[keys[a]].length; c++){
+                                    object.io[keys[a]][c].disconnect();
+                                }
+                            }else{
+                                object.io[keys[a]].disconnect();
+                            }
+                        }
+                    };
                     this.generateSelectionArea = function(points, object){
                         var debug = false;
                         object.selectionArea = {};
@@ -585,6 +600,14 @@
                             for(var a = 0; a < object.selectionArea.box.length; a++){ __globals.panes.foreground.append( __globals.utility.workspace.dotMaker(object.selectionArea.box[a].x, object.selectionArea.box[a].y, a) ); }
                             for(var a = 0; a < object.selectionArea.points.length; a++){ __globals.panes.foreground.append( __globals.utility.workspace.dotMaker(object.selectionArea.points[a].x, object.selectionArea.points[a].y, a) ); }
                         }
+                    };
+                    this.deleteObject = function(object){
+                        //run the object's onDelete method
+                            if(object.onDelete){object.onDelete();}
+                        //run disconnect on every connection node of this object
+                            __globals.utility.object.disconnectEverything(object);
+                        //remove the object from the pane it's in
+                            __globals.utility.workspace.getPane(object).removeChild(object);
                     };
                 };
                 this.audio = new function(){
@@ -1141,6 +1164,9 @@
                         });
                     };
                     this.openFile = function(callback,readAsType='readAsBinaryString'){
+                        //alert user
+                            menu.control.report('loading');
+            
                         var i = document.createElement('input');
                         i.type = 'file';
                         i.onchange = function(){
@@ -1149,7 +1175,10 @@
                                 case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
                                 case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
                             }
-                            f.onloadend = function(){ if(callback){callback(f.result);} }
+                            f.onloadend = function(){ 
+                                if(callback){callback(f.result);}
+                                menu.control.report('');
+                            }
                         };
                         i.click();
                     };
@@ -1160,7 +1189,7 @@
                         a.click();
                     };
                     this.elementMaker = function(type,name,data){
-                        if(!data.style){data.style='';}
+                        if(!data){data={};}
                         switch(type){
                             //basic
                                 case 'g':      return parts.elements.basic.g(name, data.x, data.y, data.r, data.style); break;
@@ -1172,7 +1201,7 @@
                                 case 'canvas': return parts.elements.basic.canvas(name, data.x, data.y, data.width, data.height, data.angle, data.resolution); break;
                         }
             
-                        if(data.style == ''){data.style={};}
+                        if(data.style == undefined){data.style={};}
                         switch(type){
                             default: console.warn('Unknown element: '+ type); return null; break;
             
@@ -1193,7 +1222,7 @@
             
                             //control
                                 case 'button_rect': 
-                                    var temp = parts.elements.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle ,data.style.up, data.style.hover, data.style.down, data.style.glow);
+                                    var temp = parts.elements.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.up, data.style.hover, data.style.down, data.style.glow);
                                     temp.onmouseup =    data.onmouseup    ? data.onmouseup    : temp.onmouseup   ;
                                     temp.onmousedown =  data.onmousedown  ? data.onmousedown  : temp.onmousedown ;
                                     temp.onmouseenter = data.onmouseenter ? data.onmouseenter : temp.onmouseenter;
@@ -1201,6 +1230,33 @@
                                     temp.onmousemove =  data.onmousemove  ? data.onmousemove  : temp.onmousemove ;
                                     temp.onclick =      data.onclick      ? data.onclick      : temp.onclick     ;
                                     temp.ondblclick =   data.ondblclick   ? data.ondblclick   : temp.ondblclick  ;
+                                    return temp;
+                                break;
+                                case 'button_rect_2': 
+                                    var temp = parts.elements.control.button_rect_2(
+                                        name,
+                                        data.x, data.y, data.width, data.height,
+                                        data.text,
+                                        data.textVerticalOffset, data.textHorizontalOffset,
+                                        data.style.text,
+                                        data.style.background_off,
+                                        data.style.background_press,
+                                        data.style.background_select,
+                                        data.style.background_select_press, //impossible
+                                        data.style.background_glow,
+                                        data.style.background_glow_press, //impossible
+                                        data.style.background_glow_select,
+                                        data.style.background_glow_select_press, //impossible
+                                        data.style.background_hover,
+                                        data.style.background_hover_press,
+                                        data.style.background_hover_select,
+                                        data.style.background_hover_select_press,
+                                        data.style.background_hover_glow,
+                                        data.style.background_hover_glow_press,
+                                        data.style.background_hover_glow_select,
+                                        data.style.background_hover_glow_select_press,
+                                    );
+                                    temp.onpress = data.onpress ? data.onpress : temp.onpress;
                                     return temp;
                                 break;
                                 case 'checkbox_rect':
@@ -1312,6 +1368,30 @@
                                     temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
                                     temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle ;
                                     return temp;
+                                break;
+                                case 'list':
+                                        var temp = parts.elements.control.list(
+                                            name, data.x, data.y, data.width, data.height, data.angle, data.list, 
+                                            data.selectable, data.multiSelect, data.itemHeight, data.itemSpacing,
+                                            data.itemTextVerticalOffset, data.itemTextHorizontalOffset,
+                                            data.style.listItemText,
+                                            data.style.background_off,
+                                            data.style.background_press,
+                                            data.style.background_select,
+                                            data.style.background_glow,
+                                            data.style.background_glow_select,
+                                            data.style.background_hover,
+                                            data.style.background_hover_press,
+                                            data.style.background_hover_select,
+                                            data.style.background_hover_select_press,
+                                            data.style.background_hover_glow,
+                                            data.style.background_hover_glow_press,
+                                            data.style.background_hover_glow_select,
+                                            data.style.background_hover_glow_select_press,
+                                        );
+                                        temp.onselect = data.onselect ? data.onselect : temp.onselect;
+                                        temp.onpositionchange = data.onpositionchange ? data.onpositionchange : temp.onpositionchange;
+                                        return temp;
                                 break;
             
                             //dynamic
@@ -1940,9 +2020,10 @@
                     //check if obbject is already selected
                         if( __globals.selection.selectedObjects.indexOf(object) != -1 ){return;}
             
-                    //shift object to front of view
-                        __globals.panes.middleground.removeChild(object);
-                        __globals.panes.middleground.append(object);
+                    //shift object to front of view, (within it's particular pane)
+                        var pane = __globals.utility.workspace.getPane(object);
+                        pane.removeChild(object);
+                        pane.append(object);
             
                     //perform selection
                         if(object.onSelect){object.onSelect();}
@@ -2084,22 +2165,9 @@
                 };
                 this.delete = function(){
                     while(this.selectedObjects.length > 0){
-                        //run the object's onDelete method
-                            if(this.selectedObjects[0].onDelete){this.selectedObjects[0].onDelete();}
-            
-                        //run disconnect on every connection node of this object
-                            var keys = Object.keys(this.selectedObjects[0].io);
-                            for( var a = 0; a < keys.length; a++){
-                                //account for node arrays
-                                if( Array.isArray(this.selectedObjects[0].io[keys[a]]) ){
-                                    for(var c = 0; c < this.selectedObjects[0].io[keys[a]].length; c++){
-                                        this.selectedObjects[0].io[keys[a]][c].disconnect();
-                                    }
-                                }else{ this.selectedObjects[0].io[keys[a]].disconnect(); }
-                            }
-            
-                        //remove the object from the pane it's in and then from the selected objects list
-                            __globals.utility.workspace.getPane(this.selectedObjects[0]).removeChild(this.selectedObjects[0]);
+                        //delete object
+                            __globals.utility.object.deleteObject(this.selectedObjects[0]);
+                        //remove object from selected array
                             this.selectedObjects.shift();
                     }
                     this.lastSelectedObject = null;
@@ -2587,12 +2655,11 @@
             };
             
             
-            
             // onkeydown functions
                 __globals.keyboardInteraction.onkeydown_functionList = {};
                 document.onkeydown = function(event){
                     //if key is already pressed, don't press it again
-                    if(__globals.keyboardInteraction.pressedKeys[event.code]){return;}
+                    if(__globals.keyboardInteraction.pressedKeys[event.code]){ return; }
                     __globals.keyboardInteraction.pressedKeys[event.code] = true;
             
                     //discover what the mouse is pointing at and if that thing accepts keyboard input. First check whether the
@@ -2650,10 +2717,16 @@
                     __globals.selection.paste();
                 };
                 __globals.keyboardInteraction.onkeydown_functionList.F1 = function(event){
-                    if(!event[__globals.super.keys.ctrl]){return;}
-                    console.log('help!');
                     var temp = __globals.utility.workspace.objectUnderPoint(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
-                    if(temp){ window.open(__globals.super.helpFolderLocation+'object/'+temp.id, '_blank'); }
+                    if(temp){
+                        if( objects[temp.id].metadata ){
+                            window.open( objects[temp.id].metadata.helpurl, '_blank');
+                        }else{
+                            window.open(__globals.super.helpFolderLocation+'object/'+temp.id, '_blank');
+                            console.warn('bad help url, please add metadata to your object file ->',temp.id);
+                        }
+                        __globals.keyboardInteraction.releaseAll();
+                    }
                 };
                 __globals.keyboardInteraction.onkeydown_functionList.F2 = function(event){
                     if(!event[__globals.super.keys.ctrl]){return;}
@@ -2698,6 +2771,13 @@
                     //global function
                     if( __globals.keyboardInteraction.onkeyup_functionList[event.key] ){
                         __globals.keyboardInteraction.onkeyup_functionList[event.key](event);
+                    }
+                };
+            
+            // additional utilities
+                __globals.keyboardInteraction.releaseAll = function(){
+                    for(key in __globals.keyboardInteraction.pressedKeys){
+                        document.onkeyup( new KeyboardEvent('keyup',{'key':key}) );
                     }
                 };
             __globals.audio = {};
@@ -6626,6 +6706,87 @@
                         
                             return object;
                         };
+                        
+                        this.button_rect_2 = function(
+                            id='button_rect_2',
+                            x, y, width, height,
+                            text,
+                            textVerticalOffset=0.5, textHorizontalOffset=0.05,
+                            textStyle='fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
+                            backgroundStyle_off=                     'fill:rgba(200,200,200,1)',
+                            backgroundStyle_press=                   '', //impossible
+                            backgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_select_press=            '', //impossible
+                            backgroundStyle_glow=                    'fill:rgba(220,220,220,1)',
+                            backgroundStyle_glow_press=              '', //impossible
+                            backgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_glow_select_press=       '', //impossible
+                            backgroundStyle_hover=                   'fill:rgba(220,220,200,1)',
+                            backgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
+                            backgroundStyle_hover_select=            'fill:rgba(220,220,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_glow=              'fill:rgba(240,240,200,1)',
+                            backgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
+                            backgroundStyle_hover_glow_select=       'fill:rgba(240,240,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                        ){
+                            //elements
+                                var object = __globals.utility.misc.elementMaker('g',id,{x:x,y:y});
+                        
+                                var background = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
+                                object.appendChild( background );
+                        
+                                var text = __globals.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffset, y:height*textVerticalOffset, text:text, style:textStyle});
+                                object.appendChild(text);
+                        
+                            //state
+                            object.state = {
+                                hovering:false,
+                                glowing:false,
+                                selected:false,
+                                pressed:false,
+                            };
+                            object.activateState = function(){
+                                if( object.state.pressed && !object.state.hovering ){object.state.pressed = false;}
+                        
+                                var styles = [
+                                    backgroundStyle_off,
+                                    backgroundStyle_press,
+                                    backgroundStyle_select,
+                                    backgroundStyle_select_press,
+                                    backgroundStyle_glow,
+                                    backgroundStyle_glow_press,
+                                    backgroundStyle_glow_select,
+                                    backgroundStyle_glow_select_press,
+                                    backgroundStyle_hover,
+                                    backgroundStyle_hover_press,
+                                    backgroundStyle_hover_select,
+                                    backgroundStyle_hover_select_press,
+                                    backgroundStyle_hover_glow,
+                                    backgroundStyle_hover_glow_press,
+                                    backgroundStyle_hover_glow_select,
+                                    backgroundStyle_hover_glow_select_press,
+                                ];
+                        
+                                __globals.utility.element.setStyle(
+                                    background, styles[object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + object.state.pressed*1]
+                                );
+                            };
+                            object.activateState();
+                        
+                            //interactivity
+                                object.onmouseenter = function(){ object.state.hovering = true; object.activateState(); };
+                                object.onmouseleave = function(){ object.state.hovering = false; object.activateState(); };
+                                object.onmouseup = function(){ object.state.pressed = false; object.activateState(); };
+                                object.onmousedown = function(event){ object.state.pressed = true; object.activateState(); if(object.onpress){object.onpress(event);} };
+                            //controls
+                                object.glow = function(bool){ if(bool == undefined){return object.state.glowing;} object.state.glowing = bool; object.activateState(); };
+                                object.select = function(bool){ if(bool == undefined){return object.state.selected;} object.state.selected = bool; object.activateState(); };
+                            //callbacks
+                                object.onpress = function(){};
+                        
+                            return object;
+                        };
                         this.checkbox_rect = function(
                             id='checkbox_rect',
                             x, y, width, height, angle=0,
@@ -7103,6 +7264,239 @@
                             };
                             object.glow = function(){ this.activateState(this.state+2); };
                             object.dim  = function(){ this.activateState(this.state-2); };
+                        
+                            return object;
+                        };
+                        this.list = function(
+                            id='list', 
+                            x, y, width, height, angle=0,
+                            list=['item1','item2','item3','item4','item5','item6','item7','item8','item9','item10','item11','item12','item12','item14','item15','item16','item17','item18','item19','item20','item21','item22','item23','item24'],
+                            selectable=true, multiSelect=true,
+                            itemHeight=0.1, itemSpacing=0.01,
+                            itemTextVerticalOffset=0.5, itemTextHorizontalOffset=0.05,
+                            listItemTextStyle='fill:rgba(0,0,0,1); font-size:5; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
+                        
+                            backgroundStyle_off=                     'fill:rgba(200,200,200,1)',
+                            backgroundStyle_press=                   'fill:rgba(240,240,240,1)',
+                            backgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            backgroundStyle_glow=                    'fill:rgba(220,220,220,1)',
+                            backgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            backgroundStyle_hover=                   'fill:rgba(220,220,200,1)',
+                            backgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
+                            backgroundStyle_hover_select=            'fill:rgba(220,220,200,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            backgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            backgroundStyle_hover_glow=              'fill:rgba(240,240,200,1)',
+                            backgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
+                            backgroundStyle_hover_glow_select=       'fill:rgba(240,240,200,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                        ){
+                            //state
+                                var itemArray = [];
+                                var selectedItems = [];
+                                var lastShiftClicked = undefined;
+                                var position = 0;
+                        
+                            //main object
+                                var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
+                        
+                            //background
+                                var rect = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:'fill:rgba(230,230,230,1)'});
+                                object.appendChild(rect);
+                        
+                            //viewport (for clipping the visible area)
+                                var viewport = __globals.utility.misc.elementMaker('g','viewport',{});
+                                viewport.setAttribute('clip-path','polygon(0px 0px, '+width+'px 0px, '+width+'px '+height+'px, 0px '+height+'px)');
+                                object.appendChild(viewport);
+                        
+                            //main list
+                                function makeItem(text,a){
+                                    var temp = parts.elements.control.list.item(
+                                        a, 0, (height*(itemHeight+itemSpacing))*a, 
+                                        width, height*itemHeight, 
+                                        text, itemTextVerticalOffset, 
+                                        itemTextHorizontalOffset, 
+                                        listItemTextStyle,
+                                        backgroundStyle_off,               backgroundStyle_press,
+                                        backgroundStyle_select,            undefined/*backgroundStyle_select_press*/,
+                                        backgroundStyle_glow,              undefined/*backgroundStyle_glow_press*/,
+                                        backgroundStyle_glow_select,       undefined/*backgroundStyle_glow_select_press*/,
+                                        backgroundStyle_hover,             backgroundStyle_hover_press,
+                                        backgroundStyle_hover_select,      backgroundStyle_hover_select_press,
+                                        backgroundStyle_hover_glow,        backgroundStyle_hover_glow_press,
+                                        backgroundStyle_hover_glow_select, backgroundStyle_hover_glow_select_press,
+                                    );
+                                    temp.onpressed = function(a){return function(event){object.select(a,undefined,event);}}(a);
+                        
+                                    return temp;
+                                }
+                                var mainList = __globals.utility.misc.elementMaker('g','mainList');
+                                viewport.appendChild(mainList);
+                                for(var a = 0; a < list.length; a++){
+                                    var temp = makeItem(list[a],a);
+                                    itemArray.push( temp );
+                                    mainList.appendChild( temp );
+                                }
+                                
+                            //interaction
+                                object.onwheel = function(event){
+                                    var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+                                    object.position( object.position() + move/10 );
+                                };
+                        
+                            //controls
+                                object.position = function(a,update=true){
+                                    if(a == undefined){return position;}
+                                    a = a < 0 ? 0 : a;
+                                    a = a > 1 ? 1 : a;
+                                    position = a;
+                        
+                                    var totalHeight =   height*(list.length*(itemHeight + itemSpacing) - itemSpacing)
+                                    var movementSpace = totalHeight - height;
+                                    
+                                    __globals.utility.element.setTransform_XYonly( mainList, undefined, -a*movementSpace );
+                        
+                                    var y_offSet = movementSpace * a;
+                                    var bottom = y_offSet+height;
+                        
+                                    viewport.setAttribute('clip-path','polygon(0px '+y_offSet+'px, '+width+'px '+y_offSet+'px, '+width+'px '+bottom+'px, 0px '+bottom+'px)');
+                        
+                                    if(update&&this.onpositionchange){this.onpositionchange(a);}
+                                };
+                                object.select = function(a,state,event,update=true){
+                                    //if selectability is turned off, just return the clicked item text
+                                    if(!selectable){ if(this.onselect){this.onselect(list[a],a);} return;}
+                        
+                                    //if the shift key is pressed, do a range select
+                                    if( multiSelect && event != undefined && event.shiftKey ){
+                                        if( lastShiftClicked == undefined ){ lastShiftClicked = a; return; }
+                                        else{
+                                            var min = Math.min(lastShiftClicked, a); var max = Math.max(lastShiftClicked, a);
+                                            for(var b = min; b <= max; b++){ this.select(b,undefined,undefined,false); }
+                                            lastShiftClicked = undefined;
+                                        }
+                                    }else{
+                                        if(state == undefined){
+                                            var index = selectedItems.indexOf(a);
+                                            var state = index == -1;
+                                            if(state){ selectedItems.push(a); }
+                                            else{ selectedItems.splice(index, 1); }
+                                        }
+                                        itemArray[a].select(state);
+                                    }
+                        
+                                    if(update && this.onselect){this.onselect(this.getSelected(),selectedItems);}
+                                };
+                                object.glow = function(a,state){
+                                    if(state == undefined){ itemArray[a].glow(!itemArray[a].glow()); }
+                                    else{ itemArray[a].glow(state); }
+                                };
+                                object.getSelected = function(){ return selectedItems.map(a => list[a]); };
+                                object.add = function(text){
+                                    var temp = makeItem(text,list.length);
+                                    list.push(text);
+                                    itemArray.push( temp );
+                                    mainList.appendChild( temp );
+                                };
+                                object.remove = function(a){
+                                    list.splice(a, 1);
+                                    itemArray = [];
+                                    mainList.innerHTML = '';
+                        
+                                    for(var a = 0; a < list.length; a++){
+                                        var temp = makeItem(list[a],a);
+                                        itemArray.push( temp );
+                                        mainList.appendChild( temp );
+                                    }
+                        
+                                    selectedItems = [];
+                                };
+                        
+                            //callbacks
+                                object.onselect = function(a,i){};
+                                object.onpositionchange = function(a){};
+                            
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.list.item = function(
+                            id='listItem',
+                            x, y, width, height,
+                            text,
+                            textVerticalOffset=0.5, textHorizontalOffset=0.05,
+                            textStyle='fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
+                            backgroundStyle_off=                     'fill:rgba(200,200,200,1)',
+                            backgroundStyle_press=                   '', //impossible
+                            backgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_select_press=            '', //impossible
+                            backgroundStyle_glow=                    'fill:rgba(220,220,220,1)',
+                            backgroundStyle_glow_press=              '', //impossible
+                            backgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_glow_select_press=       '', //impossible
+                            backgroundStyle_hover=                   'fill:rgba(220,220,200,1)',
+                            backgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
+                            backgroundStyle_hover_select=            'fill:rgba(220,220,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_glow=              'fill:rgba(240,240,200,1)',
+                            backgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
+                            backgroundStyle_hover_glow_select=       'fill:rgba(240,240,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                        ){
+                            //elements
+                                var object = __globals.utility.misc.elementMaker('g',id,{x:x,y:y});
+                        
+                                var background = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
+                                object.appendChild( background );
+                        
+                                var text = __globals.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffset, y:height*textVerticalOffset, text:text, style:textStyle});
+                                object.appendChild(text);
+                        
+                            //state
+                            object.state = {
+                                hovering:false,
+                                glowing:false,
+                                selected:false,
+                                pressed:false,
+                            };
+                            object.activateState = function(){
+                                if( object.state.pressed && !object.state.hovering ){object.state.pressed = false;}
+                        
+                                var styles = [
+                                    backgroundStyle_off,
+                                    backgroundStyle_press,
+                                    backgroundStyle_select,
+                                    backgroundStyle_select_press,
+                                    backgroundStyle_glow,
+                                    backgroundStyle_glow_press,
+                                    backgroundStyle_glow_select,
+                                    backgroundStyle_glow_select_press,
+                                    backgroundStyle_hover,
+                                    backgroundStyle_hover_press,
+                                    backgroundStyle_hover_select,
+                                    backgroundStyle_hover_select_press,
+                                    backgroundStyle_hover_glow,
+                                    backgroundStyle_hover_glow_press,
+                                    backgroundStyle_hover_glow_select,
+                                    backgroundStyle_hover_glow_select_press,
+                                ];
+                        
+                                __globals.utility.element.setStyle(
+                                    background, styles[object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + object.state.pressed*1]
+                                );
+                            };
+                            object.activateState();
+                        
+                            //interactivity
+                                object.onmouseenter = function(){ object.state.hovering = true; object.activateState(); };
+                                object.onmouseleave = function(){ object.state.hovering = false; object.activateState(); };
+                                object.onmouseup = function(){ object.state.pressed = false; object.activateState(); };
+                                object.onmousedown = function(event){ object.state.pressed = true; object.activateState(); if(object.onpressed){object.onpressed(event);} };
+                            //controls
+                                object.glow = function(bool){ if(bool == undefined){return object.state.glowing;} object.state.glowing = bool; object.activateState(); };
+                                object.select = function(bool){ if(bool == undefined){return object.state.selected;} object.state.selected = bool; object.activateState(); };
+                            //callbacks
+                                object.onpressed = function(event){};
                         
                             return object;
                         };
@@ -9184,8 +9578,13 @@
                     //circuitry
                         design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_1.in() );
                         design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_2.in() );
-                    
+                         
                     return obj;
+                };
+                
+                this.audio_duplicator.metadata = {
+                    name:'Audio Duplicator',
+                    helpurl:'https://metasophiea.com/curve/help/object/audioDuplicator/'
                 };
                 this.audioIn = function(x,y,setupConnect=true){
                     var attributes = {
@@ -9285,6 +9684,11 @@
                 
                     return obj;
                 };
+                
+                this.audioIn.metadata = {
+                    name:'Audio Input',
+                    helpurl:'https://metasophiea.com/curve/help/object/audioInput/'
+                };
                 this.audio_scope = function(x,y){
                     var attributes = {
                         framerateLimits: {min:1, max:30}
@@ -9347,6 +9751,11 @@
                         design.dial_continuous.framerate.set(0);
                 
                     return obj;
+                };
+                
+                this.audio_scope.metadata = {
+                    name:'Audio Scope',
+                    helpurl:'https://metasophiea.com/curve/help/object/audioScope/'
                 };
                 this.audio_sink = function(x,y){
                     var style = {
@@ -9411,6 +9820,11 @@
                                 design.audio_meter_level.left.start();
                                 design.audio_meter_level.right.start();
                     return obj;
+                };
+                
+                this.audio_sink.metadata = {
+                    name:'Audio Sink',
+                    helpurl:'https://metasophiea.com/curve/help/object/audioSink/'
                 };
                 this.basicMixer = function(x,y){
                     var style = {
@@ -9519,6 +9933,11 @@
                         }
                     
                     return obj;
+                };
+                
+                this.basicMixer.metadata = {
+                    name:'Basic Audio Mixer',
+                    helpurl:'https://metasophiea.com/curve/help/object/basicAudioMixer/'
                 };
                 this.basicSequencer = function(x,y,debug=false){
                     var vals = {
@@ -9726,6 +10145,11 @@
                         };
                 
                     return obj;
+                };
+                
+                this.basicSequencer.metadata = {
+                    name:'Basic Sequencer (Multi Pulse Out)',
+                    helpurl:'https://metasophiea.com/curve/help/object/basicSequencer_pulseOut/'
                 };
                 this.basicSequencer_midiOut = function(x,y,debug=false){
                     var vals = {
@@ -9958,6 +10382,11 @@
                         design.rangeslide.viewselect_y.set({start:0.3, end:0.7});
                 
                     return obj;
+                };
+                
+                this.basicSequencer_midiOut.metadata = {
+                    name:'Basic Sequencer (Midi Out)',
+                    helpurl:'https://metasophiea.com/curve/help/object/basicSequencer_midiOut/'
                 };
                 this.basicSynthesizer = function(x,y){
                     var attributes = {
@@ -10286,6 +10715,11 @@
                 
                     return obj;
                 };
+                
+                this.basicSynthesizer.metadata = {
+                    name:'Basic Synthesizer',
+                    helpurl:'https://metasophiea.com/curve/help/object/basicSynthesizer/'
+                };
                 this.data_duplicator = function(x,y){
                     var style = {
                         background:'fill:rgba(200,200,200,1);pointer-events:none;',
@@ -10343,6 +10777,12 @@
                     return obj;
                 
                 };
+                
+                this.data_duplicator.metadata = {
+                    name:'Data Duplicator',
+                    helpurl:'https://metasophiea.com/curve/help/object/dataDuplicator/'
+                };
+                
                 //Operation Note:
                 //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
                 //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
@@ -10471,6 +10911,11 @@
                         design.dial_continuous.outGain.set(1);
                 
                     return obj;
+                };
+                
+                this.distortionUnit.metadata = {
+                    name:'Distortion Unit',
+                    helpurl:'https://metasophiea.com/curve/help/object/distortionUnit/'
                 };
                 this.filterUnit = function(x,y){
                     var state = {
@@ -10627,6 +11072,11 @@
                         setTimeout(updateGraph,100);
                 
                     return obj;
+                };
+                
+                this.filterUnit.metadata = {
+                    name:'Filter Unit',
+                    helpurl:'https://metasophiea.com/curve/help/object/filterUnit/'
                 };
 
                 this.launchpad = function(x,y,debug=false){
@@ -10794,6 +11244,11 @@
                 
                     return obj;
                 };
+                
+                this.launchpad.metadata = {
+                    name:'Launchpad',
+                    helpurl:'https://metasophiea.com/curve/help/object/launchpad/'
+                };
                 this.looper = function(x,y,debug=false){
                     var style = {
                         background:'fill:rgba(200,200,200,1)',
@@ -10906,7 +11361,11 @@
                 
                     return obj;
                 };
-
+                
+                this.looper.metadata = {
+                    name:'Looper',
+                    helpurl:'https://metasophiea.com/curve/help/object/looper/'
+                };
                 this.multibandFilter = function(
                     x, y, angle,
                 ){
@@ -11155,6 +11614,11 @@
                     
                     return obj;
                 };
+                
+                this.multibandFilter.metadata = {
+                    name:'Multiband Filter',
+                    helpurl:'https://metasophiea.com/curve/help/object/multibandFilter/'
+                };
                 this.musicalkeyboard = function(x,y,debug=false){
                     var state = {
                         velocity:0.5,
@@ -11280,6 +11744,11 @@
                         design.dial_continuous.velocity.set(0.5);
                 
                     return obj;
+                };
+                
+                this.musicalkeyboard.metadata = {
+                    name:'Musical Keyboard',
+                    helpurl:'https://metasophiea.com/curve/help/object/musicalKeyboard/'
                 };
                 this.oneShot_multi = function(x,y,debug=false){
                     var style = {
@@ -11434,6 +11903,11 @@
                         };
                         
                     return obj;
+                };
+                
+                this.oneShot_multi.metadata = {
+                    name:'One Shot (Multi)',
+                    helpurl:'https://metasophiea.com/curve/help/object/oneShot_multi/'
                 };
 
                 this.oneShot_multi_multiTrack = function(x,y,debug=false){
@@ -11683,7 +12157,11 @@
                     
                     return obj;
                 };
-
+                
+                this.oneShot_multi_multiTrack.metadata = {
+                    name:'One Shot (Multi)(8 Track)',
+                    helpurl:'https://metasophiea.com/curve/help/object/oneShot_multi_multiTrack/'
+                };
                 this.oneShot_single = function(x,y,debug=false){
                     var style = {
                         background:'fill:rgba(200,200,200,1)',
@@ -11775,6 +12253,12 @@
                 
                     return obj;
                 };
+                
+                this.oneShot_single.metadata = {
+                    name:'One Shot (Single)',
+                    helpurl:'https://metasophiea.com/curve/help/object/oneShot_single/'
+                };
+                
 
                 this.player = function(x,y,debug=false){
                     var style = {
@@ -11923,7 +12407,11 @@
                 
                     return obj;
                 };
-
+                
+                this.player.metadata = {
+                    name:'Player',
+                    helpurl:'https://metasophiea.com/curve/help/object/player/'
+                };
                 this.pulseGenerator = function(x,y,debug=false){
                     var maxTempo = 240;
                 
@@ -12023,6 +12511,11 @@
                 
                     return obj;
                 };
+                
+                this.pulseGenerator.metadata = {
+                    name:'Pulse Generator',
+                    helpurl:'https://metasophiea.com/curve/help/object/pulseGenerator/'
+                };
                 this.pulseGenerator_hyper = function(x,y,maxTempo=999,debug=false){
                 
                     var style = {
@@ -12120,6 +12613,11 @@
                         design.dial_continuous.tempo.set(0.5);
                 
                     return obj;
+                };
+                
+                this.pulseGenerator_hyper.metadata = {
+                    name:'Pulse Generator (hyper)',
+                    helpurl:'https://metasophiea.com/curve/help/object/pulseGenerator_hyper/'
                 };
                 this.recorder = function(x,y,debug=false){
                     var style = {
@@ -12272,6 +12770,11 @@
                 
                     return obj;
                 };
+                
+                this.recorder.metadata = {
+                    name:'Recorder',
+                    helpurl:'https://metasophiea.com/curve/help/object/recorder/'
+                };
 
                 this.reverbUnit = function(x,y){
                     var state = {
@@ -12418,6 +12921,11 @@
                 
                     return obj;
                 };
+                
+                this.reverbUnit.metadata = {
+                    name:'Reverb Unit',
+                    helpurl:'https://metasophiea.com/curve/help/object/reverbUnit/'
+                };
 
                 this.universalreadout = function(x,y,debug=false){
                     var style = {
@@ -12465,49 +12973,167 @@
                 
                     return obj;
                 };
+                
+                this.universalreadout.metadata = {
+                    name:'Universal Readout',
+                    helpurl:'https://metasophiea.com/curve/help/object/universalReadout/'
+                };
             };
-            __globals.audio.context.resume().then(function(){
-                __globals.panes.menu.innerHTML = '';
-                clearTimeout(timeout);
-            },function(){
-                console.warn('I\'m not sure what to do now..I guess we just sit here in silence');
-            });
+            var menu = new function(){
+                this.objects = new function(){
+                    this.menuBar = function(){
+                        var vars = {
+                            width: 300, height:20,
+                        };
+                        vars.width = __globals.utility.workspace.getViewportDimensions().width;
+                        var style = {
+                            text: 'fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
+                            button:{
+                                off:'fill:rgba(240,240,240,1)',
+                                hover:'fill:rgba(220,220,220,1)',
+                                hover_press:'fill:rgba(250,250,250,1)',
+                            }
+                        };
+                    
+                        var design = {
+                            type:'menuBar',
+                            x:0, y:0,
+                            base:{
+                                points:[{x:0,y:0},{x:vars.width,y:0},{x:vars.width,y:vars.height},{x:0,y:vars.height}],
+                                style:'fill:rgba(240,240,240,1);'
+                            },
+                            elements:[
+                                {type:'button_rect_2',name:'file',data:{
+                                    x:0, y:0, width:70, height:vars.height, text:'objects',
+                                    textHorizontalOffset:0.15,
+                                    style:{
+                                        background_off:style.button.off,
+                                        background_hover:style.button.hover,
+                                        background_hover_press:style.button.hover_press,
+                                    },
+                                    onpress:function(){menu.control.objectPane.open();}
+                                }},
+                                {type:'button_rect_2',name:'open',data:{
+                                    x:70, y:0, width:50, height:vars.height, text:'open',
+                                    textHorizontalOffset:0.15,
+                                    style:{
+                                        background_off:style.button.off,
+                                        background_hover:style.button.hover,
+                                        background_hover_press:style.button.hover_press,
+                                    },
+                                    onpress:function(){menu.control.loadsave.load();}
+                                }},
+                                {type:'button_rect_2',name:'save',data:{
+                                    x:120, y:0, width:50, height:vars.height, text:'save',
+                                    textHorizontalOffset:0.15,
+                                    style:{
+                                        background_off:style.button.off,
+                                        background_hover:style.button.hover,
+                                        background_hover_press:style.button.hover_press,
+                                    },
+                                    onpress:function(){menu.control.loadsave.save();}
+                                }},
+                                {type:'text', name:'report', data:{
+                                    x:vars.width-75, y:10, text:'', style:style.text
+                                }},
+                            ]
+                        };
+                    
+                        //main object
+                            var obj = __globals.utility.misc.objectBuilder(objects.data_duplicator,design);
+                    
+                        //interface
+                            obj.i = {
+                                report:function(text){ if(text == undefined){return;} design.text.report.innerHTML = text; }
+                            };
+                    
+                        return obj;
+                    };
+                    this.objectPane = function(x,y){
+                        var vars = {
+                            width: 300, height:300,
+                        };
+                        var style = {
+                            background:'fill:rgba(240,240,240,1);pointer-events:none;',
+                            markings: 'fill:rgba(150,150,150,1); pointer-events:none;',
+                            text: 'fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
+                        };
+                        var design = {
+                            type:'objectPane',
+                            x:x, y:y,
+                            base:{
+                                points:[{x:0,y:0},{x:vars.width,y:0},{x:vars.width,y:25},{x:0,y:25}],
+                                style:'fill:rgba(240,240,240,0.75);'
+                            },
+                            elements:[
+                                {type:'text', name:'title', data:{
+                                    x:30, y:12.5, text:'Create Object', style:style.text
+                                }},
+                                {type:'path', name:'backing', data:{
+                                    path:[{x:0,y:25},{x:vars.width,y:25},{x:vars.width,y:vars.height},{x:0,y:vars.height}],
+                                    style:style.background
+                                }},
+                                {type:'button_rect', name:'close', data:{
+                                    x:2.5, y:2.5, width:20, height:20, 
+                                    style:{ up:'fill:rgba(255,132,132,1)', hover:'fill:rgba(255,200,200,1)', down:'fill:rgba(255,100,100,1)' },
+                                    onclick:function(){ menu.control.objectPane.close(); }
+                                }},
+                                {type:'slide', name:'scroll', data:{
+                                    x:vars.width-15, y:25, width:15, height:vars.height-25,
+                                    onchange:function(a){design.list.objectList.position(a,false);},
+                                }},
+                                {type:'list', name:'objectList', data:{
+                                    x:5, y:30, width:vars.width-25, height:vars.height-35,
+                                    list:[], selectable:false,
+                                    style:{listItemText:style.text},
+                                    onselect:function(a,i){
+                                        var p = __globals.utility.workspace.pointConverter.browser2workspace(30,30);
+                                        __globals.utility.workspace.placeAndReturnObject( objects[Object.keys(objects)[i]](p.x,p.y) );
+                                    },
+                                    onpositionchange:function(a){design.slide.scroll.set(a)},
+                                }},
+                            ]
+                        };
+                    
+                    
+                        //main object
+                            var obj = __globals.utility.misc.objectBuilder(objects.data_duplicator,design);
+                    
+                        //populate list
+                            for(i in objects){
+                                design.list.objectList.add( objects[i].metadata ? objects[i].metadata.name : i );
+                            }
+                        
+                        return obj;
+                    };
+                };
+            };
             
-            
-            var timeout = setTimeout(function(){
-                var viewportDimensions = __globals.utility.workspace.getViewportDimensions();
-            
-                //blocking screen
-                    __globals.panes.menu.append(parts.basic.rect(null, 0, 0, viewportDimensions.width, viewportDimensions.height, 0, 'fill:rgba(255,255,255,0.9)'));
-                //explanation text
-                    var text = __globals.utility.misc.elementMaker('text','explanation',{
-                        x:10, y:30, 
-                        text:'because of the \'no autoplay\' feature in browsers; this site needs you to allow it to produce sound',
-                        style:'fill:rgba(0,0,0,1); font-size:15px; font-family:Courier New; pointer-events:none;'
-                    });
-                    __globals.panes.menu.append(text);
-                    var textDimensions = text.getBBox();
-                    __globals.utility.element.setTransform(text, {
-                        x:(viewportDimensions.width-textDimensions.width)/2,
-                        y:((viewportDimensions.height-textDimensions.height)/2)-30,
-                        s:1, r:0
-                    });
-                //activation button
-                    __globals.panes.menu.append(__globals.utility.misc.elementMaker('button_rect','audioOn',{
-                        x:(viewportDimensions.width-100)/2, y:(viewportDimensions.height-50)/2,
-                        width:100, height:50,
-                        onclick:function(){
-                            __globals.audio.context.resume();
-                            __globals.panes.menu.innerHTML = '';
-                        }
-                    }));
-                //button text
-                    __globals.panes.menu.append(__globals.utility.misc.elementMaker('text','explanation',{
-                        x:(viewportDimensions.width/2)-22.5, y:(viewportDimensions.height/2)+5, 
-                        text:'allow',
-                        style:'fill:rgba(0,0,0,1); font-size:15px; font-family:Courier New; pointer-events:none;'
-                    }));
+            setTimeout(function(){
+                menu.bar = __globals.utility.workspace.placeAndReturnObject( menu.objects.menuBar(), 'menu' );
             },1);
+            
+            menu.control = {
+                report:function(text){ menu.bar.i.report(text); },
+                loadsave:{
+                    load:function(){__globals.utility.workspace.saveload.load();},
+                    save:function(){__globals.utility.workspace.saveload.save();},
+                },
+                objectPane:{
+                    obj:undefined,
+                    open:function(){
+                        if( menu.control.objectPane.obj == undefined ){
+                            menu.control.objectPane.obj = __globals.utility.workspace.placeAndReturnObject( menu.objects.objectPane(10, 30), 'menu' );
+                        }
+                    },
+                    close:function(){
+                        if( menu.control.objectPane.obj != undefined ){
+                            __globals.utility.object.deleteObject(menu.control.objectPane.obj);
+                            menu.control.objectPane.obj = undefined;
+                        }
+                    },
+                },
+            };
         }
     }
     

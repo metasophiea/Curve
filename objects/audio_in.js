@@ -96,3 +96,8 @@ this.audioIn = function(x,y,setupConnect=true){
 
     return obj;
 };
+
+this.audioIn.metadata = {
+    name:'Audio Input',
+    helpurl:'https://metasophiea.com/curve/help/object/audioInput/'
+};

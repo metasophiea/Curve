@@ -143,3 +143,8 @@ this.reverbUnit = function(x,y){
 
     return obj;
 };
+
+this.reverbUnit.metadata = {
+    name:'Reverb Unit',
+    helpurl:'https://metasophiea.com/curve/help/object/reverbUnit/'
+};

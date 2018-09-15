@@ -149,3 +149,8 @@ this.recorder = function(x,y,debug=false){
 
     return obj;
 };
+
+this.recorder.metadata = {
+    name:'Recorder',
+    helpurl:'https://metasophiea.com/curve/help/object/recorder/'
+};

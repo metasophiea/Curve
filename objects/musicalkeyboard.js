@@ -124,3 +124,8 @@ this.musicalkeyboard = function(x,y,debug=false){
 
     return obj;
 };
+
+this.musicalkeyboard.metadata = {
+    name:'Musical Keyboard',
+    helpurl:'https://metasophiea.com/curve/help/object/musicalKeyboard/'
+};

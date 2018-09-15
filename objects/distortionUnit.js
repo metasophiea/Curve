@@ -123,3 +123,8 @@ this.distortionUnit = function(x,y){
 
     return obj;
 };
+
+this.distortionUnit.metadata = {
+    name:'Distortion Unit',
+    helpurl:'https://metasophiea.com/curve/help/object/distortionUnit/'
+};

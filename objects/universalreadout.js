@@ -44,3 +44,8 @@ this.universalreadout = function(x,y,debug=false){
 
     return obj;
 };
+
+this.universalreadout.metadata = {
+    name:'Universal Readout',
+    helpurl:'https://metasophiea.com/curve/help/object/universalReadout/'
+};

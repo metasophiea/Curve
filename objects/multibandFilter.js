@@ -246,3 +246,8 @@ this.multibandFilter = function(
     
     return obj;
 };
+
+this.multibandFilter.metadata = {
+    name:'Multiband Filter',
+    helpurl:'https://metasophiea.com/curve/help/object/multibandFilter/'
+};

@@ -145,3 +145,8 @@ this.player = function(x,y,debug=false){
 
     return obj;
 };
+
+this.player.metadata = {
+    name:'Player',
+    helpurl:'https://metasophiea.com/curve/help/object/player/'
+};

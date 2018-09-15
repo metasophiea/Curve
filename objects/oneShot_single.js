@@ -89,3 +89,9 @@ this.oneShot_single = function(x,y,debug=false){
 
     return obj;
 };
+
+this.oneShot_single.metadata = {
+    name:'One Shot (Single)',
+    helpurl:'https://metasophiea.com/curve/help/object/oneShot_single/'
+};
+

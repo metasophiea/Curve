@@ -6,7 +6,7 @@ Workspace is a interface framework that is being written alongside Curve. With i
 
 Neither of these things are anyway near finished yet, but have developed far enough that I feel confident in putting them online. They're also both intertwined pretty strongly; since Workspace is being developed to make Curve, as Curve is being created.
 
-I write elsewhere, so updates will probably come in sudden bundles.
+I write elsewhere, so updates will probably come in sudden bundles. Check the [log](docs/notes/log) to see what's been happening
 
 ## Structure
 Workspace can be found essentially everywhere. Curve is currently only in the 'testSituations' folder, with some Curve-related objects in the 'objects' folder. The 'testSituations' folder is like a workshop for code that eventually makes it way out into the framework. 

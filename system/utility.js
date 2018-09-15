@@ -39,8 +39,9 @@
 //    
 //    object
 //        requestInteraction              (x,y,type) (browser position)
-//        //disconnectEverything          (object)
+//        disconnectEverything            (object)
 //        generateSelectionArea           (points:[{x:0,y:0},...], object)
+//        deteleObject                    (object)
 //    
 //    audio
 //        changeAudioParam                (audioParam, target, time, curve, cancelScheduledValues=true)
@@ -138,12 +139,13 @@ __globals.utility = new function(){
             return g;
         };
         this.getGlobalScale = function(element){
-            return __globals.utility.element.getTransform(__globals.utility.workspace.getGlobal(element)).s
+            return __globals.utility.element.getTransform(__globals.utility.workspace.getGlobal(element)).s;
         };
         this.getViewportDimensions = function(){
             return {width:__globals.svgElement.width.baseVal.value, height:__globals.svgElement.height.baseVal.value};
         };
         this.placeAndReturnObject = function(object,pane='middleground'){
+            if(object == undefined){return;}
             return __globals.panes[pane].appendChild( object );
         };
         this.mouseInteractionHandler = function(moveCode, stopCode){
@@ -269,6 +271,9 @@ __globals.utility = new function(){
         };
         this.saveload = new function(){
             this.save = function(compress=true,sceneName='project',bundleConstructorFunctions=false){
+                //alert user
+                    menu.control.report('saving');
+
                 var outputData = {
                     sceneName:sceneName,
                     bundleConstructorFunctions:bundleConstructorFunctions,
@@ -294,6 +299,9 @@ __globals.utility = new function(){
                 
                 //restarting audio
                     __globals.audio.destination.masterGain(1);
+
+                //alert user
+                    menu.control.report('');
             };
             this.__loadProcess = function(data,compressed){
                 //stopping audio
@@ -485,6 +493,7 @@ __globals.utility = new function(){
         this.requestInteraction = function(x,y,type,globalName){
             if(!x || !y){return true;}
             var temp = document.elementFromPoint(x,y);
+            if(temp == null){return false;}
     
             if(temp.hasAttribute('workspace')){return true;}
             while(!temp.hasAttribute('global')){
@@ -496,13 +505,19 @@ __globals.utility = new function(){
             
             return temp.getAttribute('pane')==globalName;
         };
-        // this.disconnectEverything = function(object){
-        //     console.warn('you\'re using this?');
-        //     // var keys = Object.keys(object.io);
-        //     // for(var a = 0; a < keys.length; a++){
-        //     //     object.io[keys[a]].disconnect();
-        //     // }
-        // };
+        this.disconnectEverything = function(object){
+            var keys = Object.keys(object.io);
+            for( var a = 0; a < keys.length; a++){
+                //account for node arrays
+                if( Array.isArray(object.io[keys[a]]) ){
+                    for(var c = 0; c < object.io[keys[a]].length; c++){
+                        object.io[keys[a]][c].disconnect();
+                    }
+                }else{
+                    object.io[keys[a]].disconnect();
+                }
+            }
+        };
         this.generateSelectionArea = function(points, object){
             var debug = false;
             object.selectionArea = {};
@@ -534,6 +549,14 @@ __globals.utility = new function(){
                 for(var a = 0; a < object.selectionArea.box.length; a++){ __globals.panes.foreground.append( __globals.utility.workspace.dotMaker(object.selectionArea.box[a].x, object.selectionArea.box[a].y, a) ); }
                 for(var a = 0; a < object.selectionArea.points.length; a++){ __globals.panes.foreground.append( __globals.utility.workspace.dotMaker(object.selectionArea.points[a].x, object.selectionArea.points[a].y, a) ); }
             }
+        };
+        this.deleteObject = function(object){
+            //run the object's onDelete method
+                if(object.onDelete){object.onDelete();}
+            //run disconnect on every connection node of this object
+                __globals.utility.object.disconnectEverything(object);
+            //remove the object from the pane it's in
+                __globals.utility.workspace.getPane(object).removeChild(object);
         };
     };
     this.audio = new function(){
@@ -1090,6 +1113,9 @@ __globals.utility = new function(){
             });
         };
         this.openFile = function(callback,readAsType='readAsBinaryString'){
+            //alert user
+                menu.control.report('loading');
+
             var i = document.createElement('input');
             i.type = 'file';
             i.onchange = function(){
@@ -1098,7 +1124,10 @@ __globals.utility = new function(){
                     case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
                     case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
                 }
-                f.onloadend = function(){ if(callback){callback(f.result);} }
+                f.onloadend = function(){ 
+                    if(callback){callback(f.result);}
+                    menu.control.report('');
+                }
             };
             i.click();
         };
@@ -1109,7 +1138,7 @@ __globals.utility = new function(){
             a.click();
         };
         this.elementMaker = function(type,name,data){
-            if(!data.style){data.style='';}
+            if(!data){data={};}
             switch(type){
                 //basic
                     case 'g':      return parts.elements.basic.g(name, data.x, data.y, data.r, data.style); break;
@@ -1121,7 +1150,7 @@ __globals.utility = new function(){
                     case 'canvas': return parts.elements.basic.canvas(name, data.x, data.y, data.width, data.height, data.angle, data.resolution); break;
             }
 
-            if(data.style == ''){data.style={};}
+            if(data.style == undefined){data.style={};}
             switch(type){
                 default: console.warn('Unknown element: '+ type); return null; break;
 
@@ -1142,7 +1171,7 @@ __globals.utility = new function(){
 
                 //control
                     case 'button_rect': 
-                        var temp = parts.elements.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle ,data.style.up, data.style.hover, data.style.down, data.style.glow);
+                        var temp = parts.elements.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.up, data.style.hover, data.style.down, data.style.glow);
                         temp.onmouseup =    data.onmouseup    ? data.onmouseup    : temp.onmouseup   ;
                         temp.onmousedown =  data.onmousedown  ? data.onmousedown  : temp.onmousedown ;
                         temp.onmouseenter = data.onmouseenter ? data.onmouseenter : temp.onmouseenter;
@@ -1150,6 +1179,33 @@ __globals.utility = new function(){
                         temp.onmousemove =  data.onmousemove  ? data.onmousemove  : temp.onmousemove ;
                         temp.onclick =      data.onclick      ? data.onclick      : temp.onclick     ;
                         temp.ondblclick =   data.ondblclick   ? data.ondblclick   : temp.ondblclick  ;
+                        return temp;
+                    break;
+                    case 'button_rect_2': 
+                        var temp = parts.elements.control.button_rect_2(
+                            name,
+                            data.x, data.y, data.width, data.height,
+                            data.text,
+                            data.textVerticalOffset, data.textHorizontalOffset,
+                            data.style.text,
+                            data.style.background_off,
+                            data.style.background_press,
+                            data.style.background_select,
+                            data.style.background_select_press, //impossible
+                            data.style.background_glow,
+                            data.style.background_glow_press, //impossible
+                            data.style.background_glow_select,
+                            data.style.background_glow_select_press, //impossible
+                            data.style.background_hover,
+                            data.style.background_hover_press,
+                            data.style.background_hover_select,
+                            data.style.background_hover_select_press,
+                            data.style.background_hover_glow,
+                            data.style.background_hover_glow_press,
+                            data.style.background_hover_glow_select,
+                            data.style.background_hover_glow_select_press,
+                        );
+                        temp.onpress = data.onpress ? data.onpress : temp.onpress;
                         return temp;
                     break;
                     case 'checkbox_rect':
@@ -1261,6 +1317,30 @@ __globals.utility = new function(){
                         temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
                         temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle ;
                         return temp;
+                    break;
+                    case 'list':
+                            var temp = parts.elements.control.list(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.list, 
+                                data.selectable, data.multiSelect, data.itemHeight, data.itemSpacing,
+                                data.itemTextVerticalOffset, data.itemTextHorizontalOffset,
+                                data.style.listItemText,
+                                data.style.background_off,
+                                data.style.background_press,
+                                data.style.background_select,
+                                data.style.background_glow,
+                                data.style.background_glow_select,
+                                data.style.background_hover,
+                                data.style.background_hover_press,
+                                data.style.background_hover_select,
+                                data.style.background_hover_select_press,
+                                data.style.background_hover_glow,
+                                data.style.background_hover_glow_press,
+                                data.style.background_hover_glow_select,
+                                data.style.background_hover_glow_select_press,
+                            );
+                            temp.onselect = data.onselect ? data.onselect : temp.onselect;
+                            temp.onpositionchange = data.onpositionchange ? data.onpositionchange : temp.onpositionchange;
+                            return temp;
                     break;
 
                 //dynamic

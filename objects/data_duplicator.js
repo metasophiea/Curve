@@ -55,6 +55,12 @@ this.data_duplicator = function(x,y){
     return obj;
 
 };
+
+this.data_duplicator.metadata = {
+    name:'Data Duplicator',
+    helpurl:'https://metasophiea.com/curve/help/object/dataDuplicator/'
+};
+
 //Operation Note:
 //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
 //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 

@@ -110,3 +110,8 @@ this.looper = function(x,y,debug=false){
 
     return obj;
 };
+
+this.looper.metadata = {
+    name:'Looper',
+    helpurl:'https://metasophiea.com/curve/help/object/looper/'
+};

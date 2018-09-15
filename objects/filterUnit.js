@@ -154,3 +154,8 @@ this.filterUnit = function(x,y){
 
     return obj;
 };
+
+this.filterUnit.metadata = {
+    name:'Filter Unit',
+    helpurl:'https://metasophiea.com/curve/help/object/filterUnit/'
+};

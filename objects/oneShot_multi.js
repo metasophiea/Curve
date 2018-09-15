@@ -152,3 +152,8 @@ this.oneShot_multi = function(x,y,debug=false){
         
     return obj;
 };
+
+this.oneShot_multi.metadata = {
+    name:'One Shot (Multi)',
+    helpurl:'https://metasophiea.com/curve/help/object/oneShot_multi/'
+};

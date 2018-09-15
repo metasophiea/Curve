@@ -230,3 +230,8 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
 
     return obj;
 };
+
+this.basicSequencer_midiOut.metadata = {
+    name:'Basic Sequencer (Midi Out)',
+    helpurl:'https://metasophiea.com/curve/help/object/basicSequencer_midiOut/'
+};

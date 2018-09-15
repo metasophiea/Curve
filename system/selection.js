@@ -30,9 +30,10 @@ __globals.selection = new function(){
         //check if obbject is already selected
             if( __globals.selection.selectedObjects.indexOf(object) != -1 ){return;}
 
-        //shift object to front of view
-            __globals.panes.middleground.removeChild(object);
-            __globals.panes.middleground.append(object);
+        //shift object to front of view, (within it's particular pane)
+            var pane = __globals.utility.workspace.getPane(object);
+            pane.removeChild(object);
+            pane.append(object);
 
         //perform selection
             if(object.onSelect){object.onSelect();}
@@ -174,22 +175,9 @@ __globals.selection = new function(){
     };
     this.delete = function(){
         while(this.selectedObjects.length > 0){
-            //run the object's onDelete method
-                if(this.selectedObjects[0].onDelete){this.selectedObjects[0].onDelete();}
-
-            //run disconnect on every connection node of this object
-                var keys = Object.keys(this.selectedObjects[0].io);
-                for( var a = 0; a < keys.length; a++){
-                    //account for node arrays
-                    if( Array.isArray(this.selectedObjects[0].io[keys[a]]) ){
-                        for(var c = 0; c < this.selectedObjects[0].io[keys[a]].length; c++){
-                            this.selectedObjects[0].io[keys[a]][c].disconnect();
-                        }
-                    }else{ this.selectedObjects[0].io[keys[a]].disconnect(); }
-                }
-
-            //remove the object from the pane it's in and then from the selected objects list
-                __globals.utility.workspace.getPane(this.selectedObjects[0]).removeChild(this.selectedObjects[0]);
+            //delete object
+                __globals.utility.object.deleteObject(this.selectedObjects[0]);
+            //remove object from selected array
                 this.selectedObjects.shift();
         }
         this.lastSelectedObject = null;

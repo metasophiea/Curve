@@ -1,4 +1,40 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-09-15
+  - updated README to point to this log
+  - object view reordering, now is aware of what pane it's working on, and can
+    rearrange objects within their panes
+  - the utility 'disconnectEverything' is back and looking good
+  - new utility 'deteleObject' which is well named
+  - the two additions above replace most of the code that was in
+    __globals.selection.delete
+  - wrote up the list part (and it's sub-part, the list.item)(complete with 
+    scrollability, selection of items, glowing, range selection (with shift)
+    adding items, removing items and all sorts of styling options)
+  - created rudimentary object creation menu panel (with automatic object list
+    population, a 'close' button and header grapple thing)(needs a way of 
+    opening it once it's been closed..maybe a key combo?)
+  - 'help button' changed from "ctrl+f1" to just F1, also added
+    '__globals.keyboardInteraction.releaseAll' to keyboardInteraction.js
+  - added object metadata code for better help url listing and object "Screen 
+    Names" to all objects
+  - began working on button_rect replacement (currently button_rect_2) based
+    off list.item
+  - added 'menu bar' which sits at the top of the window. There's one 'objects'
+    button which calls forth the object creation menu panel thing (the menu 
+    pane has the object reordering like other frames, but it makes it possible
+    to trap the panel behind the bar. I'd like to limit how high you can drag
+    the panel (like on a desktop), load and save buttons and a little report
+    thing in the top right (I'm having trouble getting the HTML to update while
+    around load/save operations)
+
+  check out for problems with
+  - pressing the button for loading an audio file, then hitting cancel and 
+    trying to work with the object again
+	
+  Compliation Results
+  - workspace.js        864 Kb  (100%)
+  - workspace.min.js    296 Kb  (34.30%)
+
 2018-09-08
   - equaliser levels fixed (along with that update problem)
   - multiband filter v2 now has a more advanced frequency response updater (it 

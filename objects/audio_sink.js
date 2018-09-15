@@ -62,3 +62,8 @@ this.audio_sink = function(x,y){
                 design.audio_meter_level.right.start();
     return obj;
 };
+
+this.audio_sink.metadata = {
+    name:'Audio Sink',
+    helpurl:'https://metasophiea.com/curve/help/object/audioSink/'
+};

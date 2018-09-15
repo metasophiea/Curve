@@ -49,6 +49,11 @@ this.audio_duplicator = function(x,y){
     //circuitry
         design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_1.in() );
         design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_2.in() );
-    
+         
     return obj;
+};
+
+this.audio_duplicator.metadata = {
+    name:'Audio Duplicator',
+    helpurl:'https://metasophiea.com/curve/help/object/audioDuplicator/'
 };

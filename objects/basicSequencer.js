@@ -205,3 +205,8 @@ this.basicSequencer = function(x,y,debug=false){
 
     return obj;
 };
+
+this.basicSequencer.metadata = {
+    name:'Basic Sequencer (Multi Pulse Out)',
+    helpurl:'https://metasophiea.com/curve/help/object/basicSequencer_pulseOut/'
+};

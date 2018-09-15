@@ -325,3 +325,8 @@ this.basicSynthesizer = function(x,y){
 
     return obj;
 };
+
+this.basicSynthesizer.metadata = {
+    name:'Basic Synthesizer',
+    helpurl:'https://metasophiea.com/curve/help/object/basicSynthesizer/'
+};

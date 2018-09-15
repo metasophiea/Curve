@@ -106,3 +106,8 @@ this.basicMixer = function(x,y){
     
     return obj;
 };
+
+this.basicMixer.metadata = {
+    name:'Basic Audio Mixer',
+    helpurl:'https://metasophiea.com/curve/help/object/basicAudioMixer/'
+};

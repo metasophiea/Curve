@@ -61,3 +61,8 @@ this.audio_scope = function(x,y){
 
     return obj;
 };
+
+this.audio_scope.metadata = {
+    name:'Audio Scope',
+    helpurl:'https://metasophiea.com/curve/help/object/audioScope/'
+};

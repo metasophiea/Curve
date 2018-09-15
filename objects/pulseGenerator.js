@@ -97,3 +97,8 @@ this.pulseGenerator = function(x,y,debug=false){
 
     return obj;
 };
+
+this.pulseGenerator.metadata = {
+    name:'Pulse Generator',
+    helpurl:'https://metasophiea.com/curve/help/object/pulseGenerator/'
+};
