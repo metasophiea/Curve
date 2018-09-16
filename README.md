@@ -13,6 +13,10 @@ Neither of these things are anyway near finished yet, but have developed far eno
 
 I write elsewhere, so updates will probably come in sudden bundles. Check the [log](docs/notes/log) to see what's been happening
 
+<p align="center">
+    <img width="640" height="480" src="https://metasophiea.com/curve/gifs/connectingNodes.gif">
+</p>
+
 ## Structure
 Workspace can be found essentially everywhere. Curve is currently only in the 'testSituations' folder, with some Curve-related objects in the 'objects' folder. The 'testSituations' folder is like a workshop for code that eventually makes it way out into the framework. 
 
