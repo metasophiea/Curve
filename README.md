@@ -1,4 +1,9 @@
 # [curve](http://metasophiea.com/curve)
+
+<p align="center">
+    <img width="640" height="360" src="https://metasophiea.com/curve/gifs/openCreateMenu.gif">
+</p>
+
 ## A Project In Two Parts
 Curve is a musical workstation designed to be like real-world music making machines. There's synthesizers and effect units and keyboards and all sorts of stuff you can plug together and play with. 
 
