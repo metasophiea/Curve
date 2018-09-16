@@ -41,7 +41,7 @@
 //        requestInteraction              (x,y,type) (browser position)
 //        disconnectEverything            (object)
 //        generateSelectionArea           (points:[{x:0,y:0},...], object)
-//        deteleObject                    (object)
+//        deleteObject                    (object)
 //    
 //    audio
 //        changeAudioParam                (audioParam, target, time, curve, cancelScheduledValues=true)
