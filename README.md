@@ -1,7 +1,7 @@
 # [curve](http://metasophiea.com/curve)
 
 <p align="center">
-    <img width="693" height="725" src="https://metasophiea.com/curve/gifs/openCreateMenu.gif">
+    <img width="725" height="693" src="https://metasophiea.com/curve/gifs/openCreateMenu.gif">
 </p>
 
 ## A Project In Two Parts
