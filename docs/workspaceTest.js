@@ -323,7 +323,7 @@
                     this.saveload = new function(){
                         this.save = function(compress=true,sceneName='project',bundleConstructorFunctions=false){
                             //alert user
-                                menu.control.report('saving');
+                                menu.control.menubar.report('saving');
             
                             var outputData = {
                                 sceneName:sceneName,
@@ -352,7 +352,7 @@
                                 __globals.audio.destination.masterGain(1);
             
                             //alert user
-                                menu.control.report('');
+                                menu.control.menubar.report('');
                         };
                         this.__loadProcess = function(data,compressed){
                             //stopping audio
@@ -1165,7 +1165,7 @@
                     };
                     this.openFile = function(callback,readAsType='readAsBinaryString'){
                         //alert user
-                            menu.control.report('loading');
+                            menu.control.menubar.report('loading');
             
                         var i = document.createElement('input');
                         i.type = 'file';
@@ -1177,7 +1177,7 @@
                             }
                             f.onloadend = function(){ 
                                 if(callback){callback(f.result);}
-                                menu.control.report('');
+                                menu.control.menubar.report('');
                             }
                         };
                         i.click();
@@ -1222,6 +1222,7 @@
             
                             //control
                                 case 'button_rect': 
+                                    console.warn('button_rect depreciated, please switch to button_rect_3');
                                     var temp = parts.elements.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.up, data.style.hover, data.style.down, data.style.glow);
                                     temp.onmouseup =    data.onmouseup    ? data.onmouseup    : temp.onmouseup   ;
                                     temp.onmousedown =  data.onmousedown  ? data.onmousedown  : temp.onmousedown ;
@@ -1233,6 +1234,7 @@
                                     return temp;
                                 break;
                                 case 'button_rect_2': 
+                                    console.warn('button_rect_2 depreciated, please switch to button_rect_3');
                                     var temp = parts.elements.control.button_rect_2(
                                         name,
                                         data.x, data.y, data.width, data.height,
@@ -1259,12 +1261,37 @@
                                     temp.onpress = data.onpress ? data.onpress : temp.onpress;
                                     return temp;
                                 break;
+                                case 'button_rect_3': 
+                                    var temp = parts.elements.control.button_rect_3(
+                                        name,
+                                        data.x, data.y, data.width, data.height, data.text,
+                                        data.textVerticalOffset, data.textHorizontalOffset,
+                                        data.active, data.hoverable, data.selectable,
+                                        data.style.text,
+                                        data.style.off,
+                                        data.style.up,                data.style.press,
+                                        data.style.select,            data.style.select_press,
+                                        data.style.glow,              data.style.glow_press,
+                                        data.style.glow_select,       data.style.glow_select_press,
+                                        data.style.hover,             data.style.hover_press,
+                                        data.style.hover_select,      data.style.hover_select_press,
+                                        data.style.hover_glow,        data.style.hover_glow_press,
+                                        data.style.hover_glow_select, data.style.hover_glow_select_press,
+                                    );
+                                    temp.onpress =    data.onpress    ? data.onpress    : temp.onpress;
+                                    temp.onrelease =  data.onrelease  ? data.onrelease  : temp.onrelease;
+                                    temp.ondblpress = data.ondblpress ? data.ondblpress : temp.ondblpress;
+                                    temp.onenter =    data.onenter    ? data.onenter    : temp.onenter;
+                                    temp.onleave =    data.onleave    ? data.onleave    : temp.onleave;
+                                    return temp;
+                                break;
                                 case 'checkbox_rect':
                                     var temp = parts.elements.control.checkbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow);
                                     temp.onchange = data.onchange ? data.onchange : temp.onchange;
                                     return temp;
                                 break;
                                 case 'key_rect':
+                                    console.warn('key_rect depreciated, please switch to button_rect_3');
                                     var temp = parts.elements.control.key_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.off, data.style.press, data.style.glow, data.style.pressAndGlow);
                                     temp.keyup =   data.keyup   ? data.keyup   : temp.keyup;
                                     temp.keydown = data.keydown ? data.keydown : temp.keydown;
@@ -1375,19 +1402,14 @@
                                             data.selectable, data.multiSelect, data.itemHeight, data.itemSpacing,
                                             data.itemTextVerticalOffset, data.itemTextHorizontalOffset,
                                             data.style.listItemText,
-                                            data.style.background_off,
-                                            data.style.background_press,
-                                            data.style.background_select,
-                                            data.style.background_glow,
-                                            data.style.background_glow_select,
-                                            data.style.background_hover,
-                                            data.style.background_hover_press,
-                                            data.style.background_hover_select,
-                                            data.style.background_hover_select_press,
-                                            data.style.background_hover_glow,
-                                            data.style.background_hover_glow_press,
-                                            data.style.background_hover_glow_select,
-                                            data.style.background_hover_glow_select_press,
+                                            data.style.background_off,               data.style.background_press,
+                                            data.style.background_select,            data.style.background_select_press,
+                                            data.style.background_glow,              data.style.background_glow_press,
+                                            data.style.background_glow_select,       data.style.background_glow_select_press,
+                                            data.style.background_hover,             data.style.background_hover_press,
+                                            data.style.background_hover_select,      data.style.background_hover_select_press,
+                                            data.style.background_hover_glow,        data.style.background_hover_glow_press,
+                                            data.style.background_hover_glow_select, data.style.background_hover_glow_select_press,
                                         );
                                         temp.onselect = data.onselect ? data.onselect : temp.onselect;
                                         temp.onpositionchange = data.onpositionchange ? data.onpositionchange : temp.onpositionchange;
@@ -6787,6 +6809,100 @@
                         
                             return object;
                         };
+                        this.button_rect_3 = function(
+                            id='button_rect_3',
+                            x, y, width, height,
+                            text,
+                            textVerticalOffset=0.5, textHorizontalOffset=0.05,
+                            active=true, hoverable=true, selectable=true,
+                            textStyle='fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
+                            backgroundStyle_off=                     'fill:rgba(180,180,180,1)',
+                            backgroundStyle_up=                      'fill:rgba(200,200,200,1)',
+                            backgroundStyle_press=                   'fill:rgba(230,230,230,1)',
+                            backgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_select_press=            'fill:rgba(230,230,230,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_glow=                    'fill:rgba(220,220,220,1)',
+                            backgroundStyle_glow_press=              'fill:rgba(250,250,250,1)',
+                            backgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_glow_select_press=       'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover=                   'fill:rgba(220,220,220,1)',
+                            backgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
+                            backgroundStyle_hover_select=            'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_glow=              'fill:rgba(240,240,240,1)',
+                            backgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
+                            backgroundStyle_hover_glow_select=       'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                        ){
+                            //elements
+                                var object = __globals.utility.misc.elementMaker('g',id,{x:x,y:y});
+                        
+                                var background = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
+                                object.appendChild( background );
+                        
+                                var text = __globals.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffset, y:height*textVerticalOffset, text:text, style:textStyle});
+                                object.appendChild(text);
+                        
+                            //state
+                                object.state = {
+                                    hovering:false,
+                                    glowing:false,
+                                    selected:false,
+                                    pressed:false,
+                                };
+                        
+                                object.activateState = function(){
+                                    if(!active){ __globals.utility.element.setStyle( background, backgroundStyle_off); return; }
+                        
+                                    var styles = [
+                                        backgroundStyle_up,                backgroundStyle_press,
+                                        backgroundStyle_select,            backgroundStyle_select_press,
+                                        backgroundStyle_glow,              backgroundStyle_glow_press,
+                                        backgroundStyle_glow_select,       backgroundStyle_glow_select_press,
+                                        backgroundStyle_hover,             backgroundStyle_hover_press,
+                                        backgroundStyle_hover_select,      backgroundStyle_hover_select_press,
+                                        backgroundStyle_hover_glow,        backgroundStyle_hover_glow_press,
+                                        backgroundStyle_hover_glow_select, backgroundStyle_hover_glow_select_press,
+                                    ];
+                        
+                                    if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
+                                    if(!selectable && object.state.selected ){ object.state.selected = false; }
+                            
+                                    __globals.utility.element.setStyle( background, styles[object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + object.state.pressed*1] );
+                                };
+                                object.activateState();
+                        
+                                //interactivity
+                                    object.onmouseenter = function(event){ this.state.hovering = true;  this.activateState(); if(this.onenter){this.onenter(event);}      };
+                                    object.onmouseleave = function(event){ this.state.hovering = false; this.release(); this.activateState(); if(this.onleave){this.onleave(event);}      };
+                                    object.onmouseup = function(event){   this.release(event); };
+                                    object.onmousedown = function(event){ this.press(event);   };
+                                    object.ondblclick = function(event){ if(this.ondblpress){this.ondblpress(event);} };
+                                //controls
+                                    object.press = function(event){
+                                        if(this.state.pressed){return;}
+                                        this.state.pressed = true;
+                                        this.activateState();
+                                        if(this.onpress){this.onpress(event);}
+                                    };
+                                    object.release = function(event){
+                                        if(!this.state.pressed){return;}
+                                        this.state.pressed = false;
+                                        this.activateState();
+                                        if(this.onrelease){this.onrelease(event);}
+                                    };
+                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; object.activateState(); };
+                                    object.glow = function(bool){   if(bool == undefined){return object.state.glowing;}  object.state.glowing = bool;  object.activateState(); };
+                                    object.select = function(bool){ if(bool == undefined){return object.state.selected;} object.state.selected = bool; object.activateState(); };
+                                //callbacks
+                                    object.onenter = function(event){};
+                                    object.onleave = function(event){};
+                                    object.onpress = function(event){};
+                                    object.ondblpress = function(event){};
+                                    object.onrelease = function(event){};
+                        
+                            return object;
+                        };
                         this.checkbox_rect = function(
                             id='checkbox_rect',
                             x, y, width, height, angle=0,
@@ -7251,7 +7367,7 @@
                             object.keyup =    function(){ /*console.log('mouseup');    */ };
                             object.keydown =  function(){ /*console.log('mousedown');  */ };
                         
-                            //methods;
+                            //methods
                             object.press =   function(){
                                 if( this.state%2 != 0 ){return;} //key already pressed 
                                 this.activateState(this.state+1);
@@ -7276,19 +7392,23 @@
                             itemTextVerticalOffset=0.5, itemTextHorizontalOffset=0.05,
                             listItemTextStyle='fill:rgba(0,0,0,1); font-size:5; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
                         
-                            backgroundStyle_off=                     'fill:rgba(200,200,200,1)',
-                            backgroundStyle_press=                   'fill:rgba(240,240,240,1)',
-                            backgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            backgroundStyle_glow=                    'fill:rgba(220,220,220,1)',
-                            backgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            backgroundStyle_hover=                   'fill:rgba(220,220,200,1)',
-                            backgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
-                            backgroundStyle_hover_select=            'fill:rgba(220,220,200,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            backgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            backgroundStyle_hover_glow=              'fill:rgba(240,240,200,1)',
-                            backgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
-                            backgroundStyle_hover_glow_select=       'fill:rgba(240,240,200,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_off=                     'fill:rgba(180,180,180,1)',
+                            listItemBackgroundStyle_up=                      'fill:rgba(220,220,220,1)',
+                            listItemBackgroundStyle_press=                   'fill:rgba(230,230,230,1)',
+                            listItemBackgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_select_press=            'fill:rgba(230,230,230,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_glow=                    'fill:rgba(230,230,210,1)',
+                            listItemBackgroundStyle_glow_press=              'fill:rgba(250,250,250,1)',
+                            listItemBackgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_glow_select_press=       'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_hover=                   'fill:rgba(230,230,230,1)',
+                            listItemBackgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
+                            listItemBackgroundStyle_hover_select=            'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_hover_glow=              'fill:rgba(240,240,240,1)',
+                            listItemBackgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
+                            listItemBackgroundStyle_hover_glow_select=       'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
                         ){
                             //state
                                 var itemArray = [];
@@ -7310,22 +7430,24 @@
                         
                             //main list
                                 function makeItem(text,a){
-                                    var temp = parts.elements.control.list.item(
-                                        a, 0, (height*(itemHeight+itemSpacing))*a, 
-                                        width, height*itemHeight, 
-                                        text, itemTextVerticalOffset, 
-                                        itemTextHorizontalOffset, 
-                                        listItemTextStyle,
-                                        backgroundStyle_off,               backgroundStyle_press,
-                                        backgroundStyle_select,            undefined/*backgroundStyle_select_press*/,
-                                        backgroundStyle_glow,              undefined/*backgroundStyle_glow_press*/,
-                                        backgroundStyle_glow_select,       undefined/*backgroundStyle_glow_select_press*/,
-                                        backgroundStyle_hover,             backgroundStyle_hover_press,
-                                        backgroundStyle_hover_select,      backgroundStyle_hover_select_press,
-                                        backgroundStyle_hover_glow,        backgroundStyle_hover_glow_press,
-                                        backgroundStyle_hover_glow_select, backgroundStyle_hover_glow_select_press,
-                                    );
-                                    temp.onpressed = function(a){return function(event){object.select(a,undefined,event);}}(a);
+                                    var temp = __globals.utility.misc.elementMaker( 'button_rect_3', a, {
+                                        x:0, y:(height*(itemHeight+itemSpacing))*a,
+                                        width:width, height:height*itemHeight, text:text,
+                                        textVerticalOffset:itemTextVerticalOffset, textHorizontalOffset:itemTextHorizontalOffset,
+                                        active:true, hoverable:true, selectable:true,
+                                        style:{
+                                            text:listItemTextStyle,
+                                            up:listItemBackgroundStyle_up,                              press:listItemBackgroundStyle_press,
+                                            select:listItemBackgroundStyle_select,                       select_press:listItemBackgroundStyle_select_press,
+                                            glow:listItemBackgroundStyle_glow,                           glow_press:listItemBackgroundStyle_glow_press,
+                                            glow_select:listItemBackgroundStyle_glow_select,             glow_select_press:listItemBackgroundStyle_glow_select_press,
+                                            hover:listItemBackgroundStyle_hover,                         hover_press:listItemBackgroundStyle_hover_press,
+                                            hover_select:listItemBackgroundStyle_hover_select,           hover_select_press:listItemBackgroundStyle_hover_select_press,
+                                            hover_glow:listItemBackgroundStyle_hover_glow,               hover_glow_press:listItemBackgroundStyle_hover_glow_press,
+                                            hover_glow_select:listItemBackgroundStyle_hover_glow_select, hover_glow_select_press:listItemBackgroundStyle_hover_glow_select_press,
+                                        }
+                                    });
+                                    temp.onpress = function(a){return function(event){object.select(a,undefined,event);}}(a);
                         
                                     return temp;
                                 }
@@ -7415,89 +7537,6 @@
                                 object.onselect = function(a,i){};
                                 object.onpositionchange = function(a){};
                             
-                            return object;
-                        };
-                        
-                        
-                        
-                        this.list.item = function(
-                            id='listItem',
-                            x, y, width, height,
-                            text,
-                            textVerticalOffset=0.5, textHorizontalOffset=0.05,
-                            textStyle='fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
-                            backgroundStyle_off=                     'fill:rgba(200,200,200,1)',
-                            backgroundStyle_press=                   '', //impossible
-                            backgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_select_press=            '', //impossible
-                            backgroundStyle_glow=                    'fill:rgba(220,220,220,1)',
-                            backgroundStyle_glow_press=              '', //impossible
-                            backgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_glow_select_press=       '', //impossible
-                            backgroundStyle_hover=                   'fill:rgba(220,220,200,1)',
-                            backgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
-                            backgroundStyle_hover_select=            'fill:rgba(220,220,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover_glow=              'fill:rgba(240,240,200,1)',
-                            backgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
-                            backgroundStyle_hover_glow_select=       'fill:rgba(240,240,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                        ){
-                            //elements
-                                var object = __globals.utility.misc.elementMaker('g',id,{x:x,y:y});
-                        
-                                var background = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
-                                object.appendChild( background );
-                        
-                                var text = __globals.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffset, y:height*textVerticalOffset, text:text, style:textStyle});
-                                object.appendChild(text);
-                        
-                            //state
-                            object.state = {
-                                hovering:false,
-                                glowing:false,
-                                selected:false,
-                                pressed:false,
-                            };
-                            object.activateState = function(){
-                                if( object.state.pressed && !object.state.hovering ){object.state.pressed = false;}
-                        
-                                var styles = [
-                                    backgroundStyle_off,
-                                    backgroundStyle_press,
-                                    backgroundStyle_select,
-                                    backgroundStyle_select_press,
-                                    backgroundStyle_glow,
-                                    backgroundStyle_glow_press,
-                                    backgroundStyle_glow_select,
-                                    backgroundStyle_glow_select_press,
-                                    backgroundStyle_hover,
-                                    backgroundStyle_hover_press,
-                                    backgroundStyle_hover_select,
-                                    backgroundStyle_hover_select_press,
-                                    backgroundStyle_hover_glow,
-                                    backgroundStyle_hover_glow_press,
-                                    backgroundStyle_hover_glow_select,
-                                    backgroundStyle_hover_glow_select_press,
-                                ];
-                        
-                                __globals.utility.element.setStyle(
-                                    background, styles[object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + object.state.pressed*1]
-                                );
-                            };
-                            object.activateState();
-                        
-                            //interactivity
-                                object.onmouseenter = function(){ object.state.hovering = true; object.activateState(); };
-                                object.onmouseleave = function(){ object.state.hovering = false; object.activateState(); };
-                                object.onmouseup = function(){ object.state.pressed = false; object.activateState(); };
-                                object.onmousedown = function(event){ object.state.pressed = true; object.activateState(); if(object.onpressed){object.onpressed(event);} };
-                            //controls
-                                object.glow = function(bool){ if(bool == undefined){return object.state.glowing;} object.state.glowing = bool; object.activateState(); };
-                                object.select = function(bool){ if(bool == undefined){return object.state.selected;} object.state.selected = bool; object.activateState(); };
-                            //callbacks
-                                object.onpressed = function(event){};
-                        
                             return object;
                         };
                         this.needleOverlay = function(
@@ -9598,7 +9637,7 @@
                         h2:'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
                 
                         readout: {background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'},
-                        button: {up:'fill:rgba(180,180,180,1)', hover:'fill:rgba(220,220,220,1)', down:'fill:rgba(170,170,170,1)', glow:'fill:rgba(220,200,220,1)'},
+                        button: { up:'fill:rgba(220,220,220,1)', hover:'fill:rgba(230,230,230,1)', hover_press:'fill:rgba(180,180,180,1)'},
                         dial: {handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',needle: 'fill:rgba(250,150,150,1)',outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'},
                     };
                     var design = {
@@ -9615,8 +9654,8 @@
                                 {type:'connectionNode_audio', name:'audioOut', data:{type: 1, x: -10, y: 15, width: 20, height: 20}},
                                 {type:'readout_sixteenSegmentDisplay', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
                                 {type:'readout_sixteenSegmentDisplay', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
-                                {type:'button_rect', name:'up',   data:{x:225, y: 15, width:15, height:10, style:style.button, onclick:function(){incSelection();}}},
-                                {type:'button_rect', name:'down', data:{x:225, y: 25, width:15, height:10, style:style.button, onclick:function(){decSelection();}}},
+                                {type:'button_rect_3', name:'up',   data:{x:225, y: 15, width:15, height:10, style:style.button, onpress:function(){incSelection();}}},
+                                {type:'button_rect_3', name:'down', data:{x:225, y: 25, width:15, height:10, style:style.button, onpress:function(){decSelection();}}},
                                 {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, style:style.dial, onchange:function(value){obj.circuitry.unit.gain(value*2);}}},
                                 {type:'label', name:'gainLabel_name', data:{x:21.25, y:44, text:'gain', style:style.h1, angle:0}},
                                 {type:'label', name:'gainLabel_0',    data:{x:15, y:40, text:'0', style:style.h2, angle:0}},
@@ -13003,33 +13042,33 @@
                                 style:'fill:rgba(240,240,240,1);'
                             },
                             elements:[
-                                {type:'button_rect_2',name:'file',data:{
-                                    x:0, y:0, width:70, height:vars.height, text:'objects',
-                                    textHorizontalOffset:0.15,
+                                {type:'button_rect_3',name:'file',data:{
+                                    x:0, y:0, width:70, height:vars.height, text:'create',
+                                    textHorizontalOffset:0.2,
                                     style:{
-                                        background_off:style.button.off,
-                                        background_hover:style.button.hover,
-                                        background_hover_press:style.button.hover_press,
+                                        up:style.button.off,
+                                        hover:style.button.hover,
+                                        hover_press:style.button.hover_press,
                                     },
                                     onpress:function(){menu.control.objectPane.open();}
                                 }},
-                                {type:'button_rect_2',name:'open',data:{
+                                {type:'button_rect_3',name:'open',data:{
                                     x:70, y:0, width:50, height:vars.height, text:'open',
-                                    textHorizontalOffset:0.15,
+                                    textHorizontalOffset:0.175,
                                     style:{
-                                        background_off:style.button.off,
-                                        background_hover:style.button.hover,
-                                        background_hover_press:style.button.hover_press,
+                                        up:style.button.off,
+                                        hover:style.button.hover,
+                                        hover_press:style.button.hover_press,
                                     },
                                     onpress:function(){menu.control.loadsave.load();}
                                 }},
-                                {type:'button_rect_2',name:'save',data:{
+                                {type:'button_rect_3',name:'save',data:{
                                     x:120, y:0, width:50, height:vars.height, text:'save',
-                                    textHorizontalOffset:0.15,
+                                    textHorizontalOffset:0.175,
                                     style:{
-                                        background_off:style.button.off,
-                                        background_hover:style.button.hover,
-                                        background_hover_press:style.button.hover_press,
+                                        up:style.button.off,
+                                        hover:style.button.hover,
+                                        hover_press:style.button.hover_press,
                                     },
                                     onpress:function(){menu.control.loadsave.save();}
                                 }},
@@ -13063,7 +13102,7 @@
                             x:x, y:y,
                             base:{
                                 points:[{x:0,y:0},{x:vars.width,y:0},{x:vars.width,y:25},{x:0,y:25}],
-                                style:'fill:rgba(240,240,240,0.75);'
+                                style:'fill:rgba(240,240,240,0.95);'
                             },
                             elements:[
                                 {type:'text', name:'title', data:{
@@ -13073,10 +13112,10 @@
                                     path:[{x:0,y:25},{x:vars.width,y:25},{x:vars.width,y:vars.height},{x:0,y:vars.height}],
                                     style:style.background
                                 }},
-                                {type:'button_rect', name:'close', data:{
+                                {type:'button_rect_3', name:'close', data:{
                                     x:2.5, y:2.5, width:20, height:20, 
-                                    style:{ up:'fill:rgba(255,132,132,1)', hover:'fill:rgba(255,200,200,1)', down:'fill:rgba(255,100,100,1)' },
-                                    onclick:function(){ menu.control.objectPane.close(); }
+                                    style:{ up:'fill:rgba(255,132,132,1)', hover:'fill:rgba(255,200,200,1)', hover_press:'fill:rgba(255,100,100,1)' },
+                                    onrelease:function(){ menu.control.objectPane.close(); }
                                 }},
                                 {type:'slide', name:'scroll', data:{
                                     x:vars.width-15, y:25, width:15, height:vars.height-25,
@@ -13107,33 +13146,36 @@
                         return obj;
                     };
                 };
+                this.control = {
+                    loadsave:{
+                        load:function(){__globals.utility.workspace.saveload.load();},
+                        save:function(){__globals.utility.workspace.saveload.save();},
+                    },
+                    menubar:{
+                        obj:undefined,
+                        report:function(text){ menu.control.menubar.obj.i.report(text); },
+                    },
+                    objectPane:{
+                        obj:undefined,
+                        open:function(){
+                            if( menu.control.objectPane.obj == undefined ){
+                                menu.control.objectPane.obj = __globals.utility.workspace.placeAndReturnObject( menu.objects.objectPane(10, 30), 'menu' );
+                            }
+                        },
+                        close:function(){
+                            if( menu.control.objectPane.obj != undefined ){
+                                __globals.utility.object.deleteObject(menu.control.objectPane.obj);
+                                menu.control.objectPane.obj = undefined;
+                            }
+                        },
+                    },
+                };
             };
+            
             
             setTimeout(function(){
-                menu.bar = __globals.utility.workspace.placeAndReturnObject( menu.objects.menuBar(), 'menu' );
+                menu.control.menubar.obj = __globals.utility.workspace.placeAndReturnObject( menu.objects.menuBar(), 'menu' );
             },1);
-            
-            menu.control = {
-                report:function(text){ menu.bar.i.report(text); },
-                loadsave:{
-                    load:function(){__globals.utility.workspace.saveload.load();},
-                    save:function(){__globals.utility.workspace.saveload.save();},
-                },
-                objectPane:{
-                    obj:undefined,
-                    open:function(){
-                        if( menu.control.objectPane.obj == undefined ){
-                            menu.control.objectPane.obj = __globals.utility.workspace.placeAndReturnObject( menu.objects.objectPane(10, 30), 'menu' );
-                        }
-                    },
-                    close:function(){
-                        if( menu.control.objectPane.obj != undefined ){
-                            __globals.utility.object.deleteObject(menu.control.objectPane.obj);
-                            menu.control.objectPane.obj = undefined;
-                        }
-                    },
-                },
-            };
             
             
             //audio duplicator

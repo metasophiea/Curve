@@ -10,7 +10,7 @@ this.audioIn = function(x,y,setupConnect=true){
         h2:'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
 
         readout: {background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'},
-        button: {up:'fill:rgba(180,180,180,1)', hover:'fill:rgba(220,220,220,1)', down:'fill:rgba(170,170,170,1)', glow:'fill:rgba(220,200,220,1)'},
+        button: { up:'fill:rgba(220,220,220,1)', hover:'fill:rgba(230,230,230,1)', hover_press:'fill:rgba(180,180,180,1)'},
         dial: {handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',needle: 'fill:rgba(250,150,150,1)',outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'},
     };
     var design = {
@@ -27,8 +27,8 @@ this.audioIn = function(x,y,setupConnect=true){
                 {type:'connectionNode_audio', name:'audioOut', data:{type: 1, x: -10, y: 15, width: 20, height: 20}},
                 {type:'readout_sixteenSegmentDisplay', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
                 {type:'readout_sixteenSegmentDisplay', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
-                {type:'button_rect', name:'up',   data:{x:225, y: 15, width:15, height:10, style:style.button, onclick:function(){incSelection();}}},
-                {type:'button_rect', name:'down', data:{x:225, y: 25, width:15, height:10, style:style.button, onclick:function(){decSelection();}}},
+                {type:'button_rect_3', name:'up',   data:{x:225, y: 15, width:15, height:10, style:style.button, onpress:function(){incSelection();}}},
+                {type:'button_rect_3', name:'down', data:{x:225, y: 25, width:15, height:10, style:style.button, onpress:function(){decSelection();}}},
                 {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, style:style.dial, onchange:function(value){obj.circuitry.unit.gain(value*2);}}},
                 {type:'label', name:'gainLabel_name', data:{x:21.25, y:44, text:'gain', style:style.h1, angle:0}},
                 {type:'label', name:'gainLabel_0',    data:{x:15, y:40, text:'0', style:style.h2, angle:0}},

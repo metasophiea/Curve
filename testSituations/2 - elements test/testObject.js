@@ -96,21 +96,9 @@ objects.testObject = function(x,y,debug=false){
                 }},
             
             //button-like
-                {type:'button_rect',name:'button_rect',data:{
+                {type:'button_rect_3',name:'button_rect_3',data:{
                     x:220, y: 5, width:20, height:20, 
-                    style:{
-                        up:'fill:rgba(200,200,200,1)', hover:'fill:rgba(220,220,220,1)', 
-                        down:'fill:rgba(180,180,180,1)', glow:'fill:rgba(220,200,220,1)'
-                    }, 
-                    onclick:function(){design.connectionNode_data.externalData_1.send('button_rect');}
-                }},
-                {type:'button_rect_2',name:'button_rect_2',data:{
-                    x:5, y: 5, width:20, height:20, 
-                    style:{
-                        up:'fill:rgba(200,200,200,1)', hover:'fill:rgba(220,220,220,1)', 
-                        down:'fill:rgba(180,180,180,1)', glow:'fill:rgba(220,200,220,1)'
-                    }, 
-                    onclick:function(){}
+                    onpress:function(){design.connectionNode_data.externalData_1.send('button_rect');}
                 }},
                 {type:'checkbox_rect', name:'checkbox_rect', data:{
                     x:245, y: 5, width:20, height:20, angle:0, 
@@ -218,6 +206,8 @@ objects.testObject = function(x,y,debug=false){
                                     design.slidePanel.slidePanel_horizontal.smoothSet(1,1,'sin',false); 
                                     design.slidePanel.slidePanel_vertical.smoothSetAll(1,1,'cos',false); 
                                     design.slidePanel.slidePanel_horizontal.smoothSetAll(1,1,'exponential',false);
+                                    design.button_rect_3.button_rect_3.glow(true);
+                                    setTimeout( function(){design.button_rect_3.button_rect_3.glow(false);}, 200 );
                                 break;
                                 case 'checkbox_rect': design.checkbox_rect.checkbox_rect.set(data,false); break;
                                 case 'key_rect': 

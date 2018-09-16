@@ -272,7 +272,7 @@ __globals.utility = new function(){
         this.saveload = new function(){
             this.save = function(compress=true,sceneName='project',bundleConstructorFunctions=false){
                 //alert user
-                    menu.control.report('saving');
+                    menu.control.menubar.report('saving');
 
                 var outputData = {
                     sceneName:sceneName,
@@ -301,7 +301,7 @@ __globals.utility = new function(){
                     __globals.audio.destination.masterGain(1);
 
                 //alert user
-                    menu.control.report('');
+                    menu.control.menubar.report('');
             };
             this.__loadProcess = function(data,compressed){
                 //stopping audio
@@ -1114,7 +1114,7 @@ __globals.utility = new function(){
         };
         this.openFile = function(callback,readAsType='readAsBinaryString'){
             //alert user
-                menu.control.report('loading');
+                menu.control.menubar.report('loading');
 
             var i = document.createElement('input');
             i.type = 'file';
@@ -1126,7 +1126,7 @@ __globals.utility = new function(){
                 }
                 f.onloadend = function(){ 
                     if(callback){callback(f.result);}
-                    menu.control.report('');
+                    menu.control.menubar.report('');
                 }
             };
             i.click();
@@ -1171,6 +1171,7 @@ __globals.utility = new function(){
 
                 //control
                     case 'button_rect': 
+                        console.warn('button_rect depreciated, please switch to button_rect_3');
                         var temp = parts.elements.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.up, data.style.hover, data.style.down, data.style.glow);
                         temp.onmouseup =    data.onmouseup    ? data.onmouseup    : temp.onmouseup   ;
                         temp.onmousedown =  data.onmousedown  ? data.onmousedown  : temp.onmousedown ;
@@ -1182,6 +1183,7 @@ __globals.utility = new function(){
                         return temp;
                     break;
                     case 'button_rect_2': 
+                        console.warn('button_rect_2 depreciated, please switch to button_rect_3');
                         var temp = parts.elements.control.button_rect_2(
                             name,
                             data.x, data.y, data.width, data.height,
@@ -1208,12 +1210,37 @@ __globals.utility = new function(){
                         temp.onpress = data.onpress ? data.onpress : temp.onpress;
                         return temp;
                     break;
+                    case 'button_rect_3': 
+                        var temp = parts.elements.control.button_rect_3(
+                            name,
+                            data.x, data.y, data.width, data.height, data.text,
+                            data.textVerticalOffset, data.textHorizontalOffset,
+                            data.active, data.hoverable, data.selectable,
+                            data.style.text,
+                            data.style.off,
+                            data.style.up,                data.style.press,
+                            data.style.select,            data.style.select_press,
+                            data.style.glow,              data.style.glow_press,
+                            data.style.glow_select,       data.style.glow_select_press,
+                            data.style.hover,             data.style.hover_press,
+                            data.style.hover_select,      data.style.hover_select_press,
+                            data.style.hover_glow,        data.style.hover_glow_press,
+                            data.style.hover_glow_select, data.style.hover_glow_select_press,
+                        );
+                        temp.onpress =    data.onpress    ? data.onpress    : temp.onpress;
+                        temp.onrelease =  data.onrelease  ? data.onrelease  : temp.onrelease;
+                        temp.ondblpress = data.ondblpress ? data.ondblpress : temp.ondblpress;
+                        temp.onenter =    data.onenter    ? data.onenter    : temp.onenter;
+                        temp.onleave =    data.onleave    ? data.onleave    : temp.onleave;
+                        return temp;
+                    break;
                     case 'checkbox_rect':
                         var temp = parts.elements.control.checkbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow);
                         temp.onchange = data.onchange ? data.onchange : temp.onchange;
                         return temp;
                     break;
                     case 'key_rect':
+                        console.warn('key_rect depreciated, please switch to button_rect_3');
                         var temp = parts.elements.control.key_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.off, data.style.press, data.style.glow, data.style.pressAndGlow);
                         temp.keyup =   data.keyup   ? data.keyup   : temp.keyup;
                         temp.keydown = data.keydown ? data.keydown : temp.keydown;
@@ -1324,19 +1351,14 @@ __globals.utility = new function(){
                                 data.selectable, data.multiSelect, data.itemHeight, data.itemSpacing,
                                 data.itemTextVerticalOffset, data.itemTextHorizontalOffset,
                                 data.style.listItemText,
-                                data.style.background_off,
-                                data.style.background_press,
-                                data.style.background_select,
-                                data.style.background_glow,
-                                data.style.background_glow_select,
-                                data.style.background_hover,
-                                data.style.background_hover_press,
-                                data.style.background_hover_select,
-                                data.style.background_hover_select_press,
-                                data.style.background_hover_glow,
-                                data.style.background_hover_glow_press,
-                                data.style.background_hover_glow_select,
-                                data.style.background_hover_glow_select_press,
+                                data.style.background_off,               data.style.background_press,
+                                data.style.background_select,            data.style.background_select_press,
+                                data.style.background_glow,              data.style.background_glow_press,
+                                data.style.background_glow_select,       data.style.background_glow_select_press,
+                                data.style.background_hover,             data.style.background_hover_press,
+                                data.style.background_hover_select,      data.style.background_hover_select_press,
+                                data.style.background_hover_glow,        data.style.background_hover_glow_press,
+                                data.style.background_hover_glow_select, data.style.background_hover_glow_select_press,
                             );
                             temp.onselect = data.onselect ? data.onselect : temp.onselect;
                             temp.onpositionchange = data.onpositionchange ? data.onpositionchange : temp.onpositionchange;

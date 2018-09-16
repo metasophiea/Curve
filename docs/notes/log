@@ -1,4 +1,15 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-09-16
+  - developed button_rect_3 which replaces list.item (now with 'active' setting)
+
+  future ideas
+  - object collision
+	
+  to do
+  - replace all button_rect and key_rect parts with button_rect_3
+  - add text edit control to button_rect_3
+  
+
 2018-09-15
   - updated README to point to this log
   - object view reordering, now is aware of what pane it's working on, and can

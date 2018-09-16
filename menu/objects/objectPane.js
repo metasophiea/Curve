@@ -12,7 +12,7 @@ this.objectPane = function(x,y){
         x:x, y:y,
         base:{
             points:[{x:0,y:0},{x:vars.width,y:0},{x:vars.width,y:25},{x:0,y:25}],
-            style:'fill:rgba(240,240,240,0.75);'
+            style:'fill:rgba(240,240,240,0.95);'
         },
         elements:[
             {type:'text', name:'title', data:{
@@ -22,10 +22,10 @@ this.objectPane = function(x,y){
                 path:[{x:0,y:25},{x:vars.width,y:25},{x:vars.width,y:vars.height},{x:0,y:vars.height}],
                 style:style.background
             }},
-            {type:'button_rect', name:'close', data:{
+            {type:'button_rect_3', name:'close', data:{
                 x:2.5, y:2.5, width:20, height:20, 
-                style:{ up:'fill:rgba(255,132,132,1)', hover:'fill:rgba(255,200,200,1)', down:'fill:rgba(255,100,100,1)' },
-                onclick:function(){ menu.control.objectPane.close(); }
+                style:{ up:'fill:rgba(255,132,132,1)', hover:'fill:rgba(255,200,200,1)', hover_press:'fill:rgba(255,100,100,1)' },
+                onrelease:function(){ menu.control.objectPane.close(); }
             }},
             {type:'slide', name:'scroll', data:{
                 x:vars.width-15, y:25, width:15, height:vars.height-25,

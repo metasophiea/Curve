@@ -40,7 +40,7 @@ this.key_rect = function(
     object.keyup =    function(){ /*console.log('mouseup');    */ };
     object.keydown =  function(){ /*console.log('mousedown');  */ };
 
-    //methods;
+    //methods
     object.press =   function(){
         if( this.state%2 != 0 ){return;} //key already pressed 
         this.activateState(this.state+1);

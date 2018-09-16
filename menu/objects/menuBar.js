@@ -20,33 +20,33 @@ this.menuBar = function(){
             style:'fill:rgba(240,240,240,1);'
         },
         elements:[
-            {type:'button_rect_2',name:'file',data:{
-                x:0, y:0, width:70, height:vars.height, text:'objects',
-                textHorizontalOffset:0.15,
+            {type:'button_rect_3',name:'file',data:{
+                x:0, y:0, width:70, height:vars.height, text:'create',
+                textHorizontalOffset:0.2,
                 style:{
-                    background_off:style.button.off,
-                    background_hover:style.button.hover,
-                    background_hover_press:style.button.hover_press,
+                    up:style.button.off,
+                    hover:style.button.hover,
+                    hover_press:style.button.hover_press,
                 },
                 onpress:function(){menu.control.objectPane.open();}
             }},
-            {type:'button_rect_2',name:'open',data:{
+            {type:'button_rect_3',name:'open',data:{
                 x:70, y:0, width:50, height:vars.height, text:'open',
-                textHorizontalOffset:0.15,
+                textHorizontalOffset:0.175,
                 style:{
-                    background_off:style.button.off,
-                    background_hover:style.button.hover,
-                    background_hover_press:style.button.hover_press,
+                    up:style.button.off,
+                    hover:style.button.hover,
+                    hover_press:style.button.hover_press,
                 },
                 onpress:function(){menu.control.loadsave.load();}
             }},
-            {type:'button_rect_2',name:'save',data:{
+            {type:'button_rect_3',name:'save',data:{
                 x:120, y:0, width:50, height:vars.height, text:'save',
-                textHorizontalOffset:0.15,
+                textHorizontalOffset:0.175,
                 style:{
-                    background_off:style.button.off,
-                    background_hover:style.button.hover,
-                    background_hover_press:style.button.hover_press,
+                    up:style.button.off,
+                    hover:style.button.hover,
+                    hover_press:style.button.hover_press,
                 },
                 onpress:function(){menu.control.loadsave.save();}
             }},
