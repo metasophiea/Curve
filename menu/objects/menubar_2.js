@@ -14,6 +14,7 @@
 
 //     var design = {
 //         type:'menuBar',
+//         skipGrapple:true,
 //         x:0, y:0,
 //         base:{
 //             points:[{x:0,y:0},{x:vars.width,y:0},{x:vars.width,y:vars.height},{x:0,y:vars.height}],

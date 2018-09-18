@@ -1,4 +1,8 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-09-18
+  - fixed bug where one could drag the menu bar around
+
+
 2018-09-16
   - developed button_rect_3 which replaces list.item (now with 'active' setting)
   - all sorts of giffing
