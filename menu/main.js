@@ -3,7 +3,8 @@ var menu = new function(){
         {{include:objects/*}}/**/
     };
     this.control = {
-        loadsave:{
+        scene:{
+            new:function(){ __globals.utility.workspace.clear() },
             load:function(){__globals.utility.workspace.saveload.load();},
             save:function(){__globals.utility.workspace.saveload.save();},
         },

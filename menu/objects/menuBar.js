@@ -114,8 +114,9 @@ this.menubar.items = [
         textHorizontalOffset:0.25,
         itemList:[
             // {text:'New Scene', function:function(){}},
-            {text:'Open Scene', function:function(){ menu.control.loadsave.load(); }},
-            {text:'Save Scene', function:function(){ menu.control.loadsave.save(); }},
+            {text:'New Scene', function:function(){ menu.control.scene.new(); }},
+            {text:'Open Scene', function:function(){ menu.control.scene.load(); }},
+            {text:'Save Scene', function:function(){ menu.control.scene.save(); }},
         ]
     },
     {

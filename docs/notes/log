@@ -5,10 +5,12 @@
   - button_rect_3 now has that key-rolling thing working (broke menubar in the
     process)
   - fixed menubar
+  - added "New Scene" function to clear the scene (no safty on that, so be
+    careful)
 
   Compliation Results
   - workspace.js                        877 Kb  (100%)
-  - workspace.min.js                    301 Kb  (34.36%)
+  - workspace.min.js                    301 Kb  (34.37%)
 
 
 
