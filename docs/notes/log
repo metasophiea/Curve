@@ -1,4 +1,26 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-09-30
+  - all current objects have had their key_rect and button_rect elements switch
+    to button_rect_3
+  - button_rect_3 now has that key-rolling thing working (broke menubar in the
+    process)
+  - fixed menubar
+
+  Compliation Results
+  - workspace.js                        877 Kb  (100%)
+  - workspace.min.js                    301 Kb  (34.36%)
+
+
+
+2018-09-29
+  - button_rect_3 now has 'pressable' option, which determines if the graphics
+    should change when the button is pressed
+  - button_rect_3 handles selection of itself now (click to toggle)
+  - created new version of the list control element, replacing the old
+  - updated menubar to have better drop-down lists, with all the functionality
+    currently available
+
+
 2018-09-18
   - fixed bug where one could drag the menu bar around
 

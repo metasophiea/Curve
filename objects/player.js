@@ -39,13 +39,10 @@ this.player = function(x,y,debug=false){
                 style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
             }},
 
-            {type:'button_rect', name:'load', data: {
+            {type:'button_rect_3', name:'load', data: {
                 x:5, y: 5, width:20, height:10,
-                style:{
-                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
-                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
-                },
-                onclick: function(){
+                style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                onpress: function(){
                     obj.player.load('file',function(data){
                         design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.player.waveformSegment() );                   
                         design.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
@@ -56,22 +53,17 @@ this.player = function(x,y,debug=false){
                     });
                 }
             }},
-            {type:'button_rect',name:'start',data:{
-                x:5, y: 17.5, width:20, height:10, 
-                style:{
-                    up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
-                    down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
-                }, 
-                onclick:function(){ obj.player.start(); }
+            {type:'button_rect_3',name:'start',data:{
+                x:5, y: 17.5, width:20, height:10,
+                style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
+                onpress:function(){ obj.player.start(); }
             }},
-            {type:'button_rect',name:'stop',data:{
-                x:15, y: 17.5, width:10, height:10, 
-                style:{
-                    up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
-                    down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(240,200,220,1)'
-                }, 
-                onclick:function(){ obj.player.stop(); }
+            {type:'button_rect_3',name:'stop',data:{
+                x:15, y: 17.5, width:10, height:10,
+                style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
+                onpress:function(){ obj.player.stop(); }
             }},
+
             {type:'label', name:'rate_label_name', data:{ x:10, y:78, text:'rate', style:style.text }},
             {type:'label', name:'rate_label_0', data:{ x:5, y:75, text:'0', style:style.text }},
             {type:'label', name:'rate_label_1', data:{ x:13.7, y:54, text:'1', style:style.text }},

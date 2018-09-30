@@ -1,5 +1,5 @@
-this.list = function(
-    id='list', 
+var list2 = function(
+    id='list2', 
     x, y, width, height, angle=0,
     list=[
         {text:'item1',  function:function(){console.log('item1 function');}},  {text:'item2',  function:function(){console.log('item2 function');}},
@@ -20,10 +20,10 @@ this.list = function(
         {text:'item31', function:function(){console.log('item31 function');}}, {text:'item32', function:function(){console.log('item32 function');}},
     ],
     selectable=true, multiSelect=true, hoverable=true, pressable=true, active=true,
-    itemHeightMux=0.1, itemSpacingMux=0.01,
-    itemTextVerticalOffsetMux=0.5, itemtextHorizontalOffsetMux=0.05,
-    listItemTextStyle='fill:rgba(0,0,0,1); font-size:5; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
-    backingStyle='fill:rgba(230,230,230,1)',
+    itemHeight=0.1, itemSpacing=0.01,
+    itemTextVerticalOffset=0.5, itemTextHorizontalOffset=0.05,
+    listItemTextStyle='fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
+
     listItemBackgroundStyle_off=                     'fill:rgba(180,180,180,1)',
     listItemBackgroundStyle_up=                      'fill:rgba(220,220,220,1)',
     listItemBackgroundStyle_press=                   'fill:rgba(230,230,230,1)',
@@ -53,7 +53,7 @@ this.list = function(
         var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
 
     //background
-        var rect = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backingStyle});
+        var rect = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:'fill:rgba(230,230,230,1)'});
         object.appendChild(rect);
 
     //viewport (for clipping the visible area)
@@ -65,55 +65,43 @@ this.list = function(
         var mainList = __globals.utility.misc.elementMaker('g','mainList');
         viewport.appendChild(mainList);
 
-        function refreshList(){
-            //clean out all values
-                itemArray = [];
-                mainList.innerHTML = '';
-                selectedItems = [];
-                position = 0;
-                lastNonShiftClicked = 0;
-
-            //populate list
-                for(var a = 0; a < list.length; a++){
-                    var temp = __globals.utility.misc.elementMaker( 'button_rect_3', a, {
-                        x:0, y:(height*(itemHeightMux+itemSpacingMux))*a,
-                        width:width, height:height*itemHeightMux, text:list[a].text,
-                        textVerticalOffset:itemTextVerticalOffsetMux, textHorizontalOffsetMux:itemtextHorizontalOffsetMux,
-                        active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                        style:{
-                            text:listItemTextStyle,
-                            off:listItemBackgroundStyle_off,
-                            up:listItemBackgroundStyle_up,                               press:listItemBackgroundStyle_press,
-                            select:listItemBackgroundStyle_select,                       select_press:listItemBackgroundStyle_select_press,
-                            glow:listItemBackgroundStyle_glow,                           glow_press:listItemBackgroundStyle_glow_press,
-                            glow_select:listItemBackgroundStyle_glow_select,             glow_select_press:listItemBackgroundStyle_glow_select_press,
-                            hover:listItemBackgroundStyle_hover,                         hover_press:listItemBackgroundStyle_hover_press,
-                            hover_select:listItemBackgroundStyle_hover_select,           hover_select_press:listItemBackgroundStyle_hover_select_press,
-                            hover_glow:listItemBackgroundStyle_hover_glow,               hover_glow_press:listItemBackgroundStyle_hover_glow_press,
-                            hover_glow_select:listItemBackgroundStyle_hover_glow_select, hover_glow_select_press:listItemBackgroundStyle_hover_glow_select_press,
-                        }
-                    });
-
-                    temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                    temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                    temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                    temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                    temp.onrelease = function(a){
-                        return function(){
-                            if( list[a].function ){ list[a].function(); }
-                            object.onrelease(a);
-                        }
-                    }(a);
-                    temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                    temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-
-                    itemArray.push( temp );
-                    mainList.appendChild( temp );
+        //populate list
+        for(var a = 0; a < list.length; a++){
+            var temp = __globals.utility.misc.elementMaker( 'button_rect_3', a, {
+                x:0, y:(height*(itemHeight+itemSpacing))*a,
+                width:width, height:height*itemHeight, text:list[a].text,
+                textVerticalOffset:itemTextVerticalOffset, textHorizontalOffset:itemTextHorizontalOffset,
+                active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                style:{
+                    text:listItemTextStyle,
+                    off:listItemBackgroundStyle_off,
+                    up:listItemBackgroundStyle_up,                               press:listItemBackgroundStyle_press,
+                    select:listItemBackgroundStyle_select,                       select_press:listItemBackgroundStyle_select_press,
+                    glow:listItemBackgroundStyle_glow,                           glow_press:listItemBackgroundStyle_glow_press,
+                    glow_select:listItemBackgroundStyle_glow_select,             glow_select_press:listItemBackgroundStyle_glow_select_press,
+                    hover:listItemBackgroundStyle_hover,                         hover_press:listItemBackgroundStyle_hover_press,
+                    hover_select:listItemBackgroundStyle_hover_select,           hover_select_press:listItemBackgroundStyle_hover_select_press,
+                    hover_glow:listItemBackgroundStyle_hover_glow,               hover_glow_press:listItemBackgroundStyle_hover_glow_press,
+                    hover_glow_select:listItemBackgroundStyle_hover_glow_select, hover_glow_select_press:listItemBackgroundStyle_hover_glow_select_press,
                 }
+            });
+
+            temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+            temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+            temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+            temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+            temp.onrelease = function(a){
+                return function(){
+                    if( list[a].function ){ list[a].function(); }
+                    object.onrelease(a);
+                }
+            }(a);
+            temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+            temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+
+            itemArray.push( temp );
+            mainList.appendChild( temp );
         }
-
-        refreshList();
-
 
 
     //interaction
@@ -129,7 +117,7 @@ this.list = function(
             a = a > 1 ? 1 : a;
             position = a;
 
-            var totalHeight =   height*(list.length*(itemHeightMux + itemSpacingMux) - itemSpacingMux)
+            var totalHeight =   height*(list.length*(itemHeight + itemSpacing) - itemSpacing)
             var movementSpace = totalHeight - height;
             
             __globals.utility.element.setTransform_XYonly( mainList, undefined, -a*movementSpace );
@@ -204,14 +192,6 @@ this.list = function(
 
             object.onselection(selectedItems);
         };
-        object.add = function(item){
-            list.push(item);
-            refreshList();
-        };
-        object.remove = function(a){
-            list.splice(a,1);
-            refreshList();
-        };
 
         //callbacks
             object.onenter = function(listItemNumber){ /*console.log('onenter:',listItemNumber);*/ };
@@ -220,7 +200,6 @@ this.list = function(
             object.ondblpress = function(listItemNumber){ /*console.log('ondblpress:',listItemNumber);*/ };
             object.onrelease = function(listItemNumber){ /*console.log('onrelease:',listItemNumber);*/ };
             object.onselection = function(listItemNumbers){ /*console.log('onselection:',listItemNumbers);*/ };
-            object.onpositionchange = function(a){};
         
     return object;
 };

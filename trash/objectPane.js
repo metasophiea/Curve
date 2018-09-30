@@ -35,10 +35,6 @@ this.objectPane = function(x,y){
                 x:5, y:30, width:vars.width-25, height:vars.height-35,
                 list:[], selectable:false,
                 style:{listItemText:style.text},
-                onselect:function(a,i){
-                    var p = __globals.utility.workspace.pointConverter.browser2workspace(30,30);
-                    __globals.utility.workspace.placeAndReturnObject( objects[Object.keys(objects)[i]](p.x,p.y) );
-                },
                 onpositionchange:function(a){design.slide.scroll.set(a)},
             }},
         ]
@@ -50,7 +46,17 @@ this.objectPane = function(x,y){
 
     //populate list
         for(i in objects){
-            design.list.objectList.add( objects[i].metadata ? objects[i].metadata.name : i );
+            design.list.objectList.add( 
+                {
+                    text: objects[i].metadata ? objects[i].metadata.name : i,
+                    function:function(i){
+                        return function(){
+                            var p = __globals.utility.workspace.pointConverter.browser2workspace(30,30);
+                            __globals.utility.workspace.placeAndReturnObject( objects[i](p.x,p.y) );
+                        }
+                    }(i),
+                }
+            );
         }
     
     return obj;

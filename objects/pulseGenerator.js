@@ -31,15 +31,12 @@ this.pulseGenerator = function(x,y,debug=false){
             }},
             {type:'connectionNode_data', name:'sync', data:{
                 x: 115, y: 11.25, width: 5, height: 17.5,
-                receive:function(){design.button_rect.sync.click();},
+                receive:function(){design.button_rect_3.sync.click();},
             }},
-            {type:'button_rect', name:'sync', data:{
+            {type:'button_rect_3', name:'sync', data:{
                 x:102.5, y: 11.25, width:10, height: 17.5,
-                style:{
-                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
-                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
-                }, 
-                onclick:function(){updateTempo(tempo)},
+                style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' }, 
+                onpress:function(){updateTempo(tempo)},
             }},
             {type:'dial_continuous',name:'tempo',data:{
                 x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 

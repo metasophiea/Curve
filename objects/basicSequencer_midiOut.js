@@ -148,15 +148,14 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
 
             //progression
                 //button
-                {type:'button_rect', name:'progress', data:{
+                {type:'button_rect_3', name:'progress', data:{
                     x:10, y:205, width:25, height:15,
                     style:{
                         up:style.button.up,
                         hover:style.button.hover,
-                        down:style.button.down,
-                        glow:style.button.glow,
+                        hover_press:style.button.down,
                     },
-                    onclick:function(){design.sequencer.main.progress();},
+                    onpress:function(){design.sequencer.main.progress();},
                 }},     
                 //connection node
                 {type:'connectionNode_data', name:'progress', data:{ 
@@ -169,15 +168,14 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
 
             //reset
                 //button
-                {type:'button_rect', name:'reset', data:{
+                {type:'button_rect_3', name:'reset', data:{
                     x:40, y:205, width:25, height:15,
                     style:{
                         up:style.button.up,
                         hover:style.button.hover,
-                        down:style.button.down,
-                        glow:style.button.glow,
+                        hover_press:style.button.down,
                     },
-                    onclick:function(){design.sequencer.main.playheadPosition(0);},
+                    onpress:function(){design.sequencer.main.playheadPosition(0);},
                 }},
                 //connection node
                 {type:'connectionNode_data', name:'reset', data:{ 

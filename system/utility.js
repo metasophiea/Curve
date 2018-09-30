@@ -1213,9 +1213,9 @@ __globals.utility = new function(){
                     case 'button_rect_3': 
                         var temp = parts.elements.control.button_rect_3(
                             name,
-                            data.x, data.y, data.width, data.height, data.text,
+                            data.x, data.y, data.width, data.height, data.angle, data.text,
                             data.textVerticalOffset, data.textHorizontalOffset,
-                            data.active, data.hoverable, data.selectable,
+                            data.active, data.hoverable, data.selectable, data.pressable,
                             data.style.text,
                             data.style.off,
                             data.style.up,                data.style.press,
@@ -1232,6 +1232,8 @@ __globals.utility = new function(){
                         temp.ondblpress = data.ondblpress ? data.ondblpress : temp.ondblpress;
                         temp.onenter =    data.onenter    ? data.onenter    : temp.onenter;
                         temp.onleave =    data.onleave    ? data.onleave    : temp.onleave;
+                        temp.onselect =   data.onselect   ? data.onselect   : temp.onselect;
+                        temp.ondeselect = data.ondeselect ? data.ondeselect : temp.ondeselect;
                         return temp;
                     break;
                     case 'checkbox_rect':
@@ -1348,10 +1350,13 @@ __globals.utility = new function(){
                     case 'list':
                             var temp = parts.elements.control.list(
                                 name, data.x, data.y, data.width, data.height, data.angle, data.list, 
-                                data.selectable, data.multiSelect, data.itemHeight, data.itemSpacing,
-                                data.itemTextVerticalOffset, data.itemTextHorizontalOffset,
+                                data.selectable, data.multiSelect, data.hoverable, data.pressable, data.active,
+                                data.itemHeightMux, data.itemSpacingMux,
+                                data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
                                 data.style.listItemText,
-                                data.style.background_off,               data.style.background_press,
+                                data.style.backing,
+                                data.style.background_off,
+                                data.style.background_up,                data.style.background_press,
                                 data.style.background_select,            data.style.background_select_press,
                                 data.style.background_glow,              data.style.background_glow_press,
                                 data.style.background_glow_select,       data.style.background_glow_select_press,
@@ -1360,7 +1365,13 @@ __globals.utility = new function(){
                                 data.style.background_hover_glow,        data.style.background_hover_glow_press,
                                 data.style.background_hover_glow_select, data.style.background_hover_glow_select_press,
                             );
-                            temp.onselect = data.onselect ? data.onselect : temp.onselect;
+                            
+                            temp.onenter = data.onenter ? data.onenter : temp.onenter;
+                            temp.onleave = data.onleave ? data.onleave : temp.onleave;
+                            temp.onpress = data.onpress ? data.onpress : temp.onpress;
+                            temp.ondblpress = data.ondblpress ? data.ondblpress : temp.ondblpress;
+                            temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
+                            temp.onselection = data.onselection ? data.onselection : temp.onselection;
                             temp.onpositionchange = data.onpositionchange ? data.onpositionchange : temp.onpositionchange;
                             return temp;
                     break;

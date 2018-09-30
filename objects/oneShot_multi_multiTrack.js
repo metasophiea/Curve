@@ -59,13 +59,10 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
 
             //load button
             design.elements.push(
-                {type:'button_rect', name:'loadFile_'+a, data: {
+                {type:'button_rect_3', name:'loadFile_'+a, data: {
                     x:5, y: 5+a*(2+45), width:20, height:10,
-                    style:{
-                        up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
-                        down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
-                    },
-                    onclick:function(instance){
+                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                    onpress:function(instance){
                         return function(){
                             obj.oneShot_multi_array[instance].load('file',
                                 function(instance){
@@ -81,13 +78,10 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
 
             //fire button
             design.elements.push(
-                {type:'button_rect',name:'fire_'+a,data:{
-                    x:5, y: 17.5+a*(2+45), width:10, height:10, 
-                    style:{
-                        up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', 
-                        down:'fill:rgba(150,170,150,1)', glow:'fill:rgba(220,220,220,1)'
-                    }, 
-                    onclick:function(instance){
+                {type:'button_rect_3',name:'fire_'+a,data:{
+                    x:5, y: 17.5+a*(2+45), width:10, height:10,
+                    style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
+                    onpress:function(instance){
                         return function(){
                             var filePlayer = obj.oneShot_multi_array[instance];
                             var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
@@ -137,13 +131,10 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
 
             //panic button
             design.elements.push(
-                {type:'button_rect',name:'panic_'+a,data:{
-                    x:15, y: 17.5+a*(2+45), width:10, height:10, 
-                    style:{
-                        up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', 
-                        down:'fill:rgba(170,150,150,1)', glow:'fill:rgba(220,220,220,1)'
-                    }, 
-                    onclick:function(instance){
+                {type:'button_rect_3',name:'panic_'+a,data:{
+                    x:15, y: 17.5+a*(2+45), width:10, height:10,
+                    style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
+                    onpress:function(instance){
                         return function(value){
                             var filePlayer = obj.oneShot_multi_array[instance];
                             var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
@@ -169,9 +160,9 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                     x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
                     receive:function(instance){
                         return function(address,data){
-                            if(address == 'pulse'){ design.button_rect['fire_'+instance].click(); }
+                            if(address == 'pulse'){ design.button_rect_3['fire_'+instance].click(); }
                             else if(address == 'hit'){
-                                if(data.velocity > 0.5){ design.button_rect['fire_'+instance].click(); }
+                                if(data.velocity > 0.5){ design.button_rect_3['fire_'+instance].click(); }
                             }
                         }
                     }(a)

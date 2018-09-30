@@ -9,7 +9,7 @@ var menu = new function(){
         },
         menubar:{
             obj:undefined,
-            report:function(text){ menu.control.menubar.obj.i.report(text); },
+            report:function(text){},
         },
         objectPane:{
             obj:undefined,
@@ -30,5 +30,5 @@ var menu = new function(){
 
 
 setTimeout(function(){
-    menu.control.menubar.obj = __globals.utility.workspace.placeAndReturnObject( menu.objects.menuBar(), 'menu' );
+    menu.control.menubar.obj = __globals.utility.workspace.placeAndReturnObject( menu.objects.menubar(), 'menu' );
 },1);

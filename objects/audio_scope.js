@@ -21,15 +21,16 @@ this.audio_scope = function(x,y){
             {type:'grapher_audioScope', name:'waveport', data:{
                 x:5, y:5, width:150, height:100
             }},
-            {type:'key_rect', name:'holdKey', data:{
+            {type:'button_rect_3', name:'holdKey', data:{
                 x:160, y:5, width:30, height:20,
-                style:{
-                    off:'fill:rgba(175,175,175,1)', press:'fill:rgba(220,220,220,1)', pressAndGlow:'fill:rgba(150,150,150,1)'
+                style:{ 
+                    up:'fill:rgba(175,175,175,1)', 
+                    hover:'fill:rgba(190,190,190,1)',
+                    hover_press:'fill:rgba(170,170,170,1)',
                 },
-                keydown:function(){design.grapher_audioScope.waveport.stop();},
-                keyup:function(){design.grapher_audioScope.waveport.start();},
+                onpress:function(){design.grapher_audioScope.waveport.stop();},
+                onrelease:function(){design.grapher_audioScope.waveport.start();},
             }},
-
             {type:'text', name:'framerate_name', data:{x: 155+6.5, y: 30+40, text: 'framerate', style: style.text}},
             {type:'text', name:'framerate_1',    data:{x: 155+4,   y: 30+34, text: '1',         style: style.text}},
             {type:'text', name:'framerate_15',   data:{x: 155+17,  y: 30+2,  text: '15',        style: style.text}},
