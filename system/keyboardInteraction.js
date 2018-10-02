@@ -106,9 +106,8 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
         var temp = __globals.utility.workspace.objectUnderPoint(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
         if(temp){
             if( objects[temp.id].metadata ){
-                window.open( objects[temp.id].metadata.helpurl, '_blank');
+                __globals.utility.misc.openURL(objects[temp.id].metadata.helpurl);
             }else{
-                window.open(__globals.super.helpFolderLocation+'object/'+temp.id, '_blank');
                 console.warn('bad help url, please add metadata to your object file ->',temp.id);
             }
             __globals.keyboardInteraction.releaseAll();
@@ -116,15 +115,13 @@ __globals.keyboardInteraction.declareKeycaptureObject = function(object,desiredK
     };
     __globals.keyboardInteraction.onkeydown_functionList.F2 = function(event){
         if(!event[__globals.super.keys.ctrl]){return;}
-        console.log('save!');
-        if(!__globals.super.enableSaveload){return;}
-        __globals.utility.workspace.saveload.save();
+        console.log('load!');
+        __globals.utility.workspace.saveload.load();
     };
     __globals.keyboardInteraction.onkeydown_functionList.F3 = function(event){
         if(!event[__globals.super.keys.ctrl]){return;}
-        console.log('load!');
-        if(!__globals.super.enableSaveload){return;}
-        __globals.utility.workspace.saveload.load();
+        console.log('save!');
+        __globals.utility.workspace.saveload.save();
     };
 
 // onkeyup functions

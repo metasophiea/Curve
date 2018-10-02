@@ -96,7 +96,7 @@ objects.testObject = function(x,y,debug=false){
                 }},
             
             //button-like
-                {type:'button_rect_3',name:'button_rect_3',data:{
+                {type:'button_rect',name:'button_rect',data:{
                     x:220, y: 5, width:20, height:20, 
                     onpress:function(){design.connectionNode_data.externalData_1.send('button_rect');}
                 }},
@@ -206,8 +206,8 @@ objects.testObject = function(x,y,debug=false){
                                     design.slidePanel.slidePanel_horizontal.smoothSet(1,1,'sin',false); 
                                     design.slidePanel.slidePanel_vertical.smoothSetAll(1,1,'cos',false); 
                                     design.slidePanel.slidePanel_horizontal.smoothSetAll(1,1,'exponential',false);
-                                    design.button_rect_3.button_rect_3.glow(true);
-                                    setTimeout( function(){design.button_rect_3.button_rect_3.glow(false);}, 200 );
+                                    design.button_rect.button_rect.glow(true);
+                                    setTimeout( function(){design.button_rect.button_rect.glow(false);}, 200 );
                                 break;
                                 case 'checkbox_rect': design.checkbox_rect.checkbox_rect.set(data,false); break;
                                 case 'key_rect': 

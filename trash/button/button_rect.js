@@ -1,7 +1,7 @@
-this.button_rect_3 = function(
-    id='button_rect_3',
+var button_rect = function(
+    id='button_rect',
     x, y, width, height, angle=0,
-    text,
+    text_left, text_right,
     textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
     active=true, hoverable=true, selectable=false, pressable=true,
     textStyle='fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
@@ -29,8 +29,10 @@ this.button_rect_3 = function(
         var background = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
         object.appendChild( background );
 
-        var text = __globals.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffsetMux, y:height*textVerticalOffsetMux, text:text, style:textStyle});
-        object.appendChild(text);
+        var text_left = __globals.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffsetMux, y:height*textVerticalOffsetMux, text:text_left, style:textStyle});
+        object.appendChild(text_left);
+        var text_right = __globals.utility.misc.elementMaker('text',null,{x:width-(width*textHorizontalOffsetMux), y:height*textVerticalOffsetMux, text:text_right, style:textStyle+'text-anchor:end;'});
+        object.appendChild(text_right);
 
     //state
         object.state = {

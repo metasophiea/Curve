@@ -31,9 +31,9 @@ this.pulseGenerator = function(x,y,debug=false){
             }},
             {type:'connectionNode_data', name:'sync', data:{
                 x: 115, y: 11.25, width: 5, height: 17.5,
-                receive:function(){design.button_rect_3.sync.click();},
+                receive:function(){design.button_rect.sync.click();},
             }},
-            {type:'button_rect_3', name:'sync', data:{
+            {type:'button_rect', name:'sync', data:{
                 x:102.5, y: 11.25, width:10, height: 17.5,
                 style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' }, 
                 onpress:function(){updateTempo(tempo)},

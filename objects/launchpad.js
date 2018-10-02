@@ -45,7 +45,7 @@ this.launchpad = function(x,y,debug=false){
                     receive:function(){obj.internalCircuits.decPage();}
                 }},
             //pulse
-                {type:'button_rect_3',name:'pulse',data:{
+                {type:'button_rect',name:'pulse',data:{
                     x:100, y:5, width:20, height:10,
                     style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down, },
                     onpress:function(){obj.internalCircuits.inc();lightLine();},
@@ -71,12 +71,12 @@ this.launchpad = function(x,y,debug=false){
                         dim:style.sevenSegmentDisplay.dim,
                     }
                 }},
-                {type:'button_rect_3',name:'nextPage',data:{
+                {type:'button_rect',name:'nextPage',data:{
                     x:102.5, y:17.5, width:15, height:5, selectable:false,
                     style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down, },
                     onpress:function(){obj.internalCircuits.incPage();},
                 }},
-                {type:'button_rect_3',name:'prevPage',data:{
+                {type:'button_rect',name:'prevPage',data:{
                     x:102.5, y:45, width:15, height:5, selectable:false,
                     style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
                     onpress:function(){obj.internalCircuits.decPage();},

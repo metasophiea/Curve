@@ -1,4 +1,24 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-10-02
+  - updated menubar dropdown colouring to match the menubar 
+  - removed button_rect and button_rect_2, and changed the name of button_rect_3
+    to button_rect (so, clean replacement)
+  - clicking anywhere while a dropdown is open, closes the dropdown
+  - remaned 'menu' to 'control' (need better names)
+  - consolidating control and it's pane (I'm giving myself all sorts of ideas
+    with this one)
+  - fixed musicalkeybaord's release and midiIn problems
+  - removed key_rect
+  - button_rect now has 'text from left' and 'text from right' arguments (though
+    you can still use just 'text' to mean 'text from left')
+  - swaped save=ctrl-f2 and load=ctrl-f3, so it's now save=ctrl-f3 and 
+    load=ctrl-f2
+  - added 'breaks' and 'spaces' to lists (little wonky)
+
+  bugs found
+  - those edit options in the menubar do nothing
+
+
 2018-09-30
   - all current objects have had their key_rect and button_rect elements switch
     to button_rect_3

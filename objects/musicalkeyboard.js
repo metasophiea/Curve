@@ -42,8 +42,8 @@ this.musicalkeyboard = function(x,y,debug=false){
                 x: 320, y: 5, width: 5, height: 10,
                 receive:function(address,data){
                     if(address != 'midinumber'){return;}
-                    if(data.velocity > 0){ design.key_rect[__globals.audio.num2name(data.num)].press();   }
-                                     else{ design.key_rect[__globals.audio.num2name(data.num)].release(); }
+                    if(data.velocity > 0){ design.button_rect[__globals.audio.num2name(data.num)].press();   }
+                                     else{ design.button_rect[__globals.audio.num2name(data.num)].release(); }
                 },
             }},
 
@@ -70,14 +70,14 @@ this.musicalkeyboard = function(x,y,debug=false){
             for(var a = 0; a < glyphs.length; a++){
                 if( noteNames[a].slice(-1) != '#' ){
                     design.elements.push(
-                        {type:'button_rect_3', name:noteNames[a], data:{
+                        {type:'button_rect', name:noteNames[a], data:{
                             x:whiteX, y:12.5, width:whiteKeyWidth, height:50, hoverable:false,
                             style:{
                                 up:style.keys.white.off, press:style.keys.white.press,
                                 glow:style.keys.white.glow, glow_press:style.keys.white.pressAndGlow,
                             },
                             onpress:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:state.velocity } ); },
-                            onunpress:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
+                            onrelease:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
                         }}
                     );
                     whiteX += whiteKeyWidth;
@@ -88,14 +88,14 @@ this.musicalkeyboard = function(x,y,debug=false){
             for(var a = 0; a < glyphs.length; a++){
                 if( noteNames[a].slice(-1) == '#' ){
                     design.elements.push(
-                        {type:'button_rect_3', name:noteNames[a], data:{
+                        {type:'button_rect', name:noteNames[a], data:{
                             x:blackX, y:12.5, width:5, height:30, hoverable:false,
                             style:{
                                 up:style.keys.black.off, press:style.keys.black.press,
                                 glow:style.keys.black.glow, glow_press:style.keys.black.pressAndGlow,
                             },
                             onpress:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:state.velocity } ); },
-                            onunpress:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
+                            onrelease:function(){ obj.io.midiout.send('midinumber', { num:__globals.audio.name2num(this.id), velocity:0 } ); },
                         }}
                     );
                     blackX += whiteKeyWidth;

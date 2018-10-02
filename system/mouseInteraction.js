@@ -228,7 +228,9 @@
 // onmousedown functions
     __globals.mouseInteraction.onmousedown_functionList = [];
     __globals.svgElement.onmousedown = function(event){
-        //menu
+        //control
+            control.mousedown(event);
+
         //workspace
         if(!__globals.utility.object.requestInteraction(event.x,event.y,'onmousedown','workspace') || event.button != 0){return;}
         for(var a = 0; a < __globals.mouseInteraction.onmousedown_functionList.length; a++){

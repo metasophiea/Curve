@@ -22,7 +22,7 @@ this.recorder = function(x,y,debug=false){
                 {type:'label', name:'logo_label', data:{x:139, y:34.5, angle:-0.25, text:'REcorder', style:style.logoText}},
 
             //rec
-                {type:'button_rect_3', name:'rec', data: {
+                {type:'button_rect', name:'rec', data: {
                     x:5, y: 25, width:20, height:10,
                     style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
                     onpress: function(){
@@ -33,7 +33,7 @@ this.recorder = function(x,y,debug=false){
                 }},
                 {type:'text', name:'button_rect_text', data:{x:10.5, y:31.5, text:'rec', angle:0, style:style.buttonText}},
             //pause/resume
-                {type:'button_rect_3', name:'pause/resume', data: {
+                {type:'button_rect', name:'pause/resume', data: {
                     x:27.5, y: 25, width:20, height:10,
                     style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
                     onpress: function(){
@@ -44,14 +44,14 @@ this.recorder = function(x,y,debug=false){
                 }},
                 {type:'text', name:'button_pause/resume_text', data:{x:30, y:31.5, text:'pause', angle:0, style:style.buttonText}},
             //stop
-                {type:'button_rect_3', name:'stop', data: {
+                {type:'button_rect', name:'stop', data: {
                     x:50, y: 25, width:20, height:10,
                     style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
                     onpress: function(){updateLights('stop');obj.recorder.stop();}
                 }},
                 {type:'text', name:'button_stop_text', data:{x:54, y:31.5, text:'stop', angle:0, style:style.buttonText}},
             //save
-                {type:'button_rect_3', name:'save', data: {
+                {type:'button_rect', name:'save', data: {
                     x:72.5, y: 25, width:20, height:10, 
                     style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
                     onpress: function(){
@@ -61,7 +61,7 @@ this.recorder = function(x,y,debug=false){
                 }},
                 {type:'text', name:'button_save_text', data:{x:76.5, y:31.5, text:'save', angle:0, style:style.buttonText}},
             //clear
-                {type:'button_rect_3', name:'clear', data: {
+                {type:'button_rect', name:'clear', data: {
                     x:95, y: 25, width:20, height:10, 
                     style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
                     onpress: function(){updateLights('clear');obj.recorder.clear();}

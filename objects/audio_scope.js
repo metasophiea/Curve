@@ -21,7 +21,7 @@ this.audio_scope = function(x,y){
             {type:'grapher_audioScope', name:'waveport', data:{
                 x:5, y:5, width:150, height:100
             }},
-            {type:'button_rect_3', name:'holdKey', data:{
+            {type:'button_rect', name:'holdKey', data:{
                 x:160, y:5, width:30, height:20,
                 style:{ 
                     up:'fill:rgba(175,175,175,1)', 

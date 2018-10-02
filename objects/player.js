@@ -39,7 +39,7 @@ this.player = function(x,y,debug=false){
                 style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
             }},
 
-            {type:'button_rect_3', name:'load', data: {
+            {type:'button_rect', name:'load', data: {
                 x:5, y: 5, width:20, height:10,
                 style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
                 onpress: function(){
@@ -53,12 +53,12 @@ this.player = function(x,y,debug=false){
                     });
                 }
             }},
-            {type:'button_rect_3',name:'start',data:{
+            {type:'button_rect',name:'start',data:{
                 x:5, y: 17.5, width:20, height:10,
                 style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
                 onpress:function(){ obj.player.start(); }
             }},
-            {type:'button_rect_3',name:'stop',data:{
+            {type:'button_rect',name:'stop',data:{
                 x:15, y: 17.5, width:10, height:10,
                 style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
                 onpress:function(){ obj.player.stop(); }

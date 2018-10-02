@@ -30,7 +30,7 @@ this.menubar = function(){
         for(var a = 0; a < this.menubar.items.length; a++){
 
             design.elements.push(
-                {type:'button_rect_3', name:a, data:{
+                {type:'button_rect', name:a, data:{
                     x: accWidth, y: 0,
                     width: this.menubar.items[a].width, height: vars.height, 
                     text: this.menubar.items[a].text,
@@ -42,16 +42,16 @@ this.menubar = function(){
                         // sent the menubar's 'vars.selected' value to undefined. Otherwise, set it to
                         // this item's number
 
-                        vars.selected = design.button_rect_3[a].select() ? undefined : a;
+                        vars.selected = design.button_rect[a].select() ? undefined : a;
                     } }(a),
                     onenter:function(a){ return function(obj,event){
                         //assuming an item has been selected, and it isn't the item that's currently being 
                         //entered; deselect that one and tell the menubar that this item is selected now.
                         //if no mouse button is pressed (no button rolling is happening) select it manually
                         if( vars.selected != undefined && vars.selected != a){
-                            design.button_rect_3[vars.selected].select(false);
+                            design.button_rect[vars.selected].select(false);
                             vars.selected = a;
-                            if(event.buttons == 0){ design.button_rect_3[vars.selected].select(true); }
+                            if(event.buttons == 0){ design.button_rect[vars.selected].select(true); }
                         }
                     }; }(a),
                     onselect:function(a,x,that){
@@ -67,11 +67,13 @@ this.menubar = function(){
                                 selectable:false, multiSelect:false, 
                                 style:{ 
                                     listItemText:'fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
-                                    background_hover:style.button.select
+                                    background_hover:style.button.select,
+                                    backing:style.button.up,
+                                    background_up:style.button.up,
                                 }
                             });
 
-                            vars.opendropdown.onrelease = function(){ design.button_rect_3[a].select(false); };
+                            vars.opendropdown.onrelease = function(){ design.button_rect[a].select(false); };
 
                             obj.append( vars.opendropdown );
                         }
@@ -114,9 +116,9 @@ this.menubar.items = [
         textHorizontalOffset:0.25,
         itemList:[
             // {text:'New Scene', function:function(){}},
-            {text:'New Scene', function:function(){ menu.control.scene.new(); }},
-            {text:'Open Scene', function:function(){ menu.control.scene.load(); }},
-            {text:'Save Scene', function:function(){ menu.control.scene.save(); }},
+            {text:'New Scene', function:function(){ control.i.scene.new(); }},
+            {text:'Open Scene', function:function(){ control.i.scene.load(); }},
+            {text:'Save Scene', function:function(){ control.i.scene.save(); }},
         ]
     },
     {

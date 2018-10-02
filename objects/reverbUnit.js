@@ -55,22 +55,22 @@ this.reverbUnit = function(x,y){
                 onchange:function(value){ obj.reverbCircuit.wetdry(1-value); },
             }},
 
-            {type:'button_rect_3',name:'raiseByOne',data:{
+            {type:'button_rect',name:'raiseByOne',data:{
                 x:51, y:6, width: 10.25, height: 5,  
                 style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
                 onpress: function(){ incReverbType(); },
             }},
-            {type:'button_rect_3',name:'raiseByTen',data:{
+            {type:'button_rect',name:'raiseByTen',data:{
                 x:38.75, y:6, width: 10.25, height: 5,  
                 style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
                 onpress: function(){ inc10ReverbType(); },
             }},
-            {type:'button_rect_3',name:'lowerByOne',data:{
+            {type:'button_rect',name:'lowerByOne',data:{
                 x:51, y:39, width: 10.25, height: 5,  
                 style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
                 onpress: function(){ decReverbType(); },
             }},
-            {type:'button_rect_3',name:'lowerByTen',data:{
+            {type:'button_rect',name:'lowerByTen',data:{
                 x:38.75, y:39, width: 10.25, height: 5,  
                 style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
                 onpress: function(){ dec10ReverbType(); },

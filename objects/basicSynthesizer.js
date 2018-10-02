@@ -239,7 +239,7 @@ this.basicSynthesizer = function(x,y){
                     onchange: function(value){ obj.__synthesizer.detuneWobbleDepth(value*100); }
                 }},
 
-            {type:'button_rect_3', name:'panicButton', data: {
+            {type:'button_rect', name:'panicButton', data: {
                 x:197.5, y: 47.5, width:20, height:20, angle: Math.PI/4,
                 style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' }, 
                 onpress:function(){ obj.__synthesizer.panic(); },

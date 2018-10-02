@@ -1,7 +1,7 @@
-__globals.panes = {'global':null, 'staticBackground':null, 'background':null, 'middleground':null, 'foreground':null, 'menu':null};
+__globals.panes = {'global':null, 'staticBackground':null, 'background':null, 'middleground':null, 'foreground':null, 'control':null};
 
 if( __globals.svgElement.children ){
-    //go through SVG and see if the 'global', 'background', 'middleground', 'foreground' and 'menu' elements have already been made
+    //go through SVG and see if the 'global', 'background', 'middleground', 'foreground' and 'control' elements have already been made
     for(var a = 0; a < __globals.svgElement.children.length; a++){
         if( __globals.svgElement.children[a].hasAttribute('pane') ){
             switch(__globals.svgElement.children[a].getAttribute('pane')){
@@ -10,12 +10,12 @@ if( __globals.svgElement.children ){
                 case 'background': __globals.panes.background = __globals.svgElement.children[a]; break;
                 case 'middleground': __globals.panes.middleground = __globals.svgElement.children[a]; break;
                 case 'foreground': __globals.panes.foreground = __globals.svgElement.children[a]; break;
-                case 'menu': __globals.panes.menu = __globals.svgElement.children[a]; break;
+                case 'control': __globals.panes.control = __globals.svgElement.children[a]; break;
             }
         }
     }
 
-    //if the 'background', 'middleground' or 'menu' elements were not made, create them
+    //if the 'background', 'middleground' or 'control' elements were not made, create them
     if(__globals.panes.workspace == null){ 
         __globals.panes.workspace = document.createElementNS('http://www.w3.org/2000/svg','g');
         __globals.panes.workspace.setAttribute('pane','workspace');
@@ -36,9 +36,9 @@ if( __globals.svgElement.children ){
         __globals.panes.foreground = document.createElementNS('http://www.w3.org/2000/svg','g');
         __globals.panes.foreground.setAttribute('pane','foreground');
     }
-    if(__globals.panes.menu == null){ 
-        __globals.panes.menu = document.createElementNS('http://www.w3.org/2000/svg','g');
-        __globals.panes.menu.setAttribute('pane','menu'); 
+    if(__globals.panes.control == null){ 
+        __globals.panes.control = document.createElementNS('http://www.w3.org/2000/svg','g');
+        __globals.panes.control.setAttribute('pane','control'); 
     }
 }
 
@@ -54,8 +54,8 @@ if(!__globals.panes.staticBackground.style.transform){ __globals.panes.staticBac
 __globals.panes.staticBackground.setAttribute('global',true);
 if(!__globals.panes.workspace.style.transform){ __globals.panes.workspace.style.transform = 'translate(0px,0px) scale(1) rotate(0rad)'; }
 __globals.panes.workspace.setAttribute('global',true);
-if(!__globals.panes.menu.style.transform){ __globals.panes.menu.style.transform = 'translate(0px,0px) scale(1) rotate(0rad)'; }
-__globals.panes.menu.setAttribute('global',true);
+if(!__globals.panes.control.style.transform){ __globals.panes.control.style.transform = 'translate(0px,0px) scale(1) rotate(0rad)'; }
+__globals.panes.control.setAttribute('global',true);
 
 //clear out svg element
 __globals.svgElement.innerHTML = '';
@@ -66,7 +66,7 @@ __globals.svgElement.append(__globals.panes.workspace);
 __globals.panes.workspace.append(__globals.panes.background);
 __globals.panes.workspace.append(__globals.panes.middleground);
 __globals.panes.workspace.append(__globals.panes.foreground);
-__globals.svgElement.append(__globals.panes.menu);
+__globals.svgElement.append(__globals.panes.control);
 
 //stop page scrolling when mouse is in the workspace SVG
 __globals.svgElement.onmouseover = function(e){

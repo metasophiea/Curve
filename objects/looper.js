@@ -26,7 +26,7 @@ this.looper = function(x,y,debug=false){
             {type:'path', name:'symbol_upperarrow', data:{ path:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], style:style.strokeMarkings }},
             {type:'path', name:'symbol_lowerarrow', data:{ path:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], style:style.strokeMarkings }},
 
-            {type:'button_rect_3', name:'loadFile', data: {
+            {type:'button_rect', name:'loadFile', data: {
                 x:5, y: 5, width:20, height:10,
                 style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
                 onpress: function(){
@@ -35,7 +35,7 @@ this.looper = function(x,y,debug=false){
                     });
                 }
             }},
-            {type:'button_rect_3',name:'fire',data:{
+            {type:'button_rect',name:'fire',data:{
                 x:5, y: 17.5, width:10, height:10,
                 style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
                 onpress:function(){
@@ -66,7 +66,7 @@ this.looper = function(x,y,debug=false){
                         func();
                 }
             }},
-            {type:'button_rect_3',name:'stop',data:{
+            {type:'button_rect',name:'stop',data:{
                 x:15, y: 17.5, width:10, height:10,
                 style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
                 onpress:function(){

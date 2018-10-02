@@ -21,7 +21,7 @@ this.menuBar = function(){
             style:'fill:rgba(240,240,240,1);'
         },
         elements:[
-            {type:'button_rect_3',name:'file',data:{
+            {type:'button_rect',name:'file',data:{
                 x:0, y:0, width:70, height:vars.height, text:'create',
                 textHorizontalOffset:0.2,
                 style:{
@@ -31,7 +31,7 @@ this.menuBar = function(){
                 },
                 onpress:function(){menu.control.objectPane.open();}
             }},
-            {type:'button_rect_3',name:'open',data:{
+            {type:'button_rect',name:'open',data:{
                 x:70, y:0, width:50, height:vars.height, text:'open',
                 textHorizontalOffset:0.175,
                 style:{
@@ -41,7 +41,7 @@ this.menuBar = function(){
                 },
                 onpress:function(){menu.control.loadsave.load();}
             }},
-            {type:'button_rect_3',name:'save',data:{
+            {type:'button_rect',name:'save',data:{
                 x:120, y:0, width:50, height:vars.height, text:'save',
                 textHorizontalOffset:0.175,
                 style:{

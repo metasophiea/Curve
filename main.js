@@ -8,7 +8,7 @@
             {{include:system/setup}}
             {{include:parts/parts.js}}
             {{include:objects/objects.js}}
-            {{include:menu/main.js}}
+            {{include:control/main.js}}
         }
     }
     

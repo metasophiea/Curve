@@ -22,7 +22,7 @@ this.objectPane = function(x,y){
                 path:[{x:0,y:25},{x:vars.width,y:25},{x:vars.width,y:vars.height},{x:0,y:vars.height}],
                 style:style.background
             }},
-            {type:'button_rect_3', name:'close', data:{
+            {type:'button_rect', name:'close', data:{
                 x:2.5, y:2.5, width:20, height:20, 
                 style:{ up:'fill:rgba(255,132,132,1)', hover:'fill:rgba(255,200,200,1)', hover_press:'fill:rgba(255,100,100,1)' },
                 onrelease:function(){ menu.control.objectPane.close(); }

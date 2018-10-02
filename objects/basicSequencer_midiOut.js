@@ -148,7 +148,7 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
 
             //progression
                 //button
-                {type:'button_rect_3', name:'progress', data:{
+                {type:'button_rect', name:'progress', data:{
                     x:10, y:205, width:25, height:15,
                     style:{
                         up:style.button.up,
@@ -168,7 +168,7 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
 
             //reset
                 //button
-                {type:'button_rect_3', name:'reset', data:{
+                {type:'button_rect', name:'reset', data:{
                     x:40, y:205, width:25, height:15,
                     style:{
                         up:style.button.up,

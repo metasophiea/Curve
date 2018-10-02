@@ -271,8 +271,11 @@ __globals.utility = new function(){
         };
         this.saveload = new function(){
             this.save = function(compress=true,sceneName='project',bundleConstructorFunctions=false){
+                //check that saving or loading is allowed
+                    if(!__globals.super.enableSaveload){return;}
+
                 //alert user
-                    menu.control.menubar.report('saving');
+                    control.i.menubar.report('saving');
 
                 var outputData = {
                     sceneName:sceneName,
@@ -301,7 +304,7 @@ __globals.utility = new function(){
                     __globals.audio.destination.masterGain(1);
 
                 //alert user
-                    menu.control.menubar.report('');
+                    control.i.menubar.report('');
             };
             this.__loadProcess = function(data,compressed){
                 //stopping audio
@@ -325,6 +328,9 @@ __globals.utility = new function(){
                 console.log('scene "'+data.sceneName+'" has been loaded');
             };
             this.load = function(compressed=true){
+                //check that saving or loading is allowed
+                    if(!__globals.super.enableSaveload){return;}
+
                 __globals.utility.misc.openFile(function(data){__globals.utility.workspace.saveload.__loadProcess(data,compressed);});
             };
             this.loadFromURL = function(url,compressed=true){
@@ -1114,7 +1120,7 @@ __globals.utility = new function(){
         };
         this.openFile = function(callback,readAsType='readAsBinaryString'){
             //alert user
-                menu.control.menubar.report('loading');
+                control.i.menubar.report('loading');
 
             var i = document.createElement('input');
             i.type = 'file';
@@ -1126,7 +1132,7 @@ __globals.utility = new function(){
                 }
                 f.onloadend = function(){ 
                     if(callback){callback(f.result);}
-                    menu.control.menubar.report('');
+                    control.i.menubar.report('');
                 }
             };
             i.click();
@@ -1171,52 +1177,13 @@ __globals.utility = new function(){
 
                 //control
                     case 'button_rect': 
-                        console.warn('button_rect depreciated, please switch to button_rect_3');
-                        var temp = parts.elements.control.button_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.up, data.style.hover, data.style.down, data.style.glow);
-                        temp.onmouseup =    data.onmouseup    ? data.onmouseup    : temp.onmouseup   ;
-                        temp.onmousedown =  data.onmousedown  ? data.onmousedown  : temp.onmousedown ;
-                        temp.onmouseenter = data.onmouseenter ? data.onmouseenter : temp.onmouseenter;
-                        temp.onmouseleave = data.onmouseleave ? data.onmouseleave : temp.onmouseleave;
-                        temp.onmousemove =  data.onmousemove  ? data.onmousemove  : temp.onmousemove ;
-                        temp.onclick =      data.onclick      ? data.onclick      : temp.onclick     ;
-                        temp.ondblclick =   data.ondblclick   ? data.ondblclick   : temp.ondblclick  ;
-                        return temp;
-                    break;
-                    case 'button_rect_2': 
-                        console.warn('button_rect_2 depreciated, please switch to button_rect_3');
-                        var temp = parts.elements.control.button_rect_2(
+                        var temp = parts.elements.control.button_rect(
                             name,
-                            data.x, data.y, data.width, data.height,
-                            data.text,
-                            data.textVerticalOffset, data.textHorizontalOffset,
-                            data.style.text,
-                            data.style.background_off,
-                            data.style.background_press,
-                            data.style.background_select,
-                            data.style.background_select_press, //impossible
-                            data.style.background_glow,
-                            data.style.background_glow_press, //impossible
-                            data.style.background_glow_select,
-                            data.style.background_glow_select_press, //impossible
-                            data.style.background_hover,
-                            data.style.background_hover_press,
-                            data.style.background_hover_select,
-                            data.style.background_hover_select_press,
-                            data.style.background_hover_glow,
-                            data.style.background_hover_glow_press,
-                            data.style.background_hover_glow_select,
-                            data.style.background_hover_glow_select_press,
-                        );
-                        temp.onpress = data.onpress ? data.onpress : temp.onpress;
-                        return temp;
-                    break;
-                    case 'button_rect_3': 
-                        var temp = parts.elements.control.button_rect_3(
-                            name,
-                            data.x, data.y, data.width, data.height, data.angle, data.text,
+                            data.x, data.y, data.width, data.height, data.angle, 
+                            (data.text ? data.text : data.text_left), data.text_right,
                             data.textVerticalOffset, data.textHorizontalOffset,
                             data.active, data.hoverable, data.selectable, data.pressable,
-                            data.style.text,
+                            data.style.text, 
                             data.style.off,
                             data.style.up,                data.style.press,
                             data.style.select,            data.style.select_press,
@@ -1239,13 +1206,6 @@ __globals.utility = new function(){
                     case 'checkbox_rect':
                         var temp = parts.elements.control.checkbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow);
                         temp.onchange = data.onchange ? data.onchange : temp.onchange;
-                        return temp;
-                    break;
-                    case 'key_rect':
-                        console.warn('key_rect depreciated, please switch to button_rect_3');
-                        var temp = parts.elements.control.key_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.off, data.style.press, data.style.glow, data.style.pressAndGlow);
-                        temp.keyup =   data.keyup   ? data.keyup   : temp.keyup;
-                        temp.keydown = data.keydown ? data.keydown : temp.keydown;
                         return temp;
                     break;
                     case 'slide':
@@ -1351,10 +1311,11 @@ __globals.utility = new function(){
                             var temp = parts.elements.control.list(
                                 name, data.x, data.y, data.width, data.height, data.angle, data.list, 
                                 data.selectable, data.multiSelect, data.hoverable, data.pressable, data.active,
-                                data.itemHeightMux, data.itemSpacingMux,
+                                data.itemHeightMux, data.itemSpacingMux, data.breakHeightMux, data.breakWidthMux, data.spacingHeightMux,
                                 data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
                                 data.style.listItemText,
                                 data.style.backing,
+                                data.style.break,
                                 data.style.background_off,
                                 data.style.background_up,                data.style.background_press,
                                 data.style.background_select,            data.style.background_select_press,
@@ -1464,6 +1425,9 @@ __globals.utility = new function(){
                 }
 
             return obj;
+        };
+        this.openURL = function(url){
+            window.open( url, '_blank');
         };
     };
     this.thirdparty = new function(){

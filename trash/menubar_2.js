@@ -31,7 +31,7 @@ this.menuBar_2 = function(){
         var accWidth = 0;
         for(var a = 0; a < keys.length; a++){
             design.elements.push(
-                {type:'button_rect_3',name:keys[a],data:{
+                {type:'button_rect',name:keys[a],data:{
                     x:accWidth, y:0, width:this.menuBar.dropdown[keys[a]].width, height:vars.height, text:keys[a],
                     textHorizontalOffset:this.menuBar.dropdown[keys[a]].textHorizontalOffset,
                     style:{ up:style.button.off, hover:style.button.hover, hover_press:style.button.hover_press },
@@ -93,7 +93,7 @@ this.menuBar.dropdown = {
         width:40,
         textHorizontalOffset:0.25,
         open:function(){
-            console.log( menu.objects.menuBar.dropdown.file.x );},
+            console.log( control.objects.menuBar.dropdown.file.x );},
         close:function(){},
     },
 }
