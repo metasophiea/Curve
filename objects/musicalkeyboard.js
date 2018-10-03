@@ -111,8 +111,8 @@ this.musicalkeyboard = function(x,y,debug=false){
 
     //keycapture
         var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:glyphs});
-        keycaptureObj.keyPress = function(key){ design.key_rect[noteNames[glyphs.indexOf(key)]].press(); };
-        keycaptureObj.keyRelease = function(key){ design.key_rect[noteNames[glyphs.indexOf(key)]].release(); };
+        keycaptureObj.keyPress = function(key){ design.button_rect[noteNames[glyphs.indexOf(key)]].press(); };
+        keycaptureObj.keyRelease = function(key){ design.button_rect[noteNames[glyphs.indexOf(key)]].release(); };
 
     //interface
         obj.i = {

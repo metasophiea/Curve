@@ -321,7 +321,7 @@
                             }
                     };
                     this.saveload = new function(){
-                        this.save = function(compress=true,sceneName='project',bundleConstructorFunctions=false){
+                        this.save = function(sceneName='project',compress=true,bundleConstructorFunctions=false){
                             //check that saving or loading is allowed
                                 if(!__globals.super.enableSaveload){return;}
             
@@ -357,38 +357,49 @@
                             //alert user
                                 control.i.menubar.report('');
                         };
-                        this.__loadProcess = function(data,compressed){
+                        this.__loadProcess = function(data,callback,compressed){
+                            var metadata;
+            
                             //stopping audio
                                 __globals.audio.destination.masterGain(0);
                                 
-                            //clear current scene
-                                __globals.utility.workspace.clear()
-                
                             //unserialize data
-                                data = __globals.utility.misc.unserialize(data,compressed);
-                    
-                            //import scene
-                                __globals.utility.workspace.importScene(data.objects, data.bundleConstructorFunctions, data.constructorFunctions);
+                                var data = __globals.utility.misc.unserialize(data,compressed);
             
-                            //set viewport position
-                                __globals.utility.workspace.gotoPosition(data.viewportLocation.x, data.viewportLocation.y, data.viewportLocation.s, data.viewportLocation.r);
-                            
-                            //restarting audio
-                                __globals.audio.destination.masterGain(1);
-                        
-                            console.log('scene "'+data.sceneName+'" has been loaded');
+                            //check it's one of ours
+                                if(data != null){
+                                    //clear current scene
+                                        __globals.utility.workspace.clear()
+            
+                                    //import scene
+                                        __globals.utility.workspace.importScene(data.objects, data.bundleConstructorFunctions, data.constructorFunctions);
+            
+                                    //set viewport position
+                                        __globals.utility.workspace.gotoPosition(data.viewportLocation.x, data.viewportLocation.y, data.viewportLocation.s, data.viewportLocation.r);
+            
+                                    //gather metadata
+                                        metadata = {sceneName:data.sceneName};
+            
+                                    console.log('scene "'+data.sceneName+'" has been loaded');
+                                }   
+                                
+                                //restart audio
+                                    __globals.audio.destination.masterGain(1);
+            
+                                //callback
+                                    if(callback){callback(metadata);}
                         };
-                        this.load = function(compressed=true){
+                        this.load = function(callback,compressed=true){
                             //check that saving or loading is allowed
                                 if(!__globals.super.enableSaveload){return;}
             
-                            __globals.utility.misc.openFile(function(data){__globals.utility.workspace.saveload.__loadProcess(data,compressed);});
+                            __globals.utility.misc.openFile(function(data){__globals.utility.workspace.saveload.__loadProcess(data,callback,compressed);});
                         };
-                        this.loadFromURL = function(url,compressed=true){
+                        this.loadFromURL = function(url,callback,compressed=true){
                             var request = new XMLHttpRequest();
                             request.open('GET', url, true);
                             request.responseType = 'text';
-                            request.onload = function(){ __globals.utility.workspace.saveload.__loadProcess(this.response,compressed); };
+                            request.onload = function(){ __globals.utility.workspace.saveload.__loadProcess(this.response,callback,compressed); };
                             request.send();
                         };
                     };
@@ -1231,7 +1242,7 @@
                                     var temp = parts.elements.control.button_rect(
                                         name,
                                         data.x, data.y, data.width, data.height, data.angle, 
-                                        (data.text ? data.text : data.text_left), data.text_right,
+                                        (data.text ? data.text : data.text_centre), data.text_left, data.text_right,
                                         data.textVerticalOffset, data.textHorizontalOffset,
                                         data.active, data.hoverable, data.selectable, data.pressable,
                                         data.style.text, 
@@ -1362,7 +1373,7 @@
                                         var temp = parts.elements.control.list(
                                             name, data.x, data.y, data.width, data.height, data.angle, data.list, 
                                             data.selectable, data.multiSelect, data.hoverable, data.pressable, data.active,
-                                            data.itemHeightMux, data.itemSpacingMux, data.breakHeightMux, data.breakWidthMux, data.spacingHeightMux,
+                                            data.itemHeightMux, data.itemSpacingMux, data.breakHeightMux, data.breakWidthMux, data.spaceHeightMux,
                                             data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
                                             data.style.listItemText,
                                             data.style.backing,
@@ -2441,7 +2452,7 @@
                                     }
                                 )
                             );
-                            for(var a = 0; a < __globals.svgElement.tempElements.length; a++){ __globals.panes.menu.append(__globals.svgElement.tempElements[a]); }
+                            for(var a = 0; a < __globals.svgElement.tempElements.length; a++){ __globals.panes.control.append(__globals.svgElement.tempElements[a]); }
             
                             //adjust selection box when the mouse moves
                             __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
@@ -2501,7 +2512,7 @@
                                 //delete all temporary elements and attributes
                                     delete __globals.svgElement.tempData;
                                     for(var a = 0; a < __globals.svgElement.tempElements.length; a++){
-                                        __globals.panes.menu.removeChild( __globals.svgElement.tempElements[a] ); 
+                                        __globals.panes.control.removeChild( __globals.svgElement.tempElements[a] ); 
                                         __globals.svgElement.tempElements[a] = null;
                                     }
                                     delete __globals.svgElement.tempElements;
@@ -2655,119 +2666,125 @@
             
             
             // onkeydown functions
-                __globals.keyboardInteraction.onkeydown_functionList = {};
+                // __globals.keyboardInteraction.onkeydown_functionList = {};
                 document.onkeydown = function(event){
                     //if key is already pressed, don't press it again
-                    if(__globals.keyboardInteraction.pressedKeys[event.code]){ return; }
-                    __globals.keyboardInteraction.pressedKeys[event.code] = true;
+                        if(__globals.keyboardInteraction.pressedKeys[event.code]){ return; }
+                        __globals.keyboardInteraction.pressedKeys[event.code] = true;
             
                     //discover what the mouse is pointing at and if that thing accepts keyboard input. First check whether the
                     //object overall accepts input, and if it doesn't check if any element accepts it. If neither do, or either
                     //function returns 'false';  use the global functions
-                    var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
-                    if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeydown','workspace')){
-                        if( __globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown != undefined ){
-                            if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown(event)){ return; }
-                        }else{
-                            //start from the most bottom element and work up until a pane is reached; checking for 
-                            //onkeydown attributes. If one is found and it returns 'false', continue climbing. 
-                            var element = document.elementFromPoint(temp[0],temp[1]);
-                            while(!element.hasAttribute('pane')){
-                                if( element.onkeydown != undefined ){
-                                    if(element.onkeydown(event)){ return; }
+                        var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
+                        if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeydown','workspace')){
+                            if( __globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown != undefined ){
+                                if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown(event)){ return; }
+                            }else{
+                                //start from the most bottom element and work up until a pane is reached; checking for 
+                                //onkeydown attributes. If one is found and it returns 'false', continue climbing. 
+                                var element = document.elementFromPoint(temp[0],temp[1]);
+                                while(!element.hasAttribute('pane')){
+                                    if( element.onkeydown != undefined ){
+                                        if(element.onkeydown(event)){ return; }
+                                    }
+                                    element = element.parentElement;
                                 }
-                                element = element.parentElement;
                             }
                         }
-                    }
             
-                    //global function
-                    if( __globals.keyboardInteraction.onkeydown_functionList[event.key] ){
-                        __globals.keyboardInteraction.onkeydown_functionList[event.key](event);
-                    }
+                    // //global function
+                    // if( __globals.keyboardInteraction.onkeydown_functionList[event.key] ){
+                    //     __globals.keyboardInteraction.onkeydown_functionList[event.key](event);
+                    // }
+            
+                    //control function
+                        control.keydown(event);
                 };
             
-                __globals.keyboardInteraction.onkeydown_functionList.Delete = function(event){
-                    console.log('delete!');
-                    __globals.selection.delete();
-                };
-                __globals.keyboardInteraction.onkeydown_functionList.Backspace = function(event){
-                    console.log('backspace!');
-                    __globals.keyboardInteraction.onkeydown_functionList.Delete(event);
-                };
-                __globals.keyboardInteraction.onkeydown_functionList.x = function(event){
-                    if(!event[__globals.super.keys.ctrl]){return;}
-                    console.log('cut!');
-                    __globals.selection.cut();
-                };
-                __globals.keyboardInteraction.onkeydown_functionList.c = function(event){
-                    if(!event[__globals.super.keys.ctrl]){return;}
-                    console.log('copy!');
-                    __globals.selection.copy();
-                };
-                __globals.keyboardInteraction.onkeydown_functionList.b = function(event){
-                    if(!event[__globals.super.keys.ctrl]){return;}
-                    console.log('duplicate!');
-                    __globals.selection.duplicate();
-                };
-                __globals.keyboardInteraction.onkeydown_functionList.v = function(event){
-                    if(!event[__globals.super.keys.ctrl]){return;}
-                    console.log('paste!');
-                    __globals.selection.paste();
-                };
-                __globals.keyboardInteraction.onkeydown_functionList.F1 = function(event){
-                    var temp = __globals.utility.workspace.objectUnderPoint(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
-                    if(temp){
-                        if( objects[temp.id].metadata ){
-                            __globals.utility.misc.openURL(objects[temp.id].metadata.helpurl);
-                        }else{
-                            console.warn('bad help url, please add metadata to your object file ->',temp.id);
-                        }
-                        __globals.keyboardInteraction.releaseAll();
-                    }
-                };
-                __globals.keyboardInteraction.onkeydown_functionList.F2 = function(event){
-                    if(!event[__globals.super.keys.ctrl]){return;}
-                    console.log('load!');
-                    __globals.utility.workspace.saveload.load();
-                };
-                __globals.keyboardInteraction.onkeydown_functionList.F3 = function(event){
-                    if(!event[__globals.super.keys.ctrl]){return;}
-                    console.log('save!');
-                    __globals.utility.workspace.saveload.save();
-                };
+                // __globals.keyboardInteraction.onkeydown_functionList.Delete = function(event){
+                //     console.log('delete!');
+                //     __globals.selection.delete();
+                // };
+                // __globals.keyboardInteraction.onkeydown_functionList.Backspace = function(event){
+                //     console.log('backspace!');
+                //     __globals.keyboardInteraction.onkeydown_functionList.Delete(event);
+                // };
+                // __globals.keyboardInteraction.onkeydown_functionList.x = function(event){
+                //     if(!event[__globals.super.keys.ctrl]){return;}
+                //     console.log('cut!');
+                //     __globals.selection.cut();
+                // };
+                // __globals.keyboardInteraction.onkeydown_functionList.c = function(event){
+                //     if(!event[__globals.super.keys.ctrl]){return;}
+                //     console.log('copy!');
+                //     __globals.selection.copy();
+                // };
+                // __globals.keyboardInteraction.onkeydown_functionList.b = function(event){
+                //     if(!event[__globals.super.keys.ctrl]){return;}
+                //     console.log('duplicate!');
+                //     __globals.selection.duplicate();
+                // };
+                // __globals.keyboardInteraction.onkeydown_functionList.v = function(event){
+                //     if(!event[__globals.super.keys.ctrl]){return;}
+                //     console.log('paste!');
+                //     __globals.selection.paste();
+                // };
+                // __globals.keyboardInteraction.onkeydown_functionList.F1 = function(event){
+                //     var temp = __globals.utility.workspace.objectUnderPoint(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
+                //     if(temp){
+                //         if( objects[temp.id].metadata ){
+                //             __globals.utility.misc.openURL(objects[temp.id].metadata.helpurl);
+                //         }else{
+                //             console.warn('bad help url, please add metadata to your object file ->',temp.id);
+                //         }
+                //         __globals.keyboardInteraction.releaseAll();
+                //     }
+                // };
+                // __globals.keyboardInteraction.onkeydown_functionList.F2 = function(event){
+                //     if(!event[__globals.super.keys.ctrl]){return;}
+                //     console.log('load!');
+                //     __globals.utility.workspace.saveload.load();
+                // };
+                // __globals.keyboardInteraction.onkeydown_functionList.F3 = function(event){
+                //     if(!event[__globals.super.keys.ctrl]){return;}
+                //     console.log('save!');
+                //     __globals.utility.workspace.saveload.save();
+                // };
             
             // onkeyup functions
-                __globals.keyboardInteraction.onkeyup_functionList = {};
+                // __globals.keyboardInteraction.onkeyup_functionList = {};
                 document.onkeyup = function(event){
                     //if key isn't pressed, don't release it
-                    if(!__globals.keyboardInteraction.pressedKeys[event.code]){return;}
-                    delete __globals.keyboardInteraction.pressedKeys[event.code];
+                        if(!__globals.keyboardInteraction.pressedKeys[event.code]){return;}
+                        delete __globals.keyboardInteraction.pressedKeys[event.code];
             
                     //discover what the mouse is pointing at and if that thing accepts keyboard input. First check whether the
                     //object overall accepts input, and if it doesn't check if the element accepts it. If neither do, or either
                     //function returns 'false';  use the global functions
-                    var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
-                    if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeyup','workspace')){
-                        if( __globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup != undefined ){
-                            if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup(event)){ return; }
-                        }else{
-                            //start from the most bottom element and work up until a pane is reached; checking for 
-                            //onkeyup attributes. If one is found and it returns 'false', continue climbing. 
-                            var element = document.elementFromPoint(temp[0],temp[1]);
-                            while(!element.hasAttribute('pane')){
-                                if( element.onkeyup != undefined ){
-                                    if(element.onkeyup(event)){ return; }
+                        var temp = [__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]];
+                        if(!__globals.utility.object.requestInteraction(temp[0],temp[1],'onkeyup','workspace')){
+                            if( __globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup != undefined ){
+                                if(__globals.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup(event)){ return; }
+                            }else{
+                                //start from the most bottom element and work up until a pane is reached; checking for 
+                                //onkeyup attributes. If one is found and it returns 'false', continue climbing. 
+                                var element = document.elementFromPoint(temp[0],temp[1]);
+                                while(!element.hasAttribute('pane')){
+                                    if( element.onkeyup != undefined ){
+                                        if(element.onkeyup(event)){ return; }
+                                    }
+                                    element = element.parentElement;
                                 }
-                                element = element.parentElement;
                             }
                         }
-                    }
             
-                    //global function
-                    if( __globals.keyboardInteraction.onkeyup_functionList[event.key] ){
-                        __globals.keyboardInteraction.onkeyup_functionList[event.key](event);
-                    }
+                    // //global function
+                    //     if( __globals.keyboardInteraction.onkeyup_functionList[event.key] ){
+                    //         __globals.keyboardInteraction.onkeyup_functionList[event.key](event);
+                    //     }
+            
+                    //control function
+                        control.keyup(event);
                 };
             
             // additional utilities
@@ -5840,14 +5857,14 @@
                                     points: {
                                         top:{
                                             left:[
-                                                {x:division*0.5+margin,         y:division*0.5+margin},  //center
+                                                {x:division*0.5+margin,         y:division*0.5+margin},  //centre
                                                 {x:division*1.0+margin,         y:division*0.0+margin},  //top
                                                 {x:division*0.0+margin,         y:division*1.0+margin},  //left
                                                 {x:division*1.0+margin,         y:division*1.0+margin},  //inner point
                                                 {x:division*1.75+margin,        y:division*1.0+margin},  //inner point right
                                                 {x:division*1.0+margin,         y:division*1.75+margin}, //inner point down
                                             ],
-                                            center:[
+                                            centre:[
                                                 {x:width/2,                     y:division*0.5+margin}, //central point
                                                 {x:width/2-division*0.5,        y:division*1.0+margin}, //lower left
                                                 {x:width/2+division*0.5,        y:division*1.0+margin}, //lower right
@@ -5855,7 +5872,7 @@
                                                 {x:width/2+division*0.5,        y:division*0.0+margin}, //upper right
                                             ],
                                             right:[
-                                                {x:width-division*0.5-margin,   y:division*0.5+margin},  //center
+                                                {x:width-division*0.5-margin,   y:division*0.5+margin},  //centre
                                                 {x:width-division*1.0-margin,   y:division*0.0+margin},  //top
                                                 {x:width-division*0.0-margin,   y:division*1.0+margin},  //right
                                                 {x:width-division*1.0-margin,   y:division*1.0+margin},  //inner point
@@ -5867,11 +5884,11 @@
                                             left:[
                                                 {x:division*0.0+margin,         y:height*0.5-division*0.5}, //top left
                                                 {x:division*1.0+margin,         y:height*0.5-division*0.5}, //top right
-                                                {x:division*0.5+margin,         y:height*0.5-division*0.0}, //center
+                                                {x:division*0.5+margin,         y:height*0.5-division*0.0}, //centre
                                                 {x:division*0.0+margin,         y:height*0.5+division*0.5}, //bottom left
                                                 {x:division*1.0+margin,         y:height*0.5+division*0.5}, //bottom right
                                             ],
-                                            center:[
+                                            centre:[
                                                 {x:width/2,                     y:height/2},                //central point
                                                 {x:width/2-division*0.5,        y:division*0.5+height/2},   //lower left
                                                 {x:width/2-division*0.25,       y:division*1.25+height/2},  //lower left down
@@ -5889,21 +5906,21 @@
                                             right:[
                                                 {x:width-division*1.0-margin,   y:height*0.5-division*0.5}, //top left
                                                 {x:width-division*0.0-margin,   y:height*0.5-division*0.5}, //top right
-                                                {x:width-division*0.5-margin,   y:height*0.5-division*0.0}, //center
+                                                {x:width-division*0.5-margin,   y:height*0.5-division*0.0}, //centre
                                                 {x:width-division*1.0-margin,   y:height*0.5+division*0.5}, //bottom left
                                                 {x:width-division*0.0-margin,   y:height*0.5+division*0.5}  //bottom right
                                             ]
                                         },
                                         bottom: {
                                             left:[
-                                                {x:division*0.5+margin,         y:height-division*0.5-margin}, //center
+                                                {x:division*0.5+margin,         y:height-division*0.5-margin}, //centre
                                                 {x:division*0.0+margin,         y:height-division*1.0-margin}, //left
                                                 {x:division*1.0+margin,         y:height-division*0.0-margin}, //bottom
                                                 {x:division*1.0+margin,         y:height-division*1.0-margin}, //inner point
                                                 {x:division*1.0+margin,         y:height-division*1.75-margin},//inner point up
                                                 {x:division*1.75+margin,        y:height-division*1.0-margin}, //inner point right
                                             ],
-                                            center:[
+                                            centre:[
                                                 {x:width/2-division*0.5,        y:height-division*1.0-margin}, //upper left
                                                 {x:width/2+division*0.5,        y:height-division*1.0-margin}, //upper right
                                                 {x:width/2,                     y:height-division*0.5-margin}, //central point
@@ -5911,7 +5928,7 @@
                                                 {x:width/2+division*0.5,        y:height-division*0.0-margin}, //lower right
                                             ],
                                             right:[
-                                                {x:width-division*0.5-margin,   y:height-division*0.5-margin}, //center
+                                                {x:width-division*0.5-margin,   y:height-division*0.5-margin}, //centre
                                                 {x:width-division*0.0-margin,   y:height-division*1.0-margin}, //right
                                                 {x:width-division*1.0-margin,   y:height-division*0.0-margin}, //bottom
                                                 {x:width-division*1.0-margin,   y:height-division*1.0-margin}, //inner point
@@ -5954,14 +5971,14 @@
                                             shapes.segments.points.top.left[1],
                                             shapes.segments.points.top.left[0],
                                             shapes.segments.points.top.left[3],
-                                            shapes.segments.points.top.center[1],
-                                            shapes.segments.points.top.center[0],
-                                            shapes.segments.points.top.center[3],
+                                            shapes.segments.points.top.centre[1],
+                                            shapes.segments.points.top.centre[0],
+                                            shapes.segments.points.top.centre[3],
                                         ],
                                         [
-                                            shapes.segments.points.top.center[4],
-                                            shapes.segments.points.top.center[0],
-                                            shapes.segments.points.top.center[2],
+                                            shapes.segments.points.top.centre[4],
+                                            shapes.segments.points.top.centre[0],
+                                            shapes.segments.points.top.centre[2],
                                             shapes.segments.points.top.right[3],
                                             shapes.segments.points.top.right[0],
                                             shapes.segments.points.top.right[1],
@@ -5979,25 +5996,25 @@
                                             shapes.segments.points.top.left[4],
                                             shapes.segments.points.top.left[3],
                                             shapes.segments.points.top.left[5],
-                                            shapes.segments.points.middle.center[9],
-                                            shapes.segments.points.middle.center[7],
-                                            shapes.segments.points.middle.center[8],
+                                            shapes.segments.points.middle.centre[9],
+                                            shapes.segments.points.middle.centre[7],
+                                            shapes.segments.points.middle.centre[8],
                                         ],
                                         [
-                                            shapes.segments.points.top.center[0],
-                                            shapes.segments.points.top.center[1],
-                                            shapes.segments.points.middle.center[7],
-                                            shapes.segments.points.middle.center[0],
-                                            shapes.segments.points.middle.center[10],
-                                            shapes.segments.points.top.center[2],
+                                            shapes.segments.points.top.centre[0],
+                                            shapes.segments.points.top.centre[1],
+                                            shapes.segments.points.middle.centre[7],
+                                            shapes.segments.points.middle.centre[0],
+                                            shapes.segments.points.middle.centre[10],
+                                            shapes.segments.points.top.centre[2],
                                         ],
                                         [
                                             shapes.segments.points.top.right[4],
                                             shapes.segments.points.top.right[3],
                                             shapes.segments.points.top.right[5],
-                                            shapes.segments.points.middle.center[11],
-                                            shapes.segments.points.middle.center[10],
-                                            shapes.segments.points.middle.center[12],
+                                            shapes.segments.points.middle.centre[11],
+                                            shapes.segments.points.middle.centre[10],
+                                            shapes.segments.points.middle.centre[12],
                                         ],
                                         [
                                             shapes.segments.points.top.right[0],
@@ -6012,17 +6029,17 @@
                                             shapes.segments.points.middle.left[4],
                                             shapes.segments.points.middle.left[2],
                                             shapes.segments.points.middle.left[1],
-                                            shapes.segments.points.middle.center[7],
-                                            shapes.segments.points.middle.center[0],
-                                            shapes.segments.points.middle.center[1],
+                                            shapes.segments.points.middle.centre[7],
+                                            shapes.segments.points.middle.centre[0],
+                                            shapes.segments.points.middle.centre[1],
                                         ],
                                         [
                                             shapes.segments.points.middle.right[3],
                                             shapes.segments.points.middle.right[2],
                                             shapes.segments.points.middle.right[0],
-                                            shapes.segments.points.middle.center[10],
-                                            shapes.segments.points.middle.center[0],
-                                            shapes.segments.points.middle.center[4],
+                                            shapes.segments.points.middle.centre[10],
+                                            shapes.segments.points.middle.centre[0],
+                                            shapes.segments.points.middle.centre[4],
                                         ],
                         
                                         [
@@ -6037,25 +6054,25 @@
                                             shapes.segments.points.bottom.left[4],
                                             shapes.segments.points.bottom.left[3],
                                             shapes.segments.points.bottom.left[5],
-                                            shapes.segments.points.middle.center[2],
-                                            shapes.segments.points.middle.center[1],
-                                            shapes.segments.points.middle.center[3],
+                                            shapes.segments.points.middle.centre[2],
+                                            shapes.segments.points.middle.centre[1],
+                                            shapes.segments.points.middle.centre[3],
                                         ],
                                         [
-                                            shapes.segments.points.bottom.center[0],
-                                            shapes.segments.points.bottom.center[2],
-                                            shapes.segments.points.bottom.center[1],
-                                            shapes.segments.points.middle.center[4],
-                                            shapes.segments.points.middle.center[0],
-                                            shapes.segments.points.middle.center[1],
+                                            shapes.segments.points.bottom.centre[0],
+                                            shapes.segments.points.bottom.centre[2],
+                                            shapes.segments.points.bottom.centre[1],
+                                            shapes.segments.points.middle.centre[4],
+                                            shapes.segments.points.middle.centre[0],
+                                            shapes.segments.points.middle.centre[1],
                                         ],
                                         [
                                             shapes.segments.points.bottom.right[4],
                                             shapes.segments.points.bottom.right[3],
                                             shapes.segments.points.bottom.right[5],
-                                            shapes.segments.points.middle.center[5],
-                                            shapes.segments.points.middle.center[4],
-                                            shapes.segments.points.middle.center[6],
+                                            shapes.segments.points.middle.centre[5],
+                                            shapes.segments.points.middle.centre[4],
+                                            shapes.segments.points.middle.centre[6],
                                         ],
                                         [
                                             shapes.segments.points.bottom.right[3],
@@ -6070,17 +6087,17 @@
                                             shapes.segments.points.bottom.left[2],
                                             shapes.segments.points.bottom.left[0],
                                             shapes.segments.points.bottom.left[3],
-                                            shapes.segments.points.bottom.center[0],
-                                            shapes.segments.points.bottom.center[2],
-                                            shapes.segments.points.bottom.center[3],
+                                            shapes.segments.points.bottom.centre[0],
+                                            shapes.segments.points.bottom.centre[2],
+                                            shapes.segments.points.bottom.centre[3],
                                         ],
                                         [
                                             shapes.segments.points.bottom.right[2],
                                             shapes.segments.points.bottom.right[0],
                                             shapes.segments.points.bottom.right[3],
-                                            shapes.segments.points.bottom.center[1],
-                                            shapes.segments.points.bottom.center[2],
-                                            shapes.segments.points.bottom.center[4],
+                                            shapes.segments.points.bottom.centre[1],
+                                            shapes.segments.points.bottom.centre[2],
+                                            shapes.segments.points.bottom.centre[4],
                                         ],
                                     ];
                                     for(var a = 0; a < points.length; a++){
@@ -6659,6 +6676,126 @@
                         };
                     };
                     this.control = new function(){
+                        this.button_rect = function(
+                            id='button_rect',
+                            x, y, width, height, angle=0,
+                            text_centre, text_left, text_right,
+                            textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
+                            active=true, hoverable=true, selectable=false, pressable=true,
+                            textStyle='fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
+                            backgroundStyle_off=                     'fill:rgba(180,180,180,1)',
+                            backgroundStyle_up=                      'fill:rgba(200,200,200,1)',
+                            backgroundStyle_press=                   'fill:rgba(230,230,230,1)',
+                            backgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_select_press=            'fill:rgba(230,230,230,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_glow=                    'fill:rgba(220,220,220,1)',
+                            backgroundStyle_glow_press=              'fill:rgba(250,250,250,1)',
+                            backgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_glow_select_press=       'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover=                   'fill:rgba(220,220,220,1)',
+                            backgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
+                            backgroundStyle_hover_select=            'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_glow=              'fill:rgba(240,240,240,1)',
+                            backgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
+                            backgroundStyle_hover_glow_select=       'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                        ){
+                            //elements
+                                var object = __globals.utility.misc.elementMaker('g',id,{x:x,y:y,r:angle});
+                        
+                                var background = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
+                                object.appendChild( background );
+                        
+                                var text_centre = __globals.utility.misc.elementMaker('text',null,{x:width/2, y:height*textVerticalOffsetMux, text:text_centre, style:textStyle+'text-anchor:middle;'});
+                                object.appendChild(text_centre);
+                                var text_left = __globals.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffsetMux, y:height*textVerticalOffsetMux, text:text_left, style:textStyle});
+                                object.appendChild(text_left);
+                                var text_right = __globals.utility.misc.elementMaker('text',null,{x:width-(width*textHorizontalOffsetMux), y:height*textVerticalOffsetMux, text:text_right, style:textStyle+'text-anchor:end;'});
+                                object.appendChild(text_right);
+                        
+                            //state
+                                object.state = {
+                                    hovering:false,
+                                    glowing:false,
+                                    selected:false,
+                                    pressed:false,
+                                };
+                        
+                                object.activateGraphicalState = function(){
+                                    if(!active){ __globals.utility.element.setStyle( background, backgroundStyle_off); return; }
+                        
+                                    var styles = [
+                                        backgroundStyle_up,                backgroundStyle_press,
+                                        backgroundStyle_select,            backgroundStyle_select_press,
+                                        backgroundStyle_glow,              backgroundStyle_glow_press,
+                                        backgroundStyle_glow_select,       backgroundStyle_glow_select_press,
+                                        backgroundStyle_hover,             backgroundStyle_hover_press,
+                                        backgroundStyle_hover_select,      backgroundStyle_hover_select_press,
+                                        backgroundStyle_hover_glow,        backgroundStyle_hover_glow_press,
+                                        backgroundStyle_hover_glow_select, backgroundStyle_hover_glow_select_press,
+                                    ];
+                        
+                                    if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
+                                    if(!selectable && object.state.selected ){ object.state.selected = false; }
+                        
+                                    __globals.utility.element.setStyle( 
+                                        background, 
+                                        styles[ object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + (pressable && object.state.pressed)*1 ]
+                                    );
+                                };
+                                object.activateGraphicalState();
+                        
+                                //interactivity
+                                    object.onmouseenter = function(event){ 
+                                        this.state.hovering = true;  
+                                        this.activateGraphicalState();
+                                        if(this.onenter){this.onenter(this, event);}
+                                        if(event.buttons == 1){object.onmousedown(event);} 
+                                    };
+                                    object.onmouseleave = function(event){ 
+                                        this.state.hovering = false; 
+                                        this.release(event); 
+                                        this.activateGraphicalState(); 
+                                        if(this.onleave){this.onleave(this, event);}
+                                    };
+                                    object.onmouseup = function(event){   this.release(event); };
+                                    object.onmousedown = function(event){ this.press(event);   };
+                                    object.ondblclick = function(event){ if(this.ondblpress){this.ondblpress(this, event);} };
+                                //controls
+                                    object.press = function(event){
+                                        if(this.state.pressed){return;}
+                                        this.state.pressed = true;
+                                        this.activateGraphicalState();
+                                        if(this.onpress){this.onpress(this, event);}
+                                        this.select( !this.select(), event );
+                                    };
+                                    object.release = function(event){
+                                        if(!this.state.pressed){return;}
+                                        this.state.pressed = false;
+                                        this.activateGraphicalState();
+                                        if(this.onrelease){this.onrelease(this, event);}
+                                    };
+                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; this.activateGraphicalState(); };
+                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  this.activateGraphicalState(); };
+                                    object.select = function(bool,event,callback=true){ 
+                                        if(bool == undefined){return this.state.selected;} 
+                                        if(!selectable){return;}
+                                        if(this.state.selected == bool){return;}
+                                        this.state.selected = bool; this.activateGraphicalState();
+                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
+                                    };
+                                //callbacks
+                                    object.onenter = function(object, event){};
+                                    object.onleave = function(object, event){};
+                                    object.onpress = function(object, event){};
+                                    object.ondblpress = function(object, event){};
+                                    object.onrelease = function(object, event){};
+                                    object.onselect = function(object, event){};
+                                    object.ondeselect = function(object, event){};
+                        
+                            return object;
+                        };
                         this.checkbox_rect = function(
                             id='checkbox_rect',
                             x, y, width, height, angle=0,
@@ -7185,7 +7322,8 @@
                                                 var temp = __globals.utility.misc.elementMaker( 'button_rect', a, {
                                                     x:0, y:accumulativeHeight,
                                                     width:width, height:height*itemHeightMux, 
-                                                    text_left: (list[a].text?list[a].text:list[a].text_left) , text_right:list[a].text_right,
+                                                    text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                                                    text_left: list[a].text_left, text_right:list[a].text_right,
                                                     textVerticalOffset:itemTextVerticalOffsetMux, textHorizontalOffsetMux:itemtextHorizontalOffsetMux,
                                                     active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
                                                     style:{
@@ -9015,124 +9153,6 @@
                             
                             return object;
                         };
-                        this.button_rect = function(
-                            id='button_rect',
-                            x, y, width, height, angle=0,
-                            text_left, text_right,
-                            textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
-                            active=true, hoverable=true, selectable=false, pressable=true,
-                            textStyle='fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
-                            backgroundStyle_off=                     'fill:rgba(180,180,180,1)',
-                            backgroundStyle_up=                      'fill:rgba(200,200,200,1)',
-                            backgroundStyle_press=                   'fill:rgba(230,230,230,1)',
-                            backgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_select_press=            'fill:rgba(230,230,230,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_glow=                    'fill:rgba(220,220,220,1)',
-                            backgroundStyle_glow_press=              'fill:rgba(250,250,250,1)',
-                            backgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_glow_select_press=       'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover=                   'fill:rgba(220,220,220,1)',
-                            backgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
-                            backgroundStyle_hover_select=            'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover_glow=              'fill:rgba(240,240,240,1)',
-                            backgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
-                            backgroundStyle_hover_glow_select=       'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                        ){
-                            //elements
-                                var object = __globals.utility.misc.elementMaker('g',id,{x:x,y:y,r:angle});
-                        
-                                var background = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
-                                object.appendChild( background );
-                        
-                                var text_left = __globals.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffsetMux, y:height*textVerticalOffsetMux, text:text_left, style:textStyle});
-                                object.appendChild(text_left);
-                                var text_right = __globals.utility.misc.elementMaker('text',null,{x:width-(width*textHorizontalOffsetMux), y:height*textVerticalOffsetMux, text:text_right, style:textStyle+'text-anchor:end;'});
-                                object.appendChild(text_right);
-                        
-                            //state
-                                object.state = {
-                                    hovering:false,
-                                    glowing:false,
-                                    selected:false,
-                                    pressed:false,
-                                };
-                        
-                                object.activateGraphicalState = function(){
-                                    if(!active){ __globals.utility.element.setStyle( background, backgroundStyle_off); return; }
-                        
-                                    var styles = [
-                                        backgroundStyle_up,                backgroundStyle_press,
-                                        backgroundStyle_select,            backgroundStyle_select_press,
-                                        backgroundStyle_glow,              backgroundStyle_glow_press,
-                                        backgroundStyle_glow_select,       backgroundStyle_glow_select_press,
-                                        backgroundStyle_hover,             backgroundStyle_hover_press,
-                                        backgroundStyle_hover_select,      backgroundStyle_hover_select_press,
-                                        backgroundStyle_hover_glow,        backgroundStyle_hover_glow_press,
-                                        backgroundStyle_hover_glow_select, backgroundStyle_hover_glow_select_press,
-                                    ];
-                        
-                                    if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
-                                    if(!selectable && object.state.selected ){ object.state.selected = false; }
-                        
-                                    __globals.utility.element.setStyle( 
-                                        background, 
-                                        styles[ object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + (pressable && object.state.pressed)*1 ]
-                                    );
-                                };
-                                object.activateGraphicalState();
-                        
-                                //interactivity
-                                    object.onmouseenter = function(event){ 
-                                        this.state.hovering = true;  
-                                        this.activateGraphicalState();
-                                        if(this.onenter){this.onenter(this, event);}
-                                        if(event.buttons == 1){object.onmousedown(event);} 
-                                    };
-                                    object.onmouseleave = function(event){ 
-                                        this.state.hovering = false; 
-                                        this.release(event); 
-                                        this.activateGraphicalState(); 
-                                        if(this.onleave){this.onleave(this, event);}
-                                    };
-                                    object.onmouseup = function(event){   this.release(event); };
-                                    object.onmousedown = function(event){ this.press(event);   };
-                                    object.ondblclick = function(event){ if(this.ondblpress){this.ondblpress(this, event);} };
-                                //controls
-                                    object.press = function(event){
-                                        if(this.state.pressed){return;}
-                                        this.state.pressed = true;
-                                        this.activateGraphicalState();
-                                        if(this.onpress){this.onpress(this, event);}
-                                        this.select( !this.select(), event );
-                                    };
-                                    object.release = function(event){
-                                        if(!this.state.pressed){return;}
-                                        this.state.pressed = false;
-                                        this.activateGraphicalState();
-                                        if(this.onrelease){this.onrelease(this, event);}
-                                    };
-                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; this.activateGraphicalState(); };
-                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  this.activateGraphicalState(); };
-                                    object.select = function(bool,event,callback=true){ 
-                                        if(bool == undefined){return this.state.selected;} 
-                                        if(!selectable){return;}
-                                        if(this.state.selected == bool){return;}
-                                        this.state.selected = bool; this.activateGraphicalState();
-                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
-                                    };
-                                //callbacks
-                                    object.onenter = function(object, event){};
-                                    object.onleave = function(object, event){};
-                                    object.onpress = function(object, event){};
-                                    object.ondblpress = function(object, event){};
-                                    object.onrelease = function(object, event){};
-                                    object.onselect = function(object, event){};
-                                    object.ondeselect = function(object, event){};
-                        
-                            return object;
-                        };
                     };
                     this.dynamic = new function(){
                         this.cable = function(
@@ -9426,26 +9446,26 @@
                         
                                 var t1 = __globals.utility.element.getCumulativeTransform(this);
                                 var t2 = __globals.utility.element.getCumulativeTransform(this.foreignNode);
-                                var center_local = {'x':this._boundary.width/2,'y':this._boundary.height/2};
-                                var center_foreign = {'x':this.foreignNode._boundary.width/2,'y':this.foreignNode._boundary.height/2};
+                                var centre_local = {'x':this._boundary.width/2,'y':this._boundary.height/2};
+                                var centre_foreign = {'x':this.foreignNode._boundary.width/2,'y':this.foreignNode._boundary.height/2};
                         
                                 if(this._rotation != 0){
-                                    var temp = __globals.utility.math.cartesian2polar(center_local.x,center_local.y);
+                                    var temp = __globals.utility.math.cartesian2polar(centre_local.x,centre_local.y);
                                     temp.ang += this._rotation;
-                                    center_local = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+                                    centre_local = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
                                 }
                         
                                 if(this.foreignNode._rotation != 0){
-                                    var temp = __globals.utility.math.cartesian2polar(center_foreign.x,center_foreign.y);
+                                    var temp = __globals.utility.math.cartesian2polar(centre_foreign.x,centre_foreign.y);
                                     temp.ang += this.foreignNode._rotation;
-                                    center_foreign = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+                                    centre_foreign = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
                                 }
                         
                                 this._cable.draw( 
-                                    t1.x + center_local.x,
-                                    t1.y + center_local.y, 
-                                    t2.x + center_foreign.x,
-                                    t2.y + center_foreign.y
+                                    t1.x + centre_local.x,
+                                    t1.y + centre_local.y, 
+                                    t2.x + centre_foreign.x,
+                                    t2.y + centre_foreign.y
                                 );
                             };
                             object.redraw = function(){
@@ -9453,26 +9473,26 @@
                         
                                 var t1 = __globals.utility.element.getCumulativeTransform(this);
                                 var t2 = __globals.utility.element.getCumulativeTransform(this.foreignNode);
-                                var center_local = {'x':this._boundary.width/2,'y':this._boundary.height/2};
-                                var center_foreign = {'x':this.foreignNode._boundary.width/2,'y':this.foreignNode._boundary.height/2};
+                                var centre_local = {'x':this._boundary.width/2,'y':this._boundary.height/2};
+                                var centre_foreign = {'x':this.foreignNode._boundary.width/2,'y':this.foreignNode._boundary.height/2};
                         
                                 if(this._rotation != 0){
-                                    var temp = __globals.utility.math.cartesian2polar(center_local.x,center_local.y);
+                                    var temp = __globals.utility.math.cartesian2polar(centre_local.x,centre_local.y);
                                     temp.ang += this._rotation;
-                                    center_local = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+                                    centre_local = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
                                 }
                         
                                 if(this.foreignNode._rotation != 0){
-                                    var temp = __globals.utility.math.cartesian2polar(center_foreign.x,center_foreign.y);
+                                    var temp = __globals.utility.math.cartesian2polar(centre_foreign.x,centre_foreign.y);
                                     temp.ang += this.foreignNode._rotation;
-                                    center_foreign = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+                                    centre_foreign = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
                                 }
                         
                                 this._cable.draw( 
-                                    t1.x + center_local.x,
-                                    t1.y + center_local.y, 
-                                    t2.x + center_foreign.x,
-                                    t2.y + center_foreign.y
+                                    t1.x + centre_local.x,
+                                    t1.y + centre_local.y, 
+                                    t2.x + centre_foreign.x,
+                                    t2.y + centre_foreign.y
                                 );
                             };
                         
@@ -9590,8 +9610,8 @@
                         var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']});
                             keycaptureObj.keyPress = function(key){
                                 switch(key){
-                                    case 'ArrowUp': design.button_rect.up.click();  break;
-                                    case 'ArrowDown': design.button_rect.down.click();  break;
+                                    case 'ArrowUp': design.button_rect.up.press();  break;
+                                    case 'ArrowDown': design.button_rect.down.press();  break;
                                     case 'ArrowLeft': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()-0.1);  break;
                                     case 'ArrowRight': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()+0.1);  break;
                                 }
@@ -11205,7 +11225,7 @@
                             {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
                             {type:'connectionNode_data', name:'trigger', data:{
                                 x: 220, y: 17.5, width: 10, height: 20,
-                                receive:function(address, data){ design.button_rect.fire.click(); }
+                                receive:function(address, data){ design.button_rect.fire.press(); }
                             }},
                 
                             //symbol
@@ -11661,8 +11681,8 @@
                 
                     //keycapture
                         var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:glyphs});
-                        keycaptureObj.keyPress = function(key){ design.key_rect[noteNames[glyphs.indexOf(key)]].press(); };
-                        keycaptureObj.keyRelease = function(key){ design.key_rect[noteNames[glyphs.indexOf(key)]].release(); };
+                        keycaptureObj.keyPress = function(key){ design.button_rect[noteNames[glyphs.indexOf(key)]].press(); };
+                        keycaptureObj.keyRelease = function(key){ design.button_rect[noteNames[glyphs.indexOf(key)]].release(); };
                 
                     //interface
                         obj.i = {
@@ -11698,7 +11718,7 @@
                                 {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
                                 {type:'connectionNode_data', name:'trigger', data:{
                                     x: 220, y: 17.5, width: 10, height: 20,
-                                    receive:function(address, data){ design.button_rect.fire.click(); }
+                                    receive:function(address, data){ design.button_rect.fire.press(); design.button_rect.fire.release(); }
                                 }},
                 
                             //symbol
@@ -11922,7 +11942,7 @@
                                             //no file = don't bother
                                                 if(filePlayer.duration() < 0){return;}
                                     
-                                            //determind start, end and duration values
+                                            //determine start, end and duration values
                                                 var start = waveport.area().A != undefined ? waveport.area().A : 0;
                                                 var end = waveport.area().B != undefined ? waveport.area().B : 1;
                                                 if(start > end){var temp=start;start=end; end=temp;}
@@ -11992,9 +12012,15 @@
                                     x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
                                     receive:function(instance){
                                         return function(address,data){
-                                            if(address == 'pulse'){ design.button_rect['fire_'+instance].click(); }
+                                            if(address == 'pulse'){ 
+                                                design.button_rect['fire_'+instance].press();
+                                                design.button_rect['fire_'+instance].release();
+                                            }
                                             else if(address == 'hit'){
-                                                if(data.velocity > 0.5){ design.button_rect['fire_'+instance].click(); }
+                                                if(data.velocity > 0.5){
+                                                    design.button_rect['fire_'+instance].press();
+                                                    design.button_rect['fire_'+instance].release();
+                                                }
                                             }
                                         }
                                     }(a)
@@ -12091,7 +12117,7 @@
                             {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
                             {type:'connectionNode_data', name:'trigger', data:{
                                 x: 220, y: 17.5, width: 10, height: 20,
-                                receive:function(address, data){ design.button_rect.fire.click(); }
+                                receive:function(address, data){ design.button_rect.fire.press(); design.button_rect.fire.release(); }
                             }},
                 
                             //symbol
@@ -12342,7 +12368,7 @@
                             }},
                             {type:'connectionNode_data', name:'sync', data:{
                                 x: 115, y: 11.25, width: 5, height: 17.5,
-                                receive:function(){design.button_rect.sync.click();},
+                                receive:function(){design.button_rect.sync.press();},
                             }},
                             {type:'button_rect', name:'sync', data:{
                                 x:102.5, y: 11.25, width:10, height: 17.5,
@@ -12442,7 +12468,7 @@
                             }},
                             {type:'connectionNode_data', name:'sync', data:{
                                 x: 115, y: 11.25, width: 5, height: 17.5,
-                                receive:function(){design.button_rect.sync.click();},
+                                receive:function(){design.button_rect.sync.press();},
                             }},
                             {type:'button_rect', name:'sync', data:{
                                 x:102.5, y: 11.25, width:10, height: 17.5,
@@ -12896,7 +12922,6 @@
                                         x: accWidth, y: 0,
                                         width: this.menubar.dropdowns[a].width, height: vars.height, 
                                         text: this.menubar.dropdowns[a].text,
-                                        textHorizontalOffset: this.menubar.dropdowns[a].textHorizontalOffset,
                                         hoverable: false, pressable: false, selectable: true,
                                         style:{ up:style.button.up, select:style.button.select },
                                         onpress:function(a){ return function(){ 
@@ -12989,73 +13014,81 @@
                     this.menubar.dropdowns = [
                         {
                             text:'file',
-                            width:50, 
-                            textHorizontalOffset:0.3,
+                            width:45,
+                            listWidth:175,
+                            listItemHeight:22.5,
+                            breakHeight: 1,
+                            spaceHeight: 2,
+                            itemList:[
+                                {text_left:'New Scene', function:function(){ if(confirm("This will clear the current scene! Are you sure?")){control.i.scene.new();} }},
+                                {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ control.i.scene.load(); }},
+                                {text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ control.i.scene.save(control.project.name); }},
+                            ]
+                        },
+                        {
+                            text:'edit',
+                            width:45,
                             listWidth:150,
                             listItemHeight:22.5,
                             breakHeight: 1,
                             spaceHeight: 2,
                             itemList:[
-                                {text:'New Scene', function:function(){ control.i.scene.new(); }},
-                                {text:'Open Scene',text_right:'ctrl-f2', function:function(){ control.i.scene.load(); }},
-                                'break',
-                                {text:'Save Scene',text_right:'ctrl-f3', function:function(){ control.i.scene.save(); }},
+                                {text_left:'Cut',       text_right:'ctrl-x',    function:function(){__globals.selection.cut();}       },
+                                {text_left:'Copy',      text_right:'ctrl-c',    function:function(){__globals.selection.copy();}      },
+                                {text_left:'Paste',     text_right:'ctrl-v',    function:function(){__globals.selection.paste();}     },
+                                {text_left:'Duplicate', text_right:'ctrl-b',    function:function(){__globals.selection.duplicate();} },
+                                {text_left:'Delete',    text_right:'del',       function:function(){__globals.selection.delete();}    },
                             ]
                         },
-                        // {
-                        //     text:'edit',
-                        //     width:45,
-                        //     textHorizontalOffset:0.25,
-                        //     listWidth:150,
-                        //     listItemHeight:22.5,
-                        //     breakHeight: 1,
-                        //     spaceHeight: 2,
-                        //     itemList:[
-                        //         {text_left:'Cut',text_right:'ctrl-x'},
-                        //         {text_left:'Copy',text_right:'ctrl-c'},
-                        //         {text_left:'Paste',text_right:'ctrl-v'},
-                        //         {text_left:'Duplicate',text_right:'ctrl-b'},
-                        //         {text_left:'Delete',text_right:'del'},
-                        //     ]
-                        // },
                         {
                             text:'create',
-                            width:65, 
-                            textHorizontalOffset:0.175,
+                            width:65,
                             listWidth:250,
                             listItemHeight:22.5,
                             breakHeight: 1,
                             spaceHeight: 2,
-                            itemList:[]
+                            itemList:(function(){
+                                var outputArray = [];
+                    
+                                //populate array with all creatable objects
+                                    for(i in objects){
+                                        outputArray.push(
+                                            {
+                                                text_left: objects[i].metadata ? objects[i].metadata.name : i,
+                                                function:function(i){
+                                                    return function(){
+                                                        var p = __globals.utility.workspace.pointConverter.browser2workspace(30,30);
+                                                        __globals.utility.workspace.placeAndReturnObject( objects[i](p.x,p.y) );
+                                                    }
+                                                }(i),
+                                            }
+                                        );
+                                    }
+                    
+                                //sort array
+                                    outputArray.sort(
+                                        function(a,b){
+                                            if(a.text_left.toLowerCase() < b.text_left.toLowerCase()) return -1;
+                                            if(a.text_left.toLowerCase() > b.text_left.toLowerCase()) return 1;
+                                            return 0;
+                                        }
+                                    );
+                            
+                                return outputArray;
+                            })()
                         },
                         {
                             text:'help',
-                            width:50, 
-                            textHorizontalOffset:0.175,
+                            width:50,
                             listWidth:150,
                             listItemHeight:22.5,
                             breakHeight: 1,
                             spaceHeight: 2,
                             itemList:[
-                                {text:'Help Docs', function:function(){ __globals.utility.misc.openURL(__globals.super.helpFolderLocation); }},
+                                {text_left:'Help Docs', text_right:'(empty)', function:function(){ __globals.utility.misc.openURL(__globals.super.helpFolderLocation); }},
                             ]
                         },
                     ];
-                    
-                    //dynamic population of 'create' dropdown
-                    for(i in objects){
-                        this.menubar.dropdowns[1].itemList.push(
-                            {
-                                text: objects[i].metadata ? objects[i].metadata.name : i,
-                                function:function(i){
-                                    return function(){
-                                        var p = __globals.utility.workspace.pointConverter.browser2workspace(30,30);
-                                        __globals.utility.workspace.placeAndReturnObject( objects[i](p.x,p.y) );
-                                    }
-                                }(i),
-                            }
-                        );
-                    }
 
                 };
                 this.mousedown = function(event){
@@ -13063,15 +13096,69 @@
                         control.i.menubar.closeEverything();
                     }
                 };
+                this.keydown = function(event){ /*console.log('control::keydown:',event);*/
+            
+                    switch(event.key.toLowerCase()){
+                        case 'backspace': case 'delete':
+                            __globals.selection.delete();
+                        break;
+                        case 'x': 
+                            if(!event[__globals.super.keys.ctrl]){return;}
+                            __globals.selection.cut();
+                        break;
+                        case 'c': 
+                            if(!event[__globals.super.keys.ctrl]){return;}
+                            __globals.selection.copy();
+                        break;
+                        case 'v': 
+                            if(!event[__globals.super.keys.ctrl]){return;}
+                            __globals.selection.paste();
+                        break;
+                        case 'b': 
+                            if(!event[__globals.super.keys.ctrl]){return;}
+                            __globals.selection.duplicate();
+                        break;
+                        case 'f1': 
+                            var temp = __globals.utility.workspace.objectUnderPoint(__globals.mouseInteraction.currentPosition[0], __globals.mouseInteraction.currentPosition[1]);
+                            if(temp){
+                                if( objects[temp.id].metadata ){
+                                    __globals.utility.misc.openURL(objects[temp.id].metadata.helpurl);
+                                }else{
+                                    console.warn('bad help url, please add metadata to your object file ->',temp.id);
+                                }
+                                __globals.keyboardInteraction.releaseAll();
+                            }
+                        break;
+                        case 'f2': 
+                            if(!event[__globals.super.keys.ctrl]){return;}
+                            this.i.scene.load();
+                        break;
+                        case 'f3': 
+                            if(!event[__globals.super.keys.ctrl]){return;}
+                            this.i.scene.save(this.project.name);
+                        break;
+                    }
+            
+                };
+                this.keyup = function(event){ /*console.log('control::keyup:',event);*/ };
                 this.i = {
                     scene:{
                         new:function(){ __globals.utility.workspace.clear(); },
-                        load:function(){__globals.utility.workspace.saveload.load();},
-                        save:function(){__globals.utility.workspace.saveload.save();},
+                        load:function(){
+                            __globals.utility.workspace.saveload.load(function(data){
+                                if(data == null){
+                                    control.i.menubar.report('invalid file','error');
+                                    return;
+                                }
+            
+                                control.project.name = data.sceneName;
+                            });
+                        },
+                        save:function(projectName){__globals.utility.workspace.saveload.save(projectName);},
                     },
                     menubar:{
                         obj:undefined,
-                        report:function(text){},
+                        report:function(text,type='default'){console.log(type+' - '+text);},
                         place:function(){
                             if(this.obj != undefined){ __globals.panes.control.remove(this.obj); }
                             this.obj = __globals.utility.workspace.placeAndReturnObject( control.objects.menubar(), 'control' );
@@ -13093,6 +13180,9 @@
                         },
                     },
                 };
+                this.project = {
+                    name:'myProject'
+                };
             };
             
             
@@ -13100,75 +13190,6 @@
                 control.i.menubar.place();
             },1);
             
-            
-            //audio duplicator
-                var audio_duplicator_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_duplicator(50,50) );
-            
-            //data duplicator
-                var data_duplicator_1 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(875, 50) );
-            
-            //audio_scope
-                var audio_scope_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_scope(150,50) );
-            
-            //audio_sink
-                var audio_sink_1 = __globals.utility.workspace.placeAndReturnObject( objects.audio_sink(400,50) );
-            
-            //basic audio mixer
-                var audio_mixer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicMixer(925, 110) );
-            
-            //basicSynthesizer
-                var basicSynthesizer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(550,50) );
-            
-            //audio effect objects
-                //distortionUnit
-                    var distortionUnit_1 = __globals.utility.workspace.placeAndReturnObject( objects.distortionUnit(25, 120) );
-                //filterUnit
-                    var filterUnit_1 = __globals.utility.workspace.placeAndReturnObject( objects.filterUnit(150, 175) );
-                //reverbUnit
-                    var reverbUnit_1 = __globals.utility.workspace.placeAndReturnObject( objects.reverbUnit(280, 170) );
-                //multiband filter
-                    var multibandFilter = __globals.utility.workspace.placeAndReturnObject( objects.multibandFilter(200,410) );
-            
-            //audio player objects
-                //oneShot_single
-                    var oneShot_single_1 = __globals.utility.workspace.placeAndReturnObject( objects.oneShot_single(425, 160) );
-                //oneShot_multi
-                    var oneShot_multi_1 = __globals.utility.workspace.placeAndReturnObject( objects.oneShot_multi(425, 220) );
-                //looper
-                    var looper_1 = __globals.utility.workspace.placeAndReturnObject( objects.looper(425,280) );
-                //standard player
-                    var player_1 = __globals.utility.workspace.placeAndReturnObject( objects.player(425,340) );
-                //oneShot_multi_multiTrack
-                    var oneShot_multi_multiTrack_1 = __globals.utility.workspace.placeAndReturnObject( objects.oneShot_multi_multiTrack(675, 160) );
-            
-            
-            //audio recorder
-                var recorder_1 = __globals.utility.workspace.placeAndReturnObject( objects.recorder(355, 110) );
-            
-            //audio input
-                var audioIn_1 = __globals.utility.workspace.placeAndReturnObject( objects.audioIn(15, 275, false) );
-            
-            //launchpad
-                var launchpad_1 = __globals.utility.workspace.placeAndReturnObject( objects.launchpad(270, 225) );
-            
-            //basic sequencer
-                var basicSequencer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer(925, 325) );
-            
-            //basic sequencer (midi output)
-                var basicSequencer_midiOut_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer_midiOut(925, 560) );
-            
-            //universalreadout
-                var universalreadout_1 = __globals.utility.workspace.placeAndReturnObject( objects.universalreadout(820, 60) );
-            
-            //pulseGenerator
-                var pulseGenerator_1 = __globals.utility.workspace.placeAndReturnObject( objects.pulseGenerator(790, 110) );
-            
-            //musical keyboard
-                var musicalkeyboard_1 = __globals.utility.workspace.placeAndReturnObject( objects.musicalkeyboard(80, 330) );
-            
-            
-            
-            // __globals.utility.workspace.gotoPosition(-1597.19, -596.058, 1.92284, 0);
 
         }
     }

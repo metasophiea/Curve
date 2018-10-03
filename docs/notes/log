@@ -1,4 +1,25 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-10-03
+  - list breaks and spaces, a little more stable now
+  - create menu is now sorted
+  - group select works again
+  - menubar has edit items now (that "bug" from yesterday was actually just me
+    being silly (turns out; if you don't program it to do anything, it won't do
+    anything))
+  - button_rect now has 'text from centre' (which is the default for 'text')
+  - fixed tiny thing in musical_keyboard
+  - fixed issue with players where 'fire' connections were only pushing the
+    'fire' buttons, and not releasing them
+  - put safty on the 'new scene' menubar function, so now an alert pops up that
+    you have to press "ok" on
+  - shifted alot of code from 'keyboardInteraction' to 'control' (mainly scene
+    effecting controls, like cut, copy and paste)(left things commented out,
+    because this feels a little risky)
+  - 'control' now holds the scene name
+  - saveload.load now has a callback for when the load is complete, providing
+    it with the metadata
+
+
 2018-10-02
   - updated menubar dropdown colouring to match the menubar 
   - removed button_rect and button_rect_2, and changed the name of button_rect_3
@@ -15,9 +36,7 @@
     load=ctrl-f2
   - added 'breaks' and 'spaces' to lists (little wonky)
 
-  bugs found
-  - those edit options in the menubar do nothing
-
+  
 
 2018-09-30
   - all current objects have had their key_rect and button_rect elements switch

@@ -268,7 +268,7 @@
                         }
                     )
                 );
-                for(var a = 0; a < __globals.svgElement.tempElements.length; a++){ __globals.panes.menu.append(__globals.svgElement.tempElements[a]); }
+                for(var a = 0; a < __globals.svgElement.tempElements.length; a++){ __globals.panes.control.append(__globals.svgElement.tempElements[a]); }
 
                 //adjust selection box when the mouse moves
                 __globals.svgElement.onmousemove_old = __globals.svgElement.onmousemove;
@@ -328,7 +328,7 @@
                     //delete all temporary elements and attributes
                         delete __globals.svgElement.tempData;
                         for(var a = 0; a < __globals.svgElement.tempElements.length; a++){
-                            __globals.panes.menu.removeChild( __globals.svgElement.tempElements[a] ); 
+                            __globals.panes.control.removeChild( __globals.svgElement.tempElements[a] ); 
                             __globals.svgElement.tempElements[a] = null;
                         }
                         delete __globals.svgElement.tempElements;

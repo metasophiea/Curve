@@ -270,7 +270,7 @@ __globals.utility = new function(){
                 }
         };
         this.saveload = new function(){
-            this.save = function(compress=true,sceneName='project',bundleConstructorFunctions=false){
+            this.save = function(sceneName='project',compress=true,bundleConstructorFunctions=false){
                 //check that saving or loading is allowed
                     if(!__globals.super.enableSaveload){return;}
 
@@ -306,38 +306,49 @@ __globals.utility = new function(){
                 //alert user
                     control.i.menubar.report('');
             };
-            this.__loadProcess = function(data,compressed){
+            this.__loadProcess = function(data,callback,compressed){
+                var metadata;
+
                 //stopping audio
                     __globals.audio.destination.masterGain(0);
                     
-                //clear current scene
-                    __globals.utility.workspace.clear()
-    
                 //unserialize data
-                    data = __globals.utility.misc.unserialize(data,compressed);
-        
-                //import scene
-                    __globals.utility.workspace.importScene(data.objects, data.bundleConstructorFunctions, data.constructorFunctions);
+                    var data = __globals.utility.misc.unserialize(data,compressed);
 
-                //set viewport position
-                    __globals.utility.workspace.gotoPosition(data.viewportLocation.x, data.viewportLocation.y, data.viewportLocation.s, data.viewportLocation.r);
-                
-                //restarting audio
-                    __globals.audio.destination.masterGain(1);
-            
-                console.log('scene "'+data.sceneName+'" has been loaded');
+                //check it's one of ours
+                    if(data != null){
+                        //clear current scene
+                            __globals.utility.workspace.clear()
+
+                        //import scene
+                            __globals.utility.workspace.importScene(data.objects, data.bundleConstructorFunctions, data.constructorFunctions);
+
+                        //set viewport position
+                            __globals.utility.workspace.gotoPosition(data.viewportLocation.x, data.viewportLocation.y, data.viewportLocation.s, data.viewportLocation.r);
+
+                        //gather metadata
+                            metadata = {sceneName:data.sceneName};
+
+                        console.log('scene "'+data.sceneName+'" has been loaded');
+                    }   
+                    
+                    //restart audio
+                        __globals.audio.destination.masterGain(1);
+
+                    //callback
+                        if(callback){callback(metadata);}
             };
-            this.load = function(compressed=true){
+            this.load = function(callback,compressed=true){
                 //check that saving or loading is allowed
                     if(!__globals.super.enableSaveload){return;}
 
-                __globals.utility.misc.openFile(function(data){__globals.utility.workspace.saveload.__loadProcess(data,compressed);});
+                __globals.utility.misc.openFile(function(data){__globals.utility.workspace.saveload.__loadProcess(data,callback,compressed);});
             };
-            this.loadFromURL = function(url,compressed=true){
+            this.loadFromURL = function(url,callback,compressed=true){
                 var request = new XMLHttpRequest();
                 request.open('GET', url, true);
                 request.responseType = 'text';
-                request.onload = function(){ __globals.utility.workspace.saveload.__loadProcess(this.response,compressed); };
+                request.onload = function(){ __globals.utility.workspace.saveload.__loadProcess(this.response,callback,compressed); };
                 request.send();
             };
         };
@@ -1180,7 +1191,7 @@ __globals.utility = new function(){
                         var temp = parts.elements.control.button_rect(
                             name,
                             data.x, data.y, data.width, data.height, data.angle, 
-                            (data.text ? data.text : data.text_left), data.text_right,
+                            (data.text ? data.text : data.text_centre), data.text_left, data.text_right,
                             data.textVerticalOffset, data.textHorizontalOffset,
                             data.active, data.hoverable, data.selectable, data.pressable,
                             data.style.text, 
@@ -1311,7 +1322,7 @@ __globals.utility = new function(){
                             var temp = parts.elements.control.list(
                                 name, data.x, data.y, data.width, data.height, data.angle, data.list, 
                                 data.selectable, data.multiSelect, data.hoverable, data.pressable, data.active,
-                                data.itemHeightMux, data.itemSpacingMux, data.breakHeightMux, data.breakWidthMux, data.spacingHeightMux,
+                                data.itemHeightMux, data.itemSpacingMux, data.breakHeightMux, data.breakWidthMux, data.spaceHeightMux,
                                 data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
                                 data.style.listItemText,
                                 data.style.backing,

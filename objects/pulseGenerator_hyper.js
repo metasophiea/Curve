@@ -30,7 +30,7 @@ this.pulseGenerator_hyper = function(x,y,maxTempo=999,debug=false){
             }},
             {type:'connectionNode_data', name:'sync', data:{
                 x: 115, y: 11.25, width: 5, height: 17.5,
-                receive:function(){design.button_rect.sync.click();},
+                receive:function(){design.button_rect.sync.press();},
             }},
             {type:'button_rect', name:'sync', data:{
                 x:102.5, y: 11.25, width:10, height: 17.5,

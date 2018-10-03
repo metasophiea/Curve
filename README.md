@@ -1,6 +1,6 @@
 # [curve](http://metasophiea.com/curve)
 
-<p align="center">
+<p align="centre">
     <img width="640" height="480" src="https://metasophiea.com/curve/gifs/openCreateMenu.gif">
 </p>
 

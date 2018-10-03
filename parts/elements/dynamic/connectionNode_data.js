@@ -123,26 +123,26 @@ this.connectionNode_data = function(
 
         var t1 = __globals.utility.element.getCumulativeTransform(this);
         var t2 = __globals.utility.element.getCumulativeTransform(this.foreignNode);
-        var center_local = {'x':this._boundary.width/2,'y':this._boundary.height/2};
-        var center_foreign = {'x':this.foreignNode._boundary.width/2,'y':this.foreignNode._boundary.height/2};
+        var centre_local = {'x':this._boundary.width/2,'y':this._boundary.height/2};
+        var centre_foreign = {'x':this.foreignNode._boundary.width/2,'y':this.foreignNode._boundary.height/2};
 
         if(this._rotation != 0){
-            var temp = __globals.utility.math.cartesian2polar(center_local.x,center_local.y);
+            var temp = __globals.utility.math.cartesian2polar(centre_local.x,centre_local.y);
             temp.ang += this._rotation;
-            center_local = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+            centre_local = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
         }
 
         if(this.foreignNode._rotation != 0){
-            var temp = __globals.utility.math.cartesian2polar(center_foreign.x,center_foreign.y);
+            var temp = __globals.utility.math.cartesian2polar(centre_foreign.x,centre_foreign.y);
             temp.ang += this.foreignNode._rotation;
-            center_foreign = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+            centre_foreign = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
         }
 
         this._cable.draw( 
-            t1.x + center_local.x,
-            t1.y + center_local.y, 
-            t2.x + center_foreign.x,
-            t2.y + center_foreign.y
+            t1.x + centre_local.x,
+            t1.y + centre_local.y, 
+            t2.x + centre_foreign.x,
+            t2.y + centre_foreign.y
         );
     };
     object.redraw = function(){
@@ -150,26 +150,26 @@ this.connectionNode_data = function(
 
         var t1 = __globals.utility.element.getCumulativeTransform(this);
         var t2 = __globals.utility.element.getCumulativeTransform(this.foreignNode);
-        var center_local = {'x':this._boundary.width/2,'y':this._boundary.height/2};
-        var center_foreign = {'x':this.foreignNode._boundary.width/2,'y':this.foreignNode._boundary.height/2};
+        var centre_local = {'x':this._boundary.width/2,'y':this._boundary.height/2};
+        var centre_foreign = {'x':this.foreignNode._boundary.width/2,'y':this.foreignNode._boundary.height/2};
 
         if(this._rotation != 0){
-            var temp = __globals.utility.math.cartesian2polar(center_local.x,center_local.y);
+            var temp = __globals.utility.math.cartesian2polar(centre_local.x,centre_local.y);
             temp.ang += this._rotation;
-            center_local = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+            centre_local = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
         }
 
         if(this.foreignNode._rotation != 0){
-            var temp = __globals.utility.math.cartesian2polar(center_foreign.x,center_foreign.y);
+            var temp = __globals.utility.math.cartesian2polar(centre_foreign.x,centre_foreign.y);
             temp.ang += this.foreignNode._rotation;
-            center_foreign = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
+            centre_foreign = __globals.utility.math.polar2cartesian(temp.ang,temp.dis);
         }
 
         this._cable.draw( 
-            t1.x + center_local.x,
-            t1.y + center_local.y, 
-            t2.x + center_foreign.x,
-            t2.y + center_foreign.y
+            t1.x + centre_local.x,
+            t1.y + centre_local.y, 
+            t2.x + centre_foreign.x,
+            t2.y + centre_foreign.y
         );
     };
 

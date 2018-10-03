@@ -102,7 +102,8 @@ this.list = function(
                         var temp = __globals.utility.misc.elementMaker( 'button_rect', a, {
                             x:0, y:accumulativeHeight,
                             width:width, height:height*itemHeightMux, 
-                            text_left: (list[a].text?list[a].text:list[a].text_left) , text_right:list[a].text_right,
+                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                            text_left: list[a].text_left, text_right:list[a].text_right,
                             textVerticalOffset:itemTextVerticalOffsetMux, textHorizontalOffsetMux:itemtextHorizontalOffsetMux,
                             active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
                             style:{

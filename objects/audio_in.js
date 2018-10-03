@@ -46,8 +46,8 @@ this.audioIn = function(x,y,setupConnect=true){
         var keycaptureObj = __globals.keyboardInteraction.declareKeycaptureObject(obj,{none:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']});
             keycaptureObj.keyPress = function(key){
                 switch(key){
-                    case 'ArrowUp': design.button_rect.up.click();  break;
-                    case 'ArrowDown': design.button_rect.down.click();  break;
+                    case 'ArrowUp': design.button_rect.up.press();  break;
+                    case 'ArrowDown': design.button_rect.down.press();  break;
                     case 'ArrowLeft': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()-0.1);  break;
                     case 'ArrowRight': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()+0.1);  break;
                 }

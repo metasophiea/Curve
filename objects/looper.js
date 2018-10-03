@@ -16,7 +16,7 @@ this.looper = function(x,y,debug=false){
             {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
             {type:'connectionNode_data', name:'trigger', data:{
                 x: 220, y: 17.5, width: 10, height: 20,
-                receive:function(address, data){ design.button_rect.fire.click(); }
+                receive:function(address, data){ design.button_rect.fire.press(); }
             }},
 
             //symbol

@@ -12,14 +12,14 @@ this.sixteenSegmentDisplay = function(
             points: {
                 top:{
                     left:[
-                        {x:division*0.5+margin,         y:division*0.5+margin},  //center
+                        {x:division*0.5+margin,         y:division*0.5+margin},  //centre
                         {x:division*1.0+margin,         y:division*0.0+margin},  //top
                         {x:division*0.0+margin,         y:division*1.0+margin},  //left
                         {x:division*1.0+margin,         y:division*1.0+margin},  //inner point
                         {x:division*1.75+margin,        y:division*1.0+margin},  //inner point right
                         {x:division*1.0+margin,         y:division*1.75+margin}, //inner point down
                     ],
-                    center:[
+                    centre:[
                         {x:width/2,                     y:division*0.5+margin}, //central point
                         {x:width/2-division*0.5,        y:division*1.0+margin}, //lower left
                         {x:width/2+division*0.5,        y:division*1.0+margin}, //lower right
@@ -27,7 +27,7 @@ this.sixteenSegmentDisplay = function(
                         {x:width/2+division*0.5,        y:division*0.0+margin}, //upper right
                     ],
                     right:[
-                        {x:width-division*0.5-margin,   y:division*0.5+margin},  //center
+                        {x:width-division*0.5-margin,   y:division*0.5+margin},  //centre
                         {x:width-division*1.0-margin,   y:division*0.0+margin},  //top
                         {x:width-division*0.0-margin,   y:division*1.0+margin},  //right
                         {x:width-division*1.0-margin,   y:division*1.0+margin},  //inner point
@@ -39,11 +39,11 @@ this.sixteenSegmentDisplay = function(
                     left:[
                         {x:division*0.0+margin,         y:height*0.5-division*0.5}, //top left
                         {x:division*1.0+margin,         y:height*0.5-division*0.5}, //top right
-                        {x:division*0.5+margin,         y:height*0.5-division*0.0}, //center
+                        {x:division*0.5+margin,         y:height*0.5-division*0.0}, //centre
                         {x:division*0.0+margin,         y:height*0.5+division*0.5}, //bottom left
                         {x:division*1.0+margin,         y:height*0.5+division*0.5}, //bottom right
                     ],
-                    center:[
+                    centre:[
                         {x:width/2,                     y:height/2},                //central point
                         {x:width/2-division*0.5,        y:division*0.5+height/2},   //lower left
                         {x:width/2-division*0.25,       y:division*1.25+height/2},  //lower left down
@@ -61,21 +61,21 @@ this.sixteenSegmentDisplay = function(
                     right:[
                         {x:width-division*1.0-margin,   y:height*0.5-division*0.5}, //top left
                         {x:width-division*0.0-margin,   y:height*0.5-division*0.5}, //top right
-                        {x:width-division*0.5-margin,   y:height*0.5-division*0.0}, //center
+                        {x:width-division*0.5-margin,   y:height*0.5-division*0.0}, //centre
                         {x:width-division*1.0-margin,   y:height*0.5+division*0.5}, //bottom left
                         {x:width-division*0.0-margin,   y:height*0.5+division*0.5}  //bottom right
                     ]
                 },
                 bottom: {
                     left:[
-                        {x:division*0.5+margin,         y:height-division*0.5-margin}, //center
+                        {x:division*0.5+margin,         y:height-division*0.5-margin}, //centre
                         {x:division*0.0+margin,         y:height-division*1.0-margin}, //left
                         {x:division*1.0+margin,         y:height-division*0.0-margin}, //bottom
                         {x:division*1.0+margin,         y:height-division*1.0-margin}, //inner point
                         {x:division*1.0+margin,         y:height-division*1.75-margin},//inner point up
                         {x:division*1.75+margin,        y:height-division*1.0-margin}, //inner point right
                     ],
-                    center:[
+                    centre:[
                         {x:width/2-division*0.5,        y:height-division*1.0-margin}, //upper left
                         {x:width/2+division*0.5,        y:height-division*1.0-margin}, //upper right
                         {x:width/2,                     y:height-division*0.5-margin}, //central point
@@ -83,7 +83,7 @@ this.sixteenSegmentDisplay = function(
                         {x:width/2+division*0.5,        y:height-division*0.0-margin}, //lower right
                     ],
                     right:[
-                        {x:width-division*0.5-margin,   y:height-division*0.5-margin}, //center
+                        {x:width-division*0.5-margin,   y:height-division*0.5-margin}, //centre
                         {x:width-division*0.0-margin,   y:height-division*1.0-margin}, //right
                         {x:width-division*1.0-margin,   y:height-division*0.0-margin}, //bottom
                         {x:width-division*1.0-margin,   y:height-division*1.0-margin}, //inner point
@@ -126,14 +126,14 @@ this.sixteenSegmentDisplay = function(
                     shapes.segments.points.top.left[1],
                     shapes.segments.points.top.left[0],
                     shapes.segments.points.top.left[3],
-                    shapes.segments.points.top.center[1],
-                    shapes.segments.points.top.center[0],
-                    shapes.segments.points.top.center[3],
+                    shapes.segments.points.top.centre[1],
+                    shapes.segments.points.top.centre[0],
+                    shapes.segments.points.top.centre[3],
                 ],
                 [
-                    shapes.segments.points.top.center[4],
-                    shapes.segments.points.top.center[0],
-                    shapes.segments.points.top.center[2],
+                    shapes.segments.points.top.centre[4],
+                    shapes.segments.points.top.centre[0],
+                    shapes.segments.points.top.centre[2],
                     shapes.segments.points.top.right[3],
                     shapes.segments.points.top.right[0],
                     shapes.segments.points.top.right[1],
@@ -151,25 +151,25 @@ this.sixteenSegmentDisplay = function(
                     shapes.segments.points.top.left[4],
                     shapes.segments.points.top.left[3],
                     shapes.segments.points.top.left[5],
-                    shapes.segments.points.middle.center[9],
-                    shapes.segments.points.middle.center[7],
-                    shapes.segments.points.middle.center[8],
+                    shapes.segments.points.middle.centre[9],
+                    shapes.segments.points.middle.centre[7],
+                    shapes.segments.points.middle.centre[8],
                 ],
                 [
-                    shapes.segments.points.top.center[0],
-                    shapes.segments.points.top.center[1],
-                    shapes.segments.points.middle.center[7],
-                    shapes.segments.points.middle.center[0],
-                    shapes.segments.points.middle.center[10],
-                    shapes.segments.points.top.center[2],
+                    shapes.segments.points.top.centre[0],
+                    shapes.segments.points.top.centre[1],
+                    shapes.segments.points.middle.centre[7],
+                    shapes.segments.points.middle.centre[0],
+                    shapes.segments.points.middle.centre[10],
+                    shapes.segments.points.top.centre[2],
                 ],
                 [
                     shapes.segments.points.top.right[4],
                     shapes.segments.points.top.right[3],
                     shapes.segments.points.top.right[5],
-                    shapes.segments.points.middle.center[11],
-                    shapes.segments.points.middle.center[10],
-                    shapes.segments.points.middle.center[12],
+                    shapes.segments.points.middle.centre[11],
+                    shapes.segments.points.middle.centre[10],
+                    shapes.segments.points.middle.centre[12],
                 ],
                 [
                     shapes.segments.points.top.right[0],
@@ -184,17 +184,17 @@ this.sixteenSegmentDisplay = function(
                     shapes.segments.points.middle.left[4],
                     shapes.segments.points.middle.left[2],
                     shapes.segments.points.middle.left[1],
-                    shapes.segments.points.middle.center[7],
-                    shapes.segments.points.middle.center[0],
-                    shapes.segments.points.middle.center[1],
+                    shapes.segments.points.middle.centre[7],
+                    shapes.segments.points.middle.centre[0],
+                    shapes.segments.points.middle.centre[1],
                 ],
                 [
                     shapes.segments.points.middle.right[3],
                     shapes.segments.points.middle.right[2],
                     shapes.segments.points.middle.right[0],
-                    shapes.segments.points.middle.center[10],
-                    shapes.segments.points.middle.center[0],
-                    shapes.segments.points.middle.center[4],
+                    shapes.segments.points.middle.centre[10],
+                    shapes.segments.points.middle.centre[0],
+                    shapes.segments.points.middle.centre[4],
                 ],
 
                 [
@@ -209,25 +209,25 @@ this.sixteenSegmentDisplay = function(
                     shapes.segments.points.bottom.left[4],
                     shapes.segments.points.bottom.left[3],
                     shapes.segments.points.bottom.left[5],
-                    shapes.segments.points.middle.center[2],
-                    shapes.segments.points.middle.center[1],
-                    shapes.segments.points.middle.center[3],
+                    shapes.segments.points.middle.centre[2],
+                    shapes.segments.points.middle.centre[1],
+                    shapes.segments.points.middle.centre[3],
                 ],
                 [
-                    shapes.segments.points.bottom.center[0],
-                    shapes.segments.points.bottom.center[2],
-                    shapes.segments.points.bottom.center[1],
-                    shapes.segments.points.middle.center[4],
-                    shapes.segments.points.middle.center[0],
-                    shapes.segments.points.middle.center[1],
+                    shapes.segments.points.bottom.centre[0],
+                    shapes.segments.points.bottom.centre[2],
+                    shapes.segments.points.bottom.centre[1],
+                    shapes.segments.points.middle.centre[4],
+                    shapes.segments.points.middle.centre[0],
+                    shapes.segments.points.middle.centre[1],
                 ],
                 [
                     shapes.segments.points.bottom.right[4],
                     shapes.segments.points.bottom.right[3],
                     shapes.segments.points.bottom.right[5],
-                    shapes.segments.points.middle.center[5],
-                    shapes.segments.points.middle.center[4],
-                    shapes.segments.points.middle.center[6],
+                    shapes.segments.points.middle.centre[5],
+                    shapes.segments.points.middle.centre[4],
+                    shapes.segments.points.middle.centre[6],
                 ],
                 [
                     shapes.segments.points.bottom.right[3],
@@ -242,17 +242,17 @@ this.sixteenSegmentDisplay = function(
                     shapes.segments.points.bottom.left[2],
                     shapes.segments.points.bottom.left[0],
                     shapes.segments.points.bottom.left[3],
-                    shapes.segments.points.bottom.center[0],
-                    shapes.segments.points.bottom.center[2],
-                    shapes.segments.points.bottom.center[3],
+                    shapes.segments.points.bottom.centre[0],
+                    shapes.segments.points.bottom.centre[2],
+                    shapes.segments.points.bottom.centre[3],
                 ],
                 [
                     shapes.segments.points.bottom.right[2],
                     shapes.segments.points.bottom.right[0],
                     shapes.segments.points.bottom.right[3],
-                    shapes.segments.points.bottom.center[1],
-                    shapes.segments.points.bottom.center[2],
-                    shapes.segments.points.bottom.center[4],
+                    shapes.segments.points.bottom.centre[1],
+                    shapes.segments.points.bottom.centre[2],
+                    shapes.segments.points.bottom.centre[4],
                 ],
             ];
             for(var a = 0; a < points.length; a++){

@@ -34,7 +34,6 @@ this.menubar = function(){
                     x: accWidth, y: 0,
                     width: this.menubar.dropdowns[a].width, height: vars.height, 
                     text: this.menubar.dropdowns[a].text,
-                    textHorizontalOffset: this.menubar.dropdowns[a].textHorizontalOffset,
                     hoverable: false, pressable: false, selectable: true,
                     style:{ up:style.button.up, select:style.button.select },
                     onpress:function(a){ return function(){ 

@@ -90,7 +90,7 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                             //no file = don't bother
                                 if(filePlayer.duration() < 0){return;}
                     
-                            //determind start, end and duration values
+                            //determine start, end and duration values
                                 var start = waveport.area().A != undefined ? waveport.area().A : 0;
                                 var end = waveport.area().B != undefined ? waveport.area().B : 1;
                                 if(start > end){var temp=start;start=end; end=temp;}
@@ -160,9 +160,15 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
                     x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
                     receive:function(instance){
                         return function(address,data){
-                            if(address == 'pulse'){ design.button_rect['fire_'+instance].click(); }
+                            if(address == 'pulse'){ 
+                                design.button_rect['fire_'+instance].press();
+                                design.button_rect['fire_'+instance].release();
+                            }
                             else if(address == 'hit'){
-                                if(data.velocity > 0.5){ design.button_rect['fire_'+instance].click(); }
+                                if(data.velocity > 0.5){
+                                    design.button_rect['fire_'+instance].press();
+                                    design.button_rect['fire_'+instance].release();
+                                }
                             }
                         }
                     }(a)
