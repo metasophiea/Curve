@@ -42,7 +42,7 @@ this.objectPane = function(x,y){
 
 
     //main object
-        var obj = __globals.utility.misc.objectBuilder(objects.data_duplicator,design);
+        var obj = system.utility.misc.objectBuilder(objects.data_duplicator,design);
 
     //populate list
         for(i in objects){
@@ -51,8 +51,8 @@ this.objectPane = function(x,y){
                     text: objects[i].metadata ? objects[i].metadata.name : i,
                     function:function(i){
                         return function(){
-                            var p = __globals.utility.workspace.pointConverter.browser2workspace(30,30);
-                            __globals.utility.workspace.placeAndReturnObject( objects[i](p.x,p.y) );
+                            var p = system.utility.workspace.pointConverter.browser2workspace(30,30);
+                            system.utility.workspace.placeAndReturnObject( objects[i](p.x,p.y) );
                         }
                     }(i),
                 }

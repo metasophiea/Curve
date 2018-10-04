@@ -1,10 +1,10 @@
 {{include:sequencer.js}}
 
-var seq = __globals.utility.workspace.placeAndReturnObject( 
+var seq = system.utility.workspace.placeAndReturnObject( 
     sequencer(undefined, 10, 10, 300, 100, 0)
 );
 
-__globals.utility.workspace.gotoPosition(-12.179, -23.4097, 3.94053, 0);
+system.utility.workspace.gotoPosition(-12.179, -23.4097, 3.94053, 0);
 
 seq.addNote(0,0,10, 10/10);
 seq.addNote(1,1,10, 9/10);

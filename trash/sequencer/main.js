@@ -1,10 +1,10 @@
 {{include:*}}
-__globals.utility.workspace.gotoPosition(45.9492, 71.8586, 3.94055, 0);
+system.utility.workspace.gotoPosition(45.9492, 71.8586, 3.94055, 0);
 
 
 
 
-var seq = __globals.utility.workspace.placeAndReturnObject( sequencer(undefined, 10, 10, 300, 100, 0) );
+var seq = system.utility.workspace.placeAndReturnObject( sequencer(undefined, 10, 10, 300, 100, 0) );
 
 seq.loopActive(true);
 seq.loopPeriod(1,63);
@@ -24,5 +24,5 @@ seq.addNote(4,10,10);
 
 
 
-var slide = __globals.utility.workspace.placeAndReturnObject( __globals.utility.misc.elementMaker('rangeslide','slide',{x:10, y:5, height:300, width:10, angle:-Math.PI/2, handleHeight:0.025}) );
+var slide = system.utility.workspace.placeAndReturnObject( system.utility.misc.elementMaker('rangeslide','slide',{x:10, y:5, height:300, width:10, angle:-Math.PI/2, handleHeight:0.025}) );
 slide.onchange = function(data){ seq.viewArea(data.start,data.end,0,1); };

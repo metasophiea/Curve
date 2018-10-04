@@ -69,7 +69,7 @@ objects.filterUnit = function(x,y){
             {type:'dial_continuous',name:'frequency',data:{
                 x: 40, y: 77.5, r: 7, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                onchange:function(value){obj.filterCircuit.frequency( __globals.utility.math.curvePoint.exponential(value,0,20000,10.5866095) );updateGraph();},
+                onchange:function(value){obj.filterCircuit.frequency( system.utility.math.curvePoint.exponential(value,0,20000,10.5866095) );updateGraph();},
             }},
 
             {type:'label', name:'type_lowp',  data:{x:10,    y: 74.5, text:'lowp', style:style.h3}},
@@ -90,7 +90,7 @@ objects.filterUnit = function(x,y){
     };
 
     //main object
-        var obj = __globals.utility.misc.objectBuilder(objects.filterUnit,design);
+        var obj = system.utility.misc.objectBuilder(objects.filterUnit,design);
 
     //import/export
         obj.importData = function(data){
@@ -110,7 +110,7 @@ objects.filterUnit = function(x,y){
 
     //circuitry
         //filter
-            obj.filterCircuit = new parts.circuits.audio.filterUnit(__globals.audio.context);
+            obj.filterCircuit = new parts.circuits.audio.filterUnit(system.audio.context);
             design.connectionNode_audio.audioIn.out().connect( obj.filterCircuit.in() );
             obj.filterCircuit.out().connect( design.connectionNode_audio.audioOut.in() );
 
@@ -125,7 +125,7 @@ objects.filterUnit = function(x,y){
                         frequencyArray.push( Math.pow(10,a)*(b/10) );
                     }
                 }
-                return {frequency:frequencyArray, location:__globals.utility.math.normalizeStretchArray(locationArray)};
+                return {frequency:frequencyArray, location:system.utility.math.normalizeStretchArray(locationArray)};
             }
             function updateGraph(){
                 var temp = getFrequencyAndLocationArray();

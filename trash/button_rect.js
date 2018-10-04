@@ -8,17 +8,17 @@ this.button_rect = function(
 ){
 
     // elements 
-    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
+    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
 
-    var rect = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, angle:angle, style:upStyle});
+    var rect = system.utility.misc.elementMaker('rect',null,{width:width, height:height, angle:angle, style:upStyle});
         object.appendChild(rect);
 
     //interactivity
-    rect.onmouseenter = function(){ __globals.utility.element.setStyle(this, hoverStyle); };
-    rect.onmouseleave = function(){ __globals.utility.element.setStyle(this, upStyle);    };
-    rect.onmousedown =  function(){ __globals.utility.element.setStyle(this, downStyle);  };
+    rect.onmouseenter = function(){ system.utility.element.setStyle(this, hoverStyle); };
+    rect.onmouseleave = function(){ system.utility.element.setStyle(this, upStyle);    };
+    rect.onmousedown =  function(){ system.utility.element.setStyle(this, downStyle);  };
     rect.onmouseup =    function(){ this.onmouseleave();                          };
-    rect.glow =         function(){ __globals.utility.element.setStyle(this, glowStyle) };
+    rect.glow =         function(){ system.utility.element.setStyle(this, glowStyle) };
 
     //callbacks
     object.onmouseup =    function(){ /*console.log('mouseup');    */ };
@@ -66,12 +66,12 @@ this.button_rect_2 = function(
     backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
 ){
     //elements
-        var object = __globals.utility.misc.elementMaker('g',id,{x:x,y:y});
+        var object = system.utility.misc.elementMaker('g',id,{x:x,y:y});
 
-        var background = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
+        var background = system.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
         object.appendChild( background );
 
-        var text = __globals.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffset, y:height*textVerticalOffset, text:text, style:textStyle});
+        var text = system.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffset, y:height*textVerticalOffset, text:text, style:textStyle});
         object.appendChild(text);
 
     //state
@@ -103,7 +103,7 @@ this.button_rect_2 = function(
             backgroundStyle_hover_glow_select_press,
         ];
 
-        __globals.utility.element.setStyle(
+        system.utility.element.setStyle(
             background, styles[object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + object.state.pressed*1]
         );
     };

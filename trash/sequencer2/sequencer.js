@@ -86,12 +86,12 @@ var sequencer = function(
 
             //update background strips
                 for(var a = 0; a < yCount; a++){
-                    __globals.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_horizontal_'+a], 0, a*(height/(yCount*zoomLevel_y)));
+                    system.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_horizontal_'+a], 0, a*(height/(yCount*zoomLevel_y)));
                     backgroundDrawArea.children['strip_horizontal_'+a].height.baseVal.value = height/(yCount*zoomLevel_y);
                     backgroundDrawArea.children['strip_horizontal_'+a].width.baseVal.value = totalSize.width;
                 }
                 for(var a = 0; a < xCount; a++){
-                    __globals.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_vertical_'+a], a*(width/(xCount*zoomLevel_x)), 0);
+                    system.utility.element.setTransform_XYonly(backgroundDrawArea.children['strip_vertical_'+a], a*(width/(xCount*zoomLevel_x)), 0);
                     backgroundDrawArea.children['strip_vertical_'+a].width.baseVal.value = width/(xCount*zoomLevel_x);
                     backgroundDrawArea.children['strip_vertical_'+a].height.baseVal.value = totalSize.height;
                 }
@@ -106,7 +106,7 @@ var sequencer = function(
                 if(playhead.position >= 0){
                     workarea.children.playhead.main.y2.baseVal.value = totalSize.height;
                     workarea.children.playhead.invisibleHandle.y2.baseVal.value = totalSize.height;
-                    __globals.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/xCount), 0);
+                    system.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/xCount), 0);
                 }
         }
         function drawBackground(){
@@ -116,7 +116,7 @@ var sequencer = function(
                 //horizontal strips
                 for(var a = 0; a < yCount; a++){
                     backgroundDrawArea.appendChild(
-                        __globals.utility.misc.elementMaker('rect','strip_horizontal_'+a,{
+                        system.utility.misc.elementMaker('rect','strip_horizontal_'+a,{
                             x1:0, y:a*(height/(yCount*zoomLevel_y)),
                             width:totalSize.width, height:height/(yCount*zoomLevel_y),
                             style:horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]],
@@ -126,7 +126,7 @@ var sequencer = function(
                 //vertical strips
                 for(var a = 0; a < xCount; a++){
                     backgroundDrawArea.appendChild(
-                        __globals.utility.misc.elementMaker('rect','strip_vertical_'+a,{
+                        system.utility.misc.elementMaker('rect','strip_vertical_'+a,{
                             x:a*(width/(xCount*zoomLevel_x)), y:0,
                             width:width/(xCount*zoomLevel_x), height:totalSize.height,
                             style:verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]],
@@ -146,7 +146,7 @@ var sequencer = function(
             //perform transform
                 viewposition.x = x;
                 viewposition.y = y;
-                __globals.utility.element.setTransform_XYonly(
+                system.utility.element.setTransform_XYonly(
                     workarea,
                     -viewposition.x*(totalSize.width - width),
                     -viewposition.y*(totalSize.height - height)
@@ -216,7 +216,7 @@ var sequencer = function(
                     this.remove();
                 };
                 newNoteBlock.ondblclick = function(event){
-                    if(!event[__globals.super.keys.ctrl]){return;}
+                    if(!event[system.super.keys.ctrl]){return;}
                     while(selectedNotes.length > 0){
                         selectedNotes[0].delete();
                     }
@@ -243,11 +243,11 @@ var sequencer = function(
                         }
 
                     //if control key is pressed; this is a strength-change operation
-                        if(event[__globals.super.keys.ctrl]){
+                        if(event[system.super.keys.ctrl]){
                             var initialStrengths = activeBlocks.map(a => a.block.strength());
                             var initial = event.offsetY;
-                            __globals.utility.workspace.mouseInteractionHandler(function(event){
-                                var diff = (initial - event.offsetY)/__globals.svgElement.clientHeight;
+                            system.utility.workspace.mouseInteractionHandler(function(event){
+                                var diff = (initial - event.offsetY)/system.svgElement.clientHeight;
                                 for(var a = 0; a < activeBlocks.length; a++){
                                     activeBlocks[a].block.strength(initialStrengths[a] + diff);
                                     noteRegistry.update(activeBlocks[a].id, { strength: initialStrengths[a] + diff });
@@ -262,7 +262,7 @@ var sequencer = function(
                         var cloned = false;
                         function cloneFunc(){
                             if(cloned){return;} cloned = true;
-                            if(event[__globals.super.keys.alt]){
+                            if(event[system.super.keys.alt]){
                                 for(var a = 0; a < selectedNotes.length; a++){
                                     var temp = noteRegistry.getNote(parseInt(selectedNotes[a].id));
                                     makeNote(temp.line, temp.position, temp.length, temp.strength);
@@ -271,12 +271,12 @@ var sequencer = function(
                         }
 
                     //block movement
-                        var initialPosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
-                        __globals.utility.workspace.mouseInteractionHandler(
+                        var initialPosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
+                        system.utility.workspace.mouseInteractionHandler(
                             function(event){//move
                                 cloneFunc(); //clone that block
 
-                                var livePosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
+                                var livePosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
                                 var diff = {
                                     line: livePosition.line - initialPosition.line,
                                     position: livePosition.position - initialPosition.position,
@@ -318,10 +318,10 @@ var sequencer = function(
                         }
                     
                     //perform block length adjustment 
-                        var initialPosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
-                        __globals.utility.workspace.mouseInteractionHandler(
+                        var initialPosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
+                        system.utility.workspace.mouseInteractionHandler(
                             function(event){
-                                var livePosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
+                                var livePosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
                                 var diff = {position: initialPosition.position-livePosition.position};
         
                                 for(var a = 0; a < activeBlocks.length; a++){
@@ -360,10 +360,10 @@ var sequencer = function(
                         }
 
                     //perform block length adjustment 
-                        var initialPosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
-                        __globals.utility.workspace.mouseInteractionHandler(
+                        var initialPosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
+                        system.utility.workspace.mouseInteractionHandler(
                             function(event){
-                                var livePosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
+                                var livePosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
                                 var diff = {position: livePosition.position - initialPosition.position};
         
                                 for(var a = 0; a < activeBlocks.length; a++){
@@ -379,27 +379,27 @@ var sequencer = function(
             return {id:newID, noteBlock:newNoteBlock};
         }
         function makePlayhead(){
-            var newPlayhead = __globals.utility.misc.elementMaker('g','playhead',{});
+            var newPlayhead = system.utility.misc.elementMaker('g','playhead',{});
             workarea.appendChild(newPlayhead);
             newPlayhead.onmousedown = function(){
                 playhead.held = true;
-                __globals.utility.workspace.mouseInteractionHandler(
+                system.utility.workspace.mouseInteractionHandler(
                     function(event){//move
-                        var livePosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
+                        var livePosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
                         obj.playheadPosition(livePosition.position);
                     },
                     function(){playhead.held = false;}
                 );
             };
 
-            newPlayhead.main = __globals.utility.misc.elementMaker('line','main',{
+            newPlayhead.main = system.utility.misc.elementMaker('line','main',{
                 x1:0, y1:0,
                 x2:0, y2:totalSize.height,
                 style:playheadStyle + 'stroke-width:'+playhead.width+';'
             });
             newPlayhead.appendChild(newPlayhead.main);
 
-            newPlayhead.invisibleHandle = __globals.utility.misc.elementMaker('line','invisibleHandle',{
+            newPlayhead.invisibleHandle = system.utility.misc.elementMaker('line','invisibleHandle',{
                 x1:0, y1:0, x2:0, y2:totalSize.height,
                 style:'stroke:rgba(0,0,0,0); cursor: col-resize; stroke-width:'+playhead.width*playhead.invisibleHandleMux+';'
             });
@@ -408,16 +408,16 @@ var sequencer = function(
 
     //elements
         //main
-            var obj = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
+            var obj = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
         //static backing
-            var backing = __globals.utility.misc.elementMaker('rect','backing',{width:width, height:height, style:backingStyle});
+            var backing = system.utility.misc.elementMaker('rect','backing',{width:width, height:height, style:backingStyle});
             obj.appendChild(backing);
         //viewport (for clipping the workarea)
-            var viewport = __globals.utility.misc.elementMaker('g','viewport',{});
+            var viewport = system.utility.misc.elementMaker('g','viewport',{});
             viewport.setAttribute('clip-path','polygon(0px 0px, '+width+'px 0px, '+width+'px '+height+'px, 0px '+height+'px)');
             obj.appendChild(viewport);
         //workarea
-            var workarea = __globals.utility.misc.elementMaker('g','workarea',{});
+            var workarea = system.utility.misc.elementMaker('g','workarea',{});
             viewport.appendChild(workarea);
             workarea.onkeydown = function(event){
                 if(event.key == 'Delete' || event.key == 'Backspace'){
@@ -429,29 +429,29 @@ var sequencer = function(
                 }
             };
             //moveable background
-                var backgroundDrawArea = __globals.utility.misc.elementMaker('g','backgroundDrawArea',{});
+                var backgroundDrawArea = system.utility.misc.elementMaker('g','backgroundDrawArea',{});
                 workarea.appendChild(backgroundDrawArea);
                 drawBackground();
             //interaction pane
-                var interactionPlane = __globals.utility.misc.elementMaker('rect','interactionPlane',{width:totalSize.width, height:totalSize.height, style:'fill:rgba(0,0,0,0);'});
+                var interactionPlane = system.utility.misc.elementMaker('rect','interactionPlane',{width:totalSize.width, height:totalSize.height, style:'fill:rgba(0,0,0,0);'});
                 workarea.appendChild(interactionPlane);
                 interactionPlane.onmousedown = function(event){
 
                     if(event.shiftKey){ //click-n-drag group select
-                        var initialPositionData = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
-                        var livePositionData = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                        var initialPositionData = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                        var livePositionData = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                         
-                        var selectionArea = __globals.utility.misc.elementMaker('rect','selectionArea',{
+                        var selectionArea = system.utility.misc.elementMaker('rect','selectionArea',{
                             x:initialPositionData.x*width, y:initialPositionData.y*height,
                             width:0, height:0,
                             style:selectionAreaStyle,
                         });
                         obj.appendChild(selectionArea);
     
-                        __globals.utility.workspace.mouseInteractionHandler(
+                        system.utility.workspace.mouseInteractionHandler(
                             function(event){//move
                                 //live re-size the selection box
-                                    livePositionData = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                                    livePositionData = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                                     var diff = {x:livePositionData.x-initialPositionData.x, y:livePositionData.y-initialPositionData.y};
             
                                     var transform = {};
@@ -470,7 +470,7 @@ var sequencer = function(
                                         transform.y = initialPositionData.y;
                                     }
             
-                                    __globals.utility.element.setTransform_XYonly(selectionArea, transform.x*width, transform.y*height);
+                                    system.utility.element.setTransform_XYonly(selectionArea, transform.x*width, transform.y*height);
                             },
                             function(){//stop
                                 //remove selection box
@@ -513,29 +513,29 @@ var sequencer = function(
                                                 {x:temp.position*(totalSize.width/xCount), y:temp.line*(totalSize.height/yCount)},
                                                 {x:(temp.position+temp.length)*(totalSize.width/xCount), y:(temp.line+1)*(totalSize.height/yCount)},
                                             ];    
-                                        if( __globals.utility.math.detectOverlap(selectionBox,block,selectionBox,block) ){ noteBlocks[a].select(true); }
+                                        if( system.utility.math.detectOverlap(selectionBox,block,selectionBox,block) ){ noteBlocks[a].select(true); }
                                     }
                             }
                         );
-                    }else if(event[__globals.super.keys.alt]){ //create note
+                    }else if(event[system.super.keys.alt]){ //create note
                         //deselect everything
                             while(selectedNotes.length > 0){
                                 selectedNotes[0].deselect();
                             }
                         
                         //get the current location and make a new note there (with length 0)
-                            var position = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
+                            var position = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,totalSize.width,totalSize.height));
                             var temp = makeNote(position.line,position.position,0);
     
                         //select this new block, and direct the mouse-down to the right handle (for user lengthening)
                             temp.noteBlock.select();
                             temp.noteBlock.rightHandle.onmousedown(event);
-                    }else if(__globals.keyboardInteraction.pressedKeys.Space){//panning
-                        var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                    }else if(system.keyboard.pressedKeys.Space){//panning
+                        var initialPosition = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                         var old_viewposition = {x:viewposition.x, y:viewposition.y};
-                        __globals.utility.workspace.mouseInteractionHandler(
+                        system.utility.workspace.mouseInteractionHandler(
                             function(event){
-                                var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                                var livePosition = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                                 var diffPosition = {x:initialPosition.x-livePosition.x, y:initialPosition.y-livePosition.y};
                                 setViewposition(
                                     old_viewposition.x + (diffPosition.x*(xCount*zoomLevel_x))/(xCount-(xCount*zoomLevel_x)),
@@ -553,7 +553,7 @@ var sequencer = function(
 
                 };
             //note block area
-                var notePane = __globals.utility.misc.elementMaker('g','notePane',{});
+                var notePane = system.utility.misc.elementMaker('g','notePane',{});
                 workarea.appendChild(notePane);
 
     //controls
@@ -562,7 +562,7 @@ var sequencer = function(
             if(end == undefined){end = start+1;}
 
             for(var a = start; a < end; a++){
-                __globals.utility.element.setStyle(
+                system.utility.element.setStyle(
                     backgroundDrawArea.children['strip_horizontal_'+a],
                     state ? horizontalStripStyle_glow : horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]]
                 );
@@ -572,7 +572,7 @@ var sequencer = function(
             if(end == undefined){end = start+1;}
 
             for(var a = start; a < end; a++){
-                __globals.utility.element.setStyle(
+                system.utility.element.setStyle(
                     backgroundDrawArea.children['strip_vertical_'+a],
                     state ? verticalStripStyle_glow : verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]]
                 );
@@ -653,7 +653,7 @@ var sequencer = function(
                 }else{ 
                     //within vilible bounds, so either create or adjust
                     if( !workarea.children.playhead ){ makePlayhead(); }
-                    __globals.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/xCount), 0);
+                    system.utility.element.setTransform_XYonly(workarea.children.playhead, playhead.position*(totalSize.width/xCount), 0);
                     //if the new position is beyond the view in the viewport, adjust the viewport (putting the playhead on the leftmost side)
                     //(assuming automoveViewposition is set)
                     if(playhead.automoveViewposition){
@@ -748,10 +748,10 @@ parts.elements.control.sequencer.noteBlock = function(
     };
     
     //elements
-        var obj = __globals.utility.misc.elementMaker('g',id,{y:line*unit_y, x:position*unit_x});
-        obj.body = __globals.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:currentStyles.body});
-        obj.leftHandle = __globals.utility.misc.elementMaker('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
-        obj.rightHandle = __globals.utility.misc.elementMaker('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
+        var obj = system.utility.misc.elementMaker('g',id,{y:line*unit_y, x:position*unit_x});
+        obj.body = system.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:currentStyles.body});
+        obj.leftHandle = system.utility.misc.elementMaker('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
+        obj.rightHandle = system.utility.misc.elementMaker('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
         obj.append(obj.body);
         obj.append(obj.leftHandle);
         obj.append(obj.rightHandle);
@@ -764,31 +764,31 @@ parts.elements.control.sequencer.noteBlock = function(
         }
         function updateLength(){
             obj.body.width.baseVal.value = length*unit_x;
-            __globals.utility.element.setTransform_XYonly(obj.rightHandle, length*unit_x-handleWidth/2, 0);
+            system.utility.element.setTransform_XYonly(obj.rightHandle, length*unit_x-handleWidth/2, 0);
         }
         function updateLineAndPosition(){
-            __globals.utility.element.setTransform_XYonly(obj,position*unit_x, line*unit_y);
+            system.utility.element.setTransform_XYonly(obj,position*unit_x, line*unit_y);
         }
         function getBlendedColour(swatch,ratio){
             //extract stlyes and get an output template
                 var tempSwatch = [];
                 for(var a = 0; a < swatch.length; a++){
-                    tempSwatch[a] = __globals.utility.element.styleExtractor(swatch[a]);
+                    tempSwatch[a] = system.utility.element.styleExtractor(swatch[a]);
                 }
                 var outputStyle = tempSwatch[0];
 
             //if there's a fill attribute; blend it and add it to the template
                 if( tempSwatch[0].hasOwnProperty('fill') ){
-                    outputStyle.fill = __globals.utility.misc.multiBlendColours(tempSwatch.map(a => a.fill),ratio);
+                    outputStyle.fill = system.utility.misc.multiBlendColours(tempSwatch.map(a => a.fill),ratio);
                 }
 
             //if there's a stroke attribute; blend it and add it to the template
                 if( tempSwatch[0].hasOwnProperty('stroke') ){
-                    outputStyle.stroke = __globals.utility.misc.multiBlendColours(tempSwatch.map(a => a.stroke),ratio);
+                    outputStyle.stroke = system.utility.misc.multiBlendColours(tempSwatch.map(a => a.stroke),ratio);
                 }
 
             //pack up the template and return
-                return __globals.utility.element.stylePacker(outputStyle);
+                return system.utility.element.stylePacker(outputStyle);
         }
 
     //controls
@@ -828,8 +828,8 @@ parts.elements.control.sequencer.noteBlock = function(
         obj.glow = function(a){
             if(a == undefined){return glow;}
             glow = a;
-            if(glow){ __globals.utility.element.setStyle(obj.body, currentStyles.glow); }
-            else{     __globals.utility.element.setStyle(obj.body, currentStyles.body); }
+            if(glow){ system.utility.element.setStyle(obj.body, currentStyles.glow); }
+            else{     system.utility.element.setStyle(obj.body, currentStyles.body); }
         };
         obj.selected = function(a){
             if(a == undefined){return selected;}

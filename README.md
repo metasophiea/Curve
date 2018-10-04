@@ -14,14 +14,17 @@ Neither of these things are anyway near finished yet, but have developed far eno
 I write elsewhere, so updates will probably come in sudden bundles. Check the [log](docs/notes/log) to see what's been happening
 
 ## Structure
-Workspace can be found essentially everywhere. Curve is currently only in the 'testSituations' folder, with some Curve-related objects in the 'objects' folder. The 'testSituations' folder is like a workshop for code that eventually makes it way out into the framework. 
+- 'main' is where the program itself is stored, seperated into four folders (which are also the four main globals) Theoretically; there is an order of dependency keeping things kinda clean, which goes "system -> parts -> objects -> control" however nothings perfect and things are still forming into that dream. You can probably guess by the names what each part does and how they fit together.
+- 'workshop' is where most experimentation, development and testing happens.
+- 'compliation' contains all the tools necessary to put the program together into a single js file which is stored in 'docs'. There's also closure in there for packing things into the "deployment" edition (workspace.min.js)
+- 'docs' consists of all the other stuff; the help files, notes, demo files, gifs, etc. Along with the html files for the website and the produced program files.
 
 ## Compiling
-You can use the 'comp' function to quickly build together the latest version of Curve and play around with whatever I was working on last by opening the 'docs/test.html' file in a browser.
+You can use the 'comp' function in the compliation folder to quickly build together the latest version of Curve and play around with whatever I was working on last by opening the 'docs/test.html' file in a browser.
 The command uses a little JavaScript compiler written in Python3 called Gravity, which can go through JS files looking for commands and execute them, ultimatly producing a single JS file. So far there's only one command - a straightforward include - but that's all I really need right now. The 'heavyComp' is used to produce "production" versions of the code. This version uses gravity to build together the program, then Clousure to pack it all up. This version is used in 'docs/index.html' and the demo links below.
 
 ## Compatibility
-Though I'd really like it to work everywhere, currently the only browser that seems to be able to handle this is Chrome. Safari covers alot of things, but has trouble with a few of the WebAudio elements, and Firefox seems to be having problems with the SVG... honestly I'm not totally sure, so just use Chrome for now
+Though I'd really like it to work everywhere, currently the only browser that seems to be able to handle this is Chrome. Safari covers alot of things, but has trouble with a few of the WebAudio elements, and Firefox seems to be having problems with the SVG... honestly I'm not totally sure, and to be fair Chrome struggles with some things, but it's the best we have currently
 
 ## Demos
 - [Demo 1](https://metasophiea.com/curve?demo=1) 

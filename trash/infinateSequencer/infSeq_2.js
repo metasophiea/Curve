@@ -78,7 +78,7 @@ var infSeq = function(
                 //horizontal strips
                 for(var a = 0; a < count.totalY; a++){
                     backgroundDrawArea.appendChild(
-                        __globals.utility.misc.elementMaker('rect','strip_horizontal_'+a,{
+                        system.utility.misc.elementMaker('rect','strip_horizontal_'+a,{
                             x1:0, y:a*(height/count.visibleY),
                             width:state.totalSize.width, height:height/count.visibleY,
                             style:horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]],
@@ -88,7 +88,7 @@ var infSeq = function(
                 //vertical strips
                 for(var a = 0; a < count.totalX; a++){
                     backgroundDrawArea.appendChild(
-                        __globals.utility.misc.elementMaker('rect','strip_vertical_'+a,{
+                        system.utility.misc.elementMaker('rect','strip_vertical_'+a,{
                             x:a*(width/count.visibleX), y:0,
                             width:width/count.visibleX, height:state.totalSize.height,
                             style:verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]],
@@ -97,27 +97,27 @@ var infSeq = function(
                 }
         }
         function makePlayhead(){
-            var playhead = __globals.utility.misc.elementMaker('g','playhead',{});
+            var playhead = system.utility.misc.elementMaker('g','playhead',{});
             workarea.appendChild(playhead);
             playhead.onmousedown = function(event){
-                __globals.utility.workspace.mouseInteractionHandler(
+                system.utility.workspace.mouseInteractionHandler(
                     function(event){//move
                         state.playhead.held = true;
-                        var livePosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
+                        var livePosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
                         obj.playheadPosition(livePosition.position);
                     },
                     function(){state.playhead.held = false;}
                 );
             };
 
-            playhead.main = __globals.utility.misc.elementMaker('line','main',{
+            playhead.main = system.utility.misc.elementMaker('line','main',{
                 x1:0, y1:0,
                 x2:0, y2:state.totalSize.height,
                 style:playheadStyle + 'stroke-width:'+state.playhead.width+';'
             });
             playhead.appendChild(playhead.main);
 
-            playhead.invisibleHandle = __globals.utility.misc.elementMaker('line','invisibleHandle',{
+            playhead.invisibleHandle = system.utility.misc.elementMaker('line','invisibleHandle',{
                 x1:0, y1:0, x2:0, y2:state.totalSize.height,
                 style:'stroke:rgba(0,0,0,0); cursor: col-resize; stroke-width:'+state.playhead.width*state.playhead.invisibleHandleMux+';'
             });
@@ -147,7 +147,7 @@ var infSeq = function(
                     this.remove();
                 };
                 newNoteBlock.ondblclick = function(event){
-                    if(!event[__globals.super.keys.ctrl]){return;}
+                    if(!event[system.super.keys.ctrl]){return;}
                     while(state.selectedNotes.length > 0){
                         state.selectedNotes[0].delete();
                     }
@@ -179,7 +179,7 @@ var infSeq = function(
                     var cloned = false;
                     function cloneFunc(){
                         if(cloned){return;} cloned = true;
-                        if(event[__globals.super.keys.alt]){
+                        if(event[system.super.keys.alt]){
                             for(var a = 0; a < state.selectedNotes.length; a++){
                                 var temp = state.noteRegistry.getNote(parseInt(state.selectedNotes[a].id));
                                 makeNote(temp.line, temp.position, temp.length, temp.strength);
@@ -188,12 +188,12 @@ var infSeq = function(
                     }
 
                     //block movement
-                        var initialPosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
-                        __globals.utility.workspace.mouseInteractionHandler(
+                        var initialPosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
+                        system.utility.workspace.mouseInteractionHandler(
                             function(event){//move
                                 cloneFunc(); //clone that block
 
-                                var livePosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
+                                var livePosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
                                 var diff = {
                                     line: livePosition.line - initialPosition.line,
                                     position: livePosition.position - initialPosition.position,
@@ -235,10 +235,10 @@ var infSeq = function(
                         }
                     
                     //perform block length adjustment 
-                        var initialPosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
-                        __globals.utility.workspace.mouseInteractionHandler(
+                        var initialPosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
+                        system.utility.workspace.mouseInteractionHandler(
                             function(event){
-                                var livePosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
+                                var livePosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
                                 var diff = {position: initialPosition.position-livePosition.position};
         
                                 for(var a = 0; a < activeBlocks.length; a++){
@@ -277,10 +277,10 @@ var infSeq = function(
                         }
 
                     //perform block length adjustment 
-                        var initialPosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
-                        __globals.utility.workspace.mouseInteractionHandler(
+                        var initialPosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
+                        system.utility.workspace.mouseInteractionHandler(
                             function(event){
-                                var livePosition = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
+                                var livePosition = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
                                 var diff = {position: livePosition.position - initialPosition.position};
         
                                 for(var a = 0; a < activeBlocks.length; a++){
@@ -298,16 +298,16 @@ var infSeq = function(
 
     //elements 
         //main
-            var obj = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
+            var obj = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
         //static backing
-            var backing = __globals.utility.misc.elementMaker('rect','backing',{width:width, height:height, style:backingStyle});
+            var backing = system.utility.misc.elementMaker('rect','backing',{width:width, height:height, style:backingStyle});
             obj.appendChild(backing);
         //viewport
-            var viewport = __globals.utility.misc.elementMaker('g','viewport',{});
+            var viewport = system.utility.misc.elementMaker('g','viewport',{});
             viewport.setAttribute('clip-path','polygon(0px 0px, '+width+'px 0px, '+width+'px '+height+'px, 0px '+height+'px)');
             obj.appendChild(viewport);
         //workarea
-            var workarea = __globals.utility.misc.elementMaker('g','workarea',{});
+            var workarea = system.utility.misc.elementMaker('g','workarea',{});
             viewport.appendChild(workarea);
             workarea.onkeydown = function(event){
                 if(event.key == 'Delete' || event.key == 'Backspace'){
@@ -319,29 +319,29 @@ var infSeq = function(
                 }
             };
             //moveable background
-                var backgroundDrawArea = __globals.utility.misc.elementMaker('g','backgroundDrawArea',{});
+                var backgroundDrawArea = system.utility.misc.elementMaker('g','backgroundDrawArea',{});
                 workarea.appendChild(backgroundDrawArea);
                 drawBackground();
             //interaction pane
-                var interactionPlane = __globals.utility.misc.elementMaker('rect','interactionPlane',{width:state.totalSize.width, height:state.totalSize.height, style:'fill:rgba(0,0,0,0);'});
+                var interactionPlane = system.utility.misc.elementMaker('rect','interactionPlane',{width:state.totalSize.width, height:state.totalSize.height, style:'fill:rgba(0,0,0,0);'});
                 workarea.appendChild(interactionPlane);
                 interactionPlane.onmousedown = function(event){
 
                     if(event.shiftKey){ //click-n-drag group select
-                        var initialPositionData = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
-                        var livePositionData = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                        var initialPositionData = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                        var livePositionData = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                         
-                        var selectionArea = __globals.utility.misc.elementMaker('rect','selectionArea',{
+                        var selectionArea = system.utility.misc.elementMaker('rect','selectionArea',{
                             x:initialPositionData.x*width, y:initialPositionData.y*height,
                             width:0, height:0,
                             style:selectionAreaStyle,
                         });
                         obj.appendChild(selectionArea);
     
-                        __globals.utility.workspace.mouseInteractionHandler(
+                        system.utility.workspace.mouseInteractionHandler(
                             function(event){//move
                                 //live re-size the selection box
-                                    livePositionData = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                                    livePositionData = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                                     var diff = {x:livePositionData.x-initialPositionData.x, y:livePositionData.y-initialPositionData.y};
             
                                     var transform = {};
@@ -360,7 +360,7 @@ var infSeq = function(
                                         transform.y = initialPositionData.y;
                                     }
             
-                                    __globals.utility.element.setTransform_XYonly(selectionArea, transform.x*width, transform.y*height);
+                                    system.utility.element.setTransform_XYonly(selectionArea, transform.x*width, transform.y*height);
                             },
                             function(){//stop
                                 //remove selection box
@@ -403,29 +403,29 @@ var infSeq = function(
                                                 {x:temp.position*(state.totalSize.width/count.totalX), y:temp.line*(state.totalSize.height/count.totalY)},
                                                 {x:(temp.position+temp.length)*(state.totalSize.width/count.totalX), y:(temp.line+1)*(state.totalSize.height/count.totalY)},
                                             ];    
-                                        if( __globals.utility.math.detectOverlap(selectionBox,block,selectionBox,block) ){ noteBlocks[a].select(true); }
+                                        if( system.utility.math.detectOverlap(selectionBox,block,selectionBox,block) ){ noteBlocks[a].select(true); }
                                     }
                             }
                         );
-                    }else if(event[__globals.super.keys.alt]){ //create note
+                    }else if(event[system.super.keys.alt]){ //create note
                         //deselect everything
                             while(state.selectedNotes.length > 0){
                                 state.selectedNotes[0].deselect();
                             }
                         
                         //get the current location and make a new note there (with length 0)
-                            var position = coordinates2lineposition(__globals.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
+                            var position = coordinates2lineposition(system.utility.element.getPositionWithinFromMouse(event,interactionPlane,state.totalSize.width,state.totalSize.height));
                             var temp = makeNote(position.line,position.position,0);
     
                         //select this new block, and direct the mouse-down to the right handle (for user lengthening)
                             temp.noteBlock.select();
                             temp.noteBlock.rightHandle.onmousedown(event);
-                    }else if(__globals.keyboardInteraction.pressedKeys.Space){//panning
-                        var initialPosition = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                    }else if(system.keyboard.pressedKeys.Space){//panning
+                        var initialPosition = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                         var old_viewposition = {x:state.viewposition.x, y:state.viewposition.y};
-                        __globals.utility.workspace.mouseInteractionHandler(
+                        system.utility.workspace.mouseInteractionHandler(
                             function(event){
-                                var livePosition = __globals.utility.element.getPositionWithinFromMouse(event,backing,width,height);
+                                var livePosition = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                                 var diffPosition = {x:initialPosition.x-livePosition.x, y:initialPosition.y-livePosition.y};
                                 obj.viewposition(
                                     old_viewposition.x + (diffPosition.x*count.visibleX)/(count.totalX-count.visibleX),
@@ -443,7 +443,7 @@ var infSeq = function(
 
                 };
             //note block area
-                var notePane = __globals.utility.misc.elementMaker('g','notePane',{});
+                var notePane = system.utility.misc.elementMaker('g','notePane',{});
                 workarea.appendChild(notePane);
 
 
@@ -453,7 +453,7 @@ var infSeq = function(
             if(end == undefined){end = start+1;}
 
             for(var a = start; a < end; a++){
-                __globals.utility.element.setStyle(
+                system.utility.element.setStyle(
                     backgroundDrawArea.children['strip_horizontal_'+a],
                     state ? horizontalStripStyle_glow : horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]]
                 );
@@ -463,7 +463,7 @@ var infSeq = function(
             if(end == undefined){end = start+1;}
 
             for(var a = start; a < end; a++){
-                __globals.utility.element.setStyle(
+                system.utility.element.setStyle(
                     backgroundDrawArea.children['strip_vertical_'+a],
                     state ? verticalStripStyle_glow : verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]]
                 );
@@ -482,7 +482,7 @@ var infSeq = function(
 
             state.viewposition.x = x;
             state.viewposition.y = y;
-            __globals.utility.element.setTransform_XYonly(
+            system.utility.element.setTransform_XYonly(
                 workarea,
                 -state.viewposition.x*(state.totalSize.width - width),
                 -state.viewposition.y*(state.totalSize.height - height)
@@ -560,7 +560,7 @@ var infSeq = function(
                 }else{ 
                     //within vilible bounds, so either create or adjust
                     if( !workarea.children.playhead ){ makePlayhead(); }
-                    __globals.utility.element.setTransform_XYonly(workarea.children.playhead, state.playhead.position*(state.totalSize.width/count.totalX), 0);
+                    system.utility.element.setTransform_XYonly(workarea.children.playhead, state.playhead.position*(state.totalSize.width/count.totalX), 0);
                     //if the new position is beyond the view in the viewport, adjust the viewport (putting the playhead on the leftmost side)
                     //(assuming automoveViewposition is set)
                     if(state.playhead.automoveViewposition){
@@ -649,10 +649,10 @@ infSeq.noteBlock = function(
     var selected = false;
     
     //elements
-        var obj = __globals.utility.misc.elementMaker('g',id,{y:line*unit_y, x:position*unit_x});
-        obj.body = __globals.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:bodyStyle});
-        obj.leftHandle = __globals.utility.misc.elementMaker('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
-        obj.rightHandle = __globals.utility.misc.elementMaker('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
+        var obj = system.utility.misc.elementMaker('g',id,{y:line*unit_y, x:position*unit_x});
+        obj.body = system.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:bodyStyle});
+        obj.leftHandle = system.utility.misc.elementMaker('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
+        obj.rightHandle = system.utility.misc.elementMaker('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
         obj.append(obj.body);
         obj.append(obj.leftHandle);
         obj.append(obj.rightHandle);
@@ -665,10 +665,10 @@ infSeq.noteBlock = function(
         }
         function updateLength(){
             obj.body.width.baseVal.value = length*unit_x;
-            __globals.utility.element.setTransform_XYonly(obj.rightHandle, length*unit_x-handleWidth/2, 0);
+            system.utility.element.setTransform_XYonly(obj.rightHandle, length*unit_x-handleWidth/2, 0);
         }
         function updateLineAndPosition(){
-            __globals.utility.element.setTransform_XYonly(obj,position*unit_x, line*unit_y);
+            system.utility.element.setTransform_XYonly(obj,position*unit_x, line*unit_y);
         }
 
     //controls
@@ -698,8 +698,8 @@ infSeq.noteBlock = function(
         obj.glow = function(a){
             if(a == undefined){return glow;}
             glow = a;
-            if(glow){ __globals.utility.element.setStyle(obj.body, bodyGlowStyle); }
-            else{     __globals.utility.element.setStyle(obj.body, bodyStyle);     }
+            if(glow){ system.utility.element.setStyle(obj.body, bodyGlowStyle); }
+            else{     system.utility.element.setStyle(obj.body, bodyStyle);     }
         };
         obj.selected = function(a){
             if(a == undefined){return selected;}
@@ -724,15 +724,15 @@ infSeq.noteBlock = function(
 
 
 
-var testElement = __globals.utility.workspace.placeAndReturnObject( infSeq(undefined, 50, 50, 500, 150, 0) );
+var testElement = system.utility.workspace.placeAndReturnObject( infSeq(undefined, 50, 50, 500, 150, 0) );
 
-var horiz = __globals.utility.workspace.placeAndReturnObject(
-    __globals.utility.misc.elementMaker('slide','hSlide',{x:50, y:240, width:20, height:500, angle:-Math.PI/2, handleHeight:0.05})
+var horiz = system.utility.workspace.placeAndReturnObject(
+    system.utility.misc.elementMaker('slide','hSlide',{x:50, y:240, width:20, height:500, angle:-Math.PI/2, handleHeight:0.05})
 );
 horiz.onchange = function(value){ testElement.viewposition(value); };
 
-var vert = __globals.utility.workspace.placeAndReturnObject(
-    __globals.utility.misc.elementMaker('slide','vSlide',{x:20, y:50, width:20, height:150, handleHeight:0.1})
+var vert = system.utility.workspace.placeAndReturnObject(
+    system.utility.misc.elementMaker('slide','vSlide',{x:20, y:50, width:20, height:150, handleHeight:0.1})
 );
 vert.onchange = function(value){ testElement.viewposition(undefined, value); };
 

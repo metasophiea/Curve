@@ -2,7 +2,7 @@ this.menuBar_2 = function(){
     var vars = {
         width: 300, height:20,
     };
-    vars.width = __globals.utility.workspace.getViewportDimensions().width;
+    vars.width = system.utility.workspace.getViewportDimensions().width;
     var style = {
         text: 'fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
         button:{
@@ -43,7 +43,7 @@ this.menuBar_2 = function(){
         }
 
     //main object
-        var obj = __globals.utility.misc.objectBuilder(objects.data_duplicator,design);
+        var obj = system.utility.misc.objectBuilder(objects.data_duplicator,design);
 
     //interface
         obj.i = {
@@ -71,8 +71,8 @@ this.menuBar.dropdown = {
             else{this.close();}
         },
         open:function(){
-            this.obj = __globals.utility.workspace.placeAndReturnObject(
-                __globals.utility.misc.elementMaker('list','createMenu',{
+            this.obj = system.utility.workspace.placeAndReturnObject(
+                system.utility.misc.elementMaker('list','createMenu',{
                     x:this.x, y:20,
                     width:200, height:300,
                     itemSpacing:0, itemHeight:0.075,
@@ -83,7 +83,7 @@ this.menuBar.dropdown = {
                 }),
             'menu');
         },
-        close:function(){ __globals.utility.workspace.getPane(this.obj).removeChild(this.obj); this.obj = undefined; },
+        close:function(){ system.utility.workspace.getPane(this.obj).removeChild(this.obj); this.obj = undefined; },
         options:[
             {}
         ],

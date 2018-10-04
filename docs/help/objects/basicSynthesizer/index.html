@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>curve - basicSynthesizer</title>
+        <meta charset="utf-8"></meta>
+        <style>
+            html, body{
+                margin:0px;
+                width:100%; height:100%;
+                background-color: blanchedalmond;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>basicSynthesizer</h1>
+        <p>some info on the basicSynthesizer</p>
+        <section id='workspaceViewport' style='width:835px; height:485px; margin: 0 auto;'>
+            <svg workspace style='width:100%; height:100%;'></svg>
+        </section>
+        <p>more info on the basicSynthesizer</p>
+    </body>
+
+</html>
+
+<script type='text/javascript' src='../../../workspace.js'></script>
+
+<script>    
+    system.utility.workspace.setStaticBackgroundStyle('fill:white;');
+
+    var musicalkeyboard_1 = system.utility.workspace.placeAndReturnObject( objects.musicalkeyboard(-5, 135) );
+    var basicSynthesizer_1 = system.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(35, 25) );
+    var audio_duplicator_1 = system.utility.workspace.placeAndReturnObject( objects.audio_duplicator(-67.5, 30) );
+    var audio_sink = system.utility.workspace.placeAndReturnObject( objects.audio_sink(-360, 25) );
+
+    musicalkeyboard_1.io.midiout.connectTo(basicSynthesizer_1.io.midiNote);
+    basicSynthesizer_1.io.audioOut.connectTo(audio_duplicator_1.io.input);
+    audio_duplicator_1.io.output_1.connectTo(audio_sink.io.right);
+    audio_duplicator_1.io.output_2.connectTo(audio_sink.io.left);
+
+    system.utility.workspace.gotoPosition(30, -30, 2.5 ,0);
+
+    basicSynthesizer_1.i.gain(0);
+
+    system.super.demoMode(true);
+</script>

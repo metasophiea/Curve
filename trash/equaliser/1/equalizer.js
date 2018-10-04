@@ -79,9 +79,9 @@ var equalizer = function(
             {type:'dial_continuous',name:'freq_'+a, data:{ x: 40, y: 30*a+32.5,  r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
                 onchange:function(a){
                     return function(value){
-                        design.readout_sixteenSegmentDisplay['readout_'+a].text( __globals.utility.misc.padString( __globals.utility.math.curvePoint.exponential(value,0,20000,10.5866095).toFixed(2), 8) );
+                        design.readout_sixteenSegmentDisplay['readout_'+a].text( system.utility.misc.padString( system.utility.math.curvePoint.exponential(value,0,20000,10.5866095).toFixed(2), 8) );
                         design.readout_sixteenSegmentDisplay['readout_'+a].print('smart');
-                        obj.filterCircuit.frequency(a, __globals.utility.math.curvePoint.exponential(value,0,20000,10.5866095));
+                        obj.filterCircuit.frequency(a, system.utility.math.curvePoint.exponential(value,0,20000,10.5866095));
                         updateGraph(a);
                     }
                 }(a)
@@ -115,12 +115,12 @@ var equalizer = function(
     }
 
     //main object
-        var obj = __globals.utility.misc.objectBuilder(objects.distortionUnit,design);
+        var obj = system.utility.misc.objectBuilder(objects.distortionUnit,design);
 
     //import/export
     //circuitry
         //multiband filter
-            obj.filterCircuit = new parts.circuits.audio.multibandFilter(__globals.audio.context,vars.channels);
+            obj.filterCircuit = new parts.circuits.audio.multibandFilter(system.audio.context,vars.channels);
             design.connectionNode_audio.audioIn.out().connect( obj.filterCircuit.in() );
             obj.filterCircuit.out().connect( design.connectionNode_audio.audioOut.in() );
 
@@ -135,7 +135,7 @@ var equalizer = function(
                         frequencyArray.push( Math.pow(10,a)*(b/10) );
                     }
                 }
-                return {frequency:frequencyArray, location:__globals.utility.math.normalizeStretchArray(locationArray)};
+                return {frequency:frequencyArray, location:system.utility.math.normalizeStretchArray(locationArray)};
             }
             function updateGraph(specificBand){
                 //if no band has been specified, gather the data for all of them and draw the whole thing. Otherwise, just gather 

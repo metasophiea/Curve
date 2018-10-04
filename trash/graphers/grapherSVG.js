@@ -15,12 +15,12 @@ parts.elements.display.grapherSVG = function(
 
     //elements
         //main
-            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
+            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
         //backing
-            var backing = __globals.utility.misc.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
+            var backing = system.utility.misc.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
             object.appendChild(backing);
         //background elements
-            var backgroundElements = __globals.utility.misc.elementMaker('g','backgroundElements',{});
+            var backgroundElements = system.utility.misc.elementMaker('g','backgroundElements',{});
             object.appendChild(backgroundElements);
         //foreground elements
             var foregroundElementsGroup = [];
@@ -65,27 +65,27 @@ parts.elements.display.grapherSVG = function(
             
             //horizontal lines
                 for(var a = 0; a < horizontalMarkings.points.length; a++){
-                    var y = height-__globals.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
+                    var y = height-system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
 
                     //lines
                         backgroundElements.append(
-                            __globals.utility.misc.elementMaker('line','horizontalMarkings_line_'+a,{y1:y, x2:width, y2:y, style:backgroundStyle})
+                            system.utility.misc.elementMaker('line','horizontalMarkings_line_'+a,{y1:y, x2:width, y2:y, style:backgroundStyle})
                         );
 
                     //text
                         if(horizontalMarkings.printText){
                             backgroundElements.append(
-                                __globals.utility.misc.elementMaker(
+                                system.utility.misc.elementMaker(
                                     'text', 
                                     'horizontalMarkings_text_'+horizontalMarkings.points[a],
                                     {
                                         x: horizontalMarkings.textPosition == undefined || horizontalMarkings.textPosition.x == undefined ? 0.5 : 
-                                            __globals.utility.math.relativeDistance(
+                                            system.utility.math.relativeDistance(
                                                 width, viewbox.left,viewbox.right, 
                                                 (typeof horizontalMarkings.textPosition.x == 'number' ? horizontalMarkings.textPosition.x : horizontalMarkings.textPosition.x[a])
                                             ),
                                         y: horizontalMarkings.textPosition == undefined || horizontalMarkings.textPosition.y == undefined ? y : 
-                                            height-__globals.utility.math.relativeDistance(
+                                            height-system.utility.math.relativeDistance(
                                                 height, viewbox.bottom,viewbox.top, 
                                                 horizontalMarkings.points[a]-(typeof horizontalMarkings.textPosition.y == 'number' ? horizontalMarkings.textPosition.y : horizontalMarkings.textPosition.y[a])
                                             ),
@@ -100,27 +100,27 @@ parts.elements.display.grapherSVG = function(
             
             //vertical lines
             for(var a = 0; a < verticalMarkings.points.length; a++){
-                var x = __globals.utility.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                var x = system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
 
                 //lines
                     backgroundElements.append(
-                        __globals.utility.misc.elementMaker('line','verticalMarkings_line_'+a,{x1:x, x2:x, y2:height, style:backgroundStyle})
+                        system.utility.misc.elementMaker('line','verticalMarkings_line_'+a,{x1:x, x2:x, y2:height, style:backgroundStyle})
                     );
                 
                 //text
                     if(verticalMarkings.printText){
                         backgroundElements.append(
-                            __globals.utility.misc.elementMaker(
+                            system.utility.misc.elementMaker(
                                 'text', 
                                 'verticalMarkings_text_'+verticalMarkings.points[a],
                                 {   
                                     x: verticalMarkings.textPosition == undefined || verticalMarkings.textPosition.x == undefined ? 0.5 : 
-                                        __globals.utility.math.relativeDistance(
+                                        system.utility.math.relativeDistance(
                                             width, viewbox.left,viewbox.right, 
                                             verticalMarkings.points[a]-(typeof verticalMarkings.textPosition.x == 'number' ? verticalMarkings.textPosition.x : verticalMarkings.textPosition.x[a]),
                                         ),
                                     y: verticalMarkings.textPosition == undefined || verticalMarkings.textPosition.y == undefined ? y : 
-                                        __globals.utility.math.relativeDistance(
+                                        system.utility.math.relativeDistance(
                                             height, viewbox.bottom,viewbox.top, 
                                             (typeof verticalMarkings.textPosition.y == 'number' ? verticalMarkings.textPosition.y : verticalMarkings.textPosition.y[a])
                                         ),
@@ -134,23 +134,23 @@ parts.elements.display.grapherSVG = function(
         };
         object.draw = function(y,x,layer=0){
             if( foregroundElementsGroup[layer] == undefined ){
-                foregroundElementsGroup[layer] = __globals.utility.misc.elementMaker('g','foregroundElements_'+layer,{});
+                foregroundElementsGroup[layer] = system.utility.misc.elementMaker('g','foregroundElements_'+layer,{});
                 object.appendChild(foregroundElementsGroup[layer] );
             }else{
                 foregroundElementsGroup[layer].innerHTML = '';
             }
 
             for(var a = 0; a < y.length-1; a++){
-                var points = __globals.utility.math.lineCorrecter({
-                    'x1': x==undefined ? (a+0)*(width/(y.length-1)) : __globals.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+0]),
-                    'x2': x==undefined ? (a+1)*(width/(y.length-1)) : __globals.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+1]),
-                    'y1': height-__globals.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+0], true),
-                    'y2': height-__globals.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+1], true)
+                var points = system.utility.math.lineCorrecter({
+                    'x1': x==undefined ? (a+0)*(width/(y.length-1)) : system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+0]),
+                    'x2': x==undefined ? (a+1)*(width/(y.length-1)) : system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+1]),
+                    'y1': height-system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+0], true),
+                    'y2': height-system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+1], true)
                 }, height, width);
 
                 if(points){
                     foregroundElementsGroup[layer].append(
-                        __globals.utility.misc.elementMaker('line',null,{
+                        system.utility.misc.elementMaker('line',null,{
                             x1:points.x1, y1:points.y1, 
                             x2:points.x2, y2:points.y2, 
                             style:(foregroundStyles[layer] == undefined ? foregroundStyles[0] : foregroundStyles[layer])

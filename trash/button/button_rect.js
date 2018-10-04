@@ -24,14 +24,14 @@ var button_rect = function(
     backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
 ){
     //elements
-        var object = __globals.utility.misc.elementMaker('g',id,{x:x,y:y,r:angle});
+        var object = system.utility.misc.elementMaker('g',id,{x:x,y:y,r:angle});
 
-        var background = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
+        var background = system.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
         object.appendChild( background );
 
-        var text_left = __globals.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffsetMux, y:height*textVerticalOffsetMux, text:text_left, style:textStyle});
+        var text_left = system.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffsetMux, y:height*textVerticalOffsetMux, text:text_left, style:textStyle});
         object.appendChild(text_left);
-        var text_right = __globals.utility.misc.elementMaker('text',null,{x:width-(width*textHorizontalOffsetMux), y:height*textVerticalOffsetMux, text:text_right, style:textStyle+'text-anchor:end;'});
+        var text_right = system.utility.misc.elementMaker('text',null,{x:width-(width*textHorizontalOffsetMux), y:height*textVerticalOffsetMux, text:text_right, style:textStyle+'text-anchor:end;'});
         object.appendChild(text_right);
 
     //state
@@ -43,7 +43,7 @@ var button_rect = function(
         };
 
         object.activateGraphicalState = function(){
-            if(!active){ __globals.utility.element.setStyle( background, backgroundStyle_off); return; }
+            if(!active){ system.utility.element.setStyle( background, backgroundStyle_off); return; }
 
             var styles = [
                 backgroundStyle_up,                backgroundStyle_press,
@@ -59,7 +59,7 @@ var button_rect = function(
             if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
             if(!selectable && object.state.selected ){ object.state.selected = false; }
 
-            __globals.utility.element.setStyle( 
+            system.utility.element.setStyle( 
                 background, 
                 styles[ object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + (pressable && object.state.pressed)*1 ]
             );

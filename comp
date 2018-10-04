@@ -1,2 +1,0 @@
-./compilation/gravity testMain.js docs/workspaceTest.js
-./compilation/gravity main.js docs/workspace.js

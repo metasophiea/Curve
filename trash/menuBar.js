@@ -2,7 +2,7 @@ this.menuBar = function(){
     var vars = {
         width: 300, height:20,
     };
-    vars.width = __globals.utility.workspace.getViewportDimensions().width;
+    vars.width = system.utility.workspace.getViewportDimensions().width;
     var style = {
         text: 'fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
         button:{
@@ -58,7 +58,7 @@ this.menuBar = function(){
     };
 
     //main object
-        var obj = __globals.utility.misc.objectBuilder(objects.data_duplicator,design);
+        var obj = system.utility.misc.objectBuilder(objects.data_duplicator,design);
 
     //interface
         obj.i = {

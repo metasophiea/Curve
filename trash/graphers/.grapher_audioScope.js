@@ -11,7 +11,7 @@ this.grapher_audioScope = function(
     //attributes
         var attributes = {
             analyser:{
-                analyserNode: __globals.audio.context.createAnalyser(),
+                analyserNode: system.audio.context.createAnalyser(),
                 timeDomainDataArray: null,
                 frequencyData: null,
                 refreshRate: 30,
@@ -27,13 +27,13 @@ this.grapher_audioScope = function(
         attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
 
     //elements 
-        var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
+        var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
             object._data = {};
             object._data.wave = {'sin':[],'cos':[]};
             object._data.resolution = 500;
 
         //main graph
-            var grapher = __globals.utility.misc.elementMaker('grapher'+graphType, 'graph', {
+            var grapher = system.utility.misc.elementMaker('grapher'+graphType, 'graph', {
                 x:0, y:0, width:width, height:height,
                 style:{
                     foreground:foregroundStyle, foregroundText:foregroundTextStyle, 

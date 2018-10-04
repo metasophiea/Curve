@@ -53,19 +53,19 @@ var list = function(
 
 
     //main object
-        var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
+        var object = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
 
     //background
-        var rect = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backingStyle});
+        var rect = system.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backingStyle});
         object.appendChild(rect);
 
     //viewport (for clipping the visible area)
-        var viewport = __globals.utility.misc.elementMaker('g','viewport',{});
+        var viewport = system.utility.misc.elementMaker('g','viewport',{});
         viewport.setAttribute('clip-path','polygon(0px 0px, '+width+'px 0px, '+width+'px '+height+'px, 0px '+height+'px)');
         object.appendChild(viewport);
 
     //main list
-        var mainList = __globals.utility.misc.elementMaker('g','mainList');
+        var mainList = system.utility.misc.elementMaker('g','mainList');
         viewport.appendChild(mainList);
 
         function refreshList(){
@@ -81,7 +81,7 @@ var list = function(
                 for(var a = 0; a < list.length; a++){
                     if( list[a] == 'break' ){
                         //break
-                        var temp = __globals.utility.misc.elementMaker( 'rect', a, {
+                        var temp = system.utility.misc.elementMaker( 'rect', a, {
                             x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
                             width:width*breakWidthMux, height:height*breakHeightMux,
                             style:breakStyle
@@ -90,7 +90,7 @@ var list = function(
                         accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
                     }else if( list[a] == 'space' ){
                         //spacing
-                        var temp = __globals.utility.misc.elementMaker( 'rect', a, {
+                        var temp = system.utility.misc.elementMaker( 'rect', a, {
                             x:0, y:accumulativeHeight,
                             width:width, height:height*spacingHeightMux,
                             style:backingStyle
@@ -99,7 +99,7 @@ var list = function(
                         accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
                     }else{
                         //regular item
-                        var temp = __globals.utility.misc.elementMaker( 'button_rect', a, {
+                        var temp = system.utility.misc.elementMaker( 'button_rect', a, {
                             x:0, y:accumulativeHeight,
                             width:width, height:height*itemHeightMux, 
                             text_left: (list[a].text?list[a].text:list[a].text_left) , text_right:list[a].text_right,
@@ -148,7 +148,7 @@ var list = function(
 
     //interaction
         object.onwheel = function(event){
-            var move = __globals.mouseInteraction.wheelInterpreter( event.deltaY );
+            var move = system.mouse.wheelInterpreter( event.deltaY );
             object.position( object.position() + move/10 );
         };
 
@@ -163,7 +163,7 @@ var list = function(
 
             var movementSpace = calculatedListHeight - height;
             
-            __globals.utility.element.setTransform_XYonly( mainList, undefined, -a*movementSpace );
+            system.utility.element.setTransform_XYonly( mainList, undefined, -a*movementSpace );
 
             var y_offSet = movementSpace * a;
             var bottom = y_offSet+height;

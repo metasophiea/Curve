@@ -98,8 +98,8 @@
 //                 onchange:function(a){
 //                     return function(value){
 //                         vars.Q[a] = value;
-//                         obj.filterCircuit_0.Q(a, __globals.utility.math.curvePoint.exponential(vars.Q[a],0,20000,10.5866095));
-//                         obj.filterCircuit_1.Q(a, __globals.utility.math.curvePoint.exponential(vars.Q[a],0,20000,10.5866095));
+//                         obj.filterCircuit_0.Q(a, system.utility.math.curvePoint.exponential(vars.Q[a],0,20000,10.5866095));
+//                         obj.filterCircuit_1.Q(a, system.utility.math.curvePoint.exponential(vars.Q[a],0,20000,10.5866095));
 //                         updateGraph(a);
 //                     }
 //                 }(a)
@@ -110,10 +110,10 @@
 //                 onchange:function(a){
 //                     return function(value){
 //                         vars.frequency[a] = value;
-//                         design.readout_sixteenSegmentDisplay['frequencyReadout_'+a].text( __globals.utility.misc.padString( __globals.utility.math.curvePoint.exponential(value,0,20000,10.5866095).toFixed(2), 8) );
+//                         design.readout_sixteenSegmentDisplay['frequencyReadout_'+a].text( system.utility.misc.padString( system.utility.math.curvePoint.exponential(value,0,20000,10.5866095).toFixed(2), 8) );
 //                         design.readout_sixteenSegmentDisplay['frequencyReadout_'+a].print('smart');
-//                         obj.filterCircuit_0.frequency(a, __globals.utility.math.curvePoint.exponential(vars.frequency[a],0,20000,10.5866095));
-//                         obj.filterCircuit_1.frequency(a, __globals.utility.math.curvePoint.exponential(vars.frequency[a],0,20000,10.5866095));
+//                         obj.filterCircuit_0.frequency(a, system.utility.math.curvePoint.exponential(vars.frequency[a],0,20000,10.5866095));
+//                         obj.filterCircuit_1.frequency(a, system.utility.math.curvePoint.exponential(vars.frequency[a],0,20000,10.5866095));
 //                         updateGraph(a);
 //                     }
 //                 }(a)
@@ -125,7 +125,7 @@
 //     }
 
 //     //main object
-//         var obj = __globals.utility.misc.objectBuilder(objects.distortionUnit,design);
+//         var obj = system.utility.misc.objectBuilder(objects.distortionUnit,design);
 
 //     //import/export
 //         obj.exportData = function(){
@@ -140,8 +140,8 @@
 //         obj.importData = function(data){};
 
 //     //circuitry
-//         obj.filterCircuit_0 = new parts.circuits.audio.multibandFilter(__globals.audio.context,vars.channelCount);
-//         obj.filterCircuit_1 = new parts.circuits.audio.multibandFilter(__globals.audio.context,vars.channelCount);
+//         obj.filterCircuit_0 = new parts.circuits.audio.multibandFilter(system.audio.context,vars.channelCount);
+//         obj.filterCircuit_1 = new parts.circuits.audio.multibandFilter(system.audio.context,vars.channelCount);
 //         design.connectionNode_audio.audioIn_0.out().connect( obj.filterCircuit_0.in() );
 //         design.connectionNode_audio.audioIn_1.out().connect( obj.filterCircuit_1.in() );
 //         obj.filterCircuit_0.out().connect( design.connectionNode_audio.audioOut_0.in() );
@@ -158,7 +158,7 @@
 //                     frequencyArray.push( Math.pow(10,a)*(b/10) );
 //                 }
 //             }
-//             return {frequency:frequencyArray, location:__globals.utility.math.normalizeStretchArray(locationArray)};
+//             return {frequency:frequencyArray, location:system.utility.math.normalizeStretchArray(locationArray)};
 //         }
 //         function updateGraph(specificBand){
 //             //if no band has been specified, gather the data for all of them and draw the whole thing. Otherwise, just gather 

@@ -1,0 +1,4 @@
+dir=$(dirname "$(cd "$(dirname "$0")" && pwd)")
+
+"$dir"/compliation/gravity "$dir"/main testMain.js docs/workspaceTest.js
+"$dir"/compliation/gravity "$dir"/main main.js docs/workspace.js

@@ -8,9 +8,9 @@ this.key_rect = function(
 ){
 
     // elements 
-    var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
+    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
 
-    var rect = __globals.utility.misc.elementMaker('rect',null,{width:width, height:height, angle:angle, style:style_off});
+    var rect = system.utility.misc.elementMaker('rect',null,{width:width, height:height, angle:angle, style:style_off});
         object.appendChild(rect);
 
     //state
@@ -21,10 +21,10 @@ this.key_rect = function(
         // 2 - glowing
         // 3 - pressed and glowing
         switch(state){
-            case 0: __globals.utility.element.setStyle(rect, style_off); break;
-            case 1: __globals.utility.element.setStyle(rect, style_press); break;
-            case 2: __globals.utility.element.setStyle(rect, style_glow); break;
-            case 3: __globals.utility.element.setStyle(rect, style_pressAndGlow); break;
+            case 0: system.utility.element.setStyle(rect, style_off); break;
+            case 1: system.utility.element.setStyle(rect, style_press); break;
+            case 2: system.utility.element.setStyle(rect, style_glow); break;
+            case 3: system.utility.element.setStyle(rect, style_pressAndGlow); break;
             default: /*console.error('Unknown state reached:', state);*/ return; break;
         }
         object.state = state;

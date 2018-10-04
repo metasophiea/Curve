@@ -13,25 +13,25 @@ parts.elements.display.grapherCanvas = function(
     var foregroundElementsGroup = [];
 
     //convert the style info
-        var tempStyleInfo = foregroundStyles.map(a => __globals.utility.element.styleExtractor(a));
+        var tempStyleInfo = foregroundStyles.map(a => system.utility.element.styleExtractor(a));
         foregroundStyles = tempStyleInfo.map(a => a.stroke);
         var foregroundLineThicknesses = tempStyleInfo.map(a => a['stroke-width']*8);
 
-        var tempStyleInfo = __globals.utility.element.styleExtractor(backgroundTextStyle);
+        var tempStyleInfo = system.utility.element.styleExtractor(backgroundTextStyle);
         backgroundTextStyle = (12*tempStyleInfo['font-size'])+'px ' + tempStyleInfo['font-family'];
 
-        var tempStyleInfo = __globals.utility.element.styleExtractor(backgroundStyle);
+        var tempStyleInfo = system.utility.element.styleExtractor(backgroundStyle);
         backgroundStyle = tempStyleInfo.stroke;
         var backgroundLineThickness = tempStyleInfo['stroke-width'] * 8;
 
-        var tempStyleInfo = __globals.utility.element.styleExtractor(backingStyle);
+        var tempStyleInfo = system.utility.element.styleExtractor(backingStyle);
         backingStyle = tempStyleInfo['fill'];
 
     //elements
         //main
-            var object = __globals.utility.misc.elementMaker('g',id,{x:x, y:y});
+            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
         //canvas
-            var canvas = __globals.utility.misc.elementMaker('canvas',id,{width:width, height:height, resolution:7});
+            var canvas = system.utility.misc.elementMaker('canvas',id,{width:width, height:height, resolution:7});
             object.appendChild(canvas.element);
 
     //controls
@@ -76,7 +76,7 @@ parts.elements.display.grapherCanvas = function(
 
             //horizontal lines
                 for(var a = 0; a < horizontalMarkings.points.length; a++){
-                    var y = __globals.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
+                    var y = system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
 
                     //lines
                     canvas.context.strokeStyle = backgroundStyle; 
@@ -94,13 +94,13 @@ parts.elements.display.grapherCanvas = function(
                         canvas.context.fillText(
                             horizontalMarkings.points[a],
                             canvas.c(horizontalMarkings.textPosition == undefined || horizontalMarkings.textPosition.x == undefined ? 0.5 : 
-                                __globals.utility.math.relativeDistance(
+                                system.utility.math.relativeDistance(
                                     width, viewbox.left,viewbox.right, 
                                     (typeof horizontalMarkings.textPosition.x == 'number' ? horizontalMarkings.textPosition.x : horizontalMarkings.textPosition.x[a])
                                 )
                             ),
                             canvas.c(horizontalMarkings.textPosition == undefined || horizontalMarkings.textPosition.y == undefined ? y+1.75 : 
-                                height-__globals.utility.math.relativeDistance(
+                                height-system.utility.math.relativeDistance(
                                     height, viewbox.bottom,viewbox.top, 
                                     horizontalMarkings.points[a]-(typeof horizontalMarkings.textPosition.y == 'number' ? horizontalMarkings.textPosition.y : horizontalMarkings.textPosition.y[a])
                                 )
@@ -111,7 +111,7 @@ parts.elements.display.grapherCanvas = function(
 
             //vertical lines
                 for(var a = 0; a < verticalMarkings.points.length; a++){
-                    var x = __globals.utility.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                    var x = system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
 
                     //lines
                     canvas.context.strokeStyle = backgroundStyle; 
@@ -129,13 +129,13 @@ parts.elements.display.grapherCanvas = function(
                         canvas.context.fillText(
                             verticalMarkings.points[a],
                             canvas.c(verticalMarkings.textPosition == undefined || verticalMarkings.textPosition.x == undefined ? 0.5 : 
-                                __globals.utility.math.relativeDistance(
+                                system.utility.math.relativeDistance(
                                     width, viewbox.left,viewbox.right, 
                                     verticalMarkings.points[a]-(typeof verticalMarkings.textPosition.x == 'number' ? verticalMarkings.textPosition.x : verticalMarkings.textPosition.x[a]),
                                 )
                             ),
                             canvas.c(verticalMarkings.textPosition == undefined || verticalMarkings.textPosition.y == undefined ? y : 
-                                __globals.utility.math.relativeDistance(
+                                system.utility.math.relativeDistance(
                                     height, viewbox.bottom,viewbox.top, 
                                     (typeof verticalMarkings.textPosition.y == 'number' ? verticalMarkings.textPosition.y : verticalMarkings.textPosition.y[a])
                                 )
@@ -160,11 +160,11 @@ parts.elements.display.grapherCanvas = function(
                     var x = foregroundElementsGroup[g].x;
 
                     for(var a = 0; a < y.length-1; a++){
-                        var points = __globals.utility.math.lineCorrecter({
-                            'x1': x==undefined ? (a+0)*(width/(y.length-1)) : __globals.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+0]),
-                            'x2': x==undefined ? (a+1)*(width/(y.length-1)) : __globals.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+1]),
-                            'y1': height-__globals.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+0], true),
-                            'y2': height-__globals.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+1], true)
+                        var points = system.utility.math.lineCorrecter({
+                            'x1': x==undefined ? (a+0)*(width/(y.length-1)) : system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+0]),
+                            'x2': x==undefined ? (a+1)*(width/(y.length-1)) : system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+1]),
+                            'y1': height-system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+0], true),
+                            'y2': height-system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+1], true)
                         }, height, width);
 
                         if(points){

@@ -26,25 +26,25 @@
 
 <script>
     //create objects
-        var pulseGenerator_1 = __globals.utility.workspace.placeAndReturnObject( objects.pulseGenerator_hyper(1320, 275, 999) );
-        var data_duplicator_1 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(1170, 320) );
-        var data_duplicator_3 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(1160, 420) );
-        var data_duplicator_4 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(1250, 360) );
+        var pulseGenerator_1 = system.utility.workspace.placeAndReturnObject( objects.pulseGenerator_hyper(1320, 275, 999) );
+        var data_duplicator_1 = system.utility.workspace.placeAndReturnObject( objects.data_duplicator(1170, 320) );
+        var data_duplicator_3 = system.utility.workspace.placeAndReturnObject( objects.data_duplicator(1160, 420) );
+        var data_duplicator_4 = system.utility.workspace.placeAndReturnObject( objects.data_duplicator(1250, 360) );
 
-        var basicSequencer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer(280, 160) );
-        var basicSequencer_midiOut_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer_midiOut(280, 400) );
-        var basicSequencer_midiOut_2 = __globals.utility.workspace.placeAndReturnObject( objects.basicSequencer_midiOut(320, 700) );
+        var basicSequencer_1 = system.utility.workspace.placeAndReturnObject( objects.basicSequencer(280, 160) );
+        var basicSequencer_midiOut_1 = system.utility.workspace.placeAndReturnObject( objects.basicSequencer_midiOut(280, 400) );
+        var basicSequencer_midiOut_2 = system.utility.workspace.placeAndReturnObject( objects.basicSequencer_midiOut(320, 700) );
 
-        var data_duplicator_2 = __globals.utility.workspace.placeAndReturnObject( objects.data_duplicator(180, 505) );
-        var basicSynthesizer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-10, 400) );
-        var basicSynthesizer_2 = __globals.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-90, 510) );
-        var oneShot_multi_multiTrack = __globals.utility.workspace.placeAndReturnObject( objects.oneShot_multi_multiTrack(-10, 0) );
+        var data_duplicator_2 = system.utility.workspace.placeAndReturnObject( objects.data_duplicator(180, 505) );
+        var basicSynthesizer_1 = system.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-10, 400) );
+        var basicSynthesizer_2 = system.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-90, 510) );
+        var oneShot_multi_multiTrack = system.utility.workspace.placeAndReturnObject( objects.oneShot_multi_multiTrack(-10, 0) );
 
-        var musicalkeyboard_1 = __globals.utility.workspace.placeAndReturnObject( objects.musicalkeyboard(-30, 750) );
-        var basicSynthesizer_3 = __globals.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-290, 675) );
+        var musicalkeyboard_1 = system.utility.workspace.placeAndReturnObject( objects.musicalkeyboard(-30, 750) );
+        var basicSynthesizer_3 = system.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-290, 675) );
 
-        var audio_mixer_1 = __globals.utility.workspace.placeAndReturnObject( objects.basicMixer(-455, 295) );    
-        var audio_sink = __globals.utility.workspace.placeAndReturnObject( objects.audio_sink(-640, 260) );
+        var audio_mixer_1 = system.utility.workspace.placeAndReturnObject( objects.basicMixer(-455, 295) );    
+        var audio_sink = system.utility.workspace.placeAndReturnObject( objects.audio_sink(-640, 260) );
 
     //connect objects
         pulseGenerator_1.io.out.connectTo(data_duplicator_4.io.input);
@@ -323,6 +323,6 @@
         oneShot_multi_multiTrack.i.area(6,0.47207436958937493,0.6238108434632305);
 
     //setup view
-        // __globals.utility.workspace.gotoPosition(-80.5151, -162.899,1.1593, 0);
+        // system.utility.workspace.gotoPosition(-80.5151, -162.899,1.1593, 0);
 
 </script>

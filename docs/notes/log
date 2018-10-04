@@ -1,4 +1,64 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-10-04
+  - major upheaval to project structure
+      we have only four global variables;
+        system
+        parts
+        objects
+        control
+      which in turn, follow the dependencies track (and folder names)
+      Perhaps folders could be rearranged aswel, to keep these four sections in a
+      section to themsevles (and just for a general reorganisation):
+
+    - renamed '__globals' to 'system'
+    - renamed 'mouseInteraction' to 'mouse'
+    - renamed 'keyboardInteraction' to 'keyboard'
+    - redid folder layout:
+        compliation/
+          closure-compiler.jar
+          gravity
+          notes
+          comp
+          heavyComp
+        docs/
+          demos/      help/
+          gifs/       notes/
+          404.html    workspace.js
+          index.html  workspace.min.js
+          test.html   workspaceTest.js        
+        main/
+          control/
+          objects/
+          parts/
+          system/
+          main.js
+          testMain.js
+        trash/
+        workshop/
+          0 - experiment area/
+          1 - system testing/
+          2 - part|object development/
+            elements testing/
+            sequencer/
+          3 - object finishing/
+        README.md
+  - rewrote the 'structure' section of the readme
+  - rearranged the files within 'objects' (in a way that doesn't matter to the
+    system, so, could be put in any way really, and this way isn't that great
+    as it is)
+
+  future ideas
+  - just redo system.pane
+
+  bugs
+  - bugs everywhere. The change was slightly poorly done, so things are broken
+    due to renaming of other things. Tests are passing however
+
+  Compliation Results
+  - workspace.js                        870 Kb  (100%)
+  - workspace.min.js                    292 Kb  (33.63%)
+
+
 2018-10-03
   - list breaks and spaces, a little more stable now
   - create menu is now sorted
