@@ -151,8 +151,6 @@
                 //        unserialize                    (data, compressed=true)
                 //        printFile                      (filename, data)
                 //        openFile                       (callback)
-                //        elementMaker                   (type, name, data)
-                //        objectBuilder                  (creatorMethod, design)
                 //
                 //    thirdparty
                 //        lzString (contains code for compressing and decompressing strings)
@@ -197,10 +195,10 @@
                         };
                     };
                     this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;',push=false){
-                        var g = system.utility.misc.elementMaker('g',null,{x:x, y:y});
+                        var g = part.builder('g',null,{x:x, y:y});
                 
-                        var dot = system.utility.misc.elementMaker('circle',null,{x:0, y:0, r:r, style:style});
-                        var textElement =  system.utility.misc.elementMaker('text',null,{x:0, y:0, angle:0, text:text, style:style});
+                        var dot = part.builder('circle',null,{x:0, y:0, r:r, style:style});
+                        var textElement =  part.builder('text',null,{x:0, y:0, angle:0, text:text, style:style});
                         g.appendChild(dot);
                         g.appendChild(textElement);
                 
@@ -317,7 +315,7 @@
                                     //if bundleConstructorFunctions is set to true, look through the constructorFunctions
                                     //to find the one that matches this object's objectConstructorName
                                     //otherwise; look through the system's object constructor list to find it
-                                    var constructor = bundleConstructorFunctions ? constructorFunctions[entry.objectConstructorName] : objects[entry.objectConstructorName];
+                                    var constructor = bundleConstructorFunctions ? constructorFunctions[entry.objectConstructorName] : object[entry.objectConstructorName];
                     
                                 //create the object and place
                                     var newObject = system.utility.workspace.placeAndReturnObject( constructor(entry.position.x,entry.position.y) );
@@ -336,7 +334,7 @@
                                         });
                                     }
                                 //add object to produced list (for the connection handler to use in future)
-                                    producedObjects.push(newObject);
+                                producedObjects.push(newObject);
                             }
                     };
                     this.saveload = new function(){
@@ -418,7 +416,7 @@
                     };
                     this.setStaticBackgroundStyle = function(style){
                         system.pane.staticBackground.innerHTML = '';
-                        system.utility.workspace.placeAndReturnObject( system.utility.misc.elementMaker('rect',null,{width:'100%',height:'100%',style:style+'pointer-events:none;'}), 'staticBackground' );    
+                        system.utility.workspace.placeAndReturnObject( part.builder('rect',null,{width:'100%',height:'100%',style:style+'pointer-events:none;'}), 'staticBackground' );    
                     };
                 };
                 this.element = new function(){
@@ -1214,289 +1212,6 @@
                         a.download = filename;
                         a.click();
                     };
-                    this.elementMaker = function(type,name,data){
-                        if(!data){data={};}
-                        switch(type){
-                            //basic
-                                case 'g':      return parts.elements.basic.g(name, data.x, data.y, data.r, data.style); break;
-                                case 'line':   return parts.elements.basic.line(name, data.x1, data.y1, data.x2, data.y2, data.style); break;
-                                case 'rect':   return parts.elements.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
-                                case 'path':   return parts.elements.basic.path(name, data.path, data.lineType, data.style); break;
-                                case 'text':   return parts.elements.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
-                                case 'circle': return parts.elements.basic.circle(name, data.x, data.y, data.r, data.angle, data.style); break;
-                                case 'canvas': return parts.elements.basic.canvas(name, data.x, data.y, data.width, data.height, data.angle, data.resolution); break;
-                        }
-                
-                        if(data.style == undefined){data.style={};}
-                        switch(type){
-                            default: console.warn('Unknown element: '+ type); return null; break;
-                
-                            //display
-                                case 'label': return parts.elements.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;
-                                case 'level': return parts.elements.display.level(name, data.x, data.y, data.angle, data.width, data.height, data.style.backing, data.style.level); break;
-                                case 'meter_level': return parts.elements.display.meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
-                                case 'audio_meter_level': return parts.elements.display.audio_meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
-                                case 'sevenSegmentDisplay': return parts.elements.display.sevenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
-                                case 'sixteenSegmentDisplay': return parts.elements.display.sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
-                                case 'readout_sixteenSegmentDisplay': return parts.elements.display.readout_sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.style.background, data.style.glow, data.style.dime); break;
-                                case 'rastorDisplay': return parts.elements.display.rastorDisplay(name, data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage); break;
-                                case 'glowbox_rect': return parts.elements.display.glowbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim); break;
-                                case 'grapherSVG': return parts.elements.display.grapherSVG(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-                                case 'grapherCanvas': return parts.elements.display.grapherCanvas(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-                                case 'grapher_periodicWave': return parts.elements.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-                                case 'grapher_audioScope': return parts.elements.display.grapher_audioScope(  name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-                
-                            //control
-                                case 'button_rect': 
-                                    var temp = parts.elements.control.button_rect(
-                                        name,
-                                        data.x, data.y, data.width, data.height, data.angle, 
-                                        (data.text ? data.text : data.text_centre), data.text_left, data.text_right,
-                                        data.textVerticalOffset, data.textHorizontalOffset,
-                                        data.active, data.hoverable, data.selectable, data.pressable,
-                                        data.style.text, 
-                                        data.style.off,
-                                        data.style.up,                data.style.press,
-                                        data.style.select,            data.style.select_press,
-                                        data.style.glow,              data.style.glow_press,
-                                        data.style.glow_select,       data.style.glow_select_press,
-                                        data.style.hover,             data.style.hover_press,
-                                        data.style.hover_select,      data.style.hover_select_press,
-                                        data.style.hover_glow,        data.style.hover_glow_press,
-                                        data.style.hover_glow_select, data.style.hover_glow_select_press,
-                                    );
-                                    temp.onpress =    data.onpress    ? data.onpress    : temp.onpress;
-                                    temp.onrelease =  data.onrelease  ? data.onrelease  : temp.onrelease;
-                                    temp.ondblpress = data.ondblpress ? data.ondblpress : temp.ondblpress;
-                                    temp.onenter =    data.onenter    ? data.onenter    : temp.onenter;
-                                    temp.onleave =    data.onleave    ? data.onleave    : temp.onleave;
-                                    temp.onselect =   data.onselect   ? data.onselect   : temp.onselect;
-                                    temp.ondeselect = data.ondeselect ? data.ondeselect : temp.ondeselect;
-                                    return temp;
-                                break;
-                                case 'checkbox_rect':
-                                    var temp = parts.elements.control.checkbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow);
-                                    temp.onchange = data.onchange ? data.onchange : temp.onchange;
-                                    return temp;
-                                break;
-                                case 'slide':
-                                    var temp = parts.elements.control.slide(name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle);
-                                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                                    return temp;
-                                break;
-                                case 'slidePanel':
-                                    var temp = parts.elements.control.slidePanel(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot);
-                                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                                    return temp;
-                                break;
-                                case 'rangeslide':
-                                    var temp = parts.elements.control.rangeslide(name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.spanWidth, data.values, data.resetValues, data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span);
-                                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                                    return temp;
-                                break;
-                                case 'dial_continuous': 
-                                    var temp = parts.elements.control.dial_continuous(
-                                        name,
-                                        data.x, data.y, data.r,
-                                        data.startAngle, data.maxAngle,
-                                        data.style.handle, data.style.slot, data.style.needle,
-                                        data.style.handle_glow, data.style.slot_glow, data.style.needle_glow,
-                                        data.arcDistance, data.style.outerArc, data.style.outerArc_glow,
-                                    );
-                                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                                    return temp;
-                                break;
-                                case 'dial_discrete':
-                                    var temp = parts.elements.control.dial_discrete(
-                                        name,
-                                        data.x, data.y, data.r,
-                                        data.optionCount,
-                                        data.startAngle, data.maxAngle,
-                                        data.style.handle, data.style.slot, data.style.needle,
-                                        data.style.handle_glow, data.style.slot_glow, data.style.needle_glow,
-                                        data.arcDistance, data.style.outerArc, data.style.outerArc_glow,
-                                    );
-                                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                                    return temp;
-                                break;
-                                case 'rastorgrid':
-                                    var temp = parts.elements.control.rastorgrid(
-                                        name,
-                                        data.x, data.y, data.width, data.height,
-                                        data.xCount, data.yCount,
-                                        data.style.backing,
-                                        data.style.check,
-                                        data.style.backingGlow,
-                                        data.style.checkGlow
-                                    );
-                                    temp.onchange = data.onchange ? data.onchange  : temp.onchange  ;
-                                    return temp;
-                                break;
-                                case 'sequencer':
-                                    var temp = parts.elements.control.sequencer(
-                                        name,
-                                        data.x, data.y, data.width, data.height, data.angle,
-                                        data.xCount, data.yCount,
-                                        data.zoomLevel_x, data.zoomLevel_y,
-                                        data.style.backing,
-                                        data.style.selectionArea,
-                                        data.style.block_body, data.style.block_bodyGlow, data.style.block_handle, data.style.block_handleWidth,
-                                        data.style.horizontalStrip_pattern, data.style.horizontalStrip_glow, data.style.horizontalStrip_styles,
-                                        data.style.verticalStrip_pattern,   data.style.verticalStrip_glow,   data.style.verticalStrip_styles,
-                                        data.style.playhead,
-                                    );
-                                    temp.onpan = data.onpan ? data.onpan : temp.onpan;
-                                    temp.onchangeviewarea = data.onchangeviewarea ? data.onchangeviewarea : temp.onchangeviewarea;
-                                    temp.event = data.event ? data.event : temp.event;
-                                    return temp;
-                                break;
-                                case 'needleOverlay':
-                                    var temp = parts.elements.control.needleOverlay(
-                                        name, data.x, data.y, data.width, data.height, data.angle,
-                                        data.needleWidth, data.selectNeedle, data.selectionArea,
-                                        data.needleStyles,
-                                    );
-                                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange;
-                                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
-                                    temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle;
-                                    return temp;
-                                break;
-                                case 'grapher_waveWorkspace':
-                                    var temp = parts.elements.control.grapher_waveWorkspace(
-                                        name, data.x, data.y, data.width, data.height, data.angle, data.graphType, data.selectNeedle, data.selectionArea,
-                                        data.style.foreground,   data.style.foregroundText,
-                                        data.style.middleground, data.style.middlegroundText,
-                                        data.style.background,   data.style.backgroundText,
-                                    );
-                                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                                    temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle ;
-                                    return temp;
-                                break;
-                                case 'list':
-                                        var temp = parts.elements.control.list(
-                                            name, data.x, data.y, data.width, data.height, data.angle, data.list, 
-                                            data.selectable, data.multiSelect, data.hoverable, data.pressable, data.active,
-                                            data.itemHeightMux, data.itemSpacingMux, data.breakHeightMux, data.breakWidthMux, data.spaceHeightMux,
-                                            data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
-                                            data.style.listItemText,
-                                            data.style.backing,
-                                            data.style.break,
-                                            data.style.background_off,
-                                            data.style.background_up,                data.style.background_press,
-                                            data.style.background_select,            data.style.background_select_press,
-                                            data.style.background_glow,              data.style.background_glow_press,
-                                            data.style.background_glow_select,       data.style.background_glow_select_press,
-                                            data.style.background_hover,             data.style.background_hover_press,
-                                            data.style.background_hover_select,      data.style.background_hover_select_press,
-                                            data.style.background_hover_glow,        data.style.background_hover_glow_press,
-                                            data.style.background_hover_glow_select, data.style.background_hover_glow_select_press,
-                                        );
-                                        
-                                        temp.onenter = data.onenter ? data.onenter : temp.onenter;
-                                        temp.onleave = data.onleave ? data.onleave : temp.onleave;
-                                        temp.onpress = data.onpress ? data.onpress : temp.onpress;
-                                        temp.ondblpress = data.ondblpress ? data.ondblpress : temp.ondblpress;
-                                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
-                                        temp.onselection = data.onselection ? data.onselection : temp.onselection;
-                                        temp.onpositionchange = data.onpositionchange ? data.onpositionchange : temp.onpositionchange;
-                                        return temp;
-                                break;
-                
-                            //dynamic
-                                case 'cable': return parts.elements.dynamic.cable(name, data.x1, data.y1, data.x2, data.y2, data.style.unactive, data.style.active); break;
-                                case 'connectionNode_audio': 
-                                    if(Object.keys(data.style).length == 0){data.style = undefined;}
-                                    return parts.elements.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, data.angle, system.audio.context, data.style);
-                                break;
-                                case 'connectionNode_data':
-                                    if(Object.keys(data.style).length == 0){data.style = undefined;}
-                                    var temp = parts.elements.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle, data.style);
-                                    temp.receive = data.receive ? data.receive : temp.receive;
-                                    temp.give = data.give ? data.give : temp.give;
-                                    return temp;
-                                break;
-                        }
-                    }; 
-                    this.objectBuilder = function(creatorMethod,design){
-                        //main
-                            var obj = system.utility.misc.elementMaker('g',design.type,{x:design.x, y:design.y});
-                            if(design.base.type == undefined){design.base.type = 'path';}
-                        
-                        //generate selection area
-                            switch(design.base.type){
-                                case 'rect':
-                                    //generate selection area
-                                        design.base.points = [{x:design.x,y:design.y}, {x:design.width,y:design.y}, {x:design.width,y:design.height}, {x:design.x,y:design.height}];
-                                        system.utility.object.generateSelectionArea(design.base.points, obj);
-                                        
-                                    //backing
-                                        design.base = system.utility.misc.elementMaker('rect',null,{x:design.base.x, y:design.base.y, width:design.base.width, height:design.base.height, angle:design.base.angle, style:design.base.style});
-                                break;
-                                case 'circle': 
-                                    //generate selection area
-                                        var res = 12; //(number of sides generated)
-                                        var mux = 2*Math.PI/res;
-                                        design.base.points = [];
-                                        for(var a = 0; a < res; a++){
-                                            design.base.points.push(
-                                                { x:design.base.x-Math.sin(a*mux)*design.base.r, y:design.base.y-Math.cos(a*mux)*design.base.r }
-                                            );
-                                        }
-                                        system.utility.object.generateSelectionArea(design.base.points, obj);
-                                        
-                                    //backing
-                                        design.base = system.utility.misc.elementMaker('circle',null,{x:design.base.x, y:design.base.y, r:design.base.r, angle:design.base.angle, style:design.base.style});
-                                break;
-                                case 'path': 
-                                    //generate selection area
-                                        system.utility.object.generateSelectionArea(design.base.points, obj);
-                                    //backing
-                                        design.base = system.utility.misc.elementMaker('path',null,{path:design.base.points, lineType:'L', style:design.base.style});
-                                break;
-                                default: console.error('Unknown base type:',design.base.type,'when creating object "'+design.type+'"'); return; break;
-                            };
-                            obj.append(design.base);
-                
-                            //declare grapple
-                                if(!design.skipGrapple){
-                                    system.mouse.declareObjectGrapple(design.base, obj, creatorMethod);
-                                }
-                
-                        //generate elements
-                            if(design.elements){
-                                for(var a = 0; a < design.elements.length; a++){
-                                    if(!design[design.elements[a].type]){design[design.elements[a].type]={};}
-                                    if(design.elements[a].name in design[design.elements[a].type]){console.warn('error: element with the name "'+design.elements[a].name+'" already exists. Element:',design.elements[a],'will not be added');continue;}
-                                    design[design.elements[a].type][design.elements[a].name] = system.utility.misc.elementMaker(design.elements[a].type,design.elements[a].name,design.elements[a].data);
-                                    obj.append(design[design.elements[a].type][design.elements[a].name]);
-                                }
-                            }
-                
-                        //io setup
-                            obj.io = {};
-                            if(design.connectionNode_audio){
-                                var keys = Object.keys(design.connectionNode_audio);
-                                for(var a = 0; a < keys.length; a++){
-                                    if(keys[a] in obj.io){console.warn('error: connection node with the name "'+keys[a]+'" already exists in the .io group. Node ',design.connectionNode_data[keys[a]],' will not be added');continue;}
-                                    obj.io[keys[a]] = design.connectionNode_audio[keys[a]];
-                                }
-                            }
-                            if(design.connectionNode_data){
-                                var keys = Object.keys(design.connectionNode_data);
-                                for(var a = 0; a < keys.length; a++){
-                                    if(keys[a] in obj.io){console.warn('error: connection node with the name "'+keys[a]+'" already exists in the .io group. Node ',design.connectionNode_data[keys[a]],' will not be added');continue;}
-                                    obj.io[keys[a]] = design.connectionNode_data[keys[a]];
-                                }
-                            }
-                
-                        return obj;
-                    };
                     this.openURL = function(url){
                         window.open( url, '_blank');
                     };
@@ -2016,7 +1731,7 @@
             system.selection = new function(){
                 //setup selected objects spaces and functionality
                 this.selectedObjects = [];
-                this.lastSelectedObject = null;
+                this.lastselectedObjects = null;
                 this.clipboard = [];
                     // pane                 -   the pane the object came from
                     // objectConstructor    -   the creation function of the object
@@ -2053,7 +1768,7 @@
                     //perform selection
                         if(object.onSelect){object.onSelect();}
                         system.selection.selectedObjects.push(object);
-                        system.selection.lastSelectedObject = object;
+                        system.selection.lastselectedObjects = object;
                 };
                 this.deselectObject = function(object){
                     system.selection.selectedObjects.splice(system.selection.selectedObjects.indexOf(object),1);
@@ -2195,7 +1910,7 @@
                         //remove object from selected array
                             this.selectedObjects.shift();
                     }
-                    this.lastSelectedObject = null;
+                    this.lastselectedObjects = null;
                 };
             };
             system.mouse = new function(){
@@ -2372,10 +2087,10 @@
                                 //  deselect the object we're working on
                                 // now set the most recently selected reference to null
                                 if( system.selection.selectedObjects.includes(system.svgElement.temp_onmouseup_originalObject) ){
-                                    if( event.shiftKey && (system.selection.lastSelectedObject != system.svgElement.temp_onmouseup_originalObject) ){
+                                    if( event.shiftKey && (system.selection.lastselectedObjects != system.svgElement.temp_onmouseup_originalObject) ){
                                         system.selection.deselectObject(system.svgElement.temp_onmouseup_originalObject);
                                     }
-                                    system.selection.lastSelectedObject = null;
+                                    system.selection.lastselectedObjects = null;
                                 }
                 
                             }
@@ -2459,7 +2174,7 @@
                 
                                 //create 'selection box' graphic and add it to the menu pane
                                 system.svgElement.tempElements.push(
-                                    system.utility.misc.elementMaker(
+                                    part.builder(
                                         'path',null,{
                                             path:[
                                                 system.svgElement.tempData.start,
@@ -2832,9 +2547,887 @@
                 this.freq2num = function(freq){ return this.names_midinumbers[this.frequencies_names[freq]]; };
                 this.freq2name = function(freq){ return this.frequencies_names[freq]; };
             };
-            var parts = new function(){
-                this.circuits = new function(){
+            var part = new function(){
+                this.circuit = new function(){
                     this.audio = new function(){
+                        this.audio2percentage = function(){
+                            return new function(){
+                                var analyser = {
+                                    timeDomainDataArray: null,
+                                    frequencyData: null,
+                                    refreshRate: 30,
+                                    refreshInterval: null,
+                                    returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                    resolution: 128
+                                };
+                                analyser.analyserNode = system.audio.context.createAnalyser();
+                                analyser.analyserNode.fftSize = analyser.resolution;
+                                analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
+                                analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
+                        
+                                this.__render = function(){
+                                        analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
+                        
+                                        var numbers = [];
+                                        for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
+                                            numbers.push(
+                                                analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
+                                            );
+                                        }
+                        
+                                        var val = 0;
+                                        numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
+                        
+                                        this.newValue(val);
+                                }
+                        
+                                //audio connections
+                                    this.audioIn = function(){return analyser.analyserNode;};
+                        
+                                //methods
+                                    this.start = function(){
+                                        analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
+                                    };
+                                    this.stop = function(){
+                                        clearInterval(analyser.refreshInterval);
+                                    };
+                        
+                                //callbacks
+                                    this.newValue = function(a){};
+                            };
+                        };
+                        this.audioIn = function(
+                            context, setupConnect=true
+                        ){
+                            //flow chain
+                                var flow = {
+                                    audioDevice: null,
+                                    outAggregator: {}
+                                };
+                        
+                            //outAggregator
+                                flow.outAggregator.gain = 1;
+                                flow.outAggregator.node = context.createGain();
+                                system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
+                        
+                        
+                            //output node
+                                this.out = function(){return flow.outAggregator.node;}
+                        
+                            //methods
+                                this.listDevices = function(callback){
+                                    navigator.mediaDevices.enumerateDevices().then(
+                                        function(devices){
+                                            callback(devices.filter((d) => d.kind === 'audioinput'));
+                                        }
+                                    );
+                                };
+                                this.selectDevice = function(deviceId){
+                                    var promise = navigator.mediaDevices.getUserMedia({audio: { deviceId: deviceId}});
+                                    promise.then(
+                                        function(source){
+                                            audioDevice = source;
+                                            system.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
+                                        },
+                                        function(error){
+                                            console.warn('could not find audio input device: "' + deviceId + '"');
+                                            console.warn('\terror:',error);
+                                        }
+                                    );
+                                };
+                                this.gain = function(a){
+                                    if(a==null){return flow.outAggregator.gain;}
+                                    flow.outAggregator.gain = a;
+                                    system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
+                                };
+                        
+                            //setup
+                                if(setupConnect){this.selectDevice('default');}
+                        };
+                        this.channelMultiplier = function(
+                            context, outputCount=2
+                        ){
+                            //flow
+                                //flow chain
+                                    var flow = {
+                                        in: {},
+                                        outs:[],
+                                        out_0: {}, out_1: {},
+                                    };
+                                
+                                //in
+                                    flow.in.gain = 1;
+                                    flow.in.node = context.createGain();    
+                                    system.utility.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                        
+                                //outs
+                                    for(var a = 0; a < outputCount; a++){
+                                        var temp = { gain:0.5, node:context.createGain() };
+                                        system.utility.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
+                                        flow.outs.push(temp);
+                                        flow.in.node.connect(temp.node);
+                                    }
+                        
+                            //input/output node
+                                this.in = function(){return flow.in.node;}
+                                this.out = function(a){return flow.outs[a].node;}
+                        
+                            //controls
+                                this.inGain = function(a){
+                                    if(a == undefined){return flow.in.gain;}
+                                    flow.in.gain = a;
+                                    system.utility.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                                };
+                                this.outGain = function(a,value){
+                                    if(value == undefined){ return flow.outs[a].gain; }
+                                    flow.outs[a].gain = value;
+                                    system.utility.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
+                                };
+                        };
+                            
+                        this.distortionUnit = function(
+                            context,
+                        ){
+                            //flow chain
+                            var flow = {
+                                inAggregator: {},
+                                distortionNode: {},
+                                outAggregator: {},
+                            };
+                        
+                            //inAggregator
+                                flow.inAggregator.gain = 0;
+                                flow.inAggregator.node = context.createGain();
+                                system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                        
+                            //distortionNode
+                                flow.distortionNode.distortionAmount = 0;
+                                flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
+                                flow.distortionNode.resolution = 100;
+                                function makeDistortionNode(){
+                                    flow.inAggregator.node.disconnect();
+                                    if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
+                                    
+                                    flow.distortionNode.node = context.createWaveShaper();
+                                        flow.distortionNode.curve = new Float32Array(system.utility.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
+                                        flow.distortionNode.node.curve = flow.distortionNode.curve;
+                                        flow.distortionNode.node.oversample = flow.distortionNode.oversample;
+                                        
+                                    flow.inAggregator.node.connect(flow.distortionNode.node);
+                                    flow.distortionNode.node.connect(flow.outAggregator.node);
+                                }
+                        
+                            //outAggregator
+                                flow.outAggregator.gain = 0;
+                                flow.outAggregator.node = context.createGain();    
+                                system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                        
+                        
+                            //input/output node
+                                this.in = function(){return flow.inAggregator.node;}
+                                this.out = function(){return flow.outAggregator.node;}
+                        
+                            //controls
+                                this.inGain = function(a){
+                                    if(a==null){return flow.inAggregator.gain;}
+                                    flow.inAggregator.gain=a;
+                                    system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
+                                };
+                                this.outGain = function(a){
+                                    if(a==null){return flow.outAggregator.gain;}
+                                    flow.outAggregator.gain=a;
+                                    system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                                };
+                                this.distortionAmount = function(a){
+                                    if(a==null){return flow.distortionNode.distortionAmount;}
+                                    flow.distortionNode.distortionAmount=a;
+                                    makeDistortionNode();
+                                };
+                                this.oversample = function(a){
+                                    if(a==null){return flow.distortionNode.oversample;}
+                                    flow.distortionNode.oversample=a;
+                                    makeDistortionNode();
+                                };
+                                this.resolution = function(a){
+                                    if(a==null){return flow.distortionNode.resolution;}
+                                    flow.distortionNode.resolution = a>=2?a:2;
+                                    makeDistortionNode();
+                                };
+                        
+                            //setup
+                                makeDistortionNode();
+                        };
+                        this.filterUnit = function(
+                            context
+                        ){
+                            //flow chain
+                                var flow = {
+                                    inAggregator: {},
+                                    filterNode: {},
+                                    outAggregator: {},
+                                };
+                        
+                            //inAggregator
+                                flow.inAggregator.gain = 1;
+                                flow.inAggregator.node = context.createGain();
+                                system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                        
+                            //filterNode
+                                flow.filterNode.node = context.createBiquadFilter();
+                        	    flow.filterNode.node.type = "lowpass";
+                                system.utility.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
+                                system.utility.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
+                                system.utility.audio.changeAudioParam(context, flow.filterNode.node.Q,0.1,0.01,'instant',true);
+                        
+                            //outAggregator
+                                flow.outAggregator.gain = 1;
+                                flow.outAggregator.node = context.createGain();
+                                system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                        
+                        
+                            //do connections
+                                flow.inAggregator.node.connect(flow.filterNode.node);
+                                flow.filterNode.node.connect(flow.outAggregator.node);
+                        
+                            //input/output node
+                                this.in = function(){return flow.inAggregator.node;}
+                                this.out = function(){return flow.outAggregator.node;}
+                        
+                            //methods
+                                this.type = function(type){flow.filterNode.node.type = type;};
+                                this.frequency = function(value){system.utility.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
+                                this.gain = function(value){system.utility.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
+                                this.Q = function(value){system.utility.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
+                                this.measureFrequencyResponse = function(start,end,step){
+                                    var frequencyArray = [];
+                                    for(var a = start; a < end; a += step){frequencyArray.push(a);}
+                                
+                                    return this.measureFrequencyResponse_values(frequencyArray);
+                                };
+                                this.measureFrequencyResponse_values = function(frequencyArray){
+                                    var Float32_frequencyArray = new Float32Array(frequencyArray);
+                                    var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                    var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                
+                                    flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+                                    return [magResponseOutput,frequencyArray];
+                                };
+                        };
+
+                        this.looper = function(context){
+                            //state
+                                var state = {
+                                    itself:this,
+                                    fileLoaded:false,
+                                    rate:1,
+                                    loop:{active:true, start:0, end:1,timeout:null},
+                                };
+                        
+                            //flow
+                                //chain
+                                var flow = {
+                                    track:{},
+                                    bufferSource:null,
+                                    channelSplitter:{},
+                                    leftOut:{}, rightOut:{}
+                                };
+                        
+                                //channelSplitter
+                                    flow.channelSplitter = context.createChannelSplitter(2);
+                        
+                                //leftOut
+                                    flow.leftOut.gain = 1;
+                                    flow.leftOut.node = context.createGain();
+                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
+                                //rightOut
+                                    flow.rightOut.gain = 1;
+                                    flow.rightOut.node = context.createGain();
+                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
+                        
+                                //output node
+                                    this.out_left  = function(){return flow.leftOut.node;}
+                                    this.out_right = function(){return flow.rightOut.node;}
+                        
+                                    
+                            //controls
+                                this.load = function(type,callback,url=''){
+                                    state.fileLoaded = false;
+                                    system.utility.audio.loadAudioFile(
+                                        function(data){
+                                            state.itself.stop();
+                                            flow.track = data;
+                                            state.fileLoaded = true;
+                                            state.needlePosition = 0.0;
+                                            callback(data);
+                                        },
+                                    type,url);
+                                };
+                                this.start = function(){
+                                    //check if we should play at all (the file must be loaded)
+                                        if(!state.fileLoaded){return;}
+                                    //stop any previous buffers, load buffer, enter settings and start from zero
+                                        if(flow.bufferSource){
+                                            flow.bufferSource.onended = function(){};
+                                            flow.bufferSource.stop(0);
+                                        }
+                                        flow.bufferSource = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                                        flow.bufferSource.playbackRate.value = state.rate;
+                                        flow.bufferSource.loop = state.loop.active;
+                                        flow.bufferSource.loopStart = state.loop.start*this.duration();
+                                        flow.bufferSource.loopEnd = state.loop.end*this.duration();
+                                        flow.bufferSource.start(0,0);
+                                        flow.bufferSource.onended = function(){flow.bufferSource = null;};
+                                };
+                                this.stop = function(){
+                                    if(!state.fileLoaded || !flow.bufferSource){return;}
+                                    flow.bufferSource.stop(0);
+                                    flow.bufferSource = undefined;
+                                };
+                                this.rate = function(){
+                                    state.rate = value;
+                                };
+                        
+                            //info
+                                this.duration = function(){
+                                    if(!state.fileLoaded){return -1;}
+                                    return flow.track.duration;
+                                };
+                                this.title = function(){
+                                    if(!state.fileLoaded){return '';}
+                                    return flow.track.name;
+                                };
+                                this.waveformSegment = function(data={start:0,end:1}){
+                                    if(data==undefined){return [];}
+                                    if(!state.fileLoaded){return [];}
+                                    return system.utility.audio.waveformSegment(flow.track.buffer,data);
+                                };
+                                this.loop = function(bool=false){
+                                    if(data==undefined){return data;}
+                                    state.loop.active = bool;
+                                };
+                                this.loopBounds = function(data={start:0,end:1}){
+                                    if(data==undefined){return data;}
+                        
+                                    state.loop.start = data.start!=undefined ? data.start : state.loop.start;
+                                    state.loop.end   = data.end!=undefined ? data.end : state.loop.end;
+                                };
+                        };
+
+                        this.multibandFilter = function(
+                            context, bandcount, frames=false
+                        ){
+                            //saved values
+                                var saved = {
+                                    settings:[], //{Q, gain, frequency, fresh(bool)}
+                                    responses:[], //{magResponse, phaseResponse, frequencyArray}
+                                };
+                        
+                            //flow chain
+                                var flow = {
+                                    inAggregator: {},
+                                    filterNodes: [],
+                                    gainNodes: [],
+                                    outAggregator: {},
+                                };
+                        
+                                //inAggregator
+                                    flow.inAggregator.gain = 1;
+                                    flow.inAggregator.node = context.createGain();
+                                    system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                        
+                                //filterNodes
+                                    function makeGenericFilter(type){
+                                        var temp = { frequency:110, Q:0.1, node:context.createBiquadFilter() };
+                                        temp.node.type = type;
+                                        system.utility.audio.changeAudioParam(context, temp.node.frequency,110,0.01,'instant',true);
+                                        system.utility.audio.changeAudioParam(context, temp.node.Q,0.1,0.01,'instant',true);
+                                        return temp;
+                                    }
+                        
+                                    if(frames){
+                                        if(bandcount < 2){bandcount = 2;}
+                                        //lowpass
+                                            flow.filterNodes.push(makeGenericFilter('lowpass'));
+                                        //bands
+                                            for(var a = 1; a < bandcount-1; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
+                                        //highpass
+                                            flow.filterNodes.push(makeGenericFilter('highpass'));
+                                    }else{
+                                        //bands
+                                            for(var a = 0; a < bandcount; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
+                                    }
+                        
+                                //gainNodes
+                                    for(var a = 0; a < bandcount; a++){
+                                        var temp = { gain:1, node:context.createGain() };
+                                        system.utility.audio.changeAudioParam(context, temp.node.gain, temp.gain, 0.01, 'instant', true);
+                                        flow.gainNodes.push(temp);
+                                        saved.settings[a] = { Q:0.1, gain:1, frequency:110, fresh:true };
+                                    }
+                        
+                                //outAggregator
+                                    flow.outAggregator.gain = 1;
+                                    flow.outAggregator.node = context.createGain();
+                                    system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                        
+                        
+                            //do connections
+                                for(var a = 0; a < bandcount; a++){
+                                    flow.inAggregator.node.connect(flow.filterNodes[a].node);
+                                    flow.filterNodes[a].node.connect(flow.gainNodes[a].node);
+                                    flow.gainNodes[a].node.connect(flow.outAggregator.node);
+                                }
+                        
+                        
+                            //input/output node
+                                this.in = function(){return flow.inAggregator.node;}
+                                this.out = function(){return flow.outAggregator.node;}
+                        
+                        
+                            //controls
+                                this.masterGain = function(value){
+                                    if(value == undefined){return flow.outAggregator.gain;}
+                                    flow.outAggregator.gain = value;
+                                    system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                                };
+                                this.gain = function(band,value){
+                                    if(value == undefined){return flow.gainNodes[band].gain;}
+                                    flow.gainNodes[band].gain = value;
+                                    system.utility.audio.changeAudioParam(context, flow.gainNodes[band].node.gain, flow.gainNodes[band].gain, 0.01, 'instant', true);
+                        
+                                    saved.settings[band].gain = value;
+                                    saved.settings[band].fresh = true;
+                                };
+                                this.frequency = function(band,value){
+                                    if(value == undefined){return flow.filterNodes[band].frequency;}
+                                    flow.filterNodes[band].frequency = value;
+                                    system.utility.audio.changeAudioParam(context, flow.filterNodes[band].node.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
+                        
+                                    saved.settings[band].frequency = value;
+                                    saved.settings[band].fresh = true;
+                                };
+                                this.Q = function(band,value){
+                                    if(value == undefined){return flow.filterNodes[band].Q;}
+                                    flow.filterNodes[band].Q = value;
+                                    system.utility.audio.changeAudioParam(context, flow.filterNodes[band].node.Q,flow.filterNodes[band].Q,0.01,'instant',true);
+                        
+                                    saved.settings[band].Q = value;
+                                    saved.settings[band].fresh = true;
+                                };
+                            
+                                this.measureFrequencyResponse = function(band, frequencyArray){
+                                    //if band is undefined, gather the response for all bands
+                                        if(band == undefined){ return Array(bandcount).fill(0).map((a,i) => this.measureFrequencyResponse(i,frequencyArray)); }
+                        
+                                    //if band hasn't had it's setttings changed since last time, just return the last values (multiplied by the master gain)
+                                        if(!saved.settings[band].fresh){
+                                            return [ saved.responses[band].magResponse.map(a => a*flow.outAggregator.gain), saved.responses[band].requencyArray ];
+                                        }
+                        
+                                    //do full calculation of band, save and return
+                                        var Float32_frequencyArray = new Float32Array(frequencyArray);
+                                        var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                        var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                        flow.filterNodes[band].node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+                        
+                                        saved.responses[band] = {
+                                            magResponse:magResponseOutput.map(a => a*flow.gainNodes[band].gain), 
+                                            phaseResponse:phaseResponseOutput, 
+                                            frequencyArray:frequencyArray,
+                                        };
+                                        saved.settings[band].fresh = false;
+                                        return [magResponseOutput.map(a => a*flow.gainNodes[band].gain*flow.outAggregator.gain),frequencyArray];
+                                };
+                        };
+                        this.oneShot_multi = function(context){
+                            //state
+                                var state = {
+                                    itself:this,
+                                    fileLoaded:false,
+                                    rate:1,
+                                };
+                        
+                            //flow
+                                //chain
+                                var flow = {
+                                    track:{},
+                                    bufferSource:null,
+                                    bufferSourceArray:[],
+                                    channelSplitter:{},
+                                    leftOut:{}, rightOut:{}
+                                };
+                        
+                                //channelSplitter
+                                    flow.channelSplitter = context.createChannelSplitter(2);
+                        
+                                //leftOut
+                                    flow.leftOut.gain = 1;
+                                    flow.leftOut.node = context.createGain();
+                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
+                                //rightOut
+                                    flow.rightOut.gain = 1;
+                                    flow.rightOut.node = context.createGain();
+                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
+                        
+                                //output node
+                                    this.audioOut = function(channel){
+                                        switch(channel){
+                                            case 'r': return flow.rightOut.node; break;
+                                            case 'l': return flow.leftOut.node; break;
+                                            default: console.error('"part.circuit.audio.oneShot_multi2.audioOut" unknown channel "'+channel+'"'); break;
+                                        }
+                                    };
+                                    this.out_left  = function(){return this.audioOut('l');}
+                                    this.out_right = function(){return this.audioOut('r');}
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                            //loading/unloading
+                                this.loadRaw = function(data){
+                                    if(Object.keys(data).length === 0){return;}
+                                    flow.track = data;
+                                    state.fileLoaded = true;
+                                    state.needlePosition = 0.0;
+                                };
+                                this.load = function(type,callback,url){
+                                    state.fileLoaded = false;
+                                    system.utility.audio.loadAudioFile(
+                                        function(data){
+                                            state.itself.loadRaw(data);
+                                            if(callback != undefined){ callback(data); }
+                                        },
+                                    type,url);
+                                };
+                                this.unloadRaw = function(){
+                                    return flow.track;
+                                };
+                        
+                            //control
+                                //play
+                                    this.fire = function(start=0,duration){
+                                        //check if we should play at all (the file must be loaded)
+                                            if(!state.fileLoaded){return;}
+                                        //load buffer, add onend code, enter rate setting, start and add to the array
+                                            var temp = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
+                                                flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
+                                            });
+                                            temp.playbackRate.value = state.rate;
+                                            temp.start(0,start*state.rate,duration*state.rate);
+                                            flow.bufferSourceArray.push(temp);
+                                    };
+                                    this.panic = function(){
+                                        while(flow.bufferSourceArray.length > 0){
+                                            flow.bufferSourceArray.shift().stop(0);
+                                        }
+                                    };
+                                //options
+                                    this.rate = function(value){
+                                        if(value == undefined){return state.rate;}
+                                        if(value == 0){value = 1/1000000;}
+                                        state.rate = value;
+                                    };
+                        
+                            //info
+                                this.duration = function(){
+                                    if(!state.fileLoaded){return -1;}
+                                    return flow.track.duration / state.rate;
+                                };
+                                this.title = function(){
+                                    if(!state.fileLoaded){return '';}
+                                    return flow.track.name;
+                                };
+                                this.waveformSegment = function(data={start:0,end:1}){
+                                    if(data==undefined){return [];}
+                                    if(!state.fileLoaded){return [];}
+                                    return system.utility.audio.waveformSegment(flow.track.buffer,data);
+                                };
+                        };
+                        this.oneShot_single = function(context){
+                            //state
+                                var state = {
+                                    itself:this,
+                                    fileLoaded:false,
+                                    rate:1,
+                                };
+                        
+                            //flow
+                                //chain
+                                var flow = {
+                                    track:{},
+                                    bufferSource:null,
+                                    channelSplitter:{},
+                                    leftOut:{}, rightOut:{}
+                                };
+                        
+                                //channelSplitter
+                                    flow.channelSplitter = context.createChannelSplitter(2);
+                        
+                                //leftOut
+                                    flow.leftOut.gain = 1;
+                                    flow.leftOut.node = context.createGain();
+                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
+                                //rightOut
+                                    flow.rightOut.gain = 1;
+                                    flow.rightOut.node = context.createGain();
+                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
+                        
+                                //output node
+                                    this.out_left  = function(){return flow.leftOut.node;}
+                                    this.out_right = function(){return flow.rightOut.node;}
+                        
+                                    
+                            //controls
+                                this.load = function(type,callback,url=''){
+                                    state.fileLoaded = false;
+                                    system.utility.audio.loadAudioFile(
+                                        function(data){
+                                            state.itself.stop();
+                                            flow.track = data;
+                                            state.fileLoaded = true;
+                                            state.needlePosition = 0.0;
+                                            callback(data);
+                                        },
+                                    type,url);
+                                };
+                                this.fire = function(){
+                                    //check if we should play at all (the file must be loaded)
+                                        if(!state.fileLoaded){return;}
+                                    //stop any previous buffers, load buffer, enter settings and start from zero
+                                        if(flow.bufferSource){
+                                            flow.bufferSource.onended = function(){};
+                                            flow.bufferSource.stop(0);
+                                        }
+                                        flow.bufferSource = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                                        flow.bufferSource.playbackRate.value = state.rate;
+                                        flow.bufferSource.start(0,0);
+                                        flow.bufferSource.onended = function(){flow.bufferSource = null;};
+                                };
+                                this.stop = function(){
+                                    if(!state.fileLoaded){return;}
+                                    flow.bufferSource.stop(0);
+                                    flow.bufferSource = undefined;
+                                };
+                                this.rate = function(){
+                                    state.rate = value;
+                                };
+                        
+                            //info
+                                this.duration = function(){
+                                    if(!state.fileLoaded){return -1;}
+                                    return flow.track.duration;
+                                };
+                                this.title = function(){
+                                    if(!state.fileLoaded){return '';}
+                                    return flow.track.name;
+                                };
+                                this.waveformSegment = function(data={start:0,end:1}){
+                                    if(data==undefined){return [];}
+                                    if(!state.fileLoaded){return [];}
+                                    return system.utility.audio.waveformSegment(flow.track.buffer,data);
+                                };
+                        };
+
+                        this.player = function(context){
+                            //state
+                                var state = {
+                                    itself:this,
+                                    fileLoaded:false,
+                                    playing:false,
+                                    playhead:{ position:0, lastSightingTime:0 },
+                                    loop:{ active:false, start:0, end:1, timeout:null},
+                                    rate:1,
+                                };
+                        
+                            //flow
+                                //flow chain
+                                var flow = {
+                                    track:{},
+                                    bufferSource:null,
+                                    channelSplitter:{},
+                                    leftOut:{}, rightOut:{}
+                                };
+                        
+                                //channelSplitter
+                                    flow.channelSplitter = context.createChannelSplitter(2);
+                        
+                                //leftOut
+                                    flow.leftOut.gain = 1;
+                                    flow.leftOut.node = context.createGain();
+                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
+                                //rightOut
+                                    flow.rightOut.gain = 1;
+                                    flow.rightOut.node = context.createGain();
+                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
+                        
+                                //output node
+                                    this.out_left  = function(){return flow.leftOut.node;}
+                                    this.out_right = function(){return flow.rightOut.node;}
+                        
+                        
+                            //internal functions
+                                function playheadCompute(){
+                                    //this code is used to update the playhead position aswel as to calculate when the loop end will occur, 
+                                    //and thus when the playhead should jump to the start of the loop. The actual looping of the audio is 
+                                    //done by the system, so this process is done solely to update the playhead position data.
+                                    //  Using the playhead's current postiion and paly rate; the length of time before the playhead is 
+                                    //scheduled to reach the end bound of the loop is calculated and given to a timeout. When this timeout 
+                                    //occurs; the playhead will jump to the start bound and the process is run again to calculate the new 
+                                    //length of time before the playhead reaches the end bound.
+                                    //  The playhead cannot move beyond the end bound, thus any negative time calculated will be set to
+                                    //zero, and the playhead will instantly jump back to the start bound (this is to mirror the operation of
+                                    //the underlying audio system)
+                        
+                                    clearInterval(state.loop.timeout);
+                                    
+                                    //update playhead position data
+                                    state.playhead.position = state.itself.currentTime();
+                                    state.playhead.lastSightingTime = context.currentTime;
+                        
+                                    //obviously, if the loop isn't active or the file isn't playing, don't do any of the work
+                                    if(!state.loop.active || !state.playing){return;}
+                        
+                                    //calculate time until the timeout should be called
+                                    var timeUntil = state.loop.end - state.itself.currentTime();
+                                    if(timeUntil < 0){timeUntil = 0;}
+                        
+                                    //the callback (which performs the jump to the start of the loop, and recomputes)
+                                    state.loop.timeout = setTimeout(function(){
+                                        state.itself.jumpTo(state.loop.start,false);
+                                        playheadCompute();
+                                    }, (timeUntil*1000)/state.rate);
+                                }
+                                function jumpToTime(value){
+                                    //check if we should jump at all
+                                    //(file must be loaded)
+                                        if(!state.fileLoaded){return;}
+                                    //if playback is stopped; only adjust the playhead position
+                                        if( !state.playing ){
+                                            state.playhead.position = value;
+                                            state.playhead.lastSightingTime = context.currentTime;
+                                            return;
+                                        }
+                        
+                                    //if loop is enabled, and the desired value is beyond the loop's end boundry,
+                                    //set the value to the start value
+                                        if(state.loop.active && value > state.loop.end){value = state.loop.start;}
+                        
+                                    //stop playback, with a callback that will change the playhead position
+                                    //and then restart playback
+                                        state.itself.stop(function(){
+                                            state.playhead.position = value;
+                                            state.playhead.lastSightingTime = context.currentTime;
+                                            state.itself.start();
+                                        });
+                                }
+                        
+                            //controls
+                                this.load = function(type,callback,url=''){
+                                    state.fileLoaded = false;
+                                    system.utility.audio.loadAudioFile(
+                                        function(data){
+                                            state.itself.stop();
+                                            flow.track = data;
+                                            state.fileLoaded = true;
+                                            state.playhead.position = 0;
+                                            callback(data);
+                                        },
+                                    type,url);
+                                };
+                                this.start = function(){
+                                    //check if we should play at all
+                                    //(player must be stopped and file must be loaded)
+                                        if(state.playing || !state.fileLoaded){return;}
+                                    //load buffer, enter settings and start from playhead position
+                                        flow.bufferSource = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(a){state.itself.stop();});
+                                        flow.bufferSource.loop = state.loop.active;
+                                        flow.bufferSource.loopStart = state.loop.start;
+                                        flow.bufferSource.loopEnd = state.loop.end;
+                                        flow.bufferSource.playbackRate.value = state.rate;
+                                        flow.bufferSource.start(0,state.playhead.position);
+                                    //log the starting time, play state
+                                        state.playhead.lastSightingTime = context.currentTime;
+                                        state.playing = true;
+                                        playheadCompute();
+                                };
+                                this.stop = function(callback){
+                                    //check if we should stop at all (player must be playing)
+                                        if( !state.playing ){return;}
+                                    //replace the onended callback (if we get one)
+                                    //(this callback will be replaced when 'play' is run again)
+                                        if(callback){flow.bufferSource.onended = function(){callback();};}
+                                    //actually stop the buffer and destroy it
+                                        flow.bufferSource.stop(0);
+                                        flow.bufferSource = undefined;
+                                    //log playhead position, play state and run playheadCompute
+                                        playheadCompute();
+                                        state.playing = false;
+                                };
+                                this.jumpTo = function(value=0,percent=true){
+                                    if(percent){
+                                        value = (value>1 ? 1 : value);
+                                        value = (value<0 ? 0 : value);
+                                        jumpToTime(this.duration()*value);
+                                    }else{jumpToTime(value);}
+                                    playheadCompute();
+                                };
+                                this.loop = function(data={active:false,start:0,end:1},percent=true){
+                                    if(data == undefined){return state.loop;}
+                        
+                                    if(data.active != undefined){
+                                        state.loop.active = data.active;
+                                        if(flow.bufferSource){flow.bufferSource.loop = data.active;}
+                                    }
+                        
+                                    if( data.start!=undefined || data.end!=undefined){
+                                        var mux = percent ? this.duration() : 1;
+                                        state.loop.start = data.start!=undefined ? data.start*mux : state.loop.start;
+                                        state.loop.end   = data.end!=undefined ?   data.end*mux :   state.loop.end;
+                                        if(flow.bufferSource){
+                                            flow.bufferSource.loopStart = state.loop.start;
+                                            flow.bufferSource.loopEnd = state.loop.end;
+                                        }
+                                    }
+                        
+                                    playheadCompute();
+                                };
+                                this.rate = function(value=1){
+                                    state.rate = value;
+                                    if(flow.bufferSource){flow.bufferSource.playbackRate.value = value;}
+                                    playheadCompute();
+                                };
+                        
+                            //info
+                                this.isLoaded = function(){return state.fileLoaded;};
+                                this.duration = function(){return !state.fileLoaded ? -1 : flow.track.duration;};
+                                this.title = function(){return !state.fileLoaded ? '' : flow.track.name;};
+                                this.currentTime = function(){
+                                    //check if file is loaded
+                                        if(!state.fileLoaded){return -1;}
+                                    //if playback is stopped, return the playhead position, 
+                                        if(!state.playing){return state.playhead.position;}
+                                    //otherwise, calculate the current position
+                                        return state.playhead.position + state.rate*(context.currentTime - state.playhead.lastSightingTime);
+                                };
+                                this.progress = function(){return this.currentTime()/this.duration()};
+                                this.waveformSegment = function(data={start:0,end:1}){
+                                    if(data==undefined || !state.fileLoaded){return [];}
+                                    return system.utility.audio.waveformSegment(flow.track.buffer, data);
+                                };
+                        };
+
                         this.recorder = function(context){
                         
                             //state
@@ -2944,53 +3537,273 @@
                                 this.out_right = function(){return flow.rightOut.node;};
                         };
 
-                        this.audioIn = function(
-                            context, setupConnect=true
+                        this.reverbUnit = function(
+                            context,
                         ){
                             //flow chain
                                 var flow = {
-                                    audioDevice: null,
-                                    outAggregator: {}
+                                    inAggregator: {},
+                                    reverbGain: {}, bypassGain: {},
+                                    reverbNode: {},
+                                    outAggregator: {},
                                 };
+                        
+                            //inAggregator
+                                flow.inAggregator.gain = 1;
+                                flow.inAggregator.node = context.createGain();
+                                system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                        
+                            //reverbGain / bypassGain
+                                flow.reverbGain.gain = 0.5;
+                                flow.bypassGain.gain = 0.5;
+                                flow.reverbGain.node = context.createGain();
+                                flow.bypassGain.node = context.createGain();
+                                system.utility.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                                system.utility.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                        
+                            //reverbNode
+                                flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
+                                flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
+                                flow.reverbNode.node = context.createConvolver();
+                        
+                                function setReverbType(repoURL,type,callback){
+                                    var ajaxRequest = new XMLHttpRequest();
+                                    ajaxRequest.open('GET', repoURL+type, true);
+                                    ajaxRequest.responseType = 'arraybuffer';
+                                    ajaxRequest.onload = function(){
+                                        //undo connections
+                                            flow.reverbNode.node.disconnect();
+                                        //create new convolver
+                                            flow.reverbNode.node = context.createConvolver();
+                                        //redo connections
+                                            flow.reverbGain.node.connect(flow.reverbNode.node);
+                                            flow.reverbNode.node.connect(flow.outAggregator.node);
+                                        //load in new buffer
+                                            context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
+                                        //run any callbacks
+                                            if(callback){callback();}  
+                                    };
+                                    ajaxRequest.send();
+                                }
+                                function getReverbTypeList(repoURL,callback=null){
+                                    var ajaxRequest = new XMLHttpRequest();
+                                    ajaxRequest.open('GET', repoURL+'available2.list', true);
+                                    ajaxRequest.onload = function() {
+                                        var list = ajaxRequest.response.split('\n'); var temp = '';
+                                        
+                                        list[list.length-1] = list[list.length-1].split(''); 
+                                        list[list.length-1].pop();
+                                        list[list.length-1] = list[list.length-1].join('');		
+                        
+                                        list.splice(-1,1);
+                                        
+                                        if(callback == null){console.log(list);}
+                                        else{callback(list);}
+                                    }
+                                    ajaxRequest.send();
+                                }	
                         
                             //outAggregator
                                 flow.outAggregator.gain = 1;
-                                flow.outAggregator.node = context.createGain();
-                                system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
+                                flow.outAggregator.node = context.createGain();    
+                                system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
                         
+                            //do connections
+                                flow.inAggregator.node.connect(flow.reverbGain.node);
+                                flow.inAggregator.node.connect(flow.bypassGain.node);
+                                flow.reverbGain.node.connect(flow.reverbNode.node);
+                                flow.bypassGain.node.connect(flow.outAggregator.node);
+                                flow.reverbNode.node.connect(flow.outAggregator.node);
                         
-                            //output node
+                            //input/output node
+                                this.in = function(){return flow.inAggregator.node;}
                                 this.out = function(){return flow.outAggregator.node;}
-                        
-                            //methods
-                                this.listDevices = function(callback){
-                                    navigator.mediaDevices.enumerateDevices().then(
-                                        function(devices){
-                                            callback(devices.filter((d) => d.kind === 'audioinput'));
-                                        }
-                                    );
+                            
+                            //controls
+                                this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
+                                this.type = function(name,callback){
+                                    if(name==null){return flow.reverbNode.selectedReverbType;}
+                                    flow.reverbNode.selectedReverbType = name;
+                                    setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
                                 };
-                                this.selectDevice = function(deviceId){
-                                    var promise = navigator.mediaDevices.getUserMedia({audio: { deviceId: deviceId}});
-                                    promise.then(
-                                        function(source){
-                                            audioDevice = source;
-                                            system.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
-                                        },
-                                        function(error){
-                                            console.warn('could not find audio input device: "' + deviceId + '"');
-                                            console.warn('\terror:',error);
-                                        }
-                                    );
-                                };
-                                this.gain = function(a){
+                                this.outGain = function(a){
                                     if(a==null){return flow.outAggregator.gain;}
-                                    flow.outAggregator.gain = a;
-                                    system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
+                                    flow.outAggregator.gain=a;
+                                    system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                                };
+                                this.wetdry = function(a){
+                                    if(a==null){return flow.reverbGain.gain;}
+                                    flow.reverbGain.gain=a;
+                                    flow.bypassGain.gain=1-a;
+                                    system.utility.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                                    system.utility.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
                                 };
                         
                             //setup
-                                if(setupConnect){this.selectDevice('default');}
+                                setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
+                        };
+
+                        this.synthesizer_1 = function(
+                            context,
+                            waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
+                            gain=1, 
+                            attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+                            detune=0, octave=0
+                        ){
+                            //components
+                                var mainOut = context.createGain();
+                                    mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
+                        
+                            //live oscillators
+                                var liveOscillators = {};
+                        
+                            //options
+                                this.waveType = function(a){if(a==null){return waveType;}waveType=a;};
+                                this.periodicWave = function(a){if(a==null){return periodicWave;}periodicWave=a;};
+                                this.gain = function(target,time,curve){
+                                    return changeAudioParam(mainOut.gain,target,time,curve);
+                                };
+                                this.attack = function(time,curve){
+                                    if(time==null&&curve==null){return attack;}
+                                    attack.time = time ? time : attack.time;
+                                    attack.curve = curve ? curve : attack.curve;
+                                };
+                                this.release = function(time,curve){
+                                    if(time==null&&curve==null){return release;}
+                                    release.time = time ? time : release.time;
+                                    release.curve = curve ? curve : release.curve;
+                                };
+                                this.octave = function(a){if(a==null){return octave;}octave=a;};
+                                this.detune = function(target,time,curve){
+                                    if(a==null){return detune;}
+                        
+                                    //change stored value for any new oscillators that are made
+                                        var start = detune;
+                                        var mux = target-start;
+                                        var stepsPerSecond = Math.round(Math.abs(mux));
+                                        var totalSteps = stepsPerSecond*time;
+                        
+                                        var steps = [1];
+                                        switch(curve){
+                                            case 'linear': steps = system.utility.math.curveGenerator.linear(totalSteps); break;
+                                            case 'exponential': steps = system.utility.math.curveGenerator.exponential(totalSteps); break;
+                                            case 's': steps = system.utility.math.curveGenerator.s(totalSteps,8); break;
+                                            case 'instant': default: break;
+                                        }
+                                        
+                                        if(steps.length != 0){
+                                            var interval = setInterval(function(){
+                                                detune = start+(steps.shift()*mux);
+                                                if(steps.length == 0){clearInterval(interval);}
+                                            },1000/stepsPerSecond);
+                                        }
+                        
+                                    //instruct liveOscillators to adjust their values
+                                        var OSCs = Object.keys(liveOscillators);
+                                        for(var b = 0; b < OSCs.length; b++){ 
+                                            liveOscillators[OSCs[b]].detune(target,time,curve);
+                                        }
+                                };
+                        
+                            //output node
+                                this.out = function(){return mainOut;}
+                        
+                            //oscillator generator
+                                function makeOSC(
+                                    context, connection, midinumber,
+                                    type, periodicWave, 
+                                    gain, attack, release,
+                                    detune, octave
+                                ){
+                                    return new function(){
+                                        this.generator = context.createOscillator();
+                                            if(type == 'custom'){ 
+                                                this.generator.setPeriodicWave( 
+                                                    // context.createPeriodicWave(new Float32Array(periodicWave.sin),new Float32Array(periodicWave.cos))
+                                                    context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                                                ); 
+                                            }else{ this.generator.type = type; }
+                                            this.generator.frequency.setTargetAtTime(system.audio.num2freq(midinumber,octave), context.currentTime, 0);
+                                            this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                                            this.generator.start(0);
+                        
+                                        this.gain = context.createGain();
+                                            this.generator.connect(this.gain);
+                                            this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                                            changeAudioParam(this.gain.gain, gain, attack.time, attack.curve, false);
+                                            this.gain.connect(connection);
+                        
+                                        this.detune = function(target,time,curve){
+                                            changeAudioParam(this.generator.detune,target,time,curve);
+                                        };
+                                        this.changeVelocity = function(a){
+                                            changeAudioParam(this.gain.gain,a,attack.time,attack.curve);
+                                        };
+                                        this.stop = function(){
+                                            changeAudioParam(this.gain.gain,0,release.time,release.curve, false);
+                                            setTimeout(function(that){
+                                                that.gain.disconnect(); 
+                                                that.generator.stop(); 
+                                                that.generator.disconnect(); 
+                                                that.gain=null; 
+                                                that.generator=null; 
+                                            }, release.time*1000, this);
+                                        };
+                                    };
+                                }
+                        
+                            //methods
+                                this.perform = function(note){
+                                    if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
+                                    else if( !liveOscillators[note.num] ){ 
+                                        //create new tone
+                                        liveOscillators[note.num] = makeOSC(context, mainOut, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave); 
+                                    }
+                                    else if( note.velocity == 0 ){ 
+                                        //stop and destroy tone
+                                        liveOscillators[note.num].stop();
+                                        delete liveOscillators[note.num];
+                                    }
+                                    else{
+                                        //adjust tone
+                                        liveOscillators[note.num].changeVelocity(note.velocity);
+                                    }
+                                };
+                                this.panic = function(){
+                                    var OSCs = Object.keys(liveOscillators);
+                                    for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+                                };
+                        
+                            //functions
+                                function changeAudioParam(audioParam,target,time,curve,cancelScheduledValues=true){
+                                    if(target==null){return audioParam.value;}
+                        
+                                    if(cancelScheduledValues){
+                                        audioParam.cancelScheduledValues(context.currentTime);
+                                    }
+                                    
+                                    switch(curve){
+                                        case 'linear': 
+                                            audioParam.linearRampToValueAtTime(target, context.currentTime+time);
+                                        break;
+                                        case 'exponential':
+                                            console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
+                                            if(target == 0){target = 1/10000;}
+                                            audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
+                                        break;
+                                        case 's':
+                                            var mux = target - audioParam.value;
+                                            var array = system.utility.math.curveGenerator.s(10);
+                                            for(var a = 0; a < array.length; a++){
+                                                array[a] = audioParam.value + array[a]*mux;
+                                            }
+                                            audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
+                                        break;
+                                        case 'instant': default:
+                                            audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                                        break;
+                                    }
+                                }
                         };
                         this.synthesizer2 = function(
                             context,
@@ -3220,1106 +4033,105 @@
                                     flow.wobbler_detune.start();
                                 };
                         };
-                        this.looper = function(context){
-                            //state
-                                var state = {
-                                    itself:this,
-                                    fileLoaded:false,
-                                    rate:1,
-                                    loop:{active:true, start:0, end:1,timeout:null},
-                                };
-                        
-                            //flow
-                                //chain
-                                var flow = {
-                                    track:{},
-                                    bufferSource:null,
-                                    channelSplitter:{},
-                                    leftOut:{}, rightOut:{}
-                                };
-                        
-                                //channelSplitter
-                                    flow.channelSplitter = context.createChannelSplitter(2);
-                        
-                                //leftOut
-                                    flow.leftOut.gain = 1;
-                                    flow.leftOut.node = context.createGain();
-                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
-                                //rightOut
-                                    flow.rightOut.gain = 1;
-                                    flow.rightOut.node = context.createGain();
-                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
-                        
-                                //output node
-                                    this.out_left  = function(){return flow.leftOut.node;}
-                                    this.out_right = function(){return flow.rightOut.node;}
-                        
-                                    
-                            //controls
-                                this.load = function(type,callback,url=''){
-                                    state.fileLoaded = false;
-                                    system.utility.audio.loadAudioFile(
-                                        function(data){
-                                            state.itself.stop();
-                                            flow.track = data;
-                                            state.fileLoaded = true;
-                                            state.needlePosition = 0.0;
-                                            callback(data);
-                                        },
-                                    type,url);
-                                };
-                                this.start = function(){
-                                    //check if we should play at all (the file must be loaded)
-                                        if(!state.fileLoaded){return;}
-                                    //stop any previous buffers, load buffer, enter settings and start from zero
-                                        if(flow.bufferSource){
-                                            flow.bufferSource.onended = function(){};
-                                            flow.bufferSource.stop(0);
-                                        }
-                                        flow.bufferSource = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
-                                        flow.bufferSource.playbackRate.value = state.rate;
-                                        flow.bufferSource.loop = state.loop.active;
-                                        flow.bufferSource.loopStart = state.loop.start*this.duration();
-                                        flow.bufferSource.loopEnd = state.loop.end*this.duration();
-                                        flow.bufferSource.start(0,0);
-                                        flow.bufferSource.onended = function(){flow.bufferSource = null;};
-                                };
-                                this.stop = function(){
-                                    if(!state.fileLoaded || !flow.bufferSource){return;}
-                                    flow.bufferSource.stop(0);
-                                    flow.bufferSource = undefined;
-                                };
-                                this.rate = function(){
-                                    state.rate = value;
-                                };
-                        
-                            //info
-                                this.duration = function(){
-                                    if(!state.fileLoaded){return -1;}
-                                    return flow.track.duration;
-                                };
-                                this.title = function(){
-                                    if(!state.fileLoaded){return '';}
-                                    return flow.track.name;
-                                };
-                                this.waveformSegment = function(data={start:0,end:1}){
-                                    if(data==undefined){return [];}
-                                    if(!state.fileLoaded){return [];}
-                                    return system.utility.audio.waveformSegment(flow.track.buffer,data);
-                                };
-                                this.loop = function(bool=false){
-                                    if(data==undefined){return data;}
-                                    state.loop.active = bool;
-                                };
-                                this.loopBounds = function(data={start:0,end:1}){
-                                    if(data==undefined){return data;}
-                        
-                                    state.loop.start = data.start!=undefined ? data.start : state.loop.start;
-                                    state.loop.end   = data.end!=undefined ? data.end : state.loop.end;
-                                };
-                        };
-
-                        this.oneShot_single = function(context){
-                            //state
-                                var state = {
-                                    itself:this,
-                                    fileLoaded:false,
-                                    rate:1,
-                                };
-                        
-                            //flow
-                                //chain
-                                var flow = {
-                                    track:{},
-                                    bufferSource:null,
-                                    channelSplitter:{},
-                                    leftOut:{}, rightOut:{}
-                                };
-                        
-                                //channelSplitter
-                                    flow.channelSplitter = context.createChannelSplitter(2);
-                        
-                                //leftOut
-                                    flow.leftOut.gain = 1;
-                                    flow.leftOut.node = context.createGain();
-                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
-                                //rightOut
-                                    flow.rightOut.gain = 1;
-                                    flow.rightOut.node = context.createGain();
-                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
-                        
-                                //output node
-                                    this.out_left  = function(){return flow.leftOut.node;}
-                                    this.out_right = function(){return flow.rightOut.node;}
-                        
-                                    
-                            //controls
-                                this.load = function(type,callback,url=''){
-                                    state.fileLoaded = false;
-                                    system.utility.audio.loadAudioFile(
-                                        function(data){
-                                            state.itself.stop();
-                                            flow.track = data;
-                                            state.fileLoaded = true;
-                                            state.needlePosition = 0.0;
-                                            callback(data);
-                                        },
-                                    type,url);
-                                };
-                                this.fire = function(){
-                                    //check if we should play at all (the file must be loaded)
-                                        if(!state.fileLoaded){return;}
-                                    //stop any previous buffers, load buffer, enter settings and start from zero
-                                        if(flow.bufferSource){
-                                            flow.bufferSource.onended = function(){};
-                                            flow.bufferSource.stop(0);
-                                        }
-                                        flow.bufferSource = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
-                                        flow.bufferSource.playbackRate.value = state.rate;
-                                        flow.bufferSource.start(0,0);
-                                        flow.bufferSource.onended = function(){flow.bufferSource = null;};
-                                };
-                                this.stop = function(){
-                                    if(!state.fileLoaded){return;}
-                                    flow.bufferSource.stop(0);
-                                    flow.bufferSource = undefined;
-                                };
-                                this.rate = function(){
-                                    state.rate = value;
-                                };
-                        
-                            //info
-                                this.duration = function(){
-                                    if(!state.fileLoaded){return -1;}
-                                    return flow.track.duration;
-                                };
-                                this.title = function(){
-                                    if(!state.fileLoaded){return '';}
-                                    return flow.track.name;
-                                };
-                                this.waveformSegment = function(data={start:0,end:1}){
-                                    if(data==undefined){return [];}
-                                    if(!state.fileLoaded){return [];}
-                                    return system.utility.audio.waveformSegment(flow.track.buffer,data);
-                                };
-                        };
-
-                        this.oneShot_multi = function(context){
-                            //state
-                                var state = {
-                                    itself:this,
-                                    fileLoaded:false,
-                                    rate:1,
-                                };
-                        
-                            //flow
-                                //chain
-                                var flow = {
-                                    track:{},
-                                    bufferSource:null,
-                                    bufferSourceArray:[],
-                                    channelSplitter:{},
-                                    leftOut:{}, rightOut:{}
-                                };
-                        
-                                //channelSplitter
-                                    flow.channelSplitter = context.createChannelSplitter(2);
-                        
-                                //leftOut
-                                    flow.leftOut.gain = 1;
-                                    flow.leftOut.node = context.createGain();
-                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
-                                //rightOut
-                                    flow.rightOut.gain = 1;
-                                    flow.rightOut.node = context.createGain();
-                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
-                        
-                                //output node
-                                    this.audioOut = function(channel){
-                                        switch(channel){
-                                            case 'r': return flow.rightOut.node; break;
-                                            case 'l': return flow.leftOut.node; break;
-                                            default: console.error('"parts.circuits.audio.oneShot_multi2.audioOut" unknown channel "'+channel+'"'); break;
-                                        }
-                                    };
-                                    this.out_left  = function(){return this.audioOut('l');}
-                                    this.out_right = function(){return this.audioOut('r');}
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                            //loading/unloading
-                                this.loadRaw = function(data){
-                                    if(Object.keys(data).length === 0){return;}
-                                    flow.track = data;
-                                    state.fileLoaded = true;
-                                    state.needlePosition = 0.0;
-                                };
-                                this.load = function(type,callback,url){
-                                    state.fileLoaded = false;
-                                    system.utility.audio.loadAudioFile(
-                                        function(data){
-                                            state.itself.loadRaw(data);
-                                            if(callback != undefined){ callback(data); }
-                                        },
-                                    type,url);
-                                };
-                                this.unloadRaw = function(){
-                                    return flow.track;
-                                };
-                        
-                            //control
-                                //play
-                                    this.fire = function(start=0,duration){
-                                        //check if we should play at all (the file must be loaded)
-                                            if(!state.fileLoaded){return;}
-                                        //load buffer, add onend code, enter rate setting, start and add to the array
-                                            var temp = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
-                                                flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
-                                            });
-                                            temp.playbackRate.value = state.rate;
-                                            temp.start(0,start*state.rate,duration*state.rate);
-                                            flow.bufferSourceArray.push(temp);
-                                    };
-                                    this.panic = function(){
-                                        while(flow.bufferSourceArray.length > 0){
-                                            flow.bufferSourceArray.shift().stop(0);
-                                        }
-                                    };
-                                //options
-                                    this.rate = function(value){
-                                        if(value == undefined){return state.rate;}
-                                        if(value == 0){value = 1/1000000;}
-                                        state.rate = value;
-                                    };
-                        
-                            //info
-                                this.duration = function(){
-                                    if(!state.fileLoaded){return -1;}
-                                    return flow.track.duration / state.rate;
-                                };
-                                this.title = function(){
-                                    if(!state.fileLoaded){return '';}
-                                    return flow.track.name;
-                                };
-                                this.waveformSegment = function(data={start:0,end:1}){
-                                    if(data==undefined){return [];}
-                                    if(!state.fileLoaded){return [];}
-                                    return system.utility.audio.waveformSegment(flow.track.buffer,data);
-                                };
-                        };
-                        this.audio2percentage = function(){
-                            return new function(){
-                                var analyser = {
-                                    timeDomainDataArray: null,
-                                    frequencyData: null,
-                                    refreshRate: 30,
-                                    refreshInterval: null,
-                                    returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                    resolution: 128
-                                };
-                                analyser.analyserNode = system.audio.context.createAnalyser();
-                                analyser.analyserNode.fftSize = analyser.resolution;
-                                analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
-                                analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
-                        
-                                this.__render = function(){
-                                        analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
-                        
-                                        var numbers = [];
-                                        for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
-                                            numbers.push(
-                                                analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
-                                            );
-                                        }
-                        
-                                        var val = 0;
-                                        numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
-                        
-                                        this.newValue(val);
-                                }
-                        
-                                //audio connections
-                                    this.audioIn = function(){return analyser.analyserNode;};
-                        
-                                //methods
-                                    this.start = function(){
-                                        analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
-                                    };
-                                    this.stop = function(){
-                                        clearInterval(analyser.refreshInterval);
-                                    };
-                        
-                                //callbacks
-                                    this.newValue = function(a){};
-                            };
-                        };
-                        this.reverbUnit = function(
-                            context,
-                        ){
-                            //flow chain
-                                var flow = {
-                                    inAggregator: {},
-                                    reverbGain: {}, bypassGain: {},
-                                    reverbNode: {},
-                                    outAggregator: {},
-                                };
-                        
-                            //inAggregator
-                                flow.inAggregator.gain = 1;
-                                flow.inAggregator.node = context.createGain();
-                                system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
-                        
-                            //reverbGain / bypassGain
-                                flow.reverbGain.gain = 0.5;
-                                flow.bypassGain.gain = 0.5;
-                                flow.reverbGain.node = context.createGain();
-                                flow.bypassGain.node = context.createGain();
-                                system.utility.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
-                                system.utility.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
-                        
-                            //reverbNode
-                                flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
-                                flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
-                                flow.reverbNode.node = context.createConvolver();
-                        
-                                function setReverbType(repoURL,type,callback){
-                                    var ajaxRequest = new XMLHttpRequest();
-                                    ajaxRequest.open('GET', repoURL+type, true);
-                                    ajaxRequest.responseType = 'arraybuffer';
-                                    ajaxRequest.onload = function(){
-                                        //undo connections
-                                            flow.reverbNode.node.disconnect();
-                                        //create new convolver
-                                            flow.reverbNode.node = context.createConvolver();
-                                        //redo connections
-                                            flow.reverbGain.node.connect(flow.reverbNode.node);
-                                            flow.reverbNode.node.connect(flow.outAggregator.node);
-                                        //load in new buffer
-                                            context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
-                                        //run any callbacks
-                                            if(callback){callback();}  
-                                    };
-                                    ajaxRequest.send();
-                                }
-                                function getReverbTypeList(repoURL,callback=null){
-                                    var ajaxRequest = new XMLHttpRequest();
-                                    ajaxRequest.open('GET', repoURL+'available2.list', true);
-                                    ajaxRequest.onload = function() {
-                                        var list = ajaxRequest.response.split('\n'); var temp = '';
-                                        
-                                        list[list.length-1] = list[list.length-1].split(''); 
-                                        list[list.length-1].pop();
-                                        list[list.length-1] = list[list.length-1].join('');		
-                        
-                                        list.splice(-1,1);
-                                        
-                                        if(callback == null){console.log(list);}
-                                        else{callback(list);}
-                                    }
-                                    ajaxRequest.send();
-                                }	
-                        
-                            //outAggregator
-                                flow.outAggregator.gain = 1;
-                                flow.outAggregator.node = context.createGain();    
-                                system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                        
-                            //do connections
-                                flow.inAggregator.node.connect(flow.reverbGain.node);
-                                flow.inAggregator.node.connect(flow.bypassGain.node);
-                                flow.reverbGain.node.connect(flow.reverbNode.node);
-                                flow.bypassGain.node.connect(flow.outAggregator.node);
-                                flow.reverbNode.node.connect(flow.outAggregator.node);
-                        
-                            //input/output node
-                                this.in = function(){return flow.inAggregator.node;}
-                                this.out = function(){return flow.outAggregator.node;}
-                            
-                            //controls
-                                this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
-                                this.type = function(name,callback){
-                                    if(name==null){return flow.reverbNode.selectedReverbType;}
-                                    flow.reverbNode.selectedReverbType = name;
-                                    setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
-                                };
-                                this.outGain = function(a){
-                                    if(a==null){return flow.outAggregator.gain;}
-                                    flow.outAggregator.gain=a;
-                                    system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
-                                };
-                                this.wetdry = function(a){
-                                    if(a==null){return flow.reverbGain.gain;}
-                                    flow.reverbGain.gain=a;
-                                    flow.bypassGain.gain=1-a;
-                                    system.utility.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
-                                    system.utility.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
-                                };
-                        
-                            //setup
-                                setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
-                        };
-
-                        this.multibandFilter = function(
-                            context, bandcount, frames=false
-                        ){
-                            //saved values
-                                var saved = {
-                                    settings:[], //{Q, gain, frequency, fresh(bool)}
-                                    responses:[], //{magResponse, phaseResponse, frequencyArray}
-                                };
-                        
-                            //flow chain
-                                var flow = {
-                                    inAggregator: {},
-                                    filterNodes: [],
-                                    gainNodes: [],
-                                    outAggregator: {},
-                                };
-                        
-                                //inAggregator
-                                    flow.inAggregator.gain = 1;
-                                    flow.inAggregator.node = context.createGain();
-                                    system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
-                        
-                                //filterNodes
-                                    function makeGenericFilter(type){
-                                        var temp = { frequency:110, Q:0.1, node:context.createBiquadFilter() };
-                                        temp.node.type = type;
-                                        system.utility.audio.changeAudioParam(context, temp.node.frequency,110,0.01,'instant',true);
-                                        system.utility.audio.changeAudioParam(context, temp.node.Q,0.1,0.01,'instant',true);
-                                        return temp;
-                                    }
-                        
-                                    if(frames){
-                                        if(bandcount < 2){bandcount = 2;}
-                                        //lowpass
-                                            flow.filterNodes.push(makeGenericFilter('lowpass'));
-                                        //bands
-                                            for(var a = 1; a < bandcount-1; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
-                                        //highpass
-                                            flow.filterNodes.push(makeGenericFilter('highpass'));
-                                    }else{
-                                        //bands
-                                            for(var a = 0; a < bandcount; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
-                                    }
-                        
-                                //gainNodes
-                                    for(var a = 0; a < bandcount; a++){
-                                        var temp = { gain:1, node:context.createGain() };
-                                        system.utility.audio.changeAudioParam(context, temp.node.gain, temp.gain, 0.01, 'instant', true);
-                                        flow.gainNodes.push(temp);
-                                        saved.settings[a] = { Q:0.1, gain:1, frequency:110, fresh:true };
-                                    }
-                        
-                                //outAggregator
-                                    flow.outAggregator.gain = 1;
-                                    flow.outAggregator.node = context.createGain();
-                                    system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                        
-                        
-                            //do connections
-                                for(var a = 0; a < bandcount; a++){
-                                    flow.inAggregator.node.connect(flow.filterNodes[a].node);
-                                    flow.filterNodes[a].node.connect(flow.gainNodes[a].node);
-                                    flow.gainNodes[a].node.connect(flow.outAggregator.node);
-                                }
-                        
-                        
-                            //input/output node
-                                this.in = function(){return flow.inAggregator.node;}
-                                this.out = function(){return flow.outAggregator.node;}
-                        
-                        
-                            //controls
-                                this.masterGain = function(value){
-                                    if(value == undefined){return flow.outAggregator.gain;}
-                                    flow.outAggregator.gain = value;
-                                    system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                                };
-                                this.gain = function(band,value){
-                                    if(value == undefined){return flow.gainNodes[band].gain;}
-                                    flow.gainNodes[band].gain = value;
-                                    system.utility.audio.changeAudioParam(context, flow.gainNodes[band].node.gain, flow.gainNodes[band].gain, 0.01, 'instant', true);
-                        
-                                    saved.settings[band].gain = value;
-                                    saved.settings[band].fresh = true;
-                                };
-                                this.frequency = function(band,value){
-                                    if(value == undefined){return flow.filterNodes[band].frequency;}
-                                    flow.filterNodes[band].frequency = value;
-                                    system.utility.audio.changeAudioParam(context, flow.filterNodes[band].node.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
-                        
-                                    saved.settings[band].frequency = value;
-                                    saved.settings[band].fresh = true;
-                                };
-                                this.Q = function(band,value){
-                                    if(value == undefined){return flow.filterNodes[band].Q;}
-                                    flow.filterNodes[band].Q = value;
-                                    system.utility.audio.changeAudioParam(context, flow.filterNodes[band].node.Q,flow.filterNodes[band].Q,0.01,'instant',true);
-                        
-                                    saved.settings[band].Q = value;
-                                    saved.settings[band].fresh = true;
-                                };
-                            
-                                this.measureFrequencyResponse = function(band, frequencyArray){
-                                    //if band is undefined, gather the response for all bands
-                                        if(band == undefined){ return Array(bandcount).fill(0).map((a,i) => this.measureFrequencyResponse(i,frequencyArray)); }
-                        
-                                    //if band hasn't had it's setttings changed since last time, just return the last values (multiplied by the master gain)
-                                        if(!saved.settings[band].fresh){
-                                            return [ saved.responses[band].magResponse.map(a => a*flow.outAggregator.gain), saved.responses[band].requencyArray ];
-                                        }
-                        
-                                    //do full calculation of band, save and return
-                                        var Float32_frequencyArray = new Float32Array(frequencyArray);
-                                        var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                                        var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                                        flow.filterNodes[band].node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
-                        
-                                        saved.responses[band] = {
-                                            magResponse:magResponseOutput.map(a => a*flow.gainNodes[band].gain), 
-                                            phaseResponse:phaseResponseOutput, 
-                                            frequencyArray:frequencyArray,
-                                        };
-                                        saved.settings[band].fresh = false;
-                                        return [magResponseOutput.map(a => a*flow.gainNodes[band].gain*flow.outAggregator.gain),frequencyArray];
-                                };
-                        };
-                        this.distortionUnit = function(
-                            context,
-                        ){
-                            //flow chain
-                            var flow = {
-                                inAggregator: {},
-                                distortionNode: {},
-                                outAggregator: {},
-                            };
-                        
-                            //inAggregator
-                                flow.inAggregator.gain = 0;
-                                flow.inAggregator.node = context.createGain();
-                                system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
-                        
-                            //distortionNode
-                                flow.distortionNode.distortionAmount = 0;
-                                flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
-                                flow.distortionNode.resolution = 100;
-                                function makeDistortionNode(){
-                                    flow.inAggregator.node.disconnect();
-                                    if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
-                                    
-                                    flow.distortionNode.node = context.createWaveShaper();
-                                        flow.distortionNode.curve = new Float32Array(system.utility.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
-                                        flow.distortionNode.node.curve = flow.distortionNode.curve;
-                                        flow.distortionNode.node.oversample = flow.distortionNode.oversample;
-                                        
-                                    flow.inAggregator.node.connect(flow.distortionNode.node);
-                                    flow.distortionNode.node.connect(flow.outAggregator.node);
-                                }
-                        
-                            //outAggregator
-                                flow.outAggregator.gain = 0;
-                                flow.outAggregator.node = context.createGain();    
-                                system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                        
-                        
-                            //input/output node
-                                this.in = function(){return flow.inAggregator.node;}
-                                this.out = function(){return flow.outAggregator.node;}
-                        
-                            //controls
-                                this.inGain = function(a){
-                                    if(a==null){return flow.inAggregator.gain;}
-                                    flow.inAggregator.gain=a;
-                                    system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
-                                };
-                                this.outGain = function(a){
-                                    if(a==null){return flow.outAggregator.gain;}
-                                    flow.outAggregator.gain=a;
-                                    system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
-                                };
-                                this.distortionAmount = function(a){
-                                    if(a==null){return flow.distortionNode.distortionAmount;}
-                                    flow.distortionNode.distortionAmount=a;
-                                    makeDistortionNode();
-                                };
-                                this.oversample = function(a){
-                                    if(a==null){return flow.distortionNode.oversample;}
-                                    flow.distortionNode.oversample=a;
-                                    makeDistortionNode();
-                                };
-                                this.resolution = function(a){
-                                    if(a==null){return flow.distortionNode.resolution;}
-                                    flow.distortionNode.resolution = a>=2?a:2;
-                                    makeDistortionNode();
-                                };
-                        
-                            //setup
-                                makeDistortionNode();
-                        };
-                        this.synthesizer_1 = function(
-                            context,
-                            waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
-                            gain=1, 
-                            attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
-                            detune=0, octave=0
-                        ){
-                            //components
-                                var mainOut = context.createGain();
-                                    mainOut.gain.setTargetAtTime(gain, context.currentTime, 0);
-                        
-                            //live oscillators
-                                var liveOscillators = {};
-                        
-                            //options
-                                this.waveType = function(a){if(a==null){return waveType;}waveType=a;};
-                                this.periodicWave = function(a){if(a==null){return periodicWave;}periodicWave=a;};
-                                this.gain = function(target,time,curve){
-                                    return changeAudioParam(mainOut.gain,target,time,curve);
-                                };
-                                this.attack = function(time,curve){
-                                    if(time==null&&curve==null){return attack;}
-                                    attack.time = time ? time : attack.time;
-                                    attack.curve = curve ? curve : attack.curve;
-                                };
-                                this.release = function(time,curve){
-                                    if(time==null&&curve==null){return release;}
-                                    release.time = time ? time : release.time;
-                                    release.curve = curve ? curve : release.curve;
-                                };
-                                this.octave = function(a){if(a==null){return octave;}octave=a;};
-                                this.detune = function(target,time,curve){
-                                    if(a==null){return detune;}
-                        
-                                    //change stored value for any new oscillators that are made
-                                        var start = detune;
-                                        var mux = target-start;
-                                        var stepsPerSecond = Math.round(Math.abs(mux));
-                                        var totalSteps = stepsPerSecond*time;
-                        
-                                        var steps = [1];
-                                        switch(curve){
-                                            case 'linear': steps = system.utility.math.curveGenerator.linear(totalSteps); break;
-                                            case 'exponential': steps = system.utility.math.curveGenerator.exponential(totalSteps); break;
-                                            case 's': steps = system.utility.math.curveGenerator.s(totalSteps,8); break;
-                                            case 'instant': default: break;
-                                        }
-                                        
-                                        if(steps.length != 0){
-                                            var interval = setInterval(function(){
-                                                detune = start+(steps.shift()*mux);
-                                                if(steps.length == 0){clearInterval(interval);}
-                                            },1000/stepsPerSecond);
-                                        }
-                        
-                                    //instruct liveOscillators to adjust their values
-                                        var OSCs = Object.keys(liveOscillators);
-                                        for(var b = 0; b < OSCs.length; b++){ 
-                                            liveOscillators[OSCs[b]].detune(target,time,curve);
-                                        }
-                                };
-                        
-                            //output node
-                                this.out = function(){return mainOut;}
-                        
-                            //oscillator generator
-                                function makeOSC(
-                                    context, connection, midinumber,
-                                    type, periodicWave, 
-                                    gain, attack, release,
-                                    detune, octave
-                                ){
-                                    return new function(){
-                                        this.generator = context.createOscillator();
-                                            if(type == 'custom'){ 
-                                                this.generator.setPeriodicWave( 
-                                                    // context.createPeriodicWave(new Float32Array(periodicWave.sin),new Float32Array(periodicWave.cos))
-                                                    context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
-                                                ); 
-                                            }else{ this.generator.type = type; }
-                                            this.generator.frequency.setTargetAtTime(system.audio.num2freq(midinumber,octave), context.currentTime, 0);
-                                            this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
-                                            this.generator.start(0);
-                        
-                                        this.gain = context.createGain();
-                                            this.generator.connect(this.gain);
-                                            this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                                            changeAudioParam(this.gain.gain, gain, attack.time, attack.curve, false);
-                                            this.gain.connect(connection);
-                        
-                                        this.detune = function(target,time,curve){
-                                            changeAudioParam(this.generator.detune,target,time,curve);
-                                        };
-                                        this.changeVelocity = function(a){
-                                            changeAudioParam(this.gain.gain,a,attack.time,attack.curve);
-                                        };
-                                        this.stop = function(){
-                                            changeAudioParam(this.gain.gain,0,release.time,release.curve, false);
-                                            setTimeout(function(that){
-                                                that.gain.disconnect(); 
-                                                that.generator.stop(); 
-                                                that.generator.disconnect(); 
-                                                that.gain=null; 
-                                                that.generator=null; 
-                                            }, release.time*1000, this);
-                                        };
-                                    };
-                                }
-                        
-                            //methods
-                                this.perform = function(note){
-                                    if( !liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
-                                    else if( !liveOscillators[note.num] ){ 
-                                        //create new tone
-                                        liveOscillators[note.num] = makeOSC(context, mainOut, note.num, waveType, periodicWave, note.velocity, attack, release, detune, octave); 
-                                    }
-                                    else if( note.velocity == 0 ){ 
-                                        //stop and destroy tone
-                                        liveOscillators[note.num].stop();
-                                        delete liveOscillators[note.num];
-                                    }
-                                    else{
-                                        //adjust tone
-                                        liveOscillators[note.num].changeVelocity(note.velocity);
-                                    }
-                                };
-                                this.panic = function(){
-                                    var OSCs = Object.keys(liveOscillators);
-                                    for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
-                                };
-                        
-                            //functions
-                                function changeAudioParam(audioParam,target,time,curve,cancelScheduledValues=true){
-                                    if(target==null){return audioParam.value;}
-                        
-                                    if(cancelScheduledValues){
-                                        audioParam.cancelScheduledValues(context.currentTime);
-                                    }
-                                    
-                                    switch(curve){
-                                        case 'linear': 
-                                            audioParam.linearRampToValueAtTime(target, context.currentTime+time);
-                                        break;
-                                        case 'exponential':
-                                            console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
-                                            if(target == 0){target = 1/10000;}
-                                            audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
-                                        break;
-                                        case 's':
-                                            var mux = target - audioParam.value;
-                                            var array = system.utility.math.curveGenerator.s(10);
-                                            for(var a = 0; a < array.length; a++){
-                                                array[a] = audioParam.value + array[a]*mux;
-                                            }
-                                            audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
-                                        break;
-                                        case 'instant': default:
-                                            audioParam.setTargetAtTime(target, context.currentTime, 0.001);
-                                        break;
-                                    }
-                                }
-                        };
-                        this.player = function(context){
-                            //state
-                                var state = {
-                                    itself:this,
-                                    fileLoaded:false,
-                                    playing:false,
-                                    playhead:{ position:0, lastSightingTime:0 },
-                                    loop:{ active:false, start:0, end:1, timeout:null},
-                                    rate:1,
-                                };
-                        
-                            //flow
-                                //flow chain
-                                var flow = {
-                                    track:{},
-                                    bufferSource:null,
-                                    channelSplitter:{},
-                                    leftOut:{}, rightOut:{}
-                                };
-                        
-                                //channelSplitter
-                                    flow.channelSplitter = context.createChannelSplitter(2);
-                        
-                                //leftOut
-                                    flow.leftOut.gain = 1;
-                                    flow.leftOut.node = context.createGain();
-                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
-                                //rightOut
-                                    flow.rightOut.gain = 1;
-                                    flow.rightOut.node = context.createGain();
-                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
-                        
-                                //output node
-                                    this.out_left  = function(){return flow.leftOut.node;}
-                                    this.out_right = function(){return flow.rightOut.node;}
-                        
-                        
-                            //internal functions
-                                function playheadCompute(){
-                                    //this code is used to update the playhead position aswel as to calculate when the loop end will occur, 
-                                    //and thus when the playhead should jump to the start of the loop. The actual looping of the audio is 
-                                    //done by the system, so this process is done solely to update the playhead position data.
-                                    //  Using the playhead's current postiion and paly rate; the length of time before the playhead is 
-                                    //scheduled to reach the end bound of the loop is calculated and given to a timeout. When this timeout 
-                                    //occurs; the playhead will jump to the start bound and the process is run again to calculate the new 
-                                    //length of time before the playhead reaches the end bound.
-                                    //  The playhead cannot move beyond the end bound, thus any negative time calculated will be set to
-                                    //zero, and the playhead will instantly jump back to the start bound (this is to mirror the operation of
-                                    //the underlying audio system)
-                        
-                                    clearInterval(state.loop.timeout);
-                                    
-                                    //update playhead position data
-                                    state.playhead.position = state.itself.currentTime();
-                                    state.playhead.lastSightingTime = context.currentTime;
-                        
-                                    //obviously, if the loop isn't active or the file isn't playing, don't do any of the work
-                                    if(!state.loop.active || !state.playing){return;}
-                        
-                                    //calculate time until the timeout should be called
-                                    var timeUntil = state.loop.end - state.itself.currentTime();
-                                    if(timeUntil < 0){timeUntil = 0;}
-                        
-                                    //the callback (which performs the jump to the start of the loop, and recomputes)
-                                    state.loop.timeout = setTimeout(function(){
-                                        state.itself.jumpTo(state.loop.start,false);
-                                        playheadCompute();
-                                    }, (timeUntil*1000)/state.rate);
-                                }
-                                function jumpToTime(value){
-                                    //check if we should jump at all
-                                    //(file must be loaded)
-                                        if(!state.fileLoaded){return;}
-                                    //if playback is stopped; only adjust the playhead position
-                                        if( !state.playing ){
-                                            state.playhead.position = value;
-                                            state.playhead.lastSightingTime = context.currentTime;
-                                            return;
-                                        }
-                        
-                                    //if loop is enabled, and the desired value is beyond the loop's end boundry,
-                                    //set the value to the start value
-                                        if(state.loop.active && value > state.loop.end){value = state.loop.start;}
-                        
-                                    //stop playback, with a callback that will change the playhead position
-                                    //and then restart playback
-                                        state.itself.stop(function(){
-                                            state.playhead.position = value;
-                                            state.playhead.lastSightingTime = context.currentTime;
-                                            state.itself.start();
-                                        });
-                                }
-                        
-                            //controls
-                                this.load = function(type,callback,url=''){
-                                    state.fileLoaded = false;
-                                    system.utility.audio.loadAudioFile(
-                                        function(data){
-                                            state.itself.stop();
-                                            flow.track = data;
-                                            state.fileLoaded = true;
-                                            state.playhead.position = 0;
-                                            callback(data);
-                                        },
-                                    type,url);
-                                };
-                                this.start = function(){
-                                    //check if we should play at all
-                                    //(player must be stopped and file must be loaded)
-                                        if(state.playing || !state.fileLoaded){return;}
-                                    //load buffer, enter settings and start from playhead position
-                                        flow.bufferSource = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(a){state.itself.stop();});
-                                        flow.bufferSource.loop = state.loop.active;
-                                        flow.bufferSource.loopStart = state.loop.start;
-                                        flow.bufferSource.loopEnd = state.loop.end;
-                                        flow.bufferSource.playbackRate.value = state.rate;
-                                        flow.bufferSource.start(0,state.playhead.position);
-                                    //log the starting time, play state
-                                        state.playhead.lastSightingTime = context.currentTime;
-                                        state.playing = true;
-                                        playheadCompute();
-                                };
-                                this.stop = function(callback){
-                                    //check if we should stop at all (player must be playing)
-                                        if( !state.playing ){return;}
-                                    //replace the onended callback (if we get one)
-                                    //(this callback will be replaced when 'play' is run again)
-                                        if(callback){flow.bufferSource.onended = function(){callback();};}
-                                    //actually stop the buffer and destroy it
-                                        flow.bufferSource.stop(0);
-                                        flow.bufferSource = undefined;
-                                    //log playhead position, play state and run playheadCompute
-                                        playheadCompute();
-                                        state.playing = false;
-                                };
-                                this.jumpTo = function(value=0,percent=true){
-                                    if(percent){
-                                        value = (value>1 ? 1 : value);
-                                        value = (value<0 ? 0 : value);
-                                        jumpToTime(this.duration()*value);
-                                    }else{jumpToTime(value);}
-                                    playheadCompute();
-                                };
-                                this.loop = function(data={active:false,start:0,end:1},percent=true){
-                                    if(data == undefined){return state.loop;}
-                        
-                                    if(data.active != undefined){
-                                        state.loop.active = data.active;
-                                        if(flow.bufferSource){flow.bufferSource.loop = data.active;}
-                                    }
-                        
-                                    if( data.start!=undefined || data.end!=undefined){
-                                        var mux = percent ? this.duration() : 1;
-                                        state.loop.start = data.start!=undefined ? data.start*mux : state.loop.start;
-                                        state.loop.end   = data.end!=undefined ?   data.end*mux :   state.loop.end;
-                                        if(flow.bufferSource){
-                                            flow.bufferSource.loopStart = state.loop.start;
-                                            flow.bufferSource.loopEnd = state.loop.end;
-                                        }
-                                    }
-                        
-                                    playheadCompute();
-                                };
-                                this.rate = function(value=1){
-                                    state.rate = value;
-                                    if(flow.bufferSource){flow.bufferSource.playbackRate.value = value;}
-                                    playheadCompute();
-                                };
-                        
-                            //info
-                                this.isLoaded = function(){return state.fileLoaded;};
-                                this.duration = function(){return !state.fileLoaded ? -1 : flow.track.duration;};
-                                this.title = function(){return !state.fileLoaded ? '' : flow.track.name;};
-                                this.currentTime = function(){
-                                    //check if file is loaded
-                                        if(!state.fileLoaded){return -1;}
-                                    //if playback is stopped, return the playhead position, 
-                                        if(!state.playing){return state.playhead.position;}
-                                    //otherwise, calculate the current position
-                                        return state.playhead.position + state.rate*(context.currentTime - state.playhead.lastSightingTime);
-                                };
-                                this.progress = function(){return this.currentTime()/this.duration()};
-                                this.waveformSegment = function(data={start:0,end:1}){
-                                    if(data==undefined || !state.fileLoaded){return [];}
-                                    return system.utility.audio.waveformSegment(flow.track.buffer, data);
-                                };
-                        };
-
-                        this.channelMultiplier = function(
-                            context, outputCount=2
-                        ){
-                            //flow
-                                //flow chain
-                                    var flow = {
-                                        in: {},
-                                        outs:[],
-                                        out_0: {}, out_1: {},
-                                    };
-                                
-                                //in
-                                    flow.in.gain = 1;
-                                    flow.in.node = context.createGain();    
-                                    system.utility.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
-                        
-                                //outs
-                                    for(var a = 0; a < outputCount; a++){
-                                        var temp = { gain:0.5, node:context.createGain() };
-                                        system.utility.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
-                                        flow.outs.push(temp);
-                                        flow.in.node.connect(temp.node);
-                                    }
-                        
-                            //input/output node
-                                this.in = function(){return flow.in.node;}
-                                this.out = function(a){return flow.outs[a].node;}
-                        
-                            //controls
-                                this.inGain = function(a){
-                                    if(a == undefined){return flow.in.gain;}
-                                    flow.in.gain = a;
-                                    system.utility.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
-                                };
-                                this.outGain = function(a,value){
-                                    if(value == undefined){ return flow.outs[a].gain; }
-                                    flow.outs[a].gain = value;
-                                    system.utility.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
-                                };
-                        };
-                            
-                        this.filterUnit = function(
-                            context
-                        ){
-                            //flow chain
-                                var flow = {
-                                    inAggregator: {},
-                                    filterNode: {},
-                                    outAggregator: {},
-                                };
-                        
-                            //inAggregator
-                                flow.inAggregator.gain = 1;
-                                flow.inAggregator.node = context.createGain();
-                                system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
-                        
-                            //filterNode
-                                flow.filterNode.node = context.createBiquadFilter();
-                        	    flow.filterNode.node.type = "lowpass";
-                                system.utility.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
-                                system.utility.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
-                                system.utility.audio.changeAudioParam(context, flow.filterNode.node.Q,0.1,0.01,'instant',true);
-                        
-                            //outAggregator
-                                flow.outAggregator.gain = 1;
-                                flow.outAggregator.node = context.createGain();
-                                system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                        
-                        
-                            //do connections
-                                flow.inAggregator.node.connect(flow.filterNode.node);
-                                flow.filterNode.node.connect(flow.outAggregator.node);
-                        
-                            //input/output node
-                                this.in = function(){return flow.inAggregator.node;}
-                                this.out = function(){return flow.outAggregator.node;}
-                        
-                            //methods
-                                this.type = function(type){flow.filterNode.node.type = type;};
-                                this.frequency = function(value){system.utility.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
-                                this.gain = function(value){system.utility.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
-                                this.Q = function(value){system.utility.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
-                                this.measureFrequencyResponse = function(start,end,step){
-                                    var frequencyArray = [];
-                                    for(var a = start; a < end; a += step){frequencyArray.push(a);}
-                                
-                                    return this.measureFrequencyResponse_values(frequencyArray);
-                                };
-                                this.measureFrequencyResponse_values = function(frequencyArray){
-                                    var Float32_frequencyArray = new Float32Array(frequencyArray);
-                                    var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                                    var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                                
-                                    flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
-                                    return [magResponseOutput,frequencyArray];
-                                };
-                        };
-
                     };
                     this.sequencing = new function(){
+                        this.launchpad = function(xCount,yCount){
+                            var pages = [];
+                            var pageCount = 10;
+                            var currentPage = 0;
+                            var position = 0;
+                            var previousPosition = xCount-1;
+                        
+                            //internal functions
+                                function makePage(xCount,yCount,fill){
+                                    return Array(xCount).fill(Array(yCount).fill(fill));
+                                }
+                        
+                            //controls
+                                //getting/setting a square or a column
+                                    this.square = function(x,y,value){
+                                        if(x < 0){x = 0;}else if(x > xCount-1){x = xCount-1;}
+                                        if(y < 0){y = 0;}else if(x > yCount-1){x = yCount-1;}
+                        
+                                        if(value == undefined){return pages[currentPage][y][x];}
+                        
+                                        pages[currentPage][y][x] = value;
+                                    };
+                                    this.line = function(a,data){
+                                        if(a == undefined){a = position;}
+                        
+                                        if(data == undefined){
+                                            var line = [];
+                                            for(var a = 0; a < yCount; a++){
+                                                if( 
+                                                    pages[currentPage] == undefined || 
+                                                    pages[currentPage][a] == undefined || 
+                                                    pages[currentPage][a][position] == undefined
+                                                ){ line.push(false); }
+                                                else{ line.push(pages[currentPage][a][position]); }
+                                            }
+                                            return line;
+                                        }else{
+                                            for(var a = 0; a < yCount; a++){
+                                                pages[currentPage][a][position] = data[a];
+                                            }
+                                        }
+                                    };
+                        
+                                //getting/setting the playhead position
+                                    this.position = function(a,react=true){
+                                        if(a == undefined){return position;}
+                                        previousPosition = position;
+                        
+                                        if(a > xCount-1){a = 0;}
+                                        else if(a < 0){a = xCount-1;}
+                        
+                                        position = a;
+                                        if(react){this.commands(this.line());}
+                                    };
+                                    this.previousPosition = function(){return previousPosition;};
+                                    this.inc = function(){ this.position(position+1); };
+                                    this.dec = function(){ this.position(position-1); };
+                        
+                                //getting/setting the page number
+                                    this.page = function(a){
+                                        if(a == undefined){return currentPage;}
+                        
+                                        if(a == -1){a = pageCount-1;}
+                                        else if(a < 0){a = 0;}
+                                        else if(a == pageCount){a = 0;}
+                                        else if(a >= pageCount){a = pageCount-1;}
+                                        currentPage = a;
+                                        if(this.pageChange != undefined){this.pageChange(currentPage);}
+                                    };
+                                    this.incPage = function(){ this.page(currentPage+1); };
+                                    this.decPage = function(){ this.page(currentPage-1); };
+                        
+                        
+                                //getting/setting the data ina page or all pages
+                                    this.exportPages = function(){
+                                        return JSON.parse(JSON.stringify(pages));
+                                    };
+                                    this.importPages = function(data){
+                                        pages = data;
+                                        this.pageChange(currentPage);
+                                    };
+                                    this.exportPage = function(a){
+                                        if(a == undefined){a = currentPage;}
+                                        if(pages[a] == undefined){ return makePage(xCount,yCount,false); }
+                                        return JSON.parse(JSON.stringify(pages[a]));
+                                    };
+                                    this.importPage = function(data,a){
+                                        if(a == undefined){a = currentPage;}
+                                        pages[a] = data;
+                                        if(this.pageChange != undefined){this.pageChange(currentPage);}
+                                    };
+                                
+                        
+                            //callbacks
+                                this.commands = function(){};
+                                this.pageChange = function(){};
+                        };
                         this.noteRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
                             var notes = [];
                             var selectedNotes = [];
@@ -4524,140 +4336,10 @@
                                 positions = [];
                             };
                         };
-                        this.launchpad = function(xCount,yCount){
-                            var pages = [];
-                            var pageCount = 10;
-                            var currentPage = 0;
-                            var position = 0;
-                            var previousPosition = xCount-1;
-                        
-                            //internal functions
-                                function makePage(xCount,yCount,fill){
-                                    return Array(xCount).fill(Array(yCount).fill(fill));
-                                }
-                        
-                            //controls
-                                //getting/setting a square or a column
-                                    this.square = function(x,y,value){
-                                        if(x < 0){x = 0;}else if(x > xCount-1){x = xCount-1;}
-                                        if(y < 0){y = 0;}else if(x > yCount-1){x = yCount-1;}
-                        
-                                        if(value == undefined){return pages[currentPage][y][x];}
-                        
-                                        pages[currentPage][y][x] = value;
-                                    };
-                                    this.line = function(a,data){
-                                        if(a == undefined){a = position;}
-                        
-                                        if(data == undefined){
-                                            var line = [];
-                                            for(var a = 0; a < yCount; a++){
-                                                if( 
-                                                    pages[currentPage] == undefined || 
-                                                    pages[currentPage][a] == undefined || 
-                                                    pages[currentPage][a][position] == undefined
-                                                ){ line.push(false); }
-                                                else{ line.push(pages[currentPage][a][position]); }
-                                            }
-                                            return line;
-                                        }else{
-                                            for(var a = 0; a < yCount; a++){
-                                                pages[currentPage][a][position] = data[a];
-                                            }
-                                        }
-                                    };
-                        
-                                //getting/setting the playhead position
-                                    this.position = function(a,react=true){
-                                        if(a == undefined){return position;}
-                                        previousPosition = position;
-                        
-                                        if(a > xCount-1){a = 0;}
-                                        else if(a < 0){a = xCount-1;}
-                        
-                                        position = a;
-                                        if(react){this.commands(this.line());}
-                                    };
-                                    this.previousPosition = function(){return previousPosition;};
-                                    this.inc = function(){ this.position(position+1); };
-                                    this.dec = function(){ this.position(position-1); };
-                        
-                                //getting/setting the page number
-                                    this.page = function(a){
-                                        if(a == undefined){return currentPage;}
-                        
-                                        if(a == -1){a = pageCount-1;}
-                                        else if(a < 0){a = 0;}
-                                        else if(a == pageCount){a = 0;}
-                                        else if(a >= pageCount){a = pageCount-1;}
-                                        currentPage = a;
-                                        if(this.pageChange != undefined){this.pageChange(currentPage);}
-                                    };
-                                    this.incPage = function(){ this.page(currentPage+1); };
-                                    this.decPage = function(){ this.page(currentPage-1); };
-                        
-                        
-                                //getting/setting the data ina page or all pages
-                                    this.exportPages = function(){
-                                        return JSON.parse(JSON.stringify(pages));
-                                    };
-                                    this.importPages = function(data){
-                                        pages = data;
-                                        this.pageChange(currentPage);
-                                    };
-                                    this.exportPage = function(a){
-                                        if(a == undefined){a = currentPage;}
-                                        if(pages[a] == undefined){ return makePage(xCount,yCount,false); }
-                                        return JSON.parse(JSON.stringify(pages[a]));
-                                    };
-                                    this.importPage = function(data,a){
-                                        if(a == undefined){a = currentPage;}
-                                        pages[a] = data;
-                                        if(this.pageChange != undefined){this.pageChange(currentPage);}
-                                    };
-                                
-                        
-                            //callbacks
-                                this.commands = function(){};
-                                this.pageChange = function(){};
-                        };
                     };
                 };
-                this.elements = new function(){
+                this.element = new function(){
                     this.basic = new function(){
-                        this.line = function(id=null, x1=0, y1=0, x2=10, y2=10, style='stroke:rgb(255,0,0); stroke-width:1'){
-                            var element = document.createElementNS('http://www.w3.org/2000/svg','line');
-                            element.id = id;
-                            element.setAttribute('x1',x1);
-                            element.setAttribute('y1',y1);
-                            element.setAttribute('x2',x2);
-                            element.setAttribute('y2',y2);
-                            element.setAttribute('style',style);
-                        
-                            return element;
-                        };
-                        this.circle = function(id=null, x=0, y=0, r=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
-                            var element = document.createElementNS('http://www.w3.org/2000/svg','circle');
-                            element.id = id;
-                            element.setAttribute('r',r);
-                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad);' + style;
-                        
-                            return element;
-                        };
-                        this.rect = function(id=null, x=0, y=0, width=0, height=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
-                            var element = document.createElementNS('http://www.w3.org/2000/svg','rect');
-                            element.id = id;
-                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad);' + style;
-                            element.setAttribute('height',height);
-                            element.setAttribute('width',width);
-                        
-                            element.rotation = function(a){
-                                if(a==null){return system.utility.element.getTransform(this).r;}
-                                system.utility.element.setRotation(this, a);
-                            };
-                        
-                            return element;
-                        };
                         this.canvas = function(id=null, x=0, y=0, width=0, height=0, angle=0, res=1){
                             var canvas = document.createElement('canvas');
                                 canvas.setAttribute('height',res*height);
@@ -4700,6 +4382,21 @@
                         //         print:function(){}
                         //     };
                         // };
+                        this.circle = function(id=null, x=0, y=0, r=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
+                            var element = document.createElementNS('http://www.w3.org/2000/svg','circle');
+                            element.id = id;
+                            element.setAttribute('r',r);
+                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad);' + style;
+                        
+                            return element;
+                        };
+                        this.g = function(id=null, x=0, y=0, r=0, style=''){
+                            var element = document.createElementNS('http://www.w3.org/2000/svg','g');
+                                element.id = id;
+                                element.style = style + 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+r+'rad);';
+                        
+                            return element;
+                        };
                         this.image = function(id=null, url, x=0, y=0, width=0, height=0, angle=0){
                             var element = document.createElementNS('http://www.w3.org/2000/svg','image');
                                 element.id = id;
@@ -4711,6 +4408,17 @@
                             return element;
                         };
                          
+                        this.line = function(id=null, x1=0, y1=0, x2=10, y2=10, style='stroke:rgb(255,0,0); stroke-width:1'){
+                            var element = document.createElementNS('http://www.w3.org/2000/svg','line');
+                            element.id = id;
+                            element.setAttribute('x1',x1);
+                            element.setAttribute('y1',y1);
+                            element.setAttribute('x2',x2);
+                            element.setAttribute('y2',y2);
+                            element.setAttribute('style',style);
+                        
+                            return element;
+                        };
                         this.path = function(id=null, path=[], lineType='L', style='fill:rgba(0,0,0,0);'){
                             // uppercase: absolute, lowercase: relative
                             // M = moveto
@@ -4746,10 +4454,17 @@
                         
                             return element;
                         };
-                        this.g = function(id=null, x=0, y=0, r=0, style=''){
-                            var element = document.createElementNS('http://www.w3.org/2000/svg','g');
-                                element.id = id;
-                                element.style = style + 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+r+'rad);';
+                        this.rect = function(id=null, x=0, y=0, width=0, height=0, angle=0, style='fill:rgba(255,100,255,0.75)'){
+                            var element = document.createElementNS('http://www.w3.org/2000/svg','rect');
+                            element.id = id;
+                            element.style = 'transform: translate('+x+'px,'+y+'px) scale(1) rotate('+angle+'rad);' + style;
+                            element.setAttribute('height',height);
+                            element.setAttribute('width',width);
+                        
+                            element.rotation = function(a){
+                                if(a==null){return system.utility.element.getTransform(this).r;}
+                                system.utility.element.setRotation(this, a);
+                            };
                         
                             return element;
                         };
@@ -4763,6 +4478,254 @@
                         };
                     };
                     this.display = new function(){
+                        this.audio_meter_level = function(
+                            id='audio_meter_level',
+                            x, y, angle=0,
+                            width, height,
+                            markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                        
+                            backingStyle='fill:rgb(10,10,10)',
+                            levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
+                            markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                        ){
+                            
+                            //elements
+                                var object = part.builder('meter_level','mainlevel',{
+                                    x:x, y:y,
+                                    width:width, height:height, angle:angle,
+                                    markings:markings,
+                                    style:{
+                                        backing:backingStyle,
+                                        levels:levelStyles,
+                                        marking:markingStyle,
+                                    }
+                                });
+                                    
+                            //circuitry
+                                var converter = part.circuit.audio.audio2percentage()
+                                    converter.newValue = function(val){object.set( val );};
+                        
+                            //audio connections
+                                object.audioIn = function(){ return converter.audioIn(); }
+                        
+                            //methods
+                                object.start = function(){ converter.start(); };
+                                object.stop = function(){ converter.stop(); };
+                        
+                            //setup
+                                object.set(0)
+                        
+                            return object;
+                        };
+                        this.glowbox_rect = function(
+                            id='glowbox_rect',
+                            x, y, width, height, angle=0,
+                            glowStyle = 'fill:rgba(240,240,240,1)',
+                            dimStyle = 'fill:rgba(80,80,80,1)'
+                        ){
+                        
+                            // elements 
+                            var object = part.builder('g',id,{x:x, y:y});
+                            var rect = part.builder('rect',null,{width:width,height:height,sngle:angle,style:dimStyle});
+                                object.appendChild(rect);
+                        
+                            //methods
+                            object.on = function(){
+                                system.utility.element.setStyle(rect,glowStyle);
+                            };
+                            object.off = function(){
+                                system.utility.element.setStyle(rect,dimStyle);
+                            };
+                        
+                            return object;
+                        };
+                        this.grapherCanvas = function(
+                            id='grapherCanvas',
+                            x, y, width, height,
+                            foregroundStyles=['stroke:rgba(0,255,0,1); stroke-width:0.75; stroke-linecap:round;','stroke:rgba(255,255,0,1); stroke-width:0.75; stroke-linecap:round;'],
+                            foregroundTextStyles=['fill:rgba(100,255,100,1); font-size:3; font-family:Helvetica;','fill:rgba(255,255,100,1); font-size:3; font-family:Helvetica;'],
+                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:1;',
+                            backgroundTextStyle='fill:rgba(0,150,0,1); font-size:5; font-family:Helvetica;',
+                            backingStyle = 'fill:rgba(50,50,50,1)',
+                        ){
+                            var viewbox = {'bottom':-1,'top':1,'left':0,'right':1};
+                            var horizontalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printingValues:[],textPosition:{x:-0.995,y:0.06},printText:false};
+                            var verticalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printingValues:[],textPosition:{x:-0.0025,y:0.04},printText:false};
+                            var foregroundElementsGroup = [];
+                        
+                            //convert the style info
+                                var tempStyleInfo = foregroundStyles.map(a => system.utility.element.styleExtractor(a));
+                                foregroundStyles = tempStyleInfo.map(a => a.stroke);
+                                var foregroundLineThicknesses = tempStyleInfo.map(a => a['stroke-width']*10);
+                        
+                                var tempStyleInfo = system.utility.element.styleExtractor(backgroundTextStyle);
+                                backgroundTextStyle = (12*tempStyleInfo['font-size'])+'px ' + tempStyleInfo['font-family'];
+                        
+                                var tempStyleInfo = system.utility.element.styleExtractor(backgroundStyle);
+                                backgroundStyle = tempStyleInfo.stroke;
+                                var backgroundLineThickness = tempStyleInfo['stroke-width']*10;
+                        
+                                var tempStyleInfo = system.utility.element.styleExtractor(backingStyle);
+                                backingStyle = tempStyleInfo['fill'];
+                        
+                            //elements
+                                //main
+                                    var object = part.builder('g',id,{x:x, y:y});
+                                //canvas
+                                    var canvas = part.builder('canvas',id,{width:width, height:height, resolution:10});
+                                    object.appendChild(canvas.element);
+                        
+                            //controls
+                                object._test = function(){
+                                    this.drawBackground();
+                                    this.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
+                                    this.draw([0,1],undefined,1);
+                                };
+                                object.backgroundLineThickness = function(a){
+                                    if(a==null){return backgroundLineThickness;}
+                                    backgroundLineThickness = a;
+                                };
+                                object.foregroundLineThickness = function(a){
+                                    if(a==null){return foregroundLineThickness;}
+                                    foregroundLineThickness = a;
+                                };
+                                object.viewbox = function(a){
+                                    if(a==null){return viewbox;}
+                                    if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
+                                    if( a.top != undefined ){viewbox.top = a.top;}
+                                    if( a.left != undefined ){viewbox.left = a.left;}
+                                    if( a.right != undefined ){viewbox.right = a.right;}
+                                };
+                                object.horizontalMarkings = function(a){
+                                    if(a==null){return horizontalMarkings;}
+                                    if( a.points != undefined ){horizontalMarkings.points = a.points;}
+                                    if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
+                                    if( a.textPosition != undefined ){horizontalMarkings.textPosition = a.textPosition;}
+                                    if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
+                                };
+                                object.verticalMarkings = function(a){
+                                    if(a==null){return verticalMarkings;}
+                                    if( a.points != undefined ){verticalMarkings.points = a.points;}
+                                    if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
+                                    if( a.textPosition != undefined ){verticalMarkings.textPosition = a.textPosition;}
+                                    if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
+                                };
+                                object.drawBackground = function(){
+                                    //backing
+                                        canvas.context.fillStyle = backingStyle;
+                                        canvas.context.fillRect(canvas.c(0), canvas.c(0), canvas.c(width), canvas.c(height));
+                        
+                                    //horizontal lines
+                                        for(var a = 0; a < horizontalMarkings.points.length; a++){
+                                            var y = system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
+                        
+                                            //lines
+                                            canvas.context.strokeStyle = backgroundStyle; 
+                                            canvas.context.lineWidth = backgroundLineThickness;
+                                            canvas.context.beginPath();
+                                            canvas.context.moveTo(0,canvas.c(y));
+                                            canvas.context.lineTo(canvas.c(width),canvas.c(y));
+                                            canvas.context.closePath();
+                                            canvas.context.stroke();
+                        
+                                            //text
+                                            if(horizontalMarkings.printText){
+                                                canvas.context.fillStyle = backgroundStyle;
+                                                canvas.context.font = backgroundTextStyle;
+                                                canvas.context.fillText(
+                                                    (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                                                    canvas.c(horizontalMarkings.textPosition == undefined || horizontalMarkings.textPosition.x == undefined ? 0.5 : 
+                                                        system.utility.math.relativeDistance(
+                                                            width, viewbox.left,viewbox.right, 
+                                                            (typeof horizontalMarkings.textPosition.x == 'number' ? horizontalMarkings.textPosition.x : horizontalMarkings.textPosition.x[a])
+                                                        )
+                                                    ),
+                                                    canvas.c(horizontalMarkings.textPosition == undefined || horizontalMarkings.textPosition.y == undefined ? y+1.75 : 
+                                                        height-system.utility.math.relativeDistance(
+                                                            height, viewbox.bottom,viewbox.top, 
+                                                            horizontalMarkings.points[a]-(typeof horizontalMarkings.textPosition.y == 'number' ? horizontalMarkings.textPosition.y : horizontalMarkings.textPosition.y[a])
+                                                        )
+                                                    ),
+                                                );
+                                            }
+                                        }
+                        
+                                    //vertical lines
+                                        for(var a = 0; a < verticalMarkings.points.length; a++){
+                                            var x = system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                        
+                                            //lines
+                                            canvas.context.strokeStyle = backgroundStyle; 
+                                            canvas.context.lineWidth = backgroundLineThickness;
+                                            canvas.context.beginPath();
+                                            canvas.context.moveTo(canvas.c(x),0);
+                                            canvas.context.lineTo(canvas.c(x),canvas.c(height));
+                                            canvas.context.closePath();
+                                            canvas.context.stroke();
+                        
+                                            //text
+                                            if(verticalMarkings.printText){
+                                                canvas.context.fillStyle = backgroundStyle;
+                                                canvas.context.font = backgroundTextStyle;
+                                                canvas.context.fillText(
+                                                    (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                                                    canvas.c(verticalMarkings.textPosition == undefined || verticalMarkings.textPosition.x == undefined ? 0.5 : 
+                                                        system.utility.math.relativeDistance(
+                                                            width, viewbox.left,viewbox.right, 
+                                                            verticalMarkings.points[a]-(typeof verticalMarkings.textPosition.x == 'number' ? verticalMarkings.textPosition.x : verticalMarkings.textPosition.x[a]),
+                                                        )
+                                                    ),
+                                                    canvas.c(verticalMarkings.textPosition == undefined || verticalMarkings.textPosition.y == undefined ? y : 
+                                                        system.utility.math.relativeDistance(
+                                                            height, viewbox.bottom,viewbox.top, 
+                                                            (typeof verticalMarkings.textPosition.y == 'number' ? verticalMarkings.textPosition.y : verticalMarkings.textPosition.y[a])
+                                                        )
+                                                    ),
+                                                );
+                                            }
+                                        }
+                        
+                                    //printing
+                                        canvas.print();
+                                };
+                                object.draw = function(y,x,layer=0){
+                                    foregroundElementsGroup[layer] = {x:x, y:y};
+                        
+                                    //background redraw
+                                        this.drawBackground();
+                        
+                                    //data drawing
+                                        for(var g = 0; g < foregroundElementsGroup.length; g++){
+                                            if(foregroundElementsGroup[g] == undefined){continue;}
+                                            var y = foregroundElementsGroup[g].y;
+                                            var x = foregroundElementsGroup[g].x;
+                        
+                                            for(var a = 0; a < y.length-1; a++){
+                                                var points = system.utility.math.lineCorrecter({
+                                                    'x1': x==undefined ? (a+0)*(width/(y.length-1)) : system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+0]),
+                                                    'x2': x==undefined ? (a+1)*(width/(y.length-1)) : system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+1]),
+                                                    'y1': height-system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+0], true),
+                                                    'y2': height-system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+1], true)
+                                                }, height, width);
+                        
+                                                if(points){
+                                                    canvas.context.strokeStyle = (foregroundStyles[g] == undefined ? foregroundStyles[0] : foregroundStyles[g]);
+                                                    canvas.context.lineWidth = (foregroundLineThicknesses[g] == undefined ? foregroundLineThicknesses[0] : foregroundLineThicknesses[g]);
+                                                    canvas.context.beginPath();
+                                                    canvas.context.moveTo(canvas.c(points.x1),canvas.c(points.y1));
+                                                    canvas.context.lineTo(canvas.c(points.x2),canvas.c(points.y2));
+                                                    canvas.context.closePath();
+                                                    canvas.context.stroke();
+                                                }   
+                                            }
+                                        }
+                        
+                                    //printing
+                                        canvas.print();
+                                };
+                        
+                            return object;
+                        };
                         this.grapherSVG = function(
                             id='grapherSVG',
                             x, y, width, height,
@@ -4780,12 +4743,12 @@
                         
                             //elements
                                 //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+                                    var object = part.builder('g',id,{x:x, y:y});
                                 //backing
-                                    var backing = system.utility.misc.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
+                                    var backing = part.builder('rect','backing',{width:width,height:height, style:backingStyle});
                                     object.appendChild(backing);
                                 //background elements
-                                    var backgroundElements = system.utility.misc.elementMaker('g','backgroundElements',{});
+                                    var backgroundElements = part.builder('g','backgroundElements',{});
                                     object.appendChild(backgroundElements);
                                 //foreground elements
                                     var foregroundElementsGroup = [];
@@ -4834,13 +4797,13 @@
                         
                                             //lines
                                                 backgroundElements.append(
-                                                    system.utility.misc.elementMaker('line','horizontalMarkings_line_'+a,{y1:y, x2:width, y2:y, style:backgroundStyle})
+                                                    part.builder('line','horizontalMarkings_line_'+a,{y1:y, x2:width, y2:y, style:backgroundStyle})
                                                 );
                         
                                             //text
                                                 if(horizontalMarkings.printText){
                                                     backgroundElements.append(
-                                                        system.utility.misc.elementMaker(
+                                                        part.builder(
                                                             'text', 
                                                             'horizontalMarkings_text_'+horizontalMarkings.points[a],
                                                             {
@@ -4869,13 +4832,13 @@
                         
                                         //lines
                                             backgroundElements.append(
-                                                system.utility.misc.elementMaker('line','verticalMarkings_line_'+a,{x1:x, x2:x, y2:height, style:backgroundStyle})
+                                                part.builder('line','verticalMarkings_line_'+a,{x1:x, x2:x, y2:height, style:backgroundStyle})
                                             );
                                         
                                         //text
                                             if(verticalMarkings.printText){
                                                 backgroundElements.append(
-                                                    system.utility.misc.elementMaker(
+                                                    part.builder(
                                                         'text', 
                                                         'verticalMarkings_text_'+verticalMarkings.points[a],
                                                         {   
@@ -4899,7 +4862,7 @@
                                 };
                                 object.draw = function(y,x,layer=0){
                                     if( foregroundElementsGroup[layer] == undefined ){
-                                        foregroundElementsGroup[layer] = system.utility.misc.elementMaker('g','foregroundElements_'+layer,{});
+                                        foregroundElementsGroup[layer] = part.builder('g','foregroundElements_'+layer,{});
                                         object.appendChild(foregroundElementsGroup[layer] );
                                     }else{
                                         foregroundElementsGroup[layer].innerHTML = '';
@@ -4915,7 +4878,7 @@
                         
                                         if(points){
                                             foregroundElementsGroup[layer].append(
-                                                system.utility.misc.elementMaker('line',null,{
+                                                part.builder('line',null,{
                                                     x1:points.x1, y1:points.y1, 
                                                     x2:points.x2, y2:points.y2, 
                                                     style:(foregroundStyles[layer] == undefined ? foregroundStyles[0] : foregroundStyles[layer])
@@ -4957,13 +4920,13 @@
                                 attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
                         
                             //elements 
-                                var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+                                var object = part.builder('g',id,{x:x, y:y});
                                     object._data = {};
                                     object._data.wave = {'sin':[],'cos':[]};
                                     object._data.resolution = 500;
                         
                                 //main graph
-                                    var grapher = system.utility.misc.elementMaker('grapher'+graphType, 'graph', {
+                                    var grapher = part.builder('grapher'+graphType, 'graph', {
                                         x:0, y:0, width:width, height:height,
                                         style:{
                                             foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
@@ -5017,6 +4980,362 @@
                         
                             //setup
                                 setBackground();
+                        
+                            return object;
+                        };
+                        this.grapher_periodicWave = function(
+                            id='grapher_periodicWave',
+                            x, y, width, height,
+                            graphType='Canvas',
+                            foregroundStyle=['stroke:rgba(0,255,0,1); stroke-width:0.75; stroke-linecap:round;'],
+                            foregroundTextStyle=['fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;'],
+                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:1;',
+                            backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                            backingStyle = 'fill:rgba(50,50,50,1)',
+                        ){
+                            //elements 
+                            var object = part.builder('g',id,{x:x, y:y});
+                                object._data = {};
+                                object._data.wave = {'sin':[],'cos':[]};
+                                object._data.resolution = 500;
+                        
+                            //main graph
+                                var grapher = part.builder('grapher'+graphType, 'graph', {
+                                    x:0, y:0, width:width, height:height,
+                                    style:{
+                                        foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
+                                        background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                        backing:backingStyle
+                                    }
+                                });
+                                object.append(grapher);
+                        
+                        
+                            //methods
+                            object.wave = function(a=null,type=null){
+                                if(a==null){
+                                    while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
+                                    while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
+                                    for(var a = 0; a < this._data.wave['sin'].length; a++){
+                                        if( !this._data.wave['sin'][a] ){ this._data.wave['sin'][a] = 0; }
+                                        if( !this._data.wave['cos'][a] ){ this._data.wave['cos'][a] = 0; }
+                                    }
+                                    return this._data.wave;
+                                }
+                        
+                                if(type==null){
+                                    this._data.wave = a;
+                                }
+                                switch(type){
+                                    case 'sin': this._data.wave.sin = a; break;
+                                    case 'cos': this._data.wave.cos = a; break;
+                                    default: break;
+                                }
+                            }
+                            object.waveElement = function(type, mux, a){
+                                if(a==null){return this._data.wave[type][mux];}
+                                this._data.wave[type][mux] = a;
+                            }
+                            object.resolution = function(a=null){
+                                if(a==null){return this._data.resolution;}
+                                this._data.resolution = a;
+                            }
+                            object.updateBackground = function(){
+                                grapher.viewbox( {'bottom':-1.1,'top':1.1} );
+                                grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
+                                grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
+                                grapher.drawBackground();
+                            };
+                            object.draw = function(){
+                                var data = [];
+                                var temp = 0;
+                                for(var a = 0; a <= this._data.resolution; a++){
+                                    temp = 0;
+                                    for(var b = 0; b < this._data.wave['sin'].length; b++){
+                                        if(!this._data.wave['sin'][b]){this._data.wave['sin'][b]=0;} // cover missing elements
+                                        temp += Math.sin(b*(2*Math.PI*(a/this._data.resolution)))*this._data.wave['sin'][b]; 
+                                    }
+                                    for(var b = 0; b < this._data.wave['cos'].length; b++){
+                                        if(!this._data.wave['cos'][b]){this._data.wave['cos'][b]=0;} // cover missing elements
+                                        temp += Math.cos(b*(2*Math.PI*(a/this._data.resolution)) )*this._data.wave['cos'][b]; 
+                                    }
+                                    data.push(temp);
+                                }
+                        
+                                grapher.draw( data );
+                            }
+                            object.reset = function(){
+                                this.wave({'sin':[],'cos':[]});
+                                this.resolution(500);
+                                this.updateBackground();
+                                // this.draw();
+                            }
+                        
+                            object.reset();
+                            return object;
+                        };
+                        this.label = function(
+                            id='label',
+                            x, y, text,
+                            style='fill:rgba(0,0,0,1); font-size:3; font-family:Helvetica;',
+                            angle=0
+                        ){
+                            //elements 
+                            var object = part.builder('g',id,{x:x, y:y});
+                        
+                            var textElement = part.builder('text',id,{text:text, angle:angle, style:style});
+                                object.appendChild(textElement);
+                        
+                        
+                            //methods
+                            object.text = function(a=null){
+                                if(a==null){return textElement.innerHTML;}
+                                textElement.innerHTML = a;
+                            }
+                        
+                            return object;
+                        };
+                        this.level = function(
+                            id='level',
+                            x, y, angle,
+                            width, height,
+                            backingStyle='fill:rgb(10,10,10)',
+                            levelStyles=['fill:rgb(250,250,250)','fill:rgb(200,200,200)']
+                        ){
+                            var values = Array.apply(null, Array(levelStyles.length)).map(Number.prototype.valueOf,0);
+                        
+                            // elements
+                                var object = part.builder('g',id,{x:x, y:y});
+                        
+                                //level layers are layered from back forward, so backing must go on last
+                                var levels = [];
+                                for(var a = 0; a < levelStyles.length; a++){
+                                    var tempStyle = levelStyles[a]!=undefined ? levelStyles[a] : levelStyles[0];
+                        
+                                    var temp = part.builder('rect','movingRect_'+a,{
+                                        x:(-height*Math.sin(angle) + width*Math.cos(angle)).toFixed(10), 
+                                        y:(height*Math.cos(angle) + width*Math.sin(angle)).toFixed(10),
+                                        width:width,
+                                        height:0, 
+                                        angle:angle+Math.PI,
+                                        style:tempStyle
+                                    });
+                                    levels.push(temp);
+                                    object.prepend(temp);
+                                }
+                        
+                                var backing = part.builder('rect','movingRect_'+a,{width:width, height:height, angle:angle, style:backingStyle});
+                                    object.prepend(backing);
+                        
+                            //methods
+                                object.set = function(a, layer=0){
+                                    if(a==null){return value;}
+                        
+                                    a = (a>1 ? 1 : a);
+                                    a = (a<0 ? 0 : a);
+                        
+                                    value = a;
+                        
+                                    levels[layer].height.baseVal.valueInSpecifiedUnits = height*value;
+                                };
+                                object.getLevelStyle = function(levelLayer){
+                                    return levels[levelLayer].style;
+                                };
+                        
+                            return object;
+                        };
+                        this.meter_level = function(
+                            id='meter_level',
+                            x, y, angle,
+                            width, height,
+                            markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                        
+                            backingStyle='fill:rgb(10,10,10)',
+                            levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
+                            markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                        ){
+                            //values
+                                var coolDown = 0;
+                                var mostRecentSetting = 0;
+                        
+                            //elements
+                                var object = part.builder('g',id,{x:x, y:y});
+                        
+                            //level
+                                levelStyles[0] += 'transition: height 0s;';
+                                levelStyles[1] += 'transition: height 0.01s;';
+                        
+                                var level = part.builder('level','mainlevel',{width:width,height:height,angle:angle,style:{backing:backingStyle,levels:levelStyles}});
+                                object.append(level);
+                        
+                            //markings
+                                function makeMark(y){
+                                    var markThickness = 0.2;
+                                    var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
+                                    return part.builder('path', null, {path:path, lineType:'L', style:markingStyle});
+                                }
+                                function insertText(y,text){
+                                    return part.builder('label', null, {y:y+0.3, text:text, style:markingStyle});
+                                }
+                        
+                                for(var a = 0; a < markings.length; a++){
+                                    object.append(makeMark(height*(1-markings[a])));
+                                    object.append(insertText(height*(1-markings[a]),markings[a]));
+                                }
+                        
+                            //update intervals
+                                setInterval(function(){        
+                                    level.set(mostRecentSetting,0);
+                        
+                                    if(coolDown>0){coolDown-=0.0025;}
+                                    level.set(coolDown,1);
+                        
+                                    if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                                },1000/30);
+                        
+                            //methods
+                                object.set = function(a){
+                                    mostRecentSetting = a;
+                                    mostRecentSetting_slow = a;
+                                };
+                        
+                            return object;
+                        };
+                        this.rastorDisplay = function(
+                            id='rastorDisplay',
+                            x, y, width, height,
+                            xCount, yCount, xGappage=1, yGappage=1
+                        ){
+                            //elements
+                                //main
+                                    var object = part.builder('g',id,{x:x, y:y});
+                        
+                                //backing
+                                var rect = part.builder('rect',null,{width:width,height:height, style:'fill:rgb(0,0,0)'});
+                                    object.appendChild(rect);
+                        
+                                //pixels
+                                    var pixels = [];
+                                    var pixelValues = [];
+                                    var pixWidth = width/xCount;
+                                    var pixHeight = height/yCount;
+                        
+                                    for(var x = 0; x < xCount; x++){
+                                        var temp_pixels = [];
+                                        var temp_pixelValues = [];
+                                        for(var y = 0; y < yCount; y++){
+                                            var rect = part.builder('rect',null,{ x:(x*pixWidth)+xGappage/2, y:(y*pixHeight)+yGappage/2, width:pixWidth-xGappage, height:pixHeight-yGappage, style:'fill:rgb(0,0,0)' });
+                                                temp_pixels.push(rect);
+                                                temp_pixelValues.push([0,0,0]);
+                                                object.appendChild(rect);
+                                        }
+                                        pixels.push(temp_pixels);
+                                        pixelValues.push(temp_pixelValues);
+                                    }
+                        
+                            //inner workings
+                                function render(){
+                                    for(var x = 0; x < xCount; x++){
+                                        for(var y = 0; y < yCount; y++){
+                                            system.utility.element.setStyle(pixels[x][y], 'fill:rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')' );
+                                        }
+                                    }
+                                }
+                                
+                            //methods
+                                object.get = function(x,y){ return pixelValues[x][y]; };
+                                object.set = function(x,y,state){ pixelValues[x][y] = state; render() };
+                                object.import = function(data){
+                                    for(var x = 0; x < xCount; x++){
+                                        for(var y = 0; y < yCount; y++){
+                                            this.set(x,y,data[x][y]);
+                                        }
+                                    }
+                                    render();
+                                };
+                                object.export = function(){ return pixelValues; }
+                                object.setAll = function(value){
+                                    for(var x = 0; x < xCount; x++){
+                                        for(var y = 0; y < yCount; y++){
+                                            this.set(x,y,value);
+                                        }
+                                    }
+                                }
+                        
+                                object.test = function(){
+                                    this.setAll([1,1,1]);
+                                    this.set(1,1,[1,0.5,0.5]);
+                                    this.set(2,2,[0.5,1,0.5]);
+                                    this.set(3,3,[0.5,0.5,1]);
+                                    this.set(4,4,[1,0.5,1]);
+                                    render();
+                                };
+                        
+                            return object;
+                        };
+                        this.readout_sixteenSegmentDisplay = function(
+                            id='readout_sixteenSegmentDisplay',
+                            x, y, width, height, count, angle=0,
+                            backgroundStyle='fill:rgb(0,0,0)',
+                            glowStyle='fill:rgb(200,200,200)',
+                            dimStyle='fill:rgb(20,20,20)'
+                        ){
+                            //values
+                                var text = '';
+                                var displayInterval = null;
+                        
+                            //elements
+                                //main
+                                    var object = part.builder('g',id,{x:x, y:y, r:angle});
+                        
+                                //display units
+                                    var units = [];
+                                    for(var a = 0; a < count; a++){
+                                        var temp = part.builder('sixteenSegmentDisplay', a, {
+                                            x:(width/count)*a, width:width/count, height:height, 
+                                            style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                        });
+                                        object.append( temp );
+                                        units.push(temp);
+                                    }
+                        
+                            //methods
+                                object.test = function(){
+                                    this.text('Look at all the text I\'ve got here! 1234567890 \\/<>()[]{}*!?"#_,.');
+                                    this.print('r2lSweep');
+                                };
+                        
+                                object.text = function(a){
+                                    if(a==null){return text;}
+                                    text = a;
+                                };
+                        
+                                object.print = function(style){
+                                    clearInterval(displayInterval);
+                                    switch(style){
+                                        case 'smart':
+                                            if(text.length > units.length){this.print('r2lSweep');}
+                                            else{this.print('regular')}
+                                        break;
+                                        case 'r2lSweep':
+                                            var displayIntervalTime = 100;
+                                            var displayStage = 0;
+                        
+                                            displayInterval = setInterval(function(){
+                                                for(var a = units.length-1; a >= 0; a--){
+                                                    units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                                }
+                        
+                                                displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                            },displayIntervalTime);
+                                        break;
+                                        case 'regular': default:
+                                            for(var a = 0; a < units.length; a++){
+                                                units[a].enterCharacter(text[a]);
+                                            }
+                                        break;
+                                    }
+                                };
                         
                             return object;
                         };
@@ -5082,10 +5401,10 @@
                         
                             //elements
                                 //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+                                    var object = part.builder('g',id,{x:x, y:y});
                         
                                 //backing
-                                    var rect = system.utility.misc.elementMaker('rect',null,{width:width,height:height,style:backgroundStyle});
+                                    var rect = part.builder('rect',null,{width:width,height:height,style:backgroundStyle});
                                         object.appendChild(rect);
                         
                                 //segments
@@ -5150,7 +5469,7 @@
                                     ];
                                     for(var a = 0; a < points.length; a++){
                                         var temp = {
-                                            segment: system.utility.misc.elementMaker('path','arc',{path:points[a], lineType:'L', style:dimStyle}),
+                                            segment: part.builder('path','arc',{path:points[a], lineType:'L', style:dimStyle}),
                                             state: false
                                         };
                                         segments.push( temp );
@@ -5299,10 +5618,10 @@
                         
                             //elements
                                 //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+                                    var object = part.builder('g',id,{x:x, y:y});
                         
                                 //backing
-                                    var rect = system.utility.misc.elementMaker('rect',null,{width:width,height:height,style:backgroundStyle});
+                                    var rect = part.builder('rect',null,{width:width,height:height,style:backgroundStyle});
                                     object.appendChild(rect);
                         
                         
@@ -5458,7 +5777,7 @@
                                     ];
                                     for(var a = 0; a < points.length; a++){
                                         var temp = {
-                                            segment: system.utility.misc.elementMaker('path','arc',{path:points[a], lineType:'L', style:dimStyle}),
+                                            segment: part.builder('path','arc',{path:points[a], lineType:'L', style:dimStyle}),
                                             state: false
                                         };
                                         segments.push( temp );
@@ -6030,612 +6349,1019 @@
                         
                             return object;
                         };
-                        this.rastorDisplay = function(
-                            id='rastorDisplay',
-                            x, y, width, height,
-                            xCount, yCount, xGappage=1, yGappage=1
-                        ){
-                            //elements
-                                //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                        
-                                //backing
-                                var rect = system.utility.misc.elementMaker('rect',null,{width:width,height:height, style:'fill:rgb(0,0,0)'});
-                                    object.appendChild(rect);
-                        
-                                //pixels
-                                    var pixels = [];
-                                    var pixelValues = [];
-                                    var pixWidth = width/xCount;
-                                    var pixHeight = height/yCount;
-                        
-                                    for(var x = 0; x < xCount; x++){
-                                        var temp_pixels = [];
-                                        var temp_pixelValues = [];
-                                        for(var y = 0; y < yCount; y++){
-                                            var rect = system.utility.misc.elementMaker('rect',null,{ x:(x*pixWidth)+xGappage/2, y:(y*pixHeight)+yGappage/2, width:pixWidth-xGappage, height:pixHeight-yGappage, style:'fill:rgb(0,0,0)' });
-                                                temp_pixels.push(rect);
-                                                temp_pixelValues.push([0,0,0]);
-                                                object.appendChild(rect);
-                                        }
-                                        pixels.push(temp_pixels);
-                                        pixelValues.push(temp_pixelValues);
-                                    }
-                        
-                            //inner workings
-                                function render(){
-                                    for(var x = 0; x < xCount; x++){
-                                        for(var y = 0; y < yCount; y++){
-                                            system.utility.element.setStyle(pixels[x][y], 'fill:rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')' );
-                                        }
-                                    }
-                                }
-                                
-                            //methods
-                                object.get = function(x,y){ return pixelValues[x][y]; };
-                                object.set = function(x,y,state){ pixelValues[x][y] = state; render() };
-                                object.import = function(data){
-                                    for(var x = 0; x < xCount; x++){
-                                        for(var y = 0; y < yCount; y++){
-                                            this.set(x,y,data[x][y]);
-                                        }
-                                    }
-                                    render();
-                                };
-                                object.export = function(){ return pixelValues; }
-                                object.setAll = function(value){
-                                    for(var x = 0; x < xCount; x++){
-                                        for(var y = 0; y < yCount; y++){
-                                            this.set(x,y,value);
-                                        }
-                                    }
-                                }
-                        
-                                object.test = function(){
-                                    this.setAll([1,1,1]);
-                                    this.set(1,1,[1,0.5,0.5]);
-                                    this.set(2,2,[0.5,1,0.5]);
-                                    this.set(3,3,[0.5,0.5,1]);
-                                    this.set(4,4,[1,0.5,1]);
-                                    render();
-                                };
-                        
-                            return object;
-                        };
-                        this.glowbox_rect = function(
-                            id='glowbox_rect',
-                            x, y, width, height, angle=0,
-                            glowStyle = 'fill:rgba(240,240,240,1)',
-                            dimStyle = 'fill:rgba(80,80,80,1)'
-                        ){
-                        
-                            // elements 
-                            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                            var rect = system.utility.misc.elementMaker('rect',null,{width:width,height:height,sngle:angle,style:dimStyle});
-                                object.appendChild(rect);
-                        
-                            //methods
-                            object.on = function(){
-                                system.utility.element.setStyle(rect,glowStyle);
-                            };
-                            object.off = function(){
-                                system.utility.element.setStyle(rect,dimStyle);
-                            };
-                        
-                            return object;
-                        };
-                        this.grapherCanvas = function(
-                            id='grapherCanvas',
-                            x, y, width, height,
-                            foregroundStyles=['stroke:rgba(0,255,0,1); stroke-width:0.75; stroke-linecap:round;','stroke:rgba(255,255,0,1); stroke-width:0.75; stroke-linecap:round;'],
-                            foregroundTextStyles=['fill:rgba(100,255,100,1); font-size:3; font-family:Helvetica;','fill:rgba(255,255,100,1); font-size:3; font-family:Helvetica;'],
-                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:1;',
-                            backgroundTextStyle='fill:rgba(0,150,0,1); font-size:5; font-family:Helvetica;',
-                            backingStyle = 'fill:rgba(50,50,50,1)',
-                        ){
-                            var viewbox = {'bottom':-1,'top':1,'left':0,'right':1};
-                            var horizontalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printingValues:[],textPosition:{x:-0.995,y:0.06},printText:false};
-                            var verticalMarkings = {points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printingValues:[],textPosition:{x:-0.0025,y:0.04},printText:false};
-                            var foregroundElementsGroup = [];
-                        
-                            //convert the style info
-                                var tempStyleInfo = foregroundStyles.map(a => system.utility.element.styleExtractor(a));
-                                foregroundStyles = tempStyleInfo.map(a => a.stroke);
-                                var foregroundLineThicknesses = tempStyleInfo.map(a => a['stroke-width']*10);
-                        
-                                var tempStyleInfo = system.utility.element.styleExtractor(backgroundTextStyle);
-                                backgroundTextStyle = (12*tempStyleInfo['font-size'])+'px ' + tempStyleInfo['font-family'];
-                        
-                                var tempStyleInfo = system.utility.element.styleExtractor(backgroundStyle);
-                                backgroundStyle = tempStyleInfo.stroke;
-                                var backgroundLineThickness = tempStyleInfo['stroke-width']*10;
-                        
-                                var tempStyleInfo = system.utility.element.styleExtractor(backingStyle);
-                                backingStyle = tempStyleInfo['fill'];
-                        
-                            //elements
-                                //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                                //canvas
-                                    var canvas = system.utility.misc.elementMaker('canvas',id,{width:width, height:height, resolution:10});
-                                    object.appendChild(canvas.element);
-                        
-                            //controls
-                                object._test = function(){
-                                    this.drawBackground();
-                                    this.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
-                                    this.draw([0,1],undefined,1);
-                                };
-                                object.backgroundLineThickness = function(a){
-                                    if(a==null){return backgroundLineThickness;}
-                                    backgroundLineThickness = a;
-                                };
-                                object.foregroundLineThickness = function(a){
-                                    if(a==null){return foregroundLineThickness;}
-                                    foregroundLineThickness = a;
-                                };
-                                object.viewbox = function(a){
-                                    if(a==null){return viewbox;}
-                                    if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
-                                    if( a.top != undefined ){viewbox.top = a.top;}
-                                    if( a.left != undefined ){viewbox.left = a.left;}
-                                    if( a.right != undefined ){viewbox.right = a.right;}
-                                };
-                                object.horizontalMarkings = function(a){
-                                    if(a==null){return horizontalMarkings;}
-                                    if( a.points != undefined ){horizontalMarkings.points = a.points;}
-                                    if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
-                                    if( a.textPosition != undefined ){horizontalMarkings.textPosition = a.textPosition;}
-                                    if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
-                                };
-                                object.verticalMarkings = function(a){
-                                    if(a==null){return verticalMarkings;}
-                                    if( a.points != undefined ){verticalMarkings.points = a.points;}
-                                    if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
-                                    if( a.textPosition != undefined ){verticalMarkings.textPosition = a.textPosition;}
-                                    if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
-                                };
-                                object.drawBackground = function(){
-                                    //backing
-                                        canvas.context.fillStyle = backingStyle;
-                                        canvas.context.fillRect(canvas.c(0), canvas.c(0), canvas.c(width), canvas.c(height));
-                        
-                                    //horizontal lines
-                                        for(var a = 0; a < horizontalMarkings.points.length; a++){
-                                            var y = system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
-                        
-                                            //lines
-                                            canvas.context.strokeStyle = backgroundStyle; 
-                                            canvas.context.lineWidth = backgroundLineThickness;
-                                            canvas.context.beginPath();
-                                            canvas.context.moveTo(0,canvas.c(y));
-                                            canvas.context.lineTo(canvas.c(width),canvas.c(y));
-                                            canvas.context.closePath();
-                                            canvas.context.stroke();
-                        
-                                            //text
-                                            if(horizontalMarkings.printText){
-                                                canvas.context.fillStyle = backgroundStyle;
-                                                canvas.context.font = backgroundTextStyle;
-                                                canvas.context.fillText(
-                                                    (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                                                    canvas.c(horizontalMarkings.textPosition == undefined || horizontalMarkings.textPosition.x == undefined ? 0.5 : 
-                                                        system.utility.math.relativeDistance(
-                                                            width, viewbox.left,viewbox.right, 
-                                                            (typeof horizontalMarkings.textPosition.x == 'number' ? horizontalMarkings.textPosition.x : horizontalMarkings.textPosition.x[a])
-                                                        )
-                                                    ),
-                                                    canvas.c(horizontalMarkings.textPosition == undefined || horizontalMarkings.textPosition.y == undefined ? y+1.75 : 
-                                                        height-system.utility.math.relativeDistance(
-                                                            height, viewbox.bottom,viewbox.top, 
-                                                            horizontalMarkings.points[a]-(typeof horizontalMarkings.textPosition.y == 'number' ? horizontalMarkings.textPosition.y : horizontalMarkings.textPosition.y[a])
-                                                        )
-                                                    ),
-                                                );
-                                            }
-                                        }
-                        
-                                    //vertical lines
-                                        for(var a = 0; a < verticalMarkings.points.length; a++){
-                                            var x = system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
-                        
-                                            //lines
-                                            canvas.context.strokeStyle = backgroundStyle; 
-                                            canvas.context.lineWidth = backgroundLineThickness;
-                                            canvas.context.beginPath();
-                                            canvas.context.moveTo(canvas.c(x),0);
-                                            canvas.context.lineTo(canvas.c(x),canvas.c(height));
-                                            canvas.context.closePath();
-                                            canvas.context.stroke();
-                        
-                                            //text
-                                            if(verticalMarkings.printText){
-                                                canvas.context.fillStyle = backgroundStyle;
-                                                canvas.context.font = backgroundTextStyle;
-                                                canvas.context.fillText(
-                                                    (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                                                    canvas.c(verticalMarkings.textPosition == undefined || verticalMarkings.textPosition.x == undefined ? 0.5 : 
-                                                        system.utility.math.relativeDistance(
-                                                            width, viewbox.left,viewbox.right, 
-                                                            verticalMarkings.points[a]-(typeof verticalMarkings.textPosition.x == 'number' ? verticalMarkings.textPosition.x : verticalMarkings.textPosition.x[a]),
-                                                        )
-                                                    ),
-                                                    canvas.c(verticalMarkings.textPosition == undefined || verticalMarkings.textPosition.y == undefined ? y : 
-                                                        system.utility.math.relativeDistance(
-                                                            height, viewbox.bottom,viewbox.top, 
-                                                            (typeof verticalMarkings.textPosition.y == 'number' ? verticalMarkings.textPosition.y : verticalMarkings.textPosition.y[a])
-                                                        )
-                                                    ),
-                                                );
-                                            }
-                                        }
-                        
-                                    //printing
-                                        canvas.print();
-                                };
-                                object.draw = function(y,x,layer=0){
-                                    foregroundElementsGroup[layer] = {x:x, y:y};
-                        
-                                    //background redraw
-                                        this.drawBackground();
-                        
-                                    //data drawing
-                                        for(var g = 0; g < foregroundElementsGroup.length; g++){
-                                            if(foregroundElementsGroup[g] == undefined){continue;}
-                                            var y = foregroundElementsGroup[g].y;
-                                            var x = foregroundElementsGroup[g].x;
-                        
-                                            for(var a = 0; a < y.length-1; a++){
-                                                var points = system.utility.math.lineCorrecter({
-                                                    'x1': x==undefined ? (a+0)*(width/(y.length-1)) : system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+0]),
-                                                    'x2': x==undefined ? (a+1)*(width/(y.length-1)) : system.utility.math.relativeDistance(width, viewbox.left,viewbox.right, x[a+1]),
-                                                    'y1': height-system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+0], true),
-                                                    'y2': height-system.utility.math.relativeDistance(height, viewbox.bottom,viewbox.top, y[a+1], true)
-                                                }, height, width);
-                        
-                                                if(points){
-                                                    canvas.context.strokeStyle = (foregroundStyles[g] == undefined ? foregroundStyles[0] : foregroundStyles[g]);
-                                                    canvas.context.lineWidth = (foregroundLineThicknesses[g] == undefined ? foregroundLineThicknesses[0] : foregroundLineThicknesses[g]);
-                                                    canvas.context.beginPath();
-                                                    canvas.context.moveTo(canvas.c(points.x1),canvas.c(points.y1));
-                                                    canvas.context.lineTo(canvas.c(points.x2),canvas.c(points.y2));
-                                                    canvas.context.closePath();
-                                                    canvas.context.stroke();
-                                                }   
-                                            }
-                                        }
-                        
-                                    //printing
-                                        canvas.print();
-                                };
-                        
-                            return object;
-                        };
-                        this.audio_meter_level = function(
-                            id='audio_meter_level',
-                            x, y, angle=0,
-                            width, height,
-                            markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                        
-                            backingStyle='fill:rgb(10,10,10)',
-                            levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
-                            markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                        ){
-                            
-                            //elements
-                                var object = system.utility.misc.elementMaker('meter_level','mainlevel',{
-                                    x:x, y:y,
-                                    width:width, height:height, angle:angle,
-                                    markings:markings,
-                                    style:{
-                                        backing:backingStyle,
-                                        levels:levelStyles,
-                                        marking:markingStyle,
-                                    }
-                                });
-                                    
-                            //circuitry
-                                var converter = parts.circuits.audio.audio2percentage()
-                                    converter.newValue = function(val){object.set( val );};
-                        
-                            //audio connections
-                                object.audioIn = function(){ return converter.audioIn(); }
-                        
-                            //methods
-                                object.start = function(){ converter.start(); };
-                                object.stop = function(){ converter.stop(); };
-                        
-                            //setup
-                                object.set(0)
-                        
-                            return object;
-                        };
-                        this.meter_level = function(
-                            id='meter_level',
-                            x, y, angle,
-                            width, height,
-                            markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                        
-                            backingStyle='fill:rgb(10,10,10)',
-                            levelStyles=['fill:rgba(250,250,250,1);','fill:rgb(100,100,100);'],
-                            markingStyle='fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                        ){
-                            //values
-                                var coolDown = 0;
-                                var mostRecentSetting = 0;
-                        
-                            //elements
-                                var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                        
-                            //level
-                                levelStyles[0] += 'transition: height 0s;';
-                                levelStyles[1] += 'transition: height 0.01s;';
-                        
-                                var level = system.utility.misc.elementMaker('level','mainlevel',{width:width,height:height,angle:angle,style:{backing:backingStyle,levels:levelStyles}});
-                                object.append(level);
-                        
-                            //markings
-                                function makeMark(y){
-                                    var markThickness = 0.2;
-                                    var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                                    return system.utility.misc.elementMaker('path', null, {path:path, lineType:'L', style:markingStyle});
-                                }
-                                function insertText(y,text){
-                                    return system.utility.misc.elementMaker('label', null, {y:y+0.3, text:text, style:markingStyle});
-                                }
-                        
-                                for(var a = 0; a < markings.length; a++){
-                                    object.append(makeMark(height*(1-markings[a])));
-                                    object.append(insertText(height*(1-markings[a]),markings[a]));
-                                }
-                        
-                            //update intervals
-                                setInterval(function(){        
-                                    level.set(mostRecentSetting,0);
-                        
-                                    if(coolDown>0){coolDown-=0.0025;}
-                                    level.set(coolDown,1);
-                        
-                                    if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
-                                },1000/30);
-                        
-                            //methods
-                                object.set = function(a){
-                                    mostRecentSetting = a;
-                                    mostRecentSetting_slow = a;
-                                };
-                        
-                            return object;
-                        };
-                        this.grapher_periodicWave = function(
-                            id='grapher_periodicWave',
-                            x, y, width, height,
-                            graphType='Canvas',
-                            foregroundStyle=['stroke:rgba(0,255,0,1); stroke-width:0.75; stroke-linecap:round;'],
-                            foregroundTextStyle=['fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;'],
-                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:1;',
-                            backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                            backingStyle = 'fill:rgba(50,50,50,1)',
-                        ){
-                            //elements 
-                            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                                object._data = {};
-                                object._data.wave = {'sin':[],'cos':[]};
-                                object._data.resolution = 500;
-                        
-                            //main graph
-                                var grapher = system.utility.misc.elementMaker('grapher'+graphType, 'graph', {
-                                    x:0, y:0, width:width, height:height,
-                                    style:{
-                                        foreground:foregroundStyle, foregroundText:foregroundTextStyle, 
-                                        background:backgroundStyle, backgroundText:backgroundTextStyle, 
-                                        backing:backingStyle
-                                    }
-                                });
-                                object.append(grapher);
-                        
-                        
-                            //methods
-                            object.wave = function(a=null,type=null){
-                                if(a==null){
-                                    while(this._data.wave.sin.length < this._data.wave.cos.length){ this._data.wave.sin.push(0); }
-                                    while(this._data.wave.sin.length > this._data.wave.cos.length){ this._data.wave.cos.push(0); }
-                                    for(var a = 0; a < this._data.wave['sin'].length; a++){
-                                        if( !this._data.wave['sin'][a] ){ this._data.wave['sin'][a] = 0; }
-                                        if( !this._data.wave['cos'][a] ){ this._data.wave['cos'][a] = 0; }
-                                    }
-                                    return this._data.wave;
-                                }
-                        
-                                if(type==null){
-                                    this._data.wave = a;
-                                }
-                                switch(type){
-                                    case 'sin': this._data.wave.sin = a; break;
-                                    case 'cos': this._data.wave.cos = a; break;
-                                    default: break;
-                                }
-                            }
-                            object.waveElement = function(type, mux, a){
-                                if(a==null){return this._data.wave[type][mux];}
-                                this._data.wave[type][mux] = a;
-                            }
-                            object.resolution = function(a=null){
-                                if(a==null){return this._data.resolution;}
-                                this._data.resolution = a;
-                            }
-                            object.updateBackground = function(){
-                                grapher.viewbox( {'bottom':-1.1,'top':1.1} );
-                                grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
-                                grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
-                                grapher.drawBackground();
-                            };
-                            object.draw = function(){
-                                var data = [];
-                                var temp = 0;
-                                for(var a = 0; a <= this._data.resolution; a++){
-                                    temp = 0;
-                                    for(var b = 0; b < this._data.wave['sin'].length; b++){
-                                        if(!this._data.wave['sin'][b]){this._data.wave['sin'][b]=0;} // cover missing elements
-                                        temp += Math.sin(b*(2*Math.PI*(a/this._data.resolution)))*this._data.wave['sin'][b]; 
-                                    }
-                                    for(var b = 0; b < this._data.wave['cos'].length; b++){
-                                        if(!this._data.wave['cos'][b]){this._data.wave['cos'][b]=0;} // cover missing elements
-                                        temp += Math.cos(b*(2*Math.PI*(a/this._data.resolution)) )*this._data.wave['cos'][b]; 
-                                    }
-                                    data.push(temp);
-                                }
-                        
-                                grapher.draw( data );
-                            }
-                            object.reset = function(){
-                                this.wave({'sin':[],'cos':[]});
-                                this.resolution(500);
-                                this.updateBackground();
-                                // this.draw();
-                            }
-                        
-                            object.reset();
-                            return object;
-                        };
-                        this.readout_sixteenSegmentDisplay = function(
-                            id='readout_sixteenSegmentDisplay',
-                            x, y, width, height, count, angle=0,
-                            backgroundStyle='fill:rgb(0,0,0)',
-                            glowStyle='fill:rgb(200,200,200)',
-                            dimStyle='fill:rgb(20,20,20)'
-                        ){
-                            //values
-                                var text = '';
-                                var displayInterval = null;
-                        
-                            //elements
-                                //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
-                        
-                                //display units
-                                    var units = [];
-                                    for(var a = 0; a < count; a++){
-                                        var temp = system.utility.misc.elementMaker('sixteenSegmentDisplay', a, {
-                                            x:(width/count)*a, width:width/count, height:height, 
-                                            style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                        });
-                                        object.append( temp );
-                                        units.push(temp);
-                                    }
-                        
-                            //methods
-                                object.test = function(){
-                                    this.text('Look at all the text I\'ve got here! 1234567890 \\/<>()[]{}*!?"#_,.');
-                                    this.print('r2lSweep');
-                                };
-                        
-                                object.text = function(a){
-                                    if(a==null){return text;}
-                                    text = a;
-                                };
-                        
-                                object.print = function(style){
-                                    clearInterval(displayInterval);
-                                    switch(style){
-                                        case 'smart':
-                                            if(text.length > units.length){this.print('r2lSweep');}
-                                            else{this.print('regular')}
-                                        break;
-                                        case 'r2lSweep':
-                                            var displayIntervalTime = 100;
-                                            var displayStage = 0;
-                        
-                                            displayInterval = setInterval(function(){
-                                                for(var a = units.length-1; a >= 0; a--){
-                                                    units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                                }
-                        
-                                                displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                            },displayIntervalTime);
-                                        break;
-                                        case 'regular': default:
-                                            for(var a = 0; a < units.length; a++){
-                                                units[a].enterCharacter(text[a]);
-                                            }
-                                        break;
-                                    }
-                                };
-                        
-                            return object;
-                        };
-                        this.label = function(
-                            id='label',
-                            x, y, text,
-                            style='fill:rgba(0,0,0,1); font-size:3; font-family:Helvetica;',
-                            angle=0
-                        ){
-                            //elements 
-                            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                        
-                            var textElement = system.utility.misc.elementMaker('text',id,{text:text, angle:angle, style:style});
-                                object.appendChild(textElement);
-                        
-                        
-                            //methods
-                            object.text = function(a=null){
-                                if(a==null){return textElement.innerHTML;}
-                                textElement.innerHTML = a;
-                            }
-                        
-                            return object;
-                        };
-                        this.level = function(
-                            id='level',
-                            x, y, angle,
-                            width, height,
-                            backingStyle='fill:rgb(10,10,10)',
-                            levelStyles=['fill:rgb(250,250,250)','fill:rgb(200,200,200)']
-                        ){
-                            var values = Array.apply(null, Array(levelStyles.length)).map(Number.prototype.valueOf,0);
-                        
-                            // elements
-                                var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                        
-                                //level layers are layered from back forward, so backing must go on last
-                                var levels = [];
-                                for(var a = 0; a < levelStyles.length; a++){
-                                    var tempStyle = levelStyles[a]!=undefined ? levelStyles[a] : levelStyles[0];
-                        
-                                    var temp = system.utility.misc.elementMaker('rect','movingRect_'+a,{
-                                        x:(-height*Math.sin(angle) + width*Math.cos(angle)).toFixed(10), 
-                                        y:(height*Math.cos(angle) + width*Math.sin(angle)).toFixed(10),
-                                        width:width,
-                                        height:0, 
-                                        angle:angle+Math.PI,
-                                        style:tempStyle
-                                    });
-                                    levels.push(temp);
-                                    object.prepend(temp);
-                                }
-                        
-                                var backing = system.utility.misc.elementMaker('rect','movingRect_'+a,{width:width, height:height, angle:angle, style:backingStyle});
-                                    object.prepend(backing);
-                        
-                            //methods
-                                object.set = function(a, layer=0){
-                                    if(a==null){return value;}
-                        
-                                    a = (a>1 ? 1 : a);
-                                    a = (a<0 ? 0 : a);
-                        
-                                    value = a;
-                        
-                                    levels[layer].height.baseVal.valueInSpecifiedUnits = height*value;
-                                };
-                                object.getLevelStyle = function(levelLayer){
-                                    return levels[levelLayer].style;
-                                };
-                        
-                            return object;
-                        };
                     };
                     this.control = new function(){
+                        this.button_rect = function(
+                            id='button_rect',
+                            x, y, width, height, angle=0,
+                            text_centre, text_left, text_right,
+                            textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
+                            active=true, hoverable=true, selectable=false, pressable=true,
+                            textStyle='fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
+                            backgroundStyle_off=                     'fill:rgba(180,180,180,1)',
+                            backgroundStyle_up=                      'fill:rgba(200,200,200,1)',
+                            backgroundStyle_press=                   'fill:rgba(230,230,230,1)',
+                            backgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_select_press=            'fill:rgba(230,230,230,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_glow=                    'fill:rgba(220,220,220,1)',
+                            backgroundStyle_glow_press=              'fill:rgba(250,250,250,1)',
+                            backgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_glow_select_press=       'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover=                   'fill:rgba(220,220,220,1)',
+                            backgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
+                            backgroundStyle_hover_select=            'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_glow=              'fill:rgba(240,240,240,1)',
+                            backgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
+                            backgroundStyle_hover_glow_select=       'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                            backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
+                        ){
+                            //elements
+                                var object = part.builder('g',id,{x:x,y:y,r:angle});
+                        
+                                var background = part.builder('rect',null,{width:width, height:height, style:backgroundStyle_off});
+                                object.appendChild( background );
+                        
+                                var text_centre = part.builder('text',null,{x:width/2, y:height*textVerticalOffsetMux, text:text_centre, style:textStyle+'text-anchor:middle;'});
+                                object.appendChild(text_centre);
+                                var text_left = part.builder('text',null,{x:width*textHorizontalOffsetMux, y:height*textVerticalOffsetMux, text:text_left, style:textStyle});
+                                object.appendChild(text_left);
+                                var text_right = part.builder('text',null,{x:width-(width*textHorizontalOffsetMux), y:height*textVerticalOffsetMux, text:text_right, style:textStyle+'text-anchor:end;'});
+                                object.appendChild(text_right);
+                        
+                            //state
+                                object.state = {
+                                    hovering:false,
+                                    glowing:false,
+                                    selected:false,
+                                    pressed:false,
+                                };
+                        
+                                object.activateGraphicalState = function(){
+                                    if(!active){ system.utility.element.setStyle( background, backgroundStyle_off); return; }
+                        
+                                    var styles = [
+                                        backgroundStyle_up,                backgroundStyle_press,
+                                        backgroundStyle_select,            backgroundStyle_select_press,
+                                        backgroundStyle_glow,              backgroundStyle_glow_press,
+                                        backgroundStyle_glow_select,       backgroundStyle_glow_select_press,
+                                        backgroundStyle_hover,             backgroundStyle_hover_press,
+                                        backgroundStyle_hover_select,      backgroundStyle_hover_select_press,
+                                        backgroundStyle_hover_glow,        backgroundStyle_hover_glow_press,
+                                        backgroundStyle_hover_glow_select, backgroundStyle_hover_glow_select_press,
+                                    ];
+                        
+                                    if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
+                                    if(!selectable && object.state.selected ){ object.state.selected = false; }
+                        
+                                    system.utility.element.setStyle( 
+                                        background, 
+                                        styles[ object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + (pressable && object.state.pressed)*1 ]
+                                    );
+                                };
+                                object.activateGraphicalState();
+                        
+                                //interactivity
+                                    object.onmouseenter = function(event){ 
+                                        this.state.hovering = true;  
+                                        this.activateGraphicalState();
+                                        if(this.onenter){this.onenter(this, event);}
+                                        if(event.buttons == 1){object.onmousedown(event);} 
+                                    };
+                                    object.onmouseleave = function(event){ 
+                                        this.state.hovering = false; 
+                                        this.release(event); 
+                                        this.activateGraphicalState(); 
+                                        if(this.onleave){this.onleave(this, event);}
+                                    };
+                                    object.onmouseup = function(event){   this.release(event); };
+                                    object.onmousedown = function(event){ this.press(event);   };
+                                    object.ondblclick = function(event){ if(this.ondblpress){this.ondblpress(this, event);} };
+                                //controls
+                                    object.press = function(event){
+                                        if(this.state.pressed){return;}
+                                        this.state.pressed = true;
+                                        this.activateGraphicalState();
+                                        if(this.onpress){this.onpress(this, event);}
+                                        this.select( !this.select(), event );
+                                    };
+                                    object.release = function(event){
+                                        if(!this.state.pressed){return;}
+                                        this.state.pressed = false;
+                                        this.activateGraphicalState();
+                                        if(this.onrelease){this.onrelease(this, event);}
+                                    };
+                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; this.activateGraphicalState(); };
+                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  this.activateGraphicalState(); };
+                                    object.select = function(bool,event,callback=true){ 
+                                        if(bool == undefined){return this.state.selected;} 
+                                        if(!selectable){return;}
+                                        if(this.state.selected == bool){return;}
+                                        this.state.selected = bool; this.activateGraphicalState();
+                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
+                                    };
+                                //callbacks
+                                    object.onenter = function(object, event){};
+                                    object.onleave = function(object, event){};
+                                    object.onpress = function(object, event){};
+                                    object.ondblpress = function(object, event){};
+                                    object.onrelease = function(object, event){};
+                                    object.onselect = function(object, event){};
+                                    object.ondeselect = function(object, event){};
+                        
+                            return object;
+                        };
+                        this.checkbox_rect = function(
+                            id='checkbox_rect',
+                            x, y, width, height, angle=0,
+                            checkStyle = 'fill:rgba(150,150,150,1)',
+                            backingStyle = 'fill:rgba(200,200,200,1)',
+                            checkGlowStyle = 'fill:rgba(220,220,220,1)',
+                            backingGlowStyle = 'fill:rgba(220,220,220,1)',
+                        ){
+                            // elements 
+                            var object = part.builder('g',id,{x:x, y:y, r:angle});
+                                object._checked = false;
+                                object.styles = {
+                                    'check':checkStyle,
+                                    'uncheck':'fill:rgba(0,0,0,0)',
+                                    'backing':backingStyle
+                                };
+                        
+                            var rect = part.builder('rect',null,{width:width,height:height, style:backingStyle});
+                                object.appendChild(rect);
+                            var checkrect = part.builder('rect',null,{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:object.styles.uncheck});
+                                object.appendChild(checkrect);
+                        
+                        
+                            function updateGraphics(){
+                                if(object._checked){ system.utility.element.setStyle(checkrect,object.styles.check); }
+                                else{ system.utility.element.setStyle(checkrect,object.styles.uncheck); }
+                                system.utility.element.setStyle(rect,object.styles.backing);
+                            }
+                        
+                            //methods
+                            object.get = function(){ return object._checked; };
+                            object.set = function(value, update=true){
+                                object._checked = value;
+                                
+                                updateGraphics();
+                        
+                                if(update&&this.onchange){ this.onchange(value); }
+                            };
+                            object.light = function(state){
+                                if(state){
+                                    object.styles.check = checkGlowStyle;
+                                    object.styles.backing = backingGlowStyle;
+                                }else{
+                                    object.styles.check = checkStyle;
+                                    object.styles.backing = backingStyle;
+                                }
+                                updateGraphics();
+                            };
+                        
+                        
+                            //callback
+                            object.onchange = function(){};
+                        
+                        
+                            //mouse interaction
+                            object.onclick = function(event){
+                                object.set(!object.get());
+                            };
+                        
+                        
+                            return object;
+                        };
+                        this.dial_continuous = function(
+                            id='dial_continuous',
+                            x, y, r,
+                            startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            handleStyle = 'fill:rgba(175,175,175,1)',
+                            slotStyle = 'fill:rgba(50,50,50,1)',
+                            needleStyle = 'fill:rgba(250,100,100,1)',
+                            handleStyle_glow = 'fill:rgba(175,175,175,1)',
+                            slotStyle_glow = 'fill:rgba(254,255,219,1)',
+                            needleStyle_glow = 'fill:rgba(250,100,100,1)',
+                            arcDistance=1.35,
+                            outerArcStyle='fill:none; stroke:none;',
+                            outerArcStyle_glow='fill:none; stroke:none;',
+                        ){
+                            // elements
+                                var object = part.builder('g',id,{x:x, y:y});
+                                    object._value = 0;
+                                    object._data = {
+                                        'mux':r*4
+                                    };
+                        
+                                //arc
+                                    var points = 5;
+                                    var pushDistance = 1.11;
+                                    var arcPath = [];
+                                    for(var a = 0; a < points; a++){
+                                        var temp = system.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
+                                        arcPath.push( temp );
+                                        var temp = system.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
+                                        arcPath.push( temp );
+                                    }
+                                    var temp = system.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
+                                    arcPath.push( temp );
+                        
+                                    var outerArc = part.builder('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
+                                    object.appendChild(outerArc);
+                        
+                                //slot
+                                    var slot = part.builder('circle','slot',{r:r*1.1, style:slotStyle});
+                                        object.appendChild(slot);
+                        
+                                //handle
+                                    var handle = part.builder('circle','slot',{r:r, style:handleStyle});
+                                        object.appendChild(handle);
+                        
+                                //needle
+                                    var needleWidth = r/5;
+                                    var needleLength = r;
+                                    var needle = part.builder('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
+                                        needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
+                                        needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
+                                        object.appendChild(needle);
+                        
+                        
+                            //methods
+                                object.get = function(){ return this._value; };
+                                object.set = function(value, live=false, update=true){
+                                    value = (value>1 ? 1 : value);
+                                    value = (value<0 ? 0 : value);
+                        
+                                    this._value = value;
+                                    if(update&&this.onchange){try{this.onchange(value);}catch(err){console.error('Error with dial_continuous:onchange\n',err);}}
+                                    if(update&&!live&&this.onrelease){try{this.onrelease(value);}catch(err){console.error('Error with dial_continuous:onrelease\n',err);}}
+                                    this.children['needle'].rotation(startAngle + maxAngle*value);
+                                };
+                                object.smoothSet = function(target,time,curve,update=true){
+                                    var startTime = system.audio.context.currentTime;
+                                    var startValue = value;
+                                    var pointFunc = system.utility.math.curvePoint.linear;
+                        
+                                    switch(curve){
+                                        case 'linear': pointFunc = system.utility.math.curvePoint.linear; break;
+                                        case 'sin': pointFunc = system.utility.math.curvePoint.sin; break;
+                                        case 'cos': pointFunc = system.utility.math.curvePoint.cos; break;
+                                        case 'exponential': pointFunc = system.utility.math.curvePoint.exponential; break;
+                                        case 's': pointFunc = system.utility.math.curvePoint.s; break;
+                                    }
+                        
+                                    object.smoothSet.interval = setInterval(function(){
+                                        var progress = (system.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
+                                        object.set( pointFunc(progress, startValue, target), true, update );
+                                        if( (system.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
+                                    }, 1000/30);  
+                                };
+                                object.glow = function(state){
+                                    if(state){
+                                        system.utility.element.setStyle(outerArc,outerArcStyle_glow);
+                                        system.utility.element.setStyle(slot,slotStyle_glow);
+                                        system.utility.element.setStyle(handle,handleStyle_glow);
+                                        system.utility.element.setStyle(needle,needleStyle_glow);
+                                    }else{
+                                        system.utility.element.setStyle(outerArc,outerArcStyle);
+                                        system.utility.element.setStyle(slot,slotStyle);
+                                        system.utility.element.setStyle(handle,handleStyle);
+                                        system.utility.element.setStyle(needle,needleStyle);
+                                    }
+                                };
+                                
+                        
+                            //callback
+                                object.onchange = function(){};
+                                object.onrelease = function(){};
+                        
+                        
+                            //mouse interaction
+                                object.ondblclick = function(){ this.set(0.5); };
+                                object.onwheel = function(event){
+                                    var move = system.mouse.wheelInterpreter( event.deltaY );
+                                    var globalScale = system.utility.workspace.getGlobalScale(object);
+                        
+                                    this.set( this.get() - move/(10*globalScale) );
+                                };
+                                object.onmousedown = function(event){
+                                    system.svgElement.onmousemove_old = system.svgElement.onmousemove;
+                                    system.svgElement.onmouseleave_old = system.svgElement.onmouseleave;
+                                    system.svgElement.onmouseup_old = system.svgElement.onmouseup;
+                        
+                                    system.svgElement.tempRef = this;
+                                    system.svgElement.tempRef._data.initialValue = this.get();
+                                    system.svgElement.tempRef._data.initialY = event.y;
+                                    system.svgElement.tempRef._data.mux = system.svgElement.tempRef._data.mux;
+                                    system.svgElement.onmousemove = function(event){
+                                        var mux = system.svgElement.tempRef._data.mux;
+                                        var value = system.svgElement.tempRef._data.initialValue;
+                                        var numerator = event.y-system.svgElement.tempRef._data.initialY;
+                                        var divider = system.utility.workspace.getGlobalScale(object);
+                        
+                                        system.svgElement.tempRef.set( value - numerator/(divider*mux), true );
+                                    };
+                                    system.svgElement.onmouseup = function(){
+                                        this.tempRef.set(this.tempRef.get(),false);
+                                        delete this.tempRef;
+                        
+                                        system.svgElement.onmousemove = system.svgElement.onmousemove_old;
+                                        system.svgElement.onmouseleave = system.svgElement.onmouseleave_old;
+                                        system.svgElement.onmouseup = system.svgElement.onmouseup_old;
+                        
+                                        system.svgElement.onmousemove_old = null;
+                                        system.svgElement.onmouseleave_old = null;
+                                        system.svgElement.onmouseup_old = null;
+                                    };
+                                    system.svgElement.onmouseleave = system.svgElement.onmouseup;
+                                    system.svgElement.onmousemove(event);
+                                };
+                        
+                            //setup
+                                object.set(0);
+                        
+                            return object;
+                        };
+                        this.dial_discrete = function(
+                            id='dial_discrete',
+                            x, y, r,
+                            optionCount=5,
+                            startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            handleStyle = 'fill:rgba(175,175,175,1)',
+                            slotStyle = 'fill:rgba(50,50,50,1)',
+                            needleStyle = 'fill:rgba(250,100,100,1)',
+                            handleStyle_glow = 'fill:rgba(175,175,175,1)',
+                            slotStyle_glow = 'fill:rgba(254,255,219,1)',
+                            needleStyle_glow = 'fill:rgba(250,100,100,1)',
+                            arcDistance=1.35,
+                            outerArcStyle='fill:none; stroke:none;',
+                            outerArcStyle_glow='fill:none; stroke:none;',
+                        ){
+                            // elements
+                            var object = part.builder('g',id,{x:x, y:y});
+                                object._value = 0;
+                                object._selection = 0;
+                                object._data = { 
+                                    'optionCount':optionCount,
+                                    'mux':r*4
+                                };
+                        
+                                //arc
+                                    var points = 5;
+                                    var pushDistance = 1.11;
+                                    var arcPath = [];
+                                    for(var a = 0; a < points; a++){
+                                        var temp = system.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
+                                        arcPath.push( temp );
+                                        var temp = system.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
+                                        arcPath.push( temp );
+                                    }
+                                    var temp = system.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
+                                    arcPath.push( temp );
+                                    var outerArc = part.builder('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
+                                    object.appendChild(outerArc);
+                        
+                                //slot
+                                    var slot = part.builder('circle','slot',{r:r*1.1, style:slotStyle});
+                                        object.appendChild(slot);
+                        
+                                //handle
+                                    var handle = part.builder('circle','slot',{r:r, style:handleStyle});
+                                        object.appendChild(handle);
+                        
+                                //needle
+                                    var needleWidth = r/5;
+                                    var needleLength = r;
+                                    var needle = part.builder('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
+                                        needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
+                                        needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
+                                        object.appendChild(needle);
+                        
+                        
+                            //methods
+                                object.select = function(a=null, live=true, update=true){
+                                    if(a==null){return this._selection;}
+                        
+                                    a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
+                                    a = (a<0 ? 0 : a);
+                        
+                                    if(this._selection == a){/*nothings changed*/return;}
+                        
+                                    this._selection = a;
+                                    this._set( a/(this._data.optionCount-1) );
+                                    if(update&&this.onchange){ this.onchange(a); }
+                                    if(update&&!live&&this.onrelease){ this.onrelease(value); }
+                                };
+                                object._get = function(){ return this._value; };
+                                object._set = function(value){
+                                    value = (value>1 ? 1 : value);
+                                    value = (value<0 ? 0 : value);
+                        
+                                    this._value = value;
+                                    this.children['needle'].rotation(startAngle + maxAngle*value);
+                                };
+                                object.glow = function(state){
+                                    if(state){
+                                        system.utility.element.setStyle(outerArc,outerArcStyle_glow);
+                                        system.utility.element.setStyle(slot,slotStyle_glow);
+                                        system.utility.element.setStyle(handle,handleStyle_glow);
+                                        system.utility.element.setStyle(needle,needleStyle_glow);
+                                    }else{
+                                        system.utility.element.setStyle(outerArc,outerArcStyle);
+                                        system.utility.element.setStyle(slot,slotStyle);
+                                        system.utility.element.setStyle(handle,handleStyle);
+                                        system.utility.element.setStyle(needle,needleStyle);
+                                    }
+                                };
+                          
+                        
+                            //callback
+                                object.onchange = function(){};
+                                object.onrelease = function(){};
+                        
+                            
+                            //mouse interaction
+                                object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
+                                object.onwheel = function(event){
+                                    var move = system.mouse.wheelInterpreter( event.deltaY );
+                                    var globalScale = system.utility.workspace.getGlobalScale(object);
+                        
+                                    if(!object.onwheel.acc){object.onwheel.acc=0;}
+                                    object.onwheel.acc += move/globalScale;
+                                    if( Math.abs(object.onwheel.acc) >= 1 ){
+                                        this.select( this.select()-1*Math.sign(object.onwheel.acc) );
+                                        object.onwheel.acc = 0;
+                                    }
+                                };
+                                object.onmousedown = function(event){
+                                    system.svgElement.onmousemove_old = system.svgElement.onmousemove;
+                                    system.svgElement.onmouseleave_old = system.svgElement.onmouseleave;
+                                    system.svgElement.onmouseup_old = system.svgElement.onmouseup;
+                        
+                                    system.svgElement.tempRef = this;
+                                    system.svgElement.tempRef._data.initialValue = this._get();
+                                    system.svgElement.tempRef._data.initialY = event.y;
+                                    system.svgElement.tempRef._data.mux = system.svgElement.tempRef._data.mux;
+                                    system.svgElement.onmousemove = function(event){
+                                        var mux = system.svgElement.tempRef._data.mux;
+                                        var value = system.svgElement.tempRef._data.initialValue;
+                                        var numerator = event.y-system.svgElement.tempRef._data.initialY;
+                                        var divider = system.utility.workspace.getGlobalScale(object);
+                        
+                                        system.svgElement.tempRef.select(
+                                            Math.round(
+                                                (system.svgElement.tempRef._data.optionCount-1)*(value - numerator/(divider*mux))
+                                            ) 
+                                        );
+                                    };
+                                    system.svgElement.onmouseup = function(){
+                                        this.tempRef.select(this.tempRef.select(),false);
+                                        this.tempRef = null;
+                                        
+                                        system.svgElement.onmousemove = system.svgElement.onmousemove_old;
+                                        system.svgElement.onmouseleave = system.svgElement.onmouseleave_old;
+                                        system.svgElement.onmouseup = system.svgElement.onmouseup_old;
+                        
+                                        system.svgElement.onmousemove_old = null;
+                                        system.svgElement.onmouseleave_old = null;
+                                        system.svgElement.onmouseup_old = null;
+                                    };
+                                    system.svgElement.onmouseleave = system.svgElement.onmouseup;
+                                    system.svgElement.onmousemove(event);
+                                };
+                        
+                            //setup
+                                object._set(0);
+                                
+                          return object;
+                        };
+                        this.grapher_waveWorkspace = function(
+                            id='grapher_waveWorkspace',
+                            x, y, width, height, angle=0, graphType='Canvas', selectNeedle=true, selectionArea=true,
+                            foregroundStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
+                            foregroundTextStyles=['fill:rgba(0,255,255,1); font-size:3; font-family:Helvetica;'],
+                            middlegroundStyle=['stroke:rgba(0,255,0,1); stroke-width:0.1; stroke-linecap:round;'],
+                            middlegroundTextStyle=['fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;'],
+                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
+                            backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
+                            backingStyle='fill:rgba(50,50,50,1)',
+                        ){
+                            var needleWidth = 1/4;
+                        
+                            //elements
+                                //main
+                                    var object = part.builder('g',id,{x:x, y:y});
+                                //main graph
+                                    var graph = part.builder('grapher'+graphType, 'graph', {
+                                        x:0, y:0, width:width, height:height,
+                                        style:{
+                                            foreground:middlegroundStyle, foregroundText:middlegroundTextStyle, 
+                                            background:backgroundStyle, backgroundText:backgroundTextStyle, 
+                                            backing:backingStyle
+                                        }
+                                    });
+                                    
+                                    object.append(graph);
+                                //needle overlay
+                                    var overlay = part.builder('needleOverlay', 'overlay', {
+                                        x:0, y:0, width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                                        needleStyles:foregroundStyles,
+                                    });
+                                    object.append(overlay);
+                        
+                            //controls
+                                object.select = overlay.select;
+                                object.area = overlay.area;
+                                object.draw = graph.draw;
+                                object.foregroundLineThickness = graph.foregroundLineThickness;
+                                object.drawBackground = graph.drawBackground;
+                                object.area = overlay.area;
+                                object._test = graph._test;
+                                object.genericNeedle = overlay.genericNeedle;
+                        
+                            //callbacks
+                                object.onchange = function(needle,value){};
+                                overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
+                                object.onrelease = function(needle,value){};
+                                overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
+                                object.selectionAreaToggle = function(toggle){};
+                                overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
+                        
+                            //setup
+                                object.drawBackground();
+                        
+                            return object;
+                        };
+                        this.list = function(
+                            id='list', 
+                            x, y, width, height, angle=0,
+                            list=[
+                                {text:'item1',  function:function(){console.log('item1 function');}},  {text:'item2',  function:function(){console.log('item2 function');}},
+                                {text:'item3',  function:function(){console.log('item3 function');}},  {text:'item4',  function:function(){console.log('item4 function');}},
+                                'space','break','space',
+                                {text:'item5',  function:function(){console.log('item5 function');}},  {text:'item6',  function:function(){console.log('item6 function');}},
+                                {text:'item7',  function:function(){console.log('item7 function');}},  {text:'item8',  function:function(){console.log('item8 function');}},
+                                {text:'item9',  function:function(){console.log('item9 function');}},  {text:'item10', function:function(){console.log('item10 function');}},
+                                {text:'item11', function:function(){console.log('item11 function');}}, {text:'item12', function:function(){console.log('item12 function');}},
+                                {text:'item13', function:function(){console.log('item13 function');}}, {text:'item14', function:function(){console.log('item14 function');}},
+                                {text:'item15', function:function(){console.log('item15 function');}}, {text:'item16', function:function(){console.log('item16 function');}},
+                                {text:'item17', function:function(){console.log('item17 function');}}, {text:'item18', function:function(){console.log('item18 function');}},
+                                {text:'item19', function:function(){console.log('item19 function');}}, {text:'item20', function:function(){console.log('item20 function');}},
+                                {text:'item21', function:function(){console.log('item21 function');}}, {text:'item22', function:function(){console.log('item22 function');}},
+                                {text:'item23', function:function(){console.log('item23 function');}}, {text:'item24', function:function(){console.log('item24 function');}},
+                                {text:'item25', function:function(){console.log('item25 function');}}, {text:'item26', function:function(){console.log('item26 function');}},
+                                {text:'item27', function:function(){console.log('item27 function');}}, {text:'item28', function:function(){console.log('item28 function');}},
+                                {text:'item29', function:function(){console.log('item29 function');}}, {text:'item30', function:function(){console.log('item30 function');}},
+                                {text:'item31', function:function(){console.log('item31 function');}}, {text:'item32', function:function(){console.log('item32 function');}},
+                            ],
+                            selectable=true, multiSelect=true, hoverable=true, pressable=true, active=true,
+                            itemHeightMux=0.1, itemSpacingMux=0.01, breakHeightMux=0.0025, breakWidthMux=0.9, spacingHeightMux=0.005,
+                            itemTextVerticalOffsetMux=0.5, itemtextHorizontalOffsetMux=0.05,
+                            listItemTextStyle='fill:rgba(0,0,0,1); font-size:5; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
+                            backingStyle='fill:rgba(230,230,230,1)',
+                            breakStyle='fill:rgba(195,195,195,1)',
+                            listItemBackgroundStyle_off=                     'fill:rgba(180,180,180,1)',
+                            listItemBackgroundStyle_up=                      'fill:rgba(220,220,220,1)',
+                            listItemBackgroundStyle_press=                   'fill:rgba(230,230,230,1)',
+                            listItemBackgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_select_press=            'fill:rgba(230,230,230,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_glow=                    'fill:rgba(230,230,210,1)',
+                            listItemBackgroundStyle_glow_press=              'fill:rgba(250,250,250,1)',
+                            listItemBackgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_glow_select_press=       'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_hover=                   'fill:rgba(230,230,230,1)',
+                            listItemBackgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
+                            listItemBackgroundStyle_hover_select=            'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_hover_glow=              'fill:rgba(240,240,240,1)',
+                            listItemBackgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
+                            listItemBackgroundStyle_hover_glow_select=       'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            listItemBackgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                        ){
+                            //state
+                                var itemArray = [];
+                                var selectedItems = [];
+                                var lastNonShiftClicked = 0;
+                                var position = 0;
+                                var calculatedListHeight;
+                        
+                        
+                            //main object
+                                var object = part.builder('g',id,{x:x, y:y, r:angle});
+                        
+                            //background
+                                var rect = part.builder('rect',null,{width:width, height:height, style:backingStyle});
+                                object.appendChild(rect);
+                        
+                            //viewport (for clipping the visible area)
+                                var viewport = part.builder('g','viewport',{});
+                                viewport.setAttribute('clip-path','polygon(0px 0px, '+width+'px 0px, '+width+'px '+height+'px, 0px '+height+'px)');
+                                object.appendChild(viewport);
+                        
+                            //main list
+                                var mainList = part.builder('g','mainList');
+                                viewport.appendChild(mainList);
+                        
+                                function refreshList(){
+                                    //clean out all values
+                                        itemArray = [];
+                                        mainList.innerHTML = '';
+                                        selectedItems = [];
+                                        position = 0;
+                                        lastNonShiftClicked = 0;
+                        
+                                    //populate list
+                                        var accumulativeHeight = 0;
+                                        for(var a = 0; a < list.length; a++){
+                                            if( list[a] == 'break' ){
+                                                //break
+                                                var temp = part.builder( 'rect', a, {
+                                                    x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                    width:width*breakWidthMux, height:height*breakHeightMux,
+                                                    style:breakStyle
+                                                });
+                        
+                                                accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                            }else if( list[a] == 'space' ){
+                                                //spacing
+                                                var temp = part.builder( 'rect', a, {
+                                                    x:0, y:accumulativeHeight,
+                                                    width:width, height:height*spacingHeightMux,
+                                                    style:backingStyle
+                                                });
+                        
+                                                accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                            }else{
+                                                //regular item
+                                                var temp = part.builder( 'button_rect', a, {
+                                                    x:0, y:accumulativeHeight,
+                                                    width:width, height:height*itemHeightMux, 
+                                                    text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                                                    text_left: list[a].text_left, text_right:list[a].text_right,
+                                                    textVerticalOffset:itemTextVerticalOffsetMux, textHorizontalOffsetMux:itemtextHorizontalOffsetMux,
+                                                    active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                                                    style:{
+                                                        text:listItemTextStyle,
+                                                        off:listItemBackgroundStyle_off,
+                                                        up:listItemBackgroundStyle_up,                               press:listItemBackgroundStyle_press,
+                                                        select:listItemBackgroundStyle_select,                       select_press:listItemBackgroundStyle_select_press,
+                                                        glow:listItemBackgroundStyle_glow,                           glow_press:listItemBackgroundStyle_glow_press,
+                                                        glow_select:listItemBackgroundStyle_glow_select,             glow_select_press:listItemBackgroundStyle_glow_select_press,
+                                                        hover:listItemBackgroundStyle_hover,                         hover_press:listItemBackgroundStyle_hover_press,
+                                                        hover_select:listItemBackgroundStyle_hover_select,           hover_select_press:listItemBackgroundStyle_hover_select_press,
+                                                        hover_glow:listItemBackgroundStyle_hover_glow,               hover_glow_press:listItemBackgroundStyle_hover_glow_press,
+                                                        hover_glow_select:listItemBackgroundStyle_hover_glow_select, hover_glow_select_press:listItemBackgroundStyle_hover_glow_select_press,
+                                                    }
+                                                });
+                        
+                                                accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                        
+                                                temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                temp.onrelease = function(a){
+                                                    return function(){
+                                                        if( list[a].function ){ list[a].function(); }
+                                                        object.onrelease(a);
+                                                    }
+                                                }(a);
+                                                temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                                            }
+                        
+                                            itemArray.push( temp );
+                                            mainList.appendChild( temp );
+                                        }
+                        
+                                    return accumulativeHeight - height*itemSpacingMux;
+                                }
+                        
+                                calculatedListHeight = refreshList();
+                        
+                        
+                        
+                            //interaction
+                                object.onwheel = function(event){
+                                    var move = system.mouse.wheelInterpreter( event.deltaY );
+                                    object.position( object.position() + move/10 );
+                                };
+                        
+                            //controls
+                                object.position = function(a,update=true){
+                                    if(a == undefined){return position;}
+                                    a = a < 0 ? 0 : a;
+                                    a = a > 1 ? 1 : a;
+                                    position = a;
+                        
+                                    if( calculatedListHeight < height ){return;}
+                        
+                                    var movementSpace = calculatedListHeight - height;
+                                    
+                                    system.utility.element.setTransform_XYonly( mainList, undefined, -a*movementSpace );
+                        
+                                    var y_offSet = movementSpace * a;
+                                    var bottom = y_offSet+height;
+                        
+                                    viewport.setAttribute('clip-path','polygon(0px '+y_offSet+'px, '+width+'px '+y_offSet+'px, '+width+'px '+bottom+'px, 0px '+bottom+'px)');
+                        
+                                    if(update&&this.onpositionchange){this.onpositionchange(a);}
+                                };
+                                object.select = function(a,state,event,update=true){
+                                    if(!selectable){return;}
+                        
+                                    //where multi selection is not allowed
+                                    if(!multiSelect){
+                                        //where we want to select an item, which is not already selected
+                                        if(state && !selectedItems.includes(a) ){
+                                            //deselect all other items
+                                            while( selectedItems.length > 0 ){
+                                                itemArray[ selectedItems[0] ].select(false,undefined,false);
+                                                selectedItems.shift();
+                                            }
+                        
+                                            //select current item
+                                            selectedItems.push(a);
+                        
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                            if(update){ itemArray[a].select(true,undefined,false); }
+                                        //where we want to deselect an item that is selected
+                                        }else if(!state && selectedItems.includes(a)){
+                                            //deselect current item
+                                            selectedItems.splice( selectedItems.indexOf(a), 1 );
+                        
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                            if(update){ itemArray[a].select(false,undefined,false); }
+                                        }
+                        
+                                    //where multi selection is allowed
+                                    }else{
+                                        //determind if range-selection is to be done
+                                        if( event != undefined && event.shiftKey ){
+                                            var min = Math.min(lastNonShiftClicked, a); var max = Math.max(lastNonShiftClicked, a);
+                        
+                                            //deselect all outside the range
+                                            selectedItems = [];
+                                            for(var b = 0; b < itemArray.length; b++){
+                                                if( b > max || b < min ){
+                                                    if( itemArray[b].select() ){
+                                                        itemArray[b].select(false,undefined,false);
+                                                    }
+                                                }
+                                            }
+                        
+                                            //select those within the range (that aren't already selected)
+                                            for(var b = min; b <= max; b++){
+                                                if( !itemArray[b].select() ){
+                                                    itemArray[b].select(true,undefined,false);
+                                                    selectedItems.push(b);
+                                                }
+                                            }
+                        
+                                        }else{
+                                            if(update){ itemArray[a].select(state); }
+                                            if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                            else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                            lastNonShiftClicked = a;
+                                        }
+                                    }
+                        
+                                    object.onselection(selectedItems);
+                                };
+                                object.add = function(item){
+                                    list.push(item);
+                                    calculatedListHeight = refreshList();
+                                };
+                                object.remove = function(a){
+                                    list.splice(a,1);
+                                    calculatedListHeight = refreshList();
+                                };
+                        
+                                //callbacks
+                                    object.onenter = function(listItemNumber){ /*console.log('onenter:',listItemNumber);*/ };
+                                    object.onleave = function(listItemNumber){ /*console.log('onleave:',listItemNumber);*/ };
+                                    object.onpress = function(listItemNumber){ /*console.log('onpress:',listItemNumber);*/ };
+                                    object.ondblpress = function(listItemNumber){ /*console.log('ondblpress:',listItemNumber);*/ };
+                                    object.onrelease = function(listItemNumber){ /*console.log('onrelease:',listItemNumber);*/ };
+                                    object.onselection = function(listItemNumbers){ /*console.log('onselection:',listItemNumbers);*/ };
+                                    object.onpositionchange = function(a){};
+                                
+                            return object;
+                        };
+                        this.needleOverlay = function(
+                            id='needleOverlay',
+                            x, y, width, height, angle=0, needleWidth=0.00125, selectNeedle=true, selectionArea=true,
+                            needleStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
+                        ){
+                            var needleData = {};
+                        
+                            //elements
+                                //main
+                                    var object = part.builder('g',id,{x:x, y:y});
+                                //backing
+                                    var backing = part.builder('rect','backing',{width:width,height:height,style:'fill:rgba(100,100,100, 0);'});
+                                    object.appendChild(backing);
+                                //control objects
+                                    var invisibleHandleWidth = width*needleWidth + width*0.005;
+                                    var controlObjects = {};
+                                        //lead
+                                        controlObjects.lead = part.builder('g','lead',{});
+                                        controlObjects.lead.append(part.builder('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}));
+                                        controlObjects.lead.append(part.builder('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}));
+                                        //selection_A
+                                        controlObjects.selection_A = part.builder('g','selection_A',{});
+                                        controlObjects.selection_A.append(part.builder('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
+                                        controlObjects.selection_A.append(part.builder('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
+                                        //selection_B
+                                        controlObjects.selection_B = part.builder('g','selection_B',{});
+                                        controlObjects.selection_B.append(part.builder('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
+                                        controlObjects.selection_B.append(part.builder('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
+                                        //selection_area
+                                        controlObjects.selection_area = part.builder('rect','selection_area',{height:height,style:needleStyles[1]+'opacity:0.33; cursor: move;'});
+                                        //generic needles
+                                        controlObjects.generic = [];
+                                    var controlObjectsGroup = part.builder('g','controlObjectsGroup',{})
+                                    object.append(controlObjectsGroup);
+                        
+                            //internal functions
+                                function setGenericNeedle(number,location,specialStyle={}){
+                                    if(controlObjects.generic[number] && location != undefined){
+                                        system.utility.element.setTransform_XYonly( controlObjects.generic[number], location*width - width*needleWidth*location, 0);
+                                    }else if(controlObjects.generic[number]){
+                                        controlObjects.generic[number].remove();
+                                        delete controlObjects.generic[number];
+                                    }else{
+                                        controlObjects.generic[number] = part.builder('g','generic_'+number,{x:(location*width - needleWidth*width/2), style:specialStyle})
+                                        controlObjects.generic[number].append( part.builder('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}) );
+                                        controlObjects.generic[number].append( part.builder('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);'}) );
+                                        controlObjectsGroup.append( controlObjects.generic[number] );
+                                    }
+                                }
+                                //place the selected needle at the selected location
+                                function needleJumpTo(needle,location){
+                                    //if the location is wrong, remove the needle and return
+                                    if(location == undefined || location < 0 || location > 1){
+                                        controlObjects[needle].remove();
+                                        delete needleData[needle];
+                                        return;
+                                    }
+                        
+                                    //if the needle isn't in the scene, add it
+                                    if( !controlObjectsGroup.contains(controlObjects[needle]) ){
+                                        controlObjectsGroup.append(controlObjects[needle]);
+                                    }
+                        
+                                    //actualy set the location of the needle (adjusting for the size of needle)
+                                    system.utility.element.setTransform_XYonly( controlObjects[needle], location*width - width*needleWidth*location, 0);
+                                    //save this value
+                                    needleData[needle] = location;
+                                }
+                                function computeSelectionArea(){
+                                    //if the selection needles' data are missing (or they are the same position) remove the area element and return
+                                    if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
+                                        controlObjects.selection_area.remove();
+                                        object.selectionAreaToggle(false);
+                                        delete needleData.selection_area;
+                                        return;
+                                    }
+                        
+                                    //if the area isn't in the scene, add it
+                                    if( !controlObjectsGroup.contains(controlObjects.selection_area) ){
+                                        controlObjectsGroup.append(controlObjects.selection_area);
+                                        object.selectionAreaToggle(true);
+                                    }
+                        
+                                    //compute area position and size
+                                    if(needleData.selection_A < needleData.selection_B){
+                                        var A = needleData.selection_A;
+                                        var B = needleData.selection_B;
+                                    }else{
+                                        var A = needleData.selection_B;
+                                        var B = needleData.selection_A;
+                                    }
+                                    var start = A - needleWidth*A + needleWidth
+                                    var area = B - needleWidth*B - start; 
+                                    if(area < 0){area = 0}
+                        
+                                    system.utility.element.setTransform_XYonly(controlObjects.selection_area, width*start, 0);
+                                    controlObjects.selection_area.setAttribute('width',width*area);
+                                }
+                        
+                            //interaction
+                                //generic onmousedown code for interaction
+                                function needle_onmousedown(needleName,callback){
+                                    if(object.onchange){ object.onchange(needleName,system.utility.element.getPositionWithinFromMouse(event,object,width,height).x); }
+                                    system.svgElement.onmousemove = function(event){
+                                        var x = system.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
+                        
+                                        needleJumpTo(needleName,x);
+                                        if(object.onchange){ object.onchange(needleName,x); }
+                                        if(callback){callback();}
+                                    };
+                                    system.svgElement.onmouseup = function(event){
+                                        var x = system.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
+                                        needleJumpTo(needleName,x);
+                                        if(object.onrelease){ object.onrelease(needleName,x); }
+                                        if(callback){callback();}
+                                        system.svgElement.onmousemove = undefined;
+                                        system.svgElement.onmouseleave = undefined;
+                                        system.svgElement.onmouseup = undefined;
+                                    };
+                                    system.svgElement.onmouseleave = system.svgElement.onmouseup;
+                                }
+                        
+                                backing.onmousedown = function(event){
+                                    if(!event.shiftKey){
+                                        if(!selectNeedle){return;}
+                                        needleJumpTo('lead',system.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
+                                        needle_onmousedown('lead');
+                                    }
+                                    else{
+                                        if(!selectionArea){return;}
+                                        needleJumpTo('selection_A',system.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
+                                        needle_onmousedown('selection_B',computeSelectionArea);
+                                    }
+                                };
+                                controlObjects.lead.onmousedown = function(){ needle_onmousedown('lead'); };
+                                controlObjects.selection_A.onmousedown = function(){
+                                    needle_onmousedown('selection_A',computeSelectionArea); 
+                                };
+                                controlObjects.selection_B.onmousedown = function(){
+                                    needle_onmousedown('selection_B',computeSelectionArea); 
+                                };
+                                controlObjects.selection_area.onmousedown = function(){
+                                    system.svgElement.onmousemove = function(event){
+                                        var divider = system.utility.workspace.getGlobalScale(object);
+                                        var newAlocation = needleData['selection_A']+event.movementX/(width*divider);
+                                        var newBlocation = needleData['selection_B']+event.movementX/(width*divider);
+                        
+                                        if(newAlocation > 1 || newAlocation < 0 || newBlocation > 1 || newBlocation < 0){return;}
+                        
+                                        if(object.onchange){ object.onchange('selection_A',newAlocation); object.onchange('selection_B',newBlocation); }
+                                        needleJumpTo('selection_A',newAlocation);
+                                        needleJumpTo('selection_B',newBlocation);
+                                        computeSelectionArea();
+                                    };
+                                    system.svgElement.onmouseup = function(event){
+                                        if(object.onrelease){ object.onrelease('selection_A',needleData.selection_A); object.onrelease('selection_B',needleData.selection_B); }
+                                        system.svgElement.onmousemove = undefined;
+                                        system.svgElement.onmouseleave = undefined;
+                                        system.svgElement.onmouseup = undefined;
+                                    };
+                                };
+                                
+                                //doubleclick to destroy selection area
+                                controlObjects.selection_A.ondblclick = function(){
+                                    needleJumpTo('selection_A');
+                                    needleJumpTo('selection_B');
+                                    computeSelectionArea();
+                                };
+                                controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
+                                controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
+                        
+                            //controls
+                                object.select = function(position,update=true){
+                                    if(!selectNeedle){return;}
+                                    //if there's no input, return the value
+                                    //if input is out of bounds, remove the needle
+                                    //otherwise, set the position
+                                    if(position == undefined){ return needleData.lead; }
+                                    else if(position > 1 || position < 0){ needleJumpTo('lead'); }
+                                    else{ needleJumpTo('lead',position); }
+                                };
+                                object.area = function(positionA,positionB){
+                                    if(!selectionArea){return;}
+                        
+                                    //if there's no input, return the values
+                                    //if input is out of bounds, remove the needles
+                                    //otherwise, set the position
+                                    if(positionA == undefined || positionB == undefined){
+                                        return {A:needleData.selection_A, B:needleData.selection_B};
+                                    }else if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 ){
+                                        needleJumpTo('selection_A');
+                                        needleJumpTo('selection_B');
+                                    }else{
+                                        needleJumpTo('selection_A',positionA);
+                                        needleJumpTo('selection_B',positionB);
+                                    }
+                        
+                                    //you always gotta compute the selection area
+                                    computeSelectionArea();
+                                };
+                                object.genericNeedle = function(number,position,specialStyle=''){
+                                    setGenericNeedle(number,position,specialStyle);
+                                };
+                        
+                            //callbacks
+                                object.onchange = function(needle,value){};
+                                object.onrelease = function(needle,value){};
+                                object.selectionAreaToggle = function(bool){};
+                        
+                            return object;
+                        };
                         this.rangeslide = function(
                             id='rangeslide', 
                             x, y, width, height, angle=0,
@@ -6651,19 +7377,19 @@
                         
                             //elements
                                 //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
+                                    var object = part.builder('g',id,{x:x, y:y, r:angle});
                                 //backing and slot group
-                                    var backingAndSlot = system.utility.misc.elementMaker('g','backingAndSlotGroup',{});
+                                    var backingAndSlot = part.builder('g','backingAndSlotGroup',{});
                                     object.appendChild(backingAndSlot);
                                     //backing
-                                        var backing = system.utility.misc.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
+                                        var backing = part.builder('rect','backing',{width:width,height:height, style:backingStyle});
                                         backingAndSlot.appendChild(backing);
                                     //slot
-                                        var slot = system.utility.misc.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
+                                        var slot = part.builder('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
                                         backingAndSlot.appendChild(slot);
                         
                                 //span
-                                    var span = system.utility.misc.elementMaker('rect','span',{
+                                    var span = part.builder('rect','span',{
                                         x:width*((1-spanWidth)/2), y:height*handleHeight,
                                         width:width*spanWidth, height:height - 2*height*handleHeight, 
                                         style:spanStyle
@@ -6674,14 +7400,14 @@
                                     var handles = {}
                                     for(var a = 0; a < handleNames.length; a++){
                                         //grouping
-                                            handles[handleNames[a]] = system.utility.misc.elementMaker('g','handle_'+a,{})
+                                            handles[handleNames[a]] = part.builder('g','handle_'+a,{})
                                             object.appendChild(handles[handleNames[a]]);
                                         //handle
-                                            var handle = system.utility.misc.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
+                                            var handle = part.builder('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
                                             handles[handleNames[a]].appendChild(handle);
                                         //invisible handle
                                             var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                            var invisibleHandle = system.utility.misc.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
+                                            var invisibleHandle = part.builder('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
                                             handles[handleNames[a]].appendChild(invisibleHandle);
                                     }
                         
@@ -6885,13 +7611,13 @@
                             checkGlowStyle = 'fill:rgba(220,220,220,1)',
                         ){
                             // elements
-                            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                            var rect = system.utility.misc.elementMaker('rect',null,{width:width,height:height, style:backingStyle});
+                            var object = part.builder('g',id,{x:x, y:y});
+                            var rect = part.builder('rect',null,{width:width,height:height, style:backingStyle});
                                 object.appendChild(rect);
                         
                             for(var y = 0; y < ycount; y++){
                                 for(var x = 0; x < xcount; x++){
-                                    var temp = system.utility.misc.elementMaker('checkbox_rect',y+'_'+x,{
+                                    var temp = part.builder('checkbox_rect',y+'_'+x,{
                                         x:x*(width/xcount), 
                                         y:y*(height/ycount), 
                                         width:width/xcount, 
@@ -6949,745 +7675,6 @@
                         
                             return object;
                         };
-                        this.needleOverlay = function(
-                            id='needleOverlay',
-                            x, y, width, height, angle=0, needleWidth=0.00125, selectNeedle=true, selectionArea=true,
-                            needleStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
-                        ){
-                            var needleData = {};
-                        
-                            //elements
-                                //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                                //backing
-                                    var backing = system.utility.misc.elementMaker('rect','backing',{width:width,height:height,style:'fill:rgba(100,100,100, 0);'});
-                                    object.appendChild(backing);
-                                //control objects
-                                    var invisibleHandleWidth = width*needleWidth + width*0.005;
-                                    var controlObjects = {};
-                                        //lead
-                                        controlObjects.lead = system.utility.misc.elementMaker('g','lead',{});
-                                        controlObjects.lead.append(system.utility.misc.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}));
-                                        controlObjects.lead.append(system.utility.misc.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}));
-                                        //selection_A
-                                        controlObjects.selection_A = system.utility.misc.elementMaker('g','selection_A',{});
-                                        controlObjects.selection_A.append(system.utility.misc.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
-                                        controlObjects.selection_A.append(system.utility.misc.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
-                                        //selection_B
-                                        controlObjects.selection_B = system.utility.misc.elementMaker('g','selection_B',{});
-                                        controlObjects.selection_B.append(system.utility.misc.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[1]}));
-                                        controlObjects.selection_B.append(system.utility.misc.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);cursor: col-resize;'}) );
-                                        //selection_area
-                                        controlObjects.selection_area = system.utility.misc.elementMaker('rect','selection_area',{height:height,style:needleStyles[1]+'opacity:0.33; cursor: move;'});
-                                        //generic needles
-                                        controlObjects.generic = [];
-                                    var controlObjectsGroup = system.utility.misc.elementMaker('g','controlObjectsGroup',{})
-                                    object.append(controlObjectsGroup);
-                        
-                            //internal functions
-                                function setGenericNeedle(number,location,specialStyle={}){
-                                    if(controlObjects.generic[number] && location != undefined){
-                                        system.utility.element.setTransform_XYonly( controlObjects.generic[number], location*width - width*needleWidth*location, 0);
-                                    }else if(controlObjects.generic[number]){
-                                        controlObjects.generic[number].remove();
-                                        delete controlObjects.generic[number];
-                                    }else{
-                                        controlObjects.generic[number] = system.utility.misc.elementMaker('g','generic_'+number,{x:(location*width - needleWidth*width/2), style:specialStyle})
-                                        controlObjects.generic[number].append( system.utility.misc.elementMaker('rect','handle',{width:needleWidth*width,height:height,style:needleStyles[0]}) );
-                                        controlObjects.generic[number].append( system.utility.misc.elementMaker('rect','invisibleHandle',{x:(width*needleWidth - invisibleHandleWidth)/2, width:invisibleHandleWidth,height:height,style:'fill:rgba(255,0,0,0);'}) );
-                                        controlObjectsGroup.append( controlObjects.generic[number] );
-                                    }
-                                }
-                                //place the selected needle at the selected location
-                                function needleJumpTo(needle,location){
-                                    //if the location is wrong, remove the needle and return
-                                    if(location == undefined || location < 0 || location > 1){
-                                        controlObjects[needle].remove();
-                                        delete needleData[needle];
-                                        return;
-                                    }
-                        
-                                    //if the needle isn't in the scene, add it
-                                    if( !controlObjectsGroup.contains(controlObjects[needle]) ){
-                                        controlObjectsGroup.append(controlObjects[needle]);
-                                    }
-                        
-                                    //actualy set the location of the needle (adjusting for the size of needle)
-                                    system.utility.element.setTransform_XYonly( controlObjects[needle], location*width - width*needleWidth*location, 0);
-                                    //save this value
-                                    needleData[needle] = location;
-                                }
-                                function computeSelectionArea(){
-                                    //if the selection needles' data are missing (or they are the same position) remove the area element and return
-                                    if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
-                                        controlObjects.selection_area.remove();
-                                        object.selectionAreaToggle(false);
-                                        delete needleData.selection_area;
-                                        return;
-                                    }
-                        
-                                    //if the area isn't in the scene, add it
-                                    if( !controlObjectsGroup.contains(controlObjects.selection_area) ){
-                                        controlObjectsGroup.append(controlObjects.selection_area);
-                                        object.selectionAreaToggle(true);
-                                    }
-                        
-                                    //compute area position and size
-                                    if(needleData.selection_A < needleData.selection_B){
-                                        var A = needleData.selection_A;
-                                        var B = needleData.selection_B;
-                                    }else{
-                                        var A = needleData.selection_B;
-                                        var B = needleData.selection_A;
-                                    }
-                                    var start = A - needleWidth*A + needleWidth
-                                    var area = B - needleWidth*B - start; 
-                                    if(area < 0){area = 0}
-                        
-                                    system.utility.element.setTransform_XYonly(controlObjects.selection_area, width*start, 0);
-                                    controlObjects.selection_area.setAttribute('width',width*area);
-                                }
-                        
-                            //interaction
-                                //generic onmousedown code for interaction
-                                function needle_onmousedown(needleName,callback){
-                                    if(object.onchange){ object.onchange(needleName,system.utility.element.getPositionWithinFromMouse(event,object,width,height).x); }
-                                    system.svgElement.onmousemove = function(event){
-                                        var x = system.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
-                        
-                                        needleJumpTo(needleName,x);
-                                        if(object.onchange){ object.onchange(needleName,x); }
-                                        if(callback){callback();}
-                                    };
-                                    system.svgElement.onmouseup = function(event){
-                                        var x = system.utility.element.getPositionWithinFromMouse(event,object,width,height).x;
-                                        needleJumpTo(needleName,x);
-                                        if(object.onrelease){ object.onrelease(needleName,x); }
-                                        if(callback){callback();}
-                                        system.svgElement.onmousemove = undefined;
-                                        system.svgElement.onmouseleave = undefined;
-                                        system.svgElement.onmouseup = undefined;
-                                    };
-                                    system.svgElement.onmouseleave = system.svgElement.onmouseup;
-                                }
-                        
-                                backing.onmousedown = function(event){
-                                    if(!event.shiftKey){
-                                        if(!selectNeedle){return;}
-                                        needleJumpTo('lead',system.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
-                                        needle_onmousedown('lead');
-                                    }
-                                    else{
-                                        if(!selectionArea){return;}
-                                        needleJumpTo('selection_A',system.utility.element.getPositionWithinFromMouse(event,object,width,height).x);
-                                        needle_onmousedown('selection_B',computeSelectionArea);
-                                    }
-                                };
-                                controlObjects.lead.onmousedown = function(){ needle_onmousedown('lead'); };
-                                controlObjects.selection_A.onmousedown = function(){
-                                    needle_onmousedown('selection_A',computeSelectionArea); 
-                                };
-                                controlObjects.selection_B.onmousedown = function(){
-                                    needle_onmousedown('selection_B',computeSelectionArea); 
-                                };
-                                controlObjects.selection_area.onmousedown = function(){
-                                    system.svgElement.onmousemove = function(event){
-                                        var divider = system.utility.workspace.getGlobalScale(object);
-                                        var newAlocation = needleData['selection_A']+event.movementX/(width*divider);
-                                        var newBlocation = needleData['selection_B']+event.movementX/(width*divider);
-                        
-                                        if(newAlocation > 1 || newAlocation < 0 || newBlocation > 1 || newBlocation < 0){return;}
-                        
-                                        if(object.onchange){ object.onchange('selection_A',newAlocation); object.onchange('selection_B',newBlocation); }
-                                        needleJumpTo('selection_A',newAlocation);
-                                        needleJumpTo('selection_B',newBlocation);
-                                        computeSelectionArea();
-                                    };
-                                    system.svgElement.onmouseup = function(event){
-                                        if(object.onrelease){ object.onrelease('selection_A',needleData.selection_A); object.onrelease('selection_B',needleData.selection_B); }
-                                        system.svgElement.onmousemove = undefined;
-                                        system.svgElement.onmouseleave = undefined;
-                                        system.svgElement.onmouseup = undefined;
-                                    };
-                                };
-                                
-                                //doubleclick to destroy selection area
-                                controlObjects.selection_A.ondblclick = function(){
-                                    needleJumpTo('selection_A');
-                                    needleJumpTo('selection_B');
-                                    computeSelectionArea();
-                                };
-                                controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
-                                controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
-                        
-                            //controls
-                                object.select = function(position,update=true){
-                                    if(!selectNeedle){return;}
-                                    //if there's no input, return the value
-                                    //if input is out of bounds, remove the needle
-                                    //otherwise, set the position
-                                    if(position == undefined){ return needleData.lead; }
-                                    else if(position > 1 || position < 0){ needleJumpTo('lead'); }
-                                    else{ needleJumpTo('lead',position); }
-                                };
-                                object.area = function(positionA,positionB){
-                                    if(!selectionArea){return;}
-                        
-                                    //if there's no input, return the values
-                                    //if input is out of bounds, remove the needles
-                                    //otherwise, set the position
-                                    if(positionA == undefined || positionB == undefined){
-                                        return {A:needleData.selection_A, B:needleData.selection_B};
-                                    }else if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 ){
-                                        needleJumpTo('selection_A');
-                                        needleJumpTo('selection_B');
-                                    }else{
-                                        needleJumpTo('selection_A',positionA);
-                                        needleJumpTo('selection_B',positionB);
-                                    }
-                        
-                                    //you always gotta compute the selection area
-                                    computeSelectionArea();
-                                };
-                                object.genericNeedle = function(number,position,specialStyle=''){
-                                    setGenericNeedle(number,position,specialStyle);
-                                };
-                        
-                            //callbacks
-                                object.onchange = function(needle,value){};
-                                object.onrelease = function(needle,value){};
-                                object.selectionAreaToggle = function(bool){};
-                        
-                            return object;
-                        };
-                        this.button_rect = function(
-                            id='button_rect',
-                            x, y, width, height, angle=0,
-                            text_centre, text_left, text_right,
-                            textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
-                            active=true, hoverable=true, selectable=false, pressable=true,
-                            textStyle='fill:rgba(0,0,0,1); font-size:15; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
-                            backgroundStyle_off=                     'fill:rgba(180,180,180,1)',
-                            backgroundStyle_up=                      'fill:rgba(200,200,200,1)',
-                            backgroundStyle_press=                   'fill:rgba(230,230,230,1)',
-                            backgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_select_press=            'fill:rgba(230,230,230,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_glow=                    'fill:rgba(220,220,220,1)',
-                            backgroundStyle_glow_press=              'fill:rgba(250,250,250,1)',
-                            backgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_glow_select_press=       'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover=                   'fill:rgba(220,220,220,1)',
-                            backgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
-                            backgroundStyle_hover_select=            'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover_glow=              'fill:rgba(240,240,240,1)',
-                            backgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
-                            backgroundStyle_hover_glow_select=       'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                            backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
-                        ){
-                            //elements
-                                var object = system.utility.misc.elementMaker('g',id,{x:x,y:y,r:angle});
-                        
-                                var background = system.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
-                                object.appendChild( background );
-                        
-                                var text_centre = system.utility.misc.elementMaker('text',null,{x:width/2, y:height*textVerticalOffsetMux, text:text_centre, style:textStyle+'text-anchor:middle;'});
-                                object.appendChild(text_centre);
-                                var text_left = system.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffsetMux, y:height*textVerticalOffsetMux, text:text_left, style:textStyle});
-                                object.appendChild(text_left);
-                                var text_right = system.utility.misc.elementMaker('text',null,{x:width-(width*textHorizontalOffsetMux), y:height*textVerticalOffsetMux, text:text_right, style:textStyle+'text-anchor:end;'});
-                                object.appendChild(text_right);
-                        
-                            //state
-                                object.state = {
-                                    hovering:false,
-                                    glowing:false,
-                                    selected:false,
-                                    pressed:false,
-                                };
-                        
-                                object.activateGraphicalState = function(){
-                                    if(!active){ system.utility.element.setStyle( background, backgroundStyle_off); return; }
-                        
-                                    var styles = [
-                                        backgroundStyle_up,                backgroundStyle_press,
-                                        backgroundStyle_select,            backgroundStyle_select_press,
-                                        backgroundStyle_glow,              backgroundStyle_glow_press,
-                                        backgroundStyle_glow_select,       backgroundStyle_glow_select_press,
-                                        backgroundStyle_hover,             backgroundStyle_hover_press,
-                                        backgroundStyle_hover_select,      backgroundStyle_hover_select_press,
-                                        backgroundStyle_hover_glow,        backgroundStyle_hover_glow_press,
-                                        backgroundStyle_hover_glow_select, backgroundStyle_hover_glow_select_press,
-                                    ];
-                        
-                                    if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
-                                    if(!selectable && object.state.selected ){ object.state.selected = false; }
-                        
-                                    system.utility.element.setStyle( 
-                                        background, 
-                                        styles[ object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + (pressable && object.state.pressed)*1 ]
-                                    );
-                                };
-                                object.activateGraphicalState();
-                        
-                                //interactivity
-                                    object.onmouseenter = function(event){ 
-                                        this.state.hovering = true;  
-                                        this.activateGraphicalState();
-                                        if(this.onenter){this.onenter(this, event);}
-                                        if(event.buttons == 1){object.onmousedown(event);} 
-                                    };
-                                    object.onmouseleave = function(event){ 
-                                        this.state.hovering = false; 
-                                        this.release(event); 
-                                        this.activateGraphicalState(); 
-                                        if(this.onleave){this.onleave(this, event);}
-                                    };
-                                    object.onmouseup = function(event){   this.release(event); };
-                                    object.onmousedown = function(event){ this.press(event);   };
-                                    object.ondblclick = function(event){ if(this.ondblpress){this.ondblpress(this, event);} };
-                                //controls
-                                    object.press = function(event){
-                                        if(this.state.pressed){return;}
-                                        this.state.pressed = true;
-                                        this.activateGraphicalState();
-                                        if(this.onpress){this.onpress(this, event);}
-                                        this.select( !this.select(), event );
-                                    };
-                                    object.release = function(event){
-                                        if(!this.state.pressed){return;}
-                                        this.state.pressed = false;
-                                        this.activateGraphicalState();
-                                        if(this.onrelease){this.onrelease(this, event);}
-                                    };
-                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; this.activateGraphicalState(); };
-                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  this.activateGraphicalState(); };
-                                    object.select = function(bool,event,callback=true){ 
-                                        if(bool == undefined){return this.state.selected;} 
-                                        if(!selectable){return;}
-                                        if(this.state.selected == bool){return;}
-                                        this.state.selected = bool; this.activateGraphicalState();
-                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
-                                    };
-                                //callbacks
-                                    object.onenter = function(object, event){};
-                                    object.onleave = function(object, event){};
-                                    object.onpress = function(object, event){};
-                                    object.ondblpress = function(object, event){};
-                                    object.onrelease = function(object, event){};
-                                    object.onselect = function(object, event){};
-                                    object.ondeselect = function(object, event){};
-                        
-                            return object;
-                        };
-                        this.checkbox_rect = function(
-                            id='checkbox_rect',
-                            x, y, width, height, angle=0,
-                            checkStyle = 'fill:rgba(150,150,150,1)',
-                            backingStyle = 'fill:rgba(200,200,200,1)',
-                            checkGlowStyle = 'fill:rgba(220,220,220,1)',
-                            backingGlowStyle = 'fill:rgba(220,220,220,1)',
-                        ){
-                            // elements 
-                            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
-                                object._checked = false;
-                                object.styles = {
-                                    'check':checkStyle,
-                                    'uncheck':'fill:rgba(0,0,0,0)',
-                                    'backing':backingStyle
-                                };
-                        
-                            var rect = system.utility.misc.elementMaker('rect',null,{width:width,height:height, style:backingStyle});
-                                object.appendChild(rect);
-                            var checkrect = system.utility.misc.elementMaker('rect',null,{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:object.styles.uncheck});
-                                object.appendChild(checkrect);
-                        
-                        
-                            function updateGraphics(){
-                                if(object._checked){ system.utility.element.setStyle(checkrect,object.styles.check); }
-                                else{ system.utility.element.setStyle(checkrect,object.styles.uncheck); }
-                                system.utility.element.setStyle(rect,object.styles.backing);
-                            }
-                        
-                            //methods
-                            object.get = function(){ return object._checked; };
-                            object.set = function(value, update=true){
-                                object._checked = value;
-                                
-                                updateGraphics();
-                        
-                                if(update&&this.onchange){ this.onchange(value); }
-                            };
-                            object.light = function(state){
-                                if(state){
-                                    object.styles.check = checkGlowStyle;
-                                    object.styles.backing = backingGlowStyle;
-                                }else{
-                                    object.styles.check = checkStyle;
-                                    object.styles.backing = backingStyle;
-                                }
-                                updateGraphics();
-                            };
-                        
-                        
-                            //callback
-                            object.onchange = function(){};
-                        
-                        
-                            //mouse interaction
-                            object.onclick = function(event){
-                                object.set(!object.get());
-                            };
-                        
-                        
-                            return object;
-                        };
-                        this.slide = function(
-                            id='slide', 
-                            x, y, width, height, angle=0,
-                            handleHeight=0.1, value=0, resetValue=-1,
-                            handleStyle = 'fill:rgba(200,200,200,1)',
-                            backingStyle = 'fill:rgba(150,150,150,1)',
-                            slotStyle = 'fill:rgba(50,50,50,1)',
-                            invisibleHandleStyle = 'fill:rgba(0,0,0,0);',
-                        ){
-                            var grappled = false;
-                        
-                            //elements
-                                //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
-                                //backing and slot group
-                                    var backingAndSlot = system.utility.misc.elementMaker('g','backingAndSlotGroup',{});
-                                    object.appendChild(backingAndSlot);
-                                    //backing
-                                        var backing = system.utility.misc.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
-                                        backingAndSlot.appendChild(backing);
-                                    //slot
-                                        var slot = system.utility.misc.elementMaker('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
-                                        backingAndSlot.appendChild(slot);
-                                //handle
-                                    var handle = system.utility.misc.elementMaker('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
-                                    object.appendChild(handle);
-                                //invisible handle
-                                    var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                    var invisibleHandle = system.utility.misc.elementMaker('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
-                                    object.appendChild(invisibleHandle);
-                        
-                            //graphical adjust
-                                function set(a,update=true){
-                                    a = (a>1 ? 1 : a);
-                                    a = (a<0 ? 0 : a);
-                        
-                                    if(update){object.onchange(a);}
-                                    
-                                    value = a;
-                                    handle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
-                                    invisibleHandle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
-                                }
-                                object.__calculationAngle = angle;
-                                function currentMousePosition(event){
-                                    return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
-                                }
-                            
-                            //methods
-                                object.set = function(value,update){
-                                    if(grappled){return;}
-                                    set(value,update);
-                                };
-                                object.smoothSet = function(target,time,curve,update){
-                                    if(grappled){return;}
-                        
-                                    var startTime = system.audio.context.currentTime;
-                                    var startValue = value;
-                                    var pointFunc = system.utility.math.curvePoint.linear;
-                        
-                                    switch(curve){
-                                        case 'linear': pointFunc = system.utility.math.curvePoint.linear; break;
-                                        case 'sin': pointFunc = system.utility.math.curvePoint.sin; break;
-                                        case 'cos': pointFunc = system.utility.math.curvePoint.cos; break;
-                                        case 'exponential': pointFunc = system.utility.math.curvePoint.exponential; break;
-                                        case 's': pointFunc = system.utility.math.curvePoint.s; break;
-                                    }
-                        
-                                    object.smoothSet.interval = setInterval(function(){
-                                        var progress = (system.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
-                                        set( pointFunc(progress, startValue, target), update );
-                                        if( (system.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
-                                    }, 1000/30);            
-                                };
-                                object.get = function(){return value;};
-                        
-                            //interaction
-                                object.ondblclick = function(){
-                                    if(resetValue<0){return;}
-                                    if(grappled){return;}
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    set(resetValue);
-                                    object.onrelease(value);
-                                };
-                                object.onwheel = function(){
-                                    if(grappled){return;}
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    var move = system.mouse.wheelInterpreter( event.deltaY );
-                                    var globalScale = system.utility.workspace.getGlobalScale(object);
-                                    set( value + move/(10*globalScale) );
-                                    object.onrelease(value);
-                                };
-                                backingAndSlot.onclick = function(event){
-                                    if(grappled){return;}
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    var y = system.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
-                        
-                                    var value = y + 0.5*handleHeight*((2*y)-1);
-                                    set(value);
-                                    object.onrelease(value);
-                                };
-                                invisibleHandle.onmousedown = function(event){
-                                    grappled = true;
-                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
-                        
-                                    var initialValue = value;
-                                    var initialY = currentMousePosition(event);
-                                    var mux = height - height*handleHeight;
-                        
-                                    system.utility.workspace.mouseInteractionHandler(
-                                        function(event){
-                                            var numerator = initialY-currentMousePosition(event);
-                                            var divider = system.utility.workspace.getGlobalScale(object);
-                                            set( initialValue - numerator/(divider*mux) );
-                                        },
-                                        function(event){
-                                            var numerator = initialY-currentMousePosition(event);
-                                            var divider = system.utility.workspace.getGlobalScale(object);
-                                            object.onrelease(initialValue - numerator/(divider*mux));
-                                            grappled = false;
-                                        }
-                                    );
-                                };
-                        
-                            //callbacks
-                                object.onchange = function(){};
-                                object.onrelease = function(){};
-                        
-                            //setup
-                                set(value);
-                        
-                            return object;
-                        };
-                        this.dial_continuous = function(
-                            id='dial_continuous',
-                            x, y, r,
-                            startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            handleStyle = 'fill:rgba(175,175,175,1)',
-                            slotStyle = 'fill:rgba(50,50,50,1)',
-                            needleStyle = 'fill:rgba(250,100,100,1)',
-                            handleStyle_glow = 'fill:rgba(175,175,175,1)',
-                            slotStyle_glow = 'fill:rgba(254,255,219,1)',
-                            needleStyle_glow = 'fill:rgba(250,100,100,1)',
-                            arcDistance=1.35,
-                            outerArcStyle='fill:none; stroke:none;',
-                            outerArcStyle_glow='fill:none; stroke:none;',
-                        ){
-                            // elements
-                                var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                                    object._value = 0;
-                                    object._data = {
-                                        'mux':r*4
-                                    };
-                        
-                                //arc
-                                    var points = 5;
-                                    var pushDistance = 1.11;
-                                    var arcPath = [];
-                                    for(var a = 0; a < points; a++){
-                                        var temp = system.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
-                                        arcPath.push( temp );
-                                        var temp = system.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
-                                        arcPath.push( temp );
-                                    }
-                                    var temp = system.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
-                                    arcPath.push( temp );
-                        
-                                    var outerArc = system.utility.misc.elementMaker('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
-                                    object.appendChild(outerArc);
-                        
-                                //slot
-                                    var slot = system.utility.misc.elementMaker('circle','slot',{r:r*1.1, style:slotStyle});
-                                        object.appendChild(slot);
-                        
-                                //handle
-                                    var handle = system.utility.misc.elementMaker('circle','slot',{r:r, style:handleStyle});
-                                        object.appendChild(handle);
-                        
-                                //needle
-                                    var needleWidth = r/5;
-                                    var needleLength = r;
-                                    var needle = system.utility.misc.elementMaker('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
-                                        needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
-                                        needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
-                                        object.appendChild(needle);
-                        
-                        
-                            //methods
-                                object.get = function(){ return this._value; };
-                                object.set = function(value, live=false, update=true){
-                                    value = (value>1 ? 1 : value);
-                                    value = (value<0 ? 0 : value);
-                        
-                                    this._value = value;
-                                    if(update&&this.onchange){try{this.onchange(value);}catch(err){console.error('Error with dial_continuous:onchange\n',err);}}
-                                    if(update&&!live&&this.onrelease){try{this.onrelease(value);}catch(err){console.error('Error with dial_continuous:onrelease\n',err);}}
-                                    this.children['needle'].rotation(startAngle + maxAngle*value);
-                                };
-                                object.smoothSet = function(target,time,curve,update=true){
-                                    var startTime = system.audio.context.currentTime;
-                                    var startValue = value;
-                                    var pointFunc = system.utility.math.curvePoint.linear;
-                        
-                                    switch(curve){
-                                        case 'linear': pointFunc = system.utility.math.curvePoint.linear; break;
-                                        case 'sin': pointFunc = system.utility.math.curvePoint.sin; break;
-                                        case 'cos': pointFunc = system.utility.math.curvePoint.cos; break;
-                                        case 'exponential': pointFunc = system.utility.math.curvePoint.exponential; break;
-                                        case 's': pointFunc = system.utility.math.curvePoint.s; break;
-                                    }
-                        
-                                    object.smoothSet.interval = setInterval(function(){
-                                        var progress = (system.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
-                                        object.set( pointFunc(progress, startValue, target), true, update );
-                                        if( (system.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
-                                    }, 1000/30);  
-                                };
-                                object.glow = function(state){
-                                    if(state){
-                                        system.utility.element.setStyle(outerArc,outerArcStyle_glow);
-                                        system.utility.element.setStyle(slot,slotStyle_glow);
-                                        system.utility.element.setStyle(handle,handleStyle_glow);
-                                        system.utility.element.setStyle(needle,needleStyle_glow);
-                                    }else{
-                                        system.utility.element.setStyle(outerArc,outerArcStyle);
-                                        system.utility.element.setStyle(slot,slotStyle);
-                                        system.utility.element.setStyle(handle,handleStyle);
-                                        system.utility.element.setStyle(needle,needleStyle);
-                                    }
-                                };
-                                
-                        
-                            //callback
-                                object.onchange = function(){};
-                                object.onrelease = function(){};
-                        
-                        
-                            //mouse interaction
-                                object.ondblclick = function(){ this.set(0.5); };
-                                object.onwheel = function(event){
-                                    var move = system.mouse.wheelInterpreter( event.deltaY );
-                                    var globalScale = system.utility.workspace.getGlobalScale(object);
-                        
-                                    this.set( this.get() - move/(10*globalScale) );
-                                };
-                                object.onmousedown = function(event){
-                                    system.svgElement.onmousemove_old = system.svgElement.onmousemove;
-                                    system.svgElement.onmouseleave_old = system.svgElement.onmouseleave;
-                                    system.svgElement.onmouseup_old = system.svgElement.onmouseup;
-                        
-                                    system.svgElement.tempRef = this;
-                                    system.svgElement.tempRef._data.initialValue = this.get();
-                                    system.svgElement.tempRef._data.initialY = event.y;
-                                    system.svgElement.tempRef._data.mux = system.svgElement.tempRef._data.mux;
-                                    system.svgElement.onmousemove = function(event){
-                                        var mux = system.svgElement.tempRef._data.mux;
-                                        var value = system.svgElement.tempRef._data.initialValue;
-                                        var numerator = event.y-system.svgElement.tempRef._data.initialY;
-                                        var divider = system.utility.workspace.getGlobalScale(object);
-                        
-                                        system.svgElement.tempRef.set( value - numerator/(divider*mux), true );
-                                    };
-                                    system.svgElement.onmouseup = function(){
-                                        this.tempRef.set(this.tempRef.get(),false);
-                                        delete this.tempRef;
-                        
-                                        system.svgElement.onmousemove = system.svgElement.onmousemove_old;
-                                        system.svgElement.onmouseleave = system.svgElement.onmouseleave_old;
-                                        system.svgElement.onmouseup = system.svgElement.onmouseup_old;
-                        
-                                        system.svgElement.onmousemove_old = null;
-                                        system.svgElement.onmouseleave_old = null;
-                                        system.svgElement.onmouseup_old = null;
-                                    };
-                                    system.svgElement.onmouseleave = system.svgElement.onmouseup;
-                                    system.svgElement.onmousemove(event);
-                                };
-                        
-                            //setup
-                                object.set(0);
-                        
-                            return object;
-                        };
-                        this.slidePanel = function(
-                            id='slidePanel', 
-                            x, y, width, height, count, angle=0,
-                            handleHeight=0.1, startValue=0, resetValue=0.5,
-                            handleStyle = 'fill:rgba(180,180,180,1)',
-                            backingStyle = 'fill:rgba(150,150,150,1)',
-                            slotStyle = 'fill:rgba(50,50,50,1)'
-                        ){
-                            //elements
-                                //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
-                                //slides
-                                    for(var a = 0; a < count; a++){
-                                        var temp = system.utility.misc.elementMaker(
-                                            'slide',a,{
-                                                x:a*(width/count), y:0,
-                                                width:width/count, height:height,
-                                                value:startValue, resetValue:resetValue,
-                                                style:{handle:handleStyle, backing:backingStyle, slot:slotStyle}
-                                            }
-                                        );
-                                        temp.onchange = function(value){ object.onchange(this.id,value); };
-                                        temp.onrelease = function(value){ object.onrelease(this.id,value); };
-                                        temp.__calculationAngle = angle;
-                                        object.appendChild(temp);
-                                    }
-                        
-                            //methods
-                                object.slide = function(index){ return object.children[index]; };
-                                object.get = function(){
-                                    var outputArray = [];
-                                    for(var a = 0; a < count; a++){
-                                        outputArray.push(this.slide(a).get());
-                                    }
-                                    return outputArray;
-                                };
-                                object.set = function(values,update=true){
-                                    for(var a = 0; a < values.length; a++){
-                                        this.slide(a).set(values[a],update);
-                                    }
-                                };
-                                object.setAll = function(value,update=true){
-                                    this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value),false );
-                                    if(update){this.onchange('all',value);}
-                                };
-                                object.smoothSet = function(values,time,curve,update=true){
-                                    for(var a = 0; a < values.length; a++){
-                                        this.slide(a).smoothSet(values[a],time,curve,update);
-                                    }
-                                };
-                                object.smoothSetAll = function(value, time, curve, update=true){
-                                    this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value), time, curve, false );
-                                    if(update){this.onchange('all',value);}
-                                };
-                        
-                            //callbacks
-                                object.onchange = function(slide,value){};
-                                object.onrelease = function(slide,value){};
-                            
-                            return object;
-                        };
                         this.sequencer = function(
                             id='svg_sequencer',
                             x, y, width, height, angle,
@@ -7741,7 +7728,7 @@
                                     left:0, right:zoomLevel_x,
                                     top:0, bottom:zoomLevel_y,
                                 };
-                                var noteRegistry = new parts.circuits.sequencing.noteRegistry(xCount,yCount);
+                                var noteRegistry = new part.circuit.sequencing.noteRegistry(xCount,yCount);
                                 var selectedNotes = [];
                                 var activeNotes = [];
                                 var snapping = true;
@@ -7891,7 +7878,7 @@
                                         //horizontal strips
                                         for(var a = 0; a < yCount; a++){
                                             backgroundDrawArea.appendChild(
-                                                system.utility.misc.elementMaker('rect','strip_horizontal_'+a,{
+                                                part.builder('rect','strip_horizontal_'+a,{
                                                     x1:0, y:a*(height/(yCount*zoomLevel_y)),
                                                     width:totalSize.width, height:height/(yCount*zoomLevel_y),
                                                     style:horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]],
@@ -7901,7 +7888,7 @@
                                         //vertical strips
                                         for(var a = 0; a < xCount; a++){
                                             backgroundDrawArea.appendChild(
-                                                system.utility.misc.elementMaker('rect','strip_vertical_'+a,{
+                                                part.builder('rect','strip_vertical_'+a,{
                                                     x:a*(width/(xCount*zoomLevel_x)), y:0,
                                                     width:width/(xCount*zoomLevel_x), height:totalSize.height,
                                                     style:verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]],
@@ -7970,7 +7957,7 @@
                                 function makeNote(line, position, length, strength=defualtStrength){
                                     var newID = noteRegistry.add({ line:line, position:position, length:length, strength:strength });
                                     var approvedData = noteRegistry.getNote(newID);
-                                    var newNoteBlock = parts.elements.control.sequencer.noteBlock(newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), approvedData.line, approvedData.position, approvedData.length, approvedData.strength, false, blockStyle_body, blockStyle_bodyGlow, blockStyle_handle, blockStyle_handleWidth);
+                                    var newNoteBlock = part.element.control.sequencer.noteBlock(newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), approvedData.line, approvedData.position, approvedData.length, approvedData.strength, false, blockStyle_body, blockStyle_bodyGlow, blockStyle_handle, blockStyle_handleWidth);
                                     notePane.append(newNoteBlock);
                         
                                     //augmenting the graphic element
@@ -8160,7 +8147,7 @@
                                     return {id:newID, noteBlock:newNoteBlock};
                                 }
                                 function makePlayhead(){
-                                    var newPlayhead = system.utility.misc.elementMaker('g','playhead',{});
+                                    var newPlayhead = part.builder('g','playhead',{});
                                     workarea.appendChild(newPlayhead);
                                     newPlayhead.onmousedown = function(){
                                         playhead.held = true;
@@ -8173,14 +8160,14 @@
                                         );
                                     };
                         
-                                    newPlayhead.main = system.utility.misc.elementMaker('line','main',{
+                                    newPlayhead.main = part.builder('line','main',{
                                         x1:0, y1:0,
                                         x2:0, y2:totalSize.height,
                                         style:playheadStyle + 'stroke-width:'+playhead.width+';'
                                     });
                                     newPlayhead.appendChild(newPlayhead.main);
                         
-                                    newPlayhead.invisibleHandle = system.utility.misc.elementMaker('line','invisibleHandle',{
+                                    newPlayhead.invisibleHandle = part.builder('line','invisibleHandle',{
                                         x1:0, y1:0, x2:0, y2:totalSize.height,
                                         style:'stroke:rgba(0,0,0,0); cursor: col-resize; stroke-width:'+playhead.width*playhead.invisibleHandleMux+';'
                                     });
@@ -8189,16 +8176,16 @@
                         
                             //elements
                                 //main
-                                    var obj = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
+                                    var obj = part.builder('g',id,{x:x, y:y, r:angle});
                                 //static backing
-                                    var backing = system.utility.misc.elementMaker('rect','backing',{width:width, height:height, style:backingStyle});
+                                    var backing = part.builder('rect','backing',{width:width, height:height, style:backingStyle});
                                     obj.appendChild(backing);
                                 //viewport (for clipping the workarea)
-                                    var viewport = system.utility.misc.elementMaker('g','viewport',{});
+                                    var viewport = part.builder('g','viewport',{});
                                     viewport.setAttribute('clip-path','polygon(0px 0px, '+width+'px 0px, '+width+'px '+height+'px, 0px '+height+'px)');
                                     obj.appendChild(viewport);
                                 //workarea
-                                    var workarea = system.utility.misc.elementMaker('g','workarea',{});
+                                    var workarea = part.builder('g','workarea',{});
                                     viewport.appendChild(workarea);
                                     workarea.onkeydown = function(event){
                                         if(event.key == 'Delete' || event.key == 'Backspace'){
@@ -8210,11 +8197,11 @@
                                         }
                                     };
                                     //moveable background
-                                        var backgroundDrawArea = system.utility.misc.elementMaker('g','backgroundDrawArea',{});
+                                        var backgroundDrawArea = part.builder('g','backgroundDrawArea',{});
                                         workarea.appendChild(backgroundDrawArea);
                                         drawBackground();
                                     //interaction pane
-                                        var interactionPlane = system.utility.misc.elementMaker('rect','interactionPlane',{width:totalSize.width, height:totalSize.height, style:'fill:rgba(0,0,0,0);'});
+                                        var interactionPlane = part.builder('rect','interactionPlane',{width:totalSize.width, height:totalSize.height, style:'fill:rgba(0,0,0,0);'});
                                         workarea.appendChild(interactionPlane);
                                         interactionPlane.onmousedown = function(event){
                         
@@ -8222,7 +8209,7 @@
                                                 var initialPositionData = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                                                 var livePositionData = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                                                 
-                                                var selectionArea = system.utility.misc.elementMaker('rect','selectionArea',{
+                                                var selectionArea = part.builder('rect','selectionArea',{
                                                     x:initialPositionData.x*width, y:initialPositionData.y*height,
                                                     width:0, height:0,
                                                     style:selectionAreaStyle,
@@ -8334,7 +8321,7 @@
                         
                                         };
                                     //note block area
-                                        var notePane = system.utility.misc.elementMaker('g','notePane',{});
+                                        var notePane = part.builder('g','notePane',{});
                                         workarea.appendChild(notePane);
                         
                             //controls
@@ -8544,10 +8531,10 @@
                             };
                             
                             //elements
-                                var obj = system.utility.misc.elementMaker('g',id,{y:line*unit_y, x:position*unit_x});
-                                obj.body = system.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:currentStyles.body});
-                                obj.leftHandle = system.utility.misc.elementMaker('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
-                                obj.rightHandle = system.utility.misc.elementMaker('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
+                                var obj = part.builder('g',id,{y:line*unit_y, x:position*unit_x});
+                                obj.body = part.builder('rect','body',{width:length*unit_x, height:unit_y, style:currentStyles.body});
+                                obj.leftHandle = part.builder('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
+                                obj.rightHandle = part.builder('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
                                 obj.append(obj.body);
                                 obj.append(obj.leftHandle);
                                 obj.append(obj.rightHandle);
@@ -8645,473 +8632,201 @@
                         
                             return obj;
                         };
-                        this.list = function(
-                            id='list', 
+                        this.slide = function(
+                            id='slide', 
                             x, y, width, height, angle=0,
-                            list=[
-                                {text:'item1',  function:function(){console.log('item1 function');}},  {text:'item2',  function:function(){console.log('item2 function');}},
-                                {text:'item3',  function:function(){console.log('item3 function');}},  {text:'item4',  function:function(){console.log('item4 function');}},
-                                'space','break','space',
-                                {text:'item5',  function:function(){console.log('item5 function');}},  {text:'item6',  function:function(){console.log('item6 function');}},
-                                {text:'item7',  function:function(){console.log('item7 function');}},  {text:'item8',  function:function(){console.log('item8 function');}},
-                                {text:'item9',  function:function(){console.log('item9 function');}},  {text:'item10', function:function(){console.log('item10 function');}},
-                                {text:'item11', function:function(){console.log('item11 function');}}, {text:'item12', function:function(){console.log('item12 function');}},
-                                {text:'item13', function:function(){console.log('item13 function');}}, {text:'item14', function:function(){console.log('item14 function');}},
-                                {text:'item15', function:function(){console.log('item15 function');}}, {text:'item16', function:function(){console.log('item16 function');}},
-                                {text:'item17', function:function(){console.log('item17 function');}}, {text:'item18', function:function(){console.log('item18 function');}},
-                                {text:'item19', function:function(){console.log('item19 function');}}, {text:'item20', function:function(){console.log('item20 function');}},
-                                {text:'item21', function:function(){console.log('item21 function');}}, {text:'item22', function:function(){console.log('item22 function');}},
-                                {text:'item23', function:function(){console.log('item23 function');}}, {text:'item24', function:function(){console.log('item24 function');}},
-                                {text:'item25', function:function(){console.log('item25 function');}}, {text:'item26', function:function(){console.log('item26 function');}},
-                                {text:'item27', function:function(){console.log('item27 function');}}, {text:'item28', function:function(){console.log('item28 function');}},
-                                {text:'item29', function:function(){console.log('item29 function');}}, {text:'item30', function:function(){console.log('item30 function');}},
-                                {text:'item31', function:function(){console.log('item31 function');}}, {text:'item32', function:function(){console.log('item32 function');}},
-                            ],
-                            selectable=true, multiSelect=true, hoverable=true, pressable=true, active=true,
-                            itemHeightMux=0.1, itemSpacingMux=0.01, breakHeightMux=0.0025, breakWidthMux=0.9, spacingHeightMux=0.005,
-                            itemTextVerticalOffsetMux=0.5, itemtextHorizontalOffsetMux=0.05,
-                            listItemTextStyle='fill:rgba(0,0,0,1); font-size:5; font-family:Helvetica; alignment-baseline:central; pointer-events: none; user-select: none;',
-                            backingStyle='fill:rgba(230,230,230,1)',
-                            breakStyle='fill:rgba(195,195,195,1)',
-                            listItemBackgroundStyle_off=                     'fill:rgba(180,180,180,1)',
-                            listItemBackgroundStyle_up=                      'fill:rgba(220,220,220,1)',
-                            listItemBackgroundStyle_press=                   'fill:rgba(230,230,230,1)',
-                            listItemBackgroundStyle_select=                  'fill:rgba(200,200,200,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            listItemBackgroundStyle_select_press=            'fill:rgba(230,230,230,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            listItemBackgroundStyle_glow=                    'fill:rgba(230,230,210,1)',
-                            listItemBackgroundStyle_glow_press=              'fill:rgba(250,250,250,1)',
-                            listItemBackgroundStyle_glow_select=             'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            listItemBackgroundStyle_glow_select_press=       'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            listItemBackgroundStyle_hover=                   'fill:rgba(230,230,230,1)',
-                            listItemBackgroundStyle_hover_press=             'fill:rgba(240,240,240,1)',
-                            listItemBackgroundStyle_hover_select=            'fill:rgba(220,220,220,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            listItemBackgroundStyle_hover_select_press=      'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            listItemBackgroundStyle_hover_glow=              'fill:rgba(240,240,240,1)',
-                            listItemBackgroundStyle_hover_glow_press=        'fill:rgba(250,250,250,1)',
-                            listItemBackgroundStyle_hover_glow_select=       'fill:rgba(240,240,240,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
-                            listItemBackgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:0.5;',
+                            handleHeight=0.1, value=0, resetValue=-1,
+                            handleStyle = 'fill:rgba(200,200,200,1)',
+                            backingStyle = 'fill:rgba(150,150,150,1)',
+                            slotStyle = 'fill:rgba(50,50,50,1)',
+                            invisibleHandleStyle = 'fill:rgba(0,0,0,0);',
                         ){
-                            //state
-                                var itemArray = [];
-                                var selectedItems = [];
-                                var lastNonShiftClicked = 0;
-                                var position = 0;
-                                var calculatedListHeight;
-                        
-                        
-                            //main object
-                                var object = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
-                        
-                            //background
-                                var rect = system.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backingStyle});
-                                object.appendChild(rect);
-                        
-                            //viewport (for clipping the visible area)
-                                var viewport = system.utility.misc.elementMaker('g','viewport',{});
-                                viewport.setAttribute('clip-path','polygon(0px 0px, '+width+'px 0px, '+width+'px '+height+'px, 0px '+height+'px)');
-                                object.appendChild(viewport);
-                        
-                            //main list
-                                var mainList = system.utility.misc.elementMaker('g','mainList');
-                                viewport.appendChild(mainList);
-                        
-                                function refreshList(){
-                                    //clean out all values
-                                        itemArray = [];
-                                        mainList.innerHTML = '';
-                                        selectedItems = [];
-                                        position = 0;
-                                        lastNonShiftClicked = 0;
-                        
-                                    //populate list
-                                        var accumulativeHeight = 0;
-                                        for(var a = 0; a < list.length; a++){
-                                            if( list[a] == 'break' ){
-                                                //break
-                                                var temp = system.utility.misc.elementMaker( 'rect', a, {
-                                                    x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                    width:width*breakWidthMux, height:height*breakHeightMux,
-                                                    style:breakStyle
-                                                });
-                        
-                                                accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                            }else if( list[a] == 'space' ){
-                                                //spacing
-                                                var temp = system.utility.misc.elementMaker( 'rect', a, {
-                                                    x:0, y:accumulativeHeight,
-                                                    width:width, height:height*spacingHeightMux,
-                                                    style:backingStyle
-                                                });
-                        
-                                                accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                            }else{
-                                                //regular item
-                                                var temp = system.utility.misc.elementMaker( 'button_rect', a, {
-                                                    x:0, y:accumulativeHeight,
-                                                    width:width, height:height*itemHeightMux, 
-                                                    text_centre: (list[a].text?list[a].text:list[a].text_centre),
-                                                    text_left: list[a].text_left, text_right:list[a].text_right,
-                                                    textVerticalOffset:itemTextVerticalOffsetMux, textHorizontalOffsetMux:itemtextHorizontalOffsetMux,
-                                                    active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                                                    style:{
-                                                        text:listItemTextStyle,
-                                                        off:listItemBackgroundStyle_off,
-                                                        up:listItemBackgroundStyle_up,                               press:listItemBackgroundStyle_press,
-                                                        select:listItemBackgroundStyle_select,                       select_press:listItemBackgroundStyle_select_press,
-                                                        glow:listItemBackgroundStyle_glow,                           glow_press:listItemBackgroundStyle_glow_press,
-                                                        glow_select:listItemBackgroundStyle_glow_select,             glow_select_press:listItemBackgroundStyle_glow_select_press,
-                                                        hover:listItemBackgroundStyle_hover,                         hover_press:listItemBackgroundStyle_hover_press,
-                                                        hover_select:listItemBackgroundStyle_hover_select,           hover_select_press:listItemBackgroundStyle_hover_select_press,
-                                                        hover_glow:listItemBackgroundStyle_hover_glow,               hover_glow_press:listItemBackgroundStyle_hover_glow_press,
-                                                        hover_glow_select:listItemBackgroundStyle_hover_glow_select, hover_glow_select_press:listItemBackgroundStyle_hover_glow_select_press,
-                                                    }
-                                                });
-                        
-                                                accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                        
-                                                temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                temp.onrelease = function(a){
-                                                    return function(){
-                                                        if( list[a].function ){ list[a].function(); }
-                                                        object.onrelease(a);
-                                                    }
-                                                }(a);
-                                                temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-                                            }
-                        
-                                            itemArray.push( temp );
-                                            mainList.appendChild( temp );
-                                        }
-                        
-                                    return accumulativeHeight - height*itemSpacingMux;
-                                }
-                        
-                                calculatedListHeight = refreshList();
-                        
-                        
-                        
-                            //interaction
-                                object.onwheel = function(event){
-                                    var move = system.mouse.wheelInterpreter( event.deltaY );
-                                    object.position( object.position() + move/10 );
-                                };
-                        
-                            //controls
-                                object.position = function(a,update=true){
-                                    if(a == undefined){return position;}
-                                    a = a < 0 ? 0 : a;
-                                    a = a > 1 ? 1 : a;
-                                    position = a;
-                        
-                                    if( calculatedListHeight < height ){return;}
-                        
-                                    var movementSpace = calculatedListHeight - height;
-                                    
-                                    system.utility.element.setTransform_XYonly( mainList, undefined, -a*movementSpace );
-                        
-                                    var y_offSet = movementSpace * a;
-                                    var bottom = y_offSet+height;
-                        
-                                    viewport.setAttribute('clip-path','polygon(0px '+y_offSet+'px, '+width+'px '+y_offSet+'px, '+width+'px '+bottom+'px, 0px '+bottom+'px)');
-                        
-                                    if(update&&this.onpositionchange){this.onpositionchange(a);}
-                                };
-                                object.select = function(a,state,event,update=true){
-                                    if(!selectable){return;}
-                        
-                                    //where multi selection is not allowed
-                                    if(!multiSelect){
-                                        //where we want to select an item, which is not already selected
-                                        if(state && !selectedItems.includes(a) ){
-                                            //deselect all other items
-                                            while( selectedItems.length > 0 ){
-                                                itemArray[ selectedItems[0] ].select(false,undefined,false);
-                                                selectedItems.shift();
-                                            }
-                        
-                                            //select current item
-                                            selectedItems.push(a);
-                        
-                                            //do not update the item itself, in the case that it was the item that sent this command
-                                            //(which would cause a little loop)
-                                            if(update){ itemArray[a].select(true,undefined,false); }
-                                        //where we want to deselect an item that is selected
-                                        }else if(!state && selectedItems.includes(a)){
-                                            //deselect current item
-                                            selectedItems.splice( selectedItems.indexOf(a), 1 );
-                        
-                                            //do not update the item itself, in the case that it was the item that sent this command
-                                            //(which would cause a little loop)
-                                            if(update){ itemArray[a].select(false,undefined,false); }
-                                        }
-                        
-                                    //where multi selection is allowed
-                                    }else{
-                                        //determind if range-selection is to be done
-                                        if( event != undefined && event.shiftKey ){
-                                            var min = Math.min(lastNonShiftClicked, a); var max = Math.max(lastNonShiftClicked, a);
-                        
-                                            //deselect all outside the range
-                                            selectedItems = [];
-                                            for(var b = 0; b < itemArray.length; b++){
-                                                if( b > max || b < min ){
-                                                    if( itemArray[b].select() ){
-                                                        itemArray[b].select(false,undefined,false);
-                                                    }
-                                                }
-                                            }
-                        
-                                            //select those within the range (that aren't already selected)
-                                            for(var b = min; b <= max; b++){
-                                                if( !itemArray[b].select() ){
-                                                    itemArray[b].select(true,undefined,false);
-                                                    selectedItems.push(b);
-                                                }
-                                            }
-                        
-                                        }else{
-                                            if(update){ itemArray[a].select(state); }
-                                            if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
-                                            else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                            lastNonShiftClicked = a;
-                                        }
-                                    }
-                        
-                                    object.onselection(selectedItems);
-                                };
-                                object.add = function(item){
-                                    list.push(item);
-                                    calculatedListHeight = refreshList();
-                                };
-                                object.remove = function(a){
-                                    list.splice(a,1);
-                                    calculatedListHeight = refreshList();
-                                };
-                        
-                                //callbacks
-                                    object.onenter = function(listItemNumber){ /*console.log('onenter:',listItemNumber);*/ };
-                                    object.onleave = function(listItemNumber){ /*console.log('onleave:',listItemNumber);*/ };
-                                    object.onpress = function(listItemNumber){ /*console.log('onpress:',listItemNumber);*/ };
-                                    object.ondblpress = function(listItemNumber){ /*console.log('ondblpress:',listItemNumber);*/ };
-                                    object.onrelease = function(listItemNumber){ /*console.log('onrelease:',listItemNumber);*/ };
-                                    object.onselection = function(listItemNumbers){ /*console.log('onselection:',listItemNumbers);*/ };
-                                    object.onpositionchange = function(a){};
-                                
-                            return object;
-                        };
-                        this.grapher_waveWorkspace = function(
-                            id='grapher_waveWorkspace',
-                            x, y, width, height, angle=0, graphType='Canvas', selectNeedle=true, selectionArea=true,
-                            foregroundStyles=['fill:rgba(240, 240, 240, 1);','fill:rgba(255, 231, 114, 1);'],
-                            foregroundTextStyles=['fill:rgba(0,255,255,1); font-size:3; font-family:Helvetica;'],
-                            middlegroundStyle=['stroke:rgba(0,255,0,1); stroke-width:0.1; stroke-linecap:round;'],
-                            middlegroundTextStyle=['fill:rgba(0,255,0,1); font-size:3; font-family:Helvetica;'],
-                            backgroundStyle='stroke:rgba(0,100,0,1); stroke-width:0.25;',
-                            backgroundTextStyle='fill:rgba(0,100,0,1); font-size:3; font-family:Helvetica;',
-                            backingStyle='fill:rgba(50,50,50,1)',
-                        ){
-                            var needleWidth = 1/4;
+                            var grappled = false;
                         
                             //elements
                                 //main
-                                    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                                //main graph
-                                    var graph = system.utility.misc.elementMaker('grapher'+graphType, 'graph', {
-                                        x:0, y:0, width:width, height:height,
-                                        style:{
-                                            foreground:middlegroundStyle, foregroundText:middlegroundTextStyle, 
-                                            background:backgroundStyle, backgroundText:backgroundTextStyle, 
-                                            backing:backingStyle
-                                        }
-                                    });
-                                    
-                                    object.append(graph);
-                                //needle overlay
-                                    var overlay = system.utility.misc.elementMaker('needleOverlay', 'overlay', {
-                                        x:0, y:0, width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
-                                        needleStyles:foregroundStyles,
-                                    });
-                                    object.append(overlay);
-                        
-                            //controls
-                                object.select = overlay.select;
-                                object.area = overlay.area;
-                                object.draw = graph.draw;
-                                object.foregroundLineThickness = graph.foregroundLineThickness;
-                                object.drawBackground = graph.drawBackground;
-                                object.area = overlay.area;
-                                object._test = graph._test;
-                                object.genericNeedle = overlay.genericNeedle;
-                        
-                            //callbacks
-                                object.onchange = function(needle,value){};
-                                overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
-                                object.onrelease = function(needle,value){};
-                                overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
-                                object.selectionAreaToggle = function(toggle){};
-                                overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
-                        
-                            //setup
-                                object.drawBackground();
-                        
-                            return object;
-                        };
-                        this.dial_discrete = function(
-                            id='dial_discrete',
-                            x, y, r,
-                            optionCount=5,
-                            startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            handleStyle = 'fill:rgba(175,175,175,1)',
-                            slotStyle = 'fill:rgba(50,50,50,1)',
-                            needleStyle = 'fill:rgba(250,100,100,1)',
-                            handleStyle_glow = 'fill:rgba(175,175,175,1)',
-                            slotStyle_glow = 'fill:rgba(254,255,219,1)',
-                            needleStyle_glow = 'fill:rgba(250,100,100,1)',
-                            arcDistance=1.35,
-                            outerArcStyle='fill:none; stroke:none;',
-                            outerArcStyle_glow='fill:none; stroke:none;',
-                        ){
-                            // elements
-                            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
-                                object._value = 0;
-                                object._selection = 0;
-                                object._data = { 
-                                    'optionCount':optionCount,
-                                    'mux':r*4
-                                };
-                        
-                                //arc
-                                    var points = 5;
-                                    var pushDistance = 1.11;
-                                    var arcPath = [];
-                                    for(var a = 0; a < points; a++){
-                                        var temp = system.utility.math.polar2cartesian(startAngle+a*(maxAngle/points),r*arcDistance);
-                                        arcPath.push( temp );
-                                        var temp = system.utility.math.polar2cartesian(startAngle+(a+0.5)*(maxAngle/points),pushDistance*r*arcDistance);
-                                        arcPath.push( temp );
-                                    }
-                                    var temp = system.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
-                                    arcPath.push( temp );
-                                    var outerArc = system.utility.misc.elementMaker('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
-                                    object.appendChild(outerArc);
-                        
-                                //slot
-                                    var slot = system.utility.misc.elementMaker('circle','slot',{r:r*1.1, style:slotStyle});
-                                        object.appendChild(slot);
-                        
+                                    var object = part.builder('g',id,{x:x, y:y, r:angle});
+                                //backing and slot group
+                                    var backingAndSlot = part.builder('g','backingAndSlotGroup',{});
+                                    object.appendChild(backingAndSlot);
+                                    //backing
+                                        var backing = part.builder('rect','backing',{width:width,height:height, style:backingStyle});
+                                        backingAndSlot.appendChild(backing);
+                                    //slot
+                                        var slot = part.builder('rect','slot',{x:width*0.45,y:(height*(handleHeight/2)),width:width*0.1,height:height*(1-handleHeight), style:slotStyle});
+                                        backingAndSlot.appendChild(slot);
                                 //handle
-                                    var handle = system.utility.misc.elementMaker('circle','slot',{r:r, style:handleStyle});
-                                        object.appendChild(handle);
+                                    var handle = part.builder('rect','handle',{width:width,height:height*handleHeight, style:handleStyle});
+                                    object.appendChild(handle);
+                                //invisible handle
+                                    var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                    var invisibleHandle = part.builder('rect','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:invisibleHandleStyle});
+                                    object.appendChild(invisibleHandle);
                         
-                                //needle
-                                    var needleWidth = r/5;
-                                    var needleLength = r;
-                                    var needle = system.utility.misc.elementMaker('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
-                                        needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
-                                        needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
-                                        object.appendChild(needle);
-                        
-                        
-                            //methods
-                                object.select = function(a=null, live=true, update=true){
-                                    if(a==null){return this._selection;}
-                        
-                                    a = (a>this._data.optionCount-1 ? this._data.optionCount-1 : a);
+                            //graphical adjust
+                                function set(a,update=true){
+                                    a = (a>1 ? 1 : a);
                                     a = (a<0 ? 0 : a);
                         
-                                    if(this._selection == a){/*nothings changed*/return;}
-                        
-                                    this._selection = a;
-                                    this._set( a/(this._data.optionCount-1) );
-                                    if(update&&this.onchange){ this.onchange(a); }
-                                    if(update&&!live&&this.onrelease){ this.onrelease(value); }
+                                    if(update){object.onchange(a);}
+                                    
+                                    value = a;
+                                    handle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
+                                    invisibleHandle.y.baseVal.valueInSpecifiedUnits = a*height*(1-handleHeight);
+                                }
+                                object.__calculationAngle = angle;
+                                function currentMousePosition(event){
+                                    return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
+                                }
+                            
+                            //methods
+                                object.set = function(value,update){
+                                    if(grappled){return;}
+                                    set(value,update);
                                 };
-                                object._get = function(){ return this._value; };
-                                object._set = function(value){
-                                    value = (value>1 ? 1 : value);
-                                    value = (value<0 ? 0 : value);
+                                object.smoothSet = function(target,time,curve,update){
+                                    if(grappled){return;}
                         
-                                    this._value = value;
-                                    this.children['needle'].rotation(startAngle + maxAngle*value);
-                                };
-                                object.glow = function(state){
-                                    if(state){
-                                        system.utility.element.setStyle(outerArc,outerArcStyle_glow);
-                                        system.utility.element.setStyle(slot,slotStyle_glow);
-                                        system.utility.element.setStyle(handle,handleStyle_glow);
-                                        system.utility.element.setStyle(needle,needleStyle_glow);
-                                    }else{
-                                        system.utility.element.setStyle(outerArc,outerArcStyle);
-                                        system.utility.element.setStyle(slot,slotStyle);
-                                        system.utility.element.setStyle(handle,handleStyle);
-                                        system.utility.element.setStyle(needle,needleStyle);
+                                    var startTime = system.audio.context.currentTime;
+                                    var startValue = value;
+                                    var pointFunc = system.utility.math.curvePoint.linear;
+                        
+                                    switch(curve){
+                                        case 'linear': pointFunc = system.utility.math.curvePoint.linear; break;
+                                        case 'sin': pointFunc = system.utility.math.curvePoint.sin; break;
+                                        case 'cos': pointFunc = system.utility.math.curvePoint.cos; break;
+                                        case 'exponential': pointFunc = system.utility.math.curvePoint.exponential; break;
+                                        case 's': pointFunc = system.utility.math.curvePoint.s; break;
                                     }
-                                };
-                          
                         
-                            //callback
+                                    object.smoothSet.interval = setInterval(function(){
+                                        var progress = (system.audio.context.currentTime-startTime)/time; if(progress > 1){progress = 1;}
+                                        set( pointFunc(progress, startValue, target), update );
+                                        if( (system.audio.context.currentTime-startTime) >= time ){ clearInterval(object.smoothSet.interval); }
+                                    }, 1000/30);            
+                                };
+                                object.get = function(){return value;};
+                        
+                            //interaction
+                                object.ondblclick = function(){
+                                    if(resetValue<0){return;}
+                                    if(grappled){return;}
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    set(resetValue);
+                                    object.onrelease(value);
+                                };
+                                object.onwheel = function(){
+                                    if(grappled){return;}
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    var move = system.mouse.wheelInterpreter( event.deltaY );
+                                    var globalScale = system.utility.workspace.getGlobalScale(object);
+                                    set( value + move/(10*globalScale) );
+                                    object.onrelease(value);
+                                };
+                                backingAndSlot.onclick = function(event){
+                                    if(grappled){return;}
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    var y = system.utility.element.getPositionWithinFromMouse(event,backingAndSlot,width,height).y;
+                        
+                                    var value = y + 0.5*handleHeight*((2*y)-1);
+                                    set(value);
+                                    object.onrelease(value);
+                                };
+                                invisibleHandle.onmousedown = function(event){
+                                    grappled = true;
+                                    if(object.smoothSet.interval){clearInterval(object.smoothSet.interval);}
+                        
+                                    var initialValue = value;
+                                    var initialY = currentMousePosition(event);
+                                    var mux = height - height*handleHeight;
+                        
+                                    system.utility.workspace.mouseInteractionHandler(
+                                        function(event){
+                                            var numerator = initialY-currentMousePosition(event);
+                                            var divider = system.utility.workspace.getGlobalScale(object);
+                                            set( initialValue - numerator/(divider*mux) );
+                                        },
+                                        function(event){
+                                            var numerator = initialY-currentMousePosition(event);
+                                            var divider = system.utility.workspace.getGlobalScale(object);
+                                            object.onrelease(initialValue - numerator/(divider*mux));
+                                            grappled = false;
+                                        }
+                                    );
+                                };
+                        
+                            //callbacks
                                 object.onchange = function(){};
                                 object.onrelease = function(){};
                         
-                            
-                            //mouse interaction
-                                object.ondblclick = function(){ this.select( Math.floor(optionCount/2) ); /*this._set(0.5);*/ };
-                                object.onwheel = function(event){
-                                    var move = system.mouse.wheelInterpreter( event.deltaY );
-                                    var globalScale = system.utility.workspace.getGlobalScale(object);
+                            //setup
+                                set(value);
                         
-                                    if(!object.onwheel.acc){object.onwheel.acc=0;}
-                                    object.onwheel.acc += move/globalScale;
-                                    if( Math.abs(object.onwheel.acc) >= 1 ){
-                                        this.select( this.select()-1*Math.sign(object.onwheel.acc) );
-                                        object.onwheel.acc = 0;
+                            return object;
+                        };
+                        this.slidePanel = function(
+                            id='slidePanel', 
+                            x, y, width, height, count, angle=0,
+                            handleHeight=0.1, startValue=0, resetValue=0.5,
+                            handleStyle = 'fill:rgba(180,180,180,1)',
+                            backingStyle = 'fill:rgba(150,150,150,1)',
+                            slotStyle = 'fill:rgba(50,50,50,1)'
+                        ){
+                            //elements
+                                //main
+                                    var object = part.builder('g',id,{x:x, y:y, r:angle});
+                                //slides
+                                    for(var a = 0; a < count; a++){
+                                        var temp = part.builder(
+                                            'slide',a,{
+                                                x:a*(width/count), y:0,
+                                                width:width/count, height:height,
+                                                value:startValue, resetValue:resetValue,
+                                                style:{handle:handleStyle, backing:backingStyle, slot:slotStyle}
+                                            }
+                                        );
+                                        temp.onchange = function(value){ object.onchange(this.id,value); };
+                                        temp.onrelease = function(value){ object.onrelease(this.id,value); };
+                                        temp.__calculationAngle = angle;
+                                        object.appendChild(temp);
+                                    }
+                        
+                            //methods
+                                object.slide = function(index){ return object.children[index]; };
+                                object.get = function(){
+                                    var outputArray = [];
+                                    for(var a = 0; a < count; a++){
+                                        outputArray.push(this.slide(a).get());
+                                    }
+                                    return outputArray;
+                                };
+                                object.set = function(values,update=true){
+                                    for(var a = 0; a < values.length; a++){
+                                        this.slide(a).set(values[a],update);
                                     }
                                 };
-                                object.onmousedown = function(event){
-                                    system.svgElement.onmousemove_old = system.svgElement.onmousemove;
-                                    system.svgElement.onmouseleave_old = system.svgElement.onmouseleave;
-                                    system.svgElement.onmouseup_old = system.svgElement.onmouseup;
-                        
-                                    system.svgElement.tempRef = this;
-                                    system.svgElement.tempRef._data.initialValue = this._get();
-                                    system.svgElement.tempRef._data.initialY = event.y;
-                                    system.svgElement.tempRef._data.mux = system.svgElement.tempRef._data.mux;
-                                    system.svgElement.onmousemove = function(event){
-                                        var mux = system.svgElement.tempRef._data.mux;
-                                        var value = system.svgElement.tempRef._data.initialValue;
-                                        var numerator = event.y-system.svgElement.tempRef._data.initialY;
-                                        var divider = system.utility.workspace.getGlobalScale(object);
-                        
-                                        system.svgElement.tempRef.select(
-                                            Math.round(
-                                                (system.svgElement.tempRef._data.optionCount-1)*(value - numerator/(divider*mux))
-                                            ) 
-                                        );
-                                    };
-                                    system.svgElement.onmouseup = function(){
-                                        this.tempRef.select(this.tempRef.select(),false);
-                                        this.tempRef = null;
-                                        
-                                        system.svgElement.onmousemove = system.svgElement.onmousemove_old;
-                                        system.svgElement.onmouseleave = system.svgElement.onmouseleave_old;
-                                        system.svgElement.onmouseup = system.svgElement.onmouseup_old;
-                        
-                                        system.svgElement.onmousemove_old = null;
-                                        system.svgElement.onmouseleave_old = null;
-                                        system.svgElement.onmouseup_old = null;
-                                    };
-                                    system.svgElement.onmouseleave = system.svgElement.onmouseup;
-                                    system.svgElement.onmousemove(event);
+                                object.setAll = function(value,update=true){
+                                    this.set( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value),false );
+                                    if(update){this.onchange('all',value);}
+                                };
+                                object.smoothSet = function(values,time,curve,update=true){
+                                    for(var a = 0; a < values.length; a++){
+                                        this.slide(a).smoothSet(values[a],time,curve,update);
+                                    }
+                                };
+                                object.smoothSetAll = function(value, time, curve, update=true){
+                                    this.smoothSet( Array.apply(null, Array(count)).map(Number.prototype.valueOf,value), time, curve, false );
+                                    if(update){this.onchange('all',value);}
                                 };
                         
-                            //setup
-                                object._set(0);
-                                
-                          return object;
+                            //callbacks
+                                object.onchange = function(slide,value){};
+                                object.onrelease = function(slide,value){};
+                            
+                            return object;
                         };
                     };
                     this.dynamic = new function(){
@@ -9122,13 +8837,13 @@
                             activeStyle='fill:none; stroke:rgb(255,100,100); stroke-width:4;'
                         ){
                             //elements
-                            var object = system.utility.misc.elementMaker('g',id,{x:x1, y:y1});
+                            var object = part.builder('g',id,{x:x1, y:y1});
                                 object.points = [{x:x1,y:y1},{x:x2,y:y2}];
                                 object.styles = {
                                     'normal':style,
                                     'active':activeStyle
                                 };
-                            var line = system.utility.misc.elementMaker('path',null,{path:object.points, lineType:'L', style:style});
+                            var line = part.builder('path',null,{path:object.points, lineType:'L', style:style});
                                 object.appendChild(line);
                         
                         
@@ -9154,7 +8869,7 @@
                             style='fill:rgba(255, 220, 220,1)'
                         ){
                             //elements
-                            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:rotation});
+                            var object = part.builder('g',id,{x:x, y:y, r:rotation});
                                 object._type = 'audio';
                                 object._cable = null;
                                 object._cableStyle = 'fill:none; stroke:rgb(242, 119, 84); stroke-width:4;';
@@ -9162,7 +8877,7 @@
                                 object._boundary = {'width':width, 'height':height};
                                 object._audioNode = audioContext.createAnalyser();
                                 object._portType = type; if(type!=0&&type!=1){type=0;}
-                            var rect = system.utility.misc.elementMaker('rect','tab',{x:0, y:0, width:width, height:height,style:style});
+                            var rect = part.builder('rect','tab',{x:0, y:0, width:width, height:height,style:style});
                                 object.appendChild(rect);
                         
                         
@@ -9239,7 +8954,7 @@
                         
                             //cabling
                             object._add_cable = function(){
-                                this._cable = system.utility.misc.elementMaker('cable',null,{style:{unactive:this._cableStyle, active:this._cableActiveStyle}});
+                                this._cable = part.builder('cable',null,{style:{unactive:this._cableStyle, active:this._cableActiveStyle}});
                                 this.foreignNode._receive_cable(this._cable);
                                 system.utility.workspace.getPane(this).appendChild(this._cable); // <-- should probably make prepend
                                 this.draw();
@@ -9292,14 +9007,14 @@
                             glowStyle='fill:rgba(244, 244, 255, 1)'
                         ){
                             //elements
-                            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:rotation});
+                            var object = part.builder('g',id,{x:x, y:y, r:rotation});
                                 object._type = 'data';
                                 object._rotation = rotation;
                                 object._cable = null;
                                 object._cableStyle = 'fill:none; stroke:rgb(84, 146, 247); stroke-width:4;';
                                 object._cableActiveStyle = 'fill:none; stroke:rgb(123, 168, 242); stroke-width:4;';
                                 object._boundary = {'width':width, 'height':height};
-                            var rect = system.utility.misc.elementMaker('rect','tab',{x:0, y:0, width:width, height:height,style:style});
+                            var rect = part.builder('rect','tab',{x:0, y:0, width:width, height:height,style:style});
                                 object.appendChild(rect);
                         
                         
@@ -9393,7 +9108,7 @@
                         
                             //cabling
                             object._add_cable = function(){
-                                this._cable = system.utility.misc.elementMaker('cable',null,{style:{unactive:this._cableStyle, active:this._cableActiveStyle}});
+                                this._cable = part.builder('cable',null,{style:{unactive:this._cableStyle, active:this._cableActiveStyle}});
                                 this.foreignNode._receive_cable(this._cable);
                                 system.utility.workspace.getPane(this).appendChild(this._cable); // <-- should probably make prepend
                                 this.draw();
@@ -9470,65 +9185,347 @@
                     };
                 };
             };
-            var objects = new function(){
-                this.audio_duplicator = function(x,y){
+            
+            part.builder = function(type,name,data){
+                if(!data){data={};}
+                switch(type){
+                    //basic
+                        case 'g':      return part.element.basic.g(name, data.x, data.y, data.r, data.style); break;
+                        case 'line':   return part.element.basic.line(name, data.x1, data.y1, data.x2, data.y2, data.style); break;
+                        case 'rect':   return part.element.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
+                        case 'path':   return part.element.basic.path(name, data.path, data.lineType, data.style); break;
+                        case 'text':   return part.element.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
+                        case 'circle': return part.element.basic.circle(name, data.x, data.y, data.r, data.angle, data.style); break;
+                        case 'canvas': return part.element.basic.canvas(name, data.x, data.y, data.width, data.height, data.angle, data.resolution); break;
+                }
+            
+                if(data.style == undefined){data.style={};}
+                switch(type){
+                    default: console.warn('Unknown element: '+ type); return null; break;
+            
+                    //display
+                        case 'label': return part.element.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;
+                        case 'level': return part.element.display.level(name, data.x, data.y, data.angle, data.width, data.height, data.style.backing, data.style.level); break;
+                        case 'meter_level': return part.element.display.meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
+                        case 'audio_meter_level': return part.element.display.audio_meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
+                        case 'sevenSegmentDisplay': return part.element.display.sevenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
+                        case 'sixteenSegmentDisplay': return part.element.display.sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
+                        case 'readout_sixteenSegmentDisplay': return part.element.display.readout_sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.style.background, data.style.glow, data.style.dime); break;
+                        case 'rastorDisplay': return part.element.display.rastorDisplay(name, data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage); break;
+                        case 'glowbox_rect': return part.element.display.glowbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim); break;
+                        case 'grapherSVG': return part.element.display.grapherSVG(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+                        case 'grapherCanvas': return part.element.display.grapherCanvas(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+                        case 'grapher_periodicWave': return part.element.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+                        case 'grapher_audioScope': return part.element.display.grapher_audioScope(  name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
+            
+                    //control
+                        case 'button_rect': 
+                            var temp = part.element.control.button_rect(
+                                name,
+                                data.x, data.y, data.width, data.height, data.angle, 
+                                (data.text ? data.text : data.text_centre), data.text_left, data.text_right,
+                                data.textVerticalOffset, data.textHorizontalOffset,
+                                data.active, data.hoverable, data.selectable, data.pressable,
+                                data.style.text, 
+                                data.style.off,
+                                data.style.up,                data.style.press,
+                                data.style.select,            data.style.select_press,
+                                data.style.glow,              data.style.glow_press,
+                                data.style.glow_select,       data.style.glow_select_press,
+                                data.style.hover,             data.style.hover_press,
+                                data.style.hover_select,      data.style.hover_select_press,
+                                data.style.hover_glow,        data.style.hover_glow_press,
+                                data.style.hover_glow_select, data.style.hover_glow_select_press,
+                            );
+                            temp.onpress =    data.onpress    ? data.onpress    : temp.onpress;
+                            temp.onrelease =  data.onrelease  ? data.onrelease  : temp.onrelease;
+                            temp.ondblpress = data.ondblpress ? data.ondblpress : temp.ondblpress;
+                            temp.onenter =    data.onenter    ? data.onenter    : temp.onenter;
+                            temp.onleave =    data.onleave    ? data.onleave    : temp.onleave;
+                            temp.onselect =   data.onselect   ? data.onselect   : temp.onselect;
+                            temp.ondeselect = data.ondeselect ? data.ondeselect : temp.ondeselect;
+                            return temp;
+                        break;
+                        case 'checkbox_rect':
+                            var temp = part.element.control.checkbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow);
+                            temp.onchange = data.onchange ? data.onchange : temp.onchange;
+                            return temp;
+                        break;
+                        case 'slide':
+                            var temp = part.element.control.slide(name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle);
+                            temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                            temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                            return temp;
+                        break;
+                        case 'slidePanel':
+                            var temp = part.element.control.slidePanel(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot);
+                            temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                            temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                            return temp;
+                        break;
+                        case 'rangeslide':
+                            var temp = part.element.control.rangeslide(name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.spanWidth, data.values, data.resetValues, data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span);
+                            temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                            temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                            return temp;
+                        break;
+                        case 'dial_continuous': 
+                            var temp = part.element.control.dial_continuous(
+                                name,
+                                data.x, data.y, data.r,
+                                data.startAngle, data.maxAngle,
+                                data.style.handle, data.style.slot, data.style.needle,
+                                data.style.handle_glow, data.style.slot_glow, data.style.needle_glow,
+                                data.arcDistance, data.style.outerArc, data.style.outerArc_glow,
+                            );
+                            temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                            temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                            return temp;
+                        break;
+                        case 'dial_discrete':
+                            var temp = part.element.control.dial_discrete(
+                                name,
+                                data.x, data.y, data.r,
+                                data.optionCount,
+                                data.startAngle, data.maxAngle,
+                                data.style.handle, data.style.slot, data.style.needle,
+                                data.style.handle_glow, data.style.slot_glow, data.style.needle_glow,
+                                data.arcDistance, data.style.outerArc, data.style.outerArc_glow,
+                            );
+                            temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                            temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                            return temp;
+                        break;
+                        case 'rastorgrid':
+                            var temp = part.element.control.rastorgrid(
+                                name,
+                                data.x, data.y, data.width, data.height,
+                                data.xCount, data.yCount,
+                                data.style.backing,
+                                data.style.check,
+                                data.style.backingGlow,
+                                data.style.checkGlow
+                            );
+                            temp.onchange = data.onchange ? data.onchange  : temp.onchange  ;
+                            return temp;
+                        break;
+                        case 'sequencer':
+                            var temp = part.element.control.sequencer(
+                                name,
+                                data.x, data.y, data.width, data.height, data.angle,
+                                data.xCount, data.yCount,
+                                data.zoomLevel_x, data.zoomLevel_y,
+                                data.style.backing,
+                                data.style.selectionArea,
+                                data.style.block_body, data.style.block_bodyGlow, data.style.block_handle, data.style.block_handleWidth,
+                                data.style.horizontalStrip_pattern, data.style.horizontalStrip_glow, data.style.horizontalStrip_styles,
+                                data.style.verticalStrip_pattern,   data.style.verticalStrip_glow,   data.style.verticalStrip_styles,
+                                data.style.playhead,
+                            );
+                            temp.onpan = data.onpan ? data.onpan : temp.onpan;
+                            temp.onchangeviewarea = data.onchangeviewarea ? data.onchangeviewarea : temp.onchangeviewarea;
+                            temp.event = data.event ? data.event : temp.event;
+                            return temp;
+                        break;
+                        case 'needleOverlay':
+                            var temp = part.element.control.needleOverlay(
+                                name, data.x, data.y, data.width, data.height, data.angle,
+                                data.needleWidth, data.selectNeedle, data.selectionArea,
+                                data.needleStyles,
+                            );
+                            temp.onchange = data.onchange   ? data.onchange  : temp.onchange;
+                            temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
+                            temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle;
+                            return temp;
+                        break;
+                        case 'grapher_waveWorkspace':
+                            var temp = part.element.control.grapher_waveWorkspace(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.graphType, data.selectNeedle, data.selectionArea,
+                                data.style.foreground,   data.style.foregroundText,
+                                data.style.middleground, data.style.middlegroundText,
+                                data.style.background,   data.style.backgroundText,
+                            );
+                            temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
+                            temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
+                            temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle ;
+                            return temp;
+                        break;
+                        case 'list':
+                                var temp = part.element.control.list(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.list, 
+                                    data.selectable, data.multiSelect, data.hoverable, data.pressable, data.active,
+                                    data.itemHeightMux, data.itemSpacingMux, data.breakHeightMux, data.breakWidthMux, data.spaceHeightMux,
+                                    data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
+                                    data.style.listItemText,
+                                    data.style.backing,
+                                    data.style.break,
+                                    data.style.background_off,
+                                    data.style.background_up,                data.style.background_press,
+                                    data.style.background_select,            data.style.background_select_press,
+                                    data.style.background_glow,              data.style.background_glow_press,
+                                    data.style.background_glow_select,       data.style.background_glow_select_press,
+                                    data.style.background_hover,             data.style.background_hover_press,
+                                    data.style.background_hover_select,      data.style.background_hover_select_press,
+                                    data.style.background_hover_glow,        data.style.background_hover_glow_press,
+                                    data.style.background_hover_glow_select, data.style.background_hover_glow_select_press,
+                                );
+                                
+                                temp.onenter = data.onenter ? data.onenter : temp.onenter;
+                                temp.onleave = data.onleave ? data.onleave : temp.onleave;
+                                temp.onpress = data.onpress ? data.onpress : temp.onpress;
+                                temp.ondblpress = data.ondblpress ? data.ondblpress : temp.ondblpress;
+                                temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
+                                temp.onselection = data.onselection ? data.onselection : temp.onselection;
+                                temp.onpositionchange = data.onpositionchange ? data.onpositionchange : temp.onpositionchange;
+                                return temp;
+                        break;
+            
+                    //dynamic
+                        case 'cable': return part.element.dynamic.cable(name, data.x1, data.y1, data.x2, data.y2, data.style.unactive, data.style.active); break;
+                        case 'connectionNode_audio': 
+                            if(Object.keys(data.style).length == 0){data.style = undefined;}
+                            return part.element.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, data.angle, system.audio.context, data.style);
+                        break;
+                        case 'connectionNode_data':
+                            if(Object.keys(data.style).length == 0){data.style = undefined;}
+                            var temp = part.element.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle, data.style);
+                            temp.receive = data.receive ? data.receive : temp.receive;
+                            temp.give = data.give ? data.give : temp.give;
+                            return temp;
+                        break;
+                }
+            }; 
+
+            var object = new function(){
+                this.distortionUnit = function(x,y){
                     var style = {
-                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
-                        markings: 'fill:rgba(150,150,150,1); pointer-events:none;',
+                        background: 'fill:rgba(200,200,200,1); stroke:none;',
+                        h1: 'fill:rgba(0,0,0,1); font-size:6px; font-family:Courier New;',
+                        h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+                
+                        dial:{
+                            handle: 'fill:rgba(220,220,220,1)',
+                            slot: 'fill:rgba(50,50,50,1)',
+                            needle: 'fill:rgba(250,150,150,1)',
+                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+                        }
                     };
                     var design = {
-                        type:'audio_duplicator',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                            style:'fill:rgba(200,200,200,0);'
+                        type: 'distortionUnit',
+                        x: x, y: y,
+                        base: {
+                            points:[
+                                { x:0,           y:10     },
+                                { x:10,          y:0      },
+                                { x:102.5/3,     y:0      },
+                                { x:102.5*0.45,  y:10     },
+                                { x:102.5*0.55,  y:10     },
+                                { x:2*(102.5/3), y:0      },
+                                { x:102.5-10,    y:0      },
+                                { x:102.5,       y:10     },
+                                { x:102.5,       y:95-10  },
+                                { x:102.5-10,    y:95     },
+                                { x:2*(102.5/3), y:95     },
+                                { x:102.5*0.55,  y:95-10  },
+                                { x:102.5*0.45,  y:95-10  },
+                                { x:102.5/3,     y:95     },
+                                { x:10,          y:95     },
+                                { x:0,           y:95-10  }
+                            ], 
+                            style:style.background
                         },
                         elements:[
-                            {type:'connectionNode_audio', name:'input', data:{ type:0, x:45, y:5, width:20, height:20 }},
-                            {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:20, height:20 }},
-                            {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:20, height:20 }},
-                
-                            {type:'path', name:'backing', data:{
-                                path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                                style:style.background
+                            {type:'connectionNode_audio', name:'audioIn', data: { type: 0, x: 102.5, y: 61.5, width: 10, height: 20 }},
+                            {type:'connectionNode_audio', name:'audioOut', data:{ type: 1, x: -10, y: 61.5, width: 10, height: 20 }},
+                        
+                            {type:'label', name:'outGain_title', data:{x:17.5, y:91,   text:'out', style:style.h1}},
+                            {type:'label', name:'outGain_0',     data:{x:9.5,  y:85.5, text:'0',   style:style.h2}},
+                            {type:'label', name:'outGain_1/2',   data:{x:19,   y:57,   text:'1/2', style:style.h2}},
+                            {type:'label', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   style:style.h2}},
+                            {type:'dial_continuous',name:'outGain',data:{
+                                x: 22.5, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){obj.distortionCircuit.outGain(value);},
                             }},
                 
-                            {type:'path', name:'upperArrow', data:{
-                                path:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}],
-                                style:style.markings,
+                            {type:'label', name:'distortionAmount_title', data:{x:15.5, y:41.5, text:'dist', style:style.h1}},
+                            {type:'label', name:'distortionAmount_0',     data:{x:9.5,  y:36,   text:'0',    style:style.h2}},
+                            {type:'label', name:'distortionAmount_50',    data:{x:20,   y:7.5,  text:'50',   style:style.h2}},
+                            {type:'label', name:'distortionAmount_100',   data:{x:33,   y:36,   text:'100',  style:style.h2}},
+                            {type:'dial_continuous',name:'distortionAmount',data:{
+                                x: 22.5, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){obj.distortionCircuit.distortionAmount(value*100);},
                             }},
-                            {type:'path', name:'lowerArrow', data:{
-                                path:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}],
-                                style:style.markings,
+                
+                            {type:'label', name:'resolution_title', data:{x:47, y:66, text:'res',  style:style.h1}},
+                            {type:'label', name:'resolution_2',     data:{x:39, y:60, text:'2',    style:style.h2}},
+                            {type:'label', name:'resolution_50',    data:{x:49, y:32, text:'500',  style:style.h2}},
+                            {type:'label', name:'resolution_100',   data:{x:63, y:60, text:'1000', style:style.h2}},
+                            {type:'dial_continuous',name:'resolution',data:{
+                                x: 52.5, y: 47.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){obj.distortionCircuit.resolution(Math.round(value*1000));},
                             }},
-                            {type:'rect', name:'topHorizontal', data:{
-                                x:5, y:15, width:45, height:2, 
-                                style:style.markings,
+                            {type:'label', name:'overSample_title', data:{x:67,   y:41.5, text:'overSamp', style:style.h1}},
+                            {type:'label', name:'overSample_0',     data:{x:61,   y:12,   text:'none',     style:style.h2}},
+                            {type:'label', name:'overSample_50',    data:{x:77.5, y:7.5,  text:'2x',       style:style.h2}},
+                            {type:'label', name:'overSample_100',   data:{x:90.5, y:12,   text:'4x',       style:style.h2}},
+                            {type:'dial_discrete',name:'overSample',data:{
+                                x: 80, y: 23, r: 12, startAngle: (1.25*Math.PI), maxAngle: 0.5*Math.PI, arcDistance: 1.35, optionCount: 3,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                onchange:function(value){obj.distortionCircuit.oversample(['none','2x','4x'][value]);},
                             }},
-                            {type:'rect', name:'vertical', data:{
-                                x:27.5, y:15, width:2, height:25.5, 
-                                style:style.markings,
-                            }},
-                            {type:'rect', name:'bottomHorizontal', data:{
-                                x:5, y:40, width:24.5, height:2, 
-                                style:style.markings,
+                            {type:'label', name:'inGain_title', data:{x:76,   y:91,   text:'in', style:style.h1}},
+                            {type:'label', name:'inGain_0',     data:{x:67,   y:85.5, text:'0',   style:style.h2}},
+                            {type:'label', name:'inGain_1/2',   data:{x:76.5, y:57,   text:'1/2', style:style.h2}},
+                            {type:'label', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   style:style.h2}},
+                            {type:'dial_continuous',name:'inGain',data:{
+                                x: 80, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){obj.distortionCircuit.inGain(2*value);},
                             }},
                         ]
                     };
                 
                     //main object
-                        var obj = system.utility.misc.objectBuilder(objects.audio_duplicator,design);
+                        var obj = object.builder(object.distortionUnit,design);
+                
+                    //import/export
+                        obj.importData = function(data){
+                            design.dial_continuous.outGain.set(data.outGain);
+                            design.dial_continuous.distortionAmount.set(data.distortionAmount);
+                            design.dial_continuous.resolution.set(data.resolution);
+                            design.dial_discrete.overSample.select(data.overSample);
+                            design.dial_continuous.inGain.set(data.inGain);
+                        };
+                        obj.exportData = function(){
+                            return {
+                                outGain:design.dial_continuous.outGain.get(), 
+                                distortionAmount:design.dial_continuous.distortionAmount.get(), 
+                                resolution:design.dial_continuous.resolution.get(), 
+                                overSample:design.dial_discrete.overSample.select(), 
+                                inGain:design.dial_continuous.inGain.get()
+                            };
+                        };
                 
                     //circuitry
-                        design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_1.in() );
-                        design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_2.in() );
-                         
+                        //distortion
+                            obj.distortionCircuit = new part.circuit.audio.distortionUnit(system.audio.context);
+                            design.connectionNode_audio.audioIn.out().connect( obj.distortionCircuit.in() );
+                            obj.distortionCircuit.out().connect( design.connectionNode_audio.audioOut.in() );
+                
+                    //setup
+                        design.dial_continuous.resolution.set(0.5);
+                        design.dial_continuous.inGain.set(0.5);
+                        design.dial_continuous.outGain.set(1);
+                
                     return obj;
                 };
                 
-                this.audio_duplicator.metadata = {
-                    name:'Audio Duplicator',
-                    helpurl:'https://metasophiea.com/curve/help/objects/audioDuplicator/'
+                this.distortionUnit.metadata = {
+                    name:'Distortion Unit',
+                    helpurl:'https://metasophiea.com/curve/help/objects/distortionUnit/'
                 };
                 this.filterUnit = function(x,y){
                     var state = {
@@ -9622,7 +9619,7 @@
                     };
                 
                     //main object
-                        var obj = system.utility.misc.objectBuilder(objects.filterUnit,design);
+                        var obj = object.builder(object.filterUnit,design);
                 
                     //import/export
                         obj.importData = function(data){
@@ -9642,7 +9639,7 @@
                 
                     //circuitry
                         //filter
-                            obj.filterCircuit = new parts.circuits.audio.filterUnit(system.audio.context);
+                            obj.filterCircuit = new part.circuit.audio.filterUnit(system.audio.context);
                             design.connectionNode_audio.audioIn.out().connect( obj.filterCircuit.in() );
                             obj.filterCircuit.out().connect( design.connectionNode_audio.audioOut.in() );
                 
@@ -9690,157 +9687,6 @@
                 this.filterUnit.metadata = {
                     name:'Filter Unit',
                     helpurl:'https://metasophiea.com/curve/help/objects/filterUnit/'
-                };
-
-                this.reverbUnit = function(x,y){
-                    var state = {
-                        reverbTypeSelected: 0,
-                        availableTypes: [],
-                    };
-                    var style = {
-                        background: 'fill:rgba(200,200,200,1); stroke:none;',
-                        h1: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
-                        h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
-                
-                        dial:{
-                            handle: 'fill:rgba(220,220,220,1)',
-                            slot: 'fill:rgba(50,50,50,1)',
-                            needle: 'fill:rgba(250,150,150,1)',
-                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-                        },
-                        button:{
-                            up: 'fill:rgba(175,175,175,1)',
-                            hover: 'fill:rgba(220,220,220,1)',
-                            down: 'fill:rgba(150,150,150,1)',
-                            glow: 'fill:rgba(220,200,220,1)',
-                        }
-                    };
-                    var design = {
-                        type: 'reverbUnit',
-                        x: x, y: y,
-                        base: {
-                            points:[
-                                {x:0,y:10},
-                                {x:51.25,y:0},
-                                {x:102.5,y:10},
-                                {x:102.5,y:40},
-                                {x:51.25,y:50},
-                                {x:0,y:40},
-                            ], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'audioIn', data:{ type: 0, x: 102.5, y: 16, width: 10, height: 20 }},
-                            {type:'connectionNode_audio', name:'audioOut', data:{ type: 1, x: -10, y: 16, width: 10, height: 20 }},
-                            
-                            {type:'label', name:'outGain_0',   data:{x:7,    y:39, text:'0', style:style.h2}},
-                            {type:'label', name:'outGain_1/2', data:{x:16.5, y:10, text:'1/2', style:style.h2}},
-                            {type:'label', name:'outGain_1',   data:{x:30,   y:39, text:'1', style:style.h2}},
-                            {type:'dial_continuous',name:'outGain',data:{
-                                x: 20, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){ obj.reverbCircuit.outGain(value); },
-                            }},
-                            {type:'label', name:'wetdry_1/2', data:{x:66.5, y:39, text:'wet', style:style.h2}},
-                            {type:'label', name:'wetdry_1',   data:{x:92.5, y:39, text:'dry', style:style.h2}},
-                            {type:'dial_continuous',name:'wetdry',data:{
-                                x: 82.5, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){ obj.reverbCircuit.wetdry(1-value); },
-                            }},
-                
-                            {type:'button_rect',name:'raiseByOne',data:{
-                                x:51, y:6, width: 10.25, height: 5,  
-                                style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
-                                onpress: function(){ incReverbType(); },
-                            }},
-                            {type:'button_rect',name:'raiseByTen',data:{
-                                x:38.75, y:6, width: 10.25, height: 5,  
-                                style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
-                                onpress: function(){ inc10ReverbType(); },
-                            }},
-                            {type:'button_rect',name:'lowerByOne',data:{
-                                x:51, y:39, width: 10.25, height: 5,  
-                                style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
-                                onpress: function(){ decReverbType(); },
-                            }},
-                            {type:'button_rect',name:'lowerByTen',data:{
-                                x:38.75, y:39, width: 10.25, height: 5,  
-                                style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
-                                onpress: function(){ dec10ReverbType(); },
-                            }},
-                
-                            {type:'sevenSegmentDisplay',name:'tens',data:{
-                                x:50, y:12.5, width:12.5, height:25,
-                            }},
-                            {type:'sevenSegmentDisplay',name:'ones',data:{
-                                x:37.5, y:12.5, width:12.5, height:25,
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.reverbUnit,design);
-                
-                    //import/export
-                        obj.importData = function(data){
-                            state.reverbTypeSelected = data.selectedType;
-                            design.dial_continuous.wetdry.set(data.wetdry);
-                            design.dial_continuous.outGain.set(data.outGain);
-                        };
-                        obj.exportData = function(){
-                            return {
-                                selectedType: state.reverbTypeSelected,
-                                wetdry: design.dial_continuous.wetdry.get(),
-                                outGain: design.dial_continuous.outGain.get(),
-                            };
-                        };
-                
-                    //circuitry
-                        //reverb
-                            obj.reverbCircuit = new parts.circuits.audio.reverbUnit(system.audio.context);
-                            design.connectionNode_audio.audioIn.out().connect( obj.reverbCircuit.in() );
-                            obj.reverbCircuit.out().connect( design.connectionNode_audio.audioOut.in() );
-                            obj.reverbCircuit.getTypes( function(a){state.availableTypes = a;} );
-                            
-                        //internal functions
-                            function setReadout(num){
-                                num = ("0" + num).slice(-2);
-                
-                                design.sevenSegmentDisplay.ones.enterCharacter(num[0]);
-                                design.sevenSegmentDisplay.tens.enterCharacter(num[1]);
-                            }
-                            function setReverbType(a){
-                                if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return;}
-                
-                                if( a >= state.availableTypes.length ){a = state.availableTypes.length-1;}
-                                else if( a < 0 ){a = 0;}
-                    
-                                state.reverbTypeSelected = a;
-                                obj.reverbCircuit.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
-                            }
-                            function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
-                            function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
-                            function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
-                            function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
-                
-                    //interface
-                        obj.i = {
-                            gain:function(a){design.dial_continuous.outGain.set(a);},
-                            wetdry:function(a){design.dial_continuous.wetdry.set(a);},
-                        };
-                
-                    //setup
-                        design.dial_continuous.outGain.set(1/2);
-                        design.dial_continuous.wetdry.set(1/2);
-                        setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
-                
-                    return obj;
-                };
-                
-                this.reverbUnit.metadata = {
-                    name:'Reverb Unit',
-                    helpurl:'https://metasophiea.com/curve/help/objects/reverbUnit/'
                 };
 
                 this.multibandFilter = function(
@@ -9999,7 +9845,7 @@
                     }
                 
                     //main object
-                        var obj = system.utility.misc.objectBuilder(objects.multibandFilter,design);
+                        var obj = object.builder(object.multibandFilter,design);
                 
                     //import/export
                         obj.exportData = function(){
@@ -10015,8 +9861,8 @@
                         obj.importData = function(data){};
                 
                     //circuitry
-                        obj.filterCircuit_0 = new parts.circuits.audio.multibandFilter(system.audio.context, vars.channelCount, true);
-                        obj.filterCircuit_1 = new parts.circuits.audio.multibandFilter(system.audio.context, vars.channelCount, true);
+                        obj.filterCircuit_0 = new part.circuit.audio.multibandFilter(system.audio.context, vars.channelCount, true);
+                        obj.filterCircuit_1 = new part.circuit.audio.multibandFilter(system.audio.context, vars.channelCount, true);
                         design.connectionNode_audio.audioIn_0.out().connect( obj.filterCircuit_0.in() );
                         design.connectionNode_audio.audioIn_1.out().connect( obj.filterCircuit_1.in() );
                         obj.filterCircuit_0.out().connect( design.connectionNode_audio.audioOut_0.in() );
@@ -10096,10 +9942,14 @@
                     name:'Multiband Filter',
                     helpurl:'https://metasophiea.com/curve/help/objects/multibandFilter/'
                 };
-                this.distortionUnit = function(x,y){
+                this.reverbUnit = function(x,y){
+                    var state = {
+                        reverbTypeSelected: 0,
+                        availableTypes: [],
+                    };
                     var style = {
                         background: 'fill:rgba(200,200,200,1); stroke:none;',
-                        h1: 'fill:rgba(0,0,0,1); font-size:6px; font-family:Courier New;',
+                        h1: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
                         h2: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
                 
                         dial:{
@@ -10107,193 +9957,1500 @@
                             slot: 'fill:rgba(50,50,50,1)',
                             needle: 'fill:rgba(250,150,150,1)',
                             arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+                        },
+                        button:{
+                            up: 'fill:rgba(175,175,175,1)',
+                            hover: 'fill:rgba(220,220,220,1)',
+                            down: 'fill:rgba(150,150,150,1)',
+                            glow: 'fill:rgba(220,200,220,1)',
                         }
                     };
                     var design = {
-                        type: 'distortionUnit',
+                        type: 'reverbUnit',
                         x: x, y: y,
                         base: {
                             points:[
-                                { x:0,           y:10     },
-                                { x:10,          y:0      },
-                                { x:102.5/3,     y:0      },
-                                { x:102.5*0.45,  y:10     },
-                                { x:102.5*0.55,  y:10     },
-                                { x:2*(102.5/3), y:0      },
-                                { x:102.5-10,    y:0      },
-                                { x:102.5,       y:10     },
-                                { x:102.5,       y:95-10  },
-                                { x:102.5-10,    y:95     },
-                                { x:2*(102.5/3), y:95     },
-                                { x:102.5*0.55,  y:95-10  },
-                                { x:102.5*0.45,  y:95-10  },
-                                { x:102.5/3,     y:95     },
-                                { x:10,          y:95     },
-                                { x:0,           y:95-10  }
+                                {x:0,y:10},
+                                {x:51.25,y:0},
+                                {x:102.5,y:10},
+                                {x:102.5,y:40},
+                                {x:51.25,y:50},
+                                {x:0,y:40},
                             ], 
                             style:style.background
                         },
                         elements:[
-                            {type:'connectionNode_audio', name:'audioIn', data: { type: 0, x: 102.5, y: 61.5, width: 10, height: 20 }},
-                            {type:'connectionNode_audio', name:'audioOut', data:{ type: 1, x: -10, y: 61.5, width: 10, height: 20 }},
-                        
-                            {type:'label', name:'outGain_title', data:{x:17.5, y:91,   text:'out', style:style.h1}},
-                            {type:'label', name:'outGain_0',     data:{x:9.5,  y:85.5, text:'0',   style:style.h2}},
-                            {type:'label', name:'outGain_1/2',   data:{x:19,   y:57,   text:'1/2', style:style.h2}},
-                            {type:'label', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   style:style.h2}},
+                            {type:'connectionNode_audio', name:'audioIn', data:{ type: 0, x: 102.5, y: 16, width: 10, height: 20 }},
+                            {type:'connectionNode_audio', name:'audioOut', data:{ type: 1, x: -10, y: 16, width: 10, height: 20 }},
+                            
+                            {type:'label', name:'outGain_0',   data:{x:7,    y:39, text:'0', style:style.h2}},
+                            {type:'label', name:'outGain_1/2', data:{x:16.5, y:10, text:'1/2', style:style.h2}},
+                            {type:'label', name:'outGain_1',   data:{x:30,   y:39, text:'1', style:style.h2}},
                             {type:'dial_continuous',name:'outGain',data:{
-                                x: 22.5, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                x: 20, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
                                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){obj.distortionCircuit.outGain(value);},
+                                onchange:function(value){ obj.reverbCircuit.outGain(value); },
+                            }},
+                            {type:'label', name:'wetdry_1/2', data:{x:66.5, y:39, text:'wet', style:style.h2}},
+                            {type:'label', name:'wetdry_1',   data:{x:92.5, y:39, text:'dry', style:style.h2}},
+                            {type:'dial_continuous',name:'wetdry',data:{
+                                x: 82.5, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){ obj.reverbCircuit.wetdry(1-value); },
                             }},
                 
-                            {type:'label', name:'distortionAmount_title', data:{x:15.5, y:41.5, text:'dist', style:style.h1}},
-                            {type:'label', name:'distortionAmount_0',     data:{x:9.5,  y:36,   text:'0',    style:style.h2}},
-                            {type:'label', name:'distortionAmount_50',    data:{x:20,   y:7.5,  text:'50',   style:style.h2}},
-                            {type:'label', name:'distortionAmount_100',   data:{x:33,   y:36,   text:'100',  style:style.h2}},
-                            {type:'dial_continuous',name:'distortionAmount',data:{
-                                x: 22.5, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){obj.distortionCircuit.distortionAmount(value*100);},
+                            {type:'button_rect',name:'raiseByOne',data:{
+                                x:51, y:6, width: 10.25, height: 5,  
+                                style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
+                                onpress: function(){ incReverbType(); },
+                            }},
+                            {type:'button_rect',name:'raiseByTen',data:{
+                                x:38.75, y:6, width: 10.25, height: 5,  
+                                style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
+                                onpress: function(){ inc10ReverbType(); },
+                            }},
+                            {type:'button_rect',name:'lowerByOne',data:{
+                                x:51, y:39, width: 10.25, height: 5,  
+                                style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
+                                onpress: function(){ decReverbType(); },
+                            }},
+                            {type:'button_rect',name:'lowerByTen',data:{
+                                x:38.75, y:39, width: 10.25, height: 5,  
+                                style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
+                                onpress: function(){ dec10ReverbType(); },
                             }},
                 
-                            {type:'label', name:'resolution_title', data:{x:47, y:66, text:'res',  style:style.h1}},
-                            {type:'label', name:'resolution_2',     data:{x:39, y:60, text:'2',    style:style.h2}},
-                            {type:'label', name:'resolution_50',    data:{x:49, y:32, text:'500',  style:style.h2}},
-                            {type:'label', name:'resolution_100',   data:{x:63, y:60, text:'1000', style:style.h2}},
-                            {type:'dial_continuous',name:'resolution',data:{
-                                x: 52.5, y: 47.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){obj.distortionCircuit.resolution(Math.round(value*1000));},
+                            {type:'sevenSegmentDisplay',name:'tens',data:{
+                                x:50, y:12.5, width:12.5, height:25,
                             }},
-                            {type:'label', name:'overSample_title', data:{x:67,   y:41.5, text:'overSamp', style:style.h1}},
-                            {type:'label', name:'overSample_0',     data:{x:61,   y:12,   text:'none',     style:style.h2}},
-                            {type:'label', name:'overSample_50',    data:{x:77.5, y:7.5,  text:'2x',       style:style.h2}},
-                            {type:'label', name:'overSample_100',   data:{x:90.5, y:12,   text:'4x',       style:style.h2}},
-                            {type:'dial_discrete',name:'overSample',data:{
-                                x: 80, y: 23, r: 12, startAngle: (1.25*Math.PI), maxAngle: 0.5*Math.PI, arcDistance: 1.35, optionCount: 3,
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                onchange:function(value){obj.distortionCircuit.oversample(['none','2x','4x'][value]);},
-                            }},
-                            {type:'label', name:'inGain_title', data:{x:76,   y:91,   text:'in', style:style.h1}},
-                            {type:'label', name:'inGain_0',     data:{x:67,   y:85.5, text:'0',   style:style.h2}},
-                            {type:'label', name:'inGain_1/2',   data:{x:76.5, y:57,   text:'1/2', style:style.h2}},
-                            {type:'label', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   style:style.h2}},
-                            {type:'dial_continuous',name:'inGain',data:{
-                                x: 80, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){obj.distortionCircuit.inGain(2*value);},
+                            {type:'sevenSegmentDisplay',name:'ones',data:{
+                                x:37.5, y:12.5, width:12.5, height:25,
                             }},
                         ]
                     };
                 
                     //main object
-                        var obj = system.utility.misc.objectBuilder(objects.distortionUnit,design);
+                        var obj = object.builder(object.reverbUnit,design);
                 
                     //import/export
                         obj.importData = function(data){
+                            state.reverbTypeSelected = data.selectedType;
+                            design.dial_continuous.wetdry.set(data.wetdry);
                             design.dial_continuous.outGain.set(data.outGain);
-                            design.dial_continuous.distortionAmount.set(data.distortionAmount);
-                            design.dial_continuous.resolution.set(data.resolution);
-                            design.dial_discrete.overSample.select(data.overSample);
-                            design.dial_continuous.inGain.set(data.inGain);
                         };
                         obj.exportData = function(){
                             return {
-                                outGain:design.dial_continuous.outGain.get(), 
-                                distortionAmount:design.dial_continuous.distortionAmount.get(), 
-                                resolution:design.dial_continuous.resolution.get(), 
-                                overSample:design.dial_discrete.overSample.select(), 
-                                inGain:design.dial_continuous.inGain.get()
+                                selectedType: state.reverbTypeSelected,
+                                wetdry: design.dial_continuous.wetdry.get(),
+                                outGain: design.dial_continuous.outGain.get(),
                             };
                         };
                 
                     //circuitry
-                        //distortion
-                            obj.distortionCircuit = new parts.circuits.audio.distortionUnit(system.audio.context);
-                            design.connectionNode_audio.audioIn.out().connect( obj.distortionCircuit.in() );
-                            obj.distortionCircuit.out().connect( design.connectionNode_audio.audioOut.in() );
+                        //reverb
+                            obj.reverbCircuit = new part.circuit.audio.reverbUnit(system.audio.context);
+                            design.connectionNode_audio.audioIn.out().connect( obj.reverbCircuit.in() );
+                            obj.reverbCircuit.out().connect( design.connectionNode_audio.audioOut.in() );
+                            obj.reverbCircuit.getTypes( function(a){state.availableTypes = a;} );
+                            
+                        //internal functions
+                            function setReadout(num){
+                                num = ("0" + num).slice(-2);
+                
+                                design.sevenSegmentDisplay.ones.enterCharacter(num[0]);
+                                design.sevenSegmentDisplay.tens.enterCharacter(num[1]);
+                            }
+                            function setReverbType(a){
+                                if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return;}
+                
+                                if( a >= state.availableTypes.length ){a = state.availableTypes.length-1;}
+                                else if( a < 0 ){a = 0;}
+                    
+                                state.reverbTypeSelected = a;
+                                obj.reverbCircuit.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
+                            }
+                            function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
+                            function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
+                            function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
+                            function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
+                
+                    //interface
+                        obj.i = {
+                            gain:function(a){design.dial_continuous.outGain.set(a);},
+                            wetdry:function(a){design.dial_continuous.wetdry.set(a);},
+                        };
                 
                     //setup
-                        design.dial_continuous.resolution.set(0.5);
-                        design.dial_continuous.inGain.set(0.5);
-                        design.dial_continuous.outGain.set(1);
+                        design.dial_continuous.outGain.set(1/2);
+                        design.dial_continuous.wetdry.set(1/2);
+                        setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
                 
                     return obj;
                 };
                 
-                this.distortionUnit.metadata = {
-                    name:'Distortion Unit',
-                    helpurl:'https://metasophiea.com/curve/help/objects/distortionUnit/'
+                this.reverbUnit.metadata = {
+                    name:'Reverb Unit',
+                    helpurl:'https://metasophiea.com/curve/help/objects/reverbUnit/'
                 };
-                this.audio_sink = function(x,y){
+
+                this.looper = function(x,y,debug=false){
                     var style = {
                         background:'fill:rgba(200,200,200,1)',
-                        level:{
-                            backing:'fill:rgb(10,10,10)', 
-                            levels:['fill:rgb(250,250,250);','fill:rgb(200,200,200);'],
-                            marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
-                        },
+                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+                        strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
                     };
                     var design = {
-                        type:'audio_sink',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
+                        type: 'looper',
+                        x: x, y: y,
+                        base: {
+                            points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
                             style:style.background
                         },
                         elements:[
-                            {type:'connectionNode_audio', name:'right', data:{
-                                type:0, x:90, y:5, width:20, height:20
+                            {type:'connectionNode_audio', name:'outRight', data:{ type: 1, x: -10, y: 5, width: 10, height: 20 }},
+                            {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
+                            {type:'connectionNode_data', name:'trigger', data:{
+                                x: 220, y: 17.5, width: 10, height: 20,
+                                receive:function(address, data){ design.button_rect.fire.press(); }
                             }},
-                            {type:'connectionNode_audio', name:'left', data:{
-                                type:0, x:90, y:30, width:20, height:20
+                
+                            //symbol
+                            {type:'circle', name:'symbol_outterCircle1', data:{ x:11.5, y:41, r:6, style:style.strokeMarkings }},
+                            {type:'circle', name:'symbol_outterCircle2', data:{ x:18.5, y:41, r:6, style:style.strokeMarkings }},
+                            {type:'rect', name:'symbol_blockingrect', data:{ x:11.5, y:34, width:7, height:15, style:style.background }},
+                            {type:'path', name:'symbol_upperarrow', data:{ path:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], style:style.strokeMarkings }},
+                            {type:'path', name:'symbol_lowerarrow', data:{ path:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], style:style.strokeMarkings }},
+                
+                            {type:'button_rect', name:'loadFile', data: {
+                                x:5, y: 5, width:20, height:10,
+                                style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                                onpress: function(){
+                                    obj.looper.load('file',function(data){
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.looper.waveformSegment() );
+                                    });
+                                }
                             }},
-                            {type:'audio_meter_level', name:'right', data:{
-                                x:10, y:5, width:5, height:45, 
-                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            {type:'button_rect',name:'fire',data:{
+                                x:5, y: 17.5, width:10, height:10,
+                                style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
+                                onpress:function(){
+                                    //no file = don't bother
+                                        if(obj.looper.duration() < 0){return;}
+                            
+                                    //actualy start the audio
+                                        obj.looper.start();
+                
+                                    //perform graphical movements
+                                        var duration = obj.looper.duration();
+                                        function func(){
+                                            //if there's already a needle; delete it
+                                            if(needle){
+                                                design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                                clearTimeout(needleTimout);
+                                            }
+                
+                                            //create new needle, and send it on its way
+                                            design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
+                                            setTimeout(function(){design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,1);},1);
+                                            needle = true;
+                
+                                            //prep the next time this function should be run
+                                            needleTimout = setTimeout(func,duration*1000);
+                                        }
+                
+                                        func();
+                                }
                             }},
-                            {type:'audio_meter_level', name:'left', data:{
-                                x:5, y:5, width:5, height:45,
-                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            {type:'button_rect',name:'stop',data:{
+                                x:15, y: 17.5, width:10, height:10,
+                                style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
+                                onpress:function(){
+                                    obj.looper.stop();
+                
+                                    //if there's a needle, remove it
+                                    if(needle){
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                        needle = false;
+                                        clearTimeout(needleTimout);
+                                    }
+                                }
                             }},
-                        ],
+                
+                            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                                x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false,
+                            }},
+                        ]
                     };
-                 
+                
                     //main object
-                        var obj = system.utility.misc.objectBuilder(objects.audio_sink,design);
+                        var obj = object.builder(object.looper,design);
                 
                     //circuitry
-                        var flow = {
-                            destination:null,
-                            stereoCombiner: null,
-                            pan_left:null, pan_right:null,
-                        };
-                        //destination
-                            flow._destination = system.audio.destination;
+                            var needle = undefined;
+                            var needleTimout = undefined;
                 
-                        //stereo channel combiner
-                            flow.stereoCombiner = new ChannelMergerNode(system.audio.context, {numberOfInputs:2});
+                        //audioFilePlayer
+                            obj.looper = new part.circuit.audio.looper(system.audio.context);
+                            obj.looper.out_right().connect( design.connectionNode_audio.outRight.in() );
+                            obj.looper.out_left().connect( design.connectionNode_audio.outLeft.in() );
                 
-                        //audio connections
-                            //inputs to meters
-                                design.connectionNode_audio.left.out().connect( design.audio_meter_level.left.audioIn() );
-                                design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
-                            //inputs to stereo combiner
-                                design.connectionNode_audio.left.out().connect(flow.stereoCombiner, 0, 0);
-                                design.connectionNode_audio.right.out().connect(flow.stereoCombiner, 0, 1);
-                            //stereo combiner to main output
-                                flow.stereoCombiner.connect(flow._destination);
-                
-                            //start audio meters
-                                design.audio_meter_level.left.start();
-                                design.audio_meter_level.right.start();
                     return obj;
                 };
                 
-                this.audio_sink.metadata = {
-                    name:'Audio Sink',
-                    helpurl:'https://metasophiea.com/curve/help/objects/audioSink/'
+                this.looper.metadata = {
+                    name:'Looper',
+                    helpurl:'https://metasophiea.com/curve/help/objects/looper/'
+                };
+                this.oneShot_multi = function(x,y,debug=false){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+                        strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
+                    };
+                    var design = {
+                        type: 'oneShot_multi',
+                        x: x, y: y,
+                        base: {
+                            points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
+                            style:style.background
+                        },
+                        elements:[
+                            //connection nodes
+                                {type:'connectionNode_audio', name:'outRight', data:{ type: 1, x: -10, y: 5, width: 10, height: 20 }},
+                                {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
+                                {type:'connectionNode_data', name:'trigger', data:{
+                                    x: 220, y: 17.5, width: 10, height: 20,
+                                    receive:function(address, data){ design.button_rect.fire.press(); design.button_rect.fire.release(); }
+                                }},
+                
+                            //symbol
+                                {type:'path', name:'symbol_arrow', data:{ path:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
+                                {type:'rect', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
+                                {type:'circle', name:'symbol_outterCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
+                                {type:'circle', name:'symbol_infCircle1', data:{ x:8.5, y:40, r:1.5, style:style.strokeMarkings }},
+                                {type:'circle', name:'symbol_infCircle2', data:{ x:11.5, y:40, r:1.5, style:style.strokeMarkings }},
+                
+                            //load/fire/panic buttons
+                                {type:'button_rect', name:'loadFile', data: {
+                                    x:5, y: 5, width:20, height:10,
+                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                                    onpress: function(){
+                                        obj.oneShot.load('file',function(data){
+                                            design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.oneShot.waveformSegment() );
+                                        });
+                                    }
+                                }},
+                                {type:'button_rect',name:'fire',data:{
+                                    x:5, y: 17.5, width:10, height:10,
+                                    style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
+                                    onpress:function(){
+                                        var filePlayer = obj.oneShot;
+                                        var waveport = design.grapher_waveWorkspace.grapher_waveWorkspace;
+                                        
+                                        //no file = don't bother
+                                            if(filePlayer.duration() < 0){return;}
+                
+                                        //determind start, end and duration values
+                                            var start = waveport.area().A != undefined ? waveport.area().A : 0;
+                                            var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                                            var duration = filePlayer.duration();
+                
+                                            var startTime = start*duration;
+                                            var duration = end*duration - startTime;
+                
+                                        //actualy start the audio
+                                            filePlayer.fire(startTime, duration);
+                
+                                        //determine playhead number
+                                            var playheadNumber = 0;
+                                            while(playheadNumber in playheads){playheadNumber++;}
+                                            playheads[playheadNumber] = {};
+                
+                                        //flash light
+                                            design.glowbox_rect.glowbox_rect.on();
+                                            setTimeout(
+                                                function(){
+                                                    design.glowbox_rect.glowbox_rect.off();
+                                                }
+                                            ,100);
+                
+                                        //perform graphical movements
+                                            waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
+                                            setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
+                                            playheads[playheadNumber].timeout = setTimeout(function(){
+                                                waveport.genericNeedle(playheadNumber);
+                                                delete playheads[playheadNumber];
+                                            },duration*1000);
+                                    }
+                                }},
+                                {type:'button_rect',name:'panic',data:{
+                                    x:15, y: 17.5, width:10, height:10,
+                                    style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
+                                    onpress:function(){
+                                        var filePlayer = obj.oneShot;
+                                        var waveport = design.grapher_waveWorkspace.grapher_waveWorkspace;
+                
+                                        filePlayer.panic();
+                
+                                        var keys = Object.keys(playheads);
+                                        for(var a = 0; a < keys.length; a++){
+                                            if(playheads[a] == undefined){continue;}
+                                            clearTimeout(playheads[a].timeout);
+                                            waveport.genericNeedle(a);
+                                            delete playheads[a];
+                                        }
+                                    }
+                                }},
+                
+                            //rate adjust
+                                {type:'slide', name:'rate', data:{
+                                    x:26.25, y:5, width:5, height:45, value:0.5, resetValue:0.5,
+                                    style:{handle:'fill:rgba(220,220,220,1)'},
+                                    onchange:function(value){obj.oneShot.rate((1-value)*2);}
+                                }},
+                
+                            //fire light
+                                {type:'glowbox_rect', name:'glowbox_rect', data:{
+                                    x:32.5, y:5, width:2.5, height:45,
+                                }},
+                
+                            //waveport
+                                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                                    x:35, y:5, width:180, height:45, selectNeedle:false, selectionArea:true,
+                                }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = object.builder(object.oneShot_multi,design);
+                
+                    //circuitry
+                            var playheads = {};
+                
+                        //audioFilePlayer
+                            obj.oneShot = new part.circuit.audio.oneShot_multi(system.audio.context);
+                            obj.oneShot.out_right().connect( design.connectionNode_audio.outRight.in() );
+                            obj.oneShot.out_left().connect( design.connectionNode_audio.outLeft.in() );
+                
+                    //interface
+                        obj.i = {};
+                        obj.i.loadURL = function(url, callback){
+                            obj.oneShot.load('url', function(){
+                                design.grapher_waveWorkspace.grapher_waveWorkspace.draw(obj.oneShot.waveformSegment());
+                                if(callback != undefined){callback();}
+                            }, url);
+                        };
+                        obj.i.area = function(a,b){
+                            design.grapher_waveWorkspace.grapher_waveWorkspace.area(a,b);
+                        };
+                        
+                    return obj;
+                };
+                
+                this.oneShot_multi.metadata = {
+                    name:'One Shot (Multi)',
+                    helpurl:'https://metasophiea.com/curve/help/objects/oneShot_multi/'
+                };
+
+                this.oneShot_multi_multiTrack = function(x,y,debug=false){
+                    var trackCount = 8;
+                
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+                        strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
+                    };
+                    var design = {
+                        type: 'oneShot_multi_multiTrack',
+                        x: x, y: y,
+                        base: {
+                            points:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'outRight', data:{ type: 1, x: -10, y: 5, width: 10, height: 20 }},
+                            {type:'connectionNode_audio', name:'outLeft', data:{  type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
+                        ]
+                    };
+                    //dynamic design
+                        for(var a = 0; a < trackCount; a++){
+                            //symbols
+                            design.elements = design.elements.concat([
+                                {type:'path', name:'symbol_'+a+'_arrow', data:{ path:[{x:19, y:35+a*(2+45)},{x:25,y:40+a*(2+45)},{x:19, y:45+a*(2+45)}], style:style.strokeMarkings }},
+                                {type:'rect', name:'symbol_'+a+'_line', data:{ x:15, y:39.5+a*(2+45), width:6, height:1, style:style.markings }},
+                                {type:'circle', name:'symbo_'+a+'l_outterCircle', data:{ x:10, y:40+a*(2+45), r:5.5, style:style.strokeMarkings }},
+                                {type:'circle', name:'symbol_'+a+'_infCircle1', data:{ x:8.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
+                                {type:'circle', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
+                            ]);
+                
+                            //rate adjust
+                            design.elements.push(
+                                {type:'slide', name:'rate_'+a, data:{
+                                    x:26.25, y:5+a*(2+45), width:5, height:45, value:0.5, resetValue:0.5,
+                                    style:{handle:'fill:rgba(220,220,220,1)'},
+                                    onchange:function(instance){
+                                        return function(value){
+                                            var filePlayer = obj.oneShot_multi_array[instance];
+                                            filePlayer.rate((1-design.slide['rate_'+instance].get())*2);
+                                        }
+                                    }(a)
+                                }}
+                            );
+                
+                            //activation light
+                            design.elements.push(
+                                {type:'glowbox_rect', name:'glowbox_rect_'+a, data:{
+                                    x:32.5, y:5+a*(2+45), width:2.5, height:45,
+                                }}
+                            );
+                
+                            //waveport
+                            design.elements.push(
+                                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_'+a, data:{
+                                    x:35, y:5+a*(2+45), width:180, height:45, selectNeedle:false, selectionArea:true,
+                                }}
+                            );
+                
+                            //load button
+                            design.elements.push(
+                                {type:'button_rect', name:'loadFile_'+a, data: {
+                                    x:5, y: 5+a*(2+45), width:20, height:10,
+                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                                    onpress:function(instance){
+                                        return function(){
+                                            obj.oneShot_multi_array[instance].load('file',
+                                                function(instance){
+                                                    return function(data){
+                                                        design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance].draw( obj.oneShot_multi_array[instance].waveformSegment() );
+                                                    }
+                                                }(instance)
+                                            );
+                                        }
+                                    }(a)
+                                }}
+                            );
+                
+                            //fire button
+                            design.elements.push(
+                                {type:'button_rect',name:'fire_'+a,data:{
+                                    x:5, y: 17.5+a*(2+45), width:10, height:10,
+                                    style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
+                                    onpress:function(instance){
+                                        return function(){
+                                            var filePlayer = obj.oneShot_multi_array[instance];
+                                            var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
+                                            var playheads = obj.playheads[instance];
+                    
+                                            //no file = don't bother
+                                                if(filePlayer.duration() < 0){return;}
+                                    
+                                            //determine start, end and duration values
+                                                var start = waveport.area().A != undefined ? waveport.area().A : 0;
+                                                var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                                                if(start > end){var temp=start;start=end; end=temp;}
+                                                var duration = filePlayer.duration();
+                    
+                                                var startTime = start*duration;
+                                                var duration = end*duration - startTime;
+                    
+                                            //actualy start the audio
+                                                filePlayer.fire(startTime, duration);
+                    
+                                            //determine playhead number
+                                                var playheadNumber = 0;
+                                                while(playheadNumber in playheads){playheadNumber++;}
+                                                playheads[playheadNumber] = {};
+                    
+                                            //flash light
+                                                design.glowbox_rect['glowbox_rect_'+instance].on();
+                                                setTimeout(
+                                                    function(a){
+                                                        return function(){
+                                                            design.glowbox_rect['glowbox_rect_'+a].off();
+                                                        }
+                                                    }(instance)
+                                                ,100);
+                    
+                                            //perform graphical movements
+                                                waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
+                                                setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
+                                                playheads[playheadNumber].timeout = setTimeout(function(playheadNumber){
+                                                    waveport.genericNeedle(playheadNumber);
+                                                    delete playheads[playheadNumber];
+                                                },duration*1000,playheadNumber);
+                                        }
+                                    }(a)
+                                }}
+                            );
+                
+                            //panic button
+                            design.elements.push(
+                                {type:'button_rect',name:'panic_'+a,data:{
+                                    x:15, y: 17.5+a*(2+45), width:10, height:10,
+                                    style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
+                                    onpress:function(instance){
+                                        return function(value){
+                                            var filePlayer = obj.oneShot_multi_array[instance];
+                                            var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
+                                            var playheads = obj.playheads[instance];
+                    
+                                            filePlayer.panic();
+                    
+                                            var keys = Object.keys(playheads);
+                                            for(var a = 0; a < keys.length; a++){
+                                                if(playheads[a] == undefined){continue;}
+                                                clearTimeout(playheads[a].timeout);
+                                                waveport.genericNeedle(a);
+                                                delete playheads[a];
+                                            }
+                                        }
+                                    }(a)
+                                }}
+                            );
+                
+                            //fire connection
+                            design.elements.push(
+                                {type:'connectionNode_data', name:'trigger_'+a, data:{
+                                    x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
+                                    receive:function(instance){
+                                        return function(address,data){
+                                            if(address == 'pulse'){ 
+                                                design.button_rect['fire_'+instance].press();
+                                                design.button_rect['fire_'+instance].release();
+                                            }
+                                            else if(address == 'hit'){
+                                                if(data.velocity > 0.5){
+                                                    design.button_rect['fire_'+instance].press();
+                                                    design.button_rect['fire_'+instance].release();
+                                                }
+                                            }
+                                        }
+                                    }(a)
+                                }}
+                            );
+                
+                        }
+                
+                    //main object
+                        var obj = object.builder(object.oneShot_multi_multiTrack,design);
+                
+                    //import/export
+                        obj.exportData = function(){
+                            var data = {
+                                tracks:[],
+                                areas:[],
+                            };
+                
+                            for(var a = 0; a < trackCount; a++){
+                                data.tracks.push(
+                                    obj.oneShot_multi_array[a].unloadRaw()
+                                );
+                                data.areas.push(
+                                    obj.i.area(a)
+                                );
+                            }
+                
+                            return data;
+                        };
+                        obj.importData = function(data){
+                            for(var a = 0; a < trackCount; a++){
+                                obj.i.loadRaw(a,data.tracks[a]);
+                                obj.i.area(a,data.areas[a].A,data.areas[a].B);
+                            }
+                        };
+                
+                    //circuitry
+                        //audioFilePlayers
+                            obj.playheads = [];
+                
+                            obj.oneShot_multi_array = [];
+                            for(var a = 0; a < trackCount; a++){
+                                obj.oneShot_multi_array.push( new part.circuit.audio.oneShot_multi(system.audio.context) );
+                                obj.oneShot_multi_array[a].out_right().connect( design.connectionNode_audio.outRight.in() );
+                                obj.oneShot_multi_array[a].out_left().connect( design.connectionNode_audio.outLeft.in() );
+                
+                                obj.playheads.push([]);
+                            }
+                
+                    //interface
+                        obj.i = {
+                            loadURL:function(trackNumber, url, callback){
+                                obj.oneShot_multi_array[trackNumber].load('url', 
+                                    function(a){
+                                        return function(){
+                                            document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_'+a].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[a].waveformSegment());
+                                        };
+                                    }(trackNumber)
+                                ,url);
+                            },
+                            loadRaw:function(trackNumber, data){
+                                obj.oneShot_multi_array[trackNumber].loadRaw(data);
+                                design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].draw(
+                                    obj.oneShot_multi_array[trackNumber].waveformSegment()
+                                );
+                            },
+                            area:function(trackNumber,a,b){
+                                return design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);
+                            }
+                        };
+                    
+                    return obj;
+                };
+                
+                this.oneShot_multi_multiTrack.metadata = {
+                    name:'One Shot (Multi)(8 Track)',
+                    helpurl:'https://metasophiea.com/curve/help/objects/oneShot_multi_multiTrack/'
+                };
+                this.oneShot_single = function(x,y,debug=false){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+                        strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
+                    };
+                    var design = {
+                        type: 'oneShot_single',
+                        x: x, y: y,
+                        base: {
+                            points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'outRight', data:{ type: 1, x: -10, y: 5, width: 10, height: 20 }},
+                            {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
+                            {type:'connectionNode_data', name:'trigger', data:{
+                                x: 220, y: 17.5, width: 10, height: 20,
+                                receive:function(address, data){ design.button_rect.fire.press(); design.button_rect.fire.release(); }
+                            }},
+                
+                            //symbol
+                            {type:'path', name:'symbol_arrow', data:{ path:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
+                            {type:'rect', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
+                            {type:'circle', name:'symbol_outterCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
+                            {type:'rect', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, style:style.markings }},
+                
+                            {type:'button_rect', name:'loadFile', data: {
+                                x:5, y: 5, width:20, height:10,
+                                style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                                onpress: function(){
+                                    obj.oneShot.load('file',function(data){
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.oneShot.waveformSegment() );
+                                    });
+                                }
+                            }},
+                            {type:'button_rect',name:'fire',data:{
+                                x:5, y: 17.5, width:20, height:10,
+                                style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
+                                onpress:function(){
+                                    //no file = don't bother
+                                        if(obj.oneShot.duration() < 0){return;}
+                            
+                                    //actualy start the audio
+                                        obj.oneShot.fire();
+                
+                                    //if there's a playhead, remove it
+                                        if(playhead){
+                                            design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                            playhead = false;
+                                            clearTimeout(playheadTimout);
+                                        }
+                
+                                    //perform graphical movements
+                                        var duration = obj.oneShot.duration();
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
+                                        playhead = true;
+                                        setTimeout(function(){design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,1);},1);
+                                        playheadTimout = setTimeout(function(){
+                                            design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
+                                            playhead = false;
+                                        },duration*1000);
+                                }
+                            }},
+                
+                            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                                x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false,
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = object.builder(object.oneShot_single,design);
+                
+                    //circuitry
+                            var playhead = undefined;
+                            var playheadTimout = undefined;
+                
+                        //audioFilePlayer
+                            obj.oneShot = new part.circuit.audio.oneShot_single(system.audio.context);
+                            obj.oneShot.out_right().connect( design.connectionNode_audio.outRight.in() );
+                            obj.oneShot.out_left().connect( design.connectionNode_audio.outLeft.in() );
+                
+                    return obj;
+                };
+                
+                this.oneShot_single.metadata = {
+                    name:'One Shot (Single)',
+                    helpurl:'https://metasophiea.com/curve/help/objects/oneShot_single/'
+                };
+                
+
+                this.player = function(x,y,debug=false){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
+                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+                    };
+                    var design = {
+                        type: 'player',
+                        x: x, y: y,
+                        base: {
+                            points:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'outRight', data:{  type: 1, x: -10, y: 5, width: 10, height: 20 }},
+                            {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
+                
+                            //symbol
+                            {type:'rect', name:'symbol_line1',  data:{ x:3.5,  y:38.5, width:1, height:2,  style:style.markings }},
+                            {type:'rect', name:'symbol_line2',  data:{ x:5.5,  y:37,   width:1, height:5,  style:style.markings }},
+                            {type:'rect', name:'symbol_line3',  data:{ x:7.5,  y:35.5, width:1, height:8,  style:style.markings }},
+                            {type:'rect', name:'symbol_line4',  data:{ x:9.5,  y:34.5, width:1, height:10, style:style.markings }},
+                            {type:'rect', name:'symbol_line5',  data:{ x:11.5, y:35.5, width:1, height:8,  style:style.markings }},
+                            {type:'rect', name:'symbol_line6',  data:{ x:13.5, y:37,   width:1, height:5,  style:style.markings }},
+                            {type:'rect', name:'symbol_line7',  data:{ x:15.5, y:39,   width:1, height:1,  style:style.markings }},
+                            {type:'rect', name:'symbol_line8',  data:{ x:17.5, y:36,   width:1, height:7,  style:style.markings }},
+                            {type:'rect', name:'symbol_line9',  data:{ x:19.5, y:32,   width:1, height:15, style:style.markings }},
+                            {type:'rect', name:'symbol_line10', data:{ x:21.5, y:34.5, width:1, height:10, style:style.markings }},
+                            {type:'rect', name:'symbol_line11', data:{ x:23.5, y:37,   width:1, height:5,  style:style.markings }},
+                            {type:'rect', name:'symbol_line12', data:{ x:25.5, y:38.5, width:1, height:2,  style:style.markings }},
+                            
+                
+                            {type:'readout_sixteenSegmentDisplay', name:'trackNameReadout', data:{
+                                x: 30, y: 5, angle:0, width:100, height:20, count:10, 
+                                style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
+                            }},
+                            {type:'readout_sixteenSegmentDisplay', name:'time', data:{
+                                x: 135, y: 5, angle:0, width:80, height:20, count:8, 
+                                style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
+                            }},
+                
+                            {type:'button_rect', name:'load', data: {
+                                x:5, y: 5, width:20, height:10,
+                                style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                                onpress: function(){
+                                    obj.player.load('file',function(data){
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.player.waveformSegment() );                   
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
+                                        design.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
+                                    
+                                        design.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
+                                        design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
+                                    });
+                                }
+                            }},
+                            {type:'button_rect',name:'start',data:{
+                                x:5, y: 17.5, width:20, height:10,
+                                style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
+                                onpress:function(){ obj.player.start(); }
+                            }},
+                            {type:'button_rect',name:'stop',data:{
+                                x:15, y: 17.5, width:10, height:10,
+                                style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
+                                onpress:function(){ obj.player.stop(); }
+                            }},
+                
+                            {type:'label', name:'rate_label_name', data:{ x:10, y:78, text:'rate', style:style.text }},
+                            {type:'label', name:'rate_label_0', data:{ x:5, y:75, text:'0', style:style.text }},
+                            {type:'label', name:'rate_label_1', data:{ x:13.7, y:54, text:'1', style:style.text }},
+                            {type:'label', name:'rate_label_2', data:{ x:23, y:75, text:'2', style:style.text }},
+                            {type:'dial_continuous',name:'rate',data:{
+                                x:15, y:65, r: 9, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, 
+                                style:{outerArc:'stroke:rgba(50,50,50,0.25); fill:none;'},
+                                onchange:function(data){ obj.player.rate( 2*data ); },
+                            }},
+                
+                            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                                x:30, y:30, width:185, height:45,
+                                selectionAreaToggle:function(bool){ obj.player.loop({active:bool}); },
+                                onchange:function(needle,value){
+                                    if(needle == 'lead'){ obj.player.jumpTo(value); }
+                                    else if(needle == 'selection_A' || needle == 'selection_B'){
+                                        var temp = design.grapher_waveWorkspace.grapher_waveWorkspace.area();
+                                        if(temp.A < temp.B){ obj.player.loop({start:temp.A,end:temp.B}); }
+                                        else{ obj.player.loop({start:temp.B,end:temp.A}); }
+                                    }
+                                },
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = object.builder(object.player,design);
+                
+                    //circuitry
+                        //audio file player
+                            obj.player = new part.circuit.audio.player(system.audio.context);
+                            obj.player.out_right().connect( design.connectionNode_audio.outRight.in() );
+                            obj.player.out_left().connect( design.connectionNode_audio.outLeft.in() );
+                
+                        //data refresh
+                            function refresh(){
+                                //check if there's a track at all
+                                    if( !obj.player.isLoaded() ){return;}
+                
+                                //time readout
+                                    var time = system.utility.math.seconds2time( Math.round(obj.player.currentTime()));
+                
+                                    design.readout_sixteenSegmentDisplay.time.text(
+                                        system.utility.misc.padString(time.h,2,'0')+':'+
+                                        system.utility.misc.padString(time.m,2,'0')+':'+
+                                        system.utility.misc.padString(time.s,2,'0')
+                                    );
+                                    design.readout_sixteenSegmentDisplay.time.print();
+                
+                                //wave box
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.select(obj.player.progress());
+                            }
+                            setInterval(refresh,1000/30);
+                
+                    //interface
+                        obj.i = {
+                            loadByURL:function(url){
+                                obj.player.load('url',function(data){
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.player.waveformSegment() );                   
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
+                                    design.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
+                                
+                                    design.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
+                                    design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
+                                },url);
+                            },
+                        };
+                
+                    //setup
+                        design.dial_continuous.rate.set(0.5);
+                
+                    return obj;
+                };
+                
+                this.player.metadata = {
+                    name:'Player',
+                    helpurl:'https://metasophiea.com/curve/help/objects/player/'
+                };
+                this.recorder = function(x,y,debug=false){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;',
+                        buttonText:'fill:rgba(100,100,100,1); font-size:5px; font-family:Courier New; pointer-events: none;',
+                        logoText:'fill:rgba(100,100,100,1); font-size:8px; font-family:Bookman; pointer-events: none;',
+                    };
+                    var design = {
+                        type: 'recorder',
+                        x: x, y: y,
+                        base: {
+                            points:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'inRight',  data: {type: 0, x: 175, y: 2.5, width: 10, height: 15}},
+                            {type:'connectionNode_audio', name:'inLeft',   data: {type: 0, x: 175, y: 22.5, width: 10, height: 15}},
+                
+                
+                            //logo label
+                                {type:'rect', name:'logo_rect', data:{x:135, y:27.5, angle:-0.25, width:35, height:10, style:'fill:rgb(230,230,230)'}},
+                                {type:'label', name:'logo_label', data:{x:139, y:34.5, angle:-0.25, text:'REcorder', style:style.logoText}},
+                
+                            //rec
+                                {type:'button_rect', name:'rec', data: {
+                                    x:5, y: 25, width:20, height:10,
+                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                                    onpress: function(){
+                                        if(state == 'paused'){obj.recorder.resume();}
+                                        else{obj.recorder.start();}
+                                        updateLights('rec');
+                                    }
+                                }},
+                                {type:'text', name:'button_rect_text', data:{x:10.5, y:31.5, text:'rec', angle:0, style:style.buttonText}},
+                            //pause/resume
+                                {type:'button_rect', name:'pause/resume', data: {
+                                    x:27.5, y: 25, width:20, height:10,
+                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                                    onpress: function(){
+                                        if(state == 'paused'){obj.recorder.resume();}
+                                        else{obj.recorder.pause();}
+                                        updateLights('pause/resume');
+                                    }
+                                }},
+                                {type:'text', name:'button_pause/resume_text', data:{x:30, y:31.5, text:'pause', angle:0, style:style.buttonText}},
+                            //stop
+                                {type:'button_rect', name:'stop', data: {
+                                    x:50, y: 25, width:20, height:10,
+                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                                    onpress: function(){updateLights('stop');obj.recorder.stop();}
+                                }},
+                                {type:'text', name:'button_stop_text', data:{x:54, y:31.5, text:'stop', angle:0, style:style.buttonText}},
+                            //save
+                                {type:'button_rect', name:'save', data: {
+                                    x:72.5, y: 25, width:20, height:10, 
+                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                                    onpress: function(){
+                                        updateLights('save');
+                                        if(state != 'empty'){ obj.recorder.save(); }
+                                    }
+                                }},
+                                {type:'text', name:'button_save_text', data:{x:76.5, y:31.5, text:'save', angle:0, style:style.buttonText}},
+                            //clear
+                                {type:'button_rect', name:'clear', data: {
+                                    x:95, y: 25, width:20, height:10, 
+                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
+                                    onpress: function(){updateLights('clear');obj.recorder.clear();}
+                                }},
+                                {type:'text', name:'button_clear_text', data:{x:97.5, y:31.5, text:'clear', angle:0, style:style.buttonText}},
+                
+                            //time readout
+                                {type:'readout_sixteenSegmentDisplay', name:'time', data:{
+                                    x: 70, y: 5, angle:0, width:100, height:15, count:11, 
+                                    style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
+                                }},
+                
+                            //activity lights
+                                //recording
+                                    {type:'glowbox_rect', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:'fill:rgb(255, 63, 63)', dim:'fill:rgb(25, 6, 6)'}}},
+                                    {type:'text', name:'activityLight_recording_text', data:{x:8, y:14, text:'rec', angle:0, style:style.text}},
+                                //paused
+                                    {type:'glowbox_rect', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:'fill:rgb(126, 186, 247)', dim:'fill:rgb(12, 18, 24)'}}},
+                                    {type:'text', name:'activityLight_paused_text', data:{x:23, y:14, text:'pau', angle:0, style:style.text}},
+                                //empty
+                                    {type:'glowbox_rect', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:'fill:rgb(199, 249, 244)', dim:'fill:rgb(19, 24, 24)'}}},
+                                    {type:'text', name:'activityLight_empty_text', data:{x:38, y:14, text:'emp', angle:0, style:style.text}},
+                                //ready to save
+                                    {type:'glowbox_rect', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:'fill:rgb(61, 224, 35)', dim:'fill:rgb(6, 22, 3)'}}},
+                                    {type:'text', name:'activityLight_full_text', data:{x:53, y:14, text:'ful', angle:0, style:style.text}},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = object.builder(object.recorder,design);
+                
+                    //circuitry
+                        //update functions
+                            //time readout
+                                setInterval(function(){
+                                    var time = obj.recorder.recordingTime();
+                                    var decimalValues = time % 1;
+                                    time = system.utility.math.seconds2time( Math.round(time) );
+                
+                                    design.readout_sixteenSegmentDisplay.time.text(
+                                        system.utility.misc.padString(time.h,2,'0')+':'+
+                                        system.utility.misc.padString(time.m,2,'0')+':'+
+                                        system.utility.misc.padString(time.s,2,'0')+'.'+
+                                        system.utility.misc.padString((''+decimalValues).slice(2),2,'0')
+                                    );
+                                    design.readout_sixteenSegmentDisplay.time.print();
+                                },100);
+                            //lights
+                                var state = 'empty'; //empty - recording - paused - full
+                                function updateLights(action){
+                                    if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
+                                    if( action == 'stop' || action == 'save' ){ state = 'full'; }
+                                    if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
+                                    if( action == 'clear' ){ state = 'empty'; }
+                                    if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
+                                    else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
+                
+                                    if(state == 'empty'){design.glowbox_rect.activityLight_empty.on();}else{design.glowbox_rect.activityLight_empty.off();}
+                                    if(state == 'recording'){design.glowbox_rect.activityLight_recording.on();}else{design.glowbox_rect.activityLight_recording.off();}
+                                    if(state == 'paused'){design.glowbox_rect.activityLight_paused.on();}else{design.glowbox_rect.activityLight_paused.off();}
+                                    if(state == 'full'){design.glowbox_rect.activityLight_full.on();}else{design.glowbox_rect.activityLight_full.off();}
+                                }
+                                updateLights('clear');
+                                design.glowbox_rect.activityLight_empty.on();
+                
+                        //audio recorder
+                            obj.recorder = new part.circuit.audio.recorder(system.audio.context);
+                            design.connectionNode_audio.inRight.out().connect( obj.recorder.in_right() );
+                            design.connectionNode_audio.inLeft.out().connect( obj.recorder.in_left() );
+                
+                    return obj;
+                };
+                
+                this.recorder.metadata = {
+                    name:'Recorder',
+                    helpurl:'https://metasophiea.com/curve/help/objects/recorder/'
+                };
+
+                this.audio_duplicator = function(x,y){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+                        markings: 'fill:rgba(150,150,150,1); pointer-events:none;',
+                    };
+                    var design = {
+                        type:'audio_duplicator',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                            style:'fill:rgba(200,200,200,0);'
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'input', data:{ type:0, x:45, y:5, width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:20, height:20 }},
+                
+                            {type:'path', name:'backing', data:{
+                                path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                                style:style.background
+                            }},
+                
+                            {type:'path', name:'upperArrow', data:{
+                                path:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}],
+                                style:style.markings,
+                            }},
+                            {type:'path', name:'lowerArrow', data:{
+                                path:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}],
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'topHorizontal', data:{
+                                x:5, y:15, width:45, height:2, 
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'vertical', data:{
+                                x:27.5, y:15, width:2, height:25.5, 
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'bottomHorizontal', data:{
+                                x:5, y:40, width:24.5, height:2, 
+                                style:style.markings,
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = object.builder(object.audio_duplicator,design);
+                
+                    //circuitry
+                        design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_1.in() );
+                        design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_2.in() );
+                         
+                    return obj;
+                };
+                
+                this.audio_duplicator.metadata = {
+                    name:'Audio Duplicator',
+                    helpurl:'https://metasophiea.com/curve/help/objects/audioDuplicator/'
+                };
+                this.basicMixer = function(x,y){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
+                        h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+                        h2: 'fill:rgb(150,150,150); font-size:4px; font-family:Courier New;',
+                
+                        dial:{
+                            handle: 'fill:rgba(220,220,220,1)',
+                            slot: 'fill:rgba(50,50,50,1)',
+                            needle: 'fill:rgba(250,150,150,1)',
+                            outerArc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+                        }
+                    };
+                    var design = {
+                        type:'basicMixer',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
+                            style:'fill:rgba(200,200,200,0);'
+                        },
+                        elements:[
+                            {type:'connectionNode_audio', name:'input_0', data:{ type:0, x:90, y:10+0,   width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'input_1', data:{ type:0, x:90, y:10+25,  width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'input_2', data:{ type:0, x:90, y:10+50,  width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'input_3', data:{ type:0, x:90, y:10+75,  width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'input_4', data:{ type:0, x:90, y:10+100, width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'input_5', data:{ type:0, x:90, y:10+125, width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'input_6', data:{ type:0, x:90, y:10+150, width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'input_7', data:{ type:0, x:90, y:10+175, width:20, height:20 }},
+                
+                            {type:'connectionNode_audio', name:'output_0', data:{ type:1, x:-10, y:5, width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:30, width:20, height:20 }},
+                
+                            {type:'path', name:'backing', data:{
+                                path:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
+                                style:style.background
+                            }},
+                
+                            {type:'text', name:'gain', data:{x:80, y:6.5, text: 'gain', style: style.h2}},
+                            {type:'text', name:'pan', data:{x:56.5, y:6.5, text: 'pan', style: style.h2}},
+                
+                            {type:'rect', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, style:style.markings }},
+                            {type:'rect', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, style:style.markings }},
+                            {type:'rect', name:'down', data:{ x:10, y:6, width:2, height:35, style:style.markings }},
+                            {type:'rect', name:'inTo0', data:{ x:2, y:14, width:10, height:2, style:style.markings }},
+                            {type:'rect', name:'inTo1', data:{ x:2, y:39, width:10, height:2, style:style.markings }},
+                        ]
+                    };
+                    //dynamic design
+                    for(var a = 0; a < 8; a++){
+                        design.elements.push(
+                            {type:'rect', name:'line_'+a, data:{
+                                x:23, y:19.1+a*25, width:75, height:2, 
+                                style:style.markings,
+                            }}
+                        );
+                
+                        design.elements.push(
+                            {type:'dial_continuous',name:'gain_'+a,data:{
+                                x:85, y:20+a*25, r: 8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
+                                onchange:function(a){
+                                    return function(value){
+                                        obj['splitter_'+a].inGain(value);
+                                    }
+                                }(a)
+                            }}
+                        );
+                        design.elements.push(
+                            {type:'dial_continuous',name:'pan_'+a,data:{
+                                x:60, y:20+a*25, r: 8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
+                                onchange:function(a){
+                                    return function(value){
+                                        obj['splitter_'+a].outGain(0,value);
+                                        obj['splitter_'+a].outGain(1,1-value);
+                                    }
+                                }(a)
+                            }}
+                        );
+                    }
+                
+                    //main object
+                        var obj = object.builder(object.basicMixer,design);
+                
+                    //internal circuitry
+                        for(var a = 0; a < 8; a++){
+                            obj['splitter_'+a] = new part.circuit.audio.channelMultiplier(system.audio.context,2);
+                            design.connectionNode_audio['input_'+a].out().connect(obj['splitter_'+a].in());
+                            obj['splitter_'+a].out(0).connect( design.connectionNode_audio['output_0'].in() );
+                            obj['splitter_'+a].out(1).connect( design.connectionNode_audio['output_1'].in() );
+                        }
+                
+                    //interface
+                        obj.i = {
+                            gain:function(track,value){design.dial_continuous['gain_'+track].set(value);},
+                            pan:function(track,value){design.dial_continuous['pan_'+track].set(value);},
+                        };
+                
+                    //setup
+                        for(var a = 0; a < 8; a++){
+                            obj.i.gain(a,0.5);
+                            obj.i.pan(a,0.5);
+                        }
+                    
+                    return obj;
+                };
+                
+                this.basicMixer.metadata = {
+                    name:'Basic Audio Mixer',
+                    helpurl:'https://metasophiea.com/curve/help/objects/basicAudioMixer/'
+                };
+                this.data_duplicator = function(x,y){
+                    var style = {
+                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
+                        markings: 'fill:rgba(150,150,150,1); pointer-events:none;',
+                    };
+                    var design = {
+                        type:'data_duplicator',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                            style:'fill:rgba(200,200,200,0);'
+                        },
+                        elements:[
+                            {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
+                            {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
+                            {type:'connectionNode_data', name:'input', data:{ 
+                                x:45, y:5, width:20, height:20,
+                                receive:function(address,data){
+                                    obj.io.output_1.send(address,data);
+                                    obj.io.output_2.send(address,data);
+                                }
+                            }},
+                
+                            {type:'path', name:'backing', data:{
+                                path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                                style:style.background
+                            }},
+                
+                            {type:'path', name:'upperArrow', data:{
+                                path:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}],
+                                style:style.markings,
+                            }},
+                            {type:'path', name:'lowerArrow', data:{
+                                path:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}],
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'topHorizontal', data:{
+                                x:5, y:15, width:45, height:2, 
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'vertical', data:{
+                                x:27.5, y:15, width:2, height:25.5, 
+                                style:style.markings,
+                            }},
+                            {type:'rect', name:'bottomHorizontal', data:{
+                                x:5, y:40, width:24.5, height:2, 
+                                style:style.markings,
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = object.builder(object.data_duplicator,design);
+                    
+                    return obj;
+                
+                };
+                
+                this.data_duplicator.metadata = {
+                    name:'Data Duplicator',
+                    helpurl:'https://metasophiea.com/curve/help/objects/dataDuplicator/'
+                };
+                
+                //Operation Note:
+                //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
+                //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
+                //  then the 2nd port
+                this.audioIn = function(x,y,setupConnect=true){
+                    var attributes = {
+                        deviceList:[],
+                        currentSelection: 0
+                    };
+                    var style = {
+                        background: 'fill:rgba(200,200,200,1); stroke:none;',
+                        marking:'fill:none; stroke:rgb(160,160,160); stroke-width:1;pointer-events: none;',
+                        h1:'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
+                        h2:'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+                
+                        readout: {background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'},
+                        button: { up:'fill:rgba(220,220,220,1)', hover:'fill:rgba(230,230,230,1)', hover_press:'fill:rgba(180,180,180,1)'},
+                        dial: {handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',needle: 'fill:rgba(250,150,150,1)',outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'},
+                    };
+                    var design = {
+                        type:'audioIn',
+                        x:x, y:y,
+                        base:{
+                            points:[
+                                {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
+                                {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                                {type:'connectionNode_audio', name:'audioOut', data:{type: 1, x: -10, y: 15, width: 20, height: 20}},
+                                {type:'readout_sixteenSegmentDisplay', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
+                                {type:'readout_sixteenSegmentDisplay', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
+                                {type:'button_rect', name:'up',   data:{x:225, y: 15, width:15, height:10, selectable:false, style:style.button, onpress:function(){incSelection();}}},
+                                {type:'button_rect', name:'down', data:{x:225, y: 25, width:15, height:10, selectable:false, style:style.button, onpress:function(){decSelection();}}},
+                                {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, style:style.dial, onchange:function(value){obj.circuitry.unit.gain(value*2);}}},
+                                {type:'label', name:'gainLabel_name', data:{x:21.25, y:44, text:'gain', style:style.h1, angle:0}},
+                                {type:'label', name:'gainLabel_0',    data:{x:15, y:40, text:'0', style:style.h2, angle:0}},
+                                {type:'label', name:'gainLabel_1',    data:{x:28.75, y:7, text:'1', style:style.h2, angle:0}},
+                                {type:'label', name:'gainLabel_2',    data:{x:42.5, y:40, text:'2', style:style.h2, angle:0}},
+                                {type:'path', name:'upArrow',   data:{path:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], style:style.marking}},
+                                {type:'path', name:'downArrow', data:{path:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], style:style.marking}},
+                                {type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = object.builder(object.audioIn,design);
+                
+                        var keycaptureObj = system.keyboard.declareKeycaptureObject(obj,{none:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']});
+                            keycaptureObj.keyPress = function(key){
+                                switch(key){
+                                    case 'ArrowUp': design.button_rect.up.press();  break;
+                                    case 'ArrowDown': design.button_rect.down.press();  break;
+                                    case 'ArrowLeft': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()-0.1);  break;
+                                    case 'ArrowRight': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()+0.1);  break;
+                                }
+                            };
+                
+                
+                    //circuitry
+                        obj.circuitry = {
+                            unit: new part.circuit.audio.audioIn(system.audio.context,setupConnect)
+                        };
+                        obj.circuitry.unit.out().connect( design.connectionNode_audio.audioOut.in() );
+                        obj.circuitry.unit.out().connect( design.audio_meter_level.audioIn.audioIn() );
+                
+                    //internal functions
+                        function selectDevice(a){
+                            if(attributes.deviceList.length == 0){
+                                design.readout_sixteenSegmentDisplay.index.text(' n/a');
+                                design.readout_sixteenSegmentDisplay.index.print();
+                                design.readout_sixteenSegmentDisplay.text.text('no devices');
+                                design.readout_sixteenSegmentDisplay.text.print('smart');
+                                return;
+                            }
+                            if( a < 0 || a >= attributes.deviceList.length ){return;}
+                            attributes.currentSelection = a;
+                
+                            selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
+                            totalNum=''+attributes.deviceList.length;while(totalNum.length < 2){ totalNum = '0'+totalNum;}
+                            design.readout_sixteenSegmentDisplay.index.text(selectionNum+'/'+totalNum);
+                            design.readout_sixteenSegmentDisplay.index.print();
+                
+                            var text = attributes.deviceList[a].deviceId;
+                            if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
+                            design.readout_sixteenSegmentDisplay.text.text(text);
+                            design.readout_sixteenSegmentDisplay.text.print('smart');
+                
+                            obj.circuitry.unit.selectDevice( attributes.deviceList[a].deviceId );
+                        }
+                        function incSelection(){ selectDevice(attributes.currentSelection+1); }
+                        function decSelection(){ selectDevice(attributes.currentSelection-1); }
+                
+                    //setup
+                        obj.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
+                        if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
+                        design.dial_continuous.outputGain.set(0.5);
+                        design.audio_meter_level.audioIn.start();
+                
+                    return obj;
+                };
+                
+                this.audioIn.metadata = {
+                    name:'Audio Input',
+                    helpurl:'https://metasophiea.com/curve/help/objects/audioInput/'
+                };
+                this.musicalkeyboard = function(x,y,debug=false){
+                    var state = {
+                        velocity:0.5,
+                    };
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        h1: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
+                        dial:{
+                            handle: 'fill:rgba(220,220,220,1)',
+                            slot: 'fill:rgba(50,50,50,1)',
+                            needle: 'fill:rgba(250,150,150,1)',
+                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+                        },
+                        keys:{
+                            white:{
+                                off:'fill:rgba(250,250,250,1)',
+                                press:'fill:rgba(230,230,230,1)',
+                                glow:'fill:rgba(220,200,220,1)',
+                                pressAndGlow:'fill:rgba(200,150,200,1)',
+                            },
+                            black:{
+                                off:'fill:rgba(50,50,50,1)',
+                                press:'fill:rgba(100,100,100,1)',
+                                glow:'fill:rgba(220,200,220,1)',
+                                pressAndGlow:'fill:rgba(200,150,200,1)',
+                            }
+                        }
+                    };
+                    var design = {
+                        type: 'musicalkeyboard',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[ {x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5} ], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_data', name:'midiout', data:{ 
+                                x: -5, y: 5, width: 5, height: 10,
+                            }},
+                            {type:'connectionNode_data', name:'midiin', data:{ 
+                                x: 320, y: 5, width: 5, height: 10,
+                                receive:function(address,data){
+                                    if(address != 'midinumber'){return;}
+                                    if(data.velocity > 0){ design.button_rect[system.audio.num2name(data.num)].press();   }
+                                                     else{ design.button_rect[system.audio.num2name(data.num)].release(); }
+                                },
+                            }},
+                
+                            //velocity dial
+                            {type:'label', name:'velocity_title', data:{x:9,  y:59,   text:'velocity', style:style.h1}},
+                            {type:'label', name:'velocity_0',     data:{x:4,  y:55,   text:'0',        style:style.h1}},
+                            {type:'label', name:'velocity_1/2',   data:{x:14, y:26.5, text:'1/2',      style:style.h1}},
+                            {type:'label', name:'velocity_1',     data:{x:28, y:55,   text:'1',        style:style.h1}},
+                            {type:'dial_continuous',name:'velocity',data:{
+                                x:17.5, y:42, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){ state.velocity = value; }
+                            }},
+                        ]
+                    };
+                    //dynamic design
+                        //placement of keys
+                            var glyphs = [ '\\','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ];
+                            var noteNames = [ '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B', '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B', '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B', '7C' ];
+                            var whiteX = 35;
+                            var whiteKeyWidth = 12.5;
+                            var blackX = 45;
+                
+                            for(var a = 0; a < glyphs.length; a++){
+                                if( noteNames[a].slice(-1) != '#' ){
+                                    design.elements.push(
+                                        {type:'button_rect', name:noteNames[a], data:{
+                                            x:whiteX, y:12.5, width:whiteKeyWidth, height:50, hoverable:false,
+                                            style:{
+                                                up:style.keys.white.off, press:style.keys.white.press,
+                                                glow:style.keys.white.glow, glow_press:style.keys.white.pressAndGlow,
+                                            },
+                                            onpress:function(){ obj.io.midiout.send('midinumber', { num:system.audio.name2num(this.id), velocity:state.velocity } ); },
+                                            onrelease:function(){ obj.io.midiout.send('midinumber', { num:system.audio.name2num(this.id), velocity:0 } ); },
+                                        }}
+                                    );
+                                    whiteX += whiteKeyWidth;
+                                }
+                            }
+                
+                            var count = 0;
+                            for(var a = 0; a < glyphs.length; a++){
+                                if( noteNames[a].slice(-1) == '#' ){
+                                    design.elements.push(
+                                        {type:'button_rect', name:noteNames[a], data:{
+                                            x:blackX, y:12.5, width:5, height:30, hoverable:false,
+                                            style:{
+                                                up:style.keys.black.off, press:style.keys.black.press,
+                                                glow:style.keys.black.glow, glow_press:style.keys.black.pressAndGlow,
+                                            },
+                                            onpress:function(){ obj.io.midiout.send('midinumber', { num:system.audio.name2num(this.id), velocity:state.velocity } ); },
+                                            onrelease:function(){ obj.io.midiout.send('midinumber', { num:system.audio.name2num(this.id), velocity:0 } ); },
+                                        }}
+                                    );
+                                    blackX += whiteKeyWidth;
+                                    count = 0;
+                                }else{ count++; }
+                                
+                                if(count > 1){ blackX += whiteKeyWidth; }
+                            }
+                
+                
+                    //main object
+                        var obj = object.builder(object.musicalkeyboard,design);
+                
+                    //keycapture
+                        var keycaptureObj = system.keyboard.declareKeycaptureObject(obj,{none:glyphs});
+                        keycaptureObj.keyPress = function(key){ design.button_rect[noteNames[glyphs.indexOf(key)]].press(); };
+                        keycaptureObj.keyRelease = function(key){ design.button_rect[noteNames[glyphs.indexOf(key)]].release(); };
+                
+                    //interface
+                        obj.i = {
+                            velocity:function(a){design.dial_continuous.velocity.set(a);},
+                        };
+                
+                    //setup
+                        design.dial_continuous.velocity.set(0.5);
+                
+                    return obj;
+                };
+                
+                this.musicalkeyboard.metadata = {
+                    name:'Musical Keyboard',
+                    helpurl:'https://metasophiea.com/curve/help/objects/musicalKeyboard/'
                 };
                 this.audio_scope = function(x,y){
                     var attributes = {
@@ -10348,7 +11505,7 @@
                     };
                 
                     //main object
-                        var obj = system.utility.misc.objectBuilder(objects.audio_scope,design);
+                        var obj = object.builder(object.audio_scope,design);
                     
                     //circuitry
                         design.connectionNode_audio.input.out().connect(design.grapher_audioScope.waveport.getNode());
@@ -10364,56 +11521,881 @@
                     name:'Audio Scope',
                     helpurl:'https://metasophiea.com/curve/help/objects/audioScope/'
                 };
-                this.universalreadout = function(x,y,debug=false){
+                this.audio_sink = function(x,y){
                     var style = {
                         background:'fill:rgba(200,200,200,1)',
-                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
+                        level:{
+                            backing:'fill:rgb(10,10,10)', 
+                            levels:['fill:rgb(250,250,250);','fill:rgb(200,200,200);'],
+                            marking:'fill:rgba(220,220,220,1); stroke:none; font-size:1px; font-family:Courier New;'
+                        },
                     };
                     var design = {
-                        type: 'universalreadout',
-                        x: x, y: y,
-                        base: {
-                            type:'circle',
-                            x:10, y:10, r:20,
+                        type:'audio_sink',
+                        x:x, y:y,
+                        base:{
+                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
                             style:style.background
                         },
                         elements:[
-                            {type:'connectionNode_data', name:'in', data:{
-                                x: 0, y: 0, width: 20, height: 20,
-                                receive: function(address,data){ print('address: '+address+' data: '+JSON.stringify(data)); }
+                            {type:'connectionNode_audio', name:'right', data:{
+                                type:0, x:90, y:5, width:20, height:20
+                            }},
+                            {type:'connectionNode_audio', name:'left', data:{
+                                type:0, x:90, y:30, width:20, height:20
+                            }},
+                            {type:'audio_meter_level', name:'right', data:{
+                                x:10, y:5, width:5, height:45, 
+                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            }},
+                            {type:'audio_meter_level', name:'left', data:{
+                                x:5, y:5, width:5, height:45,
+                                style:{backing:style.backing, levels:style.levels, markings:style.markings},
+                            }},
+                        ],
+                    };
+                 
+                    //main object
+                        var obj = object.builder(object.audio_sink,design);
+                
+                    //circuitry
+                        var flow = {
+                            destination:null,
+                            stereoCombiner: null,
+                            pan_left:null, pan_right:null,
+                        };
+                        //destination
+                            flow._destination = system.audio.destination;
+                
+                        //stereo channel combiner
+                            flow.stereoCombiner = new ChannelMergerNode(system.audio.context, {numberOfInputs:2});
+                
+                        //audio connections
+                            //inputs to meters
+                                design.connectionNode_audio.left.out().connect( design.audio_meter_level.left.audioIn() );
+                                design.connectionNode_audio.right.out().connect(design.audio_meter_level.right.audioIn());
+                            //inputs to stereo combiner
+                                design.connectionNode_audio.left.out().connect(flow.stereoCombiner, 0, 0);
+                                design.connectionNode_audio.right.out().connect(flow.stereoCombiner, 0, 1);
+                            //stereo combiner to main output
+                                flow.stereoCombiner.connect(flow._destination);
+                
+                            //start audio meters
+                                design.audio_meter_level.left.start();
+                                design.audio_meter_level.right.start();
+                    return obj;
+                };
+                
+                this.audio_sink.metadata = {
+                    name:'Audio Sink',
+                    helpurl:'https://metasophiea.com/curve/help/objects/audioSink/'
+                };
+                this.pulseGenerator = function(x,y,debug=false){
+                    var maxTempo = 240;
+                
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
+                
+                        dial:{
+                            handle: 'fill:rgba(220,220,220,1)',
+                            slot: 'fill:rgba(50,50,50,1)',
+                            needle: 'fill:rgba(250,150,150,1)',
+                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+                        }
+                    };
+                    var design = {
+                        type: 'pulseGenerator',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[
+                                {x:0,y:10},{x:10,y:0},
+                                {x:100,y:0},{x:115,y:10},
+                                {x:115,y:30},{x:100,y:40},
+                                {x:10,y:40},{x:0,y:30}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_data', name:'out', data:{
+                                x: -5, y: 11.25, width: 5, height: 17.5,
+                            }},
+                            {type:'connectionNode_data', name:'sync', data:{
+                                x: 115, y: 11.25, width: 5, height: 17.5,
+                                receive:function(){design.button_rect.sync.press();},
+                            }},
+                            {type:'button_rect', name:'sync', data:{
+                                x:102.5, y: 11.25, width:10, height: 17.5,
+                                style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' }, 
+                                onpress:function(){updateTempo(tempo)},
+                            }},
+                            {type:'dial_continuous',name:'tempo',data:{
+                                x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){updateTempo(Math.round(value*maxTempo));}
+                            }},
+                            {type:'readout_sixteenSegmentDisplay',name:'readout',data:{
+                                x:40, y:10, width:60, height:20, count:6,
                             }},
                         ]
                     };
                 
                     //main object
-                        var obj = system.utility.misc.objectBuilder(objects.universalreadout,design);
+                        var obj = object.builder(object.pulseGenerator,design);
+                
+                    //import/export
+                        obj.exportData = function(){
+                            return design.dial_continuous.tempo.get();
+                        };
+                        obj.importData = function(data){
+                            design.dial_continuous.tempo.set(data);
+                        };
                 
                     //internal functions
-                        var lines = [];
-                        var lineElements = [];
-                        var lineLimit = 10;
-                        function print(text){
-                            //add the new text to the list, and if the list becomes too long, remove the oldest item
-                            lines.unshift(text);
-                            if( lines.length > lineLimit ){ lines.pop(); }
+                        var interval = null;
+                        var tempo = 120;
+                        function updateTempo(newTempo){
+                            //update readout
+                                design.readout_sixteenSegmentDisplay.readout.text(
+                                    system.utility.misc.padString(newTempo,3,' ')+'bpm'
+                                );
+                                design.readout_sixteenSegmentDisplay.readout.print();
                 
-                            //remove all the text elements
-                            for(var a = 0; a < lineElements.length; a++){ lineElements[a].remove(); }
-                            lineElements = [];
+                            //update interval
+                                if(interval){ clearInterval(interval); }
+                                if(newTempo > 0){
+                                    interval = setInterval(function(){
+                                        obj.io.out.send('pulse');
+                                    },1000*(60/newTempo));
+                                }
                 
-                            //write in the new list
-                            for(var a = 0; a < lines.length; a++){
-                                lineElements[a] = system.utility.misc.elementMaker('text','universalreadout_'+a,{ x:40, y:a*5, text:lines[a], style:style.text })
-                                obj.append( lineElements[a] );
-                            }
+                            obj.io.out.send('pulse');
+                            tempo = newTempo;
                         }
+                
+                    //interface
+                        obj.i = {
+                            setTempo:function(value){
+                                design.dial_continuous.tempo.set(value);
+                            },
+                        };
+                
+                    //setup
+                        design.dial_continuous.tempo.set(0.5);
                 
                     return obj;
                 };
                 
-                this.universalreadout.metadata = {
-                    name:'Universal Readout',
-                    helpurl:'https://metasophiea.com/curve/help/objects/universalReadout/'
+                this.pulseGenerator.metadata = {
+                    name:'Pulse Generator',
+                    helpurl:'https://metasophiea.com/curve/help/objects/pulseGenerator/'
+                };
+                this.pulseGenerator_hyper = function(x,y,maxTempo=999,debug=false){
+                
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
+                
+                        dial:{
+                            handle: 'fill:rgba(220,220,220,1)',
+                            slot: 'fill:rgba(50,50,50,1)',
+                            needle: 'fill:rgba(250,150,150,1)',
+                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
+                        }
+                    };
+                    var design = {
+                        type: 'pulseGenerator_hyper',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[
+                                {x:0,y:10},{x:10,y:0},
+                                {x:100,y:0},{x:115,y:10},
+                                {x:115,y:30},{x:100,y:40},
+                                {x:10,y:40},{x:0,y:30}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                            {type:'connectionNode_data', name:'out', data:{
+                                x: -5, y: 11.25, width: 5, height: 17.5,
+                            }},
+                            {type:'connectionNode_data', name:'sync', data:{
+                                x: 115, y: 11.25, width: 5, height: 17.5,
+                                receive:function(){design.button_rect.sync.press();},
+                            }},
+                            {type:'button_rect', name:'sync', data:{
+                                x:102.5, y: 11.25, width:10, height: 17.5,
+                                style:{
+                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
+                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
+                                }, 
+                                onclick:function(){updateTempo(tempo)},
+                            }},
+                            {type:'dial_continuous',name:'tempo',data:{
+                                x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                onchange:function(value){updateTempo(Math.round(value*maxTempo));}
+                            }},
+                            {type:'readout_sixteenSegmentDisplay',name:'readout',data:{
+                                x:40, y:10, width:60, height:20, count:6,
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var obj = object.builder(object.pulseGenerator_hyper,design);
+                
+                    //import/export
+                        obj.exportData = function(){
+                            return design.dial_continuous.tempo.get();
+                        };
+                        obj.importData = function(data){
+                            design.dial_continuous.tempo.set(data);
+                        };
+                
+                    //internal functions
+                        var interval = null;
+                        var tempo = 120;
+                        function updateTempo(newTempo){
+                            //update readout
+                                design.readout_sixteenSegmentDisplay.readout.text(
+                                    system.utility.misc.padString(newTempo,3,' ')+'bpm'
+                                );
+                                design.readout_sixteenSegmentDisplay.readout.print();
+                
+                            //update interval
+                                if(interval){ clearInterval(interval); }
+                                if(newTempo > 0){
+                                    interval = setInterval(function(){
+                                        obj.io.out.send('pulse');
+                                    },1000*(60/newTempo));
+                                }
+                
+                            obj.io.out.send('pulse');
+                            tempo = newTempo;
+                        }
+                
+                    //interface
+                        obj.i = {
+                            setTempo:function(value){
+                                design.dial_continuous.tempo.set(value);
+                            },
+                        };
+                
+                    //setup
+                        design.dial_continuous.tempo.set(0.5);
+                
+                    return obj;
+                };
+                
+                this.pulseGenerator_hyper.metadata = {
+                    name:'Pulse Generator (hyper)',
+                    helpurl:'https://metasophiea.com/curve/help/objects/pulseGenerator_hyper/'
+                };
+                this.basicSequencer = function(x,y,debug=false){
+                    var vals = {
+                        sequencer:{
+                            width:64, height:10,
+                        }
+                    };
+                
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        markings: {
+                            fill:'fill:rgba(150,150,150,1); pointer-events: none;',
+                            stroke:'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
+                        },
+                        rangeslide:{
+                            handle:'fill:rgba(240,240,240,1)',
+                            backing:'fill:rgba(150,150,150,1)',
+                            slot:'fill:rgba(50,50,50,1)',
+                            invisibleHandle:'fill:rgba(0,0,0,0);',
+                            span:'fill:rgba(220,220,220,1)',
+                        },
+                        rangeslide_loop:{
+                            handle:'fill:rgba(240,240,240,1)',
+                            backing:'fill:rgba(150,150,150,1)',
+                            slot:'fill:rgba(50,50,50,1)',
+                            invisibleHandle:'fill:rgba(0,0,0,0);',
+                            span:'fill:rgba(255,247,145,0.5)',
+                        },
+                        button:{
+                            up:'fill:rgba(220,220,220,1)',
+                            hover:'fill:rgba(240,240,240,1)',
+                            down:'fill:rgba(180,180,180,1)',
+                            glow:'fill:rgba(220,200,220,1)',
+                        },
+                        checkbox:{
+                            backing:'fill:rgba(229, 229, 229,1)',
+                            check:'fill:rgba(252,252,252,1)',
+                        },
+                        checkbox_loop:{
+                            backing:'fill:rgba(229, 221, 112,1)',
+                            check:'fill:rgba(252,244,128,1)',
+                        },
+                    };
+                
+                    var design = {
+                        type: 'basicSequencer',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[
+                                {x:0,y:0}, 
+                                {x:800,y:0}, 
+                                {x:800,y:210}, 
+                                {x:140,y:210},
+                                {x:115,y:225},
+                                {x:0,y:225}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                            //main sequencer
+                                {type:'sequencer', name:'main', data:{
+                                    x:10, y:20, width:780, height:170, 
+                                    xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                                    event:function(event){
+                                        for(var a = 0; a < event.length; a++){
+                                            design.connectionNode_data['output_'+event[a].line].send('hit',{velocity:event[a].strength});
+                                        }
+                                    },
+                                    onchangeviewarea:function(data){
+                                        design.rangeslide.viewselect.set( {start:data.left, end:data.right}, false );
+                                    },
+                                }},
+                                {type:'rangeslide', name:'viewselect', data:{
+                                    x:10, y:20, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:1,
+                                    style:{
+                                        handle: style.rangeslide.handle,
+                                        backing: style.rangeslide.backing,
+                                        slot: style.rangeslide.slot,
+                                        invisibleHandle: style.rangeslide.invisibleHandle,
+                                        span: style.rangeslide.span,
+                                    },
+                                    onchange:function(values){ design.sequencer.main.viewArea({left:values.start,right:values.end},false); },
+                                }},    
+                
+                            //follow playhead
+                                {type:'checkbox_rect', name:'followPlayhead',data:{
+                                    x:100, y:205, width:15, height:15,
+                                    style:{
+                                        backing:style.checkbox.backing,
+                                        check:style.checkbox.check,
+                                    },
+                                    onchange:function(value){design.sequencer.main.automove(value);}
+                                }},
+                
+                            //loop control   
+                                //activation
+                                {type:'checkbox_rect', name:'loopActive',data:{
+                                    x:70, y:205, width:25, height:15,
+                                    style:{
+                                        backing:style.checkbox_loop.backing,
+                                        check:style.checkbox_loop.check,
+                                    },
+                                    onchange:function(value){design.sequencer.main.loopActive(value);}
+                                }},
+                                //range
+                                {type:'rangeslide', name:'loopSelect', data:{
+                                    x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:0.75,
+                                    style:{
+                                        handle: style.rangeslide_loop.handle,
+                                        backing: style.rangeslide_loop.backing,
+                                        slot: style.rangeslide_loop.slot,
+                                        invisibleHandle: style.rangeslide_loop.invisibleHandle,
+                                        span: style.rangeslide_loop.span,
+                                    },
+                                    onchange:function(values){ 
+                                        var a = Math.round(values.start*vals.sequencer.width);
+                                        var b = Math.round(values.end*vals.sequencer.width);
+                                        if(b == 0){b = 1;}
+                                        design.sequencer.main.loopPeriod(a,b);
+                                    },
+                                }},    
+                
+                            //progression
+                                //button
+                                {type:'button_rect', name:'progress', data:{
+                                    x:10, y:205, width:25, height:15,
+                                    style:{
+                                        up:style.button.up,
+                                        hover:style.button.hover,
+                                        hover_press:style.button.down,
+                                    },
+                                    onpress:function(){design.sequencer.main.progress();},
+                                }},     
+                                //connection node
+                                {type:'connectionNode_data', name:'progress', data:{ 
+                                    x: 800, y: 5, width: 5, height: 20,
+                                    receive:function(){design.sequencer.main.progress();}
+                                }},
+                                //symbol
+                                {type:'path', name:'progress_arrow', data:{ path:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
+                
+                
+                            //reset
+                                //button
+                                {type:'button_rect', name:'reset', data:{
+                                    x:40, y:205, width:25, height:15,
+                                    style:{
+                                        up:style.button.up,
+                                        hover:style.button.hover,
+                                        hover_press:style.button.down,
+                                    },
+                                    onpress:function(){design.sequencer.main.playheadPosition(0);},
+                                }},
+                                //connection node
+                                {type:'connectionNode_data', name:'reset', data:{ 
+                                    x: 800, y: 30, width: 5, height: 20,
+                                    receive:function(){design.sequencer.main.playheadPosition(0);}
+                                }},
+                                //symbol
+                                {type:'path', name:'reset_arrow', data:{ path:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
+                                {type:'path', name:'reset_line', data:{ path:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
+                        ]
+                    };
+                    //dynamic design
+                        for(var a = 0; a < vals.sequencer.height; a++){
+                            design.elements.push(
+                                {type:'connectionNode_data', name:'output_'+a, data:{ 
+                                    x: -5, y: 11+a*(180/vals.sequencer.height), width: 5, height:(180/vals.sequencer.height)-2,
+                                    receive:function(){design.sequencer.main.playheadPosition(0);}
+                                }},
+                            );
+                        }
+                
+                
+                    //main object
+                        var obj = object.builder(object.basicSequencer,design);
+                
+                    //import/export
+                        obj.exportData = function(){
+                            return {
+                                loop:{
+                                    active:design.checkbox_rect.loopActive.get(),
+                                    range:design.sequencer.main.loopPeriod(),
+                                },
+                                autofollow:design.checkbox_rect.followPlayhead.get(),
+                                notes:design.sequencer.main.getAllNotes(),
+                            };
+                        };
+                        obj.importData = function(data){
+                            design.sequencer.main.addNotes(data.notes);
+                            obj.i.loopActive(data.loop.active);
+                            design.rangeslide.loopSelect.set(data.loop.range);
+                            design.checkbox_rect.followPlayhead.set(data.autofollow);
+                        };
+                
+                    //interface
+                        obj.i = {
+                            addNote:function(line, position, length, strength=1){design.sequencer.main.addNote(line, position, length, strength);},
+                            addNotes:function(data){design.sequencer.main.addNotes(data);},
+                            getNotes:function(){return design.sequencer.main.getAllNotes();},
+                            loopActive:function(a){design.checkbox_rect.loopActive.set(a);},
+                        };
+                
+                    return obj;
+                };
+                
+                this.basicSequencer.metadata = {
+                    name:'Basic Sequencer (Multi Pulse Out)',
+                    helpurl:'https://metasophiea.com/curve/help/objects/basicSequencer_pulseOut/'
+                };
+                this.basicSequencer_midiOut = function(x,y,debug=false){
+                    var vals = {
+                        sequencer:{
+                            width:64, //height:100,
+                            midiRange:{ bottom:24, top:131 },
+                            pattern:[0,0,1,0,1,0,1,0,0,1,0,1],
+                        }
+                    };
+                    //calculate pattern basied on midi range
+                    var temp = vals.sequencer.pattern.length - ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(system.audio.num2name(vals.sequencer.midiRange.top).slice(1))
+                    vals.sequencer.pattern = vals.sequencer.pattern.slice(temp).concat(vals.sequencer.pattern.slice(0,temp));
+                
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        markings: {
+                            fill:'fill:rgba(150,150,150,1); pointer-events: none;',
+                            stroke:'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
+                        },
+                        rangeslide:{
+                            handle:'fill:rgba(240,240,240,1)',
+                            backing:'fill:rgba(150,150,150,1)',
+                            slot:'fill:rgba(50,50,50,1)',
+                            invisibleHandle:'fill:rgba(0,0,0,0);',
+                            span:'fill:rgba(220,220,220,1)',
+                        },
+                        rangeslide_loop:{
+                            handle:'fill:rgba(240,240,240,1)',
+                            backing:'fill:rgba(150,150,150,1)',
+                            slot:'fill:rgba(50,50,50,1)',
+                            invisibleHandle:'fill:rgba(0,0,0,0);',
+                            span:'fill:rgba(255,247,145,0.5)',
+                        },
+                        button:{
+                            up:'fill:rgba(220,220,220,1)',
+                            hover:'fill:rgba(240,240,240,1)',
+                            down:'fill:rgba(180,180,180,1)',
+                            glow:'fill:rgba(220,200,220,1)',
+                        },
+                        checkbox:{
+                            backing:'fill:rgba(229, 229, 229,1)',
+                            check:'fill:rgba(252,252,252,1)',
+                        },
+                        checkbox_loop:{
+                            backing:'fill:rgba(229, 221, 112,1)',
+                            check:'fill:rgba(252,244,128,1)',
+                        },
+                    };
+                
+                    var design = {
+                        type: 'basicSequencer_midiOut',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[ 
+                                {x:0,y:0}, 
+                                {x:800,y:0}, 
+                                {x:800,y:210}, 
+                                {x:140,y:210},
+                                {x:115,y:225},
+                                {x:0,y:225}
+                            ], 
+                            style:style.background
+                        },
+                        elements:[
+                            //midi out
+                                {type:'connectionNode_data', name:'midiout', data:{
+                                    x: -5, y: 11.25, width: 5, height: 17.5,
+                                }},
+                
+                
+                            //main sequencer
+                                {type:'sequencer', name:'main', data:{
+                                    x:20, y:20, width:770, height:170, 
+                                    xCount:vals.sequencer.width, yCount:vals.sequencer.midiRange.top-vals.sequencer.midiRange.bottom+1,
+                                    event:function(event){
+                                        for(var a = 0; a < event.length; a++){
+                                            design.connectionNode_data.midiout.send('midinumber',{num:midiNumber_line_converter(event[a].line), velocity:event[a].strength});
+                                        }
+                                    },
+                                    style:{
+                                        horizontalStrip_pattern:vals.sequencer.pattern
+                                    },
+                                    onchangeviewarea:function(data){
+                                        design.rangeslide.viewselect_x.set( {start:data.left, end:data.right}, false );
+                                        design.rangeslide.viewselect_y.set( {start:data.top, end:data.bottom}, false );
+                                    },
+                                }},
+                                {type:'rangeslide', name:'viewselect_y', data:{
+                                    x:10, y:20, height:170, width: 10, angle:0, handleHeight:1/16, spanWidth:1,
+                                    style:{
+                                        handle: style.rangeslide.handle,
+                                        backing: style.rangeslide.backing,
+                                        slot: style.rangeslide.slot,
+                                        invisibleHandle: style.rangeslide.invisibleHandle,
+                                        span: style.rangeslide.span,
+                                    },
+                                    onchange:function(values){ design.sequencer.main.viewArea({top:values.start,bottom:values.end},false); },
+                                }},
+                                {type:'rangeslide', name:'viewselect_x', data:{
+                                    x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:1,
+                                    style:{
+                                        handle: style.rangeslide.handle,
+                                        backing: style.rangeslide.backing,
+                                        slot: style.rangeslide.slot,
+                                        invisibleHandle: style.rangeslide.invisibleHandle,
+                                        span: style.rangeslide.span,
+                                    },
+                                    onchange:function(values){ design.sequencer.main.viewArea({left:values.start,right:values.end},false); },
+                                }},
+                
+                            //follow playhead
+                                {type:'checkbox_rect', name:'followPlayhead',data:{
+                                    x:100, y:205, width:15, height:15,
+                                    style:{
+                                        backing:style.checkbox.backing,
+                                        check:style.checkbox.check,
+                                    },
+                                    onchange:function(value){design.sequencer.main.automove(value);}
+                                }},
+                
+                            //loop control   
+                                //activation
+                                {type:'checkbox_rect', name:'loopActive',data:{
+                                    x:70, y:205, width:25, height:15,
+                                    style:{
+                                        backing:style.checkbox_loop.backing,
+                                        check:style.checkbox_loop.check,
+                                    },
+                                    onchange:function(value){design.sequencer.main.loopActive(value);}
+                                }},
+                                //range
+                                {type:'rangeslide', name:'loopSelect', data:{
+                                    x:20, y:200, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75,
+                                    style:{
+                                        handle: style.rangeslide_loop.handle,
+                                        backing: style.rangeslide_loop.backing,
+                                        slot: style.rangeslide_loop.slot,
+                                        invisibleHandle: style.rangeslide_loop.invisibleHandle,
+                                        span: style.rangeslide_loop.span,
+                                    },
+                                    onchange:function(values){ 
+                                        var a = Math.round(values.start*vals.sequencer.width);
+                                        var b = Math.round(values.end*vals.sequencer.width);
+                                        if(b == 0){b = 1;}
+                                        design.sequencer.main.loopPeriod(a,b);
+                                    },
+                                }},    
+                
+                            //progression
+                                //button
+                                {type:'button_rect', name:'progress', data:{
+                                    x:10, y:205, width:25, height:15,
+                                    style:{
+                                        up:style.button.up,
+                                        hover:style.button.hover,
+                                        hover_press:style.button.down,
+                                    },
+                                    onpress:function(){design.sequencer.main.progress();},
+                                }},     
+                                //connection node
+                                {type:'connectionNode_data', name:'progress', data:{ 
+                                    x: 800, y: 5, width: 5, height: 20,
+                                    receive:function(){design.sequencer.main.progress();}
+                                }},
+                                //symbol
+                                {type:'path', name:'progress_arrow', data:{ path:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
+                
+                
+                            //reset
+                                //button
+                                {type:'button_rect', name:'reset', data:{
+                                    x:40, y:205, width:25, height:15,
+                                    style:{
+                                        up:style.button.up,
+                                        hover:style.button.hover,
+                                        hover_press:style.button.down,
+                                    },
+                                    onpress:function(){design.sequencer.main.playheadPosition(0);},
+                                }},
+                                //connection node
+                                {type:'connectionNode_data', name:'reset', data:{ 
+                                    x: 800, y: 30, width: 5, height: 20,
+                                    receive:function(){design.sequencer.main.playheadPosition(0);}
+                                }},
+                                //symbol
+                                {type:'path', name:'reset_arrow', data:{ path:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
+                                {type:'path', name:'reset_line', data:{ path:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
+                        ]
+                    };
+                
+                    //internal functions
+                        function midiNumber_line_converter(num){ return vals.sequencer.midiRange.top - num; }
+                
+                    //main object
+                        var obj = object.builder(object.basicSequencer_midiOut,design);
+                
+                    //import/export
+                        obj.exportData = function(){
+                            return {
+                                loop:{
+                                    active:design.checkbox_rect.loopActive.get(),
+                                    range:design.sequencer.main.loopPeriod(),
+                                },
+                                autofollow:design.checkbox_rect.followPlayhead.get(),
+                                notes:design.sequencer.main.getAllNotes(),
+                                viewArea:design.sequencer.main.viewArea(),
+                            };
+                        };
+                        obj.importData = function(data){
+                            design.sequencer.main.addNotes(data.notes);
+                            obj.i.loopActive(data.loop.active);
+                            design.rangeslide.loopSelect.set(data.loop.range);
+                            design.checkbox_rect.followPlayhead.set(data.autofollow);
+                            design.sequencer.main.viewArea(data.viewArea);
+                        };
+                
+                    //interface
+                        obj.i = {
+                            addNote:function(number, position, length, strength=1){design.sequencer.main.addNote(midiNumber_line_converter(number), position, length, strength);},
+                            addNotes:function(data){ for(var a = 0; a < data.length; a++){ this.addNote(data[a].line, data[a].position, data[a].length, data[a].strength); } },
+                            getNotes:function(){return design.sequencer.main.getAllNotes();},
+                            loopActive:function(a){design.checkbox_rect.loopActive.set(a);},
+                            stepSize:design.sequencer.main.step,
+                        };
+                
+                    //setup
+                        design.rangeslide.viewselect_y.set({start:0.3, end:0.7});
+                
+                    return obj;
+                };
+                
+                this.basicSequencer_midiOut.metadata = {
+                    name:'Basic Sequencer (Midi Out)',
+                    helpurl:'https://metasophiea.com/curve/help/objects/basicSequencer_midiOut/'
+                };
+                this.launchpad = function(x,y,debug=false){
+                    var values = {
+                        xCount:8, yCount:8,
+                    };
+                    var style = {
+                        background:'fill:rgba(200,200,200,1)',
+                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
+                        button: {
+                            up: 'fill:rgba(175,175,175,1)',
+                            hover: 'fill:rgba(220,220,220,1)',
+                            down: 'fill:rgba(150,150,150,1)'
+                        },
+                        grid: {
+                            backing: 'fill:rgba(200,175,200,1)',
+                            check: 'fill:rgba(150,125,150,1)',
+                            backingGlow: 'fill:rgba(225,175,225,1)',
+                            checkGlow:'fill:rgba(200,125,200,1)'
+                        },
+                        sevenSegmentDisplay:{
+                            background:'fill:rgba(200,175,200,1)',
+                            glow:'fill:rgba(225,225,225,1)',
+                            dim:'fill:rgba(150,125,150,1',
+                        }
+                    };
+                    var design = {
+                        type: 'launchpad',
+                        x: x, y: y,
+                        base: {
+                            type:'path',
+                            points:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}], 
+                            style:style.background
+                        },
+                        elements:[
+                            //input data
+                                {type:'connectionNode_data', name:'pulse', data:{ 
+                                    x: 125, y: 5, width: 5, height: 10,
+                                    receive:function(){obj.internalCircuits.inc();lightLine();}
+                                }},
+                                {type:'connectionNode_data', name:'nextPage', data:{ 
+                                    x: 125, y: 22.5, width: 5, height: 10,
+                                    receive:function(){obj.internalCircuits.incPage();}
+                                }},
+                                {type:'connectionNode_data', name:'prevPage', data:{ 
+                                    x: 125, y: 35, width: 5, height: 10,
+                                    receive:function(){obj.internalCircuits.decPage();}
+                                }},
+                            //pulse
+                                {type:'button_rect',name:'pulse',data:{
+                                    x:100, y:5, width:20, height:10,
+                                    style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down, },
+                                    onpress:function(){obj.internalCircuits.inc();lightLine();},
+                                }},
+                            //rastorgrid
+                                {type:'rastorgrid',name:'rastorgrid',data:{
+                                    x:5, y:5, width:90, height:90,
+                                    xCount:values.xCount, yCount:values.yCount,
+                                    style:{
+                                        backing: style.grid.backing, 
+                                        check:style.grid.check, 
+                                        backingGlow:style.grid.backingGlow, 
+                                        checkGlow:style.grid.checkGlow
+                                    },
+                                    onchange:function(data){obj.internalCircuits.importPage(data);},
+                                }},
+                            //page select
+                                {type:'sevenSegmentDisplay',name:'pageNumber',data:{
+                                    x:100, y:22.5, width:20, height:22.5,
+                                    style:{
+                                        background:style.sevenSegmentDisplay.background,
+                                        glow:style.sevenSegmentDisplay.glow,
+                                        dim:style.sevenSegmentDisplay.dim,
+                                    }
+                                }},
+                                {type:'button_rect',name:'nextPage',data:{
+                                    x:102.5, y:17.5, width:15, height:5, selectable:false,
+                                    style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down, },
+                                    onpress:function(){obj.internalCircuits.incPage();},
+                                }},
+                                {type:'button_rect',name:'prevPage',data:{
+                                    x:102.5, y:45, width:15, height:5, selectable:false,
+                                    style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
+                                    onpress:function(){obj.internalCircuits.decPage();},
+                                }},
+                        ]
+                    };
+                    //dynamic design
+                        for(var a = 0; a < values.yCount; a++){
+                            //data-out ports
+                            design.elements.push(
+                                {type:'connectionNode_data', name:'out_'+a, data:{
+                                    x: -5, y: a*12.5 + 2.5, width: 5, height: 7.5,
+                                }},
+                            );
+                        }
+                
+                
+                    //main object
+                        var obj = object.builder(object.launchpad,design);
+                
+                    //import/export
+                        obj.exportData = function(){
+                            return {
+                                currentPage: obj.internalCircuits.page(),
+                                data:obj.internalCircuits.exportPages(),
+                            };
+                        };
+                        obj.importData = function(data){
+                            if(data.data != undefined){ obj.internalCircuits.importPages(data.data); }
+                            if(data.currentPage){ obj.internalCircuits.page(data.currentPage); }
+                        };
+                
+                    //internal functions
+                        function lightLine(){
+                            for(var a = 0; a < values.yCount; a++){
+                                design.rastorgrid.rastorgrid.light(obj.internalCircuits.previousPosition(),a,false);
+                                design.rastorgrid.rastorgrid.light(obj.internalCircuits.position(),a,true);
+                            }
+                        }
+                        function pageChange(data){
+                            design.sevenSegmentDisplay.pageNumber.enterCharacter(''+data);
+                            var newPage = obj.internalCircuits.exportPage();
+                
+                            if(newPage == undefined){
+                                design.rastorgrid.rastorgrid.clear();
+                            }else{
+                                design.rastorgrid.rastorgrid.set(newPage);
+                            }
+                        }
+                
+                    //circuitry
+                        obj.internalCircuits = new part.circuit.sequencing.launchpad(values.xCount, values.yCount);
+                        obj.internalCircuits.commands = function(data){
+                            for(var a = 0; a < values.yCount; a++){
+                                if(data[a]){ obj.io['out_'+a].send('pulse'); }
+                            }
+                        };
+                        obj.internalCircuits.pageChange = pageChange;
+                
+                    //interface
+                        obj.i = {
+                            importPage:function(data,a){obj.internalCircuits.importPage(data,a);},
+                            exportPage:function(a){return obj.internalCircuits.exportPage(a);},
+                            importPages:function(data){obj.internalCircuits.importPages(data);},
+                            exportPages:function(){return obj.internalCircuits.exportPages();},
+                            setPage:function(a){obj.internalCircuits.page(a);}
+                        };
+                
+                    //setup 
+                        lightLine();
+                        design.sevenSegmentDisplay.pageNumber.enterCharacter('0');
+                
+                    return obj;
+                };
+                
+                this.launchpad.metadata = {
+                    name:'Launchpad',
+                    helpurl:'https://metasophiea.com/curve/help/objects/launchpad/'
                 };
                 this.basicSynthesizer = function(x,y){
                     var attributes = {
@@ -10670,7 +12652,7 @@
                     };
                 
                     //main object
-                        var obj = system.utility.misc.objectBuilder(objects.basicSynthesizer,design);
+                        var obj = object.builder(object.basicSynthesizer,design);
                 
                     //import/export
                         obj.exportData = function(){
@@ -10713,7 +12695,7 @@
                         };
                 
                     //circuitry
-                        obj.__synthesizer = new parts.circuits.audio.synthesizer2(system.audio.context);
+                        obj.__synthesizer = new part.circuit.audio.synthesizer2(system.audio.context);
                         obj.__synthesizer.out().connect( design.connectionNode_audio.audioOut.in() );
                 
                     //interface
@@ -10744,2114 +12726,134 @@
                     name:'Basic Synthesizer',
                     helpurl:'https://metasophiea.com/curve/help/objects/basicSynthesizer/'
                 };
-                this.pulseGenerator_hyper = function(x,y,maxTempo=999,debug=false){
-                
+                this.universalreadout = function(x,y,debug=false){
                     var style = {
                         background:'fill:rgba(200,200,200,1)',
                         text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
-                
-                        dial:{
-                            handle: 'fill:rgba(220,220,220,1)',
-                            slot: 'fill:rgba(50,50,50,1)',
-                            needle: 'fill:rgba(250,150,150,1)',
-                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-                        }
                     };
                     var design = {
-                        type: 'pulseGenerator_hyper',
+                        type: 'universalreadout',
                         x: x, y: y,
                         base: {
-                            type:'path',
-                            points:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
+                            type:'circle',
+                            x:10, y:10, r:20,
                             style:style.background
                         },
                         elements:[
-                            {type:'connectionNode_data', name:'out', data:{
-                                x: -5, y: 11.25, width: 5, height: 17.5,
-                            }},
-                            {type:'connectionNode_data', name:'sync', data:{
-                                x: 115, y: 11.25, width: 5, height: 17.5,
-                                receive:function(){design.button_rect.sync.press();},
-                            }},
-                            {type:'button_rect', name:'sync', data:{
-                                x:102.5, y: 11.25, width:10, height: 17.5,
-                                style:{
-                                    up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', 
-                                    down:'fill:rgba(150,150,150,1)', glow:'fill:rgba(220,200,220,1)'
-                                }, 
-                                onclick:function(){updateTempo(tempo)},
-                            }},
-                            {type:'dial_continuous',name:'tempo',data:{
-                                x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){updateTempo(Math.round(value*maxTempo));}
-                            }},
-                            {type:'readout_sixteenSegmentDisplay',name:'readout',data:{
-                                x:40, y:10, width:60, height:20, count:6,
+                            {type:'connectionNode_data', name:'in', data:{
+                                x: 0, y: 0, width: 20, height: 20,
+                                receive: function(address,data){ print('address: '+address+' data: '+JSON.stringify(data)); }
                             }},
                         ]
                     };
                 
                     //main object
-                        var obj = system.utility.misc.objectBuilder(objects.pulseGenerator_hyper,design);
-                
-                    //import/export
-                        obj.exportData = function(){
-                            return design.dial_continuous.tempo.get();
-                        };
-                        obj.importData = function(data){
-                            design.dial_continuous.tempo.set(data);
-                        };
+                        var obj = object.builder(object.universalreadout,design);
                 
                     //internal functions
-                        var interval = null;
-                        var tempo = 120;
-                        function updateTempo(newTempo){
-                            //update readout
-                                design.readout_sixteenSegmentDisplay.readout.text(
-                                    system.utility.misc.padString(newTempo,3,' ')+'bpm'
-                                );
-                                design.readout_sixteenSegmentDisplay.readout.print();
-                
-                            //update interval
-                                if(interval){ clearInterval(interval); }
-                                if(newTempo > 0){
-                                    interval = setInterval(function(){
-                                        obj.io.out.send('pulse');
-                                    },1000*(60/newTempo));
-                                }
-                
-                            obj.io.out.send('pulse');
-                            tempo = newTempo;
-                        }
-                
-                    //interface
-                        obj.i = {
-                            setTempo:function(value){
-                                design.dial_continuous.tempo.set(value);
-                            },
-                        };
-                
-                    //setup
-                        design.dial_continuous.tempo.set(0.5);
-                
-                    return obj;
-                };
-                
-                this.pulseGenerator_hyper.metadata = {
-                    name:'Pulse Generator (hyper)',
-                    helpurl:'https://metasophiea.com/curve/help/objects/pulseGenerator_hyper/'
-                };
-                this.pulseGenerator = function(x,y,debug=false){
-                    var maxTempo = 240;
-                
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
-                
-                        dial:{
-                            handle: 'fill:rgba(220,220,220,1)',
-                            slot: 'fill:rgba(50,50,50,1)',
-                            needle: 'fill:rgba(250,150,150,1)',
-                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-                        }
-                    };
-                    var design = {
-                        type: 'pulseGenerator',
-                        x: x, y: y,
-                        base: {
-                            type:'path',
-                            points:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_data', name:'out', data:{
-                                x: -5, y: 11.25, width: 5, height: 17.5,
-                            }},
-                            {type:'connectionNode_data', name:'sync', data:{
-                                x: 115, y: 11.25, width: 5, height: 17.5,
-                                receive:function(){design.button_rect.sync.press();},
-                            }},
-                            {type:'button_rect', name:'sync', data:{
-                                x:102.5, y: 11.25, width:10, height: 17.5,
-                                style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' }, 
-                                onpress:function(){updateTempo(tempo)},
-                            }},
-                            {type:'dial_continuous',name:'tempo',data:{
-                                x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){updateTempo(Math.round(value*maxTempo));}
-                            }},
-                            {type:'readout_sixteenSegmentDisplay',name:'readout',data:{
-                                x:40, y:10, width:60, height:20, count:6,
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.pulseGenerator,design);
-                
-                    //import/export
-                        obj.exportData = function(){
-                            return design.dial_continuous.tempo.get();
-                        };
-                        obj.importData = function(data){
-                            design.dial_continuous.tempo.set(data);
-                        };
-                
-                    //internal functions
-                        var interval = null;
-                        var tempo = 120;
-                        function updateTempo(newTempo){
-                            //update readout
-                                design.readout_sixteenSegmentDisplay.readout.text(
-                                    system.utility.misc.padString(newTempo,3,' ')+'bpm'
-                                );
-                                design.readout_sixteenSegmentDisplay.readout.print();
-                
-                            //update interval
-                                if(interval){ clearInterval(interval); }
-                                if(newTempo > 0){
-                                    interval = setInterval(function(){
-                                        obj.io.out.send('pulse');
-                                    },1000*(60/newTempo));
-                                }
-                
-                            obj.io.out.send('pulse');
-                            tempo = newTempo;
-                        }
-                
-                    //interface
-                        obj.i = {
-                            setTempo:function(value){
-                                design.dial_continuous.tempo.set(value);
-                            },
-                        };
-                
-                    //setup
-                        design.dial_continuous.tempo.set(0.5);
-                
-                    return obj;
-                };
-                
-                this.pulseGenerator.metadata = {
-                    name:'Pulse Generator',
-                    helpurl:'https://metasophiea.com/curve/help/objects/pulseGenerator/'
-                };
-                this.musicalkeyboard = function(x,y,debug=false){
-                    var state = {
-                        velocity:0.5,
-                    };
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        h1: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
-                        dial:{
-                            handle: 'fill:rgba(220,220,220,1)',
-                            slot: 'fill:rgba(50,50,50,1)',
-                            needle: 'fill:rgba(250,150,150,1)',
-                            arc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-                        },
-                        keys:{
-                            white:{
-                                off:'fill:rgba(250,250,250,1)',
-                                press:'fill:rgba(230,230,230,1)',
-                                glow:'fill:rgba(220,200,220,1)',
-                                pressAndGlow:'fill:rgba(200,150,200,1)',
-                            },
-                            black:{
-                                off:'fill:rgba(50,50,50,1)',
-                                press:'fill:rgba(100,100,100,1)',
-                                glow:'fill:rgba(220,200,220,1)',
-                                pressAndGlow:'fill:rgba(200,150,200,1)',
-                            }
-                        }
-                    };
-                    var design = {
-                        type: 'musicalkeyboard',
-                        x: x, y: y,
-                        base: {
-                            type:'path',
-                            points:[ {x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5} ], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_data', name:'midiout', data:{ 
-                                x: -5, y: 5, width: 5, height: 10,
-                            }},
-                            {type:'connectionNode_data', name:'midiin', data:{ 
-                                x: 320, y: 5, width: 5, height: 10,
-                                receive:function(address,data){
-                                    if(address != 'midinumber'){return;}
-                                    if(data.velocity > 0){ design.button_rect[system.audio.num2name(data.num)].press();   }
-                                                     else{ design.button_rect[system.audio.num2name(data.num)].release(); }
-                                },
-                            }},
-                
-                            //velocity dial
-                            {type:'label', name:'velocity_title', data:{x:9,  y:59,   text:'velocity', style:style.h1}},
-                            {type:'label', name:'velocity_0',     data:{x:4,  y:55,   text:'0',        style:style.h1}},
-                            {type:'label', name:'velocity_1/2',   data:{x:14, y:26.5, text:'1/2',      style:style.h1}},
-                            {type:'label', name:'velocity_1',     data:{x:28, y:55,   text:'1',        style:style.h1}},
-                            {type:'dial_continuous',name:'velocity',data:{
-                                x:17.5, y:42, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                onchange:function(value){ state.velocity = value; }
-                            }},
-                        ]
-                    };
-                    //dynamic design
-                        //placement of keys
-                            var glyphs = [ '\\','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ];
-                            var noteNames = [ '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B', '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B', '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B', '7C' ];
-                            var whiteX = 35;
-                            var whiteKeyWidth = 12.5;
-                            var blackX = 45;
-                
-                            for(var a = 0; a < glyphs.length; a++){
-                                if( noteNames[a].slice(-1) != '#' ){
-                                    design.elements.push(
-                                        {type:'button_rect', name:noteNames[a], data:{
-                                            x:whiteX, y:12.5, width:whiteKeyWidth, height:50, hoverable:false,
-                                            style:{
-                                                up:style.keys.white.off, press:style.keys.white.press,
-                                                glow:style.keys.white.glow, glow_press:style.keys.white.pressAndGlow,
-                                            },
-                                            onpress:function(){ obj.io.midiout.send('midinumber', { num:system.audio.name2num(this.id), velocity:state.velocity } ); },
-                                            onrelease:function(){ obj.io.midiout.send('midinumber', { num:system.audio.name2num(this.id), velocity:0 } ); },
-                                        }}
-                                    );
-                                    whiteX += whiteKeyWidth;
-                                }
-                            }
-                
-                            var count = 0;
-                            for(var a = 0; a < glyphs.length; a++){
-                                if( noteNames[a].slice(-1) == '#' ){
-                                    design.elements.push(
-                                        {type:'button_rect', name:noteNames[a], data:{
-                                            x:blackX, y:12.5, width:5, height:30, hoverable:false,
-                                            style:{
-                                                up:style.keys.black.off, press:style.keys.black.press,
-                                                glow:style.keys.black.glow, glow_press:style.keys.black.pressAndGlow,
-                                            },
-                                            onpress:function(){ obj.io.midiout.send('midinumber', { num:system.audio.name2num(this.id), velocity:state.velocity } ); },
-                                            onrelease:function(){ obj.io.midiout.send('midinumber', { num:system.audio.name2num(this.id), velocity:0 } ); },
-                                        }}
-                                    );
-                                    blackX += whiteKeyWidth;
-                                    count = 0;
-                                }else{ count++; }
-                                
-                                if(count > 1){ blackX += whiteKeyWidth; }
-                            }
-                
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.musicalkeyboard,design);
-                
-                    //keycapture
-                        var keycaptureObj = system.keyboard.declareKeycaptureObject(obj,{none:glyphs});
-                        keycaptureObj.keyPress = function(key){ design.button_rect[noteNames[glyphs.indexOf(key)]].press(); };
-                        keycaptureObj.keyRelease = function(key){ design.button_rect[noteNames[glyphs.indexOf(key)]].release(); };
-                
-                    //interface
-                        obj.i = {
-                            velocity:function(a){design.dial_continuous.velocity.set(a);},
-                        };
-                
-                    //setup
-                        design.dial_continuous.velocity.set(0.5);
-                
-                    return obj;
-                };
-                
-                this.musicalkeyboard.metadata = {
-                    name:'Musical Keyboard',
-                    helpurl:'https://metasophiea.com/curve/help/objects/musicalKeyboard/'
-                };
-                this.audioIn = function(x,y,setupConnect=true){
-                    var attributes = {
-                        deviceList:[],
-                        currentSelection: 0
-                    };
-                    var style = {
-                        background: 'fill:rgba(200,200,200,1); stroke:none;',
-                        marking:'fill:none; stroke:rgb(160,160,160); stroke-width:1;pointer-events: none;',
-                        h1:'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
-                        h2:'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New;',
-                
-                        readout: {background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'},
-                        button: { up:'fill:rgba(220,220,220,1)', hover:'fill:rgba(230,230,230,1)', hover_press:'fill:rgba(180,180,180,1)'},
-                        dial: {handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',needle: 'fill:rgba(250,150,150,1)',outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'},
-                    };
-                    var design = {
-                        type:'audioIn',
-                        x:x, y:y,
-                        base:{
-                            points:[
-                                {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
-                                {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
-                            ], 
-                            style:style.background
-                        },
-                        elements:[
-                                {type:'connectionNode_audio', name:'audioOut', data:{type: 1, x: -10, y: 15, width: 20, height: 20}},
-                                {type:'readout_sixteenSegmentDisplay', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
-                                {type:'readout_sixteenSegmentDisplay', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
-                                {type:'button_rect', name:'up',   data:{x:225, y: 15, width:15, height:10, selectable:false, style:style.button, onpress:function(){incSelection();}}},
-                                {type:'button_rect', name:'down', data:{x:225, y: 25, width:15, height:10, selectable:false, style:style.button, onpress:function(){decSelection();}}},
-                                {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, style:style.dial, onchange:function(value){obj.circuitry.unit.gain(value*2);}}},
-                                {type:'label', name:'gainLabel_name', data:{x:21.25, y:44, text:'gain', style:style.h1, angle:0}},
-                                {type:'label', name:'gainLabel_0',    data:{x:15, y:40, text:'0', style:style.h2, angle:0}},
-                                {type:'label', name:'gainLabel_1',    data:{x:28.75, y:7, text:'1', style:style.h2, angle:0}},
-                                {type:'label', name:'gainLabel_2',    data:{x:42.5, y:40, text:'2', style:style.h2, angle:0}},
-                                {type:'path', name:'upArrow',   data:{path:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], style:style.marking}},
-                                {type:'path', name:'downArrow', data:{path:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], style:style.marking}},
-                                {type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.audioIn,design);
-                
-                        var keycaptureObj = system.keyboard.declareKeycaptureObject(obj,{none:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']});
-                            keycaptureObj.keyPress = function(key){
-                                switch(key){
-                                    case 'ArrowUp': design.button_rect.up.press();  break;
-                                    case 'ArrowDown': design.button_rect.down.press();  break;
-                                    case 'ArrowLeft': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()-0.1);  break;
-                                    case 'ArrowRight': design.dial_continuous.outputGain.set(design.dial_continuous.outputGain.get()+0.1);  break;
-                                }
-                            };
-                
-                
-                    //circuitry
-                        obj.circuitry = {
-                            unit: new parts.circuits.audio.audioIn(system.audio.context,setupConnect)
-                        };
-                        obj.circuitry.unit.out().connect( design.connectionNode_audio.audioOut.in() );
-                        obj.circuitry.unit.out().connect( design.audio_meter_level.audioIn.audioIn() );
-                
-                    //internal functions
-                        function selectDevice(a){
-                            if(attributes.deviceList.length == 0){
-                                design.readout_sixteenSegmentDisplay.index.text(' n/a');
-                                design.readout_sixteenSegmentDisplay.index.print();
-                                design.readout_sixteenSegmentDisplay.text.text('no devices');
-                                design.readout_sixteenSegmentDisplay.text.print('smart');
-                                return;
-                            }
-                            if( a < 0 || a >= attributes.deviceList.length ){return;}
-                            attributes.currentSelection = a;
-                
-                            selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
-                            totalNum=''+attributes.deviceList.length;while(totalNum.length < 2){ totalNum = '0'+totalNum;}
-                            design.readout_sixteenSegmentDisplay.index.text(selectionNum+'/'+totalNum);
-                            design.readout_sixteenSegmentDisplay.index.print();
-                
-                            var text = attributes.deviceList[a].deviceId;
-                            if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
-                            design.readout_sixteenSegmentDisplay.text.text(text);
-                            design.readout_sixteenSegmentDisplay.text.print('smart');
-                
-                            obj.circuitry.unit.selectDevice( attributes.deviceList[a].deviceId );
-                        }
-                        function incSelection(){ selectDevice(attributes.currentSelection+1); }
-                        function decSelection(){ selectDevice(attributes.currentSelection-1); }
-                
-                    //setup
-                        obj.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
-                        if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
-                        design.dial_continuous.outputGain.set(0.5);
-                        design.audio_meter_level.audioIn.start();
-                
-                    return obj;
-                };
-                
-                this.audioIn.metadata = {
-                    name:'Audio Input',
-                    helpurl:'https://metasophiea.com/curve/help/objects/audioInput/'
-                };
-                this.data_duplicator = function(x,y){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
-                        markings: 'fill:rgba(150,150,150,1); pointer-events:none;',
-                    };
-                    var design = {
-                        type:'data_duplicator',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                            style:'fill:rgba(200,200,200,0);'
-                        },
-                        elements:[
-                            {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
-                            {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
-                            {type:'connectionNode_data', name:'input', data:{ 
-                                x:45, y:5, width:20, height:20,
-                                receive:function(address,data){
-                                    obj.io.output_1.send(address,data);
-                                    obj.io.output_2.send(address,data);
-                                }
-                            }},
-                
-                            {type:'path', name:'backing', data:{
-                                path:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                                style:style.background
-                            }},
-                
-                            {type:'path', name:'upperArrow', data:{
-                                path:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}],
-                                style:style.markings,
-                            }},
-                            {type:'path', name:'lowerArrow', data:{
-                                path:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}],
-                                style:style.markings,
-                            }},
-                            {type:'rect', name:'topHorizontal', data:{
-                                x:5, y:15, width:45, height:2, 
-                                style:style.markings,
-                            }},
-                            {type:'rect', name:'vertical', data:{
-                                x:27.5, y:15, width:2, height:25.5, 
-                                style:style.markings,
-                            }},
-                            {type:'rect', name:'bottomHorizontal', data:{
-                                x:5, y:40, width:24.5, height:2, 
-                                style:style.markings,
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.data_duplicator,design);
-                    
-                    return obj;
-                
-                };
-                
-                this.data_duplicator.metadata = {
-                    name:'Data Duplicator',
-                    helpurl:'https://metasophiea.com/curve/help/objects/dataDuplicator/'
-                };
-                
-                //Operation Note:
-                //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
-                //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
-                //  then the 2nd port
-                this.recorder = function(x,y,debug=false){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;',
-                        buttonText:'fill:rgba(100,100,100,1); font-size:5px; font-family:Courier New; pointer-events: none;',
-                        logoText:'fill:rgba(100,100,100,1); font-size:8px; font-family:Bookman; pointer-events: none;',
-                    };
-                    var design = {
-                        type: 'recorder',
-                        x: x, y: y,
-                        base: {
-                            points:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'inRight',  data: {type: 0, x: 175, y: 2.5, width: 10, height: 15}},
-                            {type:'connectionNode_audio', name:'inLeft',   data: {type: 0, x: 175, y: 22.5, width: 10, height: 15}},
-                
-                
-                            //logo label
-                                {type:'rect', name:'logo_rect', data:{x:135, y:27.5, angle:-0.25, width:35, height:10, style:'fill:rgb(230,230,230)'}},
-                                {type:'label', name:'logo_label', data:{x:139, y:34.5, angle:-0.25, text:'REcorder', style:style.logoText}},
-                
-                            //rec
-                                {type:'button_rect', name:'rec', data: {
-                                    x:5, y: 25, width:20, height:10,
-                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
-                                    onpress: function(){
-                                        if(state == 'paused'){obj.recorder.resume();}
-                                        else{obj.recorder.start();}
-                                        updateLights('rec');
-                                    }
-                                }},
-                                {type:'text', name:'button_rect_text', data:{x:10.5, y:31.5, text:'rec', angle:0, style:style.buttonText}},
-                            //pause/resume
-                                {type:'button_rect', name:'pause/resume', data: {
-                                    x:27.5, y: 25, width:20, height:10,
-                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
-                                    onpress: function(){
-                                        if(state == 'paused'){obj.recorder.resume();}
-                                        else{obj.recorder.pause();}
-                                        updateLights('pause/resume');
-                                    }
-                                }},
-                                {type:'text', name:'button_pause/resume_text', data:{x:30, y:31.5, text:'pause', angle:0, style:style.buttonText}},
-                            //stop
-                                {type:'button_rect', name:'stop', data: {
-                                    x:50, y: 25, width:20, height:10,
-                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
-                                    onpress: function(){updateLights('stop');obj.recorder.stop();}
-                                }},
-                                {type:'text', name:'button_stop_text', data:{x:54, y:31.5, text:'stop', angle:0, style:style.buttonText}},
-                            //save
-                                {type:'button_rect', name:'save', data: {
-                                    x:72.5, y: 25, width:20, height:10, 
-                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
-                                    onpress: function(){
-                                        updateLights('save');
-                                        if(state != 'empty'){ obj.recorder.save(); }
-                                    }
-                                }},
-                                {type:'text', name:'button_save_text', data:{x:76.5, y:31.5, text:'save', angle:0, style:style.buttonText}},
-                            //clear
-                                {type:'button_rect', name:'clear', data: {
-                                    x:95, y: 25, width:20, height:10, 
-                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
-                                    onpress: function(){updateLights('clear');obj.recorder.clear();}
-                                }},
-                                {type:'text', name:'button_clear_text', data:{x:97.5, y:31.5, text:'clear', angle:0, style:style.buttonText}},
-                
-                            //time readout
-                                {type:'readout_sixteenSegmentDisplay', name:'time', data:{
-                                    x: 70, y: 5, angle:0, width:100, height:15, count:11, 
-                                    style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
-                                }},
-                
-                            //activity lights
-                                //recording
-                                    {type:'glowbox_rect', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:'fill:rgb(255, 63, 63)', dim:'fill:rgb(25, 6, 6)'}}},
-                                    {type:'text', name:'activityLight_recording_text', data:{x:8, y:14, text:'rec', angle:0, style:style.text}},
-                                //paused
-                                    {type:'glowbox_rect', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:'fill:rgb(126, 186, 247)', dim:'fill:rgb(12, 18, 24)'}}},
-                                    {type:'text', name:'activityLight_paused_text', data:{x:23, y:14, text:'pau', angle:0, style:style.text}},
-                                //empty
-                                    {type:'glowbox_rect', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:'fill:rgb(199, 249, 244)', dim:'fill:rgb(19, 24, 24)'}}},
-                                    {type:'text', name:'activityLight_empty_text', data:{x:38, y:14, text:'emp', angle:0, style:style.text}},
-                                //ready to save
-                                    {type:'glowbox_rect', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:'fill:rgb(61, 224, 35)', dim:'fill:rgb(6, 22, 3)'}}},
-                                    {type:'text', name:'activityLight_full_text', data:{x:53, y:14, text:'ful', angle:0, style:style.text}},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.recorder,design);
-                
-                    //circuitry
-                        //update functions
-                            //time readout
-                                setInterval(function(){
-                                    var time = obj.recorder.recordingTime();
-                                    var decimalValues = time % 1;
-                                    time = system.utility.math.seconds2time( Math.round(time) );
-                
-                                    design.readout_sixteenSegmentDisplay.time.text(
-                                        system.utility.misc.padString(time.h,2,'0')+':'+
-                                        system.utility.misc.padString(time.m,2,'0')+':'+
-                                        system.utility.misc.padString(time.s,2,'0')+'.'+
-                                        system.utility.misc.padString((''+decimalValues).slice(2),2,'0')
-                                    );
-                                    design.readout_sixteenSegmentDisplay.time.print();
-                                },100);
-                            //lights
-                                var state = 'empty'; //empty - recording - paused - full
-                                function updateLights(action){
-                                    if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
-                                    if( action == 'stop' || action == 'save' ){ state = 'full'; }
-                                    if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
-                                    if( action == 'clear' ){ state = 'empty'; }
-                                    if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
-                                    else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
-                
-                                    if(state == 'empty'){design.glowbox_rect.activityLight_empty.on();}else{design.glowbox_rect.activityLight_empty.off();}
-                                    if(state == 'recording'){design.glowbox_rect.activityLight_recording.on();}else{design.glowbox_rect.activityLight_recording.off();}
-                                    if(state == 'paused'){design.glowbox_rect.activityLight_paused.on();}else{design.glowbox_rect.activityLight_paused.off();}
-                                    if(state == 'full'){design.glowbox_rect.activityLight_full.on();}else{design.glowbox_rect.activityLight_full.off();}
-                                }
-                                updateLights('clear');
-                                design.glowbox_rect.activityLight_empty.on();
-                
-                        //audio recorder
-                            obj.recorder = new parts.circuits.audio.recorder(system.audio.context);
-                            design.connectionNode_audio.inRight.out().connect( obj.recorder.in_right() );
-                            design.connectionNode_audio.inLeft.out().connect( obj.recorder.in_left() );
-                
-                    return obj;
-                };
-                
-                this.recorder.metadata = {
-                    name:'Recorder',
-                    helpurl:'https://metasophiea.com/curve/help/objects/recorder/'
-                };
-
-                this.looper = function(x,y,debug=false){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
-                        strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
-                    };
-                    var design = {
-                        type: 'looper',
-                        x: x, y: y,
-                        base: {
-                            points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'outRight', data:{ type: 1, x: -10, y: 5, width: 10, height: 20 }},
-                            {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
-                            {type:'connectionNode_data', name:'trigger', data:{
-                                x: 220, y: 17.5, width: 10, height: 20,
-                                receive:function(address, data){ design.button_rect.fire.press(); }
-                            }},
-                
-                            //symbol
-                            {type:'circle', name:'symbol_outterCircle1', data:{ x:11.5, y:41, r:6, style:style.strokeMarkings }},
-                            {type:'circle', name:'symbol_outterCircle2', data:{ x:18.5, y:41, r:6, style:style.strokeMarkings }},
-                            {type:'rect', name:'symbol_blockingrect', data:{ x:11.5, y:34, width:7, height:15, style:style.background }},
-                            {type:'path', name:'symbol_upperarrow', data:{ path:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], style:style.strokeMarkings }},
-                            {type:'path', name:'symbol_lowerarrow', data:{ path:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], style:style.strokeMarkings }},
-                
-                            {type:'button_rect', name:'loadFile', data: {
-                                x:5, y: 5, width:20, height:10,
-                                style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
-                                onpress: function(){
-                                    obj.looper.load('file',function(data){
-                                        design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.looper.waveformSegment() );
-                                    });
-                                }
-                            }},
-                            {type:'button_rect',name:'fire',data:{
-                                x:5, y: 17.5, width:10, height:10,
-                                style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
-                                onpress:function(){
-                                    //no file = don't bother
-                                        if(obj.looper.duration() < 0){return;}
-                            
-                                    //actualy start the audio
-                                        obj.looper.start();
-                
-                                    //perform graphical movements
-                                        var duration = obj.looper.duration();
-                                        function func(){
-                                            //if there's already a needle; delete it
-                                            if(needle){
-                                                design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
-                                                clearTimeout(needleTimout);
-                                            }
-                
-                                            //create new needle, and send it on its way
-                                            design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
-                                            setTimeout(function(){design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,1);},1);
-                                            needle = true;
-                
-                                            //prep the next time this function should be run
-                                            needleTimout = setTimeout(func,duration*1000);
-                                        }
-                
-                                        func();
-                                }
-                            }},
-                            {type:'button_rect',name:'stop',data:{
-                                x:15, y: 17.5, width:10, height:10,
-                                style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
-                                onpress:function(){
-                                    obj.looper.stop();
-                
-                                    //if there's a needle, remove it
-                                    if(needle){
-                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
-                                        needle = false;
-                                        clearTimeout(needleTimout);
-                                    }
-                                }
-                            }},
-                
-                            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                                x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false,
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.looper,design);
-                
-                    //circuitry
-                            var needle = undefined;
-                            var needleTimout = undefined;
-                
-                        //audioFilePlayer
-                            obj.looper = new parts.circuits.audio.looper(system.audio.context);
-                            obj.looper.out_right().connect( design.connectionNode_audio.outRight.in() );
-                            obj.looper.out_left().connect( design.connectionNode_audio.outLeft.in() );
-                
-                    return obj;
-                };
-                
-                this.looper.metadata = {
-                    name:'Looper',
-                    helpurl:'https://metasophiea.com/curve/help/objects/looper/'
-                };
-                this.oneShot_single = function(x,y,debug=false){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
-                        strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
-                    };
-                    var design = {
-                        type: 'oneShot_single',
-                        x: x, y: y,
-                        base: {
-                            points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'outRight', data:{ type: 1, x: -10, y: 5, width: 10, height: 20 }},
-                            {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
-                            {type:'connectionNode_data', name:'trigger', data:{
-                                x: 220, y: 17.5, width: 10, height: 20,
-                                receive:function(address, data){ design.button_rect.fire.press(); design.button_rect.fire.release(); }
-                            }},
-                
-                            //symbol
-                            {type:'path', name:'symbol_arrow', data:{ path:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
-                            {type:'rect', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
-                            {type:'circle', name:'symbol_outterCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
-                            {type:'rect', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, style:style.markings }},
-                
-                            {type:'button_rect', name:'loadFile', data: {
-                                x:5, y: 5, width:20, height:10,
-                                style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
-                                onpress: function(){
-                                    obj.oneShot.load('file',function(data){
-                                        design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.oneShot.waveformSegment() );
-                                    });
-                                }
-                            }},
-                            {type:'button_rect',name:'fire',data:{
-                                x:5, y: 17.5, width:20, height:10,
-                                style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
-                                onpress:function(){
-                                    //no file = don't bother
-                                        if(obj.oneShot.duration() < 0){return;}
-                            
-                                    //actualy start the audio
-                                        obj.oneShot.fire();
-                
-                                    //if there's a playhead, remove it
-                                        if(playhead){
-                                            design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
-                                            playhead = false;
-                                            clearTimeout(playheadTimout);
-                                        }
-                
-                                    //perform graphical movements
-                                        var duration = obj.oneShot.duration();
-                                        design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,0,'transition: transform '+duration+'s;transition-timing-function: linear;');
-                                        playhead = true;
-                                        setTimeout(function(){design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0,1);},1);
-                                        playheadTimout = setTimeout(function(){
-                                            design.grapher_waveWorkspace.grapher_waveWorkspace.genericNeedle(0);
-                                            playhead = false;
-                                        },duration*1000);
-                                }
-                            }},
-                
-                            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                                x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false,
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.oneShot_single,design);
-                
-                    //circuitry
-                            var playhead = undefined;
-                            var playheadTimout = undefined;
-                
-                        //audioFilePlayer
-                            obj.oneShot = new parts.circuits.audio.oneShot_single(system.audio.context);
-                            obj.oneShot.out_right().connect( design.connectionNode_audio.outRight.in() );
-                            obj.oneShot.out_left().connect( design.connectionNode_audio.outLeft.in() );
-                
-                    return obj;
-                };
-                
-                this.oneShot_single.metadata = {
-                    name:'One Shot (Single)',
-                    helpurl:'https://metasophiea.com/curve/help/objects/oneShot_single/'
-                };
-                
-
-                this.oneShot_multi = function(x,y,debug=false){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
-                        strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
-                    };
-                    var design = {
-                        type: 'oneShot_multi',
-                        x: x, y: y,
-                        base: {
-                            points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
-                            style:style.background
-                        },
-                        elements:[
-                            //connection nodes
-                                {type:'connectionNode_audio', name:'outRight', data:{ type: 1, x: -10, y: 5, width: 10, height: 20 }},
-                                {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
-                                {type:'connectionNode_data', name:'trigger', data:{
-                                    x: 220, y: 17.5, width: 10, height: 20,
-                                    receive:function(address, data){ design.button_rect.fire.press(); design.button_rect.fire.release(); }
-                                }},
-                
-                            //symbol
-                                {type:'path', name:'symbol_arrow', data:{ path:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
-                                {type:'rect', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
-                                {type:'circle', name:'symbol_outterCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
-                                {type:'circle', name:'symbol_infCircle1', data:{ x:8.5, y:40, r:1.5, style:style.strokeMarkings }},
-                                {type:'circle', name:'symbol_infCircle2', data:{ x:11.5, y:40, r:1.5, style:style.strokeMarkings }},
-                
-                            //load/fire/panic buttons
-                                {type:'button_rect', name:'loadFile', data: {
-                                    x:5, y: 5, width:20, height:10,
-                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
-                                    onpress: function(){
-                                        obj.oneShot.load('file',function(data){
-                                            design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.oneShot.waveformSegment() );
-                                        });
-                                    }
-                                }},
-                                {type:'button_rect',name:'fire',data:{
-                                    x:5, y: 17.5, width:10, height:10,
-                                    style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
-                                    onpress:function(){
-                                        var filePlayer = obj.oneShot;
-                                        var waveport = design.grapher_waveWorkspace.grapher_waveWorkspace;
-                                        
-                                        //no file = don't bother
-                                            if(filePlayer.duration() < 0){return;}
-                
-                                        //determind start, end and duration values
-                                            var start = waveport.area().A != undefined ? waveport.area().A : 0;
-                                            var end = waveport.area().B != undefined ? waveport.area().B : 1;
-                                            var duration = filePlayer.duration();
-                
-                                            var startTime = start*duration;
-                                            var duration = end*duration - startTime;
-                
-                                        //actualy start the audio
-                                            filePlayer.fire(startTime, duration);
-                
-                                        //determine playhead number
-                                            var playheadNumber = 0;
-                                            while(playheadNumber in playheads){playheadNumber++;}
-                                            playheads[playheadNumber] = {};
-                
-                                        //flash light
-                                            design.glowbox_rect.glowbox_rect.on();
-                                            setTimeout(
-                                                function(){
-                                                    design.glowbox_rect.glowbox_rect.off();
-                                                }
-                                            ,100);
-                
-                                        //perform graphical movements
-                                            waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
-                                            setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
-                                            playheads[playheadNumber].timeout = setTimeout(function(){
-                                                waveport.genericNeedle(playheadNumber);
-                                                delete playheads[playheadNumber];
-                                            },duration*1000);
-                                    }
-                                }},
-                                {type:'button_rect',name:'panic',data:{
-                                    x:15, y: 17.5, width:10, height:10,
-                                    style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
-                                    onpress:function(){
-                                        var filePlayer = obj.oneShot;
-                                        var waveport = design.grapher_waveWorkspace.grapher_waveWorkspace;
-                
-                                        filePlayer.panic();
-                
-                                        var keys = Object.keys(playheads);
-                                        for(var a = 0; a < keys.length; a++){
-                                            if(playheads[a] == undefined){continue;}
-                                            clearTimeout(playheads[a].timeout);
-                                            waveport.genericNeedle(a);
-                                            delete playheads[a];
-                                        }
-                                    }
-                                }},
-                
-                            //rate adjust
-                                {type:'slide', name:'rate', data:{
-                                    x:26.25, y:5, width:5, height:45, value:0.5, resetValue:0.5,
-                                    style:{handle:'fill:rgba(220,220,220,1)'},
-                                    onchange:function(value){obj.oneShot.rate((1-value)*2);}
-                                }},
-                
-                            //fire light
-                                {type:'glowbox_rect', name:'glowbox_rect', data:{
-                                    x:32.5, y:5, width:2.5, height:45,
-                                }},
-                
-                            //waveport
-                                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                                    x:35, y:5, width:180, height:45, selectNeedle:false, selectionArea:true,
-                                }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.oneShot_multi,design);
-                
-                    //circuitry
-                            var playheads = {};
-                
-                        //audioFilePlayer
-                            obj.oneShot = new parts.circuits.audio.oneShot_multi(system.audio.context);
-                            obj.oneShot.out_right().connect( design.connectionNode_audio.outRight.in() );
-                            obj.oneShot.out_left().connect( design.connectionNode_audio.outLeft.in() );
-                
-                    //interface
-                        obj.i = {};
-                        obj.i.loadURL = function(url, callback){
-                            obj.oneShot.load('url', function(){
-                                design.grapher_waveWorkspace.grapher_waveWorkspace.draw(obj.oneShot.waveformSegment());
-                                if(callback != undefined){callback();}
-                            }, url);
-                        };
-                        obj.i.area = function(a,b){
-                            design.grapher_waveWorkspace.grapher_waveWorkspace.area(a,b);
-                        };
-                        
-                    return obj;
-                };
-                
-                this.oneShot_multi.metadata = {
-                    name:'One Shot (Multi)',
-                    helpurl:'https://metasophiea.com/curve/help/objects/oneShot_multi/'
-                };
-
-                this.oneShot_multi_multiTrack = function(x,y,debug=false){
-                    var trackCount = 8;
-                
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
-                        strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
-                    };
-                    var design = {
-                        type: 'oneShot_multi_multiTrack',
-                        x: x, y: y,
-                        base: {
-                            points:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'outRight', data:{ type: 1, x: -10, y: 5, width: 10, height: 20 }},
-                            {type:'connectionNode_audio', name:'outLeft', data:{  type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
-                        ]
-                    };
-                    //dynamic design
-                        for(var a = 0; a < trackCount; a++){
-                            //symbols
-                            design.elements = design.elements.concat([
-                                {type:'path', name:'symbol_'+a+'_arrow', data:{ path:[{x:19, y:35+a*(2+45)},{x:25,y:40+a*(2+45)},{x:19, y:45+a*(2+45)}], style:style.strokeMarkings }},
-                                {type:'rect', name:'symbol_'+a+'_line', data:{ x:15, y:39.5+a*(2+45), width:6, height:1, style:style.markings }},
-                                {type:'circle', name:'symbo_'+a+'l_outterCircle', data:{ x:10, y:40+a*(2+45), r:5.5, style:style.strokeMarkings }},
-                                {type:'circle', name:'symbol_'+a+'_infCircle1', data:{ x:8.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
-                                {type:'circle', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
-                            ]);
-                
-                            //rate adjust
-                            design.elements.push(
-                                {type:'slide', name:'rate_'+a, data:{
-                                    x:26.25, y:5+a*(2+45), width:5, height:45, value:0.5, resetValue:0.5,
-                                    style:{handle:'fill:rgba(220,220,220,1)'},
-                                    onchange:function(instance){
-                                        return function(value){
-                                            var filePlayer = obj.oneShot_multi_array[instance];
-                                            filePlayer.rate((1-design.slide['rate_'+instance].get())*2);
-                                        }
-                                    }(a)
-                                }}
-                            );
-                
-                            //activation light
-                            design.elements.push(
-                                {type:'glowbox_rect', name:'glowbox_rect_'+a, data:{
-                                    x:32.5, y:5+a*(2+45), width:2.5, height:45,
-                                }}
-                            );
-                
-                            //waveport
-                            design.elements.push(
-                                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_'+a, data:{
-                                    x:35, y:5+a*(2+45), width:180, height:45, selectNeedle:false, selectionArea:true,
-                                }}
-                            );
-                
-                            //load button
-                            design.elements.push(
-                                {type:'button_rect', name:'loadFile_'+a, data: {
-                                    x:5, y: 5+a*(2+45), width:20, height:10,
-                                    style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
-                                    onpress:function(instance){
-                                        return function(){
-                                            obj.oneShot_multi_array[instance].load('file',
-                                                function(instance){
-                                                    return function(data){
-                                                        design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance].draw( obj.oneShot_multi_array[instance].waveformSegment() );
-                                                    }
-                                                }(instance)
-                                            );
-                                        }
-                                    }(a)
-                                }}
-                            );
-                
-                            //fire button
-                            design.elements.push(
-                                {type:'button_rect',name:'fire_'+a,data:{
-                                    x:5, y: 17.5+a*(2+45), width:10, height:10,
-                                    style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
-                                    onpress:function(instance){
-                                        return function(){
-                                            var filePlayer = obj.oneShot_multi_array[instance];
-                                            var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
-                                            var playheads = obj.playheads[instance];
-                    
-                                            //no file = don't bother
-                                                if(filePlayer.duration() < 0){return;}
-                                    
-                                            //determine start, end and duration values
-                                                var start = waveport.area().A != undefined ? waveport.area().A : 0;
-                                                var end = waveport.area().B != undefined ? waveport.area().B : 1;
-                                                if(start > end){var temp=start;start=end; end=temp;}
-                                                var duration = filePlayer.duration();
-                    
-                                                var startTime = start*duration;
-                                                var duration = end*duration - startTime;
-                    
-                                            //actualy start the audio
-                                                filePlayer.fire(startTime, duration);
-                    
-                                            //determine playhead number
-                                                var playheadNumber = 0;
-                                                while(playheadNumber in playheads){playheadNumber++;}
-                                                playheads[playheadNumber] = {};
-                    
-                                            //flash light
-                                                design.glowbox_rect['glowbox_rect_'+instance].on();
-                                                setTimeout(
-                                                    function(a){
-                                                        return function(){
-                                                            design.glowbox_rect['glowbox_rect_'+a].off();
-                                                        }
-                                                    }(instance)
-                                                ,100);
-                    
-                                            //perform graphical movements
-                                                waveport.genericNeedle(playheadNumber,start,'transition: transform '+duration+'s; transition-timing-function: linear;');
-                                                setTimeout(function(a){waveport.genericNeedle(playheadNumber,a);},1,end);
-                                                playheads[playheadNumber].timeout = setTimeout(function(playheadNumber){
-                                                    waveport.genericNeedle(playheadNumber);
-                                                    delete playheads[playheadNumber];
-                                                },duration*1000,playheadNumber);
-                                        }
-                                    }(a)
-                                }}
-                            );
-                
-                            //panic button
-                            design.elements.push(
-                                {type:'button_rect',name:'panic_'+a,data:{
-                                    x:15, y: 17.5+a*(2+45), width:10, height:10,
-                                    style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
-                                    onpress:function(instance){
-                                        return function(value){
-                                            var filePlayer = obj.oneShot_multi_array[instance];
-                                            var waveport = design.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
-                                            var playheads = obj.playheads[instance];
-                    
-                                            filePlayer.panic();
-                    
-                                            var keys = Object.keys(playheads);
-                                            for(var a = 0; a < keys.length; a++){
-                                                if(playheads[a] == undefined){continue;}
-                                                clearTimeout(playheads[a].timeout);
-                                                waveport.genericNeedle(a);
-                                                delete playheads[a];
-                                            }
-                                        }
-                                    }(a)
-                                }}
-                            );
-                
-                            //fire connection
-                            design.elements.push(
-                                {type:'connectionNode_data', name:'trigger_'+a, data:{
-                                    x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
-                                    receive:function(instance){
-                                        return function(address,data){
-                                            if(address == 'pulse'){ 
-                                                design.button_rect['fire_'+instance].press();
-                                                design.button_rect['fire_'+instance].release();
-                                            }
-                                            else if(address == 'hit'){
-                                                if(data.velocity > 0.5){
-                                                    design.button_rect['fire_'+instance].press();
-                                                    design.button_rect['fire_'+instance].release();
-                                                }
-                                            }
-                                        }
-                                    }(a)
-                                }}
-                            );
-                
-                        }
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.oneShot_multi_multiTrack,design);
-                
-                    //import/export
-                        obj.exportData = function(){
-                            var data = {
-                                tracks:[],
-                                areas:[],
-                            };
-                
-                            for(var a = 0; a < trackCount; a++){
-                                data.tracks.push(
-                                    obj.oneShot_multi_array[a].unloadRaw()
-                                );
-                                data.areas.push(
-                                    obj.i.area(a)
-                                );
-                            }
-                
-                            return data;
-                        };
-                        obj.importData = function(data){
-                            for(var a = 0; a < trackCount; a++){
-                                obj.i.loadRaw(a,data.tracks[a]);
-                                obj.i.area(a,data.areas[a].A,data.areas[a].B);
-                            }
-                        };
-                
-                    //circuitry
-                        //audioFilePlayers
-                            obj.playheads = [];
-                
-                            obj.oneShot_multi_array = [];
-                            for(var a = 0; a < trackCount; a++){
-                                obj.oneShot_multi_array.push( new parts.circuits.audio.oneShot_multi(system.audio.context) );
-                                obj.oneShot_multi_array[a].out_right().connect( design.connectionNode_audio.outRight.in() );
-                                obj.oneShot_multi_array[a].out_left().connect( design.connectionNode_audio.outLeft.in() );
-                
-                                obj.playheads.push([]);
-                            }
-                
-                    //interface
-                        obj.i = {
-                            loadURL:function(trackNumber, url, callback){
-                                obj.oneShot_multi_array[trackNumber].load('url', 
-                                    function(a){
-                                        return function(){
-                                            document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_'+a].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[a].waveformSegment());
-                                        };
-                                    }(trackNumber)
-                                ,url);
-                            },
-                            loadRaw:function(trackNumber, data){
-                                obj.oneShot_multi_array[trackNumber].loadRaw(data);
-                                design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].draw(
-                                    obj.oneShot_multi_array[trackNumber].waveformSegment()
-                                );
-                            },
-                            area:function(trackNumber,a,b){
-                                return design.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);
-                            }
-                        };
-                    
-                    return obj;
-                };
-                
-                this.oneShot_multi_multiTrack.metadata = {
-                    name:'One Shot (Multi)(8 Track)',
-                    helpurl:'https://metasophiea.com/curve/help/objects/oneShot_multi_multiTrack/'
-                };
-                this.player = function(x,y,debug=false){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
-                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
-                    };
-                    var design = {
-                        type: 'player',
-                        x: x, y: y,
-                        base: {
-                            points:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}], 
-                            style:style.background
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'outRight', data:{  type: 1, x: -10, y: 5, width: 10, height: 20 }},
-                            {type:'connectionNode_audio', name:'outLeft', data:{ type: 1, x: -10, y: 27.5, width: 10, height: 20 }},
-                
-                            //symbol
-                            {type:'rect', name:'symbol_line1',  data:{ x:3.5,  y:38.5, width:1, height:2,  style:style.markings }},
-                            {type:'rect', name:'symbol_line2',  data:{ x:5.5,  y:37,   width:1, height:5,  style:style.markings }},
-                            {type:'rect', name:'symbol_line3',  data:{ x:7.5,  y:35.5, width:1, height:8,  style:style.markings }},
-                            {type:'rect', name:'symbol_line4',  data:{ x:9.5,  y:34.5, width:1, height:10, style:style.markings }},
-                            {type:'rect', name:'symbol_line5',  data:{ x:11.5, y:35.5, width:1, height:8,  style:style.markings }},
-                            {type:'rect', name:'symbol_line6',  data:{ x:13.5, y:37,   width:1, height:5,  style:style.markings }},
-                            {type:'rect', name:'symbol_line7',  data:{ x:15.5, y:39,   width:1, height:1,  style:style.markings }},
-                            {type:'rect', name:'symbol_line8',  data:{ x:17.5, y:36,   width:1, height:7,  style:style.markings }},
-                            {type:'rect', name:'symbol_line9',  data:{ x:19.5, y:32,   width:1, height:15, style:style.markings }},
-                            {type:'rect', name:'symbol_line10', data:{ x:21.5, y:34.5, width:1, height:10, style:style.markings }},
-                            {type:'rect', name:'symbol_line11', data:{ x:23.5, y:37,   width:1, height:5,  style:style.markings }},
-                            {type:'rect', name:'symbol_line12', data:{ x:25.5, y:38.5, width:1, height:2,  style:style.markings }},
-                            
-                
-                            {type:'readout_sixteenSegmentDisplay', name:'trackNameReadout', data:{
-                                x: 30, y: 5, angle:0, width:100, height:20, count:10, 
-                                style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
-                            }},
-                            {type:'readout_sixteenSegmentDisplay', name:'time', data:{
-                                x: 135, y: 5, angle:0, width:80, height:20, count:8, 
-                                style:{background:'fill:rgb(0,0,0)', glow:'fill:rgb(200,200,200)',dim:'fill:rgb(20,20,20)'}
-                            }},
-                
-                            {type:'button_rect', name:'load', data: {
-                                x:5, y: 5, width:20, height:10,
-                                style:{ up:'fill:rgba(175,175,175,1)', hover:'fill:rgba(220,220,220,1)', hover_press:'fill:rgba(150,150,150,1)' },
-                                onpress: function(){
-                                    obj.player.load('file',function(data){
-                                        design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.player.waveformSegment() );                   
-                                        design.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
-                                        design.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
-                                    
-                                        design.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
-                                        design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
-                                    });
-                                }
-                            }},
-                            {type:'button_rect',name:'start',data:{
-                                x:5, y: 17.5, width:20, height:10,
-                                style:{ up:'fill:rgba(175,195,175,1)', hover:'fill:rgba(220,240,220,1)', hover_press:'fill:rgba(150,170,150,1)' }, 
-                                onpress:function(){ obj.player.start(); }
-                            }},
-                            {type:'button_rect',name:'stop',data:{
-                                x:15, y: 17.5, width:10, height:10,
-                                style:{ up:'fill:rgba(195,175,175,1)', hover:'fill:rgba(240,220,220,1)', hover_press:'fill:rgba(170,150,150,1)' }, 
-                                onpress:function(){ obj.player.stop(); }
-                            }},
-                
-                            {type:'label', name:'rate_label_name', data:{ x:10, y:78, text:'rate', style:style.text }},
-                            {type:'label', name:'rate_label_0', data:{ x:5, y:75, text:'0', style:style.text }},
-                            {type:'label', name:'rate_label_1', data:{ x:13.7, y:54, text:'1', style:style.text }},
-                            {type:'label', name:'rate_label_2', data:{ x:23, y:75, text:'2', style:style.text }},
-                            {type:'dial_continuous',name:'rate',data:{
-                                x:15, y:65, r: 9, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.35, 
-                                style:{outerArc:'stroke:rgba(50,50,50,0.25); fill:none;'},
-                                onchange:function(data){ obj.player.rate( 2*data ); },
-                            }},
-                
-                            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                                x:30, y:30, width:185, height:45,
-                                selectionAreaToggle:function(bool){ obj.player.loop({active:bool}); },
-                                onchange:function(needle,value){
-                                    if(needle == 'lead'){ obj.player.jumpTo(value); }
-                                    else if(needle == 'selection_A' || needle == 'selection_B'){
-                                        var temp = design.grapher_waveWorkspace.grapher_waveWorkspace.area();
-                                        if(temp.A < temp.B){ obj.player.loop({start:temp.A,end:temp.B}); }
-                                        else{ obj.player.loop({start:temp.B,end:temp.A}); }
-                                    }
-                                },
-                            }},
-                        ]
-                    };
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.player,design);
-                
-                    //circuitry
-                        //audio file player
-                            obj.player = new parts.circuits.audio.player(system.audio.context);
-                            obj.player.out_right().connect( design.connectionNode_audio.outRight.in() );
-                            obj.player.out_left().connect( design.connectionNode_audio.outLeft.in() );
-                
-                        //data refresh
-                            function refresh(){
-                                //check if there's a track at all
-                                    if( !obj.player.isLoaded() ){return;}
-                
-                                //time readout
-                                    var time = system.utility.math.seconds2time( Math.round(obj.player.currentTime()));
-                
-                                    design.readout_sixteenSegmentDisplay.time.text(
-                                        system.utility.misc.padString(time.h,2,'0')+':'+
-                                        system.utility.misc.padString(time.m,2,'0')+':'+
-                                        system.utility.misc.padString(time.s,2,'0')
-                                    );
-                                    design.readout_sixteenSegmentDisplay.time.print();
-                
-                                //wave box
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.select(obj.player.progress());
-                            }
-                            setInterval(refresh,1000/30);
-                
-                    //interface
-                        obj.i = {
-                            loadByURL:function(url){
-                                obj.player.load('url',function(data){
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.draw( obj.player.waveformSegment() );                   
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
-                                    design.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
-                                
-                                    design.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
-                                    design.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
-                                },url);
-                            },
-                        };
-                
-                    //setup
-                        design.dial_continuous.rate.set(0.5);
-                
-                    return obj;
-                };
-                
-                this.player.metadata = {
-                    name:'Player',
-                    helpurl:'https://metasophiea.com/curve/help/objects/player/'
-                };
-                this.basicSequencer = function(x,y,debug=false){
-                    var vals = {
-                        sequencer:{
-                            width:64, height:10,
-                        }
-                    };
-                
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        markings: {
-                            fill:'fill:rgba(150,150,150,1); pointer-events: none;',
-                            stroke:'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
-                        },
-                        rangeslide:{
-                            handle:'fill:rgba(240,240,240,1)',
-                            backing:'fill:rgba(150,150,150,1)',
-                            slot:'fill:rgba(50,50,50,1)',
-                            invisibleHandle:'fill:rgba(0,0,0,0);',
-                            span:'fill:rgba(220,220,220,1)',
-                        },
-                        rangeslide_loop:{
-                            handle:'fill:rgba(240,240,240,1)',
-                            backing:'fill:rgba(150,150,150,1)',
-                            slot:'fill:rgba(50,50,50,1)',
-                            invisibleHandle:'fill:rgba(0,0,0,0);',
-                            span:'fill:rgba(255,247,145,0.5)',
-                        },
-                        button:{
-                            up:'fill:rgba(220,220,220,1)',
-                            hover:'fill:rgba(240,240,240,1)',
-                            down:'fill:rgba(180,180,180,1)',
-                            glow:'fill:rgba(220,200,220,1)',
-                        },
-                        checkbox:{
-                            backing:'fill:rgba(229, 229, 229,1)',
-                            check:'fill:rgba(252,252,252,1)',
-                        },
-                        checkbox_loop:{
-                            backing:'fill:rgba(229, 221, 112,1)',
-                            check:'fill:rgba(252,244,128,1)',
-                        },
-                    };
-                
-                    var design = {
-                        type: 'basicSequencer',
-                        x: x, y: y,
-                        base: {
-                            type:'path',
-                            points:[
-                                {x:0,y:0}, 
-                                {x:800,y:0}, 
-                                {x:800,y:210}, 
-                                {x:140,y:210},
-                                {x:115,y:225},
-                                {x:0,y:225}
-                            ], 
-                            style:style.background
-                        },
-                        elements:[
-                            //main sequencer
-                                {type:'sequencer', name:'main', data:{
-                                    x:10, y:20, width:780, height:170, 
-                                    xCount:vals.sequencer.width, yCount:vals.sequencer.height,
-                                    event:function(event){
-                                        for(var a = 0; a < event.length; a++){
-                                            design.connectionNode_data['output_'+event[a].line].send('hit',{velocity:event[a].strength});
-                                        }
-                                    },
-                                    onchangeviewarea:function(data){
-                                        design.rangeslide.viewselect.set( {start:data.left, end:data.right}, false );
-                                    },
-                                }},
-                                {type:'rangeslide', name:'viewselect', data:{
-                                    x:10, y:20, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:1,
-                                    style:{
-                                        handle: style.rangeslide.handle,
-                                        backing: style.rangeslide.backing,
-                                        slot: style.rangeslide.slot,
-                                        invisibleHandle: style.rangeslide.invisibleHandle,
-                                        span: style.rangeslide.span,
-                                    },
-                                    onchange:function(values){ design.sequencer.main.viewArea({left:values.start,right:values.end},false); },
-                                }},    
-                
-                            //follow playhead
-                                {type:'checkbox_rect', name:'followPlayhead',data:{
-                                    x:100, y:205, width:15, height:15,
-                                    style:{
-                                        backing:style.checkbox.backing,
-                                        check:style.checkbox.check,
-                                    },
-                                    onchange:function(value){design.sequencer.main.automove(value);}
-                                }},
-                
-                            //loop control   
-                                //activation
-                                {type:'checkbox_rect', name:'loopActive',data:{
-                                    x:70, y:205, width:25, height:15,
-                                    style:{
-                                        backing:style.checkbox_loop.backing,
-                                        check:style.checkbox_loop.check,
-                                    },
-                                    onchange:function(value){design.sequencer.main.loopActive(value);}
-                                }},
-                                //range
-                                {type:'rangeslide', name:'loopSelect', data:{
-                                    x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:0.75,
-                                    style:{
-                                        handle: style.rangeslide_loop.handle,
-                                        backing: style.rangeslide_loop.backing,
-                                        slot: style.rangeslide_loop.slot,
-                                        invisibleHandle: style.rangeslide_loop.invisibleHandle,
-                                        span: style.rangeslide_loop.span,
-                                    },
-                                    onchange:function(values){ 
-                                        var a = Math.round(values.start*vals.sequencer.width);
-                                        var b = Math.round(values.end*vals.sequencer.width);
-                                        if(b == 0){b = 1;}
-                                        design.sequencer.main.loopPeriod(a,b);
-                                    },
-                                }},    
-                
-                            //progression
-                                //button
-                                {type:'button_rect', name:'progress', data:{
-                                    x:10, y:205, width:25, height:15,
-                                    style:{
-                                        up:style.button.up,
-                                        hover:style.button.hover,
-                                        hover_press:style.button.down,
-                                    },
-                                    onpress:function(){design.sequencer.main.progress();},
-                                }},     
-                                //connection node
-                                {type:'connectionNode_data', name:'progress', data:{ 
-                                    x: 800, y: 5, width: 5, height: 20,
-                                    receive:function(){design.sequencer.main.progress();}
-                                }},
-                                //symbol
-                                {type:'path', name:'progress_arrow', data:{ path:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
-                
-                
-                            //reset
-                                //button
-                                {type:'button_rect', name:'reset', data:{
-                                    x:40, y:205, width:25, height:15,
-                                    style:{
-                                        up:style.button.up,
-                                        hover:style.button.hover,
-                                        hover_press:style.button.down,
-                                    },
-                                    onpress:function(){design.sequencer.main.playheadPosition(0);},
-                                }},
-                                //connection node
-                                {type:'connectionNode_data', name:'reset', data:{ 
-                                    x: 800, y: 30, width: 5, height: 20,
-                                    receive:function(){design.sequencer.main.playheadPosition(0);}
-                                }},
-                                //symbol
-                                {type:'path', name:'reset_arrow', data:{ path:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
-                                {type:'path', name:'reset_line', data:{ path:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
-                        ]
-                    };
-                    //dynamic design
-                        for(var a = 0; a < vals.sequencer.height; a++){
-                            design.elements.push(
-                                {type:'connectionNode_data', name:'output_'+a, data:{ 
-                                    x: -5, y: 11+a*(180/vals.sequencer.height), width: 5, height:(180/vals.sequencer.height)-2,
-                                    receive:function(){design.sequencer.main.playheadPosition(0);}
-                                }},
-                            );
-                        }
-                
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.basicSequencer,design);
-                
-                    //import/export
-                        obj.exportData = function(){
-                            return {
-                                loop:{
-                                    active:design.checkbox_rect.loopActive.get(),
-                                    range:design.sequencer.main.loopPeriod(),
-                                },
-                                autofollow:design.checkbox_rect.followPlayhead.get(),
-                                notes:design.sequencer.main.getAllNotes(),
-                            };
-                        };
-                        obj.importData = function(data){
-                            design.sequencer.main.addNotes(data.notes);
-                            obj.i.loopActive(data.loop.active);
-                            design.rangeslide.loopSelect.set(data.loop.range);
-                            design.checkbox_rect.followPlayhead.set(data.autofollow);
-                        };
-                
-                    //interface
-                        obj.i = {
-                            addNote:function(line, position, length, strength=1){design.sequencer.main.addNote(line, position, length, strength);},
-                            addNotes:function(data){design.sequencer.main.addNotes(data);},
-                            getNotes:function(){return design.sequencer.main.getAllNotes();},
-                            loopActive:function(a){design.checkbox_rect.loopActive.set(a);},
-                        };
-                
-                    return obj;
-                };
-                
-                this.basicSequencer.metadata = {
-                    name:'Basic Sequencer (Multi Pulse Out)',
-                    helpurl:'https://metasophiea.com/curve/help/objects/basicSequencer_pulseOut/'
-                };
-                this.launchpad = function(x,y,debug=false){
-                    var values = {
-                        xCount:8, yCount:8,
-                    };
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
-                        button: {
-                            up: 'fill:rgba(175,175,175,1)',
-                            hover: 'fill:rgba(220,220,220,1)',
-                            down: 'fill:rgba(150,150,150,1)'
-                        },
-                        grid: {
-                            backing: 'fill:rgba(200,175,200,1)',
-                            check: 'fill:rgba(150,125,150,1)',
-                            backingGlow: 'fill:rgba(225,175,225,1)',
-                            checkGlow:'fill:rgba(200,125,200,1)'
-                        },
-                        sevenSegmentDisplay:{
-                            background:'fill:rgba(200,175,200,1)',
-                            glow:'fill:rgba(225,225,225,1)',
-                            dim:'fill:rgba(150,125,150,1',
-                        }
-                    };
-                    var design = {
-                        type: 'launchpad',
-                        x: x, y: y,
-                        base: {
-                            type:'path',
-                            points:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}], 
-                            style:style.background
-                        },
-                        elements:[
-                            //input data
-                                {type:'connectionNode_data', name:'pulse', data:{ 
-                                    x: 125, y: 5, width: 5, height: 10,
-                                    receive:function(){obj.internalCircuits.inc();lightLine();}
-                                }},
-                                {type:'connectionNode_data', name:'nextPage', data:{ 
-                                    x: 125, y: 22.5, width: 5, height: 10,
-                                    receive:function(){obj.internalCircuits.incPage();}
-                                }},
-                                {type:'connectionNode_data', name:'prevPage', data:{ 
-                                    x: 125, y: 35, width: 5, height: 10,
-                                    receive:function(){obj.internalCircuits.decPage();}
-                                }},
-                            //pulse
-                                {type:'button_rect',name:'pulse',data:{
-                                    x:100, y:5, width:20, height:10,
-                                    style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down, },
-                                    onpress:function(){obj.internalCircuits.inc();lightLine();},
-                                }},
-                            //rastorgrid
-                                {type:'rastorgrid',name:'rastorgrid',data:{
-                                    x:5, y:5, width:90, height:90,
-                                    xCount:values.xCount, yCount:values.yCount,
-                                    style:{
-                                        backing: style.grid.backing, 
-                                        check:style.grid.check, 
-                                        backingGlow:style.grid.backingGlow, 
-                                        checkGlow:style.grid.checkGlow
-                                    },
-                                    onchange:function(data){obj.internalCircuits.importPage(data);},
-                                }},
-                            //page select
-                                {type:'sevenSegmentDisplay',name:'pageNumber',data:{
-                                    x:100, y:22.5, width:20, height:22.5,
-                                    style:{
-                                        background:style.sevenSegmentDisplay.background,
-                                        glow:style.sevenSegmentDisplay.glow,
-                                        dim:style.sevenSegmentDisplay.dim,
-                                    }
-                                }},
-                                {type:'button_rect',name:'nextPage',data:{
-                                    x:102.5, y:17.5, width:15, height:5, selectable:false,
-                                    style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down, },
-                                    onpress:function(){obj.internalCircuits.incPage();},
-                                }},
-                                {type:'button_rect',name:'prevPage',data:{
-                                    x:102.5, y:45, width:15, height:5, selectable:false,
-                                    style:{ up:style.button.up, hover:style.button.hover, hover_press:style.button.down },
-                                    onpress:function(){obj.internalCircuits.decPage();},
-                                }},
-                        ]
-                    };
-                    //dynamic design
-                        for(var a = 0; a < values.yCount; a++){
-                            //data-out ports
-                            design.elements.push(
-                                {type:'connectionNode_data', name:'out_'+a, data:{
-                                    x: -5, y: a*12.5 + 2.5, width: 5, height: 7.5,
-                                }},
-                            );
-                        }
-                
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.launchpad,design);
-                
-                    //import/export
-                        obj.exportData = function(){
-                            return {
-                                currentPage: obj.internalCircuits.page(),
-                                data:obj.internalCircuits.exportPages(),
-                            };
-                        };
-                        obj.importData = function(data){
-                            if(data.data != undefined){ obj.internalCircuits.importPages(data.data); }
-                            if(data.currentPage){ obj.internalCircuits.page(data.currentPage); }
-                        };
-                
-                    //internal functions
-                        function lightLine(){
-                            for(var a = 0; a < values.yCount; a++){
-                                design.rastorgrid.rastorgrid.light(obj.internalCircuits.previousPosition(),a,false);
-                                design.rastorgrid.rastorgrid.light(obj.internalCircuits.position(),a,true);
-                            }
-                        }
-                        function pageChange(data){
-                            design.sevenSegmentDisplay.pageNumber.enterCharacter(''+data);
-                            var newPage = obj.internalCircuits.exportPage();
-                
-                            if(newPage == undefined){
-                                design.rastorgrid.rastorgrid.clear();
-                            }else{
-                                design.rastorgrid.rastorgrid.set(newPage);
+                        var lines = [];
+                        var lineElements = [];
+                        var lineLimit = 10;
+                        function print(text){
+                            //add the new text to the list, and if the list becomes too long, remove the oldest item
+                            lines.unshift(text);
+                            if( lines.length > lineLimit ){ lines.pop(); }
+                
+                            //remove all the text elements
+                            for(var a = 0; a < lineElements.length; a++){ lineElements[a].remove(); }
+                            lineElements = [];
+                
+                            //write in the new list
+                            for(var a = 0; a < lines.length; a++){
+                                lineElements[a] = part.builder('text','universalreadout_'+a,{ x:40, y:a*5, text:lines[a], style:style.text })
+                                obj.append( lineElements[a] );
                             }
                         }
                 
-                    //circuitry
-                        obj.internalCircuits = new parts.circuits.sequencing.launchpad(values.xCount, values.yCount);
-                        obj.internalCircuits.commands = function(data){
-                            for(var a = 0; a < values.yCount; a++){
-                                if(data[a]){ obj.io['out_'+a].send('pulse'); }
-                            }
-                        };
-                        obj.internalCircuits.pageChange = pageChange;
-                
-                    //interface
-                        obj.i = {
-                            importPage:function(data,a){obj.internalCircuits.importPage(data,a);},
-                            exportPage:function(a){return obj.internalCircuits.exportPage(a);},
-                            importPages:function(data){obj.internalCircuits.importPages(data);},
-                            exportPages:function(){return obj.internalCircuits.exportPages();},
-                            setPage:function(a){obj.internalCircuits.page(a);}
-                        };
-                
-                    //setup 
-                        lightLine();
-                        design.sevenSegmentDisplay.pageNumber.enterCharacter('0');
-                
                     return obj;
                 };
                 
-                this.launchpad.metadata = {
-                    name:'Launchpad',
-                    helpurl:'https://metasophiea.com/curve/help/objects/launchpad/'
-                };
-                this.basicSequencer_midiOut = function(x,y,debug=false){
-                    var vals = {
-                        sequencer:{
-                            width:64, //height:100,
-                            midiRange:{ bottom:24, top:131 },
-                            pattern:[0,0,1,0,1,0,1,0,0,1,0,1],
-                        }
-                    };
-                    //calculate pattern basied on midi range
-                    var temp = vals.sequencer.pattern.length - ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(system.audio.num2name(vals.sequencer.midiRange.top).slice(1))
-                    vals.sequencer.pattern = vals.sequencer.pattern.slice(temp).concat(vals.sequencer.pattern.slice(0,temp));
-                
-                    var style = {
-                        background:'fill:rgba(200,200,200,1)',
-                        markings: {
-                            fill:'fill:rgba(150,150,150,1); pointer-events: none;',
-                            stroke:'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
-                        },
-                        rangeslide:{
-                            handle:'fill:rgba(240,240,240,1)',
-                            backing:'fill:rgba(150,150,150,1)',
-                            slot:'fill:rgba(50,50,50,1)',
-                            invisibleHandle:'fill:rgba(0,0,0,0);',
-                            span:'fill:rgba(220,220,220,1)',
-                        },
-                        rangeslide_loop:{
-                            handle:'fill:rgba(240,240,240,1)',
-                            backing:'fill:rgba(150,150,150,1)',
-                            slot:'fill:rgba(50,50,50,1)',
-                            invisibleHandle:'fill:rgba(0,0,0,0);',
-                            span:'fill:rgba(255,247,145,0.5)',
-                        },
-                        button:{
-                            up:'fill:rgba(220,220,220,1)',
-                            hover:'fill:rgba(240,240,240,1)',
-                            down:'fill:rgba(180,180,180,1)',
-                            glow:'fill:rgba(220,200,220,1)',
-                        },
-                        checkbox:{
-                            backing:'fill:rgba(229, 229, 229,1)',
-                            check:'fill:rgba(252,252,252,1)',
-                        },
-                        checkbox_loop:{
-                            backing:'fill:rgba(229, 221, 112,1)',
-                            check:'fill:rgba(252,244,128,1)',
-                        },
-                    };
-                
-                    var design = {
-                        type: 'basicSequencer_midiOut',
-                        x: x, y: y,
-                        base: {
-                            type:'path',
-                            points:[ 
-                                {x:0,y:0}, 
-                                {x:800,y:0}, 
-                                {x:800,y:210}, 
-                                {x:140,y:210},
-                                {x:115,y:225},
-                                {x:0,y:225}
-                            ], 
-                            style:style.background
-                        },
-                        elements:[
-                            //midi out
-                                {type:'connectionNode_data', name:'midiout', data:{
-                                    x: -5, y: 11.25, width: 5, height: 17.5,
-                                }},
-                
-                
-                            //main sequencer
-                                {type:'sequencer', name:'main', data:{
-                                    x:20, y:20, width:770, height:170, 
-                                    xCount:vals.sequencer.width, yCount:vals.sequencer.midiRange.top-vals.sequencer.midiRange.bottom+1,
-                                    event:function(event){
-                                        for(var a = 0; a < event.length; a++){
-                                            design.connectionNode_data.midiout.send('midinumber',{num:midiNumber_line_converter(event[a].line), velocity:event[a].strength});
-                                        }
-                                    },
-                                    style:{
-                                        horizontalStrip_pattern:vals.sequencer.pattern
-                                    },
-                                    onchangeviewarea:function(data){
-                                        design.rangeslide.viewselect_x.set( {start:data.left, end:data.right}, false );
-                                        design.rangeslide.viewselect_y.set( {start:data.top, end:data.bottom}, false );
-                                    },
-                                }},
-                                {type:'rangeslide', name:'viewselect_y', data:{
-                                    x:10, y:20, height:170, width: 10, angle:0, handleHeight:1/16, spanWidth:1,
-                                    style:{
-                                        handle: style.rangeslide.handle,
-                                        backing: style.rangeslide.backing,
-                                        slot: style.rangeslide.slot,
-                                        invisibleHandle: style.rangeslide.invisibleHandle,
-                                        span: style.rangeslide.span,
-                                    },
-                                    onchange:function(values){ design.sequencer.main.viewArea({top:values.start,bottom:values.end},false); },
-                                }},
-                                {type:'rangeslide', name:'viewselect_x', data:{
-                                    x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/32, spanWidth:1,
-                                    style:{
-                                        handle: style.rangeslide.handle,
-                                        backing: style.rangeslide.backing,
-                                        slot: style.rangeslide.slot,
-                                        invisibleHandle: style.rangeslide.invisibleHandle,
-                                        span: style.rangeslide.span,
-                                    },
-                                    onchange:function(values){ design.sequencer.main.viewArea({left:values.start,right:values.end},false); },
-                                }},
-                
-                            //follow playhead
-                                {type:'checkbox_rect', name:'followPlayhead',data:{
-                                    x:100, y:205, width:15, height:15,
-                                    style:{
-                                        backing:style.checkbox.backing,
-                                        check:style.checkbox.check,
-                                    },
-                                    onchange:function(value){design.sequencer.main.automove(value);}
-                                }},
-                
-                            //loop control   
-                                //activation
-                                {type:'checkbox_rect', name:'loopActive',data:{
-                                    x:70, y:205, width:25, height:15,
-                                    style:{
-                                        backing:style.checkbox_loop.backing,
-                                        check:style.checkbox_loop.check,
-                                    },
-                                    onchange:function(value){design.sequencer.main.loopActive(value);}
-                                }},
-                                //range
-                                {type:'rangeslide', name:'loopSelect', data:{
-                                    x:20, y:200, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75,
-                                    style:{
-                                        handle: style.rangeslide_loop.handle,
-                                        backing: style.rangeslide_loop.backing,
-                                        slot: style.rangeslide_loop.slot,
-                                        invisibleHandle: style.rangeslide_loop.invisibleHandle,
-                                        span: style.rangeslide_loop.span,
-                                    },
-                                    onchange:function(values){ 
-                                        var a = Math.round(values.start*vals.sequencer.width);
-                                        var b = Math.round(values.end*vals.sequencer.width);
-                                        if(b == 0){b = 1;}
-                                        design.sequencer.main.loopPeriod(a,b);
-                                    },
-                                }},    
-                
-                            //progression
-                                //button
-                                {type:'button_rect', name:'progress', data:{
-                                    x:10, y:205, width:25, height:15,
-                                    style:{
-                                        up:style.button.up,
-                                        hover:style.button.hover,
-                                        hover_press:style.button.down,
-                                    },
-                                    onpress:function(){design.sequencer.main.progress();},
-                                }},     
-                                //connection node
-                                {type:'connectionNode_data', name:'progress', data:{ 
-                                    x: 800, y: 5, width: 5, height: 20,
-                                    receive:function(){design.sequencer.main.progress();}
-                                }},
-                                //symbol
-                                {type:'path', name:'progress_arrow', data:{ path:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
-                
-                
-                            //reset
-                                //button
-                                {type:'button_rect', name:'reset', data:{
-                                    x:40, y:205, width:25, height:15,
-                                    style:{
-                                        up:style.button.up,
-                                        hover:style.button.hover,
-                                        hover_press:style.button.down,
-                                    },
-                                    onpress:function(){design.sequencer.main.playheadPosition(0);},
-                                }},
-                                //connection node
-                                {type:'connectionNode_data', name:'reset', data:{ 
-                                    x: 800, y: 30, width: 5, height: 20,
-                                    receive:function(){design.sequencer.main.playheadPosition(0);}
-                                }},
-                                //symbol
-                                {type:'path', name:'reset_arrow', data:{ path:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
-                                {type:'path', name:'reset_line', data:{ path:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
-                        ]
-                    };
-                
-                    //internal functions
-                        function midiNumber_line_converter(num){ return vals.sequencer.midiRange.top - num; }
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.basicSequencer_midiOut,design);
-                
-                    //import/export
-                        obj.exportData = function(){
-                            return {
-                                loop:{
-                                    active:design.checkbox_rect.loopActive.get(),
-                                    range:design.sequencer.main.loopPeriod(),
-                                },
-                                autofollow:design.checkbox_rect.followPlayhead.get(),
-                                notes:design.sequencer.main.getAllNotes(),
-                                viewArea:design.sequencer.main.viewArea(),
-                            };
-                        };
-                        obj.importData = function(data){
-                            design.sequencer.main.addNotes(data.notes);
-                            obj.i.loopActive(data.loop.active);
-                            design.rangeslide.loopSelect.set(data.loop.range);
-                            design.checkbox_rect.followPlayhead.set(data.autofollow);
-                            design.sequencer.main.viewArea(data.viewArea);
-                        };
-                
-                    //interface
-                        obj.i = {
-                            addNote:function(number, position, length, strength=1){design.sequencer.main.addNote(midiNumber_line_converter(number), position, length, strength);},
-                            addNotes:function(data){ for(var a = 0; a < data.length; a++){ this.addNote(data[a].line, data[a].position, data[a].length, data[a].strength); } },
-                            getNotes:function(){return design.sequencer.main.getAllNotes();},
-                            loopActive:function(a){design.checkbox_rect.loopActive.set(a);},
-                            stepSize:design.sequencer.main.step,
-                        };
-                
-                    //setup
-                        design.rangeslide.viewselect_y.set({start:0.3, end:0.7});
-                
-                    return obj;
-                };
-                
-                this.basicSequencer_midiOut.metadata = {
-                    name:'Basic Sequencer (Midi Out)',
-                    helpurl:'https://metasophiea.com/curve/help/objects/basicSequencer_midiOut/'
-                };
-                this.basicMixer = function(x,y){
-                    var style = {
-                        background:'fill:rgba(200,200,200,1);pointer-events:none;',
-                        markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
-                        h1: 'fill:rgba(0,0,0,1); font-size:7px; font-family:Courier New;',
-                        h2: 'fill:rgb(150,150,150); font-size:4px; font-family:Courier New;',
-                
-                        dial:{
-                            handle: 'fill:rgba(220,220,220,1)',
-                            slot: 'fill:rgba(50,50,50,1)',
-                            needle: 'fill:rgba(250,150,150,1)',
-                            outerArc: 'fill:none; stroke:rgb(150,150,150); stroke-width:1;',
-                        }
-                    };
-                    var design = {
-                        type:'basicMixer',
-                        x:x, y:y,
-                        base:{
-                            points:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
-                            style:'fill:rgba(200,200,200,0);'
-                        },
-                        elements:[
-                            {type:'connectionNode_audio', name:'input_0', data:{ type:0, x:90, y:10+0,   width:20, height:20 }},
-                            {type:'connectionNode_audio', name:'input_1', data:{ type:0, x:90, y:10+25,  width:20, height:20 }},
-                            {type:'connectionNode_audio', name:'input_2', data:{ type:0, x:90, y:10+50,  width:20, height:20 }},
-                            {type:'connectionNode_audio', name:'input_3', data:{ type:0, x:90, y:10+75,  width:20, height:20 }},
-                            {type:'connectionNode_audio', name:'input_4', data:{ type:0, x:90, y:10+100, width:20, height:20 }},
-                            {type:'connectionNode_audio', name:'input_5', data:{ type:0, x:90, y:10+125, width:20, height:20 }},
-                            {type:'connectionNode_audio', name:'input_6', data:{ type:0, x:90, y:10+150, width:20, height:20 }},
-                            {type:'connectionNode_audio', name:'input_7', data:{ type:0, x:90, y:10+175, width:20, height:20 }},
-                
-                            {type:'connectionNode_audio', name:'output_0', data:{ type:1, x:-10, y:5, width:20, height:20 }},
-                            {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:30, width:20, height:20 }},
-                
-                            {type:'path', name:'backing', data:{
-                                path:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
-                                style:style.background
-                            }},
-                
-                            {type:'text', name:'gain', data:{x:80, y:6.5, text: 'gain', style: style.h2}},
-                            {type:'text', name:'pan', data:{x:56.5, y:6.5, text: 'pan', style: style.h2}},
-                
-                            {type:'rect', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, style:style.markings }},
-                            {type:'rect', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, style:style.markings }},
-                            {type:'rect', name:'down', data:{ x:10, y:6, width:2, height:35, style:style.markings }},
-                            {type:'rect', name:'inTo0', data:{ x:2, y:14, width:10, height:2, style:style.markings }},
-                            {type:'rect', name:'inTo1', data:{ x:2, y:39, width:10, height:2, style:style.markings }},
-                        ]
-                    };
-                    //dynamic design
-                    for(var a = 0; a < 8; a++){
-                        design.elements.push(
-                            {type:'rect', name:'line_'+a, data:{
-                                x:23, y:19.1+a*25, width:75, height:2, 
-                                style:style.markings,
-                            }}
-                        );
-                
-                        design.elements.push(
-                            {type:'dial_continuous',name:'gain_'+a,data:{
-                                x:85, y:20+a*25, r: 8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
-                                onchange:function(a){
-                                    return function(value){
-                                        obj['splitter_'+a].inGain(value);
-                                    }
-                                }(a)
-                            }}
-                        );
-                        design.elements.push(
-                            {type:'dial_continuous',name:'pan_'+a,data:{
-                                x:60, y:20+a*25, r: 8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.outerArc},
-                                onchange:function(a){
-                                    return function(value){
-                                        obj['splitter_'+a].outGain(0,value);
-                                        obj['splitter_'+a].outGain(1,1-value);
-                                    }
-                                }(a)
-                            }}
-                        );
-                    }
-                
-                    //main object
-                        var obj = system.utility.misc.objectBuilder(objects.basicMixer,design);
-                
-                    //internal circuitry
-                        for(var a = 0; a < 8; a++){
-                            obj['splitter_'+a] = new parts.circuits.audio.channelMultiplier(system.audio.context,2);
-                            design.connectionNode_audio['input_'+a].out().connect(obj['splitter_'+a].in());
-                            obj['splitter_'+a].out(0).connect( design.connectionNode_audio['output_0'].in() );
-                            obj['splitter_'+a].out(1).connect( design.connectionNode_audio['output_1'].in() );
-                        }
-                
-                    //interface
-                        obj.i = {
-                            gain:function(track,value){design.dial_continuous['gain_'+track].set(value);},
-                            pan:function(track,value){design.dial_continuous['pan_'+track].set(value);},
-                        };
-                
-                    //setup
-                        for(var a = 0; a < 8; a++){
-                            obj.i.gain(a,0.5);
-                            obj.i.pan(a,0.5);
-                        }
-                    
-                    return obj;
-                };
-                
-                this.basicMixer.metadata = {
-                    name:'Basic Audio Mixer',
-                    helpurl:'https://metasophiea.com/curve/help/objects/basicAudioMixer/'
+                this.universalreadout.metadata = {
+                    name:'Universal Readout',
+                    helpurl:'https://metasophiea.com/curve/help/objects/universalReadout/'
                 };
             };
+            
+            object.builder = function(creatorMethod,design){
+                //main
+                    var obj = part.builder('g',design.type,{x:design.x, y:design.y});
+                    if(design.base.type == undefined){design.base.type = 'path';}
+                
+                //generate selection area
+                    switch(design.base.type){
+                        case 'rect':
+                            //generate selection area
+                                design.base.points = [{x:design.x,y:design.y}, {x:design.width,y:design.y}, {x:design.width,y:design.height}, {x:design.x,y:design.height}];
+                                system.utility.object.generateSelectionArea(design.base.points, obj);
+                                
+                            //backing
+                                design.base = part.builder('rect',null,{x:design.base.x, y:design.base.y, width:design.base.width, height:design.base.height, angle:design.base.angle, style:design.base.style});
+                        break;
+                        case 'circle': 
+                            //generate selection area
+                                var res = 12; //(number of sides generated)
+                                var mux = 2*Math.PI/res;
+                                design.base.points = [];
+                                for(var a = 0; a < res; a++){
+                                    design.base.points.push(
+                                        { x:design.base.x-Math.sin(a*mux)*design.base.r, y:design.base.y-Math.cos(a*mux)*design.base.r }
+                                    );
+                                }
+                                system.utility.object.generateSelectionArea(design.base.points, obj);
+                                
+                            //backing
+                                design.base = part.builder('circle',null,{x:design.base.x, y:design.base.y, r:design.base.r, angle:design.base.angle, style:design.base.style});
+                        break;
+                        case 'path': 
+                            //generate selection area
+                                system.utility.object.generateSelectionArea(design.base.points, obj);
+                            //backing
+                                design.base = part.builder('path',null,{path:design.base.points, lineType:'L', style:design.base.style});
+                        break;
+                        default: console.error('Unknown base type:',design.base.type,'when creating object "'+design.type+'"'); return; break;
+                    };
+                    obj.append(design.base);
+            
+                    //declare grapple
+                        if(!design.skipGrapple){
+                            system.mouse.declareObjectGrapple(design.base, obj, creatorMethod);
+                        }
+            
+                //generate elements
+                    if(design.elements){
+                        for(var a = 0; a < design.elements.length; a++){
+                            if(!design[design.elements[a].type]){design[design.elements[a].type]={};}
+                            if(design.elements[a].name in design[design.elements[a].type]){console.warn('error: element with the name "'+design.elements[a].name+'" already exists. Element:',design.elements[a],'will not be added');continue;}
+                            design[design.elements[a].type][design.elements[a].name] = part.builder(design.elements[a].type,design.elements[a].name,design.elements[a].data);
+                            obj.append(design[design.elements[a].type][design.elements[a].name]);
+                        }
+                    }
+            
+                //io setup
+                    obj.io = {};
+                    if(design.connectionNode_audio){
+                        var keys = Object.keys(design.connectionNode_audio);
+                        for(var a = 0; a < keys.length; a++){
+                            if(keys[a] in obj.io){console.warn('error: connection node with the name "'+keys[a]+'" already exists in the .io group. Node ',design.connectionNode_data[keys[a]],' will not be added');continue;}
+                            obj.io[keys[a]] = design.connectionNode_audio[keys[a]];
+                        }
+                    }
+                    if(design.connectionNode_data){
+                        var keys = Object.keys(design.connectionNode_data);
+                        for(var a = 0; a < keys.length; a++){
+                            if(keys[a] in obj.io){console.warn('error: connection node with the name "'+keys[a]+'" already exists in the .io group. Node ',design.connectionNode_data[keys[a]],' will not be added');continue;}
+                            obj.io[keys[a]] = design.connectionNode_data[keys[a]];
+                        }
+                    }
+            
+                return obj;
+            };
+
             var control = new function(){
                 this.objects = new function(){
                     this.menubar = function(){
@@ -12922,7 +12924,7 @@
                                                     }
                     
                                                 //produce the dropdown list for the selected item
-                                                    vars.opendropdown = system.utility.misc.elementMaker('list','createMenu',{
+                                                    vars.opendropdown = part.builder('list','createMenu',{
                                                         x:x, y:20,
                                                         width: that.menubar.dropdowns[a].listWidth, height: height,
                                                         itemHeightMux:  that.menubar.dropdowns[a].listItemHeight/height, 
@@ -12955,7 +12957,7 @@
                     
                     
                         //main object
-                            var obj = system.utility.misc.objectBuilder(objects.data_duplicator,design);
+                            var obj = object.builder(object.data_duplicator,design);
                     
                         //interface
                             obj.i = {
@@ -13019,14 +13021,14 @@
                                 var outputArray = [];
                     
                                 //populate array with all creatable objects
-                                    for(i in objects){
+                                    for(i in object){
                                         outputArray.push(
                                             {
-                                                text_left: objects[i].metadata ? objects[i].metadata.name : i,
+                                                text_left: object[i].metadata ? object[i].metadata.name : i,
                                                 function:function(i){
                                                     return function(){
                                                         var p = system.utility.workspace.pointConverter.browser2workspace(30,30);
-                                                        system.utility.workspace.placeAndReturnObject( objects[i](p.x,p.y) );
+                                                        system.utility.workspace.placeAndReturnObject( object[i](p.x,p.y) );
                                                     }
                                                 }(i),
                                             }
@@ -13091,8 +13093,8 @@
                         case 'f1': 
                             var temp = system.utility.workspace.objectUnderPoint(system.mouse.currentPosition[0], system.mouse.currentPosition[1]);
                             if(temp){
-                                if( objects[temp.id].metadata ){
-                                    system.utility.misc.openURL(objects[temp.id].metadata.helpurl);
+                                if( object[temp.id].metadata ){
+                                    system.utility.misc.openURL(object[temp.id].metadata.helpurl);
                                 }else{
                                     console.warn('bad help url, please add metadata to your object file ->',temp.id);
                                 }

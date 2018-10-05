@@ -1,6 +1,6 @@
 //setup selected objects spaces and functionality
 this.selectedObjects = [];
-this.lastSelectedObject = null;
+this.lastselectedObjects = null;
 this.clipboard = [];
     // pane                 -   the pane the object came from
     // objectConstructor    -   the creation function of the object
@@ -37,7 +37,7 @@ this.selectObject = function(object){
     //perform selection
         if(object.onSelect){object.onSelect();}
         system.selection.selectedObjects.push(object);
-        system.selection.lastSelectedObject = object;
+        system.selection.lastselectedObjects = object;
 };
 this.deselectObject = function(object){
     system.selection.selectedObjects.splice(system.selection.selectedObjects.indexOf(object),1);
@@ -179,5 +179,5 @@ this.delete = function(){
         //remove object from selected array
             this.selectedObjects.shift();
     }
-    this.lastSelectedObject = null;
+    this.lastselectedObjects = null;
 };

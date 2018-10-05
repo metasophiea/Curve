@@ -1,4 +1,4 @@
-parts.elements.control.dial_continuous = function(
+part.element.control.dial_continuous = function(
     id='dial_continuous',
     x, y, r,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
@@ -13,7 +13,7 @@ parts.elements.control.dial_continuous = function(
     outerArcStyle_glow='fill:none; stroke:none;',
 ){
     // elements
-        var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+        var object = part.builder('g',id,{x:x, y:y});
             object._value = 0;
             object._data = {
                 'mux':r*4
@@ -32,21 +32,21 @@ parts.elements.control.dial_continuous = function(
             var temp = system.utility.math.polar2cartesian(startAngle+maxAngle,r*arcDistance);
             arcPath.push( temp );
 
-            var outerArc = system.utility.misc.elementMaker('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
+            var outerArc = part.builder('path','arc',{path:arcPath, lineType:'Q', style:outerArcStyle});
             object.appendChild(outerArc);
 
         //slot
-            var slot = system.utility.misc.elementMaker('circle','slot',{r:r*1.1, style:slotStyle});
+            var slot = part.builder('circle','slot',{r:r*1.1, style:slotStyle});
                 object.appendChild(slot);
 
         //handle
-            var handle = system.utility.misc.elementMaker('circle','slot',{r:r, style:handleStyle});
+            var handle = part.builder('circle','slot',{r:r, style:handleStyle});
                 object.appendChild(handle);
 
         //needle
             var needleWidth = r/5;
             var needleLength = r;
-            var needle = system.utility.misc.elementMaker('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
+            var needle = part.builder('rect','needle',{height:needleWidth, width:needleLength, style:needleStyle});
                 needle.x.baseVal.valueInSpecifiedUnits = needleLength/3;
                 needle.y.baseVal.valueInSpecifiedUnits = -needleWidth/2;
                 object.appendChild(needle);

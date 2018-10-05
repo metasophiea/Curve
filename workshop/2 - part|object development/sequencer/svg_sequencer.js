@@ -51,7 +51,7 @@ var svg_sequencer = function(
             left:0, right:zoomLevel_x,
             top:0, bottom:zoomLevel_y,
         };
-        var noteRegistry = new parts.circuits.sequencing.noteRegistry(xCount,yCount);
+        var noteRegistry = new part.circuit.sequencing.noteRegistry(xCount,yCount);
         var selectedNotes = [];
         var activeNotes = [];
         var snapping = true;
@@ -201,7 +201,7 @@ var svg_sequencer = function(
                 //horizontal strips
                 for(var a = 0; a < yCount; a++){
                     backgroundDrawArea.appendChild(
-                        system.utility.misc.elementMaker('rect','strip_horizontal_'+a,{
+                        part.builder('rect','strip_horizontal_'+a,{
                             x1:0, y:a*(height/(yCount*zoomLevel_y)),
                             width:totalSize.width, height:height/(yCount*zoomLevel_y),
                             style:horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]],
@@ -211,7 +211,7 @@ var svg_sequencer = function(
                 //vertical strips
                 for(var a = 0; a < xCount; a++){
                     backgroundDrawArea.appendChild(
-                        system.utility.misc.elementMaker('rect','strip_vertical_'+a,{
+                        part.builder('rect','strip_vertical_'+a,{
                             x:a*(width/(xCount*zoomLevel_x)), y:0,
                             width:width/(xCount*zoomLevel_x), height:totalSize.height,
                             style:verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]],
@@ -470,7 +470,7 @@ var svg_sequencer = function(
             return {id:newID, noteBlock:newNoteBlock};
         }
         function makePlayhead(){
-            var newPlayhead = system.utility.misc.elementMaker('g','playhead',{});
+            var newPlayhead = part.builder('g','playhead',{});
             workarea.appendChild(newPlayhead);
             newPlayhead.onmousedown = function(){
                 playhead.held = true;
@@ -483,14 +483,14 @@ var svg_sequencer = function(
                 );
             };
 
-            newPlayhead.main = system.utility.misc.elementMaker('line','main',{
+            newPlayhead.main = part.builder('line','main',{
                 x1:0, y1:0,
                 x2:0, y2:totalSize.height,
                 style:playheadStyle + 'stroke-width:'+playhead.width+';'
             });
             newPlayhead.appendChild(newPlayhead.main);
 
-            newPlayhead.invisibleHandle = system.utility.misc.elementMaker('line','invisibleHandle',{
+            newPlayhead.invisibleHandle = part.builder('line','invisibleHandle',{
                 x1:0, y1:0, x2:0, y2:totalSize.height,
                 style:'stroke:rgba(0,0,0,0); cursor: col-resize; stroke-width:'+playhead.width*playhead.invisibleHandleMux+';'
             });
@@ -499,16 +499,16 @@ var svg_sequencer = function(
 
     //elements
         //main
-            var obj = system.utility.misc.elementMaker('g',id,{x:x, y:y, r:angle});
+            var obj = part.builder('g',id,{x:x, y:y, r:angle});
         //static backing
-            var backing = system.utility.misc.elementMaker('rect','backing',{width:width, height:height, style:backingStyle});
+            var backing = part.builder('rect','backing',{width:width, height:height, style:backingStyle});
             obj.appendChild(backing);
         //viewport (for clipping the workarea)
-            var viewport = system.utility.misc.elementMaker('g','viewport',{});
+            var viewport = part.builder('g','viewport',{});
             viewport.setAttribute('clip-path','polygon(0px 0px, '+width+'px 0px, '+width+'px '+height+'px, 0px '+height+'px)');
             obj.appendChild(viewport);
         //workarea
-            var workarea = system.utility.misc.elementMaker('g','workarea',{});
+            var workarea = part.builder('g','workarea',{});
             viewport.appendChild(workarea);
             workarea.onkeydown = function(event){
                 if(event.key == 'Delete' || event.key == 'Backspace'){
@@ -520,11 +520,11 @@ var svg_sequencer = function(
                 }
             };
             //moveable background
-                var backgroundDrawArea = system.utility.misc.elementMaker('g','backgroundDrawArea',{});
+                var backgroundDrawArea = part.builder('g','backgroundDrawArea',{});
                 workarea.appendChild(backgroundDrawArea);
                 drawBackground();
             //interaction pane
-                var interactionPlane = system.utility.misc.elementMaker('rect','interactionPlane',{width:totalSize.width, height:totalSize.height, style:'fill:rgba(0,0,0,0);'});
+                var interactionPlane = part.builder('rect','interactionPlane',{width:totalSize.width, height:totalSize.height, style:'fill:rgba(0,0,0,0);'});
                 workarea.appendChild(interactionPlane);
                 interactionPlane.onmousedown = function(event){
 
@@ -532,7 +532,7 @@ var svg_sequencer = function(
                         var initialPositionData = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                         var livePositionData = system.utility.element.getPositionWithinFromMouse(event,backing,width,height);
                         
-                        var selectionArea = system.utility.misc.elementMaker('rect','selectionArea',{
+                        var selectionArea = part.builder('rect','selectionArea',{
                             x:initialPositionData.x*width, y:initialPositionData.y*height,
                             width:0, height:0,
                             style:selectionAreaStyle,
@@ -644,7 +644,7 @@ var svg_sequencer = function(
 
                 };
             //note block area
-                var notePane = system.utility.misc.elementMaker('g','notePane',{});
+                var notePane = part.builder('g','notePane',{});
                 workarea.appendChild(notePane);
 
     //controls
@@ -854,10 +854,10 @@ svg_sequencer.noteBlock = function(
     };
     
     //elements
-        var obj = system.utility.misc.elementMaker('g',id,{y:line*unit_y, x:position*unit_x});
-        obj.body = system.utility.misc.elementMaker('rect','body',{width:length*unit_x, height:unit_y, style:currentStyles.body});
-        obj.leftHandle = system.utility.misc.elementMaker('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
-        obj.rightHandle = system.utility.misc.elementMaker('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
+        var obj = part.builder('g',id,{y:line*unit_y, x:position*unit_x});
+        obj.body = part.builder('rect','body',{width:length*unit_x, height:unit_y, style:currentStyles.body});
+        obj.leftHandle = part.builder('rect','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y,style:handleStyle});
+        obj.rightHandle = part.builder('rect','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:handleStyle});
         obj.append(obj.body);
         obj.append(obj.leftHandle);
         obj.append(obj.rightHandle);

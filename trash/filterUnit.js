@@ -1,4 +1,4 @@
-objects.filterUnit = function(x,y){
+object.filterUnit = function(x,y){
     var state = {
         freqRange:{ low: 0.1, high: 20000, },
         graphDetail: 3,
@@ -90,7 +90,7 @@ objects.filterUnit = function(x,y){
     };
 
     //main object
-        var obj = system.utility.misc.objectBuilder(objects.filterUnit,design);
+        var obj = object.builder(object.filterUnit,design);
 
     //import/export
         obj.importData = function(data){
@@ -110,7 +110,7 @@ objects.filterUnit = function(x,y){
 
     //circuitry
         //filter
-            obj.filterCircuit = new parts.circuits.audio.filterUnit(system.audio.context);
+            obj.filterCircuit = new part.circuit.audio.filterUnit(system.audio.context);
             design.connectionNode_audio.audioIn.out().connect( obj.filterCircuit.in() );
             obj.filterCircuit.out().connect( design.connectionNode_audio.audioOut.in() );
 

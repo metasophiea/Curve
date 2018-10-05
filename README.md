@@ -14,7 +14,7 @@ Neither of these things are anyway near finished yet, but have developed far eno
 I write elsewhere, so updates will probably come in sudden bundles. Check the [log](docs/notes/log) to see what's been happening
 
 ## Structure
-- 'main' is where the program itself is stored, seperated into four folders (which are also the four main globals) Theoretically; there is an order of dependency keeping things kinda clean, which goes "system -> parts -> objects -> control" however nothings perfect and things are still forming into that dream. You can probably guess by the names what each part does and how they fit together.
+- 'main' is where the program itself is stored, seperated into four folders (which are also the four main globals) Theoretically; there is an order of dependency keeping things kinda clean, which goes "system -> part -> object -> control" however nothings perfect and things are still forming into that dream. You can probably guess by the names what each part does and how they fit together.
 - 'workshop' is where most experimentation, development and testing happens.
 - 'compliation' contains all the tools necessary to put the program together into a single js file which is stored in 'docs'. There's also closure in there for packing things into the "deployment" edition (workspace.min.js)
 - 'docs' consists of all the other stuff; the help files, notes, demo files, gifs, etc. Along with the html files for the website and the produced program files.

@@ -24,5 +24,5 @@ seq.addNote(4,10,10);
 
 
 
-var slide = system.utility.workspace.placeAndReturnObject( system.utility.misc.elementMaker('rangeslide','slide',{x:10, y:5, height:300, width:10, angle:-Math.PI/2, handleHeight:0.025}) );
+var slide = system.utility.workspace.placeAndReturnObject( part.builder('rangeslide','slide',{x:10, y:5, height:300, width:10, angle:-Math.PI/2, handleHeight:0.025}) );
 slide.onchange = function(data){ seq.viewArea(data.start,data.end,0,1); };

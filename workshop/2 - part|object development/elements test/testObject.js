@@ -1,4 +1,4 @@
-objects.testObject = function(x,y,debug=false){
+object.testObject = function(x,y,debug=false){
     var style = {
         background: 'fill:rgba(255,100,255,0.75); stroke:none;',
         h1: 'fill:rgba(0,0,0,1); font-size:14px; font-family:Courier New;',
@@ -257,7 +257,7 @@ objects.testObject = function(x,y,debug=false){
     };
  
     //main object
-        var obj = system.utility.misc.objectBuilder(objects.testObject,design);
+        var obj = object.builder(object.testObject,design);
 
     //setup
         design.grapher_audioScope.grapher_audioScope_SVG.refreshRate(1);

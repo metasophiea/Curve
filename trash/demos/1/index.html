@@ -26,15 +26,15 @@
 
 <script>
     //create objects
-        var pulseGenerator = system.utility.workspace.placeAndReturnObject( objects.pulseGenerator(1260, -5) );
-        var launchpad_1 = system.utility.workspace.placeAndReturnObject( objects.launchpad(1110, 20) );
-        var launchpad_2 = system.utility.workspace.placeAndReturnObject( objects.launchpad(970, 125) );
-        var launchpad_3 = system.utility.workspace.placeAndReturnObject( objects.launchpad(785, 245) );
-        var launchpad_4 = system.utility.workspace.placeAndReturnObject( objects.launchpad(615, 190) );
-        var oneShot_multi_multiTrack = system.utility.workspace.placeAndReturnObject( objects.oneShot_multi_multiTrack(330, 15) );
-        var audio_sink = system.utility.workspace.placeAndReturnObject( objects.audio_sink(20,20) );
-        var reverbUnit_1 = system.utility.workspace.placeAndReturnObject( objects.reverbUnit(170, 20) );
-        var reverbUnit_2 = system.utility.workspace.placeAndReturnObject( objects.reverbUnit(170, 80) );
+        var pulseGenerator = system.utility.workspace.placeAndReturnObject( object.pulseGenerator(1260, -5) );
+        var launchpad_1 = system.utility.workspace.placeAndReturnObject( object.launchpad(1110, 20) );
+        var launchpad_2 = system.utility.workspace.placeAndReturnObject( object.launchpad(970, 125) );
+        var launchpad_3 = system.utility.workspace.placeAndReturnObject( object.launchpad(785, 245) );
+        var launchpad_4 = system.utility.workspace.placeAndReturnObject( object.launchpad(615, 190) );
+        var oneShot_multi_multiTrack = system.utility.workspace.placeAndReturnObject( object.oneShot_multi_multiTrack(330, 15) );
+        var audio_sink = system.utility.workspace.placeAndReturnObject( object.audio_sink(20,20) );
+        var reverbUnit_1 = system.utility.workspace.placeAndReturnObject( object.reverbUnit(170, 20) );
+        var reverbUnit_2 = system.utility.workspace.placeAndReturnObject( object.reverbUnit(170, 80) );
 
     //connect obejcts
         pulseGenerator.io.out.connectTo(launchpad_1.io.pulse);

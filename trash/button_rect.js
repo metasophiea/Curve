@@ -8,9 +8,9 @@ this.button_rect = function(
 ){
 
     // elements 
-    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+    var object = part.builder('g',id,{x:x, y:y});
 
-    var rect = system.utility.misc.elementMaker('rect',null,{width:width, height:height, angle:angle, style:upStyle});
+    var rect = part.builder('rect',null,{width:width, height:height, angle:angle, style:upStyle});
         object.appendChild(rect);
 
     //interactivity
@@ -66,12 +66,12 @@ this.button_rect_2 = function(
     backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
 ){
     //elements
-        var object = system.utility.misc.elementMaker('g',id,{x:x,y:y});
+        var object = part.builder('g',id,{x:x,y:y});
 
-        var background = system.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
+        var background = part.builder('rect',null,{width:width, height:height, style:backgroundStyle_off});
         object.appendChild( background );
 
-        var text = system.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffset, y:height*textVerticalOffset, text:text, style:textStyle});
+        var text = part.builder('text',null,{x:width*textHorizontalOffset, y:height*textVerticalOffset, text:text, style:textStyle});
         object.appendChild(text);
 
     //state

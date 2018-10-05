@@ -66,7 +66,7 @@ this.menubar = function(){
                                 }
 
                             //produce the dropdown list for the selected item
-                                vars.opendropdown = system.utility.misc.elementMaker('list','createMenu',{
+                                vars.opendropdown = part.builder('list','createMenu',{
                                     x:x, y:20,
                                     width: that.menubar.dropdowns[a].listWidth, height: height,
                                     itemHeightMux:  that.menubar.dropdowns[a].listItemHeight/height, 
@@ -99,7 +99,7 @@ this.menubar = function(){
 
 
     //main object
-        var obj = system.utility.misc.objectBuilder(objects.data_duplicator,design);
+        var obj = object.builder(object.data_duplicator,design);
 
     //interface
         obj.i = {

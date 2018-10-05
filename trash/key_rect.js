@@ -8,9 +8,9 @@ this.key_rect = function(
 ){
 
     // elements 
-    var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+    var object = part.builder('g',id,{x:x, y:y});
 
-    var rect = system.utility.misc.elementMaker('rect',null,{width:width, height:height, angle:angle, style:style_off});
+    var rect = part.builder('rect',null,{width:width, height:height, angle:angle, style:style_off});
         object.appendChild(rect);
 
     //state

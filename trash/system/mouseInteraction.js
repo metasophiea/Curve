@@ -172,10 +172,10 @@
                 //  deselect the object we're working on
                 // now set the most recently selected reference to null
                 if( system.selection.selectedObjects.includes(system.svgElement.temp_onmouseup_originalObject) ){
-                    if( event.shiftKey && (system.selection.lastSelectedObject != system.svgElement.temp_onmouseup_originalObject) ){
+                    if( event.shiftKey && (system.selection.lastselectedObjects != system.svgElement.temp_onmouseup_originalObject) ){
                         system.selection.deselectObject(system.svgElement.temp_onmouseup_originalObject);
                     }
-                    system.selection.lastSelectedObject = null;
+                    system.selection.lastselectedObjects = null;
                 }
 
             }
@@ -257,7 +257,7 @@
 
                 //create 'selection box' graphic and add it to the menu pane
                 system.svgElement.tempElements.push(
-                    system.utility.misc.elementMaker(
+                    part.builder(
                         'path',null,{
                             path:[
                                 system.svgElement.tempData.start,
@@ -316,7 +316,7 @@
                     //function)
                         var objects = system.pane.middleground.children;
                         var tempHolder = [];
-                        for(var a = 0; a < objects.length; a++){
+                        for(var a = 0; a < object.length; a++){
                             if(objects[a].selectionArea){
                                 if(system.utility.math.detectOverlap(selectionArea.points, objects[a].selectionArea.points, selectionArea.box, objects[a].selectionArea.box)){
                                     tempHolder.push( objects[a] );

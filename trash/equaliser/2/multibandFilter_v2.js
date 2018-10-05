@@ -1,4 +1,4 @@
-// parts.circuits.audio.multibandFilter_v2 = function(
+// part.circuit.audio.multibandFilter_v2 = function(
 //     context, bandcount, frames=false
 // ){
 //     //saved values

@@ -1,4 +1,4 @@
-parts.elements.display.grapherCanvas = function(
+part.element.display.grapherCanvas = function(
     id='grapherCanvas',
     x, y, width, height,
     foregroundStyles=['stroke:rgba(0,255,0,1); stroke-width:0.75; stroke-linecap:round;','stroke:rgba(255,255,0,1); stroke-width:0.75; stroke-linecap:round;'],
@@ -29,9 +29,9 @@ parts.elements.display.grapherCanvas = function(
 
     //elements
         //main
-            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+            var object = part.builder('g',id,{x:x, y:y});
         //canvas
-            var canvas = system.utility.misc.elementMaker('canvas',id,{width:width, height:height, resolution:7});
+            var canvas = part.builder('canvas',id,{width:width, height:height, resolution:7});
             object.appendChild(canvas.element);
 
     //controls

@@ -25,9 +25,9 @@ this.grapherCanvas = function(
 
     //elements
         //main
-            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+            var object = part.builder('g',id,{x:x, y:y});
         //canvas
-            var canvas = system.utility.misc.elementMaker('canvas',id,{width:width, height:height, resolution:7});
+            var canvas = part.builder('canvas',id,{width:width, height:height, resolution:7});
             object.appendChild(canvas.element);
 
     //internal methods

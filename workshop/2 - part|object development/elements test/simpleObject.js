@@ -1,4 +1,4 @@
-objects.simpleObject = function(x,y,debug=false){
+object.simpleObject = function(x,y,debug=false){
     var style = {
         background: 'fill:rgba(255,100,255,0.75); stroke:none;'
     };
@@ -13,7 +13,7 @@ objects.simpleObject = function(x,y,debug=false){
     };
 
     //main object
-        var obj = system.utility.misc.objectBuilder(objects.testObject,design);
+        var obj = object.builder(object.testObject,design);
 
     return obj;
 }

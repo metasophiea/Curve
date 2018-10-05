@@ -1,4 +1,4 @@
-objects.basicSequencer = function(x,y,debug=false){
+object.basicSequencer = function(x,y,debug=false){
     var vals = {
         sequencer:{
             width:32, height:10,
@@ -140,7 +140,7 @@ objects.basicSequencer = function(x,y,debug=false){
 
 
     //main object
-        var obj = system.utility.misc.objectBuilder(objects.basicSequencer,design);
+        var obj = object.builder(object.basicSequencer,design);
 
     //interface
         obj.i = {

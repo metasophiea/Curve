@@ -34,8 +34,8 @@ var control = new function(){
             case 'f1': 
                 var temp = system.utility.workspace.objectUnderPoint(system.mouse.currentPosition[0], system.mouse.currentPosition[1]);
                 if(temp){
-                    if( objects[temp.id].metadata ){
-                        system.utility.misc.openURL(objects[temp.id].metadata.helpurl);
+                    if( object[temp.id].metadata ){
+                        system.utility.misc.openURL(object[temp.id].metadata.helpurl);
                     }else{
                         console.warn('bad help url, please add metadata to your object file ->',temp.id);
                     }

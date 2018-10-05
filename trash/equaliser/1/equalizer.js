@@ -115,12 +115,12 @@ var equalizer = function(
     }
 
     //main object
-        var obj = system.utility.misc.objectBuilder(objects.distortionUnit,design);
+        var obj = object.builder(object.distortionUnit,design);
 
     //import/export
     //circuitry
         //multiband filter
-            obj.filterCircuit = new parts.circuits.audio.multibandFilter(system.audio.context,vars.channels);
+            obj.filterCircuit = new part.circuit.audio.multibandFilter(system.audio.context,vars.channels);
             design.connectionNode_audio.audioIn.out().connect( obj.filterCircuit.in() );
             obj.filterCircuit.out().connect( design.connectionNode_audio.audioOut.in() );
 

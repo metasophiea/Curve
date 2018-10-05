@@ -13,9 +13,9 @@ this.grapher_waveWorkspace = function(
 
     //elements
         //main
-            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+            var object = part.builder('g',id,{x:x, y:y});
         //main graph
-            var graph = system.utility.misc.elementMaker('grapher'+graphType, 'graph', {
+            var graph = part.builder('grapher'+graphType, 'graph', {
                 x:0, y:0, width:width, height:height,
                 style:{
                     foreground:middlegroundStyle, foregroundText:middlegroundTextStyle, 
@@ -26,7 +26,7 @@ this.grapher_waveWorkspace = function(
             
             object.append(graph);
         //needle overlay
-            var overlay = system.utility.misc.elementMaker('needleOverlay', 'overlay', {
+            var overlay = part.builder('needleOverlay', 'overlay', {
                 x:0, y:0, width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
                 needleStyles:foregroundStyles,
             });

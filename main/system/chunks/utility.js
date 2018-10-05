@@ -80,8 +80,6 @@
 //        unserialize                    (data, compressed=true)
 //        printFile                      (filename, data)
 //        openFile                       (callback)
-//        elementMaker                   (type, name, data)
-//        objectBuilder                  (creatorMethod, design)
 //
 //    thirdparty
 //        lzString (contains code for compressing and decompressing strings)
@@ -126,10 +124,10 @@ this.workspace = new function(){
         };
     };
     this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;',push=false){
-        var g = system.utility.misc.elementMaker('g',null,{x:x, y:y});
+        var g = part.builder('g',null,{x:x, y:y});
 
-        var dot = system.utility.misc.elementMaker('circle',null,{x:0, y:0, r:r, style:style});
-        var textElement =  system.utility.misc.elementMaker('text',null,{x:0, y:0, angle:0, text:text, style:style});
+        var dot = part.builder('circle',null,{x:0, y:0, r:r, style:style});
+        var textElement =  part.builder('text',null,{x:0, y:0, angle:0, text:text, style:style});
         g.appendChild(dot);
         g.appendChild(textElement);
 
@@ -246,7 +244,7 @@ this.workspace = new function(){
                     //if bundleConstructorFunctions is set to true, look through the constructorFunctions
                     //to find the one that matches this object's objectConstructorName
                     //otherwise; look through the system's object constructor list to find it
-                    var constructor = bundleConstructorFunctions ? constructorFunctions[entry.objectConstructorName] : objects[entry.objectConstructorName];
+                    var constructor = bundleConstructorFunctions ? constructorFunctions[entry.objectConstructorName] : object[entry.objectConstructorName];
     
                 //create the object and place
                     var newObject = system.utility.workspace.placeAndReturnObject( constructor(entry.position.x,entry.position.y) );
@@ -265,7 +263,7 @@ this.workspace = new function(){
                         });
                     }
                 //add object to produced list (for the connection handler to use in future)
-                    producedObjects.push(newObject);
+                producedObjects.push(newObject);
             }
     };
     this.saveload = new function(){
@@ -347,7 +345,7 @@ this.workspace = new function(){
     };
     this.setStaticBackgroundStyle = function(style){
         system.pane.staticBackground.innerHTML = '';
-        system.utility.workspace.placeAndReturnObject( system.utility.misc.elementMaker('rect',null,{width:'100%',height:'100%',style:style+'pointer-events:none;'}), 'staticBackground' );    
+        system.utility.workspace.placeAndReturnObject( part.builder('rect',null,{width:'100%',height:'100%',style:style+'pointer-events:none;'}), 'staticBackground' );    
     };
 };
 this.element = new function(){
@@ -1142,289 +1140,6 @@ this.misc = new function(){
         a.href = URL.createObjectURL(new Blob([data]));
         a.download = filename;
         a.click();
-    };
-    this.elementMaker = function(type,name,data){
-        if(!data){data={};}
-        switch(type){
-            //basic
-                case 'g':      return parts.elements.basic.g(name, data.x, data.y, data.r, data.style); break;
-                case 'line':   return parts.elements.basic.line(name, data.x1, data.y1, data.x2, data.y2, data.style); break;
-                case 'rect':   return parts.elements.basic.rect(name, data.x, data.y, data.width, data.height, data.angle, data.style); break;
-                case 'path':   return parts.elements.basic.path(name, data.path, data.lineType, data.style); break;
-                case 'text':   return parts.elements.basic.text(name, data.x, data.y, data.text, data.angle, data.style); break;
-                case 'circle': return parts.elements.basic.circle(name, data.x, data.y, data.r, data.angle, data.style); break;
-                case 'canvas': return parts.elements.basic.canvas(name, data.x, data.y, data.width, data.height, data.angle, data.resolution); break;
-        }
-
-        if(data.style == undefined){data.style={};}
-        switch(type){
-            default: console.warn('Unknown element: '+ type); return null; break;
-
-            //display
-                case 'label': return parts.elements.display.label(name, data.x, data.y, data.text, data.style, data.angle); break;
-                case 'level': return parts.elements.display.level(name, data.x, data.y, data.angle, data.width, data.height, data.style.backing, data.style.level); break;
-                case 'meter_level': return parts.elements.display.meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
-                case 'audio_meter_level': return parts.elements.display.audio_meter_level(name, data.x, data.y, data.angle, data.width, data.height, data.markings, data.style.backing, data.style.levels, data.style.marking); break;
-                case 'sevenSegmentDisplay': return parts.elements.display.sevenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
-                case 'sixteenSegmentDisplay': return parts.elements.display.sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.style.background, data.style.glow, data.style.dim); break;
-                case 'readout_sixteenSegmentDisplay': return parts.elements.display.readout_sixteenSegmentDisplay(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.style.background, data.style.glow, data.style.dime); break;
-                case 'rastorDisplay': return parts.elements.display.rastorDisplay(name, data.x, data.y, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage); break;
-                case 'glowbox_rect': return parts.elements.display.glowbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim); break;
-                case 'grapherSVG': return parts.elements.display.grapherSVG(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-                case 'grapherCanvas': return parts.elements.display.grapherCanvas(name, data.x, data.y, data.width, data.height, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-                case 'grapher_periodicWave': return parts.elements.display.grapher_periodicWave(name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-                case 'grapher_audioScope': return parts.elements.display.grapher_audioScope(  name, data.x, data.y, data.width, data.height, data.graphType, data.style.foreground, data.style.foregroundText, data.style.background, data.style.backgroundText, data.style.backing); break;
-
-            //control
-                case 'button_rect': 
-                    var temp = parts.elements.control.button_rect(
-                        name,
-                        data.x, data.y, data.width, data.height, data.angle, 
-                        (data.text ? data.text : data.text_centre), data.text_left, data.text_right,
-                        data.textVerticalOffset, data.textHorizontalOffset,
-                        data.active, data.hoverable, data.selectable, data.pressable,
-                        data.style.text, 
-                        data.style.off,
-                        data.style.up,                data.style.press,
-                        data.style.select,            data.style.select_press,
-                        data.style.glow,              data.style.glow_press,
-                        data.style.glow_select,       data.style.glow_select_press,
-                        data.style.hover,             data.style.hover_press,
-                        data.style.hover_select,      data.style.hover_select_press,
-                        data.style.hover_glow,        data.style.hover_glow_press,
-                        data.style.hover_glow_select, data.style.hover_glow_select_press,
-                    );
-                    temp.onpress =    data.onpress    ? data.onpress    : temp.onpress;
-                    temp.onrelease =  data.onrelease  ? data.onrelease  : temp.onrelease;
-                    temp.ondblpress = data.ondblpress ? data.ondblpress : temp.ondblpress;
-                    temp.onenter =    data.onenter    ? data.onenter    : temp.onenter;
-                    temp.onleave =    data.onleave    ? data.onleave    : temp.onleave;
-                    temp.onselect =   data.onselect   ? data.onselect   : temp.onselect;
-                    temp.ondeselect = data.ondeselect ? data.ondeselect : temp.ondeselect;
-                    return temp;
-                break;
-                case 'checkbox_rect':
-                    var temp = parts.elements.control.checkbox_rect(name, data.x, data.y, data.width, data.height, data.angle, data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow);
-                    temp.onchange = data.onchange ? data.onchange : temp.onchange;
-                    return temp;
-                break;
-                case 'slide':
-                    var temp = parts.elements.control.slide(name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle);
-                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                    return temp;
-                break;
-                case 'slidePanel':
-                    var temp = parts.elements.control.slidePanel(name, data.x, data.y, data.width, data.height, data.count, data.angle, data.handleHeight, data.value, data.resetValue, data.style.handle, data.style.backing, data.style.slot);
-                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                    return temp;
-                break;
-                case 'rangeslide':
-                    var temp = parts.elements.control.rangeslide(name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.spanWidth, data.values, data.resetValues, data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span);
-                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                    return temp;
-                break;
-                case 'dial_continuous': 
-                    var temp = parts.elements.control.dial_continuous(
-                        name,
-                        data.x, data.y, data.r,
-                        data.startAngle, data.maxAngle,
-                        data.style.handle, data.style.slot, data.style.needle,
-                        data.style.handle_glow, data.style.slot_glow, data.style.needle_glow,
-                        data.arcDistance, data.style.outerArc, data.style.outerArc_glow,
-                    );
-                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                    return temp;
-                break;
-                case 'dial_discrete':
-                    var temp = parts.elements.control.dial_discrete(
-                        name,
-                        data.x, data.y, data.r,
-                        data.optionCount,
-                        data.startAngle, data.maxAngle,
-                        data.style.handle, data.style.slot, data.style.needle,
-                        data.style.handle_glow, data.style.slot_glow, data.style.needle_glow,
-                        data.arcDistance, data.style.outerArc, data.style.outerArc_glow,
-                    );
-                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                    return temp;
-                break;
-                case 'rastorgrid':
-                    var temp = parts.elements.control.rastorgrid(
-                        name,
-                        data.x, data.y, data.width, data.height,
-                        data.xCount, data.yCount,
-                        data.style.backing,
-                        data.style.check,
-                        data.style.backingGlow,
-                        data.style.checkGlow
-                    );
-                    temp.onchange = data.onchange ? data.onchange  : temp.onchange  ;
-                    return temp;
-                break;
-                case 'sequencer':
-                    var temp = parts.elements.control.sequencer(
-                        name,
-                        data.x, data.y, data.width, data.height, data.angle,
-                        data.xCount, data.yCount,
-                        data.zoomLevel_x, data.zoomLevel_y,
-                        data.style.backing,
-                        data.style.selectionArea,
-                        data.style.block_body, data.style.block_bodyGlow, data.style.block_handle, data.style.block_handleWidth,
-                        data.style.horizontalStrip_pattern, data.style.horizontalStrip_glow, data.style.horizontalStrip_styles,
-                        data.style.verticalStrip_pattern,   data.style.verticalStrip_glow,   data.style.verticalStrip_styles,
-                        data.style.playhead,
-                    );
-                    temp.onpan = data.onpan ? data.onpan : temp.onpan;
-                    temp.onchangeviewarea = data.onchangeviewarea ? data.onchangeviewarea : temp.onchangeviewarea;
-                    temp.event = data.event ? data.event : temp.event;
-                    return temp;
-                break;
-                case 'needleOverlay':
-                    var temp = parts.elements.control.needleOverlay(
-                        name, data.x, data.y, data.width, data.height, data.angle,
-                        data.needleWidth, data.selectNeedle, data.selectionArea,
-                        data.needleStyles,
-                    );
-                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange;
-                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
-                    temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle;
-                    return temp;
-                break;
-                case 'grapher_waveWorkspace':
-                    var temp = parts.elements.control.grapher_waveWorkspace(
-                        name, data.x, data.y, data.width, data.height, data.angle, data.graphType, data.selectNeedle, data.selectionArea,
-                        data.style.foreground,   data.style.foregroundText,
-                        data.style.middleground, data.style.middlegroundText,
-                        data.style.background,   data.style.backgroundText,
-                    );
-                    temp.onchange = data.onchange   ? data.onchange  : temp.onchange  ;
-                    temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease ;
-                    temp.selectionAreaToggle = data.selectionAreaToggle ? data.selectionAreaToggle : temp.selectionAreaToggle ;
-                    return temp;
-                break;
-                case 'list':
-                        var temp = parts.elements.control.list(
-                            name, data.x, data.y, data.width, data.height, data.angle, data.list, 
-                            data.selectable, data.multiSelect, data.hoverable, data.pressable, data.active,
-                            data.itemHeightMux, data.itemSpacingMux, data.breakHeightMux, data.breakWidthMux, data.spaceHeightMux,
-                            data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
-                            data.style.listItemText,
-                            data.style.backing,
-                            data.style.break,
-                            data.style.background_off,
-                            data.style.background_up,                data.style.background_press,
-                            data.style.background_select,            data.style.background_select_press,
-                            data.style.background_glow,              data.style.background_glow_press,
-                            data.style.background_glow_select,       data.style.background_glow_select_press,
-                            data.style.background_hover,             data.style.background_hover_press,
-                            data.style.background_hover_select,      data.style.background_hover_select_press,
-                            data.style.background_hover_glow,        data.style.background_hover_glow_press,
-                            data.style.background_hover_glow_select, data.style.background_hover_glow_select_press,
-                        );
-                        
-                        temp.onenter = data.onenter ? data.onenter : temp.onenter;
-                        temp.onleave = data.onleave ? data.onleave : temp.onleave;
-                        temp.onpress = data.onpress ? data.onpress : temp.onpress;
-                        temp.ondblpress = data.ondblpress ? data.ondblpress : temp.ondblpress;
-                        temp.onrelease = data.onrelease ? data.onrelease : temp.onrelease;
-                        temp.onselection = data.onselection ? data.onselection : temp.onselection;
-                        temp.onpositionchange = data.onpositionchange ? data.onpositionchange : temp.onpositionchange;
-                        return temp;
-                break;
-
-            //dynamic
-                case 'cable': return parts.elements.dynamic.cable(name, data.x1, data.y1, data.x2, data.y2, data.style.unactive, data.style.active); break;
-                case 'connectionNode_audio': 
-                    if(Object.keys(data.style).length == 0){data.style = undefined;}
-                    return parts.elements.dynamic.connectionNode_audio(name, data.type, data.x, data.y, data.width, data.height, data.angle, system.audio.context, data.style);
-                break;
-                case 'connectionNode_data':
-                    if(Object.keys(data.style).length == 0){data.style = undefined;}
-                    var temp = parts.elements.dynamic.connectionNode_data(name, data.x, data.y, data.width, data.height, data.angle, data.style);
-                    temp.receive = data.receive ? data.receive : temp.receive;
-                    temp.give = data.give ? data.give : temp.give;
-                    return temp;
-                break;
-        }
-    }; 
-    this.objectBuilder = function(creatorMethod,design){
-        //main
-            var obj = system.utility.misc.elementMaker('g',design.type,{x:design.x, y:design.y});
-            if(design.base.type == undefined){design.base.type = 'path';}
-        
-        //generate selection area
-            switch(design.base.type){
-                case 'rect':
-                    //generate selection area
-                        design.base.points = [{x:design.x,y:design.y}, {x:design.width,y:design.y}, {x:design.width,y:design.height}, {x:design.x,y:design.height}];
-                        system.utility.object.generateSelectionArea(design.base.points, obj);
-                        
-                    //backing
-                        design.base = system.utility.misc.elementMaker('rect',null,{x:design.base.x, y:design.base.y, width:design.base.width, height:design.base.height, angle:design.base.angle, style:design.base.style});
-                break;
-                case 'circle': 
-                    //generate selection area
-                        var res = 12; //(number of sides generated)
-                        var mux = 2*Math.PI/res;
-                        design.base.points = [];
-                        for(var a = 0; a < res; a++){
-                            design.base.points.push(
-                                { x:design.base.x-Math.sin(a*mux)*design.base.r, y:design.base.y-Math.cos(a*mux)*design.base.r }
-                            );
-                        }
-                        system.utility.object.generateSelectionArea(design.base.points, obj);
-                        
-                    //backing
-                        design.base = system.utility.misc.elementMaker('circle',null,{x:design.base.x, y:design.base.y, r:design.base.r, angle:design.base.angle, style:design.base.style});
-                break;
-                case 'path': 
-                    //generate selection area
-                        system.utility.object.generateSelectionArea(design.base.points, obj);
-                    //backing
-                        design.base = system.utility.misc.elementMaker('path',null,{path:design.base.points, lineType:'L', style:design.base.style});
-                break;
-                default: console.error('Unknown base type:',design.base.type,'when creating object "'+design.type+'"'); return; break;
-            };
-            obj.append(design.base);
-
-            //declare grapple
-                if(!design.skipGrapple){
-                    system.mouse.declareObjectGrapple(design.base, obj, creatorMethod);
-                }
-
-        //generate elements
-            if(design.elements){
-                for(var a = 0; a < design.elements.length; a++){
-                    if(!design[design.elements[a].type]){design[design.elements[a].type]={};}
-                    if(design.elements[a].name in design[design.elements[a].type]){console.warn('error: element with the name "'+design.elements[a].name+'" already exists. Element:',design.elements[a],'will not be added');continue;}
-                    design[design.elements[a].type][design.elements[a].name] = system.utility.misc.elementMaker(design.elements[a].type,design.elements[a].name,design.elements[a].data);
-                    obj.append(design[design.elements[a].type][design.elements[a].name]);
-                }
-            }
-
-        //io setup
-            obj.io = {};
-            if(design.connectionNode_audio){
-                var keys = Object.keys(design.connectionNode_audio);
-                for(var a = 0; a < keys.length; a++){
-                    if(keys[a] in obj.io){console.warn('error: connection node with the name "'+keys[a]+'" already exists in the .io group. Node ',design.connectionNode_data[keys[a]],' will not be added');continue;}
-                    obj.io[keys[a]] = design.connectionNode_audio[keys[a]];
-                }
-            }
-            if(design.connectionNode_data){
-                var keys = Object.keys(design.connectionNode_data);
-                for(var a = 0; a < keys.length; a++){
-                    if(keys[a] in obj.io){console.warn('error: connection node with the name "'+keys[a]+'" already exists in the .io group. Node ',design.connectionNode_data[keys[a]],' will not be added');continue;}
-                    obj.io[keys[a]] = design.connectionNode_data[keys[a]];
-                }
-            }
-
-        return obj;
     };
     this.openURL = function(url){
         window.open( url, '_blank');

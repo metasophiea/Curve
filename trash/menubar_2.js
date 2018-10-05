@@ -43,7 +43,7 @@ this.menuBar_2 = function(){
         }
 
     //main object
-        var obj = system.utility.misc.objectBuilder(objects.data_duplicator,design);
+        var obj = object.builder(object.data_duplicator,design);
 
     //interface
         obj.i = {
@@ -72,7 +72,7 @@ this.menuBar.dropdown = {
         },
         open:function(){
             this.obj = system.utility.workspace.placeAndReturnObject(
-                system.utility.misc.elementMaker('list','createMenu',{
+                part.builder('list','createMenu',{
                     x:this.x, y:20,
                     width:200, height:300,
                     itemSpacing:0, itemHeight:0.075,
@@ -93,7 +93,7 @@ this.menuBar.dropdown = {
         width:40,
         textHorizontalOffset:0.25,
         open:function(){
-            console.log( control.objects.menuBar.dropdown.file.x );},
+            console.log( control.object.menuBar.dropdown.file.x );},
         close:function(){},
     },
 }

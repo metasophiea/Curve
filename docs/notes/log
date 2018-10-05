@@ -1,4 +1,17 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-10-05
+  - renamed "parts" to "part"
+  - renamed "objects" to "object"
+  - shifted 'elementMaker' into parts section, with the new name "builder"
+    (system.utility.misc.elementMaker -> part.builder)
+  - shifted 'objectBuilder' into objects section, with the new name "builder"
+    (system.utility.misc.elementMaker -> object.builder)
+  - renamed part.circuits to part.circuit
+  - renamed part.elements to part.element
+
+  future ideas
+  - view controls in menubar (reset mainly)
+
 2018-10-04
   - major upheaval to project structure
       we have only four global variables;

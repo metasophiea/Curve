@@ -24,14 +24,14 @@ var button_rect = function(
     backgroundStyle_hover_glow_select_press= 'fill:rgba(250,250,250,1); stroke:rgba(120,120,120,1); stroke-width:2;',
 ){
     //elements
-        var object = system.utility.misc.elementMaker('g',id,{x:x,y:y,r:angle});
+        var object = part.builder('g',id,{x:x,y:y,r:angle});
 
-        var background = system.utility.misc.elementMaker('rect',null,{width:width, height:height, style:backgroundStyle_off});
+        var background = part.builder('rect',null,{width:width, height:height, style:backgroundStyle_off});
         object.appendChild( background );
 
-        var text_left = system.utility.misc.elementMaker('text',null,{x:width*textHorizontalOffsetMux, y:height*textVerticalOffsetMux, text:text_left, style:textStyle});
+        var text_left = part.builder('text',null,{x:width*textHorizontalOffsetMux, y:height*textVerticalOffsetMux, text:text_left, style:textStyle});
         object.appendChild(text_left);
-        var text_right = system.utility.misc.elementMaker('text',null,{x:width-(width*textHorizontalOffsetMux), y:height*textVerticalOffsetMux, text:text_right, style:textStyle+'text-anchor:end;'});
+        var text_right = part.builder('text',null,{x:width-(width*textHorizontalOffsetMux), y:height*textVerticalOffsetMux, text:text_right, style:textStyle+'text-anchor:end;'});
         object.appendChild(text_right);
 
     //state

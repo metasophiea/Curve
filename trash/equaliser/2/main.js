@@ -1,7 +1,7 @@
 {{include:*}}
-var eq2 = system.utility.workspace.placeAndReturnObject( objects.multibandFilter(undefined,280,100) );
-var audio_sink_1 = system.utility.workspace.placeAndReturnObject( objects.audio_sink(125,110) );
-var player_1 = system.utility.workspace.placeAndReturnObject( objects.player(510,100) );
+var eq2 = system.utility.workspace.placeAndReturnObject( object.multibandFilter(undefined,280,100) );
+var audio_sink_1 = system.utility.workspace.placeAndReturnObject( object.audio_sink(125,110) );
+var player_1 = system.utility.workspace.placeAndReturnObject( object.player(510,100) );
 
 player_1.io.outRight.connectTo( eq2.io.audioIn_0 );
 player_1.io.outLeft.connectTo( eq2.io.audioIn_1 );

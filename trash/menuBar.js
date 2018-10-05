@@ -58,7 +58,7 @@ this.menuBar = function(){
     };
 
     //main object
-        var obj = system.utility.misc.objectBuilder(objects.data_duplicator,design);
+        var obj = object.builder(object.data_duplicator,design);
 
     //interface
         obj.i = {

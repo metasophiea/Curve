@@ -1,4 +1,4 @@
-parts.audio.midiPerformer_basic = function(){
+part.audio.midiPerformer_basic = function(){
     var midiSequence = null;
     var settings = {
         'arrangementName' : '',
@@ -109,9 +109,9 @@ function makeMidiPlayer(x,y){
     var height = 370;
     var nodeSize = 20;
     
-    var _mainObject = parts.basic.g('midiPlayer', x, y);
+    var _mainObject = part.basic.g('midiPlayer', x, y);
 
-    var backing = parts.basic.rect(null, 0, 0, width, height, 0, 'fill:rgba(200,200,200,1)');
+    var backing = part.basic.rect(null, 0, 0, width, height, 0, 'fill:rgba(200,200,200,1)');
         _mainObject.append(backing);
         system.mouse.declareObjectGrapple(backing, _mainObject, makeMidiPlayer);
 
@@ -175,11 +175,11 @@ function makeMidiPlayer(x,y){
     _mainObject.io = {};
     _mainObject.io.out = [];
     for(var a = 0; a < 16; a++){
-        _mainObject.io.out.push( parts.dynamic.connectionNode_data('io.out_'+a,-nodeSize/2,nodeSize*1.1*a + nodeSize/2,nodeSize,nodeSize) );
+        _mainObject.io.out.push( part.dynamic.connectionNode_data('io.out_'+a,-nodeSize/2,nodeSize*1.1*a + nodeSize/2,nodeSize,nodeSize) );
         _mainObject.append( _mainObject.io.out[a] );
     }
 
-    var perf = new parts.audio.midiPerformer_basic();
+    var perf = new part.audio.midiPerformer_basic();
     perf.loadMidi(internalizedMidi);
     perf.command = function(channel, commandType, commandData){
         if(commandType == 'note'){

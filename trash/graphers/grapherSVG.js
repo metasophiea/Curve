@@ -1,4 +1,4 @@
-parts.elements.display.grapherSVG = function(
+part.element.display.grapherSVG = function(
     id='grapherSVG',
     x, y, width, height,
     foregroundStyles=['stroke:rgba(0,255,0,1); stroke-width:0.75; stroke-linecap:round;','stroke:rgba(255,255,0,1); stroke-width:0.75; stroke-linecap:round;'],
@@ -15,12 +15,12 @@ parts.elements.display.grapherSVG = function(
 
     //elements
         //main
-            var object = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+            var object = part.builder('g',id,{x:x, y:y});
         //backing
-            var backing = system.utility.misc.elementMaker('rect','backing',{width:width,height:height, style:backingStyle});
+            var backing = part.builder('rect','backing',{width:width,height:height, style:backingStyle});
             object.appendChild(backing);
         //background elements
-            var backgroundElements = system.utility.misc.elementMaker('g','backgroundElements',{});
+            var backgroundElements = part.builder('g','backgroundElements',{});
             object.appendChild(backgroundElements);
         //foreground elements
             var foregroundElementsGroup = [];
@@ -69,13 +69,13 @@ parts.elements.display.grapherSVG = function(
 
                     //lines
                         backgroundElements.append(
-                            system.utility.misc.elementMaker('line','horizontalMarkings_line_'+a,{y1:y, x2:width, y2:y, style:backgroundStyle})
+                            part.builder('line','horizontalMarkings_line_'+a,{y1:y, x2:width, y2:y, style:backgroundStyle})
                         );
 
                     //text
                         if(horizontalMarkings.printText){
                             backgroundElements.append(
-                                system.utility.misc.elementMaker(
+                                part.builder(
                                     'text', 
                                     'horizontalMarkings_text_'+horizontalMarkings.points[a],
                                     {
@@ -104,13 +104,13 @@ parts.elements.display.grapherSVG = function(
 
                 //lines
                     backgroundElements.append(
-                        system.utility.misc.elementMaker('line','verticalMarkings_line_'+a,{x1:x, x2:x, y2:height, style:backgroundStyle})
+                        part.builder('line','verticalMarkings_line_'+a,{x1:x, x2:x, y2:height, style:backgroundStyle})
                     );
                 
                 //text
                     if(verticalMarkings.printText){
                         backgroundElements.append(
-                            system.utility.misc.elementMaker(
+                            part.builder(
                                 'text', 
                                 'verticalMarkings_text_'+verticalMarkings.points[a],
                                 {   
@@ -134,7 +134,7 @@ parts.elements.display.grapherSVG = function(
         };
         object.draw = function(y,x,layer=0){
             if( foregroundElementsGroup[layer] == undefined ){
-                foregroundElementsGroup[layer] = system.utility.misc.elementMaker('g','foregroundElements_'+layer,{});
+                foregroundElementsGroup[layer] = part.builder('g','foregroundElements_'+layer,{});
                 object.appendChild(foregroundElementsGroup[layer] );
             }else{
                 foregroundElementsGroup[layer].innerHTML = '';
@@ -150,7 +150,7 @@ parts.elements.display.grapherSVG = function(
 
                 if(points){
                     foregroundElementsGroup[layer].append(
-                        system.utility.misc.elementMaker('line',null,{
+                        part.builder('line',null,{
                             x1:points.x1, y1:points.y1, 
                             x2:points.x2, y2:points.y2, 
                             style:(foregroundStyles[layer] == undefined ? foregroundStyles[0] : foregroundStyles[layer])

@@ -32,7 +32,7 @@ function fileData2midifile2internal(fileData){
                 }
 
             //create a new note registry 
-                var temp = new parts.circuits.sequencing.noteRegistry();
+                var temp = new part.circuit.sequencing.noteRegistry();
                 
             //go through each note on the list, modifying them and adding them to the registry
                 for(var b = 0; b < currentList.length; b++){
@@ -55,11 +55,11 @@ function fileData2midifile2internal(fileData){
 
 
 
-var pulseGenerator_1 = system.utility.workspace.placeAndReturnObject( objects.pulseGenerator_hyper(870, -15) );
-var basicSequencer_midiOut_1 = system.utility.workspace.placeAndReturnObject( objects.basicSequencer_midiOut(10, 10) );
-var basicSynthesizer_1 = system.utility.workspace.placeAndReturnObject( objects.basicSynthesizer(-250, 40) );
-var audio_duplicator_1 = system.utility.workspace.placeAndReturnObject( objects.audio_duplicator(-345, 50) );
-var audio_sink_1 = system.utility.workspace.placeAndReturnObject( objects.audio_sink(-490, 50) );
+var pulseGenerator_1 = system.utility.workspace.placeAndReturnObject( object.pulseGenerator_hyper(870, -15) );
+var basicSequencer_midiOut_1 = system.utility.workspace.placeAndReturnObject( object.basicSequencer_midiOut(10, 10) );
+var basicSynthesizer_1 = system.utility.workspace.placeAndReturnObject( object.basicSynthesizer(-250, 40) );
+var audio_duplicator_1 = system.utility.workspace.placeAndReturnObject( object.audio_duplicator(-345, 50) );
+var audio_sink_1 = system.utility.workspace.placeAndReturnObject( object.audio_sink(-490, 50) );
 pulseGenerator_1.io.out.connectTo(basicSequencer_midiOut_1.io.progress);
 basicSequencer_midiOut_1.io.midiout.connectTo(basicSynthesizer_1.io.midiNote);
 basicSynthesizer_1.io.audioOut.connectTo(audio_duplicator_1.io.input);

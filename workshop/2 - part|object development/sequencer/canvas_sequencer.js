@@ -64,7 +64,7 @@ var canvas_sequencer = function(
             left:0, right:zoomLevel_x,
             top:0, bottom:zoomLevel_y,
         };
-        var noteRegistry = new parts.circuits.sequencing.noteRegistry(xCount,yCount);
+        var noteRegistry = new part.circuit.sequencing.noteRegistry(xCount,yCount);
         var selectedNotes = [];
         var activeNotes = [];
         var snapping = true;
@@ -125,9 +125,9 @@ var canvas_sequencer = function(
 
     //elements
         //main
-        var obj = system.utility.misc.elementMaker('g',id,{x:x, y:y});
+        var obj = part.builder('g',id,{x:x, y:y});
         //canvas
-            var canvas = system.utility.misc.elementMaker('canvas',id,{width:width, height:height, resolution:5});
+            var canvas = part.builder('canvas',id,{width:width, height:height, resolution:5});
             obj.appendChild(canvas.element);
     //controls
         obj.viewArea = setViewArea;

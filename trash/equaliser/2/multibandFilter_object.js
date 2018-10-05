@@ -125,7 +125,7 @@
 //     }
 
 //     //main object
-//         var obj = system.utility.misc.objectBuilder(objects.distortionUnit,design);
+//         var obj = object.builder(object.distortionUnit,design);
 
 //     //import/export
 //         obj.exportData = function(){
@@ -140,8 +140,8 @@
 //         obj.importData = function(data){};
 
 //     //circuitry
-//         obj.filterCircuit_0 = new parts.circuits.audio.multibandFilter(system.audio.context,vars.channelCount);
-//         obj.filterCircuit_1 = new parts.circuits.audio.multibandFilter(system.audio.context,vars.channelCount);
+//         obj.filterCircuit_0 = new part.circuit.audio.multibandFilter(system.audio.context,vars.channelCount);
+//         obj.filterCircuit_1 = new part.circuit.audio.multibandFilter(system.audio.context,vars.channelCount);
 //         design.connectionNode_audio.audioIn_0.out().connect( obj.filterCircuit_0.in() );
 //         design.connectionNode_audio.audioIn_1.out().connect( obj.filterCircuit_1.in() );
 //         obj.filterCircuit_0.out().connect( design.connectionNode_audio.audioOut_0.in() );

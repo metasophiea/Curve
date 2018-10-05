@@ -69,7 +69,7 @@ var tests = [
 //     {
 //         title:'adding a note',
 //         test:function(){
-//             var noteRegistry = new parts.elements.control.sequencer.noteRegistry(64, 10, 10);
+//             var noteRegistry = new part.element.control.sequencer.noteRegistry(64, 10, 10);
 //             noteRegistry.add({ line:0, position:0, length:5, strength:1 });
 
 //             var res = true;
@@ -92,7 +92,7 @@ var tests = [
 //     }
 // ];
 
-console.log('%cTesting - parts.elements.control.sequencer.noteRegistry', 'font-size:15px; font-weight:bold;');
+console.log('%cTesting - part.element.control.sequencer.noteRegistry', 'font-size:15px; font-weight:bold;');
 console.log('%c-- regular use', 'font-weight: bold;');
 testRunner(tests);
 

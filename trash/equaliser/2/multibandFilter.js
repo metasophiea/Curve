@@ -1,4 +1,4 @@
-// parts.circuits.audio.multibandFilter = function(
+// part.circuit.audio.multibandFilter = function(
 //     context, bandcount
 // ){
 //     //flow chain

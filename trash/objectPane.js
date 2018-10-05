@@ -42,17 +42,17 @@ this.objectPane = function(x,y){
 
 
     //main object
-        var obj = system.utility.misc.objectBuilder(objects.data_duplicator,design);
+        var obj = object.builder(object.data_duplicator,design);
 
     //populate list
         for(i in objects){
             design.list.objectList.add( 
                 {
-                    text: objects[i].metadata ? objects[i].metadata.name : i,
+                    text: object[i].metadata ? object[i].metadata.name : i,
                     function:function(i){
                         return function(){
                             var p = system.utility.workspace.pointConverter.browser2workspace(30,30);
-                            system.utility.workspace.placeAndReturnObject( objects[i](p.x,p.y) );
+                            system.utility.workspace.placeAndReturnObject( object[i](p.x,p.y) );
                         }
                     }(i),
                 }
