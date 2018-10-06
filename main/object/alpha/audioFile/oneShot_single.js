@@ -70,7 +70,7 @@ this.oneShot_single = function(x,y,debug=false){
     };
 
     //main object
-        var obj = object.builder(object.oneShot_single,design);
+        var obj = object.builder(object.alpha.oneShot_single,design);
 
     //circuitry
             var playhead = undefined;

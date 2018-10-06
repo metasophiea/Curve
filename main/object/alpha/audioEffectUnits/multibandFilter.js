@@ -154,7 +154,7 @@ this.multibandFilter = function(
     }
 
     //main object
-        var obj = object.builder(object.multibandFilter,design);
+        var obj = object.builder(object.alpha.multibandFilter,design);
 
     //import/export
         obj.exportData = function(){

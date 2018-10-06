@@ -44,7 +44,7 @@ this.audio_duplicator = function(x,y){
     };
 
     //main object
-        var obj = object.builder(object.audio_duplicator,design);
+        var obj = object.builder(object.alpha.audio_duplicator,design);
 
     //circuitry
         design.connectionNode_audio.input.out().connect( design.connectionNode_audio.output_1.in() );

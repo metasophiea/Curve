@@ -253,7 +253,7 @@ this.basicSynthesizer = function(x,y){
     };
 
     //main object
-        var obj = object.builder(object.basicSynthesizer,design);
+        var obj = object.builder(object.alpha.basicSynthesizer,design);
 
     //import/export
         obj.exportData = function(){

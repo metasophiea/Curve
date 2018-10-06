@@ -33,7 +33,7 @@ this.audio_sink = function(x,y){
     };
  
     //main object
-        var obj = object.builder(object.audio_sink,design);
+        var obj = object.builder(object.alpha.audio_sink,design);
 
     //circuitry
         var flow = {

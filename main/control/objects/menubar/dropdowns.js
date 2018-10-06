@@ -39,14 +39,14 @@ this.menubar.dropdowns = [
             var outputArray = [];
 
             //populate array with all creatable objects
-                for(i in object){
+                for(i in object.alpha){
                     outputArray.push(
                         {
-                            text_left: object[i].metadata ? object[i].metadata.name : i,
+                            text_left: object.alpha[i].metadata ? object.alpha[i].metadata.name : i,
                             function:function(i){
                                 return function(){
                                     var p = system.utility.workspace.pointConverter.browser2workspace(30,30);
-                                    system.utility.workspace.placeAndReturnObject( object[i](p.x,p.y) );
+                                    system.utility.workspace.placeAndReturnObject( object.alpha[i](p.x,p.y) );
                                 }
                             }(i),
                         }

@@ -52,7 +52,7 @@ this.pulseGenerator_hyper = function(x,y,maxTempo=999,debug=false){
     };
 
     //main object
-        var obj = object.builder(object.pulseGenerator_hyper,design);
+        var obj = object.builder(object.alpha.pulseGenerator_hyper,design);
 
     //import/export
         obj.exportData = function(){

@@ -192,7 +192,7 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
         function midiNumber_line_converter(num){ return vals.sequencer.midiRange.top - num; }
 
     //main object
-        var obj = object.builder(object.basicSequencer_midiOut,design);
+        var obj = object.builder(object.alpha.basicSequencer_midiOut,design);
 
     //import/export
         obj.exportData = function(){

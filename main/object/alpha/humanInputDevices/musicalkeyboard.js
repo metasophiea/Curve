@@ -107,7 +107,7 @@ this.musicalkeyboard = function(x,y,debug=false){
 
 
     //main object
-        var obj = object.builder(object.musicalkeyboard,design);
+        var obj = object.builder(object.alpha.musicalkeyboard,design);
 
     //keycapture
         var keycaptureObj = system.keyboard.declareKeycaptureObject(obj,{none:glyphs});

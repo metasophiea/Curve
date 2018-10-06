@@ -51,7 +51,7 @@ this.audio_scope = function(x,y){
     };
 
     //main object
-        var obj = object.builder(object.audio_scope,design);
+        var obj = object.builder(object.alpha.audio_scope,design);
     
     //circuitry
         design.connectionNode_audio.input.out().connect(design.grapher_audioScope.waveport.getNode());

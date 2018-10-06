@@ -173,7 +173,7 @@ this.basicSequencer = function(x,y,debug=false){
 
 
     //main object
-        var obj = object.builder(object.basicSequencer,design);
+        var obj = object.builder(object.alpha.basicSequencer,design);
 
     //import/export
         obj.exportData = function(){

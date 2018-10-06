@@ -90,7 +90,7 @@ this.distortionUnit = function(x,y){
     };
 
     //main object
-        var obj = object.builder(object.distortionUnit,design);
+        var obj = object.builder(object.alpha.distortionUnit,design);
 
     //import/export
         obj.importData = function(data){

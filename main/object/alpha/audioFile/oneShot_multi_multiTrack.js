@@ -142,7 +142,7 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
     
                             filePlayer.panic();
     
-                            var keys = Object.keys(playheads);
+                            var keys = object.alpha.keys(playheads);
                             for(var a = 0; a < keys.length; a++){
                                 if(playheads[a] == undefined){continue;}
                                 clearTimeout(playheads[a].timeout);
@@ -178,7 +178,7 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
         }
 
     //main object
-        var obj = object.builder(object.oneShot_multi_multiTrack,design);
+        var obj = object.builder(object.alpha.oneShot_multi_multiTrack,design);
 
     //import/export
         obj.exportData = function(){

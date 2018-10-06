@@ -86,7 +86,7 @@ this.reverbUnit = function(x,y){
     };
 
     //main object
-        var obj = object.builder(object.reverbUnit,design);
+        var obj = object.builder(object.alpha.reverbUnit,design);
 
     //import/export
         obj.importData = function(data){

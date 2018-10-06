@@ -1,5 +1,7 @@
 var object = new function(){
-    {{include:alpha/*}}
+    this.alpha = new function(){
+        {{include:alpha/*}}
+    };
 };
 
 {{include:builder.js}}

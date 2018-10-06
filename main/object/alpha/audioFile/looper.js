@@ -88,7 +88,7 @@ this.looper = function(x,y,debug=false){
     };
 
     //main object
-        var obj = object.builder(object.looper,design);
+        var obj = object.builder(object.alpha.looper,design);
 
     //circuitry
             var needle = undefined;

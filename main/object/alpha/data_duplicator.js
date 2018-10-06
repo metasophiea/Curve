@@ -50,7 +50,7 @@ this.data_duplicator = function(x,y){
     };
 
     //main object
-        var obj = object.builder(object.data_duplicator,design);
+        var obj = object.builder(object.alpha.data_duplicator,design);
     
     return obj;
 

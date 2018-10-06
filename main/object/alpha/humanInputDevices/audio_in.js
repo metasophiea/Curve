@@ -41,7 +41,7 @@ this.audioIn = function(x,y,setupConnect=true){
     };
 
     //main object
-        var obj = object.builder(object.audioIn,design);
+        var obj = object.builder(object.alpha.audioIn,design);
 
         var keycaptureObj = system.keyboard.declareKeycaptureObject(obj,{none:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']});
             keycaptureObj.keyPress = function(key){

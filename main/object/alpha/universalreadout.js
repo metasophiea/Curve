@@ -20,7 +20,7 @@ this.universalreadout = function(x,y,debug=false){
     };
 
     //main object
-        var obj = object.builder(object.universalreadout,design);
+        var obj = object.builder(object.alpha.universalreadout,design);
 
     //internal functions
         var lines = [];

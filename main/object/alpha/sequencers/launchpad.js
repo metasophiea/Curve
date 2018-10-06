@@ -95,7 +95,7 @@ this.launchpad = function(x,y,debug=false){
 
 
     //main object
-        var obj = object.builder(object.launchpad,design);
+        var obj = object.builder(object.alpha.launchpad,design);
 
     //import/export
         obj.exportData = function(){

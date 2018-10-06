@@ -91,7 +91,7 @@ this.recorder = function(x,y,debug=false){
     };
 
     //main object
-        var obj = object.builder(object.recorder,design);
+        var obj = object.builder(object.alpha.recorder,design);
 
     //circuitry
         //update functions

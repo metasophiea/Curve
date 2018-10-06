@@ -90,7 +90,7 @@ this.filterUnit = function(x,y){
     };
 
     //main object
-        var obj = object.builder(object.filterUnit,design);
+        var obj = object.builder(object.alpha.filterUnit,design);
 
     //import/export
         obj.importData = function(data){

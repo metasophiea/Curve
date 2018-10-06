@@ -50,7 +50,7 @@ this.pulseGenerator = function(x,y,debug=false){
     };
 
     //main object
-        var obj = object.builder(object.pulseGenerator,design);
+        var obj = object.builder(object.alpha.pulseGenerator,design);
 
     //import/export
         obj.exportData = function(){

@@ -90,7 +90,7 @@ this.player = function(x,y,debug=false){
     };
 
     //main object
-        var obj = object.builder(object.player,design);
+        var obj = object.builder(object.alpha.player,design);
 
     //circuitry
         //audio file player
