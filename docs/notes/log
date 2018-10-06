@@ -2,6 +2,12 @@
 2018-10-06
   - removed gif
   - prefixed all the alpha objects with 'alpha'
+  - fixed up loading / saving a scene
+  - fixed "new scene" (clearing objects wasn't being done right)
+
+  things to look into
+  - system.utility.workspace.clear is now stuck on removing objects from the 
+    middleground
 
 
 2018-10-05

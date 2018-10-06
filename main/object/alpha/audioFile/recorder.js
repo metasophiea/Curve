@@ -6,7 +6,8 @@ this.recorder = function(x,y,debug=false){
         logoText:'fill:rgba(100,100,100,1); font-size:8px; font-family:Bookman; pointer-events: none;',
     };
     var design = {
-        type: 'recorder',
+        name: 'recorder',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             points:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], 

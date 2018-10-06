@@ -1,7 +1,9 @@
-object.builder = function(creatorMethod,design){
+object.builder = function(creatorMethod,design){ 
     //main
-        var obj = part.builder('g',design.type,{x:design.x, y:design.y});
+        var obj = part.builder('g',design.name,{x:design.x, y:design.y});
         if(design.base.type == undefined){design.base.type = 'path';}
+        obj.name = design.name;
+        obj.collection = design.collection;
     
     //generate selection area
         switch(design.base.type){
@@ -34,7 +36,7 @@ object.builder = function(creatorMethod,design){
                 //backing
                     design.base = part.builder('path',null,{path:design.base.points, lineType:'L', style:design.base.style});
             break;
-            default: console.error('Unknown base type:',design.base.type,'when creating object "'+design.type+'"'); return; break;
+            default: console.error('Unknown base type:',design.base.type,'when creating object "'+design.collection+'.'+design.name+'"'); return; break;
         };
         obj.append(design.base);
 

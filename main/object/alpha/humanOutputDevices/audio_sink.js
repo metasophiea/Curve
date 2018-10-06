@@ -8,7 +8,8 @@ this.audio_sink = function(x,y){
         },
     };
     var design = {
-        type:'audio_sink',
+        name:'audio_sink',
+        collection: 'alpha',
         x:x, y:y,
         base:{
             points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 

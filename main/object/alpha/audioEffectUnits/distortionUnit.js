@@ -12,7 +12,8 @@ this.distortionUnit = function(x,y){
         }
     };
     var design = {
-        type: 'distortionUnit',
+        name: 'distortionUnit',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             points:[

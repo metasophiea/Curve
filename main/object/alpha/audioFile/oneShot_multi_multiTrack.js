@@ -7,7 +7,8 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
         strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
     };
     var design = {
-        type: 'oneShot_multi_multiTrack',
+        name: 'oneShot_multi_multiTrack',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             points:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], 

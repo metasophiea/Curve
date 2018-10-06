@@ -23,7 +23,8 @@ this.launchpad = function(x,y,debug=false){
         }
     };
     var design = {
-        type: 'launchpad',
+        name: 'launchpad',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             type:'path',

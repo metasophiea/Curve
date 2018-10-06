@@ -12,7 +12,14 @@ this.clipboard = [];
     //                              indexOfDestinationObject
 
 
-
+this.selectEverything = function(){
+    this.deselectEverything();
+    for(var a = 0; a < system.pane.middleground.children.length; a++){
+        if( system.pane.middleground.children[a].id != 'null' ){
+            this.selectedObjects.push(system.pane.middleground.children[a]);
+        }
+    }
+};
 this.deselectEverything = function(except=[]){
     var newList = [];
 

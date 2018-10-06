@@ -27,7 +27,8 @@ this.musicalkeyboard = function(x,y,debug=false){
         }
     };
     var design = {
-        type: 'musicalkeyboard',
+        name: 'musicalkeyboard',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             type:'path',

@@ -7,7 +7,8 @@ this.audio_scope = function(x,y){
         text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;'
     };
     var design = {
-        type:'audio_scope',
+        name:'audio_scope',
+        collection: 'alpha',
         x:x, y:y,
         base:{
             points:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],

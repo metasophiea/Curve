@@ -12,7 +12,8 @@ this.pulseGenerator_hyper = function(x,y,maxTempo=999,debug=false){
         }
     };
     var design = {
-        type: 'pulseGenerator_hyper',
+        name: 'pulseGenerator_hyper',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             type:'path',

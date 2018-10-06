@@ -161,8 +161,9 @@ this.workspace = new function(){
         };
         system.svgElement.onmouseleave = system.svgElement.onmouseup;
     };
-    this.clear = function(pane='middleground'){
-        system.pane[pane].innerHTML = '';
+    this.clear = function(){
+        system.selection.selectEverything();
+        system.selection.delete();
     };
     this.exportScene = function(bundleConstructorFunctions=false){
         var outputData = [];
@@ -189,11 +190,14 @@ this.workspace = new function(){
                     if( !objectsArray[a].creatorMethod ){continue;}
                     //if bundleConstructorFunctions is true, save all the constructor functions 
                     //in constructorFunctions, then add the constructor name to the entry
+                    //(if there was no object for this collection, make one)
                     if(bundleConstructorFunctions){
-                        constructorFunctions[objectsArray[a].id] = objectsArray[a].creatorMethod;
+                        if( constructorFunctions[objectsArray[a].collection] == undefined ){ constructorFunctions[objectsArray[a].collection] = {}; }
+                        constructorFunctions[objectsArray[a].collection][objectsArray[a].name] = objectsArray[a].creatorMethod;
                     }
                     //if it's not set, just add the constructor name to the entry
-                    entry.objectConstructorName = objectsArray[a].id
+                    entry.objectConstructorCollection = objectsArray[a].collection;
+                    entry.objectConstructorName = objectsArray[a].name;
                     
                 //get the objects position
                     entry.position = system.utility.element.getTransform(objectsArray[a]);
@@ -242,9 +246,9 @@ this.workspace = new function(){
     
                 //get the creator function
                     //if bundleConstructorFunctions is set to true, look through the constructorFunctions
-                    //to find the one that matches this object's objectConstructorName
+                    //to find the one that matches this object's objectConstructorName and objectConstructorCollection
                     //otherwise; look through the system's object constructor list to find it
-                    var constructor = bundleConstructorFunctions ? constructorFunctions[entry.objectConstructorName] : object[entry.objectConstructorName];
+                    var constructor = bundleConstructorFunctions ? constructorFunctions[entry.objectConstructorCollection][entry.objectConstructorName] : object[entry.objectConstructorCollection][entry.objectConstructorName];
     
                 //create the object and place
                     var newObject = system.utility.workspace.placeAndReturnObject( constructor(entry.position.x,entry.position.y) );
@@ -321,7 +325,9 @@ this.workspace = new function(){
                         metadata = {sceneName:data.sceneName};
 
                     console.log('scene "'+data.sceneName+'" has been loaded');
-                }   
+                }else{
+                    console.error('unrecognized file format');
+                }
                 
                 //restart audio
                     system.audio.destination.masterGain(1);

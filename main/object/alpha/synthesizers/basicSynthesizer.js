@@ -19,7 +19,8 @@ this.basicSynthesizer = function(x,y){
         }
     };
     var design = {
-        type:'basicSynthesizer',
+        name:'basicSynthesizer',
+        collection: 'alpha',
         x:x, y:y,
         base:{
             points:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 

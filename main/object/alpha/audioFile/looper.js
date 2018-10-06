@@ -5,7 +5,8 @@ this.looper = function(x,y,debug=false){
         strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
     };
     var design = {
-        type: 'looper',
+        name: 'looper',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 

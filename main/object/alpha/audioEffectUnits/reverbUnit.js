@@ -22,7 +22,8 @@ this.reverbUnit = function(x,y){
         }
     };
     var design = {
-        type: 'reverbUnit',
+        name: 'reverbUnit',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             points:[

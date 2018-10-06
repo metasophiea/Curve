@@ -14,7 +14,8 @@ this.audioIn = function(x,y,setupConnect=true){
         dial: {handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',needle: 'fill:rgba(250,150,150,1)',outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'},
     };
     var design = {
-        type:'audioIn',
+        name:'audioIn',
+        collection: 'alpha',
         x:x, y:y,
         base:{
             points:[

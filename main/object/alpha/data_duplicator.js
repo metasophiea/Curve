@@ -4,7 +4,8 @@ this.data_duplicator = function(x,y){
         markings: 'fill:rgba(150,150,150,1); pointer-events:none;',
     };
     var design = {
-        type:'data_duplicator',
+        name:'data_duplicator',
+        collection: 'alpha',
         x:x, y:y,
         base:{
             points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],

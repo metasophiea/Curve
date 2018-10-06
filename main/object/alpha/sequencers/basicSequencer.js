@@ -42,7 +42,8 @@ this.basicSequencer = function(x,y,debug=false){
     };
 
     var design = {
-        type: 'basicSequencer',
+        name: 'basicSequencer',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             type:'path',

@@ -66,7 +66,8 @@ this.multibandFilter = function(
     var width = 195;
     var height = 255;
     var design = {
-        type: 'multibandFilter',
+        name: 'multibandFilter',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             points:[

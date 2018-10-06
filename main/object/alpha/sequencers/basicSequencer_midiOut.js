@@ -47,7 +47,8 @@ this.basicSequencer_midiOut = function(x,y,debug=false){
     };
 
     var design = {
-        type: 'basicSequencer_midiOut',
+        name: 'basicSequencer_midiOut',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             type:'path',

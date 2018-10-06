@@ -13,7 +13,8 @@ this.pulseGenerator = function(x,y,debug=false){
         }
     };
     var design = {
-        type: 'pulseGenerator',
+        name: 'pulseGenerator',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             type:'path',

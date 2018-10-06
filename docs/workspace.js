@@ -232,8 +232,9 @@
                         };
                         system.svgElement.onmouseleave = system.svgElement.onmouseup;
                     };
-                    this.clear = function(pane='middleground'){
-                        system.pane[pane].innerHTML = '';
+                    this.clear = function(){
+                        system.selection.selectEverything();
+                        system.selection.delete();
                     };
                     this.exportScene = function(bundleConstructorFunctions=false){
                         var outputData = [];
@@ -260,11 +261,14 @@
                                     if( !objectsArray[a].creatorMethod ){continue;}
                                     //if bundleConstructorFunctions is true, save all the constructor functions 
                                     //in constructorFunctions, then add the constructor name to the entry
+                                    //(if there was no object for this collection, make one)
                                     if(bundleConstructorFunctions){
-                                        constructorFunctions[objectsArray[a].id] = objectsArray[a].creatorMethod;
+                                        if( constructorFunctions[objectsArray[a].collection] == undefined ){ constructorFunctions[objectsArray[a].collection] = {}; }
+                                        constructorFunctions[objectsArray[a].collection][objectsArray[a].name] = objectsArray[a].creatorMethod;
                                     }
                                     //if it's not set, just add the constructor name to the entry
-                                    entry.objectConstructorName = objectsArray[a].id
+                                    entry.objectConstructorCollection = objectsArray[a].collection;
+                                    entry.objectConstructorName = objectsArray[a].name;
                                     
                                 //get the objects position
                                     entry.position = system.utility.element.getTransform(objectsArray[a]);
@@ -313,9 +317,9 @@
                     
                                 //get the creator function
                                     //if bundleConstructorFunctions is set to true, look through the constructorFunctions
-                                    //to find the one that matches this object's objectConstructorName
+                                    //to find the one that matches this object's objectConstructorName and objectConstructorCollection
                                     //otherwise; look through the system's object constructor list to find it
-                                    var constructor = bundleConstructorFunctions ? constructorFunctions[entry.objectConstructorName] : object[entry.objectConstructorName];
+                                    var constructor = bundleConstructorFunctions ? constructorFunctions[entry.objectConstructorCollection][entry.objectConstructorName] : object[entry.objectConstructorCollection][entry.objectConstructorName];
                     
                                 //create the object and place
                                     var newObject = system.utility.workspace.placeAndReturnObject( constructor(entry.position.x,entry.position.y) );
@@ -392,7 +396,9 @@
                                         metadata = {sceneName:data.sceneName};
                 
                                     console.log('scene "'+data.sceneName+'" has been loaded');
-                                }   
+                                }else{
+                                    console.error('unrecognized file format');
+                                }
                                 
                                 //restart audio
                                     system.audio.destination.masterGain(1);
@@ -1743,7 +1749,14 @@
                     //                              indexOfDestinationObject
                 
                 
-                
+                this.selectEverything = function(){
+                    this.deselectEverything();
+                    for(var a = 0; a < system.pane.middleground.children.length; a++){
+                        if( system.pane.middleground.children[a].id != 'null' ){
+                            this.selectedObjects.push(system.pane.middleground.children[a]);
+                        }
+                    }
+                };
                 this.deselectEverything = function(except=[]){
                     var newList = [];
                 
@@ -9404,7 +9417,8 @@
                             markings: 'fill:rgba(150,150,150,1); pointer-events:none;',
                         };
                         var design = {
-                            type:'audio_duplicator',
+                            name:'audio_duplicator',
+                            collection: 'alpha',
                             x:x, y:y,
                             base:{
                                 points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
@@ -9481,7 +9495,8 @@
                             }
                         };
                         var design = {
-                            type: 'filterUnit',
+                            name: 'filterUnit',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 points:[
@@ -9643,7 +9658,8 @@
                             }
                         };
                         var design = {
-                            type: 'reverbUnit',
+                            name: 'reverbUnit',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 points:[
@@ -9838,7 +9854,8 @@
                         var width = 195;
                         var height = 255;
                         var design = {
-                            type: 'multibandFilter',
+                            name: 'multibandFilter',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 points:[
@@ -10037,7 +10054,8 @@
                             }
                         };
                         var design = {
-                            type: 'distortionUnit',
+                            name: 'distortionUnit',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 points:[
@@ -10163,7 +10181,8 @@
                             },
                         };
                         var design = {
-                            type:'audio_sink',
+                            name:'audio_sink',
+                            collection: 'alpha',
                             x:x, y:y,
                             base:{
                                 points:[{x:0,y:0},{x:100,y:0},{x:100,y:55},{x:0,y:55}], 
@@ -10231,7 +10250,8 @@
                             text:'fill:rgba(0,0,0,1); font-size:5px; font-family:Courier New; pointer-events: none;'
                         };
                         var design = {
-                            type:'audio_scope',
+                            name:'audio_scope',
+                            collection: 'alpha',
                             x:x, y:y,
                             base:{
                                 points:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
@@ -10297,7 +10317,8 @@
                             text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
                         };
                         var design = {
-                            type: 'universalreadout',
+                            name: 'universalreadout',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 type:'circle',
@@ -10363,7 +10384,8 @@
                             }
                         };
                         var design = {
-                            type:'basicSynthesizer',
+                            name:'basicSynthesizer',
+                            collection: 'alpha',
                             x:x, y:y,
                             base:{
                                 points:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
@@ -10685,7 +10707,8 @@
                             }
                         };
                         var design = {
-                            type: 'pulseGenerator_hyper',
+                            name: 'pulseGenerator_hyper',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 type:'path',
@@ -10789,7 +10812,8 @@
                             }
                         };
                         var design = {
-                            type: 'pulseGenerator',
+                            name: 'pulseGenerator',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 type:'path',
@@ -10904,7 +10928,8 @@
                             }
                         };
                         var design = {
-                            type: 'musicalkeyboard',
+                            name: 'musicalkeyboard',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 type:'path',
@@ -11022,7 +11047,8 @@
                             dial: {handle:'fill:rgba(220,220,220,1)', slot:'fill:rgba(50,50,50,1)',needle: 'fill:rgba(250,150,150,1)',outerArc:'fill:none; stroke:rgb(150,150,150); stroke-width:1;'},
                         };
                         var design = {
-                            type:'audioIn',
+                            name:'audioIn',
+                            collection: 'alpha',
                             x:x, y:y,
                             base:{
                                 points:[
@@ -11115,7 +11141,8 @@
                             markings: 'fill:rgba(150,150,150,1); pointer-events:none;',
                         };
                         var design = {
-                            type:'data_duplicator',
+                            name:'data_duplicator',
+                            collection: 'alpha',
                             x:x, y:y,
                             base:{
                                 points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
@@ -11184,7 +11211,8 @@
                             logoText:'fill:rgba(100,100,100,1); font-size:8px; font-family:Bookman; pointer-events: none;',
                         };
                         var design = {
-                            type: 'recorder',
+                            name: 'recorder',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 points:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], 
@@ -11325,7 +11353,8 @@
                             strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
                         };
                         var design = {
-                            type: 'looper',
+                            name: 'looper',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
@@ -11433,7 +11462,8 @@
                             strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
                         };
                         var design = {
-                            type: 'oneShot_single',
+                            name: 'oneShot_single',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
@@ -11525,7 +11555,8 @@
                             strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
                         };
                         var design = {
-                            type: 'oneShot_multi',
+                            name: 'oneShot_multi',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], 
@@ -11678,7 +11709,8 @@
                             strokeMarkings: 'fill:none; stroke:rgba(150,150,150,1); stroke-width:1; pointer-events: none;',
                         };
                         var design = {
-                            type: 'oneShot_multi_multiTrack',
+                            name: 'oneShot_multi_multiTrack',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 points:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], 
@@ -11925,7 +11957,8 @@
                             markings: 'fill:rgba(150,150,150,1); pointer-events: none;',
                         };
                         var design = {
-                            type: 'player',
+                            name: 'player',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 points:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}], 
@@ -12106,7 +12139,8 @@
                         };
                     
                         var design = {
-                            type: 'basicSequencer',
+                            name: 'basicSequencer',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 type:'path',
@@ -12297,7 +12331,8 @@
                             }
                         };
                         var design = {
-                            type: 'launchpad',
+                            name: 'launchpad',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 type:'path',
@@ -12479,7 +12514,8 @@
                         };
                     
                         var design = {
-                            type: 'basicSequencer_midiOut',
+                            name: 'basicSequencer_midiOut',
+                            collection: 'alpha',
                             x: x, y: y,
                             base: {
                                 type:'path',
@@ -12680,7 +12716,8 @@
                             }
                         };
                         var design = {
-                            type:'basicMixer',
+                            name:'basicMixer',
+                            collection: 'alpha',
                             x:x, y:y,
                             base:{
                                 points:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
@@ -12781,10 +12818,12 @@
                 };
             };
             
-            object.builder = function(creatorMethod,design){
+            object.builder = function(creatorMethod,design){ 
                 //main
-                    var obj = part.builder('g',design.type,{x:design.x, y:design.y});
+                    var obj = part.builder('g',design.name,{x:design.x, y:design.y});
                     if(design.base.type == undefined){design.base.type = 'path';}
+                    obj.name = design.name;
+                    obj.collection = design.collection;
                 
                 //generate selection area
                     switch(design.base.type){
@@ -12817,7 +12856,7 @@
                             //backing
                                 design.base = part.builder('path',null,{path:design.base.points, lineType:'L', style:design.base.style});
                         break;
-                        default: console.error('Unknown base type:',design.base.type,'when creating object "'+design.type+'"'); return; break;
+                        default: console.error('Unknown base type:',design.base.type,'when creating object "'+design.collection+'.'+design.name+'"'); return; break;
                     };
                     obj.append(design.base);
             

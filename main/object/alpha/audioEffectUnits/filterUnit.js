@@ -22,7 +22,8 @@ this.filterUnit = function(x,y){
         }
     };
     var design = {
-        type: 'filterUnit',
+        name: 'filterUnit',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             points:[

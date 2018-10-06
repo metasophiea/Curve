@@ -4,7 +4,8 @@ this.universalreadout = function(x,y,debug=false){
         text: 'fill:rgba(0,0,0,1); font-size:4px; font-family:Courier New; pointer-events: none;',
     };
     var design = {
-        type: 'universalreadout',
+        name: 'universalreadout',
+        collection: 'alpha',
         x: x, y: y,
         base: {
             type:'circle',
