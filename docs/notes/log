@@ -8,6 +8,7 @@
   things to look into
   - system.utility.workspace.clear is now stuck on removing objects from the 
     middleground
+  - adjusting the window shuold change the menubar size
 
 
 2018-10-05
