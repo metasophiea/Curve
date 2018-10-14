@@ -1,12 +1,12 @@
 console.log('%cTesting - system.utility.workspace', 'font-size:15px; font-weight:bold;');
     console.log('%c- exporting a scene', 'font-weight: bold;');
         system.utility.workspace.clear();
-        system.utility.workspace.placeAndReturnObject( object.audio_duplicator(50,50) );
-        system.utility.workspace.placeAndReturnObject( object.audio_duplicator(200,50) );
+        system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(50,50) );
+        system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(200,50) );
         tester(system.utility.workspace.exportScene(),{
             scene:[
-                {objectConstructorName:"audio_duplicator", position:{x:50, y:50, s:1, r:0}, connections:[]},
-                {objectConstructorName:"audio_duplicator", position:{x:200, y:50, s:1, r:0}, connections:[]}
+                {objectConstructorCollection: "alpha", objectConstructorName:"audio_duplicator", position:{x:50, y:50, s:1, r:0}, connections:[]},
+                {objectConstructorCollection: "alpha", objectConstructorName:"audio_duplicator", position:{x:200, y:50, s:1, r:0}, connections:[]}
             ],
             constructorFunctions:{}
         });
@@ -14,20 +14,20 @@ console.log('%cTesting - system.utility.workspace', 'font-size:15px; font-weight
     console.log('%c- exporting a scene (with code bundling turned on)', 'font-weight: bold;');
         //this test could easily break if the object creation code is reformatted (here or over where audio_duplicator is defined)
         system.utility.workspace.clear();
-        system.utility.workspace.placeAndReturnObject( object.audio_duplicator(50,50) );
-        system.utility.workspace.placeAndReturnObject( object.audio_duplicator(200,50) );
+        system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(50,50) );
+        system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(200,50) );
         tester( system.utility.workspace.exportScene(true), {
             scene: [
-                {objectConstructorName:"audio_duplicator", position:{x:50, y:50, s:1, r:0}, connections:[]},
-                {objectConstructorName:"audio_duplicator", position:{x:200, y:50, s:1, r:0}, connections:[]}
+                {objectConstructorCollection: "alpha", objectConstructorName:"audio_duplicator", position:{x:50, y:50, s:1, r:0}, connections:[]},
+                {objectConstructorCollection: "alpha", objectConstructorName:"audio_duplicator", position:{x:200, y:50, s:1, r:0}, connections:[]}
             ],
             constructorFunctions:{ audio_duplicator:object.audio_duplicator }
         } );
 
     console.log('%c- exporting a scene and then importing it', 'font-weight: bold;');
         system.utility.workspace.clear();
-        system.utility.workspace.placeAndReturnObject( object.audio_duplicator(50,50) );
-        system.utility.workspace.placeAndReturnObject( object.audio_duplicator(200,50) );
+        system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(50,50) );
+        system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(200,50) );
         var temp = system.utility.workspace.exportScene();
         system.utility.workspace.clear();
         system.utility.workspace.importScene(temp.scene);
@@ -38,8 +38,8 @@ console.log('%cTesting - system.utility.workspace', 'font-size:15px; font-weight
 
     console.log('%c- exporting a scene (with code bundling turned on) and then importing it', 'font-weight: bold;');
         system.utility.workspace.clear();
-        system.utility.workspace.placeAndReturnObject( object.audio_duplicator(50,50) );
-        system.utility.workspace.placeAndReturnObject( object.audio_duplicator(200,50) );
+        system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(50,50) );
+        system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(200,50) );
         var temp = system.utility.workspace.exportScene(true);
         system.utility.workspace.clear();
         system.utility.workspace.importScene(temp.scene,true,temp.constructorFunctions);

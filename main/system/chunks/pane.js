@@ -81,3 +81,6 @@ if( system.svgElement.children ){
             document.body.style.overflow = '';
         }
     };
+
+//alert control when the window changes size
+    window.onresize = function(){ if(control.windowresize){control.windowresize();} };

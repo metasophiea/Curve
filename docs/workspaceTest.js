@@ -22,6 +22,9 @@
                     this.testMode = (new URL(window.location.href)).searchParams.get("test") != null;
                 
                 
+                //enable object clipping
+                    this.enableObjectClipping = false;
+                
                     
                 //enable/disable mouse wheel zoom
                     this.mouseWheelZoomEnabled = true;
@@ -1733,11 +1736,14 @@
                             document.body.style.overflow = '';
                         }
                     };
+                
+                //alert control when the window changes size
+                    window.onresize = function(){ if(control.windowresize){control.windowresize();} };
             };
             system.selection = new function(){
                 //setup selected objects spaces and functionality
                 this.selectedObjects = [];
-                this.lastselectedObjects = null;
+                this.lastSelectedObjects = null;
                 this.clipboard = [];
                     // pane                 -   the pane the object came from
                     // objectConstructor    -   the creation function of the object
@@ -1781,7 +1787,7 @@
                     //perform selection
                         if(object.onSelect){object.onSelect();}
                         system.selection.selectedObjects.push(object);
-                        system.selection.lastselectedObjects = object;
+                        system.selection.lastSelectedObjects = object;
                 };
                 this.deselectObject = function(object){
                     system.selection.selectedObjects.splice(system.selection.selectedObjects.indexOf(object),1);
@@ -1795,59 +1801,62 @@
                     this.delete();
                 };
                 this.copy = function(){
-                    this.clipboard = [];
+                    //firstly, empty the clipboard
+                        this.clipboard = [];
                 
+                    //for all selected objects; collect their data and add it to the clipboard
                     for( var a = 0; a < this.selectedObjects.length; a++){
-                        var newEntry = [];   
+                        //create entry
+                            var entry = {};
                 
-                        //pane
-                            newEntry.push( system.utility.workspace.getPane(this.selectedObjects[a]) );
-                
-                        //objectConstructor
-                            //if the object doesn't have a constructor, don't bother with any of this
-                            // in-fact; deselect it altogether and move on to the next object
-                            if( !this.selectedObjects[a].creatorMethod ){
-                                system.selection.deselectObject(this.selectedObjects[a]);
-                                a--; continue;
-                            }
-                            newEntry.push( this.selectedObjects[a].creatorMethod );
-                
-                        //originalsPosition
-                            newEntry.push( system.utility.element.getTransform(this.selectedObjects[a]) );
-                
-                        //data
-                            if( this.selectedObjects[a].exportData ){
-                                newEntry.push( this.selectedObjects[a].exportData() );
-                            }else{ newEntry.push( null ); }
-                
-                        //connections
-                            if(this.selectedObjects[a].io){
-                                var connections = [];
-                                var keys = Object.keys(this.selectedObjects[a].io);
-                                for(var b = 0; b < keys.length; b++){
-                                    var conn = [];
-                
-                                    //originPort
-                                        conn.push(keys[b]);
-                
-                                    //destinationPort and indexOfDestinationObject
-                                        if(!this.selectedObjects[a].io[keys[b]].foreignNode){ continue;}
-                                        
-                                        var destinationPorts = Object.keys(this.selectedObjects[a].io[keys[b]].foreignNode.parentElement.io);
-                                        for(var c = 0; c < destinationPorts.length; c++){
-                                            if(this.selectedObjects[a].io[keys[b]].foreignNode.parentElement.io[destinationPorts[c]] === this.selectedObjects[a].io[keys[b]].foreignNode){
-                                                conn.push(destinationPorts[c]);
-                                                conn.push(this.selectedObjects.indexOf(this.selectedObjects[a].io[keys[b]].foreignNode.parentElement));
-                                                break;
-                                            }
-                                        }
-                
-                                    if( conn[2] >= 0 ){ connections.push(conn); }
+                            //objectConstructor
+                                //if the object doesn't have a constructor, don't bother with any of this
+                                //in-fact; deselect it altogether and move on to the next object
+                                if( !this.selectedObjects[a].creatorMethod ){
+                                    system.selection.deselectObject(this.selectedObjects[a]);
+                                    a--; 
+                                    continue;
                                 }
-                                newEntry.push(connections);
-                            }
+                                entry.objectConstructor = this.selectedObjects[a].creatorMethod;
                 
-                        this.clipboard.push(newEntry);
+                            //pane
+                                entry.pane = system.utility.workspace.getPane(this.selectedObjects[a]);
+                
+                            //originalPosition
+                                entry.originalPosition = system.utility.element.getTransform(this.selectedObjects[a]);
+                
+                            //data
+                                entry.data = this.selectedObjects[a].exportData ? this.selectedObjects[a].exportData() : null;
+                
+                            //connections
+                                if(this.selectedObjects[a].io){
+                                    var connections = [];
+                                    var keys = Object.keys(this.selectedObjects[a].io);
+                                    for(var b = 0; b < keys.length; b++){
+                                        var conn = [];
+                
+                                        //originPort
+                                            conn.push(keys[b]);
+                
+                                        //destinationPort and indexOfDestinationObject
+                                            if(!this.selectedObjects[a].io[keys[b]].foreignNode){ continue;}
+                                            
+                                            var destinationPorts = Object.keys(this.selectedObjects[a].io[keys[b]].foreignNode.parentElement.io);
+                                            for(var c = 0; c < destinationPorts.length; c++){
+                                                if(this.selectedObjects[a].io[keys[b]].foreignNode.parentElement.io[destinationPorts[c]] === this.selectedObjects[a].io[keys[b]].foreignNode){
+                                                    conn.push(destinationPorts[c]);
+                                                    conn.push(this.selectedObjects.indexOf(this.selectedObjects[a].io[keys[b]].foreignNode.parentElement));
+                                                    break;
+                                                }
+                                            }
+                
+                                        if( conn[2] >= 0 ){ connections.push(conn); }
+                                    }
+                                    entry.connections = connections;
+                                }
+                
+                        //push entry to clipboard
+                            this.clipboard.push(entry);
                     }
                 };
                 this.paste = function(position=null){
@@ -1858,58 +1867,51 @@
                         this.deselectEverything();
                 
                     //position manipulation
-                    // if position is not set to 'duplicate', calculate new positions for the objects
-                        if(position != 'duplicate'){
+                    //if position is not set to 'duplicate'; calculate new positions for the objects
+                        if(position != 'duplicate'){                
                             // collect all positions
                                 var points = [];
-                                this.clipboard.forEach( element => points.push(element[2]) );
+                                this.clipboard.forEach( element => points.push(element.originalPosition) );
+                
                             //get the bounding box of this selection, and then the top left point of that
                                 var topLeft = system.utility.math.boundingBoxFromPoints(points)[0];
-                            //subtract this point from each position
-                            // then add on the mouses's position, or the provided position
-                                if(!position){
-                                    // //use viewport for position (functional, but unused)
-                                    //     var position = system.utility.element.getTransform(system.pane.workspace);
-                                    //     position = {x:-position.x/position.s, y:-position.y/position.s};
                 
-                                    //use mouse position
-                                        var position = system.utility.workspace.pointConverter.browser2workspace(system.mouse.currentPosition[0], system.mouse.currentPosition[1]);
+                            //if no position has been provided at all; calculate a new one from the mouse position
+                                if(position == undefined){
+                                    position = system.utility.workspace.pointConverter.browser2workspace(system.mouse.currentPosition[0], system.mouse.currentPosition[1]);
                                 }
+                
+                            //combine this topLeft point with the provided (or calculated) position, 
+                            //then add this to the mouses' position
                                 this.clipboard.forEach( function(element){
-                                    element[2].x += position.x - topLeft.x;
-                                    element[2].y += position.y - topLeft.y;
+                                    element.originalPosition.x += position.x - topLeft.x;
+                                    element.originalPosition.y += position.y - topLeft.y;
                                 } );
                         }
                 
                     //object printing
-                    this.clipboard.forEach(function(item){
-                        // pane              = item[0]
-                        // objectConstructor = item[1]
-                        // originalsPosition = item[2]
-                        // data              = item[3]
-                        // connections       = item[4]
+                        this.clipboard.forEach(function(item){
+                            //create the object with its new position
+                                var obj = item.objectConstructor(item.originalPosition.x,item.originalPosition.y);
+                                if(obj.importData){obj.importData(item.data);}
                 
-                        //create the object with its new position
-                            var obj = item[1](item[2].x,item[2].y);
-                            if(obj.importData){obj.importData(item[3]);}
+                            //add the object to the pane and select it
+                                item.pane.appendChild(obj);
+                                system.selection.selectObject(obj);
                 
-                        //add the object to the pane and select it
-                            item[0].appendChild(obj);
-                            system.selection.selectObject(obj);
-                
-                        //go through its connections, and attempt to connect them to everything they should be connected to
-                        // (don't worry if a object isn't avalable yet, just skip that one. Things will work out in the end)
-                            if(item[4]){
-                                item[4].forEach(function(conn){
-                                    // originPort                  = conn[0]
-                                    // destinationPort             = conn[1]
-                                    // indexOfDestinationObject    = conn[2]
-                                    if( conn[2] < system.selection.selectedObjects.length ){
-                                        obj.io[conn[0]].connectTo( system.selection.selectedObjects[conn[2]].io[conn[1]] );
-                                    }
-                                });
-                            }
-                    });
+                            //go through its connections, and attempt to connect them to everything they should be connected to
+                            // (don't worry if a object isn't avalable yet, just skip that one. Things will work out in the end)
+                                if(item.connections){
+                                    item.connections.forEach(function(conn){
+                                        // originPort                  = conn[0]
+                                        // destinationPort             = conn[1]
+                                        // indexOfDestinationObject    = conn[2]
+                                        if( conn[2] < system.selection.selectedObjects.length ){
+                                            obj.io[conn[0]].connectTo( system.selection.selectedObjects[conn[2]].io[conn[1]] );
+                                        }
+                                    });
+                                }
+                        });
                 };
                 this.duplicate = function(){
                     this.copy();
@@ -1923,7 +1925,7 @@
                         //remove object from selected array
                             this.selectedObjects.shift();
                     }
-                    this.lastselectedObjects = null;
+                    this.lastSelectedObjects = null;
                 };
             };
             system.mouse = new function(){
@@ -1933,7 +1935,28 @@
                         return y/100;
                         // return y > 0 ? 1 : -1;
                     };
+                    this.functionListRunner = function(list){
+                        //function builder for working with the 'functionList' format
                 
+                        return function(event){
+                            //run through function list, and activate functions where necessary
+                                for(var a = 0; a < list.length; a++){
+                                    var shouldRun = true;
+                
+                                    //determine if all the requirements of this function are met
+                                        for(var b = 0; b < list[a].specialKeys.length; b++){
+                                            shouldRun = shouldRun && event[list[a].specialKeys[b]];
+                                            if(!shouldRun){break;} //(one is already not a match, so save time and just bail here)
+                                        }
+                
+                                    //if all requirements were met, run the function
+                                    if(shouldRun){  
+                                        //if the function returns 'false', continue with the list; otherwise stop here
+                                            if( list[a].function(event) ){ break; }
+                                    }
+                                }
+                        }
+                };
                 
                 
                 
@@ -1960,31 +1983,21 @@
                         grapple.target.grapple = grapple;
                         grapple.target.style.transform = grapple.target.style.transform ? grapple.target.style.transform : 'translate(0px,0px) scale(1) rotate(0rad)';
                 
-                        grapple.onmousedown = function(event){
-                            if(event.button != 0){return;}
-                            system.svgElement.temp_onmousedown_originalObject = this.target;
+                        function grappleFunctionRunner(list){
+                            return function(event){
+                                //ensure that it's the action button on the mouse
+                                    if(event.button != 0){return;}
+                                
+                                //save target
+                                    system.svgElement.temp_target = this.target;
                 
-                            for(var a = 0; a < system.mouse.objectGrapple_functionList.onmousedown.length; a++){
-                                var shouldRun = true;
-                                for(var b = 0; b < system.mouse.objectGrapple_functionList.onmousedown[a].specialKeys.length; b++){
-                                    shouldRun = shouldRun && event[system.mouse.objectGrapple_functionList.onmousedown[a].specialKeys[b]];
-                                    if(!shouldRun){break;}
-                                }
-                                if(shouldRun){ system.mouse.objectGrapple_functionList.onmousedown[a].function(event); break; }
+                                //run through function list, and activate functions where necessary
+                                    system.mouse.functionListRunner(list)(event);
                             }
-                        };
-                        grapple.onmouseup = function(event){
-                            system.svgElement.temp_onmouseup_originalObject = this.target;
+                        }
                 
-                            for(var a = 0; a < system.mouse.objectGrapple_functionList.onmouseup.length; a++){
-                                var shouldRun = true;
-                                for(var b = 0; b < system.mouse.objectGrapple_functionList.onmouseup[a].specialKeys.length; b++){
-                                    shouldRun = shouldRun && event[system.mouse.objectGrapple_functionList.onmouseup[a].specialKeys[b]];
-                                    if(!shouldRun){break;}
-                                }
-                                if(shouldRun){ system.mouse.objectGrapple_functionList.onmouseup[a].function(event); break; }
-                            }
-                        };
+                        grapple.onmousedown = grappleFunctionRunner( system.mouse.objectGrapple_functionList.onmousedown );
+                        grapple.onmouseup = grappleFunctionRunner( system.mouse.objectGrapple_functionList.onmouseup );
                     };
                 
                     //duplication
@@ -1995,22 +2008,23 @@
                                 if(system.super.readOnlyMode){return;}
                 
                                 // if mousedown occurs over an object that isn't selected; select it
-                                if( !system.selection.selectedObjects.includes(system.svgElement.temp_onmousedown_originalObject) ){
-                                    system.selection.selectObject(system.svgElement.temp_onmousedown_originalObject);
-                                }
+                                    if( !system.selection.selectedObjects.includes(system.svgElement.temp_target) ){
+                                        system.selection.selectObject(system.svgElement.temp_target);
+                                    }
                 
                                 //perform duplication
-                                system.selection.duplicate();
+                                    system.selection.duplicate();
                 
                                 //start moving the first object in the object list
                                 // (the movement code will handle moving the rest)
-                                system.selection.selectedObjects[0].grapple.onmousedown(
-                                    {
-                                        'x':event.x, 'y':event.y,
-                                        'button':0
-                                    }
-                                );
+                                    system.selection.selectedObjects[0].grapple.onmousedown(
+                                        {
+                                            'x':event.x, 'y':event.y,
+                                            'button':0
+                                        }
+                                    );
                 
+                                return true;
                             }
                         }
                     );
@@ -2025,67 +2039,100 @@
                                 //  and if the shift key is not pressed
                                 //   deselect everything
                                 //  now, select the object we're working on if not selected
-                                if( !system.selection.selectedObjects.includes(system.svgElement.temp_onmousedown_originalObject) ){
-                                    if(!event.shiftKey){ system.selection.deselectEverything(); }
-                                    system.selection.selectObject(system.svgElement.temp_onmousedown_originalObject);
-                                }
+                                    if( !system.selection.selectedObjects.includes(system.svgElement.temp_target) ){
+                                        if(!event.shiftKey){ system.selection.deselectEverything(); }
+                                        system.selection.selectObject(system.svgElement.temp_target);
+                                    }
                 
-                                // collect together information on the click position and the selected object's positions
-                                system.svgElement.temp_oldClickPosition = [event.x,event.y];
-                                system.svgElement.temp_oldObjectPositions = [];
-                                for(var a = 0; a < system.selection.selectedObjects.length; a++){
-                                    system.svgElement.temp_oldObjectPositions.push( system.utility.element.getTransform(system.selection.selectedObjects[a]) );
-                                }
+                                // collect together information on the click position and the selected object's positions and seection area
+                                    system.svgElement.temp_oldClickPosition = [event.x,event.y];
+                                    system.svgElement.temp_oldObjectPositions = [];
+                                    system.svgElement.temp_oldObjectSelectionArea = [];
+                                    for(var a = 0; a < system.selection.selectedObjects.length; a++){
+                                        system.svgElement.temp_oldObjectPositions.push( system.utility.element.getTransform(system.selection.selectedObjects[a]) );
+                                        system.svgElement.temp_oldObjectSelectionArea.push( Object.assign({},system.selection.selectedObjects[a].selectionArea) );
+                                    }
                 
                                 // perform the move for all selected objects
-                                system.svgElement.onmousemove_old = system.svgElement.onmousemove;
-                                system.svgElement.onmousemove = function(event){
-                                    for(var a = 0; a < system.selection.selectedObjects.length; a++){
-                                        var clickPosition = system.svgElement.temp_oldClickPosition;
-                                        var position = {};
-                                            position.x = system.svgElement.temp_oldObjectPositions[a].x;
-                                            position.y = system.svgElement.temp_oldObjectPositions[a].y;
-                                            position.s = system.svgElement.temp_oldObjectPositions[a].s;
-                                            position.r = system.svgElement.temp_oldObjectPositions[a].r;
-                                        var globalScale = system.utility.workspace.getGlobalScale(system.selection.selectedObjects[a]);
+                                    system.svgElement.onmousemove_old = system.svgElement.onmousemove;
+                                    system.svgElement.onmousemove = function(event){
+                                        for(var a = 0; a < system.selection.selectedObjects.length; a++){
+                                            // calculate new position
+                                                var clickPosition = system.svgElement.temp_oldClickPosition;
+                                                var position = {};
+                                                    position.x = system.svgElement.temp_oldObjectPositions[a].x;
+                                                    position.y = system.svgElement.temp_oldObjectPositions[a].y;
+                                                    position.s = system.svgElement.temp_oldObjectPositions[a].s;
+                                                    position.r = system.svgElement.temp_oldObjectPositions[a].r;
+                                                var globalScale = system.utility.workspace.getGlobalScale(system.selection.selectedObjects[a]);
                 
-                                        position.x = (position.x-(clickPosition[0]-event.x)/globalScale);
-                                        position.y = (position.y-(clickPosition[1]-event.y)/globalScale);
+                                                position.x = (position.x-(clickPosition[0]-event.x)/globalScale);
+                                                position.y = (position.y-(clickPosition[1]-event.y)/globalScale);
                 
-                                        system.utility.element.setTransform(system.selection.selectedObjects[a], position);
+                                            // check for collisions, and adjust accordingly if required
+                                                // calculate new object base points
+                                                    var diff = {
+                                                        x: system.svgElement.temp_oldObjectPositions[a].x - position.x,
+                                                        y: system.svgElement.temp_oldObjectPositions[a].y - position.y
+                                                    };
+                                                    var box = system.svgElement.temp_oldObjectSelectionArea[a].box.map(function(a){return {x:a.x-diff.x, y:a.y-diff.y};});
+                                                    var points = system.svgElement.temp_oldObjectSelectionArea[a].points.map(function(a){return {x:a.x-diff.x, y:a.y-diff.y};});
                 
-                                        //perform all redraws and updates for object
-                                        if( system.selection.selectedObjects[a].onMove ){system.selection.selectedObjects[a].onMove();}
-                                        if( system.selection.selectedObjects[a].updateSelectionArea ){system.selection.selectedObjects[a].updateSelectionArea();}
-                                        if( system.selection.selectedObjects[a].io ){
-                                            var keys = Object.keys( system.selection.selectedObjects[a].io );
-                                            for(var b = 0; b < keys.length; b++){ 
-                                                //account for node arrays
-                                                if( Array.isArray(system.selection.selectedObjects[a].io[keys[b]]) ){
-                                                    for(var c = 0; c < system.selection.selectedObjects[a].io[keys[b]].length; c++){
-                                                        system.selection.selectedObjects[a].io[keys[b]][c].redraw();
+                                                // discover if these points collide with any of the other objects
+                                                // (if this object is free from clipping and global 'enableObjectClipping' is false; skip this step)
+                                                    function detectOverlap(box,points){
+                                                        var objects = system.pane.middleground.children;
+                                                        for(var b = 0; b < objects.length; b++){
+                                                            if(objects[b] != system.selection.selectedObjects[a] && objects[b].selectionArea){ //check compared object is not the moving object, and that it has a selection area
+                                                                if(system.utility.math.detectOverlap(points, objects[b].selectionArea.points, box, objects[b].selectionArea.box)){
+                                                                    return true;
+                                                                }
+                                                            }
+                                                        }
+                                                        return false;
                                                     }
-                                                }else{  system.selection.selectedObjects[a].io[keys[b]].redraw(); }
-                                            }
+                                                    var overlapDetected = system.selection.selectedObjects[a].clippingActive && system.super.enableObjectClipping ? detectOverlap(box,points) : false;
+                
+                                                    // if so, don't change anything
+                                                    // if not, go ahead as usual (push object position update)
+                                                        if(!overlapDetected){
+                                                            system.utility.element.setTransform(system.selection.selectedObjects[a], position);
+                                                        }
+                
+                                            // perform all redraws and updates for object
+                                                if( system.selection.selectedObjects[a].onMove ){system.selection.selectedObjects[a].onMove();}
+                                                if( system.selection.selectedObjects[a].updateSelectionArea ){system.selection.selectedObjects[a].updateSelectionArea();}
+                                                if( system.selection.selectedObjects[a].io ){
+                                                    var keys = Object.keys( system.selection.selectedObjects[a].io );
+                                                    for(var b = 0; b < keys.length; b++){ 
+                                                        //account for node arrays
+                                                            if( Array.isArray(system.selection.selectedObjects[a].io[keys[b]]) ){
+                                                                for(var c = 0; c < system.selection.selectedObjects[a].io[keys[b]].length; c++){
+                                                                    system.selection.selectedObjects[a].io[keys[b]][c].redraw();
+                                                                }
+                                                            }else{  system.selection.selectedObjects[a].io[keys[b]].redraw(); }
+                                                    }
+                                                }
                                         }
-                                    }
-                                };
+                                    };
                 
                                 // clean-up code
-                                system.svgElement.onmouseup = function(){
-                                    this.onmousemove = null;
-                                    delete system.svgElement.tempElements;
-                                    this.onmousemove = system.svgElement.onmousemove_old;
-                                    delete this.temp_onmousedown_originalObject;
-                                    delete this.temp_oldClickPosition;
-                                    delete this.temp_oldObjectPositions;
-                                    delete this.onmouseleave;
-                                    delete this.onmouseup;
-                                };
+                                    system.svgElement.onmouseup = function(){
+                                        this.onmousemove = null;
+                                        delete system.svgElement.tempElements;
+                                        this.onmousemove = system.svgElement.onmousemove_old;
+                                        delete this.temp_onmousedown_originalObject;
+                                        delete this.temp_oldClickPosition;
+                                        delete this.temp_oldObjectPositions;
+                                        delete this.onmouseleave;
+                                        delete this.onmouseup;
+                                    };
                             
                                 system.svgElement.onmouseleave = system.svgElement.onmouseup;
                 
                                 system.svgElement.onmousemove(event);
+                
+                                return true;
                             }
                         }
                     );
@@ -2099,13 +2146,14 @@
                                 // and if the object we're working on is not the most recently selected
                                 //  deselect the object we're working on
                                 // now set the most recently selected reference to null
-                                if( system.selection.selectedObjects.includes(system.svgElement.temp_onmouseup_originalObject) ){
-                                    if( event.shiftKey && (system.selection.lastselectedObjects != system.svgElement.temp_onmouseup_originalObject) ){
-                                        system.selection.deselectObject(system.svgElement.temp_onmouseup_originalObject);
+                                if( system.selection.selectedObjects.includes(system.svgElement.temp_target) ){
+                                    if( event.shiftKey && (system.selection.lastselectedObjects != system.svgElement.temp_target) ){
+                                        system.selection.deselectObject(system.svgElement.temp_target);
                                     }
                                     system.selection.lastselectedObjects = null;
                                 }
                 
+                                return true;
                             }
                         }
                     );
@@ -2122,20 +2170,15 @@
                 // onmousemove functions
                     this.onmousemove_functionList = [];
                     system.svgElement.onmousemove = function(event){
-                        //control
+                        //inform control of the mouse move
                             control.mousemove(event);
                 
-                        //workspace
-                        if(system.utility.object.requestInteraction(event.x,event.y,'onmousemove','workspace')){
-                            for(var a = 0; a < system.mouse.onmousemove_functionList.length; a++){
-                                var shouldRun = true;
-                                for(var b = 0; b < system.mouse.onmousemove_functionList[a].specialKeys.length; b++){
-                                    shouldRun = shouldRun && event[system.mouse.onmousemove_functionList[a].specialKeys[b]];
-                                    if(!shouldRun){break;}
+                        //perform workspace functions
+                            //perform functions only if the element in question and all of it's parents are ok with it
+                                if(system.utility.object.requestInteraction(event.x,event.y,'onmousemove','workspace')){
+                                    //run through function list, and activate functions where necessary
+                                        system.mouse.functionListRunner(system.mouse.onmousemove_functionList)(event);
                                 }
-                                if(shouldRun){ system.mouse.onmousemove_functionList[a].function(event); break; }
-                            }
-                        }
                     };
                 
                     // register position
@@ -2144,6 +2187,7 @@
                             'specialKeys':[],
                             'function':function(event){
                                 system.mouse.currentPosition = [event.x, event.y];
+                                return true;
                             }
                         }
                     );
@@ -2158,122 +2202,119 @@
                 // onmousedown functions
                     this.onmousedown_functionList = [];
                     system.svgElement.onmousedown = function(event){
-                        //control
+                        //inform control of the mouse down
                             control.mousedown(event);
                 
-                        //workspace
-                        if(!system.utility.object.requestInteraction(event.x,event.y,'onmousedown','workspace') || event.button != 0){return;}
-                        for(var a = 0; a < system.mouse.onmousedown_functionList.length; a++){
-                            var shouldRun = true;
-                            for(var b = 0; b < system.mouse.onmousedown_functionList[a].specialKeys.length; b++){
-                                shouldRun = shouldRun && event[system.mouse.onmousedown_functionList[a].specialKeys[b]];
-                                if(!shouldRun){break;}
-                            }
-                            if(shouldRun){ system.mouse.onmousedown_functionList[a].function(event,system.pane.workspace); break; }
-                        }
+                        //perform workspace functions
+                            //perform functions only if the element in question and all of it's parents are ok with it, and if the action button
+                            //is being used
+                                if( system.utility.object.requestInteraction(event.x,event.y,'onmousedown','workspace') && event.button == 0 ){
+                                    //run through function list, and activate functions where necessary
+                                        system.mouse.functionListRunner(system.mouse.onmousedown_functionList)(event);
+                                }
                     };
                 
                     //group selection
                     this.onmousedown_functionList.push(
                         {
                             'specialKeys':['shiftKey'],
-                            'function':function(event,globalPane){
-                                // if(system.super.readOnlyMode){return;}
+                            'function':function(event){
+                                if(system.super.readOnlyMode){return;}
                 
                                 //setup
-                                system.svgElement.tempData = {};
-                                system.svgElement.tempElements = [];
-                                system.svgElement.tempData.start = {'x':event.x, 'y':event.y};
+                                    system.svgElement.tempData = {};
+                                    system.svgElement.tempElements = [];
+                                    system.svgElement.tempData.start = {'x':event.x, 'y':event.y};
                 
-                                //create 'selection box' graphic and add it to the menu pane
-                                system.svgElement.tempElements.push(
-                                    part.builder(
-                                        'path',null,{
-                                            path:[
-                                                system.svgElement.tempData.start,
-                                                system.svgElement.tempData.start,
-                                                system.svgElement.tempData.start,
-                                                system.svgElement.tempData.start
-                                            ], type:'L', style:'fill:rgba(120,120,255,0.25)'
-                                        }
-                                    )
-                                );
-                                for(var a = 0; a < system.svgElement.tempElements.length; a++){ system.pane.control.append(system.svgElement.tempElements[a]); }
+                                //create 'selection box' graphic and add it to the control pane
+                                    system.svgElement.tempElements.push(
+                                        part.builder(
+                                            'path',null,{
+                                                path:[
+                                                    system.svgElement.tempData.start,
+                                                    system.svgElement.tempData.start,
+                                                    system.svgElement.tempData.start,
+                                                    system.svgElement.tempData.start
+                                                ], type:'L', style:'fill:rgba(120,120,255,0.25)'
+                                            }
+                                        )
+                                    );
+                                    for(var a = 0; a < system.svgElement.tempElements.length; a++){ system.pane.control.append(system.svgElement.tempElements[a]); }
                 
                                 //adjust selection box when the mouse moves
-                                system.svgElement.onmousemove_old = system.svgElement.onmousemove;
-                                system.svgElement.onmousemove = function(event){
-                                    system.svgElement.tempData.end = {'x':event.x, 'y':event.y};
+                                    system.svgElement.onmousemove_old = system.svgElement.onmousemove;
+                                    system.svgElement.onmousemove = function(event){
+                                        system.svgElement.tempData.end = {'x':event.x, 'y':event.y};
                 
-                                    system.svgElement.tempElements[0].path(
-                                        [
-                                            {x:system.svgElement.tempData.start.x, y:system.svgElement.tempData.start.y},
-                                            {x:system.svgElement.tempData.end.x,   y:system.svgElement.tempData.start.y},
-                                            {x:system.svgElement.tempData.end.x,   y:system.svgElement.tempData.end.y},
-                                            {x:system.svgElement.tempData.start.x, y:system.svgElement.tempData.end.y}
-                                        ]
-                                    );
-                                    
-                                };
+                                        system.svgElement.tempElements[0].path(
+                                            [
+                                                {x:system.svgElement.tempData.start.x, y:system.svgElement.tempData.start.y},
+                                                {x:system.svgElement.tempData.end.x,   y:system.svgElement.tempData.start.y},
+                                                {x:system.svgElement.tempData.end.x,   y:system.svgElement.tempData.end.y},
+                                                {x:system.svgElement.tempData.start.x, y:system.svgElement.tempData.end.y}
+                                            ]
+                                        );
+                                        
+                                    };
                 
                                 //when the mouse is raised; 
                                 //  find the objects that are selected
                                 //  tell them they are selected (tell the rest they aren't)
                                 //  add the selected to the 'selected objects list'
-                                system.svgElement.onmouseup = function(){
-                                    //set up
-                                        system.selection.deselectEverything();
-                                        var start = system.utility.workspace.pointConverter.browser2workspace(system.svgElement.tempData.start.x,system.svgElement.tempData.start.y);
-                                        var end = system.utility.workspace.pointConverter.browser2workspace(system.svgElement.tempData.end.x,system.svgElement.tempData.end.y);
-                                        var selectionArea = {};
-                                    
-                                    //create selection box (correcting negative values along the way)
-                                        selectionArea.box = [{},{}];
-                                        if(start.x > end.x){ selectionArea.box[0].x = start.x; selectionArea.box[1].x = end.x; }
-                                        else{ selectionArea.box[0].x = end.x; selectionArea.box[1].x = start.x; }
-                                        if(start.y > end.y){ selectionArea.box[0].y = start.y; selectionArea.box[1].y = end.y; }
-                                        else{ selectionArea.box[0].y = end.y; selectionArea.box[1].y = start.y; }
-                                        //create poly of this box with clockwise wind
-                                        if( Math.sign(start.x-end.x) != Math.sign(start.y-end.y) ){
-                                            selectionArea.points = [start, {x:start.x, y:end.y}, end, {x:end.x, y:start.y}];
-                                        }else{ 
-                                            selectionArea.points = [start, {x:end.x, y:start.y}, end, {x:start.x, y:end.y}];
-                                        };
+                                    system.svgElement.onmouseup = function(){
+                                        //set up
+                                            system.selection.deselectEverything();
+                                            var start = system.utility.workspace.pointConverter.browser2workspace(system.svgElement.tempData.start.x,system.svgElement.tempData.start.y);
+                                            var end = system.utility.workspace.pointConverter.browser2workspace(system.svgElement.tempData.end.x,system.svgElement.tempData.end.y);
+                                            var selectionArea = {};
                                         
-                                    //run though all middleground objects to see if they are selected in this box add the objects 
-                                    //that overlap with the selection area to a temporary array, then select them all in one go
-                                    //(this is to ease the object reordering that happens in the "system.selection.selectObject"
-                                    //function)
-                                        var objects = system.pane.middleground.children;
-                                        var tempHolder = [];
-                                        for(var a = 0; a < objects.length; a++){
-                                            if(objects[a].selectionArea){
-                                                if(system.utility.math.detectOverlap(selectionArea.points, objects[a].selectionArea.points, selectionArea.box, objects[a].selectionArea.box)){
-                                                    tempHolder.push( objects[a] );
+                                        //create selection box (correcting negative values along the way)
+                                            selectionArea.box = [{},{}];
+                                            if(start.x > end.x){ selectionArea.box[0].x = start.x; selectionArea.box[1].x = end.x; }
+                                            else{ selectionArea.box[0].x = end.x; selectionArea.box[1].x = start.x; }
+                                            if(start.y > end.y){ selectionArea.box[0].y = start.y; selectionArea.box[1].y = end.y; }
+                                            else{ selectionArea.box[0].y = end.y; selectionArea.box[1].y = start.y; }
+                                            //create poly of this box with clockwise wind
+                                            if( Math.sign(start.x-end.x) != Math.sign(start.y-end.y) ){
+                                                selectionArea.points = [start, {x:start.x, y:end.y}, end, {x:end.x, y:start.y}];
+                                            }else{ 
+                                                selectionArea.points = [start, {x:end.x, y:start.y}, end, {x:start.x, y:end.y}];
+                                            };
+                                            
+                                        //run though all middleground objects to see if they are selected in this box add the objects 
+                                        //that overlap with the selection area to a temporary array, then select them all in one go
+                                        //(this is to ease the object reordering that happens in the "system.selection.selectObject"
+                                        //function)
+                                            var objects = system.pane.middleground.children;
+                                            var tempHolder = [];
+                                            for(var a = 0; a < objects.length; a++){
+                                                if(objects[a].selectionArea){
+                                                    if(system.utility.math.detectOverlap(selectionArea.points, objects[a].selectionArea.points, selectionArea.box, objects[a].selectionArea.box)){
+                                                        tempHolder.push( objects[a] );
+                                                    }
                                                 }
                                             }
-                                        }
-                                        for(var a = 0; a < tempHolder.length; a++){ system.selection.selectObject(tempHolder[a]); }
+                                            for(var a = 0; a < tempHolder.length; a++){ system.selection.selectObject(tempHolder[a]); }
                 
-                                    //delete all temporary elements and attributes
-                                        delete system.svgElement.tempData;
-                                        for(var a = 0; a < system.svgElement.tempElements.length; a++){
-                                            system.pane.control.removeChild( system.svgElement.tempElements[a] ); 
-                                            system.svgElement.tempElements[a] = null;
-                                        }
-                                        delete system.svgElement.tempElements;
-                                        this.onmousemove = system.svgElement.onmousemove_old;
-                                        delete system.svgElement.onmousemove_old;
-                                        this.onmouseleave = null;
-                                        globalPane.removeAttribute('oldPosition');
-                                        globalPane.removeAttribute('clickPosition');
-                                        this.onmouseleave = null;
-                                        this.onmouseup = null;
-                                };
+                                        //delete all temporary elements and attributes
+                                            delete system.svgElement.tempData;
+                                            for(var a = 0; a < system.svgElement.tempElements.length; a++){
+                                                system.pane.control.removeChild( system.svgElement.tempElements[a] ); 
+                                                system.svgElement.tempElements[a] = null;
+                                            }
+                                            delete system.svgElement.tempElements;
+                                            this.onmousemove = system.svgElement.onmousemove_old;
+                                            delete system.svgElement.onmousemove_old;
+                                            this.onmouseleave = null;
+                                            this.onmouseleave = null;
+                                            this.onmouseup = null;
+                                    };
                 
                                 system.svgElement.onmouseleave = system.svgElement.onmouseup;
                 
                                 system.svgElement.onmousemove(event);
+                
+                                return true;
                             }
                         }
                     );
@@ -2282,11 +2323,11 @@
                     this.onmousedown_functionList.push(
                         {
                             'specialKeys':[],
-                            'function':function(event,globalPane){
+                            'function':function(event){
                                 if(!system.super.mouseGripPanningEnabled){return;}
                 
                                 system.selection.deselectEverything();
-                                system.svgElement.temp_oldPosition = system.utility.element.getTransform(globalPane);
+                                system.svgElement.temp_oldPosition = system.utility.element.getTransform(system.pane.workspace);
                                 system.pane.workspace.setAttribute('clickPosition','['+event.x +','+ event.y+']');
                 
                                 system.svgElement.onmousemove_old = system.svgElement.onmousemove;
@@ -2296,17 +2337,16 @@
                                         position.y = system.svgElement.temp_oldPosition.y;
                                         position.s = system.svgElement.temp_oldPosition.s;
                                         position.r = system.svgElement.temp_oldPosition.r;
-                                    var clickPosition = JSON.parse(globalPane.getAttribute('clickPosition'));
+                                    var clickPosition = JSON.parse(system.pane.workspace.getAttribute('clickPosition'));
                                     position.x = position.x-(clickPosition[0]-event.x);
                                     position.y = position.y-(clickPosition[1]-event.y);
-                                    system.utility.element.setTransform(globalPane, position);
+                                    system.utility.element.setTransform(system.pane.workspace, position);
                                 };
                 
                                 system.svgElement.onmouseup = function(){
                                     this.onmousemove = system.svgElement.onmousemove_old;
                                     delete system.svgElement.onmousemove_old;
-                                    globalPane.removeAttribute('oldPosition');
-                                    globalPane.removeAttribute('clickPosition');
+                                    system.pane.workspace.removeAttribute('clickPosition');
                                     this.onmouseleave = null;
                                     this.onmouseup = null;
                                 };
@@ -2315,6 +2355,7 @@
                 
                                 system.svgElement.onmousemove(event);
                 
+                                return true;
                             }
                         }
                     );
@@ -2328,20 +2369,15 @@
                 // onwheel functions
                     this.onwheel_functionList = [];
                     system.svgElement.onwheel = function(event){
-                        //control
+                        //inform control of the mouse wheel
                             control.mousewheel(event);
                 
-                        //workspace
-                        if(system.utility.object.requestInteraction(event.x,event.y,'onwheel','workspace')){
-                            for(var a = 0; a < system.mouse.onwheel_functionList.length; a++){
-                                var shouldRun = true;
-                                for(var b = 0; b < system.mouse.onwheel_functionList[a].specialKeys.length; b++){
-                                    shouldRun = shouldRun && event[system.mouse.onwheel_functionList[a].specialKeys[b]];
-                                    if(!shouldRun){break;}
-                                }
-                                if(shouldRun){ system.mouse.onwheel_functionList[a].function(event); break; }
+                        //perform workspace functions
+                            //perform functions only if the element in question and all of it's parents are ok with it
+                                if(system.utility.object.requestInteraction(event.x,event.y,'onwheel','workspace')){
+                                    //run through function list, and activate functions where necessary
+                                        system.mouse.functionListRunner(system.mouse.onwheel_functionList)(event);
                             }
-                        }
                     };
                 
                     this.onwheel_functionList.push(
@@ -2367,6 +2403,8 @@
                                 position.y = position.y - ( newPixY - oldPixY );
                 
                                 system.utility.element.setTransform(system.pane.workspace, position);
+                
+                                return true;
                             }
                         }
                     );
@@ -2374,44 +2412,78 @@
             system.keyboard = new function(){
                 this.pressedKeys = {};
                 
-                // keycapture
-                this.declareKeycaptureObject = function(object,desiredKeys={none:[],shift:[],control:[],meta:[],alt:[]}){
-                    var connectionObject = new function(){
-                        this.keyPress = function(key,modifiers={}){};
-                        this.keyRelease = function(key,modifiers={}){};
-                    };
-                
-                    //connectionObject function runners
-                    //if for any reason the object using the connectionObject isn't interested in the
-                    //key, return 'false' otherwise return 'true'
-                    function keyProcessor(type,event){
-                        if(!connectionObject[type]){return false;}
-                
-                        modifiers = {
-                            shift:event.shiftKey,
-                            control:event[system.super.keys.ctrl],
-                            meta:event.metaKey,
-                            alt:event[system.super.keys.alt]
+                //keycapture
+                    this.declareKeycaptureObject = function(object,desiredKeys={none:[],shift:[],control:[],meta:[],alt:[]}){
+                        var connectionObject = new function(){
+                            this.keyPress = function(key,modifiers={}){};
+                            this.keyRelease = function(key,modifiers={}){};
                         };
                 
-                        if( 
-                            (event.control  && desiredKeys.control && ( desiredKeys.control=='all' || (Array.isArray(desiredKeys.control) && desiredKeys.control.includes(event.key)) )) ||
-                            (event.shiftKey && desiredKeys.shift   && ( desiredKeys.shift=='all'   || (Array.isArray(desiredKeys.shift)   && desiredKeys.shift.includes(event.key))   )) ||
-                            (event.metaKey  && desiredKeys.meta    && ( desiredKeys.meta=='all'    || (Array.isArray(desiredKeys.meta)    && desiredKeys.meta.includes(event.key))    )) ||
-                            (event.alt      && desiredKeys.alt     && ( desiredKeys.alt=='all'     || (Array.isArray(desiredKeys.alt)     && desiredKeys.alt.includes(event.key))     )) ||
-                            (                  desiredKeys.none    && ( desiredKeys.none=='all'    || (Array.isArray(desiredKeys.none)    && desiredKeys.none.includes(event.key))    ))
-                        ){
-                            connectionObject[type](event.key,modifiers);
-                            return true;
+                        //connectionObject function runners
+                        //if for any reason the object using the connectionObject isn't interested in the
+                        //key, return 'false' otherwise return 'true'
+                            function keyProcessor(type,event){
+                                if(!connectionObject[type]){return false;}
+                
+                                modifiers = {
+                                    shift:event.shiftKey,
+                                    control:event[system.super.keys.ctrl],
+                                    meta:event.metaKey,
+                                    alt:event[system.super.keys.alt]
+                                };
+                
+                                if( 
+                                    (event.control  && desiredKeys.control && ( desiredKeys.control=='all' || (Array.isArray(desiredKeys.control) && desiredKeys.control.includes(event.key)) )) ||
+                                    (event.shiftKey && desiredKeys.shift   && ( desiredKeys.shift=='all'   || (Array.isArray(desiredKeys.shift)   && desiredKeys.shift.includes(event.key))   )) ||
+                                    (event.metaKey  && desiredKeys.meta    && ( desiredKeys.meta=='all'    || (Array.isArray(desiredKeys.meta)    && desiredKeys.meta.includes(event.key))    )) ||
+                                    (event.alt      && desiredKeys.alt     && ( desiredKeys.alt=='all'     || (Array.isArray(desiredKeys.alt)     && desiredKeys.alt.includes(event.key))     )) ||
+                                    (                  desiredKeys.none    && ( desiredKeys.none=='all'    || (Array.isArray(desiredKeys.none)    && desiredKeys.none.includes(event.key))    ))
+                                ){
+                                    connectionObject[type](event.key,modifiers);
+                                    return true;
+                                }
+                
+                                return false;
+                            }
+                
+                            object.onkeydown = function(event){ return keyProcessor('keyPress',event); };
+                            object.onkeyup = function(event){ return keyProcessor('keyRelease',event); };
+                
+                        return connectionObject;
+                    };
+                    this.functionRunner = function(keyDirection,event){
+                        //discover what the mouse is pointing at and if that thing accepts keyboard input. First check whether the
+                        //object overall accepts input, and if it doesn't check if any element accepts it
+                
+                        //perform functions only if the element in question ord all of it's parents have a "keyDirection" related function somewhere
+                             if(!system.utility.object.requestInteraction(system.mouse.currentPosition[0], system.mouse.currentPosition[1], keyDirection, 'workspace')){
+                                //if the object under the mouse pointer has been declared a keycapture object; run it's appropriate function
+                                //if it doesn't; inquire with the element under the pointer and all it's parents, running their functions as necessary
+                                    if( system.utility.workspace.objectUnderPoint(system.mouse.currentPosition[0], system.mouse.currentPosition[1])[keyDirection] != undefined ){
+                                        if(system.utility.workspace.objectUnderPoint(system.mouse.currentPosition[0], system.mouse.currentPosition[1])[keyDirection](event)){ return; }
+                                    }else{
+                                        //start from the most bottom element and work up until a pane is reached; checking for 
+                                        //"keyDirection" attributes. If one is found and it returns 'false', continue climbing. 
+                                        var element = document.elementFromPoint(system.mouse.currentPosition[0], system.mouse.currentPosition[1]);
+                                        while(!element.hasAttribute('pane')){
+                                            if( element[keyDirection] != undefined ){
+                                                if(element[keyDirection](event)){ return; }
+                                            }
+                                            element = element.parentElement;
+                                        }
+                                    }
+                            }
+                    };
+                    this.releaseAll = function(){
+                        for(var a = 0; a < this.pressedKeys.length; a++){
+                            document.onkeyup( new KeyboardEvent('keyup',{'key':this.pressedKeys[a]}) );
                         }
+                    };
+                    this.releaseKey = function(keyCode){
+                        document.onkeyup( {code:keyCode} );
+                    };
                 
-                        return false;
-                    }
-                    object.onkeydown = function(event){ return keyProcessor('keyPress',event); };
-                    object.onkeyup = function(event){ return keyProcessor('keyRelease',event); };
                 
-                    return connectionObject;
-                };
                 
                 
                 // onkeydown functions
@@ -2420,28 +2492,11 @@
                             if(system.keyboard.pressedKeys[event.code]){ return; }
                             system.keyboard.pressedKeys[event.code] = true;
                 
-                        //discover what the mouse is pointing at and if that thing accepts keyboard input. First check whether the
-                        //object overall accepts input, and if it doesn't check if any element accepts it. If neither do, or either
-                        //function returns 'false';  use the global functions
-                            var temp = [system.mouse.currentPosition[0], system.mouse.currentPosition[1]];
-                            if(!system.utility.object.requestInteraction(temp[0],temp[1],'onkeydown','workspace')){
-                                if( system.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown != undefined ){
-                                    if(system.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeydown(event)){ return; }
-                                }else{
-                                    //start from the most bottom element and work up until a pane is reached; checking for 
-                                    //onkeydown attributes. If one is found and it returns 'false', continue climbing. 
-                                    var element = document.elementFromPoint(temp[0],temp[1]);
-                                    while(!element.hasAttribute('pane')){
-                                        if( element.onkeydown != undefined ){
-                                            if(element.onkeydown(event)){ return; }
-                                        }
-                                        element = element.parentElement;
-                                    }
-                                }
-                            }
-                
-                        //control function
+                        //inform control of the key down
                             control.keydown(event);
+                        
+                        //perform action
+                            system.keyboard.functionRunner('onkeydown',event);
                     };
                  
                 
@@ -2451,35 +2506,11 @@
                             if(!system.keyboard.pressedKeys[event.code]){return;}
                             delete system.keyboard.pressedKeys[event.code];
                 
-                        //discover what the mouse is pointing at and if that thing accepts keyboard input. First check whether the
-                        //object overall accepts input, and if it doesn't check if the element accepts it. If neither do, or either
-                        //function returns 'false';  use the global functions
-                            var temp = [system.mouse.currentPosition[0], system.mouse.currentPosition[1]];
-                            if(!system.utility.object.requestInteraction(temp[0],temp[1],'onkeyup','workspace')){
-                                if( system.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup != undefined ){
-                                    if(system.utility.workspace.objectUnderPoint(temp[0],temp[1]).onkeyup(event)){ return; }
-                                }else{
-                                    //start from the most bottom element and work up until a pane is reached; checking for 
-                                    //onkeyup attributes. If one is found and it returns 'false', continue climbing. 
-                                    var element = document.elementFromPoint(temp[0],temp[1]);
-                                    while(!element.hasAttribute('pane')){
-                                        if( element.onkeyup != undefined ){
-                                            if(element.onkeyup(event)){ return; }
-                                        }
-                                        element = element.parentElement;
-                                    }
-                                }
-                            }
-                
-                        //control function
+                        //inform control of the key up
                             control.keyup(event);
-                    };
-                
-                // additional utilities
-                    this.releaseAll = function(){
-                        for(key in this.pressedKeys){
-                            document.onkeyup( new KeyboardEvent('keyup',{'key':key}) );
-                        }
+                        
+                        //perform action
+                            system.keyboard.functionRunner('onkeyup',event);
                     };
             };
             system.audio = new function(){
@@ -2495,70 +2526,70 @@
                         system.utility.audio.changeAudioParam(system.audio.context, this.gain, this._gain, 0.01, 'instant', true);
                     };
                 
-                //frequencies index
-                    this.names_frequencies_split = {
-                        0:{ 'C':16.35, 'C#':17.32, 'D':18.35, 'D#':19.45, 'E':20.60, 'F':21.83, 'F#':23.12, 'G':24.50, 'G#':25.96, 'A':27.50, 'A#':29.14, 'B':30.87  },
-                        1:{ 'C':32.70, 'C#':34.65, 'D':36.71, 'D#':38.89, 'E':41.20, 'F':43.65, 'F#':46.25, 'G':49.00, 'G#':51.91, 'A':55.00, 'A#':58.27, 'B':61.74, },    
-                        2:{ 'C':65.41, 'C#':69.30, 'D':73.42, 'D#':77.78, 'E':82.41, 'F':87.31, 'F#':92.50, 'G':98.00, 'G#':103.8, 'A':110.0, 'A#':116.5, 'B':123.5, },
-                        3:{ 'C':130.8, 'C#':138.6, 'D':146.8, 'D#':155.6, 'E':164.8, 'F':174.6, 'F#':185.0, 'G':196.0, 'G#':207.7, 'A':220.0, 'A#':233.1, 'B':246.9, },    
-                        4:{ 'C':261.6, 'C#':277.2, 'D':293.7, 'D#':311.1, 'E':329.6, 'F':349.2, 'F#':370.0, 'G':392.0, 'G#':415.3, 'A':440.0, 'A#':466.2, 'B':493.9, },
-                        5:{ 'C':523.3, 'C#':554.4, 'D':587.3, 'D#':622.3, 'E':659.3, 'F':698.5, 'F#':740.0, 'G':784.0, 'G#':830.6, 'A':880.0, 'A#':932.3, 'B':987.8, },    
-                        6:{ 'C':1047,  'C#':1109,  'D':1175,  'D#':1245,  'E':1319,  'F':1397,  'F#':1480,  'G':1568,  'G#':1661,  'A':1760,  'A#':1865,  'B':1976,  },
-                        7:{ 'C':2093,  'C#':2217,  'D':2349,  'D#':2489,  'E':2637,  'F':2794,  'F#':2960,  'G':3136,  'G#':3322,  'A':3520,  'A#':3729,  'B':3951,  },    
-                        8:{ 'C':4186,  'C#':4435,  'D':4699,  'D#':4978,  'E':5274,  'F':5588,  'F#':5920,  'G':6272,  'G#':6645,  'A':7040,  'A#':7459,  'B':7902   }, 
-                    };
-                    //generate forward index
-                    // eg. {... '4C':261.6, '4C#':277.2 ...}
-                    this.names_frequencies = {};
-                    var octaves = Object.entries(this.names_frequencies_split);
-                    for(var a = 0; a < octaves.length; a++){
-                        var names = Object.entries(this.names_frequencies_split[a]);
-                        for(var b = 0; b < names.length; b++){
-                            this.names_frequencies[ octaves[a][0]+names[b][0] ] = names[b][1];
-                        }
-                    }
-                    //generate backward index
-                    // eg. {... 261.6:'4C', 277.2:'4C#' ...}
-                    this.frequencies_names = {};
-                    var temp = Object.entries(this.names_frequencies);
-                    for(var a = 0; a < temp.length; a++){ this.frequencies_names[temp[a][1]] = temp[a][0]; }
                 
-                    this.getFreq = function(name){ return this.names_frequencies[name]; };
-                    this.getName = function(freq){ return this.frequencies_names[freq]; };
+                //note frequencies, names and midi numbers
+                    //lead functions
+                        this.num2name = function(num){ return this.midinumbers_names[num]; };
+                        this.num2freq = function(num){ return this.names_frequencies[this.midinumbers_names[num]]; };
                 
+                        this.name2num = function(name){ return this.names_midinumbers[name]; };
+                        this.name2freq = function(name){ return this.names_frequencies[name]; };
                 
-                //generate midi notes index
-                    var temp = [
-                        '0C', '0C#', '0D', '0D#', '0E', '0F', '0F#', '0G', '0G#', '0A', '0A#', '0B',
-                        '1C', '1C#', '1D', '1D#', '1E', '1F', '1F#', '1G', '1G#', '1A', '1A#', '1B',
-                        '2C', '2C#', '2D', '2D#', '2E', '2F', '2F#', '2G', '2G#', '2A', '2A#', '2B',
-                        '3C', '3C#', '3D', '3D#', '3E', '3F', '3F#', '3G', '3G#', '3A', '3A#', '3B',
-                        '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B',
-                        '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B',
-                        '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B',
-                        '7C', '7C#', '7D', '7D#', '7E', '7F', '7F#', '7G', '7G#', '7A', '7A#', '7B',
-                        '8C', '8C#', '8D', '8D#', '8E', '8F', '8F#', '8G', '8G#', '8A', '8A#', '8B',
-                    ];
-                    //generate forward index
-                    this.midinumbers_names = {};
-                    for(var a = 0; a < temp.length; a++){
-                        this.midinumbers_names[a+24] = temp[a];
-                    }
-                    //generate backward index
-                    this.names_midinumbers = {};
-                    var temp = Object.entries(this.midinumbers_names);
-                    for(var a = 0; a < temp.length; a++){ 
-                        this.names_midinumbers[temp[a][1]] = parseInt(temp[a][0]);
-                    }
+                        this.freq2num = function(freq){ return this.names_midinumbers[this.frequencies_names[freq]]; };
+                        this.freq2name = function(freq){ return this.frequencies_names[freq]; };
                     
-                this.num2name = function(num){ return this.midinumbers_names[num]; };
-                this.num2freq = function(num){ return this.names_frequencies[this.midinumbers_names[num]]; };
+                    //data
+                        //frequencies index
+                            this.names_frequencies_split = {
+                                0:{ 'C':16.35, 'C#':17.32, 'D':18.35, 'D#':19.45, 'E':20.60, 'F':21.83, 'F#':23.12, 'G':24.50, 'G#':25.96, 'A':27.50, 'A#':29.14, 'B':30.87  },
+                                1:{ 'C':32.70, 'C#':34.65, 'D':36.71, 'D#':38.89, 'E':41.20, 'F':43.65, 'F#':46.25, 'G':49.00, 'G#':51.91, 'A':55.00, 'A#':58.27, 'B':61.74, },    
+                                2:{ 'C':65.41, 'C#':69.30, 'D':73.42, 'D#':77.78, 'E':82.41, 'F':87.31, 'F#':92.50, 'G':98.00, 'G#':103.8, 'A':110.0, 'A#':116.5, 'B':123.5, },
+                                3:{ 'C':130.8, 'C#':138.6, 'D':146.8, 'D#':155.6, 'E':164.8, 'F':174.6, 'F#':185.0, 'G':196.0, 'G#':207.7, 'A':220.0, 'A#':233.1, 'B':246.9, },    
+                                4:{ 'C':261.6, 'C#':277.2, 'D':293.7, 'D#':311.1, 'E':329.6, 'F':349.2, 'F#':370.0, 'G':392.0, 'G#':415.3, 'A':440.0, 'A#':466.2, 'B':493.9, },
+                                5:{ 'C':523.3, 'C#':554.4, 'D':587.3, 'D#':622.3, 'E':659.3, 'F':698.5, 'F#':740.0, 'G':784.0, 'G#':830.6, 'A':880.0, 'A#':932.3, 'B':987.8, },    
+                                6:{ 'C':1047,  'C#':1109,  'D':1175,  'D#':1245,  'E':1319,  'F':1397,  'F#':1480,  'G':1568,  'G#':1661,  'A':1760,  'A#':1865,  'B':1976,  },
+                                7:{ 'C':2093,  'C#':2217,  'D':2349,  'D#':2489,  'E':2637,  'F':2794,  'F#':2960,  'G':3136,  'G#':3322,  'A':3520,  'A#':3729,  'B':3951,  },    
+                                8:{ 'C':4186,  'C#':4435,  'D':4699,  'D#':4978,  'E':5274,  'F':5588,  'F#':5920,  'G':6272,  'G#':6645,  'A':7040,  'A#':7459,  'B':7902   }, 
+                            };
+                            //generate forward index
+                            // eg. {... '4C':261.6, '4C#':277.2 ...}
+                                this.names_frequencies = {};
+                                var octaves = Object.entries(this.names_frequencies_split);
+                                for(var a = 0; a < octaves.length; a++){
+                                    var names = Object.entries(this.names_frequencies_split[a]);
+                                    for(var b = 0; b < names.length; b++){
+                                        this.names_frequencies[ octaves[a][0]+names[b][0] ] = names[b][1];
+                                    }
+                                }
+                            //generate backward index
+                            // eg. {... 261.6:'4C', 277.2:'4C#' ...}
+                                this.frequencies_names = {};
+                                var temp = Object.entries(this.names_frequencies);
+                                for(var a = 0; a < temp.length; a++){ this.frequencies_names[temp[a][1]] = temp[a][0]; }
                 
-                this.name2num = function(name){ return this.names_midinumbers[name]; };
-                this.name2freq = function(name){ return this.names_frequencies[name]; };
-                
-                this.freq2num = function(freq){ return this.names_midinumbers[this.frequencies_names[freq]]; };
-                this.freq2name = function(freq){ return this.frequencies_names[freq]; };
+                        //generate midi notes index
+                            var temp = [
+                                '0C', '0C#', '0D', '0D#', '0E', '0F', '0F#', '0G', '0G#', '0A', '0A#', '0B',
+                                '1C', '1C#', '1D', '1D#', '1E', '1F', '1F#', '1G', '1G#', '1A', '1A#', '1B',
+                                '2C', '2C#', '2D', '2D#', '2E', '2F', '2F#', '2G', '2G#', '2A', '2A#', '2B',
+                                '3C', '3C#', '3D', '3D#', '3E', '3F', '3F#', '3G', '3G#', '3A', '3A#', '3B',
+                                '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B',
+                                '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B',
+                                '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B',
+                                '7C', '7C#', '7D', '7D#', '7E', '7F', '7F#', '7G', '7G#', '7A', '7A#', '7B',
+                                '8C', '8C#', '8D', '8D#', '8E', '8F', '8F#', '8G', '8G#', '8A', '8A#', '8B',
+                            ];
+                            //generate forward index
+                                this.midinumbers_names = {};
+                                for(var a = 0; a < temp.length; a++){
+                                    this.midinumbers_names[a+24] = temp[a];
+                                }
+                            //generate backward index
+                                this.names_midinumbers = {};
+                                var temp = Object.entries(this.midinumbers_names);
+                                for(var a = 0; a < temp.length; a++){ 
+                                    this.names_midinumbers[temp[a][1]] = parseInt(temp[a][0]);
+                                }
             };
             var part = new function(){
                 this.circuit = new function(){
@@ -11640,7 +11671,7 @@
                     
                                             filePlayer.panic();
                     
-                                            var keys = object.alpha.keys(playheads);
+                                            var keys = Object.keys(playheads);
                                             for(var a = 0; a < keys.length; a++){
                                                 if(playheads[a] == undefined){continue;}
                                                 clearTimeout(playheads[a].timeout);
@@ -11845,7 +11876,7 @@
                         
                                                 filePlayer.panic();
                         
-                                                var keys = object.alpha.keys(playheads);
+                                                var keys = Object.keys(playheads);
                                                 for(var a = 0; a < keys.length; a++){
                                                     if(playheads[a] == undefined){continue;}
                                                     clearTimeout(playheads[a].timeout);
@@ -12824,6 +12855,7 @@
                     if(design.base.type == undefined){design.base.type = 'path';}
                     obj.name = design.name;
                     obj.collection = design.collection;
+                    obj.clippingActive = design.clippingActive == undefined ? true : design.clippingActive;
                 
                 //generate selection area
                     switch(design.base.type){
@@ -12914,7 +12946,7 @@
                         };
                     
                         var design = {
-                            type:'menubar',
+                            name:'menubar',
                             skipGrapple:true,
                             x:0, y:0,
                             base:{
@@ -13102,6 +13134,9 @@
                     ];
 
                 };
+                this.windowresize = function(){
+                    control.i.menubar.resize();
+                };
                 this.mousemove = function(event){};
                 this.mousedown = function(event){
                     if( system.utility.workspace.objectUnderPoint(event.x, event.y) == null ){
@@ -13126,6 +13161,7 @@
                         case 'v': 
                             if(!event[system.super.keys.ctrl]){return;}
                             system.selection.paste();
+                            system.keyboard.releaseKey('KeyV');
                         break;
                         case 'b': 
                             if(!event[system.super.keys.ctrl]){return;}
@@ -13173,9 +13209,15 @@
                         obj:undefined,
                         report:function(text,type='default'){console.log(type+' - '+text);},
                         place:function(){
-                            if(this.obj != undefined){ system.pane.control.remove(this.obj); }
+                            if(this.obj != undefined){return;}
                             this.obj = system.utility.workspace.placeAndReturnObject( control.objects.menubar(), 'control' );
                         },
+                        remove:function(){ 
+                            if(this.obj == undefined){return;} 
+                            system.pane.control.removeChild(this.obj); 
+                            this.obj = undefined;
+                        },
+                        resize:function(){ this.remove(); this.place(); },
                         closeEverything:function(){ this.obj.i.closeEverything(); },
                     },
                     objectPane:{

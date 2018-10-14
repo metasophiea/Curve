@@ -4,6 +4,7 @@ object.builder = function(creatorMethod,design){
         if(design.base.type == undefined){design.base.type = 'path';}
         obj.name = design.name;
         obj.collection = design.collection;
+        obj.clippingActive = design.clippingActive == undefined ? true : design.clippingActive;
     
     //generate selection area
         switch(design.base.type){

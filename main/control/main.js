@@ -2,6 +2,9 @@ var control = new function(){
     this.objects = new function(){
         {{include:objects/menubar/bar.js}}
     };
+    this.windowresize = function(){
+        control.i.menubar.resize();
+    };
     this.mousemove = function(event){};
     this.mousedown = function(event){
         if( system.utility.workspace.objectUnderPoint(event.x, event.y) == null ){
@@ -26,6 +29,7 @@ var control = new function(){
             case 'v': 
                 if(!event[system.super.keys.ctrl]){return;}
                 system.selection.paste();
+                system.keyboard.releaseKey('KeyV');
             break;
             case 'b': 
                 if(!event[system.super.keys.ctrl]){return;}
@@ -73,9 +77,15 @@ var control = new function(){
             obj:undefined,
             report:function(text,type='default'){console.log(type+' - '+text);},
             place:function(){
-                if(this.obj != undefined){ system.pane.control.remove(this.obj); }
+                if(this.obj != undefined){return;}
                 this.obj = system.utility.workspace.placeAndReturnObject( control.objects.menubar(), 'control' );
             },
+            remove:function(){ 
+                if(this.obj == undefined){return;} 
+                system.pane.control.removeChild(this.obj); 
+                this.obj = undefined;
+            },
+            resize:function(){ this.remove(); this.place(); },
             closeEverything:function(){ this.obj.i.closeEverything(); },
         },
         objectPane:{

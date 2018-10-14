@@ -11,6 +11,9 @@
     this.testMode = (new URL(window.location.href)).searchParams.get("test") != null;
 
 
+//enable object clipping
+    this.enableObjectClipping = false;
+
     
 //enable/disable mouse wheel zoom
     this.mouseWheelZoomEnabled = true;

@@ -1,4 +1,31 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018/10-14
+  - added super switch to disable object clipping (which is now disabled by
+    default)
+  - worked on shortening and tightening the system.mouse code
+  - worked on shortening and tightening the system.keyboard code
+  - fixed issue where the key 'V' wasn't being raised after a ctrl-V, as the OS
+    was capturing it and taking focus from the window. Fixed by adding 
+    "system.keyboard.releaseKey('KeyV');" into control's paste code
+  - redid copy/paste code to use keys instead of that weird numbering system
+
+  bugs found
+  - pasting not working perfectly (don't seem to paste groups of objects in the
+    right place (all to the right and below the pointer))
+
+  future ideas
+  - probably need to remove my usage of "system.svgElement" for storing
+    temporary data
+
+
+2018-10-07
+  - menubar resizes when the window does
+  - added object clipping (it's rather clunky, groups that move together too
+    quickly will bounce off eachother and there's no sliding along object's 
+    sides.... but it works. There's also a new design option to turn off
+    clipping (that's accessble from the object instance aswel))
+
+
 2018-10-06
   - removed gif
   - prefixed all the alpha objects with 'alpha'

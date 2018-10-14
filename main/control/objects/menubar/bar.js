@@ -15,7 +15,7 @@ this.menubar = function(){
     };
 
     var design = {
-        type:'menubar',
+        name:'menubar',
         skipGrapple:true,
         x:0, y:0,
         base:{

@@ -90,7 +90,7 @@ this.oneShot_multi = function(x,y,debug=false){
 
                         filePlayer.panic();
 
-                        var keys = object.alpha.keys(playheads);
+                        var keys = Object.keys(playheads);
                         for(var a = 0; a < keys.length; a++){
                             if(playheads[a] == undefined){continue;}
                             clearTimeout(playheads[a].timeout);
