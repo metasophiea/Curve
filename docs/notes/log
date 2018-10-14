@@ -17,13 +17,17 @@
   - probably need to remove my usage of "system.svgElement" for storing
     temporary data
 
+  Compilation Results
+  - workspace.js                        885 Kb  (100%)
+  - workspace.min.js                    290 Kb  (32.8%)
+
 
 2018-10-07
   - menubar resizes when the window does
   - added object clipping (it's rather clunky, groups that move together too
     quickly will bounce off eachother and there's no sliding along object's 
     sides.... but it works. There's also a new design option to turn off
-    clipping (that's accessble from the object instance aswel))
+    clipping (that's accessible from the object instance aswel))
 
 
 2018-10-06
@@ -60,13 +64,13 @@
         control
       which in turn, follow the dependencies track (and folder names)
       Perhaps folders could be rearranged aswel, to keep these four sections in a
-      section to themsevles (and just for a general reorganisation):
+      section to themselves (and just for a general reorganisation):
 
     - renamed '__globals' to 'system'
     - renamed 'mouseInteraction' to 'mouse'
     - renamed 'keyboardInteraction' to 'keyboard'
     - redid folder layout:
-        compliation/
+        compilation/
           closure-compiler.jar
           gravity
           notes
@@ -106,7 +110,7 @@
   - bugs everywhere. The change was slightly poorly done, so things are broken
     due to renaming of other things. Tests are passing however
 
-  Compliation Results
+  Compilation Results
   - workspace.js                        870 Kb  (100%)
   - workspace.min.js                    292 Kb  (33.63%)
 
@@ -122,7 +126,7 @@
   - fixed tiny thing in musical_keyboard
   - fixed issue with players where 'fire' connections were only pushing the
     'fire' buttons, and not releasing them
-  - put safty on the 'new scene' menubar function, so now an alert pops up that
+  - put safety on the 'new scene' menubar function, so now an alert pops up that
     you have to press "ok" on
   - shifted alot of code from 'keyboardInteraction' to 'control' (mainly scene
     effecting controls, like cut, copy and paste)(left things commented out,
@@ -137,14 +141,14 @@
   - removed button_rect and button_rect_2, and changed the name of button_rect_3
     to button_rect (so, clean replacement)
   - clicking anywhere while a dropdown is open, closes the dropdown
-  - remaned 'menu' to 'control' (need better names)
+  - renamed 'menu' to 'control' (need better names)
   - consolidating control and it's pane (I'm giving myself all sorts of ideas
     with this one)
-  - fixed musicalkeybaord's release and midiIn problems
+  - fixed musicalkeyboard's release and midiIn problems
   - removed key_rect
   - button_rect now has 'text from left' and 'text from right' arguments (though
     you can still use just 'text' to mean 'text from left')
-  - swaped save=ctrl-f2 and load=ctrl-f3, so it's now save=ctrl-f3 and 
+  - swapped save=ctrl-f2 and load=ctrl-f3, so it's now save=ctrl-f3 and 
     load=ctrl-f2
   - added 'breaks' and 'spaces' to lists (little wonky)
 
@@ -156,10 +160,10 @@
   - button_rect_3 now has that key-rolling thing working (broke menubar in the
     process)
   - fixed menubar
-  - added "New Scene" function to clear the scene (no safty on that, so be
+  - added "New Scene" function to clear the scene (no safety on that, so be
     careful)
 
-  Compliation Results
+  Compilation Results
   - workspace.js                        877 Kb  (100%)
   - workspace.min.js                    301 Kb  (34.37%)
 
@@ -195,7 +199,7 @@
   - object view reordering, now is aware of what pane it's working on, and can
     rearrange objects within their panes
   - the utility 'disconnectEverything' is back and looking good
-  - new utility 'deteleObject' which is well named
+  - new utility 'deleteObject' which is well named
   - the two additions above replace most of the code that was in
     __globals.selection.delete
   - wrote up the list part (and it's sub-part, the list.item)(complete with 
@@ -222,7 +226,7 @@
   - pressing the button for loading an audio file, then hitting cancel and 
     trying to work with the object again
 	
-  Compliation Results
+  Compilation Results
   - workspace.js        864 Kb  (100%)
   - workspace.min.js    296 Kb  (34.30%)
 
@@ -243,7 +247,7 @@
   future ideas
   - drop shadows
 
-  Compliation Results
+  Compilation Results
   - workspace.js                        825 Kb  (100%)
   - workspace.min.js                    281 Kb  (34.15%)
 
@@ -281,31 +285,31 @@
 2018-08-14
   - (you're going to have to fix the viewbox thing in graphSVG (and probably 
     grapherCanvas too))
-  - developed the grapherSVG and filder obejct further. Filter now has a freq 
+  - developed the grapherSVG and filter object further. Filter now has a freq 
     range of 0 to 20000, and the graph is logarithmic. Needs more detail though.
     (Grapher part needs development overall)
 
   future ideas
-  - the filter object's dials should glow and unglow when they become active and
-    unactive
+  - the filter object's dials should glow and dim when they become active and
+    inactive
 
-  Compliation Results
+  Compilation Results
   - workspace.js                        783 Kb  (100%)
   - workspace.min.js                    265 Kb  (33.83%)
   - workspace.min.js (web compressed)   94.4 Kb (12%)
 
-  (there seems to be a nice consistancy of removing 2/3 of the original size)
+  (there seems to be a nice consistency of removing 2/3 of the original size)
 
 
 2018-08-13
   - tried rewriting the sequencer in canvas, but it's way way too slow. The fix
-    I made for the canvas in forignObject bug thing, causes hugh lag when the
-    pixels are transfered into the image. I think that things will get much
+    I made for the canvas in foreignObject bug thing, causes hugh lag when the
+    pixels are transferred into the image. I think that things will get much
     faster when the bug is fixed in Chrome. Until then...
   - updated how things are done in the sequencer and in the get and set
     transform utilities, which seems to have sped things up a bit..its still not
     enough though. Alot of time is being spent on recalculation and rendering,
-    so that canvas equilivent is becoming a requirement :/
+    so that canvas equivalent is becoming a requirement :/
   - fixed grapherSVG to do background lines and text better (no drawing outside
     the box (mostly), more control of what the text is)
 
@@ -319,8 +323,8 @@
 
 
 2018-08-08
-  - corrected small thing in noteRegistry where a judegment was being done when
-    'rightLimit' was set to -1. Fixed so that the judegment is ignored in this
+  - corrected small thing in noteRegistry where a judgement was being done when
+    'rightLimit' was set to -1. Fixed so that the judgement is ignored in this
     case
   - 'generateSelectionArea' was using 'temp' as a global instead of a local.
     Changed that
@@ -337,7 +341,7 @@
 
 
 2018-08-06
-  - updated utilirt.misc.openFile to have an argument for "readAsType". One can 
+  - updated utility.misc.openFile to have an argument for "readAsType". One can 
     select between 'readAsBinaryString' (the default) and 'readAsArrayBuffer'
 
 
@@ -356,7 +360,7 @@
   - changed "double click on sequencer note block body" from 'delete' to 'reset
     strength to default' (also added a default strength variable)
 
-  Compliation Results
+  Compilation Results
   - workspace.js                        768 Kb  (100%)
   - workspace.min.js                    261 Kb  (34.04%)
     (almost a megabyte on the raw version. Crazy crazy crazy. ~12,000 lines)
@@ -383,15 +387,15 @@
     side, and leaving a little black line on the right. It's recreatable
     currently in the second demo on the top two sequencers, but not the bottom
     one. The bottom one is the same object as the middle. Even copying the
-    objects perserves the glitch in the new objects. Recreating the scene isn't
+    objects preserves the glitch in the new objects. Recreating the scene isn't
     helping. I can't find anything different between the objects in the elements
     listing.
       One can manually change the clip-path from
     polygon(0px 0px, 0px 170px, 780px 170px, 780px 0px)
     to
     polygon(1.5px 0px, 781.5px 0px, 781.5px 170px, 1.5px 170px) which will fix
-    things, but ofcourse, using the objects view adjust undos all this. It 
-    appears as though the clip-path itself is missaligned by 1.5px to the left.
+    things, but ofcourse, using the objects view adjust undoes all this. It 
+    appears as though the clip-path itself is misaligned by 1.5px to the left.
     Shifting the element that contains this attribute doesn't help, it just the
     problem with it.
                     As it is; I've no idea what is causing this.
@@ -406,7 +410,7 @@
   - pushed the new sequencer, replacing old one (the change seems to havae gone
     well, though it seems the right side of the loop is missing in demo 2...
     curious. Stranger still; one of the three objects is fine, and it has the
-    same sequencer dimentions as another ):/ )
+    same sequencer dimensions as another ):/ )
 
   future ideas
   - package workspace up into a proper little package thing. Currently there's
@@ -418,7 +422,7 @@
     there's 'stable' versions and 'dev' versions, instead of hoping that my
     updates don't break the demos.
 
-      With a cursoury test, it's clear that two or more workspace elements won't
+      With a cursory test, it's clear that two or more workspace elements won't
     work, the way things are now. Moreover, the sealing I tried ages ago and
     commented out for 'dev' purposes, also breaks things when uncommented, when
     there's two or more instances. It seems to work alright when there's only
@@ -445,14 +449,14 @@
 
 
 2018-07-27
-  - added 'staticBackground' pane to very back of hmtl strucure, plus a
+  - added 'staticBackground' pane to very back of hmtl structure, plus a
     'setStaticBackgroundStyle' utility which creates a 100% rect in it. Thus,
     you can now set the background with a solid colour
 
 
 2018-07-26
   - the viewport position is now saved in a save file
-  - scene loading now runs the clear command to wash out the pervious scene
+  - scene loading now runs the clear command to wash out the previous scene
   - during saving and loading a scene, master volume is set to zero (to stop
     hanging notes ringing out as the machine is busy)
   - added super global interaction switches /enable/disable mouse wheel zoom
@@ -468,7 +472,7 @@
 
 2018-07-25
   - 'tester' can now compare function code
-  - importScene/exportScene now uses a slightly mroe efficient way of storing 
+  - importScene/exportScene now uses a slightly more efficient way of storing 
     constructor functions in file (and the option to not store them at all)
   - got a compression library (first thirdparty code) for saveload.serialize
     (it's in tests still, but currently we're getting 61.7% removed)
@@ -511,13 +515,13 @@
     left disconnected)
   - cleaned up notes file into notes folder
   - fixed bug in 'sequencer.noteRegistry' where the updating of note positions
-    wasn't being delt with properly and things were ending up off the side. The
+    wasn't being dealt with properly and things were ending up off the side. The
     logic has been re-written to be better now (new tests for it too)
   - added help/save/load function keys (F1, F2 and F3)
   - began help folder, which can be linked to from the app by pressing F1 ove an
     object
 
-  Compliation Results
+  Compilation Results
   - workspace.js                        688 Kb  (100%)
   - workspace.min.js                    242 Kb  (35.25%)
   - workspace.min.js (web compressed)   47.3 Kb (6.8%)
@@ -536,7 +540,7 @@
   bugs found
   - rangeslide handle movement is a bit weird
 
-  Compliation Results
+  Compilation Results
   - workspace.js                        733 Kb (100%)
   - workspace.min.js                    254 Kb (34.76%)
   - workspace.min.js (web compressed)  49.6 Kb (6.76%)
@@ -550,7 +554,7 @@
 2018-07-18
   - added code that checks the URL for a dev parameter. If it is present, the
     page unload code won't be activated
-  - started on the next verion of the pianoroll part..starting with testing the
+  - started on the next version of the pianoroll part..starting with testing the
     sub parts
 
 
@@ -563,11 +567,11 @@
 2018-07-16
   - added code to stand in the way of a page unload (just the standard "are you 
     sure" box that comes built in with the browser)(commented out for dev 
-    purposes. It's (currerntly) the first line in system/misc.js)
-  - added workspace.mouseInteractionHandler to utiltiy (so now hopefully we
+    purposes. It's (currently) the first line in system/misc.js)
+  - added workspace.mouseInteractionHandler to utility (so now hopefully we
     don't have another one of those rangeslide incidents)(perhaps change
     everything to use this?)
-  - added veloticy interface to musicalkeybaord
+  - added velocity interface to musicalkeybaord
   - updated rangeslide so that the values are stored only as 'start' and 'end'
     (instead of having mixed in array indexes)
   - changed some of the pianoroll interaction, to make mousing around easier
@@ -577,7 +581,7 @@
 
 
 2018-07-15
-  - updaed pianoroll a little to make it easuer to change the x count
+  - updated pianoroll a little to make it easier to change the x count
   - wrote different music into demo 2 and added reverb
   - added bits of interface to the reverb object
   - fixed rangeslide which had sloppy mouse-move code, which would replace the 
@@ -590,18 +594,18 @@
     notes into the loop-start events. In effect; stopping notes that have end
     events which are outside the loop from sounding forever. It also means I can
     get rid off all that silly -1/100000 stuff, so things are sounding better
-  - key_rect callbacks 'onkeydown' and 'onkeyup' remaned to 'keydown' and 
+  - key_rect callbacks 'onkeydown' and 'onkeyup' renamed to 'keydown' and 
     'keyup', as the previous names were clashing with the keyboardInteraction 
     system (this could be a wider problem, but probably only for this part (due
     to it's name))
   - fixed detectOverlap again; turns out the order that the boundingBox points
     are in is very important. I've added sortation code, but have also tried to
     make it so code that provides bounding boxes, always puts the higher-valued
-    point at the start of the array (the 'left/right'/'top/bottom' metaphore and
+    point at the start of the array (the 'left/right'/'top/bottom' metaphor and
     naming scheme I used is pretty mangled now)
   - rushed pianoroll part and object through so that I could put together demo 2
     The way things are, one can continue to develop those items without
-    affecting the demo, thus the demo can be updated at a leasurly pace.
+    affecting the demo, thus the demo can be updated at a leisurely pace.
 
                 * Workspace (unminified) surpasses 10,000 lines *
 
@@ -610,7 +614,7 @@
     nicer way
   - audio mixer
 
-  Compliation Results
+  Compilation Results
   - workspace.js                        655 Kb  (100%)
   - workspace.min.js                    231 Kb  ( 35%)
   - workspace.min.js (web compressed)    46 Kb  (  7%)
@@ -623,7 +627,7 @@
 
 
 2018-07-11
-  - fixed the bug from yesterday; turned out, the number convertion is normal,
+  - fixed the bug from yesterday; turned out, the number conversion is normal,
     and it was my own 'getTransform' code that was not reading the produced 
     style string correctly. I redid the regex, things seem to be working better
     now (though it all seems a little inefficient)
@@ -635,7 +639,7 @@
 
 2018-07-10
   - wrote up rangeselector part (which allows one to select a range on a
-    slide-like area. Comes complete with handles that bumb off eachother, area
+    slide-like area. Comes complete with handles that bump off eachother, area
     panning and expand/shrink mouse wheel)
   
   bug found
@@ -665,7 +669,7 @@
     made a little nicer. So far there's alt-click to add, click-n-drag, 
     shift-click-n-drag to group select, click anyway to deselect, alt-drag to
     clone, right and left handle drag to lengthen, and all that springy
-    boundries thing. Still playing with the interaction logic of it all till it
+    boundaries thing. Still playing with the interaction logic of it all till it
     feels natural.
   - fixed duplicate events problem in noteRegistry
 
@@ -696,7 +700,7 @@
 
 
 2018-07-01
-  - piano rool editor now uses the noteRegistry more vigorously, allowing it to
+  - piano roll editor now uses the noteRegistry more vigorously, allowing it to
     set limitations such as maximum note length and maximum limit to an event on
     the right. Also added method that can return notes who have events between
     two defined times
@@ -707,7 +711,7 @@
     advanced launchpad)
     future development ideas
     - ctrl-drag to clone
-    - ability to sectect groups of notes (and move around/clone)
+    - ability to select groups of notes (and move around/clone)
     - shift-drag empty space to select area
     - shift/alt-drag used space to adjust velocity (and colour)
     - playfield that goes off the slides (zooming, panning, etc)
@@ -725,7 +729,7 @@
 
 
 2018-06-27
-  - fixed that lanuchpad sequence data duplication copy bug thing
+  - fixed that launchpad sequence data duplication copy bug thing
   - added closure-compiler to build chain, creating a 'heavyComp' command along
     the way (to differentiate between the dev 'comp' command) 'heavyComp' runs 
     gravity on only 'main.js' (and can detect if an error occurs stopping the
@@ -740,7 +744,7 @@
   - created a musicalkeybaord object
   - fixed non-functional panic button in the basicSynthesizer
   - added musicalkeybaord object to 'finished objects' area
-  - fixed universalreadout to interperate the 'data' segment a bit nicer (by
+  - fixed universalreadout to interpret the 'data' segment a bit nicer (by
     converting things to JSON)
 
 
@@ -750,7 +754,7 @@
   - added rate slider and panic button to oneShot_multi_multiTrack object (also
     changed the 'dynamic design' section to use closures in functions instead of
     parsing the IDs of their parents)
-  - accidentally left is possbible to set the playback to 0 in the oneShot_multi
+  - accidentally left is possible to set the playback to 0 in the oneShot_multi
     circuit (which the browser did not like) the minimum is now set at 1/1000000
   - loadURL interface added to the oneShot_multi object (these interfaces should
     save time when doing scripted jobs)
@@ -765,7 +769,7 @@
 
 
 2018-06-25
-  - added light feature to the multitrack and single track miltishot audio file
+  - added light feature to the multitrack and single track multishot audio file
     players
   - also added the ability to select a region to use within the audio track
   - forgot to hook up the fdail in the reverb object
@@ -784,7 +788,7 @@
 2018-06-23
   - updated demo1 to have sound and sequencing
   - launchpad object importData method updated to deal with missing values
-    (something that sould be done everywhere probably)
+    (something that should be done everywhere probably)
   - oneShot_multi circuit load method callback protected against missing 
     function
   - launchpad circuit now runs the pageChange callback after importPage or 
@@ -801,10 +805,10 @@
     parts.circuits.sequencing.launchpad circuit (which probably needs a rename))
     (also the universal readout doesn't print to the console, but to some text
     in the viewport)
-  - reated and added a puse generator
+  - created and added a pulse generator
   - did import/export code for the launchpad
   - redid the comp command, so now there's two files produced; a 'test' edition
-    thats the same as the old one, and a 'regular' one that has none of the test
+    that's the same as the old one, and a 'regular' one that has none of the test
     situation code. In this way I can now test and develop like normal, while
     having demo pages that are unaffected. Both still don't have the wrapping
     enabled, so, there's work to be done still.
@@ -813,7 +817,7 @@
 
   bug found
   - odd bug in audio file player looper, where hitting the play button
-    repeatidly would always restart the audio, but sometimes the play head would
+    repeatedly would always restart the audio, but sometimes the play head would
     disappear. Seems to be caused by the style of the needle not being set in 
     time before the request to move the needle to the other side of the viewbox
     occurs (the style has a transition setting). The commands are being 
@@ -847,7 +851,7 @@
     way)
   - added math.curvePoint functions to utility, and fixed up other aspects of 
     curve generation
-  - udpated smoothSet in the slider and continuous dial parts, in a bid to make
+  - updated smoothSet in the slider and continuous dial parts, in a bid to make
     them more efficient and time conscious..I think it's worked
   - started on revamping the testSituations folder
 
@@ -878,10 +882,10 @@
     functionality, along with the ability to get the recording length at any 
     time. I've also simplified the input/output audio nodes somewhat. The 
     object is pretty sparse at current however.
-  - worked on simplifing audio channels; turns out things are already pretty
+  - worked on simplifying audio channels; turns out things are already pretty
     simple as they are (I was worried that the audio streams were mixing channel
     counts, and didn't know how that was effecting things. Seems only the audio
-    file player was suffering from this. Need to be more vigilent about channels
+    file player was suffering from this. Need to be more vigilant about channels
     and streams in future)
 
 2018-06-12
@@ -901,7 +905,7 @@
   - wrote up looper circuitry and object. It just takes a file and always loops
     it while playing. The circuitry has the ability to loop a sub-section of the
     file, but the object doesn't have that feature
-  - wrote up new verison of the generic audio file player, which is written a 
+  - wrote up new version of the generic audio file player, which is written a 
     bit nicer, with some small changes
   - test situation 10 / 2 / 2 is looking good, now with each player type in an
     object (and labels)
@@ -932,8 +936,8 @@
 2018-06-04
   - needleOverlay work complete, seems pretty solid now
   - worked on integrating the needleOverlay with the audioFilePlayer object. You
-    can now select the loop region, move it around and disactivate it. It's a 
-    bit rickity, but it works (you might want to check up on the 'loopCompute'
+    can now select the loop region, move it around and deactivate it. It's a 
+    bit rickety, but it works (you might want to check up on the 'loopCompute'
     and anything to do with getting the current time in the audioFilePlayer
     audio part. It works on my machine!)
   - cleaned things up a bit in test situation 10 - 2
@@ -998,16 +1002,16 @@
 
 2018-05-25
   - added 'seconds2time' and 'padString' utilities under math (the second isn't
-    really math though..I should make a 'string' catagory or something...)
+    really math though..I should make a 'string' category or something...)
   - fixed up play/pause/stop functionality in the audio file player, and added
     the ability to get the current time
-  - horizontal slider has been updated to override programmactic 'set' calls
+  - horizontal slider has been updated to override programmatic 'set' calls
     when the user is pulling the handle..it works, but needs work. Also it needs
     to be copied to other such controls
   - audio file player object now has a scrubber (everything needs work)
 
   future ideas
-  - theres some 'detune' and 'play rate' methods in the audio source buffer
+  - there's some 'detune' and 'play rate' methods in the audio source buffer
     thing somewhere..
 
 
@@ -1045,7 +1049,7 @@
 2018-05-18
   - redid the paste fix from yesterday, to put the 'declareObjectGrapple' back
     into the object builder
-  - fix in autio_meter_level, where not setting the angle value would produce
+  - fix in audio_meter_level, where not setting the angle value would produce
     the element upside-down. It now defaults to 0 so that doesn't happen.
   - redid object builder to have z position control, it's also just flatly
     better now
