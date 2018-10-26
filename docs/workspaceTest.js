@@ -73,93 +73,366 @@
 
             };
             system.utility = new function(){
-                // utility
-                //    workspace
-                //        currentPosition                 ()
-                //        gotoPosition                    (x,y,z,r)
-                //        getPane                         (element)
-                //        getGlobal                       (element)
-                //        objectUnderPoint                (x,y) (browser position)
-                //        pointConverter
-                //            browser2workspace           (x,y)
-                //            workspace2browser           (x,y)
-                //        dotMaker                        (x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;')
-                //        getGlobalScale                  (element)
-                //        getViewportDimensions           ()
-                //        placeAndReturnObject            (object, pane='middleground')
-                //        mouseInteractionHandler         (moveCode, stopCode)
-                //        clear                           (pane='middleground')
-                //        exportScene                     (bundleConstructorFunctions=false)
-                //        importScene                     (data, bundleConstructorFunctions=false, constructorFunctions)
-                //        saveload
-                //            save                        (compress=true, sceneName='project', bundleConstructorFunctions=false)
-                //            __loadProcess               (data, compressed)
-                //            load                        (compressed=true)
-                //            loadFromURL                 (url, compressed=true)
-                //        setStaticBackgroundStyle        (style)
-                //    
-                //    element
-                //        getTransform                    (element)
-                //        getCumulativeTransform          (element)
-                //        getTruePoint                    (element)
-                //        setTransform                    (element, transform:{x:0, y:0, s:1, r:0})
-                //        setTransform_XYonly             (element, x, y)
-                //        setStyle                        (element, style)
-                //        setRotation                     (element, rotation)
-                //        getBoundingBox                  (element)
-                //        makeUnselectable                (element)
-                //        getPositionWithinFromMouse      (event, element, elementWidth, elementHeight)
-                //        styleExtractor                  (string)
-                //        stylePacker                     (object)
-                //    
-                //    object
-                //        requestInteraction              (x,y,type) (browser position)
-                //        disconnectEverything            (object)
-                //        generateSelectionArea           (points:[{x:0,y:0},...], object)
-                //        deleteObject                    (object)
-                //    
-                //    audio
-                //        changeAudioParam                (audioParam, target, time, curve, cancelScheduledValues=true)
-                //        loadBuffer                      (callback, type='file', url)
-                //        waveformSegment                 (audioBuffer, bounds={start:0,end:1})
-                //    
-                //    math
-                //        averageArray                    (array)
-                //        largestValueFound               (array)
-                //        polar2cartesian                 (angle,distance)
-                //        cartesian2polar                 (x,y)
-                //        boundingBoxFromPoints           (points:[{x:0,y:0},...])
-                //        seconds2time                    (seconds)
-                //        detectOverlap                   (poly_a:[{x:0,y:0},...], poly_b:[{x:0,y:0},...], box_a:[{x:0,y:0},{x:0,y:0}]=null, box_b:[{x:0,y:0},{x:0,y:0}]=null)
-                //        normalizeStretchArray           (array)
-                //        curvePoint
-                //            linear                      (x, start=0, end=1)
-                //            sin                         (x, start=0, end=1)
-                //            cos                         (x, start=0, end=1)
-                //            s                           (x, start=0, end=1, sharpness=8)
-                //        curveGenerator
-                //            linear                      (stepCount, start=0, end=1)
-                //            sin                         (stepCount, start=0, end=1)
-                //            cos                         (stepCount, start=0, end=1)
-                //            s                           (stepCount, start=0, end=1, sharpness=8)
-                //            exponential                 (stepCount, start=0, end=1)
-                //        relativeDistance                (realLength, start,end, d, allowOverflow=false
-                //        lineCorrecter                   (points, maxheight, maxwidth)
-                //
-                //    misc
-                //        padString                      (string, length)
-                //        compressString                 (string)
-                //        decompressString               (string)
-                //        serialize                      (data, compress=true)
-                //        unserialize                    (data, compressed=true)
-                //        printFile                      (filename, data)
-                //        openFile                       (callback)
-                //
-                //    thirdparty
-                //        lzString (contains code for compressing and decompressing strings)
-                //    
-                //    experimental
+                this.element = new function(){
+                    this.getTransform = function(element){
+                        // //pure js
+                        //     var end_1 = element.style.transform.indexOf('px');
+                        //     var end_2 = element.style.transform.indexOf('px) scale(');
+                        //     var end_3 = element.style.transform.indexOf(') rotate(');
+                        //     var end_4 = element.style.transform.indexOf('rad)');
                 
+                        //     return {
+                        //         x: Number( element.style.transform.substring(10,end_1)),
+                        //         y: Number( element.style.transform.substring(end_1+4,end_2)),
+                        //         s: Number( element.style.transform.substring(end_2+10,end_3)),
+                        //         r: Number( element.style.transform.substring(end_3+9,end_4))
+                        //     };
+                
+                        //pure js 2 
+                            var text = element.style.transform;
+                            text = text.slice(10).split('px, ',2);
+                            var num1 = Number(text[0]);
+                            text = text[1].split('px) scale(',2);
+                            var num2 = Number(text[0]);
+                            text = text[1].split(') rotate(',2);
+                            var num3 = Number(text[0]);
+                            var num4 = Number(text[1].slice(0,-4));
+                
+                            return { x: num1, y: num2, s: num3, r: num4 };
+                
+                        // //regex
+                        //     var pattern = /translate\((.*)px,| (.*)px|\) scale\((.*)\) |rotate\((.*)rad\)/g;
+                
+                        //     var result = [];
+                        //     for(var a = 0; a < 4; a++){
+                        //         result.push(Number(pattern.exec(element.style.transform)[a+1]));
+                        //     }
+                            
+                        //     return {x:result[0],y:result[1],s:result[2],r:result[3]};
+                    };
+                    this.getCumulativeTransform = function(element){
+                        data = this.getTransform(element);
+                        while( !element.parentElement.getAttribute('pane') ){
+                            element = element.parentElement;
+                            var newData = this.getTransform(element);
+                            data.x += newData.x;
+                            data.y += newData.y;
+                            data.s *= newData.s;
+                            data.r += newData.r;
+                        }
+                        return data;
+                    };
+                    this.getTruePoint = function(element){
+                        data = this.getTransform(element);
+                        while( !element.parentElement.getAttribute('pane') ){
+                            element = element.parentElement;
+                            var newData = this.getTransform(element);
+                            var temp = system.utility.math.cartesian2polar(data.x,data.y);
+                            temp.ang += newData.r;
+                            temp = system.utility.math.polar2cartesian(temp.ang,temp.dis);
+                            data.x = temp.x + newData.x;
+                            data.y = temp.y + newData.y;
+                            data.s *= newData.s;
+                            data.r += newData.r;
+                        }
+                        return data;
+                    };
+                    this.setTransform = function(element, transform){
+                        //(code removed for speed, but I remember it was solving some formatting problem somewhere)
+                        // element.style.transform = 'translate('+transform.x.toFixed(16)+'px, '+(transform.y.toFixed(16))+'px) scale('+transform.s.toFixed(16)+') rotate(' +transform.r.toFixed(16)+ 'rad)';
+                        element.style.transform = 'translate('+transform.x+'px, '+transform.y+'px) scale('+transform.s+') rotate(' +transform.r+ 'rad)';
+                    };
+                    this.setTransform_XYonly = function(element, x, y){
+                        if(x == null && y == null){return;}
+                
+                        var transformData = this.getTransform(element);
+                        if(x!=null){transformData.x = x;}
+                        if(y!=null){transformData.y = y;}
+                        this.setTransform( element, transformData );
+                    };
+                    this.setStyle = function(element, style){
+                        var transform = this.getTransform(element); 
+                        element.style = style;
+                        this.setTransform(element, transform);
+                    };
+                    this.setRotation = function(element, rotation){
+                        var pattern = /rotate\(([-+]?[0-9]*\.?[0-9]+)/;
+                        element.style.transform = element.style.transform.replace( pattern, 'rotate('+rotation );
+                    };
+                    this.getBoundingBox = function(element){
+                        var tempG = document.createElementNS('http://www.w3.org/2000/svg','g');
+                        system.pane.workspace.append(tempG);
+                
+                        element = element.cloneNode(true);
+                        tempG.append(element);
+                        var temp = element.getBBox();
+                        tempG.remove();
+                        
+                        return temp;
+                    };
+                    this.makeUnselectable = function(element){
+                        element.style['-webkit-user-select'] = 'none';
+                        element.style['-moz-user-select'] = 'none';
+                        element.style['-ms-user-select'] = 'none';
+                        element.style['user-select'] = 'none';
+                    };
+                    this.getPositionWithinFromMouse = function(event, element, elementWidth, elementHeight){
+                        var elementOrigin = system.utility.element.getTruePoint(element);
+                        var mouseClick = system.utility.workspace.pointConverter.browser2workspace(event.offsetX,event.offsetY);
+                
+                        var temp = system.utility.math.cartesian2polar(
+                            mouseClick.x-elementOrigin.x,
+                            mouseClick.y-elementOrigin.y
+                        );
+                        temp.ang -= elementOrigin.r;
+                        temp = system.utility.math.polar2cartesian(temp.ang,temp.dis);
+                
+                        var ans = { x:temp.x/elementWidth, y:temp.y/elementHeight };
+                        if(ans.x < 0){ans.x = 0;}else if(ans.x > 1){ans.x = 1;}
+                        if(ans.y < 0){ans.y = 0;}else if(ans.y > 1){ans.y = 1;}
+                        return ans;
+                    };
+                    this.styleExtractor = function(string){
+                        var outputObject= {};
+                
+                        //split style string into individual settings (and filter out any empty strings)
+                            var array = string.split(';').filter(function(n){ return n.length != 0 });
+                
+                        //create the object
+                        try{
+                            for(var a = 0; a < array.length; a++){
+                                //split on colon
+                                    var temp = array[a].split(':');
+                                //strip whitespace
+                                    temp[0] = temp[0].replace(/^\s+|\s+$/g, '');
+                                    temp[1] = temp[1].replace(/^\s+|\s+$/g, '');
+                                //push into object
+                                    outputObject[temp[0]] = temp[1];
+                            }
+                        }catch(e){console.error('styleExtractor was unable to parse the string "'+string+'"');return {};}
+                        
+                        return outputObject;
+                    };
+                    this.stylePacker = function(object){
+                        var styleString = '';
+                        var keys = Object.keys(object);
+                        for(var a = 0; a < keys.length; a++){
+                            styleString += keys[a] +':'+ object[keys[a]] +';';
+                        }
+                        return styleString;
+                    };
+                };
+                this.misc = new function(){
+                    this.padString = function(string,length,padding=' '){
+                        if(padding.length<1){return string;}
+                        string = ''+string;
+                
+                        while(string.length < length){
+                            string = padding + string;
+                        }
+                
+                        return string;
+                    };
+                    this.blendColours = function(rgba_1,rgba_2,ratio){
+                        //extract
+                            function extract(rgba){
+                                rgba = rgba.split(',');
+                                rgba[0] = rgba[0].replace('rgba(', '');
+                                rgba[3] = rgba[3].replace(')', '');
+                                return rgba.map(function(a){return parseFloat(a);})
+                            }
+                            rgba_1 = extract(rgba_1);
+                            rgba_2 = extract(rgba_2);
+                
+                        //blend
+                            var rgba_out = [];
+                            for(var a = 0; a < rgba_1.length; a++){
+                                rgba_out[a] = (1-ratio)*rgba_1[a] + ratio*rgba_2[a];
+                            }
+                
+                        //pack
+                            return 'rgba('+rgba_out[0]+','+rgba_out[1]+','+rgba_out[2]+','+rgba_out[3]+')';            
+                    };
+                    this.multiBlendColours = function(rgbaList,ratio){
+                        //special cases
+                            if(ratio == 0){return rgbaList[0];}
+                            if(ratio == 1){return rgbaList[rgbaList.length-1];}
+                        //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
+                            var p = ratio*(rgbaList.length-1);
+                            return system.utility.misc.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+                    };
+                    this.compressString = function(string){return system.utility.thirdparty.lzString.compress(string);};
+                    this.decompressString = function(string){return system.utility.thirdparty.lzString.decompress(string);};
+                    this.serialize = function(data,compress=true){
+                        function getType(obj){
+                            return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+                        }
+                    
+                        var data = JSON.stringify(data, function(key, value){
+                    
+                            //preserve types that JSON.stringify can't handle as "unique types"
+                            switch(getType(value)){
+                                case 'function':
+                                    return {__uniqueType:'function', __value:value.toString(), __name:value.name};
+                                case 'arraybuffer': 
+                                    return {__uniqueType:'arraybuffer', __value:btoa(String.fromCharCode(new Uint8Array(value)))}
+                                case 'audiobuffer':
+                                    var channelData = [];
+                                    for(var a = 0; a < value.numberOfChannels; a++){
+                                        channelData.push( Array.from(value.getChannelData(a)) );
+                                    }
+                                    return {
+                                        __uniqueType:'audiobuffer', 
+                                        __channelData:channelData, 
+                                        __sampleRate:value.sampleRate,
+                                        __numberOfChannels:value.numberOfChannels,
+                                        __length:value.length
+                                    };
+                                break;
+                                default: return value;
+                            }
+                    
+                        });
+                    
+                        if(compress){ data = system.utility.misc.compressString(data); }
+                        return data;
+                    };
+                    this.unserialize = function(data,compressed=true){
+                        if(data === undefined){return undefined;}
+                    
+                        if(compressed){ data = system.utility.misc.decompressString(data); }
+                    
+                        return JSON.parse(data, function(key, value){
+                    
+                            //recover unique types
+                            if(typeof value == 'object' && value != null && '__uniqueType' in value){
+                                switch(value.__uniqueType){
+                                    case 'function':
+                                        var functionHead = value.__value.substring(0,value.__value.indexOf('{'));
+                                        functionHead = functionHead.substring(functionHead.indexOf('(')+1, functionHead.lastIndexOf(')'));
+                                        var functionBody = value.__value.substring(value.__value.indexOf('{')+1, value.__value.lastIndexOf('}'));
+                    
+                                        value = Function(functionHead,functionBody);
+                                    break;
+                                    case 'arraybuffer':
+                                        value = atob(value.__value);
+                                        for(var a = 0; a < value.length; a++){ value[a] = value[a].charCodeAt(0); }
+                                        value = new ArrayBuffer(value);
+                                    break;
+                                    case 'audiobuffer':
+                                        var audioBuffer = system.audio.context.createBuffer(value.__numberOfChannels, value.__length, value.__sampleRate);
+                    
+                                        for(var a = 0; a < audioBuffer.numberOfChannels; a++){
+                                            workingBuffer = audioBuffer.getChannelData(a);
+                                            for(var i = 0; i < audioBuffer.length; i++){
+                                                workingBuffer[i] = value.__channelData[a][i];
+                                            }
+                                        }
+                    
+                                        value = audioBuffer;
+                                    break;
+                                    default: value = value.__value;
+                                }
+                            }
+                    
+                            return value;
+                        });
+                    };
+                    this.openFile = function(callback,readAsType='readAsBinaryString'){
+                        var i = document.createElement('input');
+                        i.type = 'file';
+                        i.onchange = function(){
+                            var f = new FileReader();
+                            switch(readAsType){
+                                case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
+                                case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
+                            }
+                            f.onloadend = function(){ 
+                                if(callback){callback(f.result);}
+                            }
+                        };
+                        i.click();
+                    };
+                    this.printFile = function(filename,data){
+                        var a = document.createElement('a');
+                        a.href = URL.createObjectURL(new Blob([data]));
+                        a.download = filename;
+                        a.click();
+                    };
+                    this.openURL = function(url){
+                        window.open( url, '_blank');
+                    };
+                };
+                this.object = new function(){
+                    this.requestInteraction = function(x,y,type,globalName){
+                        if(!x || !y){return true;}
+                        var temp = document.elementFromPoint(x,y);
+                        if(temp == null){return false;}
+                
+                        if(temp.hasAttribute('workspace')){return true;}
+                        while(!temp.hasAttribute('global')){
+                            if(temp == document.body){ return false; }
+                
+                            if(temp[type] || temp.hasAttribute(type)){return false;}
+                            temp = temp.parentElement;
+                        }
+                        
+                        return temp.getAttribute('pane')==globalName;
+                    };
+                    this.disconnectEverything = function(object){
+                        var keys = Object.keys(object.io);
+                        for( var a = 0; a < keys.length; a++){
+                            //account for node arrays
+                            if( Array.isArray(object.io[keys[a]]) ){
+                                for(var c = 0; c < object.io[keys[a]].length; c++){
+                                    object.io[keys[a]][c].disconnect();
+                                }
+                            }else{
+                                object.io[keys[a]].disconnect();
+                            }
+                        }
+                    };
+                    this.generateSelectionArea = function(points, object){
+                        var debug = false;
+                        object.selectionArea = {};
+                        object.selectionArea.box = [];
+                        object.selectionArea.points = [];
+                        object.updateSelectionArea = function(){
+                            //the main shape we want to use
+                            object.selectionArea.points = [];
+                            points.forEach(function(item){
+                                object.selectionArea.points.push( {x:item.x, y:item.y} );
+                            });
+                            object.selectionArea.box = system.utility.math.boundingBoxFromPoints(object.selectionArea.points);
+                
+                            //adjusting it for the object's position in space
+                            var temp = system.utility.element.getTransform(object);
+                            object.selectionArea.box.forEach(function(element) {
+                                element.x += temp.x;
+                                element.y += temp.y;
+                            });
+                            object.selectionArea.points.forEach(function(element) {
+                                element.x += temp.x;
+                                element.y += temp.y;
+                            });
+                        };
+                
+                        object.updateSelectionArea();
+                
+                        if(debug){
+                            for(var a = 0; a < object.selectionArea.box.length; a++){ system.pane.foreground.append( system.utility.workspace.dotMaker(object.selectionArea.box[a].x, object.selectionArea.box[a].y, a) ); }
+                            for(var a = 0; a < object.selectionArea.points.length; a++){ system.pane.foreground.append( system.utility.workspace.dotMaker(object.selectionArea.points[a].x, object.selectionArea.points[a].y, a) ); }
+                        }
+                    };
+                    this.deleteObject = function(object){
+                        //run the object's onDelete method
+                            if(object.onDelete){object.onDelete();}
+                        //run disconnect on every connection node of this object
+                            system.utility.object.disconnectEverything(object);
+                        //remove the object from the pane it's in
+                            system.utility.workspace.getPane(object).removeChild(object);
+                    };
+                };
                 this.workspace = new function(){
                     this.currentPosition = function(){
                         return system.utility.element.getTransform(system.pane.workspace);
@@ -428,225 +701,90 @@
                         system.utility.workspace.placeAndReturnObject( part.builder('rect',null,{width:'100%',height:'100%',style:style+'pointer-events:none;'}), 'staticBackground' );    
                     };
                 };
-                this.element = new function(){
-                    this.getTransform = function(element){
-                        // //pure js
-                        //     var end_1 = element.style.transform.indexOf('px');
-                        //     var end_2 = element.style.transform.indexOf('px) scale(');
-                        //     var end_3 = element.style.transform.indexOf(') rotate(');
-                        //     var end_4 = element.style.transform.indexOf('rad)');
-                
-                        //     return {
-                        //         x: Number( element.style.transform.substring(10,end_1)),
-                        //         y: Number( element.style.transform.substring(end_1+4,end_2)),
-                        //         s: Number( element.style.transform.substring(end_2+10,end_3)),
-                        //         r: Number( element.style.transform.substring(end_3+9,end_4))
-                        //     };
-                
-                        //pure js 2 
-                            var text = element.style.transform;
-                            text = text.slice(10).split('px, ',2);
-                            var num1 = Number(text[0]);
-                            text = text[1].split('px) scale(',2);
-                            var num2 = Number(text[0]);
-                            text = text[1].split(') rotate(',2);
-                            var num3 = Number(text[0]);
-                            var num4 = Number(text[1].slice(0,-4));
-                
-                            return { x: num1, y: num2, s: num3, r: num4 };
-                
-                        // //regex
-                        //     var pattern = /translate\((.*)px,| (.*)px|\) scale\((.*)\) |rotate\((.*)rad\)/g;
-                
-                        //     var result = [];
-                        //     for(var a = 0; a < 4; a++){
-                        //         result.push(Number(pattern.exec(element.style.transform)[a+1]));
-                        //     }
-                            
-                        //     return {x:result[0],y:result[1],s:result[2],r:result[3]};
-                    };
-                    this.getCumulativeTransform = function(element){
-                        data = this.getTransform(element);
-                        while( !element.parentElement.getAttribute('pane') ){
-                            element = element.parentElement;
-                            var newData = this.getTransform(element);
-                            data.x += newData.x;
-                            data.y += newData.y;
-                            data.s *= newData.s;
-                            data.r += newData.r;
-                        }
-                        return data;
-                    };
-                    this.getTruePoint = function(element){
-                        data = this.getTransform(element);
-                        while( !element.parentElement.getAttribute('pane') ){
-                            element = element.parentElement;
-                            var newData = this.getTransform(element);
-                            var temp = system.utility.math.cartesian2polar(data.x,data.y);
-                            temp.ang += newData.r;
-                            temp = system.utility.math.polar2cartesian(temp.ang,temp.dis);
-                            data.x = temp.x + newData.x;
-                            data.y = temp.y + newData.y;
-                            data.s *= newData.s;
-                            data.r += newData.r;
-                        }
-                        return data;
-                    };
-                    this.setTransform = function(element, transform){
-                        //(code removed for speed, but I remember it was solving some formatting problem somewhere)
-                        // element.style.transform = 'translate('+transform.x.toFixed(16)+'px, '+(transform.y.toFixed(16))+'px) scale('+transform.s.toFixed(16)+') rotate(' +transform.r.toFixed(16)+ 'rad)';
-                        element.style.transform = 'translate('+transform.x+'px, '+transform.y+'px) scale('+transform.s+') rotate(' +transform.r+ 'rad)';
-                    };
-                    this.setTransform_XYonly = function(element, x, y){
-                        if(x == null && y == null){return;}
-                
-                        var transformData = this.getTransform(element);
-                        if(x!=null){transformData.x = x;}
-                        if(y!=null){transformData.y = y;}
-                        this.setTransform( element, transformData );
-                    };
-                    this.setStyle = function(element, style){
-                        var transform = this.getTransform(element); 
-                        element.style = style;
-                        this.setTransform(element, transform);
-                    };
-                    this.setRotation = function(element, rotation){
-                        var pattern = /rotate\(([-+]?[0-9]*\.?[0-9]+)/;
-                        element.style.transform = element.style.transform.replace( pattern, 'rotate('+rotation );
-                    };
-                    this.getBoundingBox = function(element){
-                        var tempG = document.createElementNS('http://www.w3.org/2000/svg','g');
-                        system.pane.workspace.append(tempG);
-                
-                        element = element.cloneNode(true);
-                        tempG.append(element);
-                        var temp = element.getBBox();
-                        tempG.remove();
-                        
-                        return temp;
-                    };
-                    this.makeUnselectable = function(element){
-                        element.style['-webkit-user-select'] = 'none';
-                        element.style['-moz-user-select'] = 'none';
-                        element.style['-ms-user-select'] = 'none';
-                        element.style['user-select'] = 'none';
-                    };
-                    this.getPositionWithinFromMouse = function(event, element, elementWidth, elementHeight){
-                        var elementOrigin = system.utility.element.getTruePoint(element);
-                        var mouseClick = system.utility.workspace.pointConverter.browser2workspace(event.offsetX,event.offsetY);
-                
-                        var temp = system.utility.math.cartesian2polar(
-                            mouseClick.x-elementOrigin.x,
-                            mouseClick.y-elementOrigin.y
-                        );
-                        temp.ang -= elementOrigin.r;
-                        temp = system.utility.math.polar2cartesian(temp.ang,temp.dis);
-                
-                        var ans = { x:temp.x/elementWidth, y:temp.y/elementHeight };
-                        if(ans.x < 0){ans.x = 0;}else if(ans.x > 1){ans.x = 1;}
-                        if(ans.y < 0){ans.y = 0;}else if(ans.y > 1){ans.y = 1;}
-                        return ans;
-                    };
-                    this.styleExtractor = function(string){
-                        var outputObject= {};
-                
-                        //split style string into individual settings (and filter out any empty strings)
-                            var array = string.split(';').filter(function(n){ return n.length != 0 });
-                
-                        //create the object
-                        try{
-                            for(var a = 0; a < array.length; a++){
-                                //split on colon
-                                    var temp = array[a].split(':');
-                                //strip whitespace
-                                    temp[0] = temp[0].replace(/^\s+|\s+$/g, '');
-                                    temp[1] = temp[1].replace(/^\s+|\s+$/g, '');
-                                //push into object
-                                    outputObject[temp[0]] = temp[1];
-                            }
-                        }catch(e){console.error('styleExtractor was unable to parse the string "'+string+'"');return {};}
-                        
-                        return outputObject;
-                    };
-                    this.stylePacker = function(object){
-                        var styleString = '';
-                        var keys = Object.keys(object);
-                        for(var a = 0; a < keys.length; a++){
-                            styleString += keys[a] +':'+ object[keys[a]] +';';
-                        }
-                        return styleString;
-                    };
-                };
-                this.object = new function(){
-                    this.requestInteraction = function(x,y,type,globalName){
-                        if(!x || !y){return true;}
-                        var temp = document.elementFromPoint(x,y);
-                        if(temp == null){return false;}
-                
-                        if(temp.hasAttribute('workspace')){return true;}
-                        while(!temp.hasAttribute('global')){
-                            if(temp == document.body){ return false; }
-                
-                            if(temp[type] || temp.hasAttribute(type)){return false;}
-                            temp = temp.parentElement;
-                        }
-                        
-                        return temp.getAttribute('pane')==globalName;
-                    };
-                    this.disconnectEverything = function(object){
-                        var keys = Object.keys(object.io);
-                        for( var a = 0; a < keys.length; a++){
-                            //account for node arrays
-                            if( Array.isArray(object.io[keys[a]]) ){
-                                for(var c = 0; c < object.io[keys[a]].length; c++){
-                                    object.io[keys[a]][c].disconnect();
-                                }
-                            }else{
-                                object.io[keys[a]].disconnect();
-                            }
-                        }
-                    };
-                    this.generateSelectionArea = function(points, object){
-                        var debug = false;
-                        object.selectionArea = {};
-                        object.selectionArea.box = [];
-                        object.selectionArea.points = [];
-                        object.updateSelectionArea = function(){
-                            //the main shape we want to use
-                            object.selectionArea.points = [];
-                            points.forEach(function(item){
-                                object.selectionArea.points.push( {x:item.x, y:item.y} );
-                            });
-                            object.selectionArea.box = system.utility.math.boundingBoxFromPoints(object.selectionArea.points);
-                
-                            //adjusting it for the object's position in space
-                            var temp = system.utility.element.getTransform(object);
-                            object.selectionArea.box.forEach(function(element) {
-                                element.x += temp.x;
-                                element.y += temp.y;
-                            });
-                            object.selectionArea.points.forEach(function(element) {
-                                element.x += temp.x;
-                                element.y += temp.y;
-                            });
-                        };
-                
-                        object.updateSelectionArea();
-                
-                        if(debug){
-                            for(var a = 0; a < object.selectionArea.box.length; a++){ system.pane.foreground.append( system.utility.workspace.dotMaker(object.selectionArea.box[a].x, object.selectionArea.box[a].y, a) ); }
-                            for(var a = 0; a < object.selectionArea.points.length; a++){ system.pane.foreground.append( system.utility.workspace.dotMaker(object.selectionArea.points[a].x, object.selectionArea.points[a].y, a) ); }
-                        }
-                    };
-                    this.deleteObject = function(object){
-                        //run the object's onDelete method
-                            if(object.onDelete){object.onDelete();}
-                        //run disconnect on every connection node of this object
-                            system.utility.object.disconnectEverything(object);
-                        //remove the object from the pane it's in
-                            system.utility.workspace.getPane(object).removeChild(object);
-                    };
-                };
+                // utility
+                //    workspace
+                //        currentPosition                 ()
+                //        gotoPosition                    (x,y,z,r)
+                //        getPane                         (element)
+                //        getGlobal                       (element)
+                //        objectUnderPoint                (x,y) (browser position)
+                //        pointConverter
+                //            browser2workspace           (x,y)
+                //            workspace2browser           (x,y)
+                //        dotMaker                        (x,y,text,r=0,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;')
+                //        getGlobalScale                  (element)
+                //        getViewportDimensions           ()
+                //        placeAndReturnObject            (object, pane='middleground')
+                //        mouseInteractionHandler         (moveCode, stopCode)
+                //        clear                           (pane='middleground')
+                //        exportScene                     (bundleConstructorFunctions=false)
+                //        importScene                     (data, bundleConstructorFunctions=false, constructorFunctions)
+                //        saveload
+                //            save                        (compress=true, sceneName='project', bundleConstructorFunctions=false)
+                //            __loadProcess               (data, compressed)
+                //            load                        (compressed=true)
+                //            loadFromURL                 (url, compressed=true)
+                //        setStaticBackgroundStyle        (style)
+                //    
+                //    element
+                //        getTransform                    (element)
+                //        getCumulativeTransform          (element)
+                //        getTruePoint                    (element)
+                //        setTransform                    (element, transform:{x:0, y:0, s:1, r:0})
+                //        setTransform_XYonly             (element, x, y)
+                //        setStyle                        (element, style)
+                //        setRotation                     (element, rotation)
+                //        getBoundingBox                  (element)
+                //        makeUnselectable                (element)
+                //        getPositionWithinFromMouse      (event, element, elementWidth, elementHeight)
+                //        styleExtractor                  (string)
+                //        stylePacker                     (object)
+                //    
+                //    object
+                //        requestInteraction              (x,y,type) (browser position)
+                //        disconnectEverything            (object)
+                //        generateSelectionArea           (points:[{x:0,y:0},...], object)
+                //        deleteObject                    (object)
+                //    
+                //    audio
+                //        changeAudioParam                (audioParam, target, time, curve, cancelScheduledValues=true)
+                //        loadBuffer                      (callback, type='file', url)
+                //        waveformSegment                 (audioBuffer, bounds={start:0,end:1})
+                //    
+                //    math
+                //        averageArray                    (array)
+                //        largestValueFound               (array)
+                //        polar2cartesian                 (angle,distance)
+                //        cartesian2polar                 (x,y)
+                //        boundingBoxFromPoints           (points:[{x:0,y:0},...])
+                //        seconds2time                    (seconds)
+                //        detectOverlap                   (poly_a:[{x:0,y:0},...], poly_b:[{x:0,y:0},...], box_a:[{x:0,y:0},{x:0,y:0}]=null, box_b:[{x:0,y:0},{x:0,y:0}]=null)
+                //        normalizeStretchArray           (array)
+                //        curvePoint
+                //            linear                      (x, start=0, end=1)
+                //            sin                         (x, start=0, end=1)
+                //            cos                         (x, start=0, end=1)
+                //            s                           (x, start=0, end=1, sharpness=8)
+                //        curveGenerator
+                //            linear                      (stepCount, start=0, end=1)
+                //            sin                         (stepCount, start=0, end=1)
+                //            cos                         (stepCount, start=0, end=1)
+                //            s                           (stepCount, start=0, end=1, sharpness=8)
+                //            exponential                 (stepCount, start=0, end=1)
+                //        relativeDistance                (realLength, start,end, d, allowOverflow=false
+                //        lineCorrecter                   (points, maxheight, maxwidth)
+                //
+                //    misc
+                //        padString                      (string, length)
+                //        compressString                 (string)
+                //        decompressString               (string)
+                //        serialize                      (data, compress=true)
+                //        unserialize                    (data, compressed=true)
+                //        printFile                      (filename, data)
+                //        openFile                       (callback)
+                //
+                //    thirdparty
+                //        lzString (contains code for compressing and decompressing strings)
                 this.audio = new function(){
                     this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
                         if(target==null){return audioParam.value;}
@@ -1084,147 +1222,6 @@
                         return points;
                     };
                 };
-                this.misc = new function(){
-                    this.padString = function(string,length,padding=' '){
-                        if(padding.length<1){return string;}
-                        string = ''+string;
-                
-                        while(string.length < length){
-                            string = padding + string;
-                        }
-                
-                        return string;
-                    };
-                    this.blendColours = function(rgba_1,rgba_2,ratio){
-                        //extract
-                            function extract(rgba){
-                                rgba = rgba.split(',');
-                                rgba[0] = rgba[0].replace('rgba(', '');
-                                rgba[3] = rgba[3].replace(')', '');
-                                return rgba.map(function(a){return parseFloat(a);})
-                            }
-                            rgba_1 = extract(rgba_1);
-                            rgba_2 = extract(rgba_2);
-                
-                        //blend
-                            var rgba_out = [];
-                            for(var a = 0; a < rgba_1.length; a++){
-                                rgba_out[a] = (1-ratio)*rgba_1[a] + ratio*rgba_2[a];
-                            }
-                
-                        //pack
-                            return 'rgba('+rgba_out[0]+','+rgba_out[1]+','+rgba_out[2]+','+rgba_out[3]+')';            
-                    };
-                    this.multiBlendColours = function(rgbaList,ratio){
-                        //special cases
-                            if(ratio == 0){return rgbaList[0];}
-                            if(ratio == 1){return rgbaList[rgbaList.length-1];}
-                        //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
-                            var p = ratio*(rgbaList.length-1);
-                            return system.utility.misc.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
-                    };
-                    this.compressString = function(string){return system.utility.thirdparty.lzString.compress(string);};
-                    this.decompressString = function(string){return system.utility.thirdparty.lzString.decompress(string);};
-                    this.serialize = function(data,compress=true){
-                        function getType(obj){
-                            return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
-                        }
-                    
-                        var data = JSON.stringify(data, function(key, value){
-                    
-                            //preserve types that JSON.stringify can't handle as "unique types"
-                            switch(getType(value)){
-                                case 'function':
-                                    return {__uniqueType:'function', __value:value.toString(), __name:value.name};
-                                case 'arraybuffer': 
-                                    return {__uniqueType:'arraybuffer', __value:btoa(String.fromCharCode(new Uint8Array(value)))}
-                                case 'audiobuffer':
-                                    var channelData = [];
-                                    for(var a = 0; a < value.numberOfChannels; a++){
-                                        channelData.push( Array.from(value.getChannelData(a)) );
-                                    }
-                                    return {
-                                        __uniqueType:'audiobuffer', 
-                                        __channelData:channelData, 
-                                        __sampleRate:value.sampleRate,
-                                        __numberOfChannels:value.numberOfChannels,
-                                        __length:value.length
-                                    };
-                                break;
-                                default: return value;
-                            }
-                    
-                        });
-                    
-                        if(compress){ data = system.utility.misc.compressString(data); }
-                        return data;
-                    };
-                    this.unserialize = function(data,compressed=true){
-                        if(data === undefined){return undefined;}
-                    
-                        if(compressed){ data = system.utility.misc.decompressString(data); }
-                    
-                        return JSON.parse(data, function(key, value){
-                    
-                            //recover unique types
-                            if(typeof value == 'object' && value != null && '__uniqueType' in value){
-                                switch(value.__uniqueType){
-                                    case 'function':
-                                        var functionHead = value.__value.substring(0,value.__value.indexOf('{'));
-                                        functionHead = functionHead.substring(functionHead.indexOf('(')+1, functionHead.lastIndexOf(')'));
-                                        var functionBody = value.__value.substring(value.__value.indexOf('{')+1, value.__value.lastIndexOf('}'));
-                    
-                                        value = Function(functionHead,functionBody);
-                                    break;
-                                    case 'arraybuffer':
-                                        value = atob(value.__value);
-                                        for(var a = 0; a < value.length; a++){ value[a] = value[a].charCodeAt(0); }
-                                        value = new ArrayBuffer(value);
-                                    break;
-                                    case 'audiobuffer':
-                                        var audioBuffer = system.audio.context.createBuffer(value.__numberOfChannels, value.__length, value.__sampleRate);
-                    
-                                        for(var a = 0; a < audioBuffer.numberOfChannels; a++){
-                                            workingBuffer = audioBuffer.getChannelData(a);
-                                            for(var i = 0; i < audioBuffer.length; i++){
-                                                workingBuffer[i] = value.__channelData[a][i];
-                                            }
-                                        }
-                    
-                                        value = audioBuffer;
-                                    break;
-                                    default: value = value.__value;
-                                }
-                            }
-                    
-                            return value;
-                        });
-                    };
-                    this.openFile = function(callback,readAsType='readAsBinaryString'){
-                        var i = document.createElement('input');
-                        i.type = 'file';
-                        i.onchange = function(){
-                            var f = new FileReader();
-                            switch(readAsType){
-                                case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
-                                case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
-                            }
-                            f.onloadend = function(){ 
-                                if(callback){callback(f.result);}
-                            }
-                        };
-                        i.click();
-                    };
-                    this.printFile = function(filename,data){
-                        var a = document.createElement('a');
-                        a.href = URL.createObjectURL(new Blob([data]));
-                        a.download = filename;
-                        a.click();
-                    };
-                    this.openURL = function(url){
-                        window.open( url, '_blank');
-                    };
-                };
                 this.thirdparty = new function(){
                     this.lzString = (function(){
                         // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
@@ -1649,8 +1646,6 @@
                         return LZString;
                     })();
                 };
-                this.experimental = new function(){
-                };
             };
             system.pane = new function(){
                 //{'global':null, 'staticBackground':null, 'background':null, 'middleground':null, 'foreground':null, 'control':null};
@@ -2044,7 +2039,7 @@
                                         system.selection.selectObject(system.svgElement.temp_target);
                                     }
                 
-                                // collect together information on the click position and the selected object's positions and seection area
+                                // collect together information on the click position and the selected object's positions and section area
                                     system.svgElement.temp_oldClickPosition = [event.x,event.y];
                                     system.svgElement.temp_oldObjectPositions = [];
                                     system.svgElement.temp_oldObjectSelectionArea = [];
@@ -13245,75 +13240,747 @@
                 if(system.super.enableMenubar){ control.i.menubar.place(); }
             },1);
             
+            function tester(item1,item2){
+                function getType(obj){
+                    return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+                }
+                function comparer(item1,item2){
+                    if(getType(item1) != getType(item2)){ return false; }
+                    if(typeof item1 == 'boolean' || typeof item1 == 'number' || typeof item1 == 'string'){ return item1 === item2; }
+                    if(typeof item1 === 'undefined' || typeof item2 === 'undefined' || item1 === null || item2 === null){ return item1 === item2;  }
+                    if(getType(item1) == 'function'){
+                        item1 = item1.toString();
+                        item2 = item2.toString();
             
-            //audio duplicator
-                var audio_duplicator_1 = system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(50,50) );
+                        var item1_functionHead = item1.substring(0,item1.indexOf('{'));
+                        item1_functionHead = item1_functionHead.substring(item1_functionHead.indexOf('(')+1, item1_functionHead.lastIndexOf(')'));
+                        var item1_functionBody = item1.substring(item1.indexOf('{')+1, item1.lastIndexOf('}'));
             
-            //data duplicator
-                var data_duplicator_1 = system.utility.workspace.placeAndReturnObject( object.alpha.data_duplicator(875, 50) );
+                        var item2_functionHead = item2.substring(0,item2.indexOf('{'));
+                        item2_functionHead = item2_functionHead.substring(item2_functionHead.indexOf('(')+1, item2_functionHead.lastIndexOf(')'));
+                        var item2_functionBody = item2.substring(item2.indexOf('{')+1, item2.lastIndexOf('}'));
             
-            //audio_scope
-                var audio_scope_1 = system.utility.workspace.placeAndReturnObject( object.alpha.audio_scope(150,50) );
+                        return item1_functionHead.trim() == item2_functionHead.trim() && item1_functionBody.trim() == item2_functionBody.trim();
+                    }
+                    if(typeof item1 == 'object'){
+                        var keys = Object.keys(item1);
+                        var result = true;
+                        for(var a = 0; a < keys.length; a++){
+                            result = result && comparer(item1[keys[a]],item2[keys[a]]);
+                        }
+                        return result;
+                    }
+                    return false;
+                }
             
-            //audio_sink
-                var audio_sink_1 = system.utility.workspace.placeAndReturnObject( object.alpha.audio_sink(400,50) );
-            
-            //basic audio mixer
-                var audio_mixer_1 = system.utility.workspace.placeAndReturnObject( object.alpha.basicMixer(925, 110) );
-            
-            //basicSynthesizer
-                var basicSynthesizer_1 = system.utility.workspace.placeAndReturnObject( object.alpha.basicSynthesizer(550,50) );
-            
-            //audio effect objects
-                //distortionUnit
-                    var distortionUnit_1 = system.utility.workspace.placeAndReturnObject( object.alpha.distortionUnit(25, 120) );
-                //filterUnit
-                    var filterUnit_1 = system.utility.workspace.placeAndReturnObject( object.alpha.filterUnit(150, 175) );
-                //reverbUnit
-                    var reverbUnit_1 = system.utility.workspace.placeAndReturnObject( object.alpha.reverbUnit(280, 170) );
-                //multiband filter
-                    var multibandFilter = system.utility.workspace.placeAndReturnObject( object.alpha.multibandFilter(200,410) );
-            
-            //audio player objects
-                //oneShot_single
-                    var oneShot_single_1 = system.utility.workspace.placeAndReturnObject( object.alpha.oneShot_single(425, 160) );
-                //oneShot_multi
-                    var oneShot_multi_1 = system.utility.workspace.placeAndReturnObject( object.alpha.oneShot_multi(425, 220) );
-                //looper
-                    var looper_1 = system.utility.workspace.placeAndReturnObject( object.alpha.looper(425,280) );
-                //standard player
-                    var player_1 = system.utility.workspace.placeAndReturnObject( object.alpha.player(425,340) );
-                //oneShot_multi_multiTrack
-                    var oneShot_multi_multiTrack_1 = system.utility.workspace.placeAndReturnObject( object.alpha.oneShot_multi_multiTrack(675, 160) );
-            
-            
-            //audio recorder
-                var recorder_1 = system.utility.workspace.placeAndReturnObject( object.alpha.recorder(355, 110) );
-            
-            //audio input
-                var audioIn_1 = system.utility.workspace.placeAndReturnObject( object.alpha.audioIn(15, 275, false) );
-            
-            //launchpad
-                var launchpad_1 = system.utility.workspace.placeAndReturnObject( object.alpha.launchpad(270, 225) );
-            
-            //basic sequencer
-                var basicSequencer_1 = system.utility.workspace.placeAndReturnObject( object.alpha.basicSequencer(925, 325) );
-            
-            //basic sequencer (midi output)
-                var basicSequencer_midiOut_1 = system.utility.workspace.placeAndReturnObject( object.alpha.basicSequencer_midiOut(925, 560) );
-            
-            //universalreadout
-                var universalreadout_1 = system.utility.workspace.placeAndReturnObject( object.alpha.universalreadout(820, 60) );
-            
-            //pulseGenerator
-                var pulseGenerator_1 = system.utility.workspace.placeAndReturnObject( object.alpha.pulseGenerator(790, 110) );
-            
-            //musical keyboard
-                var musicalkeyboard_1 = system.utility.workspace.placeAndReturnObject( object.alpha.musicalkeyboard(80, 330) );
+                if( comparer(item1,item2) ){
+                    console.log('%cpass', 'color: green;'); return true;
+                }else{
+                    console.log(item1 ,'!=', item2);
+                    console.log('%cfail', 'color: red;'); return false;
+                }
+            }
             
             
             
-            // system.utility.workspace.gotoPosition(-1597.19, -596.058, 1.92284, 0);
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            console.log('%cTesting - system.utility.element', 'font-size:15px; font-weight:bold;');
+                console.log('%c-- getTransform', 'font-weight: bold;');
+                var sudoElement = {style:{transform:'translate(-1.25px, 2.5px) scale(1) rotate(0rad)'}};
+                tester(system.utility.element.getTransform(sudoElement),{x: -1.25, y: 2.5, s: 1, r: 0});
+            
+                var sudoElement = {style:{transform:'translate(0px, 9.75e-05px) scale(1) rotate(0rad)'}};
+                tester(system.utility.element.getTransform(sudoElement),{x: 0, y: 0.0000975, s: 1, r: 0});
+            
+                console.log('%c-- styleExtractor', 'font-weight: bold;');
+                tester(system.utility.element.styleExtractor('stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;'),{stroke:"rgba(0,255,0,1)", 'stroke-width': "0.5", 'stroke-linecap': "round"});
+                tester(system.utility.element.styleExtractor('stroke:rgba(0,255,0,1);stroke-width:0.5;stroke-linecap:round;'),{stroke:"rgba(0,255,0,1)", 'stroke-width': "0.5", 'stroke-linecap': "round"});
+            console.log('%cTesting - system.utility.math', 'font-size:15px; font-weight:bold;');
+                console.log('%c-- normalizeStretchArray', 'font-weight: bold;');
+                    tester(system.utility.math.normalizeStretchArray([0,1]),[0,1]);
+                    tester(system.utility.math.normalizeStretchArray([0,0.5,1]),[0,0.5,1]);
+                    tester(system.utility.math.normalizeStretchArray([0,0.9,1]),[0,0.9,1]);
+                    tester(system.utility.math.normalizeStretchArray([0.9,0.99,0.999]),[0, 0.9090909090909088, 1]);
+                    tester(system.utility.math.normalizeStretchArray([0,0.0001,1.9]),[0, 0.000052631578947368424, 1]);
+                    tester(system.utility.math.normalizeStretchArray([-1,-0.9999,0.9]),[0, 0.000052631578947397684, 1]);
+            
+                console.log('%c-- curvePoint', 'font-weight: bold;');
+                    console.log('%c- linear', 'font-weight: bold;');
+                        tester(system.utility.math.curvePoint.linear(),0.5);
+                        tester(system.utility.math.curvePoint.linear(0.1,0,1),.1);
+                        tester(system.utility.math.curvePoint.linear(0.1,0,2),0.2);
+                        tester(system.utility.math.curvePoint.linear(0.5,-1,1),0);
+                        tester(system.utility.math.curvePoint.linear(0.99,-5,10),9.85);
+                        for(var a = 0; a <= 10; a++){
+                            tester(system.utility.math.curvePoint.linear(a/10),a/10);
+                        }
+                        var answers = [0.025,0.1225,0.22,0.3175,0.41500000000000004,0.5125,0.61,0.7075,0.805,0.9025,1];
+                        for(var a = 0; a <= 10; a++){
+                            tester(system.utility.math.curvePoint.linear(a/10,0.025,1),answers[a] );
+                        }
+                    console.log('%c- sin', 'font-weight: bold;');
+                        tester(system.utility.math.curvePoint.sin(),           0.7071067811865475);
+                        tester(system.utility.math.curvePoint.sin(0.1,0,1),    0.15643446504023087);
+                        tester(system.utility.math.curvePoint.sin(0.1,0,2),    0.31286893008046174);
+                        tester(system.utility.math.curvePoint.sin(0.5,-1,1),   0.4142135623730949);
+                        tester(system.utility.math.curvePoint.sin(1/3,-1,1),   -1.1102230246251565e-16);
+                        tester(system.utility.math.curvePoint.sin(0.99,-5,10), 9.998149487224909);
+                    console.log('%c- cos', 'font-weight: bold;');
+                        tester(system.utility.math.curvePoint.cos(),             0.2928932188134524);
+                        tester(system.utility.math.curvePoint.cos(0.1,0,1),      0.01231165940486223);
+                        tester(system.utility.math.curvePoint.cos(0.1,0,2),      0.02462331880972446);
+                        tester(system.utility.math.curvePoint.cos(0.5,-1,1),     -0.41421356237309515);
+                        tester(system.utility.math.curvePoint.cos(2/3,-1,1),     -2.220446049250313e-16);
+                        tester(system.utility.math.curvePoint.cos(0.0001,-5,10), -4.999999814944917);
+                        tester(system.utility.math.curvePoint.cos(0.9999,-5,10), 9.997643805519496);
+                    console.log('%c- s', 'font-weight: bold;');
+                        tester(system.utility.math.curvePoint.s()   , 0.5000000000000001 );
+                        tester(system.utility.math.curvePoint.s(0.0), 0 );
+                        tester(system.utility.math.curvePoint.s(0.1), 0.021969820441244133 );
+                        tester(system.utility.math.curvePoint.s(0.2), 0.06761890207197617 );
+                        tester(system.utility.math.curvePoint.s(0.3), 0.15559244154839164 );
+                        tester(system.utility.math.curvePoint.s(0.4), 0.30293667416374986 );
+                        tester(system.utility.math.curvePoint.s(0.5), 0.5000000000000001 );
+                        tester(system.utility.math.curvePoint.s(0.6), 0.6970633258362502 );
+                        tester(system.utility.math.curvePoint.s(0.7), 0.8444075584516083 );
+                        tester(system.utility.math.curvePoint.s(0.8), 0.9323810979280239 );
+                        tester(system.utility.math.curvePoint.s(0.9), 0.9780301795587558 );
+                        tester(system.utility.math.curvePoint.s(1)  , 1 );
+                    console.log('%c- exponential', 'font-weight: bold;');
+                        tester(system.utility.math.curvePoint.exponential(),     0.2689414213699951 );
+                        tester(system.utility.math.curvePoint.exponential(0.0),  0 );
+                        tester(system.utility.math.curvePoint.exponential(0.1),  0.03465343780550409 );
+                        tester(system.utility.math.curvePoint.exponential(0.2),  0.07697924232087867 );
+                        tester(system.utility.math.curvePoint.exponential(0.3),  0.12867609669730537 );
+                        tester(system.utility.math.curvePoint.exponential(0.4),  0.19181877722087765 );
+                        tester(system.utility.math.curvePoint.exponential(0.5),  0.2689414213699951 );
+                        tester(system.utility.math.curvePoint.exponential(0.6),  0.3631392316503325 );
+                        tester(system.utility.math.curvePoint.exponential(0.7),  0.47819269693938515 );
+                        tester(system.utility.math.curvePoint.exponential(0.8),  0.6187193167793194 );
+                        tester(system.utility.math.curvePoint.exponential(0.9),  0.7903589178467405 );
+                        tester(system.utility.math.curvePoint.exponential(1),    1 );
+            
+                console.log('%c-- curveGenerator', 'font-weight: bold;');
+                    console.log('%c- linear', 'font-weight: bold;');
+                        tester(system.utility.math.curveGenerator.linear(),       [0, 1]);
+                        tester(system.utility.math.curveGenerator.linear(10),     [0, 0.1111111111111111, 0.2222222222222222, 0.3333333333333333, 0.4444444444444444, 0.5555555555555556, 0.6666666666666666, 0.7777777777777778, 0.8888888888888888, 1]);
+                        tester(system.utility.math.curveGenerator.linear(10,5,10),[5, 5.555555555555555, 6.111111111111111, 6.666666666666666, 7.222222222222222, 7.777777777777778, 8.333333333333332, 8.88888888888889, 9.444444444444445, 10]);
+                        tester(system.utility.math.curveGenerator.linear(10,8),   [8, 7.222222222222222, 6.444444444444445, 5.666666666666667, 4.888888888888889, 4.111111111111111, 3.333333333333334, 2.5555555555555554, 1.7777777777777786, 1]);
+                    console.log('%c- sin', 'font-weight: bold;');
+                        tester(system.utility.math.curveGenerator.sin(),        [0, 1] );
+                        tester(system.utility.math.curveGenerator.sin(10),      [0, 0.17364817766693033, 0.3420201433256687, 0.49999999999999994, 0.6427876096865393, 0.766044443118978, 0.8660254037844386, 0.9396926207859083, 0.984807753012208, 1] );
+                        tester(system.utility.math.curveGenerator.sin(10,5,10), [5, 5.868240888334651, 6.710100716628343, 7.5, 8.213938048432697, 8.83022221559489, 9.330127018922193, 9.69846310392954, 9.92403876506104, 10] );
+                        tester(system.utility.math.curveGenerator.sin(10,8),    [8, 6.784462756331488, 5.605858996720319, 4.5, 3.5004867321942257, 2.637688898167154, 1.9378221735089296, 1.4221516544986414, 1.106345728914544, 1] );
+                    console.log('%c- cos', 'font-weight: bold;');
+                        tester(system.utility.math.curveGenerator.cos(),        [0, 1] );
+                        tester(system.utility.math.curveGenerator.cos(10),      [0, 0.01519224698779198, 0.06030737921409157, 0.1339745962155613, 0.233955556881022, 0.35721239031346064, 0.4999999999999999, 0.6579798566743311, 0.8263518223330696, 1] );
+                        tester(system.utility.math.curveGenerator.cos(10,5,10), [5, 5.07596123493896, 5.301536896070457, 5.669872981077806, 6.16977778440511, 6.786061951567303, 7.5, 8.289899283371655, 9.131759111665348, 10]);
+                        tester(system.utility.math.curveGenerator.cos(10,8),    [8, 7.893654271085456, 7.5778483455013586, 7.062177826491071, 6.362311101832846, 5.499513267805776, 4.500000000000001, 3.3941410032796817, 2.2155372436685132, 1] );
+                    console.log('%c- s', 'font-weight: bold;');
+                        tester(system.utility.math.curveGenerator.s(),        [0, 1] );
+                        tester(system.utility.math.curveGenerator.s(10),      [0, 0.022463335897421843, 0.06913784818223383, 0.15908756682599312, 0.309741642431138, 0.5112316679487109, 0.712721693466284, 0.8633757690714288, 0.953325487715188, 1] );
+                        tester(system.utility.math.curveGenerator.s(10,5,10), [5, 5.112316679487109, 5.345689240911169, 5.795437834129966, 6.54870821215569, 7.556158339743554, 8.56360846733142, 9.316878845357143, 9.76662743857594, 10] );
+                        tester(system.utility.math.curveGenerator.s(10,8),    [8, 7.842756648718047, 7.516035062724363, 6.886387032218048, 5.8318085029820335, 4.421378324359024, 3.0109481457360117, 1.9563696164999982, 1.3267215859936838, 1] );
+                    console.log('%c- exponential', 'font-weight: bold;');
+                        tester(system.utility.math.curveGenerator.exponential(),        [0, 1] );
+                        tester(system.utility.math.curveGenerator.exponential(10),      [0, 0.03894923837706363, 0.08759095067273646, 0.1483370980594927, 0.2241998555196527, 0.3189409743731226, 0.4372583135012321, 0.5850187886546604, 0.7695492909331704, 1] );
+                        tester(system.utility.math.curveGenerator.exponential(10,5,10), [5, 5.194746191885318, 5.437954753363682, 5.7416854902974634, 6.120999277598264, 6.594704871865613, 7.18629156750616, 7.925093943273302, 8.847746454665852, 10] );
+                        tester(system.utility.math.curveGenerator.exponential(10,8),    [8, 7.727355331360554, 7.386863345290845, 6.961640313583551, 6.430601011362431, 5.767413179388142, 4.939191805491375, 3.9048684794173774, 2.6131549634678075, 1] );
+                
+                console.log('%c-- detectOverlap', 'font-weight: bold;');
+                    console.log('%c- totally separate shapes', 'font-weight: bold;');
+                        var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+                        var poly_b = [{x:15,y:15},{x:25,y:15},{x:25,y:25},{x:15,y:25}];
+                        var box_a = [{x:10,y:10},{x:0,y:0}];
+                        var box_b = [{x:25,y:25},{x:15,y:15}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), false);
+                    console.log('%c- simple overlap -> true', 'font-weight: bold;');
+                        var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+                        var poly_b = [{x:5,y:5},{x:15,y:5},{x:15,y:15},{x:5,y:15}];
+                        var box_a = [{x:10,y:10},{x:0,y:0}];
+                        var box_b = [{x:15,y:15},{x:5,y:5}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                    console.log('%c- the same shape twice, with bounding boxes -> true', 'font-weight: bold;');
+                        var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+                        var poly_b = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, [poly_a[2],poly_a[0]], [poly_b[2],poly_b[0]]), true);
+                    console.log('%c- the same shape twice, no bounding boxes -> true', 'font-weight: bold;');
+                        var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+                        var poly_b = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b), true);
+                    console.log('%c- live examples (should all be \'true\')', 'font-weight: bold;');
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":50,"y":50},{"x":105,"y":50},{"x":105,"y":105},{"x":50,"y":105}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":50,"y":50},{"x":105,"y":105}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":875,"y":50},{"x":930,"y":50},{"x":930,"y":105},{"x":875,"y":105}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":875,"y":50},{"x":930,"y":105}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":150,"y":50},{"x":345,"y":50},{"x":345,"y":160},{"x":150,"y":160}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":150,"y":50},{"x":345,"y":160}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":400,"y":50},{"x":500,"y":50},{"x":500,"y":105},{"x":400,"y":105}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":400,"y":50},{"x":500,"y":105}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":550,"y":50},{"x":790,"y":50},{"x":790,"y":90},{"x":740,"y":140},{"x":550,"y":140}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":550,"y":50},{"x":790,"y":140}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":25,"y":130},{"x":35,"y":120},{"x":59.166666666666664,"y":120},{"x":71.125,"y":130},{"x":81.375,"y":130},{"x":93.33333333333333,"y":120},{"x":117.5,"y":120},{"x":127.5,"y":130},{"x":127.5,"y":205},{"x":117.5,"y":215},{"x":93.33333333333333,"y":215},{"x":81.375,"y":205},{"x":71.125,"y":205},{"x":59.166666666666664,"y":215},{"x":35,"y":215},{"x":25,"y":205}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":25,"y":120},{"x":127.5,"y":215}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":160,"y":175},{"x":242.5,"y":175},{"x":252.5,"y":245},{"x":201.25,"y":275},{"x":150,"y":245}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":150,"y":175},{"x":252.5,"y":275}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":280,"y":180},{"x":331.25,"y":170},{"x":382.5,"y":180},{"x":382.5,"y":210},{"x":331.25,"y":220},{"x":280,"y":210}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":280,"y":170},{"x":382.5,"y":220}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":425,"y":160},{"x":645,"y":160},{"x":645,"y":215},{"x":425,"y":215}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":425,"y":160},{"x":645,"y":215}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":425,"y":220},{"x":645,"y":220},{"x":645,"y":275},{"x":425,"y":275}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":425,"y":220},{"x":645,"y":275}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":425,"y":280},{"x":645,"y":280},{"x":645,"y":335},{"x":425,"y":335}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":425,"y":280},{"x":645,"y":335}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":425,"y":340},{"x":645,"y":340},{"x":645,"y":420},{"x":425,"y":420}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":425,"y":340},{"x":645,"y":420}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":675,"y":160},{"x":895,"y":160},{"x":895,"y":545},{"x":675,"y":545}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":675,"y":160},{"x":895,"y":545}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":355,"y":110},{"x":530,"y":110},{"x":530,"y":150},{"x":355,"y":150}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":355,"y":110},{"x":530,"y":150}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":15,"y":285},{"x":25,"y":285},{"x":37.5,"y":275},{"x":52.5,"y":275},{"x":65,"y":285},{"x":260,"y":285},{"x":260,"y":315},{"x":65,"y":315},{"x":52.5,"y":325},{"x":37.5,"y":325},{"x":25,"y":315},{"x":15,"y":315}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":15,"y":275},{"x":260,"y":325}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":270,"y":225},{"x":395,"y":225},{"x":395,"y":275},{"x":370,"y":285},{"x":370,"y":325},{"x":270,"y":325}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":270,"y":225},{"x":395,"y":325}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":830,"y":50},{"x":820,"y":52.67949192431122},{"x":812.6794919243113,"y":60},{"x":810,"y":70},{"x":812.6794919243113,"y":80},{"x":820,"y":87.32050807568876},{"x":830,"y":90},{"x":840,"y":87.32050807568878},{"x":847.3205080756887,"y":80},{"x":850,"y":70},{"x":847.3205080756887,"y":60.000000000000014},{"x":840,"y":52.679491924311236}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":810,"y":50},{"x":850,"y":90}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":790,"y":120},{"x":800,"y":110},{"x":890,"y":110},{"x":905,"y":120},{"x":905,"y":140},{"x":890,"y":150},{"x":800,"y":150},{"x":790,"y":140}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+                        var box_b = [{"x":790,"y":110},{"x":905,"y":150}];
+                        
+                        var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
+                        var poly_b = [{"x":80,"y":330},{"x":400,"y":330},{"x":400,"y":392.5},{"x":80,"y":392.5}];
+                        var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
+                        var box_b = [{"x":80,"y":330},{"x":400,"y":392.5}];
+                        tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
+            
+                console.log('%c-- intersectionOfTwoLineSegments', 'font-weight: bold;');
+                    //the function tells where the lines would intersect if they were infinatly long in both directions,
+                    //the next two bools reveal if this point if within the segment given (you need two 'true's for an intersectionOfTwoLineSegments)
+                    console.log('%c- simple crossing', 'font-weight: bold;');
+                        var segment1 = [{x:0,y:0},{x:5,y:5}];
+                        var segment2 = [{x:5,y:0},{x:0,y:5}];
+                        tester(system.utility.math.intersectionOfTwoLineSegments(segment1, segment2), {x: 2.5, y: 2.5, inSeg1: true, inSeg2: true});
+                    console.log('%c- no crossing', 'font-weight: bold;');
+                        var segment1 = [{x:0,y:0},{x:5,y:5}];
+                        var segment2 = [{x:0,y:2},{x:0,y:5}];
+                        tester(system.utility.math.intersectionOfTwoLineSegments(segment1, segment2),{x: 0, y: 0, inSeg1: true, inSeg2: false} );
+                    console.log('%c- one segment touches the other', 'font-weight: bold;');
+                        var segment1 = [{x:0,y:0},{x:5,y:5}];
+                        var segment2 = [{x:2.5,y:2.5},{x:0,y:5}];
+                        tester(system.utility.math.intersectionOfTwoLineSegments(segment1, segment2),{x: 2.5, y: 2.5, inSeg1: true, inSeg2: true} );
+            
+                console.log('%c-- boundingBoxFromPoints', 'font-weight: bold;');
+                    console.log('%c- simple box', 'font-weight: bold;');
+                        var poly = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
+                        tester(system.utility.math.boundingBoxFromPoints(poly),[{x: 10, y: 10},{x: 0, y: 0}]);
+                    console.log('%c- triangle', 'font-weight: bold;');
+                        var poly = [{x:0,y:0},{x:10,y:0},{x:5,y:10}];
+                        tester(system.utility.math.boundingBoxFromPoints(poly),[{x: 10, y: 10},{x: 0, y: 0}]);
+            
+                console.log('%c-- polar2cartesian', 'font-weight: bold;');
+                    var distance = 10;
+                    var angle = 0;
+                    tester(system.utility.math.polar2cartesian(angle,distance),{x: 10, y: 0});
+                    var distance = -10;
+                    var angle = 0;
+                    tester(system.utility.math.polar2cartesian(angle,distance),{x: -10, y: -0});
+                    var distance = 10;
+                    var angle = Math.PI/2;
+                    tester(system.utility.math.polar2cartesian(angle,distance),{x: 6.123233995736766e-16, y: 10});
+                    var distance = -10;
+                    var angle = Math.PI;
+                    tester(system.utility.math.polar2cartesian(angle,distance),{x: 10, y: -1.2246467991473533e-15});
+                    var distance = 3.5355339059327378;
+                    var angle = Math.PI/4;
+                    tester(system.utility.math.polar2cartesian(angle,distance),{x: 2.5000000000000004, y: 2.5});
+            
+                console.log('%c-- cartesian2polar', 'font-weight: bold;');
+                    var x = 10;
+                    var y = 0;
+                    tester(system.utility.math.cartesian2polar(x,y),{dis: 10, ang: 0});
+                    var x = -10;
+                    var y = 0;
+                    tester(system.utility.math.cartesian2polar(x,y),{dis: 10, ang: 3.141592653589793});
+                    var x = 0;
+                    var y = 10;
+                    tester( system.utility.math.cartesian2polar(x,y),{dis: 10, ang: 1.5707963267948966});
+                    var x = 10;
+                    var y = 40;
+                    tester(system.utility.math.cartesian2polar(x,y),{dis: 41.23105625617661, ang: 1.3258176636680326});
+                    var x = 2.5;
+                    var y = 2.5;
+                    tester(system.utility.math.cartesian2polar(x,y),{dis: 3.5355339059327378, ang: 0.7853981633974483});
+            
+                console.log('%c-- relativeDistance', 'font-weight: bold;');
+                    tester(system.utility.math.relativeDistance(100, 0,1, 0),0);
+                    tester(system.utility.math.relativeDistance(100, 0,1, 1),100);
+                    tester(system.utility.math.relativeDistance(100, 0,1, 0.1),10);
+                    tester(system.utility.math.relativeDistance(100, 0,1, 0.5),50);
+                    tester(system.utility.math.relativeDistance(100, -1,1, 0),50);
+                    tester(system.utility.math.relativeDistance(100, -1,0, 0),100);
+                    tester(system.utility.math.relativeDistance(100, -1,0, 0.5),100);
+                    tester(system.utility.math.relativeDistance(100, -1,0, 0.5, true),150);
+                        
+                console.log('%c-- lineCorrecter', 'font-weight: bold;');
+                    tester(system.utility.math.lineCorrecter({x1:0,y1:0,x2:10,y2:10}, 100, 100),{x1: 0, y1: 0, x2: 10, y2: 10});
+                    tester(system.utility.math.lineCorrecter({x1:0,y1:0,x2:10,y2:10}, 100, 1),undefined);
+                    tester(system.utility.math.lineCorrecter({x1:0,y1:0,x2:10,y2:10}, 1, 100),{x1: 0, y1: 0, x2: 1, y2: 1});
+            console.log('%cTesting - system.utility.workspace', 'font-size:15px; font-weight:bold;');
+                console.log('%c- exporting a scene', 'font-weight: bold;');
+                    system.utility.workspace.clear();
+                    system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(50,50) );
+                    system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(200,50) );
+                    tester(system.utility.workspace.exportScene(),{
+                        scene:[
+                            {objectConstructorCollection: "alpha", objectConstructorName:"audio_duplicator", position:{x:50, y:50, s:1, r:0}, connections:[]},
+                            {objectConstructorCollection: "alpha", objectConstructorName:"audio_duplicator", position:{x:200, y:50, s:1, r:0}, connections:[]}
+                        ],
+                        constructorFunctions:{}
+                    });
+            
+                console.log('%c- exporting a scene (with code bundling turned on)', 'font-weight: bold;');
+                    //this test could easily break if the object creation code is reformatted (here or over where audio_duplicator is defined)
+                    system.utility.workspace.clear();
+                    system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(50,50) );
+                    system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(200,50) );
+                    tester( system.utility.workspace.exportScene(true), {
+                        scene: [
+                            {objectConstructorCollection: "alpha", objectConstructorName:"audio_duplicator", position:{x:50, y:50, s:1, r:0}, connections:[]},
+                            {objectConstructorCollection: "alpha", objectConstructorName:"audio_duplicator", position:{x:200, y:50, s:1, r:0}, connections:[]}
+                        ],
+                        constructorFunctions:{ audio_duplicator:object.audio_duplicator }
+                    } );
+            
+                console.log('%c- exporting a scene and then importing it', 'font-weight: bold;');
+                    system.utility.workspace.clear();
+                    system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(50,50) );
+                    system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(200,50) );
+                    var temp = system.utility.workspace.exportScene();
+                    system.utility.workspace.clear();
+                    system.utility.workspace.importScene(temp.scene);
+            
+                    tester(system.pane.middleground.innerHTML,'<g id="audio_duplicator" style="transform: translate(50px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g><g id="audio_duplicator" style="transform: translate(200px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g>');
+            
+                    system.utility.workspace.clear();
+            
+                console.log('%c- exporting a scene (with code bundling turned on) and then importing it', 'font-weight: bold;');
+                    system.utility.workspace.clear();
+                    system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(50,50) );
+                    system.utility.workspace.placeAndReturnObject( object.alpha.audio_duplicator(200,50) );
+                    var temp = system.utility.workspace.exportScene(true);
+                    system.utility.workspace.clear();
+                    system.utility.workspace.importScene(temp.scene,true,temp.constructorFunctions);
+            
+                    tester(system.pane.middleground.innerHTML,'<g id="audio_duplicator" style="transform: translate(50px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g><g id="audio_duplicator" style="transform: translate(200px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g>');
+            
+                    
+                    system.utility.workspace.clear();
+            console.log('%cTesting - system.utility.misc', 'font-size:15px; font-weight:bold;');
+                console.log('%c- serialize/unserialize (no compression)', 'font-weight: bold;');
+                    function doBoth(data,ser_data,un_data){
+                        var s_data = system.utility.misc.serialize(data,false);
+                        tester(s_data,ser_data);
+                        var u_data = system.utility.misc.unserialize(s_data,false);
+                        tester(u_data,un_data);
+                    }
+                
+                    var org_data;
+                    var ser_data;
+                    doBoth(org_data,ser_data,org_data);
+                    var org_data = 1;
+                    var ser_data = '1';
+                    doBoth(org_data,ser_data,org_data);
+                    var org_data = 5;
+                    var ser_data = '5';
+                    doBoth(org_data,ser_data,org_data);
+                    var org_data = 546544494849;
+                    var ser_data = '546544494849';
+                    doBoth(org_data,ser_data,org_data);
+                
+                    var org_data = '';
+                    var ser_data = '""';
+                    doBoth(org_data,ser_data,org_data);
+                    var org_data = 'hello\n';
+                    var ser_data = JSON.stringify('hello\n');
+                    doBoth(org_data,ser_data,org_data);
+                    var org_data = '546544494849';
+                    var ser_data = '"546544494849"';
+                    doBoth(org_data,ser_data,org_data);
+                
+                    var org_data = [1,2,3];
+                    var ser_data = '[1,2,3]';
+                    doBoth(org_data,ser_data,org_data);
+                    var org_data = [1,2,3];
+                    var ser_data = '[1,2,3]';
+                    doBoth(org_data,ser_data,org_data);
+                    var org_data = ['hello','there','my','friend'];
+                    var ser_data = JSON.stringify(['hello','there','my','friend']);
+                    doBoth(org_data,ser_data,org_data);
+                    var org_data = ['hello',1,'my',76];
+                    var ser_data = JSON.stringify(['hello',1,'my',76]);
+                    doBoth(org_data,ser_data,org_data);
+                
+                    var org_data = {item:0,thing:'hello',null:null};
+                    var ser_data = JSON.stringify({item:0,thing:'hello',null:null});
+                    doBoth(org_data,ser_data,org_data);
+                    var org_data = {item:0,thing:function(){console.log('hello');},null:null};
+                    var ser_data = JSON.stringify({"item":0,"thing":{"__uniqueType":"function","__value":"function(){console.log('hello');}","__name":"thing"},"null":null});
+                    doBoth(org_data,ser_data,org_data);
+                
+                    var org_data = new ArrayBuffer(8);
+                    var ser_data = JSON.stringify({"__uniqueType":"arraybuffer","__value":"AA=="});
+                    doBoth(org_data,ser_data,org_data);
+                    var org_data = [new ArrayBuffer(8),new ArrayBuffer(8),new ArrayBuffer(8)]
+                    var ser_data = JSON.stringify([{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="}]);
+                    doBoth(org_data,ser_data,org_data);
+            
+                console.log('%c- blendColours', 'font-weight: bold;');
+                tester( system.utility.misc.blendColours('rgba(0,0,0,0)', 'rgba(255,255,255,1)', 0), 'rgba(0,0,0,0)' );
+                tester( system.utility.misc.blendColours('rgba(0,0,0,0)', 'rgba(255,255,255,1)', 1), 'rgba(255,255,255,1)' );
+                    tester( system.utility.misc.blendColours('rgba(0,0,0,0)', 'rgba(255,255,255,1)', 0.5), 'rgba(127.5,127.5,127.5,0.5)' );
+                    tester( system.utility.misc.blendColours('rgba(247, 180, 112, 0.5)', 'rgba(255, 173, 102,1)', 0.5), 'rgba(251,176.5,107,0.75)' );
+            
+                console.log('%c- multiBlendColours', 'font-weight: bold;');
+                    tester( system.utility.misc.multiBlendColours(['rgba(0,0,0,0)', 'rgba(255,255,255,1)'], 0.5), 'rgba(127.5,127.5,127.5,0.5)' );
+                    tester( system.utility.misc.multiBlendColours(['rgba(0,0,0,0)', 'rgba(255,255,255,1)'], 0), 'rgba(0,0,0,0)' );
+                    tester( system.utility.misc.multiBlendColours(['rgba(0,0,0,0)', 'rgba(255,255,255,1)'], 1), 'rgba(255,255,255,1)' );
+                    tester( system.utility.misc.multiBlendColours( ['rgba(150,100,150,0.75)','rgba(255,255,255,0.75)'], 0.5 ), 'rgba(202.5,177.5,202.5,0.75)' );
+                    tester( system.utility.misc.multiBlendColours( ['rgba(150,100,150,0.75)','rgba(0,0,0,1)','rgba(255,255,255,0.75)'], 0.25 ), 'rgba(75,50,75,0.875)' );
+                    tester( system.utility.misc.multiBlendColours( ['rgba(0,0,0,1)','rgba(150,100,150,0.75)','rgba(0,0,0,1)','rgba(255,255,255,0.75)'], 0.99 ), 'rgba(247.34999999999994,247.34999999999994,247.34999999999994,0.7575000000000001)' );
+                    //(this one can be rather touchy, as the math is a bit weird. For example the first number is supposed to be 247.345,
+                    //but can come out as 247.34999999999994 or 247.34500000000001 depending on how the system feels at the time)
+                     
+                     
+                     
+            console.log('%cTesting - part.circuit.sequencing.noteRegistry', 'font-size:15px; font-weight:bold;');
+            console.log('%c-- regular use', 'font-weight: bold;');
+            console.log('%c- adding a note', 'font-weight: bold;');
+                var noteRegistry = new part.circuit.sequencing.noteRegistry(64, 10, 10);
+                noteRegistry.add({ line:0, position:0, length:5, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:0, position:0, length:5, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 0, position: 0, strength: 1},{noteID: 0, line: 0, position: 5, strength: 0}]);
+            
+            console.log('%c- removing it', 'font-weight: bold;');
+                noteRegistry.remove(0);
+                tester(noteRegistry.getAllNotes(), [null]);
+                tester(noteRegistry.getAllEvents(), [null,null]);
+            
+            console.log('%c- adding three notes', 'font-weight: bold;');
+                noteRegistry.add({ line:0, position:0, length:5, strength:1 });
+                noteRegistry.add({ line:1, position:1, length:1, strength:0.5 });
+                noteRegistry.add({ line:2, position:2, length:10, strength:0.25 });
+                tester(noteRegistry.getAllNotes(), [
+                    {line:0,position:0,length:5,strength:1},
+                    {line:1,position:1,length:1,strength:0.5},
+                    {line:2,position:2,length:10,strength:0.25}
+                ]);
+                tester(noteRegistry.getAllEvents(), [
+                    {noteID:0,line:0,position:0,strength:1},{noteID:0,line:0,position:5,strength:0},
+                    {noteID:1,line:1,position:1,strength:0.5},{noteID:1,line:1,position:2,strength:0},
+                    {noteID:2,line:2,position:2,strength:0.25},{noteID:2,line:2,position:12,strength:0}
+                ]);
+            
+            console.log('%c- removing the middle one', 'font-weight: bold;');
+                noteRegistry.remove(1);
+                tester(noteRegistry.getAllNotes(), [
+                    {line:0,position:0,length:5,strength:1},
+                    null,
+                    {line:2,position:2,length:10,strength:0.25}
+                ]);
+                tester(noteRegistry.getAllEvents(), [
+                    {noteID:0,line:0,position:0,strength:1},{noteID:0,line:0,position:5,strength:0},
+                    null,null,
+                    {noteID:2,line:2,position:2,strength:0.25},{noteID:2,line:2,position:12,strength:0}
+                ]);
+            
+            console.log('%c- adding a note (to be automatically inserted in the middle position)', 'font-weight: bold;');
+                noteRegistry.add({ line:4, position:4, length:6, strength:0.75 });
+                tester(noteRegistry.getAllNotes(), [
+                    {line:0,position:0,length:5,strength:1},
+                    {line:4,position:4,length:6,strength:0.75},
+                    {line:2,position:2,length:10,strength:0.25}
+                ]);
+                tester(noteRegistry.getAllEvents(), [
+                    {noteID:0,line:0,position:0,strength:1},{noteID:0,line:0,position:5,strength:0},
+                    {noteID:1,line:4,position:4,strength:0.75},{noteID:1,line:4,position:10,strength:0},
+                    {noteID:2,line:2,position:2,strength:0.25},{noteID:2,line:2,position:12,strength:0}
+                ]);
+            
+            console.log('%c- updating a note', 'font-weight: bold;');
+                noteRegistry.update(0,{ line:9, position:50, length:2, strength:0.1 });
+                tester(noteRegistry.getAllNotes(), [
+                    {line:9,position:50,length:2,strength:0.1},
+                    {line:4,position:4,length:6,strength:0.75},
+                    {line:2,position:2,length:10,strength:0.25}
+                ]);
+                tester(noteRegistry.getAllEvents(), [
+                    {noteID:0,line:9,position:50,strength:0.1},{noteID:0,line:9,position:52,strength:0},
+                    {noteID:1,line:4,position:4,strength:0.75},{noteID:1,line:4,position:10,strength:0},
+                    {noteID:2,line:2,position:2,strength:0.25},{noteID:2,line:2,position:12,strength:0}
+                ]);
+            
+            console.log('%c- full reset', 'font-weight: bold;');
+                noteRegistry.reset();
+                tester(noteRegistry.getAllNotes(), []);
+                tester(noteRegistry.getAllEvents(), []);
+            
+            console.log('%c- getting events', 'font-weight: bold;');
+                noteRegistry.add({ line:0, position:0, length:5, strength:1 });
+                noteRegistry.add({ line:1, position:1, length:1, strength:0.5 });
+                noteRegistry.add({ line:2, position:6, length:10, strength:0.25 });
+                tester( noteRegistry.eventsBetween(0,3), [
+                    {noteID: 0, line: 0, position: 0, strength: 1},
+                    {noteID: 1, line: 1, position: 1, strength: 0.5},
+                    {noteID: 1, line: 1, position: 2, strength: 0}
+                ]);
+                tester( noteRegistry.eventsBetween(16), [
+                    {noteID: 2, line: 2, position: 16, strength: 0}
+                ]);
+            
+            console.log('%c- import/export', 'font-weight: bold;');
+                noteRegistry.import({
+                    "notes":[
+                        {"line":9,"position":50,"length":2,"strength":0.1},
+                        {"line":4,"position":4,"length":6,"strength":0.75},
+                        {"line":2,"position":2,"length":10,"strength":0.25}
+                    ],
+                    "selectedNotes":[],
+                    "events":[
+                        {"noteID":0,"line":9,"position":50,"strength":0.1},
+                        {"noteID":0,"line":9,"position":52,"strength":0},
+                        {"noteID":1,"line":4,"position":4,"strength":0.75},
+                        {"noteID":1,"line":4,"position":10,"strength":0},
+                        {"noteID":2,"line":2,"position":2,"strength":0.25},
+                        {"noteID":2,"line":2,"position":12,"strength":0}
+                    ],
+                    "events_byID":[[0,1],[2,3],[4,5]],
+                    "events_byPosition":{"2":[4],"4":[2],"10":[3],"12":[5],"50":[0],"52":[1]},
+                    "positions":[2,12,4,10,50,52]
+                });
+                tester( noteRegistry.export(), {
+                    "notes":[
+                        {"line":9,"position":50,"length":2,"strength":0.1},
+                        {"line":4,"position":4,"length":6,"strength":0.75},
+                        {"line":2,"position":2,"length":10,"strength":0.25}
+                    ],
+                    "selectedNotes":[],
+                    "events":[
+                        {"noteID":0,"line":9,"position":50,"strength":0.1},
+                        {"noteID":0,"line":9,"position":52,"strength":0},
+                        {"noteID":1,"line":4,"position":4,"strength":0.75},
+                        {"noteID":1,"line":4,"position":10,"strength":0},
+                        {"noteID":2,"line":2,"position":2,"strength":0.25},
+                        {"noteID":2,"line":2,"position":12,"strength":0}
+                    ],
+                    "events_byID":[[0,1],[2,3],[4,5]],
+                    "events_byPosition":{"2":[4],"4":[2],"10":[3],"12":[5],"50":[0],"52":[1]},
+                    "positions":[2,12,4,10,50,52]
+                });
+            
+            console.log('%c-- irregular use', 'font-weight: bold;');
+                noteRegistry.reset();
+                
+            console.log('%c- adding a note (bad line)', 'font-weight: bold;');
+                //(line should clip to a number within the bounds)
+                noteRegistry.add({ line:20, position:0, length:5, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:9, position:0, length:5, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 9, position: 0, strength: 1},{noteID: 0, line: 9, position: 5, strength: 0}]);
+                noteRegistry.reset();
+            
+                noteRegistry.add({ line:-1, position:0, length:5, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:0, position:0, length:5, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line:0, position: 0, strength: 1},{noteID: 0, line:0, position: 5, strength: 0}]);
+                noteRegistry.reset();
+            
+            console.log('%c- adding a note (bad position)', 'font-weight: bold;');
+                //(position should clip to a place within the bounds, where there length of the note is also taken into account)
+                noteRegistry.add({ line:5, position:100, length:5, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:5, position:59, length:5, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 5, position:59, strength: 1},{noteID: 0, line:5, position:64, strength: 0}]);
+                noteRegistry.reset();
+            
+                noteRegistry.add({ line:5, position:-1, length:5, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:5, position:0, length:5, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 5, position:0, strength: 1},{noteID: 0, line:5, position:5, strength: 0}]);
+                noteRegistry.reset();
+            
+            console.log('%c- adding a note (bad length)', 'font-weight: bold;');
+                //(length should clip to whatever the max is, or at minimum zero)
+                noteRegistry.add({ line:5, position:10, length:100, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:5, position:10, length:10, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 5, position:10, strength: 1},{noteID: 0, line:5, position:20, strength: 0}]);
+                noteRegistry.reset();
+            
+                noteRegistry.add({ line:5, position:10, length:-1, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:5, position:10, length:0, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 5, position:10, strength: 1},{noteID: 0, line:5, position:10, strength: 0}]);
+                noteRegistry.reset();
+            
+            console.log('%c- adding a note (ends beyond boundries)', 'font-weight: bold;');
+                //(note should be clipped to fit)
+                //too far to the right
+                noteRegistry.add({ line:5, position:62, length:8, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:5, position:62, length:2, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line:5, position:62, strength: 1},{noteID: 0, line:5, position:64, strength: 0}]);
+                noteRegistry.reset();
+                //too far to the left
+                noteRegistry.add({ line:5, position:-5, length:8, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:5, position:0, length:8, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line:5, position:0, strength: 1},{noteID: 0, line:5, position:8, strength: 0}]);
+                noteRegistry.reset();
+                //below last line
+                noteRegistry.add({ line:50, position:5, length:8, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:9, position:5, length:8, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID:0, line:9, position:5, strength: 1},{noteID:0, line:9, position:13, strength: 0}]);
+                noteRegistry.reset();
+                //above top line
+                noteRegistry.add({ line:-6, position:5, length:8, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:0, position:5, length:8, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID:0, line:0, position:5, strength: 1},{noteID:0, line:0, position:13, strength: 0}]);
+                noteRegistry.reset();
+            
+            console.log('%c- adding a note (all of the above)', 'font-weight: bold;');
+                //(length is limited before the postition is corrected. Line can be corrected in an unrelated way)
+                noteRegistry.add({ line:50, position:100, length:100, strength:1 });
+                tester(noteRegistry.getAllNotes(), [{line:9, position:54, length:10, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line:9, position:54, strength: 1},{noteID: 0, line:9, position:64, strength: 0}]);
+                noteRegistry.reset();
+            
+            console.log('%c- remove note (note doesn\'t exist)', 'font-weight: bold;');
+                //remove should just do nothing
+                noteRegistry.add({ line:0, position:0, length:5, strength:1 });
+                noteRegistry.add({ line:1, position:1, length:1, strength:0.5 });
+                noteRegistry.add({ line:2, position:6, length:10, strength:0.25 });
+                noteRegistry.remove(10);
+                noteRegistry.remove(-1);
+                tester(noteRegistry.getAllNotes(), [
+                    {line: 0, position: 0, length: 5, strength: 1},
+                    {line: 1, position: 1, length: 1, strength: 0.5},
+                    {line: 2, position: 6, length: 10, strength: 0.25},
+                ]);
+                tester(noteRegistry.getAllEvents(), [
+                    {noteID: 0, line: 0, position: 0, strength: 1},{noteID: 0, line: 0, position: 5, strength: 0},
+                    {noteID: 1, line: 1, position: 1, strength: 0.5},{noteID: 1, line: 1, position: 2, strength: 0},
+                    {noteID: 2, line: 2, position: 6, strength: 0.25},{noteID: 2, line: 2, position: 16, strength: 0},
+                ]);
+            
+            console.log('%c- getting events (out of range)', 'font-weight: bold;');
+                //should be pretty straight-forward. Either there are events in the range, or there isn't
+                tester( noteRegistry.eventsBetween(100,1000), []);
+                tester( noteRegistry.eventsBetween(-100,-1), []);
+                tester( noteRegistry.eventsBetween(-100,100), [
+                    {noteID: 0, line: 0, position: 0, strength: 1},
+                    {noteID: 1, line: 1, position: 1, strength: 0.5},
+                    {noteID: 1, line: 1, position: 2, strength: 0},
+                    {noteID: 0, line: 0, position: 5, strength: 0},
+                    {noteID: 2, line: 2, position: 6, strength: 0.25},
+                    {noteID: 2, line: 2, position: 16, strength: 0},
+                ]);
+                
+            console.log('%c- updating a note (wrong position)', 'font-weight: bold;');
+                //(note should be provented from moving too far to the right)
+                var noteRegistry = new part.circuit.sequencing.noteRegistry(64, 10, 10);
+                noteRegistry.add({ line:0, position:0, length:5, strength:1 });
+                noteRegistry.update(0,{position:100});
+                tester(noteRegistry.getAllNotes(), [{line:0, position:59, length:5, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 0, position: 59, strength: 1},{noteID: 0, line: 0, position: 64, strength: 0}]);
+            console.log('%c- updating a note (wrong length)', 'font-weight: bold;');
+                //(note should be provented from extending past the right limit)
+                var noteRegistry = new part.circuit.sequencing.noteRegistry(64, 10);
+                noteRegistry.add({ line:0, position:7, length:5, strength:1 });
+                noteRegistry.update(0,{length:100});
+                tester(noteRegistry.getAllNotes(), [{line:0, position:7, length:57, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 0, position: 7, strength: 1},{noteID: 0, line: 0, position: 64, strength: 0}]);
+            console.log('%c- updating a note (wrong length and position)', 'font-weight: bold;');
+                //(note should be provented from extending past the right limit)
+                var noteRegistry = new part.circuit.sequencing.noteRegistry(64, 10);
+                noteRegistry.add({ line:0, position:7, length:5, strength:1 });
+                noteRegistry.update(0,{position:100,length:100});
+                tester(noteRegistry.getAllNotes(), [{line:0, position:64, length:0, strength:1}]);
+                tester(noteRegistry.getAllEvents(), [{noteID: 0, line: 0, position: 64, strength: 1},{noteID: 0, line: 0, position: 64, strength: 0}]);
+
 
         }
     }

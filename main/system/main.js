@@ -8,7 +8,7 @@ system.super = new function(){
     {{include:chunks/super.js}}
 };
 system.utility = new function(){
-    {{include:chunks/utility.js}}
+    {{include:chunks/utility/*}}/**/
 };
 system.pane = new function(){
     {{include:chunks/pane.js}}

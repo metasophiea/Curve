@@ -1,431 +1,1493 @@
-console.log('%cTesting - system.utility', 'font-size:15px; font-weight:bold;');
 
 
-// console.log('%c--- workspace', 'font-weight: bold;');
-//     console.log('%c- exporting a scene', 'font-weight: bold;');
-//         system.utility.workspace.clear();
-//         system.utility.workspace.placeAndReturnObject( object.audio_duplicator(50,50) );
-//         system.utility.workspace.placeAndReturnObject( object.audio_duplicator(200,50) );
-//         tester(system.utility.workspace.exportScene(),{
-//             scene:[
-//                 {objectConstructorName:"audio_duplicator", position:{x:50, y:50, s:1, r:0}, connections:[]},
-//                 {objectConstructorName:"audio_duplicator", position:{x:200, y:50, s:1, r:0}, connections:[]}
-//             ],
-//             constructorFunctions:{}
-//         });
+this.workspace = new function(){
+    this.currentPosition = function(){
+        return system.utility.element.getTransform(system.pane.workspace);
+    };
+    this.gotoPosition = function(x,y,z,r){
+        system.utility.element.setTransform(system.pane.workspace, {x:x,y:y,s:z,r:r});
+    };
+    this.getPane = function(element){
+        while( !element.getAttribute('pane') ){ element = element.parentElement; }
+        return element;
+    };
+    this.getGlobal = function(element){
+        while( !element.getAttribute('global') ){ element = element.parentElement; }
+        return element;
+    };
+    this.objectUnderPoint = function(x,y){
+        if(x == undefined || y == undefined){return;}
 
-//     console.log('%c- exporting a scene (with code bundling turned on)', 'font-weight: bold;');
-//         //this test could easily break if the object creation code is reformatted (here or over where audio_duplicator is defined)
-//         system.utility.workspace.clear();
-//         system.utility.workspace.placeAndReturnObject( object.audio_duplicator(50,50) );
-//         system.utility.workspace.placeAndReturnObject( object.audio_duplicator(200,50) );
-//         tester( system.utility.workspace.exportScene(true), {
-//             scene: [
-//                 {objectConstructorName:"audio_duplicator", position:{x:50, y:50, s:1, r:0}, connections:[]},
-//                 {objectConstructorName:"audio_duplicator", position:{x:200, y:50, s:1, r:0}, connections:[]}
-//             ],
-//             constructorFunctions:{ audio_duplicator:object.audio_duplicator }
-//         } );
+        var temp = document.elementFromPoint(x,y);
+        if(temp.hasAttribute('workspace')){return null;}
 
-//     console.log('%c- exporting a scene and then importing it', 'font-weight: bold;');
-//         system.utility.workspace.clear();
-//         system.utility.workspace.placeAndReturnObject( object.audio_duplicator(50,50) );
-//         system.utility.workspace.placeAndReturnObject( object.audio_duplicator(200,50) );
-//         var temp = system.utility.workspace.exportScene();
-//         system.utility.workspace.clear();
-//         system.utility.workspace.importScene(temp.scene);
+        while(!temp.parentElement.hasAttribute('pane')){ 
+            temp = temp.parentElement;
+        }
 
-//         tester(system.pane.middleground.innerHTML,'<g id="audio_duplicator" style="transform: translate(50px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g><g id="audio_duplicator" style="transform: translate(200px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g>');
+        return temp;
+    };
+    this.pointConverter = new function(){
+        this.browser2workspace = function(x,y){
+            var globalTransform = system.utility.element.getTransform(system.pane.workspace);
+            return {'x':(x-globalTransform.x)/globalTransform.s, 'y':(y-globalTransform.y)/globalTransform.s};
+        };
+        this.workspace2browser = function(x,y){
+            var globalTransform = system.utility.element.getTransform(system.pane.workspace);
+            return {'x':(x*globalTransform.s)+globalTransform.x, 'y':(y*globalTransform.s)+globalTransform.y};
+        };
+    };
+    this.dotMaker = function(x,y,text='',r=1,style='fill:rgba(255,100,255,0.75); font-size:3; font-family:Helvetica;',push=false){
+        var g = part.builder('g',null,{x:x, y:y});
 
-//         system.utility.workspace.clear();
+        var dot = part.builder('circle',null,{x:0, y:0, r:r, style:style});
+        var textElement =  part.builder('text',null,{x:0, y:0, angle:0, text:text, style:style});
+        g.appendChild(dot);
+        g.appendChild(textElement);
 
-//     console.log('%c- exporting a scene (with code bundling turned on) and then importing it', 'font-weight: bold;');
-//         system.utility.workspace.clear();
-//         system.utility.workspace.placeAndReturnObject( object.audio_duplicator(50,50) );
-//         system.utility.workspace.placeAndReturnObject( object.audio_duplicator(200,50) );
-//         var temp = system.utility.workspace.exportScene(true);
-//         system.utility.workspace.clear();
-//         system.utility.workspace.importScene(temp.scene,true,temp.constructorFunctions);
+        if(push){system.pane.foreground.append(g);}
 
-//         tester(system.pane.middleground.innerHTML,'<g id="audio_duplicator" style="transform: translate(50px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g><g id="audio_duplicator" style="transform: translate(200px, 50px) scale(1) rotate(0rad);"><path id="null" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgba(200, 200, 200, 0);"></path><g id="input" style="transform: translate(45px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_1" style="transform: translate(-10px, 5px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><g id="output_2" style="transform: translate(-10px, 30px) scale(1) rotate(0rad);"><rect id="tab" height="20" width="20" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(255, 220, 220);"></rect></g><path id="backing" d="M 0 0 L 55 0 55 55 0 55" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(200, 200, 200); pointer-events: none;"></path><path id="upperArrow" d="M 10 11 L 2.5 16 10 21" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><path id="lowerArrow" d="M 10 36 L 2.5 41 10 46" style="transform: translate(0px, 0px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></path><rect id="topHorizontal" height="2" width="45" style="transform: translate(5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="vertical" height="25.5" width="2" style="transform: translate(27.5px, 15px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect><rect id="bottomHorizontal" height="2" width="24.5" style="transform: translate(5px, 40px) scale(1) rotate(0rad); fill: rgb(150, 150, 150); pointer-events: none;"></rect></g>');
+        return g;
+    };
+    this.getGlobalScale = function(element){
+        return system.utility.element.getTransform(system.utility.workspace.getGlobal(element)).s;
+    };
+    this.getViewportDimensions = function(){
+        return {width:system.svgElement.width.baseVal.value, height:system.svgElement.height.baseVal.value};
+    };
+    this.placeAndReturnObject = function(object,pane='middleground'){
+        if(object == undefined){return;}
+        return system.pane[pane].appendChild( object );
+    };
+    this.mouseInteractionHandler = function(moveCode, stopCode){
+        if(moveCode == undefined){return;}
 
+        system.svgElement.onmousemove_old = system.svgElement.onmousemove;
+        system.svgElement.onmouseup_old = system.svgElement.onmouseup;
+        system.svgElement.onmouseleave_old = system.svgElement.onmouseleave;
+
+        system.svgElement.onmousemove = function(event){ moveCode(event); };
+        system.svgElement.onmouseup = function(event){
+            if(stopCode != undefined){ stopCode(event); }
+            system.svgElement.onmousemove = system.svgElement.onmousemove_old;
+            system.svgElement.onmouseleave = system.svgElement.onmouseleave_old;
+            system.svgElement.onmouseup = system.svgElement.onmouseup_old;
+        };
+        system.svgElement.onmouseleave = system.svgElement.onmouseup;
+    };
+    this.clear = function(){
+        system.selection.selectEverything();
+        system.selection.delete();
+    };
+    this.exportScene = function(bundleConstructorFunctions=false){
+        var outputData = [];
+        var constructorFunctions = {};
+    
+        //create array of all objects to be saved
+            var objectsArray = Array.from(system.pane.middleground.children);
+    
+        //strip out all the cable objects (they have the id 'null')
+            var temp = [];
+            for(var a = 0; a < objectsArray.length; a++){
+                if(objectsArray[a].id != 'null'){
+                    temp.push(objectsArray[a]);
+                }
+            }
+            objectsArray = temp;
+    
+        //cycle through this array, and create the scene data
+            for(var a = 0; a < objectsArray.length; a++){
+                var entry = {};
+    
+                //save the object's constructor
+                    //(if the object doesn't have a constructor, don't bother with any of this)
+                    if( !objectsArray[a].creatorMethod ){continue;}
+                    //if bundleConstructorFunctions is true, save all the constructor functions 
+                    //in constructorFunctions, then add the constructor name to the entry
+                    //(if there was no object for this collection, make one)
+                    if(bundleConstructorFunctions){
+                        if( constructorFunctions[objectsArray[a].collection] == undefined ){ constructorFunctions[objectsArray[a].collection] = {}; }
+                        constructorFunctions[objectsArray[a].collection][objectsArray[a].name] = objectsArray[a].creatorMethod;
+                    }
+                    //if it's not set, just add the constructor name to the entry
+                    entry.objectConstructorCollection = objectsArray[a].collection;
+                    entry.objectConstructorName = objectsArray[a].name;
+                    
+                //get the objects position
+                    entry.position = system.utility.element.getTransform(objectsArray[a]);
+    
+                //export the object's state
+                    if( objectsArray[a].exportData ){
+                        entry.data = objectsArray[a].exportData();
+                    }
+    
+                //log all connections
+                    if(objectsArray[a].io){
+                        var connections = [];
+                        var keys = Object.keys(objectsArray[a].io);
+                        for(var b = 0; b < keys.length; b++){
+                            var connection = {};
+    
+                            //originPort
+                                connection.originPort = keys[b];
+                            //destinationPort and indexOfDestinationObject
+                                if(!objectsArray[a].io[keys[b]].foreignNode){continue;}
+    
+                                var destinationPorts = Object.keys(objectsArray[a].io[keys[b]].foreignNode.parentElement.io);
+                                for(var c = 0; c < destinationPorts.length; c++){
+                                    if(objectsArray[a].io[keys[b]].foreignNode.parentElement.io[destinationPorts[c]] === objectsArray[a].io[keys[b]].foreignNode){
+                                        connection.destinationPorts = destinationPorts[c];
+                                        connection.destinationIndex = objectsArray.indexOf(objectsArray[a].io[keys[b]].foreignNode.parentElement);
+                                        break;
+                                    }
+                                }
+                                if( connection.destinationIndex >= 0 ){ connections.push(connection); }
+                        }
+                        entry.connections = connections;
+                    }
+    
+                //add this entry to the save data list
+                    outputData.push(entry);
+            }
+    
+        return {scene:outputData, constructorFunctions:constructorFunctions};
+    };
+    this.importScene = function(data,bundleConstructorFunctions=false,constructorFunctions){
+        //print objects to scene
+            var producedObjects = [];
+            for(var a = 0; a < data.length; a++){
+                var entry = data[a];
+    
+                //get the creator function
+                    //if bundleConstructorFunctions is set to true, look through the constructorFunctions
+                    //to find the one that matches this object's objectConstructorName and objectConstructorCollection
+                    //otherwise; look through the system's object constructor list to find it
+                    var constructor = bundleConstructorFunctions ? constructorFunctions[entry.objectConstructorCollection][entry.objectConstructorName] : object[entry.objectConstructorCollection][entry.objectConstructorName];
+    
+                //create the object and place
+                    var newObject = system.utility.workspace.placeAndReturnObject( constructor(entry.position.x,entry.position.y) );
+    
+                //import object's state
+                    if(newObject.importData){
+                        newObject.importData(entry.data);
+                    }
+    
+                //perform connections
+                    if(entry.connections){
+                        entry.connections.forEach(function(conn){
+                            if( conn.destinationIndex < producedObjects.length ){
+                                newObject.io[conn.originPort].connectTo( producedObjects[conn.destinationIndex].io[conn.destinationPorts] );
+                            }
+                        });
+                    }
+                //add object to produced list (for the connection handler to use in future)
+                producedObjects.push(newObject);
+            }
+    };
+    this.saveload = new function(){
+        this.save = function(sceneName='project',compress=true,bundleConstructorFunctions=false){
+            //check that saving or loading is allowed
+                if(!system.super.enableSaveload){return;}
+
+            var outputData = {
+                sceneName:sceneName,
+                bundleConstructorFunctions:bundleConstructorFunctions,
+                viewportLocation:system.utility.workspace.currentPosition(),
+                constructorFunctions:{},
+                objects:[],
+            };
+            var sceneName = outputData.sceneName;
         
-//         system.utility.workspace.clear();
+            //stopping audio
+                system.audio.destination.masterGain(0);
 
-
-
-
-
-
-
-// console.log('%c--- element', 'font-weight: bold;');
-//     console.log('%c-- getTransform', 'font-weight: bold;');
-//     var sudoElement = {style:{transform:'translate(-1.25px, 2.5px) scale(1) rotate(0rad)'}};
-//     tester(system.utility.element.getTransform(sudoElement),{x: -1.25, y: 2.5, s: 1, r: 0});
-//     var sudoElement = {style:{transform:'translate(0px, 9.75e-05px) scale(1) rotate(0rad)'}};
-//     tester(system.utility.element.getTransform(sudoElement),{x: 0, y: 0.0000975, s: 1, r: 0});
-
-//     console.log('%c-- styleExtractor', 'font-weight: bold;');
-//     tester(system.utility.element.styleExtractor('stroke:rgba(0,255,0,1); stroke-width:0.5; stroke-linecap:round;'),{stroke:"rgba(0,255,0,1)", 'stroke-width': "0.5", 'stroke-linecap': "round"});
-//     tester(system.utility.element.styleExtractor('stroke:rgba(0,255,0,1);stroke-width:0.5;stroke-linecap:round;'),{stroke:"rgba(0,255,0,1)", 'stroke-width': "0.5", 'stroke-linecap': "round"});
-
-
-
-
-
-
-
-
-// console.log('%c--- math', 'font-weight: bold;');
-//     console.log('%c-- normalizeStretchArray', 'font-weight: bold;');
-//         tester(system.utility.math.normalizeStretchArray([0,1]),[0,1]);
-//         tester(system.utility.math.normalizeStretchArray([0,0.5,1]),[0,0.5,1]);
-//         tester(system.utility.math.normalizeStretchArray([0,0.9,1]),[0,0.9,1]);
-//         tester(system.utility.math.normalizeStretchArray([0.9,0.99,0.999]),[0, 0.9090909090909088, 1]);
-//         tester(system.utility.math.normalizeStretchArray([0,0.0001,1.9]),[0, 0.000052631578947368424, 1]);
-//         tester(system.utility.math.normalizeStretchArray([-1,-0.9999,0.9]),[0, 0.000052631578947397684, 1]);
-//     console.log('%c-- curvePoint', 'font-weight: bold;');
-//         console.log('%c- linear', 'font-weight: bold;');
-//             tester(system.utility.math.curvePoint.linear(),0.5);
-//             tester(system.utility.math.curvePoint.linear(0.1,0,1),.1);
-//             tester(system.utility.math.curvePoint.linear(0.1,0,2),0.2);
-//             tester(system.utility.math.curvePoint.linear(0.5,-1,1),0);
-//             tester(system.utility.math.curvePoint.linear(0.99,-5,10),9.85);
-//             for(var a = 0; a <= 10; a++){
-//                 tester(system.utility.math.curvePoint.linear(a/10),a/10);
-//             }
-//             var answers = [0.025,0.1225,0.22,0.3175,0.41500000000000004,0.5125,0.61,0.7075,0.805,0.9025,1];
-//             for(var a = 0; a <= 10; a++){
-//                 tester(system.utility.math.curvePoint.linear(a/10,0.025,1),answers[a] );
-//             }
-//         console.log('%c- sin', 'font-weight: bold;');
-//             tester(system.utility.math.curvePoint.sin(),           0.7071067811865475);
-//             tester(system.utility.math.curvePoint.sin(0.1,0,1),    0.15643446504023087);
-//             tester(system.utility.math.curvePoint.sin(0.1,0,2),    0.31286893008046174);
-//             tester(system.utility.math.curvePoint.sin(0.5,-1,1),   0.4142135623730949);
-//             tester(system.utility.math.curvePoint.sin(1/3,-1,1),   -1.1102230246251565e-16);
-//             tester(system.utility.math.curvePoint.sin(0.99,-5,10), 9.998149487224909);
-//         console.log('%c- cos', 'font-weight: bold;');
-//             tester(system.utility.math.curvePoint.cos(),             0.2928932188134524);
-//             tester(system.utility.math.curvePoint.cos(0.1,0,1),      0.01231165940486223);
-//             tester(system.utility.math.curvePoint.cos(0.1,0,2),      0.02462331880972446);
-//             tester(system.utility.math.curvePoint.cos(0.5,-1,1),     -0.41421356237309515);
-//             tester(system.utility.math.curvePoint.cos(2/3,-1,1),     -2.220446049250313e-16);
-//             tester(system.utility.math.curvePoint.cos(0.0001,-5,10), -4.999999814944917);
-//             tester(system.utility.math.curvePoint.cos(0.9999,-5,10), 9.997643805519496);
-//         console.log('%c- s', 'font-weight: bold;');
-//             tester(system.utility.math.curvePoint.s()   , 0.5000000000000001 );
-//             tester(system.utility.math.curvePoint.s(0.0), 0 );
-//             tester(system.utility.math.curvePoint.s(0.1), 0.021969820441244133 );
-//             tester(system.utility.math.curvePoint.s(0.2), 0.06761890207197617 );
-//             tester(system.utility.math.curvePoint.s(0.3), 0.15559244154839164 );
-//             tester(system.utility.math.curvePoint.s(0.4), 0.30293667416374986 );
-//             tester(system.utility.math.curvePoint.s(0.5), 0.5000000000000001 );
-//             tester(system.utility.math.curvePoint.s(0.6), 0.6970633258362502 );
-//             tester(system.utility.math.curvePoint.s(0.7), 0.8444075584516083 );
-//             tester(system.utility.math.curvePoint.s(0.8), 0.9323810979280239 );
-//             tester(system.utility.math.curvePoint.s(0.9), 0.9780301795587558 );
-//             tester(system.utility.math.curvePoint.s(1)  , 1 );
-//         console.log('%c- exponential', 'font-weight: bold;');
-//             tester(system.utility.math.curvePoint.exponential(),     0.2689414213699951 );
-//             tester(system.utility.math.curvePoint.exponential(0.0),  0 );
-//             tester(system.utility.math.curvePoint.exponential(0.1),  0.03465343780550409 );
-//             tester(system.utility.math.curvePoint.exponential(0.2),  0.07697924232087867 );
-//             tester(system.utility.math.curvePoint.exponential(0.3),  0.12867609669730537 );
-//             tester(system.utility.math.curvePoint.exponential(0.4),  0.19181877722087765 );
-//             tester(system.utility.math.curvePoint.exponential(0.5),  0.2689414213699951 );
-//             tester(system.utility.math.curvePoint.exponential(0.6),  0.3631392316503325 );
-//             tester(system.utility.math.curvePoint.exponential(0.7),  0.47819269693938515 );
-//             tester(system.utility.math.curvePoint.exponential(0.8),  0.6187193167793194 );
-//             tester(system.utility.math.curvePoint.exponential(0.9),  0.7903589178467405 );
-//             tester(system.utility.math.curvePoint.exponential(1),    1 );
-//     console.log('%c-- curveGenerator', 'font-weight: bold;');
-//         console.log('%c- linear', 'font-weight: bold;');
-//             tester(system.utility.math.curveGenerator.linear(),       [0, 1]);
-//             tester(system.utility.math.curveGenerator.linear(10),     [0, 0.1111111111111111, 0.2222222222222222, 0.3333333333333333, 0.4444444444444444, 0.5555555555555556, 0.6666666666666666, 0.7777777777777778, 0.8888888888888888, 1]);
-//             tester(system.utility.math.curveGenerator.linear(10,5,10),[5, 5.555555555555555, 6.111111111111111, 6.666666666666666, 7.222222222222222, 7.777777777777778, 8.333333333333332, 8.88888888888889, 9.444444444444445, 10]);
-//             tester(system.utility.math.curveGenerator.linear(10,8),   [8, 7.222222222222222, 6.444444444444445, 5.666666666666667, 4.888888888888889, 4.111111111111111, 3.333333333333334, 2.5555555555555554, 1.7777777777777786, 1]);
-//         console.log('%c- sin', 'font-weight: bold;');
-//             tester(system.utility.math.curveGenerator.sin(),        [0, 1] );
-//             tester(system.utility.math.curveGenerator.sin(10),      [0, 0.17364817766693033, 0.3420201433256687, 0.49999999999999994, 0.6427876096865393, 0.766044443118978, 0.8660254037844386, 0.9396926207859083, 0.984807753012208, 1] );
-//             tester(system.utility.math.curveGenerator.sin(10,5,10), [5, 5.868240888334651, 6.710100716628343, 7.5, 8.213938048432697, 8.83022221559489, 9.330127018922193, 9.69846310392954, 9.92403876506104, 10] );
-//             tester(system.utility.math.curveGenerator.sin(10,8),    [8, 6.784462756331488, 5.605858996720319, 4.5, 3.5004867321942257, 2.637688898167154, 1.9378221735089296, 1.4221516544986414, 1.106345728914544, 1] );
-//         console.log('%c- cos', 'font-weight: bold;');
-//             tester(system.utility.math.curveGenerator.cos(),        [0, 1] );
-//             tester(system.utility.math.curveGenerator.cos(10),      [0, 0.01519224698779198, 0.06030737921409157, 0.1339745962155613, 0.233955556881022, 0.35721239031346064, 0.4999999999999999, 0.6579798566743311, 0.8263518223330696, 1] );
-//             tester(system.utility.math.curveGenerator.cos(10,5,10), [5, 5.07596123493896, 5.301536896070457, 5.669872981077806, 6.16977778440511, 6.786061951567303, 7.5, 8.289899283371655, 9.131759111665348, 10]);
-//             tester(system.utility.math.curveGenerator.cos(10,8),    [8, 7.893654271085456, 7.5778483455013586, 7.062177826491071, 6.362311101832846, 5.499513267805776, 4.500000000000001, 3.3941410032796817, 2.2155372436685132, 1] );
-//         console.log('%c- s', 'font-weight: bold;');
-//             tester(system.utility.math.curveGenerator.s(),        [0, 1] );
-//             tester(system.utility.math.curveGenerator.s(10),      [0, 0.022463335897421843, 0.06913784818223383, 0.15908756682599312, 0.309741642431138, 0.5112316679487109, 0.712721693466284, 0.8633757690714288, 0.953325487715188, 1] );
-//             tester(system.utility.math.curveGenerator.s(10,5,10), [5, 5.112316679487109, 5.345689240911169, 5.795437834129966, 6.54870821215569, 7.556158339743554, 8.56360846733142, 9.316878845357143, 9.76662743857594, 10] );
-//             tester(system.utility.math.curveGenerator.s(10,8),    [8, 7.842756648718047, 7.516035062724363, 6.886387032218048, 5.8318085029820335, 4.421378324359024, 3.0109481457360117, 1.9563696164999982, 1.3267215859936838, 1] );
-//         console.log('%c- exponential', 'font-weight: bold;');
-//             tester(system.utility.math.curveGenerator.exponential(),        [0, 1] );
-//             tester(system.utility.math.curveGenerator.exponential(10),      [0, 0.03894923837706363, 0.08759095067273646, 0.1483370980594927, 0.2241998555196527, 0.3189409743731226, 0.4372583135012321, 0.5850187886546604, 0.7695492909331704, 1] );
-//             tester(system.utility.math.curveGenerator.exponential(10,5,10), [5, 5.194746191885318, 5.437954753363682, 5.7416854902974634, 6.120999277598264, 6.594704871865613, 7.18629156750616, 7.925093943273302, 8.847746454665852, 10] );
-//             tester(system.utility.math.curveGenerator.exponential(10,8),    [8, 7.727355331360554, 7.386863345290845, 6.961640313583551, 6.430601011362431, 5.767413179388142, 4.939191805491375, 3.9048684794173774, 2.6131549634678075, 1] );
-//     console.log('%c-- detectOverlap', 'font-weight: bold;');
-//         console.log('%c- totally separate shapes', 'font-weight: bold;');
-//             var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-//             var poly_b = [{x:15,y:15},{x:25,y:15},{x:25,y:25},{x:15,y:25}];
-//             var box_a = [{x:10,y:10},{x:0,y:0}];
-//             var box_b = [{x:25,y:25},{x:15,y:15}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), false);
-//         console.log('%c- simple overlap -> true', 'font-weight: bold;');
-//             var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-//             var poly_b = [{x:5,y:5},{x:15,y:5},{x:15,y:15},{x:5,y:15}];
-//             var box_a = [{x:10,y:10},{x:0,y:0}];
-//             var box_b = [{x:15,y:15},{x:5,y:5}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-//         console.log('%c- the same shape twice, with bounding boxes -> true', 'font-weight: bold;');
-//             var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-//             var poly_b = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, [poly_a[2],poly_a[0]], [poly_b[2],poly_b[0]]), true);
-//         console.log('%c- the same shape twice, no bounding boxes -> true', 'font-weight: bold;');
-//             var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-//             var poly_b = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b), true);
-//         console.log('%c- live examples (should all be \'true\')', 'font-weight: bold;');
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":50,"y":50},{"x":105,"y":50},{"x":105,"y":105},{"x":50,"y":105}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":50,"y":50},{"x":105,"y":105}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":875,"y":50},{"x":930,"y":50},{"x":930,"y":105},{"x":875,"y":105}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":875,"y":50},{"x":930,"y":105}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":150,"y":50},{"x":345,"y":50},{"x":345,"y":160},{"x":150,"y":160}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":150,"y":50},{"x":345,"y":160}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":400,"y":50},{"x":500,"y":50},{"x":500,"y":105},{"x":400,"y":105}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":400,"y":50},{"x":500,"y":105}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":550,"y":50},{"x":790,"y":50},{"x":790,"y":90},{"x":740,"y":140},{"x":550,"y":140}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":550,"y":50},{"x":790,"y":140}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":25,"y":130},{"x":35,"y":120},{"x":59.166666666666664,"y":120},{"x":71.125,"y":130},{"x":81.375,"y":130},{"x":93.33333333333333,"y":120},{"x":117.5,"y":120},{"x":127.5,"y":130},{"x":127.5,"y":205},{"x":117.5,"y":215},{"x":93.33333333333333,"y":215},{"x":81.375,"y":205},{"x":71.125,"y":205},{"x":59.166666666666664,"y":215},{"x":35,"y":215},{"x":25,"y":205}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":25,"y":120},{"x":127.5,"y":215}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":160,"y":175},{"x":242.5,"y":175},{"x":252.5,"y":245},{"x":201.25,"y":275},{"x":150,"y":245}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":150,"y":175},{"x":252.5,"y":275}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":280,"y":180},{"x":331.25,"y":170},{"x":382.5,"y":180},{"x":382.5,"y":210},{"x":331.25,"y":220},{"x":280,"y":210}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":280,"y":170},{"x":382.5,"y":220}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":425,"y":160},{"x":645,"y":160},{"x":645,"y":215},{"x":425,"y":215}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":425,"y":160},{"x":645,"y":215}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":425,"y":220},{"x":645,"y":220},{"x":645,"y":275},{"x":425,"y":275}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":425,"y":220},{"x":645,"y":275}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":425,"y":280},{"x":645,"y":280},{"x":645,"y":335},{"x":425,"y":335}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":425,"y":280},{"x":645,"y":335}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":425,"y":340},{"x":645,"y":340},{"x":645,"y":420},{"x":425,"y":420}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":425,"y":340},{"x":645,"y":420}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":675,"y":160},{"x":895,"y":160},{"x":895,"y":545},{"x":675,"y":545}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":675,"y":160},{"x":895,"y":545}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":355,"y":110},{"x":530,"y":110},{"x":530,"y":150},{"x":355,"y":150}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":355,"y":110},{"x":530,"y":150}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":15,"y":285},{"x":25,"y":285},{"x":37.5,"y":275},{"x":52.5,"y":275},{"x":65,"y":285},{"x":260,"y":285},{"x":260,"y":315},{"x":65,"y":315},{"x":52.5,"y":325},{"x":37.5,"y":325},{"x":25,"y":315},{"x":15,"y":315}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":15,"y":275},{"x":260,"y":325}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":270,"y":225},{"x":395,"y":225},{"x":395,"y":275},{"x":370,"y":285},{"x":370,"y":325},{"x":270,"y":325}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":270,"y":225},{"x":395,"y":325}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":830,"y":50},{"x":820,"y":52.67949192431122},{"x":812.6794919243113,"y":60},{"x":810,"y":70},{"x":812.6794919243113,"y":80},{"x":820,"y":87.32050807568876},{"x":830,"y":90},{"x":840,"y":87.32050807568878},{"x":847.3205080756887,"y":80},{"x":850,"y":70},{"x":847.3205080756887,"y":60.000000000000014},{"x":840,"y":52.679491924311236}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":810,"y":50},{"x":850,"y":90}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":790,"y":120},{"x":800,"y":110},{"x":890,"y":110},{"x":905,"y":120},{"x":905,"y":140},{"x":890,"y":150},{"x":800,"y":150},{"x":790,"y":140}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-//             var box_b = [{"x":790,"y":110},{"x":905,"y":150}];
-            
-//             var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-//             var poly_b = [{"x":80,"y":330},{"x":400,"y":330},{"x":400,"y":392.5},{"x":80,"y":392.5}];
-//             var box_a = [{"x":1027,"y":355},{"x":68,"y":34}];
-//             var box_b = [{"x":80,"y":330},{"x":400,"y":392.5}];
-//             tester(system.utility.math.detectOverlap(poly_a, poly_b, box_a, box_b), true);
-//     console.log('%c-- intersectionOfTwoLineSegments', 'font-weight: bold;');
-//         //the function tells where the lines would intersect if they were infinatly long in both directions,
-//         //the next two bools reveal if this point if within the segment given (you need two 'true's for an intersectionOfTwoLineSegments)
-//         console.log('%c-- simple crossing', 'font-weight: bold;');
-//             var segment1 = [{x:0,y:0},{x:5,y:5}];
-//             var segment2 = [{x:5,y:0},{x:0,y:5}];
-//             tester(system.utility.math.intersectionOfTwoLineSegments(segment1, segment2), {x: 2.5, y: 2.5, inSeg1: true, inSeg2: true});
-//         console.log('%c-- no crossing', 'font-weight: bold;');
-//             var segment1 = [{x:0,y:0},{x:5,y:5}];
-//             var segment2 = [{x:0,y:2},{x:0,y:5}];
-//             tester(system.utility.math.intersectionOfTwoLineSegments(segment1, segment2),{x: 0, y: 0, inSeg1: true, inSeg2: false} );
-//         console.log('%c-- one segment touches the other', 'font-weight: bold;');
-//             var segment1 = [{x:0,y:0},{x:5,y:5}];
-//             var segment2 = [{x:2.5,y:2.5},{x:0,y:5}];
-//             tester(system.utility.math.intersectionOfTwoLineSegments(segment1, segment2),{x: 2.5, y: 2.5, inSeg1: true, inSeg2: true} );
-//     console.log('%c-- boundingBoxFromPoints', 'font-weight: bold;');
-//         console.log('%c-- simple box', 'font-weight: bold;');
-//             var poly = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-//             tester(system.utility.math.boundingBoxFromPoints(poly),[{x: 10, y: 10},{x: 0, y: 0}]);
-//         console.log('%c-- triangle', 'font-weight: bold;');
-//             var poly = [{x:0,y:0},{x:10,y:0},{x:5,y:10}];
-//             tester(system.utility.math.boundingBoxFromPoints(poly),[{x: 10, y: 10},{x: 0, y: 0}]);
-//     console.log('%c-- polar2cartesian', 'font-weight: bold;');
-//         var distance = 10;
-//         var angle = 0;
-//         tester(system.utility.math.polar2cartesian(angle,distance),{x: 10, y: 0});
-//         var distance = -10;
-//         var angle = 0;
-//         tester(system.utility.math.polar2cartesian(angle,distance),{x: -10, y: -0});
-//         var distance = 10;
-//         var angle = Math.PI/2;
-//         tester(system.utility.math.polar2cartesian(angle,distance),{x: 6.123233995736766e-16, y: 10});
-//         var distance = -10;
-//         var angle = Math.PI;
-//         tester(system.utility.math.polar2cartesian(angle,distance),{x: 10, y: -1.2246467991473533e-15});
-//         var distance = 3.5355339059327378;
-//         var angle = Math.PI/4;
-//         tester(system.utility.math.polar2cartesian(angle,distance),{x: 2.5000000000000004, y: 2.5});
-//     console.log('%c-- cartesian2polar', 'font-weight: bold;');
-//         var x = 10;
-//         var y = 0;
-//         tester(system.utility.math.cartesian2polar(x,y),{dis: 10, ang: 0});
-//         var x = -10;
-//         var y = 0;
-//         tester(system.utility.math.cartesian2polar(x,y),{dis: 10, ang: 3.141592653589793});
-//         var x = 0;
-//         var y = 10;
-//         tester( system.utility.math.cartesian2polar(x,y),{dis: 10, ang: 1.5707963267948966});
-//         var x = 10;
-//         var y = 40;
-//         tester(system.utility.math.cartesian2polar(x,y),{dis: 41.23105625617661, ang: 1.3258176636680326});
-//         var x = 2.5;
-//         var y = 2.5;
-//         tester(system.utility.math.cartesian2polar(x,y),{dis: 3.5355339059327378, ang: 0.7853981633974483});
-
-
-
-
-
-
-
-
-// console.log('%c--- misc', 'font-weight: bold;');
-//     console.log('%c-- serialize/unserialize (no compression)', 'font-weight: bold;');
-//         function doBoth(data,ser_data,un_data){
-//             var s_data = system.utility.misc.serialize(data,false);
-//             tester(s_data,ser_data);
-//             var u_data = system.utility.misc.unserialize(s_data,false);
-//             tester(u_data,un_data);
-//         }
-    
-//         var org_data;
-//         var ser_data;
-//         doBoth(org_data,ser_data,org_data);
-//         var org_data = 1;
-//         var ser_data = '1';
-//         doBoth(org_data,ser_data,org_data);
-//         var org_data = 5;
-//         var ser_data = '5';
-//         doBoth(org_data,ser_data,org_data);
-//         var org_data = 546544494849;
-//         var ser_data = '546544494849';
-//         doBoth(org_data,ser_data,org_data);
-    
-//         var org_data = '';
-//         var ser_data = '""';
-//         doBoth(org_data,ser_data,org_data);
-//         var org_data = 'hello\n';
-//         var ser_data = JSON.stringify('hello\n');
-//         doBoth(org_data,ser_data,org_data);
-//         var org_data = '546544494849';
-//         var ser_data = '"546544494849"';
-//         doBoth(org_data,ser_data,org_data);
-    
-//         var org_data = [1,2,3];
-//         var ser_data = '[1,2,3]';
-//         doBoth(org_data,ser_data,org_data);
-//         var org_data = [1,2,3];
-//         var ser_data = '[1,2,3]';
-//         doBoth(org_data,ser_data,org_data);
-//         var org_data = ['hello','there','my','friend'];
-//         var ser_data = JSON.stringify(['hello','there','my','friend']);
-//         doBoth(org_data,ser_data,org_data);
-//         var org_data = ['hello',1,'my',76];
-//         var ser_data = JSON.stringify(['hello',1,'my',76]);
-//         doBoth(org_data,ser_data,org_data);
-    
-//         var org_data = {item:0,thing:'hello',null:null};
-//         var ser_data = JSON.stringify({item:0,thing:'hello',null:null});
-//         doBoth(org_data,ser_data,org_data);
-//         var org_data = {item:0,thing:function(){console.log('hello');},null:null};
-//         var ser_data = JSON.stringify({"item":0,"thing":{"__uniqueType":"function","__value":"function(){console.log('hello');}","__name":"thing"},"null":null});
-//         doBoth(org_data,ser_data,org_data);
-    
-//         var org_data = new ArrayBuffer(8);
-//         var ser_data = JSON.stringify({"__uniqueType":"arraybuffer","__value":"AA=="});
-//         doBoth(org_data,ser_data,org_data);
-//         var org_data = [new ArrayBuffer(8),new ArrayBuffer(8),new ArrayBuffer(8)]
-//         var ser_data = JSON.stringify([{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="}]);
-//         doBoth(org_data,ser_data,org_data);
-
-
-
-
-
-
-
+            //gather the scene data
+                var temp = system.utility.workspace.exportScene(outputData.bundleConstructorFunctions);
+                outputData.objects = temp.scene;
+                outputData.constructorFunctions = temp.constructorFunctions;
         
-console.log('%c--- experimental', 'font-weight: bold;');
+            //serialize data
+                outputData = system.utility.misc.serialize(outputData,compress);
+        
+            //print to file
+                system.utility.misc.printFile(sceneName+'.crv',outputData);
+            
+            //restarting audio
+                system.audio.destination.masterGain(1);
+        };
+        this.__loadProcess = function(data,callback,compressed){
+            var metadata;
+
+            //stopping audio
+                system.audio.destination.masterGain(0);
+                
+            //unserialize data
+                var data = system.utility.misc.unserialize(data,compressed);
+
+            //check it's one of ours
+                if(data != null){
+                    //clear current scene
+                        system.utility.workspace.clear()
+
+                    //import scene
+                        system.utility.workspace.importScene(data.objects, data.bundleConstructorFunctions, data.constructorFunctions);
+
+                    //set viewport position
+                        system.utility.workspace.gotoPosition(data.viewportLocation.x, data.viewportLocation.y, data.viewportLocation.s, data.viewportLocation.r);
+
+                    //gather metadata
+                        metadata = {sceneName:data.sceneName};
+
+                    console.log('scene "'+data.sceneName+'" has been loaded');
+                }else{
+                    console.error('unrecognized file format');
+                }
+                
+                //restart audio
+                    system.audio.destination.masterGain(1);
+
+                //callback
+                    if(callback){callback(metadata);}
+        };
+        this.load = function(callback,compressed=true){
+            //check that saving or loading is allowed
+                if(!system.super.enableSaveload){return;}
+
+            system.utility.misc.openFile(function(data){system.utility.workspace.saveload.__loadProcess(data,callback,compressed);});
+        };
+        this.loadFromURL = function(url,callback,compressed=true){
+            var request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.responseType = 'text';
+            request.onload = function(){ system.utility.workspace.saveload.__loadProcess(this.response,callback,compressed); };
+            request.send();
+        };
+    };
+    this.setStaticBackgroundStyle = function(style){
+        system.pane.staticBackground.innerHTML = '';
+        system.utility.workspace.placeAndReturnObject( part.builder('rect',null,{width:'100%',height:'100%',style:style+'pointer-events:none;'}), 'staticBackground' );    
+    };
+};
+this.element = new function(){
+    this.getTransform = function(element){
+        // //pure js
+        //     var end_1 = element.style.transform.indexOf('px');
+        //     var end_2 = element.style.transform.indexOf('px) scale(');
+        //     var end_3 = element.style.transform.indexOf(') rotate(');
+        //     var end_4 = element.style.transform.indexOf('rad)');
+
+        //     return {
+        //         x: Number( element.style.transform.substring(10,end_1)),
+        //         y: Number( element.style.transform.substring(end_1+4,end_2)),
+        //         s: Number( element.style.transform.substring(end_2+10,end_3)),
+        //         r: Number( element.style.transform.substring(end_3+9,end_4))
+        //     };
+
+        //pure js 2 
+            var text = element.style.transform;
+            text = text.slice(10).split('px, ',2);
+            var num1 = Number(text[0]);
+            text = text[1].split('px) scale(',2);
+            var num2 = Number(text[0]);
+            text = text[1].split(') rotate(',2);
+            var num3 = Number(text[0]);
+            var num4 = Number(text[1].slice(0,-4));
+
+            return { x: num1, y: num2, s: num3, r: num4 };
+
+        // //regex
+        //     var pattern = /translate\((.*)px,| (.*)px|\) scale\((.*)\) |rotate\((.*)rad\)/g;
+
+        //     var result = [];
+        //     for(var a = 0; a < 4; a++){
+        //         result.push(Number(pattern.exec(element.style.transform)[a+1]));
+        //     }
+            
+        //     return {x:result[0],y:result[1],s:result[2],r:result[3]};
+    };
+    this.getCumulativeTransform = function(element){
+        data = this.getTransform(element);
+        while( !element.parentElement.getAttribute('pane') ){
+            element = element.parentElement;
+            var newData = this.getTransform(element);
+            data.x += newData.x;
+            data.y += newData.y;
+            data.s *= newData.s;
+            data.r += newData.r;
+        }
+        return data;
+    };
+    this.getTruePoint = function(element){
+        data = this.getTransform(element);
+        while( !element.parentElement.getAttribute('pane') ){
+            element = element.parentElement;
+            var newData = this.getTransform(element);
+            var temp = system.utility.math.cartesian2polar(data.x,data.y);
+            temp.ang += newData.r;
+            temp = system.utility.math.polar2cartesian(temp.ang,temp.dis);
+            data.x = temp.x + newData.x;
+            data.y = temp.y + newData.y;
+            data.s *= newData.s;
+            data.r += newData.r;
+        }
+        return data;
+    };
+    this.setTransform = function(element, transform){
+        //(code removed for speed, but I remember it was solving some formatting problem somewhere)
+        // element.style.transform = 'translate('+transform.x.toFixed(16)+'px, '+(transform.y.toFixed(16))+'px) scale('+transform.s.toFixed(16)+') rotate(' +transform.r.toFixed(16)+ 'rad)';
+        element.style.transform = 'translate('+transform.x+'px, '+transform.y+'px) scale('+transform.s+') rotate(' +transform.r+ 'rad)';
+    };
+    this.setTransform_XYonly = function(element, x, y){
+        if(x == null && y == null){return;}
+
+        var transformData = this.getTransform(element);
+        if(x!=null){transformData.x = x;}
+        if(y!=null){transformData.y = y;}
+        this.setTransform( element, transformData );
+    };
+    this.setStyle = function(element, style){
+        var transform = this.getTransform(element); 
+        element.style = style;
+        this.setTransform(element, transform);
+    };
+    this.setRotation = function(element, rotation){
+        var pattern = /rotate\(([-+]?[0-9]*\.?[0-9]+)/;
+        element.style.transform = element.style.transform.replace( pattern, 'rotate('+rotation );
+    };
+    this.getBoundingBox = function(element){
+        var tempG = document.createElementNS('http://www.w3.org/2000/svg','g');
+        system.pane.workspace.append(tempG);
+
+        element = element.cloneNode(true);
+        tempG.append(element);
+        var temp = element.getBBox();
+        tempG.remove();
+        
+        return temp;
+    };
+    this.makeUnselectable = function(element){
+        element.style['-webkit-user-select'] = 'none';
+        element.style['-moz-user-select'] = 'none';
+        element.style['-ms-user-select'] = 'none';
+        element.style['user-select'] = 'none';
+    };
+    this.getPositionWithinFromMouse = function(event, element, elementWidth, elementHeight){
+        var elementOrigin = system.utility.element.getTruePoint(element);
+        var mouseClick = system.utility.workspace.pointConverter.browser2workspace(event.offsetX,event.offsetY);
+
+        var temp = system.utility.math.cartesian2polar(
+            mouseClick.x-elementOrigin.x,
+            mouseClick.y-elementOrigin.y
+        );
+        temp.ang -= elementOrigin.r;
+        temp = system.utility.math.polar2cartesian(temp.ang,temp.dis);
+
+        var ans = { x:temp.x/elementWidth, y:temp.y/elementHeight };
+        if(ans.x < 0){ans.x = 0;}else if(ans.x > 1){ans.x = 1;}
+        if(ans.y < 0){ans.y = 0;}else if(ans.y > 1){ans.y = 1;}
+        return ans;
+    };
+    this.styleExtractor = function(string){
+        var outputObject= {};
+
+        //split style string into individual settings (and filter out any empty strings)
+            var array = string.split(';').filter(function(n){ return n.length != 0 });
+
+        //create the object
+        try{
+            for(var a = 0; a < array.length; a++){
+                //split on colon
+                    var temp = array[a].split(':');
+                //strip whitespace
+                    temp[0] = temp[0].replace(/^\s+|\s+$/g, '');
+                    temp[1] = temp[1].replace(/^\s+|\s+$/g, '');
+                //push into object
+                    outputObject[temp[0]] = temp[1];
+            }
+        }catch(e){console.error('styleExtractor was unable to parse the string "'+string+'"');return {};}
+        
+        return outputObject;
+    };
+    this.stylePacker = function(object){
+        var styleString = '';
+        var keys = Object.keys(object);
+        for(var a = 0; a < keys.length; a++){
+            styleString += keys[a] +':'+ object[keys[a]] +';';
+        }
+        return styleString;
+    };
+};
+this.object = new function(){
+    this.requestInteraction = function(x,y,type,globalName){
+        if(!x || !y){return true;}
+        var temp = document.elementFromPoint(x,y);
+        if(temp == null){return false;}
+
+        if(temp.hasAttribute('workspace')){return true;}
+        while(!temp.hasAttribute('global')){
+            if(temp == document.body){ return false; }
+
+            if(temp[type] || temp.hasAttribute(type)){return false;}
+            temp = temp.parentElement;
+        }
+        
+        return temp.getAttribute('pane')==globalName;
+    };
+    this.disconnectEverything = function(object){
+        var keys = Object.keys(object.io);
+        for( var a = 0; a < keys.length; a++){
+            //account for node arrays
+            if( Array.isArray(object.io[keys[a]]) ){
+                for(var c = 0; c < object.io[keys[a]].length; c++){
+                    object.io[keys[a]][c].disconnect();
+                }
+            }else{
+                object.io[keys[a]].disconnect();
+            }
+        }
+    };
+    this.generateSelectionArea = function(points, object){
+        var debug = false;
+        object.selectionArea = {};
+        object.selectionArea.box = [];
+        object.selectionArea.points = [];
+        object.updateSelectionArea = function(){
+            //the main shape we want to use
+            object.selectionArea.points = [];
+            points.forEach(function(item){
+                object.selectionArea.points.push( {x:item.x, y:item.y} );
+            });
+            object.selectionArea.box = system.utility.math.boundingBoxFromPoints(object.selectionArea.points);
+
+            //adjusting it for the object's position in space
+            var temp = system.utility.element.getTransform(object);
+            object.selectionArea.box.forEach(function(element) {
+                element.x += temp.x;
+                element.y += temp.y;
+            });
+            object.selectionArea.points.forEach(function(element) {
+                element.x += temp.x;
+                element.y += temp.y;
+            });
+        };
+
+        object.updateSelectionArea();
+
+        if(debug){
+            for(var a = 0; a < object.selectionArea.box.length; a++){ system.pane.foreground.append( system.utility.workspace.dotMaker(object.selectionArea.box[a].x, object.selectionArea.box[a].y, a) ); }
+            for(var a = 0; a < object.selectionArea.points.length; a++){ system.pane.foreground.append( system.utility.workspace.dotMaker(object.selectionArea.points[a].x, object.selectionArea.points[a].y, a) ); }
+        }
+    };
+    this.deleteObject = function(object){
+        //run the object's onDelete method
+            if(object.onDelete){object.onDelete();}
+        //run disconnect on every connection node of this object
+            system.utility.object.disconnectEverything(object);
+        //remove the object from the pane it's in
+            system.utility.workspace.getPane(object).removeChild(object);
+    };
+};
+this.audio = new function(){
+    this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
+        if(target==null){return audioParam.value;}
+
+        if(cancelScheduledValues){ audioParam.cancelScheduledValues(context.currentTime); }
+
+        try{
+            switch(curve){
+                case 'linear': 
+                    audioParam.linearRampToValueAtTime(target, context.currentTime+time);
+                break;
+                case 'exponential':
+                    console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
+                    if(target == 0){target = 1/10000;}
+                    audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
+                break;
+                case 's':
+                    var mux = target - audioParam.value;
+                    var array = system.utility.math.curveGenerator.s(10);
+                    for(var a = 0; a < array.length; a++){
+                        array[a] = audioParam.value + array[a]*mux;
+                    }
+                    audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
+                break;
+                case 'instant': default:
+                    audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                break;
+            }
+        }catch(e){
+            console.log('could not change param (possibly due to an overlap, or bad target value)');
+            console.log('audioParam:',audioParam,'target:',target,'time:',time,'curve:',curve,'cancelScheduledValues:',cancelScheduledValues);
+            console.log(e);
+        }
+    };
+    this.loadAudioFile = function(callback,type='file',url=''){
+        switch(type){
+            case 'url': 
+                var request = new XMLHttpRequest();
+                request.open('GET', url, true);
+                request.responseType = 'arraybuffer';
+                request.onload = function(){
+                    system.audio.context.decodeAudioData(this.response, function(data){
+                        callback({
+                            buffer:data,
+                            name:(url.split('/')).pop(),
+                            duration:data.duration,
+                        });
+                    }, function(e){console.warn("Error with decoding audio data" + e.err);});
+                }
+                request.send();
+            break;
+            case 'file': default:
+                var inputObject = document.createElement('input');
+                inputObject.type = 'file';
+                inputObject.onchange = function(){
+                    var file = this.files[0];
+                    var fileReader = new FileReader();
+                    fileReader.readAsArrayBuffer(file);
+                    fileReader.onload = function(data){
+                        system.audio.context.decodeAudioData(data.target.result, function(buffer){
+                            callback({
+                                buffer:buffer,
+                                name:file.name,
+                                duration:buffer.duration,
+                            });
+                        });
+                    }
+                };
+                document.body.appendChild(inputObject);
+                inputObject.click();
+            break;
+        }
+    };
+    this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}){
+        var waveform = audioBuffer.getChannelData(0);
+        var channelCount = audioBuffer.numberOfChannels;
+
+        bounds.start = bounds.start ? bounds.start : 0;
+        bounds.end = bounds.end ? bounds.end : 1;
+        var resolution = 10000;
+        var start = audioBuffer.length*bounds.start;
+        var end = audioBuffer.length*bounds.end;
+        var step = (end - start)/resolution;
+
+        var outputArray = [];
+        for(var a = start; a < end; a+=Math.round(step)){
+            outputArray.push( 
+                system.utility.math.largestValueFound(
+                    waveform.slice(a, a+Math.round(step))
+                )
+            );
+        }
+
+        return outputArray;
+    };
+    this.loadBuffer = function(context, data, destination, onended){
+        var temp = context.createBufferSource();
+        temp.buffer = data;
+        temp.connect(destination);
+        temp.onended = onended;
+        return temp;
+    };
+};
+this.math = new function(){
+    this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
+    this.largestValueFound = function(array){
+        return array.reduce(function(max,current){
+            return Math.abs(max) > Math.abs(current) ? max : current;
+        });
+    };
+    this.polar2cartesian = function(angle,distance){
+        return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
+    };
+    this.cartesian2polar = function(x,y){
+        var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
+
+        if(x === 0 ){
+            if(y === 0){ang = 0;}
+            else if(y > 0){ang = 0.5*Math.PI;}
+            else{ang = 1.5*Math.PI;}
+        }
+        else if(y === 0 ){
+            if(x >= 0){ang = 0;}else{ang = Math.PI;}
+        }
+        else if(x >= 0){ ang = Math.atan(y/x); }
+        else{ /*if(x < 0)*/ ang = Math.atan(y/x) + Math.PI; }
+
+        return {'dis':dis,'ang':ang};
+    };
+    this.boundingBoxFromPoints = function(points){
+        var left = points[0].x; var right = points[0].x;
+        var top = points[0].y;  var bottom = points[0].y;
+
+        for(var a = 1; a < points.length; a++){
+            if( points[a].x < left ){ left = points[a].x; }
+            else if(points[a].x > right){ right = points[a].x; }
+
+            if( points[a].y < top ){ top = points[a].y; }
+            else if(points[a].y > bottom){ bottom = points[a].y; }
+        }
+
+        return [{x:right,y:bottom},{x:left,y:top}];
+    };
+    this.intersectionOfTwoLineSegments = function(segment1, segment2){
+        var denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
+        if(denominator == 0){return null;}
+
+        var u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+        var u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;;
+        return {
+            'x':      (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
+            'y':      (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
+            'inSeg1': (u1 >= 0 && u1 <= 1),
+            'inSeg2': (u2 >= 0 && u2 <= 1)
+        };
+    };
+    this.seconds2time = function(seconds){
+        var result = {h:0, m:0, s:0};
+        
+        result.h = Math.floor(seconds/3600);
+        seconds = seconds - result.h*3600;
+
+        result.m = Math.floor(seconds/60);
+        seconds = seconds - result.m*60;
+
+        result.s = seconds;
+
+        return result;
+    };
+    this.detectOverlap = function(poly_a, poly_b, box_a, box_b){
+        var debugMode = false;
+
+        // Quick Judgement with bounding boxes
+        // (when bounding boxes are provided)
+        if(box_a && box_b){
+
+            //sort boxes ("largest points" should be first)
+                if(box_a[0].x < box_a[1].x){
+                    if(debugMode){console.log('bounding box a sorting required');}
+                    var temp = box_a[0];
+                    box_a[0] = box_a[1];
+                    box_a[1] = temp;
+                }
+                if(box_b[0].x < box_b[1].x){
+                    if(debugMode){console.log('bounding box b sorting required');}
+                    var temp = box_b[0];
+                    box_b[0] = box_b[1];
+                    box_b[1] = temp;
+                }
+
+            if(
+                (box_a[0].y < box_b[1].y) || //a_0_y (a's highest point) is below b_1_y (b's lowest point)
+                (box_a[1].y > box_b[0].y) || //a_1_y (a's lowest point) is above b_0_y (b's highest point)
+                (box_a[0].x < box_b[1].x) || //a_0_x (a's leftest point) is right of b_1_x (b's rightest point)
+                (box_a[1].x > box_b[0].x)    //a_1_x (a's rightest point) is left of b_0_x (b's leftest point)
+            ){if(debugMode){console.log('clearly separate shapes');}return false;}
+        }
+
+        // Detailed Judgement
+            function distToSegmentSquared(p, a, b){
+                function distanceBetweenTwoPoints(a, b){ return Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2) }
+
+                var lineLength = distanceBetweenTwoPoints(a, b);               //get length of line segment
+                if (lineLength == 0){return distanceBetweenTwoPoints(p, a);}   //if line segment length is zero, just return the distance between a line point and the point
+                
+                var t = ((p.x-a.x) * (b.x-a.x) + (p.y-a.y) * (b.y-a.y)) / lineLength;
+                t = Math.max(0, Math.min(1, t));
+                return distanceBetweenTwoPoints(p, { 'x': a.x + t*(b.x-a.x), 'y': a.y + t*(b.y-a.y) });
+            }
+            function sideOfLineSegment(p, a, b){
+                //get side that the point is on ('true' is 'inside')
+                return ((b.x-a.x)*(p.y-a.y) - (p.x-a.x)*(b.y-a.y))>0;
+            }
+
+
+            //a point from A is in B
+            // run through each point of poly 'A' and each side of poly 'B'
+            // for each point in A, find the closest side of B and determine what side that point is on
+            // if any point of A is inside B, declare an overlap
+            var poly_b_clone = Object.assign([], poly_b); //because of referencing 
+            poly_b_clone.push(poly_b[0]);
+            for(var b = 0; b < poly_a.length; b++){
+                var tempSmallestDistance = {'dis':Number.MAX_SAFE_INTEGER,'side':false};
+                for(var a = 0; a < poly_b_clone.length-1; a++){
+                    var linePoint_1 = {'x':poly_b_clone[a].x,'y':poly_b_clone[a].y};
+                    var linePoint_2 = {'x':poly_b_clone[a+1].x,'y':poly_b_clone[a+1].y};
+                    var point = {'x':poly_a[b].x,'y':poly_a[b].y};
+                        //reformat data into line-segment points and the point of interest
+
+                    var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
+                        if(dis==0){if(debugMode){console.log('oh hay, collision - AinB');}return true; }
+                        //get distance from point to line segment
+                        //if zero, it's a collision and we can end early
+
+                    if( tempSmallestDistance.dis > dis ){ 
+                        //if this distance is the smallest found in this round, save the distance and side
+                        tempSmallestDistance.dis = dis; 
+                        tempSmallestDistance.side = sideOfLineSegment(point, linePoint_1, linePoint_2);
+                    }
+                }
+                if( tempSmallestDistance.side ){if(debugMode){console.log('a point from A is in B');}return true;}
+            }
+            //a point from B is in A
+            // same as above, but the other way around
+            var poly_a_clone = Object.assign([], poly_a); //because of referencing 
+            poly_a_clone.push(poly_a[0]);
+            for(var b = 0; b < poly_b.length; b++){
+                var tempSmallestDistance = {'dis':Number.MAX_SAFE_INTEGER,'side':false};
+                for(var a = 0; a < poly_a_clone.length-1; a++){
+                    var linePoint_1 = {'x':poly_a_clone[a].x,'y':poly_a_clone[a].y};
+                    var linePoint_2 = {'x':poly_a_clone[a+1].x,'y':poly_a_clone[a+1].y};
+                    var point = {'x':poly_a[b].x,'y':poly_a[b].y};
+                        //reformat data into line-segment points and the point of interest
+
+                    var dis = distToSegmentSquared(point,linePoint_1,linePoint_2);
+                        if(dis==0){if(debugMode){console.log('oh hay, line collision - BinA');}return true; }
+                        //get distance from point to line segment
+                        //if zero, it's a collision and we can end early
+
+                    if( tempSmallestDistance.dis > dis ){ 
+                        //if this distance is the smallest found in this round, save the distance and side
+                        tempSmallestDistance.dis = dis; 
+                        tempSmallestDistance.side = sideOfLineSegment(point, linePoint_1, linePoint_2);
+                        testTemp = point;
+                        testTempA = linePoint_1;
+                        testTempB = linePoint_2;
+                    }
+                }
+                if( tempSmallestDistance.side ){if(debugMode){console.log('a point from B is in A');}return true;}
+            }
+
+            //side intersection
+            // compare each side of each poly to every other side, looking for lines that
+            // cross each other. If a crossing is found at any point; return true
+                for(var a = 0; a < poly_a_clone.length-1; a++){
+                    for(var b = 0; b < poly_b_clone.length-1; b++){
+                        var data = this.intersectionOfTwoLineSegments(poly_a_clone, poly_b_clone);
+                        if(!data){continue;}
+                        if(data.inSeg1 && data.inSeg2){if(debugMode){console.log('point intersection at ' + data.x + ' ' + data.y);}return true;}
+                    }
+                }
+
+        return false;
+    };
+    this.normalizeStretchArray = function(array){
+        //discover the largest number
+            var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
+
+        //devide everything by this largest number, making everything a ratio of this value 
+            var dux = Math.abs(array[biggestIndex]);
+            array = array.map(x => x / dux);
+
+        //stretch the other side of the array to meet 0 or 1
+            if(array[0] == 0 && array[array.length-1] == 1){return array;}
+            var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
+            array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
+
+        return array;
+    };
+    this.curvePoint = new function(){
+        this.linear = function(x=0.5, start=0, end=1){
+            return x *(end-start)+start;
+        };
+        this.sin = function(x=0.5, start=0, end=1){
+            return Math.sin(Math.PI/2*x) *(end-start)+start;
+        };
+        this.cos = function(x=0.5, start=0, end=1){
+            return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
+        };
+        this.s = function(x=0.5, start=0, end=1, sharpness=8){
+            var temp = system.utility.math.normalizeStretchArray([
+                1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
+                1/( 1 + Math.exp(-sharpness*(x-0.5)) ),
+                1/( 1 + Math.exp(-sharpness*(1-0.5)) ),
+            ]);
+            return temp[1] *(end-start)+start;
+        };
+        this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
+            var temp = system.utility.math.normalizeStretchArray([
+                (Math.exp(sharpness*0)-1)/(Math.E-1),
+                (Math.exp(sharpness*x)-1)/(Math.E-1),
+                (Math.exp(sharpness*1)-1)/(Math.E-1),
+            ]);
+            return temp[1] *(end-start)+start;
+        };
+    };
+    this.curveGenerator = new function(){
+        this.linear = function(stepCount=2, start=0, end=1){
+            stepCount = Math.abs(stepCount)-1; var outputArray = [0];
+            for(var a = 1; a < stepCount; a++){ 
+                outputArray.push(a/stepCount);
+            }
+            outputArray.push(1); 
+
+            var mux = end-start;
+            for(var a = 0 ; a < outputArray.length; a++){
+                outputArray[a] = outputArray[a]*mux + start;
+            }
+
+            return outputArray;
+        };
+        this.sin = function(stepCount=2, start=0, end=1){
+            stepCount = Math.abs(stepCount) -1;
+            var outputArray = [0];
+            for(var a = 1; a < stepCount; a++){ 
+                outputArray.push(
+                    Math.sin( Math.PI/2*(a/stepCount) )
+                );
+            }
+            outputArray.push(1); 
+
+            var mux = end-start;
+            for(var a = 0 ; a < outputArray.length; a++){
+                outputArray[a] = outputArray[a]*mux + start;
+            }
+
+            return outputArray;		
+        };
+        this.cos = function(stepCount=2, start=0, end=1){
+            stepCount = Math.abs(stepCount) -1;
+            var outputArray = [0];
+            for(var a = 1; a < stepCount; a++){ 
+                outputArray.push(
+                    1 - Math.cos( Math.PI/2*(a/stepCount) )
+                );
+            }
+            outputArray.push(1); 
+
+            var mux = end-start;
+            for(var a = 0 ; a < outputArray.length; a++){
+                outputArray[a] = outputArray[a]*mux + start;
+            }
+
+            return outputArray;	
+        };
+        this.s = function(stepCount=2, start=0, end=1, sharpness=8){
+            if(sharpness == 0){sharpness = 1/1000000;}
+
+            var curve = [];
+            for(var a = 0; a < stepCount; a++){
+                curve.push(
+                    1/( 1 + Math.exp(-sharpness*((a/stepCount)-0.5)) )
+                );
+            }
+
+            var outputArray = system.utility.math.normalizeStretchArray(curve);
+
+            var mux = end-start;
+            for(var a = 0 ; a < outputArray.length; a++){
+                outputArray[a] = outputArray[a]*mux + start;
+            }
+
+            return outputArray;
+        };
+        this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
+            var stepCount = stepCount-1;
+            var outputArray = [];
+            
+            for(var a = 0; a <= stepCount; a++){
+                outputArray.push( (Math.exp(sharpness*(a/stepCount))-1)/(Math.E-1) ); // Math.E == Math.exp(1)
+            }
+
+            outputArray = system.utility.math.normalizeStretchArray(outputArray);
+
+            var mux = end-start;
+            for(var a = 0 ; a < outputArray.length; a++){
+                outputArray[a] = outputArray[a]*mux + start;
+            }
+
+            return outputArray;
+        };
+    };
+    this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
+        var mux = (d - start)/(end - start);
+        if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
+        return mux*realLength;
+    };
+    this.lineCorrecter = function(points, maxheight, maxwidth){
+        //this function detects line points that would exceed the view area, then replaces them with clipped points
+        //(only corrects points that exceed the y limits. Those that exceed the X limits are simply dropped)
+
+        if( points.x1 < 0 || points.x2 < 0 ){ return; }
+        if( points.x1 > maxwidth || points.x2 > maxwidth ){ return; }
+
+        if( points.y1 < 0 && points.y2 < 0 ){ return; }
+        if( points.y1 > maxheight && points.y2 > maxheight ){ return; }
+
+        var slope = (points.y2 - points.y1)/(points.x2 - points.x1);
+
+        if( points.y1 < 0 ){ points.x1 = (0 - points.y1 + slope*points.x1)/slope; points.y1 = 0; }
+        else if( points.y2 < 0 ){ points.x2 = (0 - points.y2 + slope*points.x2)/slope; points.y2 = 0; }
+        if( points.y1 > maxheight ){ points.x1 = (maxheight - points.y1 + slope*points.x1)/slope; points.y1 = maxheight; }
+        else if( points.y2 > maxheight ){ points.x2 = (maxheight - points.y2 + slope*points.x2)/slope; points.y2 = maxheight; }
+
+        return points;
+    };
+};
+this.misc = new function(){
+    this.padString = function(string,length,padding=' '){
+        if(padding.length<1){return string;}
+        string = ''+string;
+
+        while(string.length < length){
+            string = padding + string;
+        }
+
+        return string;
+    };
+    this.blendColours = function(rgba_1,rgba_2,ratio){
+        //extract
+            function extract(rgba){
+                rgba = rgba.split(',');
+                rgba[0] = rgba[0].replace('rgba(', '');
+                rgba[3] = rgba[3].replace(')', '');
+                return rgba.map(function(a){return parseFloat(a);})
+            }
+            rgba_1 = extract(rgba_1);
+            rgba_2 = extract(rgba_2);
+
+        //blend
+            var rgba_out = [];
+            for(var a = 0; a < rgba_1.length; a++){
+                rgba_out[a] = (1-ratio)*rgba_1[a] + ratio*rgba_2[a];
+            }
+
+        //pack
+            return 'rgba('+rgba_out[0]+','+rgba_out[1]+','+rgba_out[2]+','+rgba_out[3]+')';            
+    };
+    this.multiBlendColours = function(rgbaList,ratio){
+        //special cases
+            if(ratio == 0){return rgbaList[0];}
+            if(ratio == 1){return rgbaList[rgbaList.length-1];}
+        //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
+            var p = ratio*(rgbaList.length-1);
+            return system.utility.misc.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+    };
+    this.compressString = function(string){return system.utility.thirdparty.lzString.compress(string);};
+    this.decompressString = function(string){return system.utility.thirdparty.lzString.decompress(string);};
+    this.serialize = function(data,compress=true){
+        function getType(obj){
+            return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+        }
+    
+        var data = JSON.stringify(data, function(key, value){
+    
+            //preserve types that JSON.stringify can't handle as "unique types"
+            switch(getType(value)){
+                case 'function':
+                    return {__uniqueType:'function', __value:value.toString(), __name:value.name};
+                case 'arraybuffer': 
+                    return {__uniqueType:'arraybuffer', __value:btoa(String.fromCharCode(new Uint8Array(value)))}
+                case 'audiobuffer':
+                    var channelData = [];
+                    for(var a = 0; a < value.numberOfChannels; a++){
+                        channelData.push( Array.from(value.getChannelData(a)) );
+                    }
+                    return {
+                        __uniqueType:'audiobuffer', 
+                        __channelData:channelData, 
+                        __sampleRate:value.sampleRate,
+                        __numberOfChannels:value.numberOfChannels,
+                        __length:value.length
+                    };
+                break;
+                default: return value;
+            }
+    
+        });
+    
+        if(compress){ data = system.utility.misc.compressString(data); }
+        return data;
+    };
+    this.unserialize = function(data,compressed=true){
+        if(data === undefined){return undefined;}
+    
+        if(compressed){ data = system.utility.misc.decompressString(data); }
+    
+        return JSON.parse(data, function(key, value){
+    
+            //recover unique types
+            if(typeof value == 'object' && value != null && '__uniqueType' in value){
+                switch(value.__uniqueType){
+                    case 'function':
+                        var functionHead = value.__value.substring(0,value.__value.indexOf('{'));
+                        functionHead = functionHead.substring(functionHead.indexOf('(')+1, functionHead.lastIndexOf(')'));
+                        var functionBody = value.__value.substring(value.__value.indexOf('{')+1, value.__value.lastIndexOf('}'));
+    
+                        value = Function(functionHead,functionBody);
+                    break;
+                    case 'arraybuffer':
+                        value = atob(value.__value);
+                        for(var a = 0; a < value.length; a++){ value[a] = value[a].charCodeAt(0); }
+                        value = new ArrayBuffer(value);
+                    break;
+                    case 'audiobuffer':
+                        var audioBuffer = system.audio.context.createBuffer(value.__numberOfChannels, value.__length, value.__sampleRate);
+    
+                        for(var a = 0; a < audioBuffer.numberOfChannels; a++){
+                            workingBuffer = audioBuffer.getChannelData(a);
+                            for(var i = 0; i < audioBuffer.length; i++){
+                                workingBuffer[i] = value.__channelData[a][i];
+                            }
+                        }
+    
+                        value = audioBuffer;
+                    break;
+                    default: value = value.__value;
+                }
+            }
+    
+            return value;
+        });
+    };
+    this.openFile = function(callback,readAsType='readAsBinaryString'){
+        var i = document.createElement('input');
+        i.type = 'file';
+        i.onchange = function(){
+            var f = new FileReader();
+            switch(readAsType){
+                case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
+                case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
+            }
+            f.onloadend = function(){ 
+                if(callback){callback(f.result);}
+            }
+        };
+        i.click();
+    };
+    this.printFile = function(filename,data){
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([data]));
+        a.download = filename;
+        a.click();
+    };
+    this.openURL = function(url){
+        window.open( url, '_blank');
+    };
+};
+this.thirdparty = new function(){
+    this.lzString = (function(){
+        // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
+        // This work is free. You can redistribute it and/or modify it
+        // under the terms of the WTFPL, Version 2
+        // For more information see LICENSE.txt or http://www.wtfpl.net/
+        //
+        // For more information, the home page:
+        // http://pieroxy.net/blog/pages/lz-string/testing.html
+        //
+        // LZ-based compression algorithm, version 1.4.4
+        //
+        // Modified by Metasophiea <metasophiea@gmail.com>
+        var f = String.fromCharCode;
+        var keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+        var baseReverseDic = {};
+        
+        function getBaseValue(alphabet, character) {
+            if(!baseReverseDic[alphabet]){
+                baseReverseDic[alphabet] = {};
+                for(var i = 0 ; i < alphabet.length; i++){
+                    baseReverseDic[alphabet][alphabet.charAt(i)] = i;
+                }
+            }	
+            return baseReverseDic[alphabet][character];
+        }
+        
+        var LZString = {
+            //compress into a string that is URI encoded
+            compress: function (input) {
+                if(input == null){return "";}
+                return LZString._compress(input, 6, function(a){return keyStrUriSafe.charAt(a);});
+            },
+            
+            //decompress from an output of compress which was URI encoded
+            decompress:function (input) {
+                if(input == null){return "";}
+                if(input == ""){return null;}
+                input = input.replace(/ /g, "+");
+                return LZString._decompress(input.length, 32, function(index){ return getBaseValue(keyStrUriSafe, input.charAt(index)); });
+            },
+            
+            _compress: function(uncompressed, bitsPerChar, getCharFromInt){
+                if (uncompressed == null) return "";
+                var i, value,
+                    context_dictionary= {},
+                    context_dictionaryToCreate= {},
+                    context_c="",
+                    context_wc="",
+                    context_w="",
+                    context_enlargeIn= 2, // Compensate for the first entry which should not count
+                    context_dictSize= 3,
+                    context_numBits= 2,
+                    context_data=[],
+                    context_data_val=0,
+                    context_data_position=0,
+                    ii;
+            
+                for (ii = 0; ii < uncompressed.length; ii += 1) {
+                context_c = uncompressed.charAt(ii);
+                if (!Object.prototype.hasOwnProperty.call(context_dictionary,context_c)) {
+                    context_dictionary[context_c] = context_dictSize++;
+                    context_dictionaryToCreate[context_c] = true;
+                }
+            
+                context_wc = context_w + context_c;
+                if (Object.prototype.hasOwnProperty.call(context_dictionary,context_wc)) {
+                    context_w = context_wc;
+                } else {
+                    if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+                    if (context_w.charCodeAt(0)<256) {
+                        for (i=0 ; i<context_numBits ; i++) {
+                        context_data_val = (context_data_val << 1);
+                        if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                        } else {
+                            context_data_position++;
+                        }
+                        }
+                        value = context_w.charCodeAt(0);
+                        for (i=0 ; i<8 ; i++) {
+                        context_data_val = (context_data_val << 1) | (value&1);
+                        if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                        } else {
+                            context_data_position++;
+                        }
+                        value = value >> 1;
+                        }
+                    } else {
+                        value = 1;
+                        for (i=0 ; i<context_numBits ; i++) {
+                        context_data_val = (context_data_val << 1) | value;
+                        if (context_data_position ==bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                        } else {
+                            context_data_position++;
+                        }
+                        value = 0;
+                        }
+                        value = context_w.charCodeAt(0);
+                        for (i=0 ; i<16 ; i++) {
+                        context_data_val = (context_data_val << 1) | (value&1);
+                        if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                        } else {
+                            context_data_position++;
+                        }
+                        value = value >> 1;
+                        }
+                    }
+                    context_enlargeIn--;
+                    if (context_enlargeIn == 0) {
+                        context_enlargeIn = Math.pow(2, context_numBits);
+                        context_numBits++;
+                    }
+                    delete context_dictionaryToCreate[context_w];
+                    } else {
+                    value = context_dictionary[context_w];
+                    for (i=0 ; i<context_numBits ; i++) {
+                        context_data_val = (context_data_val << 1) | (value&1);
+                        if (context_data_position == bitsPerChar-1) {
+                        context_data_position = 0;
+                        context_data.push(getCharFromInt(context_data_val));
+                        context_data_val = 0;
+                        } else {
+                        context_data_position++;
+                        }
+                        value = value >> 1;
+                    }
+            
+            
+                    }
+                    context_enlargeIn--;
+                    if (context_enlargeIn == 0) {
+                    context_enlargeIn = Math.pow(2, context_numBits);
+                    context_numBits++;
+                    }
+                    // Add wc to the dictionary.
+                    context_dictionary[context_wc] = context_dictSize++;
+                    context_w = String(context_c);
+                }
+                }
+            
+                // Output the code for w.
+                if (context_w !== "") {
+                if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+                    if (context_w.charCodeAt(0)<256) {
+                    for (i=0 ; i<context_numBits ; i++) {
+                        context_data_val = (context_data_val << 1);
+                        if (context_data_position == bitsPerChar-1) {
+                        context_data_position = 0;
+                        context_data.push(getCharFromInt(context_data_val));
+                        context_data_val = 0;
+                        } else {
+                        context_data_position++;
+                        }
+                    }
+                    value = context_w.charCodeAt(0);
+                    for (i=0 ; i<8 ; i++) {
+                        context_data_val = (context_data_val << 1) | (value&1);
+                        if (context_data_position == bitsPerChar-1) {
+                        context_data_position = 0;
+                        context_data.push(getCharFromInt(context_data_val));
+                        context_data_val = 0;
+                        } else {
+                        context_data_position++;
+                        }
+                        value = value >> 1;
+                    }
+                    } else {
+                    value = 1;
+                    for (i=0 ; i<context_numBits ; i++) {
+                        context_data_val = (context_data_val << 1) | value;
+                        if (context_data_position == bitsPerChar-1) {
+                        context_data_position = 0;
+                        context_data.push(getCharFromInt(context_data_val));
+                        context_data_val = 0;
+                        } else {
+                        context_data_position++;
+                        }
+                        value = 0;
+                    }
+                    value = context_w.charCodeAt(0);
+                    for (i=0 ; i<16 ; i++) {
+                        context_data_val = (context_data_val << 1) | (value&1);
+                        if (context_data_position == bitsPerChar-1) {
+                        context_data_position = 0;
+                        context_data.push(getCharFromInt(context_data_val));
+                        context_data_val = 0;
+                        } else {
+                        context_data_position++;
+                        }
+                        value = value >> 1;
+                    }
+                    }
+                    context_enlargeIn--;
+                    if (context_enlargeIn == 0) {
+                    context_enlargeIn = Math.pow(2, context_numBits);
+                    context_numBits++;
+                    }
+                    delete context_dictionaryToCreate[context_w];
+                } else {
+                    value = context_dictionary[context_w];
+                    for (i=0 ; i<context_numBits ; i++) {
+                    context_data_val = (context_data_val << 1) | (value&1);
+                    if (context_data_position == bitsPerChar-1) {
+                        context_data_position = 0;
+                        context_data.push(getCharFromInt(context_data_val));
+                        context_data_val = 0;
+                    } else {
+                        context_data_position++;
+                    }
+                    value = value >> 1;
+                    }
+            
+            
+                }
+                context_enlargeIn--;
+                if (context_enlargeIn == 0) {
+                    context_enlargeIn = Math.pow(2, context_numBits);
+                    context_numBits++;
+                }
+                }
+            
+                // Mark the end of the stream
+                value = 2;
+                for (i=0 ; i<context_numBits ; i++) {
+                context_data_val = (context_data_val << 1) | (value&1);
+                if (context_data_position == bitsPerChar-1) {
+                    context_data_position = 0;
+                    context_data.push(getCharFromInt(context_data_val));
+                    context_data_val = 0;
+                } else {
+                    context_data_position++;
+                }
+                value = value >> 1;
+                }
+            
+                // Flush the last char
+                while (true) {
+                context_data_val = (context_data_val << 1);
+                if (context_data_position == bitsPerChar-1) {
+                    context_data.push(getCharFromInt(context_data_val));
+                    break;
+                }
+                else context_data_position++;
+                }
+                return context_data.join('');
+            },
+            
+            _decompress: function(length, resetValue, getNextValue){
+                var dictionary = [],
+                    next,
+                    enlargeIn = 4,
+                    dictSize = 4,
+                    numBits = 3,
+                    entry = "",
+                    result = [],
+                    i,
+                    w,
+                    bits, resb, maxpower, power,
+                    c,
+                    data = {val:getNextValue(0), position:resetValue, index:1};
+            
+                for (i = 0; i < 3; i += 1) {
+                dictionary[i] = i;
+                }
+            
+                bits = 0;
+                maxpower = Math.pow(2,2);
+                power=1;
+                while (power!=maxpower) {
+                resb = data.val & data.position;
+                data.position >>= 1;
+                if (data.position == 0) {
+                    data.position = resetValue;
+                    data.val = getNextValue(data.index++);
+                }
+                bits |= (resb>0 ? 1 : 0) * power;
+                power <<= 1;
+                }
+            
+                switch (next = bits) {
+                case 0:
+                    bits = 0;
+                    maxpower = Math.pow(2,8);
+                    power=1;
+                    while (power!=maxpower) {
+                        resb = data.val & data.position;
+                        data.position >>= 1;
+                        if (data.position == 0) {
+                        data.position = resetValue;
+                        data.val = getNextValue(data.index++);
+                        }
+                        bits |= (resb>0 ? 1 : 0) * power;
+                        power <<= 1;
+                    }
+                    c = f(bits);
+                    break;
+                case 1:
+                    bits = 0;
+                    maxpower = Math.pow(2,16);
+                    power=1;
+                    while (power!=maxpower) {
+                        resb = data.val & data.position;
+                        data.position >>= 1;
+                        if (data.position == 0) {
+                        data.position = resetValue;
+                        data.val = getNextValue(data.index++);
+                        }
+                        bits |= (resb>0 ? 1 : 0) * power;
+                        power <<= 1;
+                    }
+                    c = f(bits);
+                    break;
+                case 2:
+                    return "";
+                }
+                dictionary[3] = c;
+                w = c;
+                result.push(c);
+                while (true) {
+                if (data.index > length) {
+                    return "";
+                }
+            
+                bits = 0;
+                maxpower = Math.pow(2,numBits);
+                power=1;
+                while (power!=maxpower) {
+                    resb = data.val & data.position;
+                    data.position >>= 1;
+                    if (data.position == 0) {
+                    data.position = resetValue;
+                    data.val = getNextValue(data.index++);
+                    }
+                    bits |= (resb>0 ? 1 : 0) * power;
+                    power <<= 1;
+                }
+            
+                switch (c = bits) {
+                    case 0:
+                    bits = 0;
+                    maxpower = Math.pow(2,8);
+                    power=1;
+                    while (power!=maxpower) {
+                        resb = data.val & data.position;
+                        data.position >>= 1;
+                        if (data.position == 0) {
+                        data.position = resetValue;
+                        data.val = getNextValue(data.index++);
+                        }
+                        bits |= (resb>0 ? 1 : 0) * power;
+                        power <<= 1;
+                    }
+            
+                    dictionary[dictSize++] = f(bits);
+                    c = dictSize-1;
+                    enlargeIn--;
+                    break;
+                    case 1:
+                    bits = 0;
+                    maxpower = Math.pow(2,16);
+                    power=1;
+                    while (power!=maxpower) {
+                        resb = data.val & data.position;
+                        data.position >>= 1;
+                        if (data.position == 0) {
+                        data.position = resetValue;
+                        data.val = getNextValue(data.index++);
+                        }
+                        bits |= (resb>0 ? 1 : 0) * power;
+                        power <<= 1;
+                    }
+                    dictionary[dictSize++] = f(bits);
+                    c = dictSize-1;
+                    enlargeIn--;
+                    break;
+                    case 2:
+                    return result.join('');
+                }
+            
+                if (enlargeIn == 0) {
+                    enlargeIn = Math.pow(2, numBits);
+                    numBits++;
+                }
+            
+                if (dictionary[c]) {
+                    entry = dictionary[c];
+                } else {
+                    if (c === dictSize) {
+                    entry = w + w.charAt(0);
+                    } else {
+                    return null;
+                    }
+                }
+                result.push(entry);
+            
+                // Add w+entry[0] to the dictionary.
+                dictionary[dictSize++] = w + entry.charAt(0);
+                enlargeIn--;
+            
+                w = entry;
+            
+                if (enlargeIn == 0) {
+                    enlargeIn = Math.pow(2, numBits);
+                    numBits++;
+                }
+            
+                }
+            }
+        };
+        return LZString;
+    })();
+};
+this.experimental = new function(){
+};

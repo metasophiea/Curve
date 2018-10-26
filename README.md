@@ -20,7 +20,7 @@ You can use the 'comp' function in the compliation folder to quickly build toget
 The command uses a little JavaScript compiler written in Python3 called Gravity, which can go through JS files looking for commands and execute them, ultimatly producing a single JS file. So far there's only one command - a straightforward include - but that's all I really need right now. The 'heavyComp' is used to produce "production" versions of the code. This version uses gravity to build together the program, then Clousure to pack it all up. This version is used in 'docs/index.html' and the demo links below.
 
 ## Compatibility
-Though I'd really like it to work everywhere, currently the only browser that seems to be able to handle this is Chrome. Safari covers alot of things, but has trouble with a few of the WebAudio elements, and Firefox seems to be having problems with the SVG... honestly I'm not totally sure, and to be fair Chrome struggles with some things, but it's the best we have currently
+Though I'd really like it to work everywhere, currently the only browser that seems to be able to handle this is Chrome. Safari covers alot of things, but has trouble with a few of the WebAudio elements, and Firefox seems to be having problems with the SVG... honestly I'm not totally sure, and to be fair Chrome struggles with some things, but it's the best we have currently. I thinking about using Electron instead, which could fore user's experience to be more consistent..we'll see
 
 ## Demos
 - [Demo 1](https://metasophiea.com/curve?demo=1) 

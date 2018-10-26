@@ -1,6 +1,6 @@
 echo "running Gravity"
 dir=$(dirname "$(cd "$(dirname "$0")" && pwd)")
-"$dir"/compliation/gravity "$dir"/main main.js docs/workspace.js
+"$dir"/compilation/gravity "$dir"/main main.js docs/workspace.js
 if [ $? -ne 0 ]; then
     echo "";
     echo "Gravity has encountered an error; bailing";
@@ -10,7 +10,7 @@ echo "";
 
 
 echo "running Closure"
-java -jar "$dir"/compliation/closure-compiler* --js_output_file=docs/workspace.min.js docs/workspace.js
+java -jar "$dir"/compilation/closure-compiler* --js_output_file=docs/workspace.min.js docs/workspace.js
 if [ $? -ne 0 ]; then
     echo "";
     echo "Closure has encountered an error; bailing";
