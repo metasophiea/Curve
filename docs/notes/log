@@ -1,6 +1,32 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-10-30
+  : yesterday and today; I've been working on a canvas-only version of workspace
+    It's currently only in the experiment area, but things are going well.
+    Currently; I have what I'm calling the 'core' of the rendering system mostly
+    down, which basically equates to the SVG system of the current main version,
+    and bits of the "system".
+    Development is ongoing, and I hope to incorporate much of the code that is 
+    already created; though this is essentially an overhaul of the entire app,
+    so, development won't be super quick. Could potentially allow for future
+    graphical acceleration changes to be made in future though
+
+    canvas verson currently has:
+    - core rendering object attached to canvas using 'animation frame' 
+      rendering
+    - rect, poly, image and dot elements; along with a 'group' element for
+      grouping (what a coincidence)
+    - image data caching
+    - canvas element section from XY position
+    - automatic canvas sizing (using custom html elememnt attributes)
+    - 'unseen' element non-rendering
+    - some stat collection on canvas performance (currently just frame rate)
+    - element grouping object, which contains all shapes to be rendered
+    - mouse interface (missing alot of functionality however)
+    - panning and zooming (functional when angled too)
+
+
 2018-10-18
-  - split utiltiy up into it's own little folder of code
+  - split utility up into it's own little folder of code
 
 
 2018-10-14

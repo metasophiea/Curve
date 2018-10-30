@@ -860,7 +860,7 @@
                     };
                     this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}){
                         var waveform = audioBuffer.getChannelData(0);
-                        var channelCount = audioBuffer.numberOfChannels;
+                        // var channelCount = audioBuffer.numberOfChannels;
                 
                         bounds.start = bounds.start ? bounds.start : 0;
                         bounds.end = bounds.end ? bounds.end : 1;
