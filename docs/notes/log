@@ -1,4 +1,55 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-11-01
+  - canvas experiment
+    - expanded element.recompute to create bounding boxes for groups
+    - expanded element.recompute to add parent elements to element (if parnet is
+      undefined, it means that this element is at the top of the tree, making
+      the parent the arrangement)
+    - added element.getPerent and element.getChildren functions
+    - added element.getArrangement function
+    - added add and remove functions (which now perform the element.recompute
+      function when elements are added or removed, instead of the render
+      function)
+    - replaced context.translate in element.draw.rect with custom a function for
+      performing the same task. Things are a bit faster now
+    - no-render judgement moved so now it's the first thing that happens when any
+      element is rendered
+    - began work on new element.recompute code. Going well but needs testing
+
+  findings
+  - the framerate is usually around 50fps on my laptop, but drops to 30 or so
+    when I add 10,000 elements to the scene... I'm not sure if this will be a
+    problem or not. Upon inspection; we're spending alot of time 'translating'
+    the canvas. Perhaps the development of a drawing method that does not
+    require this function is in order. Luckily, doing so won't effect the
+    operation of the rest of the system in any way.
+              - removes context.translate from element.draw.rect -
+    things are faster now, sitting at around 47 when adding 10,000 elements.
+    More work still needed (perhaps replacing the internals of rect with calls
+    to poly? No canvas rotation needed that way)
+              - tests with lots of polys -
+    30fps. No translate there to remove either. Tell you what though; 10,000 
+    polys off screen (and thus not being rendered)? ~52fps
+
+  bugs
+  - element.recompute isn't recomputing individual elements correctly
+    (currently, one needs to compute from the arrangement) Need to expand it so
+    that it goes up through the tree collecting x, y and angle offsets; returns
+    with these calculated then computes all the lower elements
+    (adding lots of elememts is quite slow)
+
+2018-10-31
+  - canvas experiment
+    - rearranged the functions a little
+    - renamed 'zoom' to 'scale' because it was bugging me
+    - added rendered element getters/setters (none functional)
+    - added element bounding box and points computer (stripping out this
+      functionality from the 'renderElement' function)(in future, this function 
+      will only be run when edits are made to the element arrangement list
+      itself (and even then, only the elements that have been changed), instead
+      of in every render loop)
+
+
 2018-10-30
   : yesterday and today; I've been working on a canvas-only version of workspace
     It's currently only in the experiment area, but things are going well.
@@ -10,19 +61,21 @@
     so, development won't be super quick. Could potentially allow for future
     graphical acceleration changes to be made in future though
 
-    canvas verson currently has:
+    canvas version currently has:
     - core rendering object attached to canvas using 'animation frame' 
       rendering
     - rect, poly, image and dot elements; along with a 'group' element for
       grouping (what a coincidence)
     - image data caching
     - canvas element section from XY position
-    - automatic canvas sizing (using custom html elememnt attributes)
+    - automatic canvas sizing (using custom html element attributes)
     - 'unseen' element non-rendering
     - some stat collection on canvas performance (currently just frame rate)
     - element grouping object, which contains all shapes to be rendered
-    - mouse interface (missing alot of functionality however)
+    - mouse interface (missing a lot of functionality however)
     - panning and zooming (functional when angled too)
+  
+    currently works on chrome, firefox and safari
 
 
 2018-10-18
@@ -93,8 +146,8 @@
         objects
         control
       which in turn, follow the dependencies track (and folder names)
-      Perhaps folders could be rearranged aswel, to keep these four sections in a
-      section to themselves (and just for a general reorganisation):
+      Perhaps folders could be rearranged aswel, to keep these four sections in 
+      a section to themselves (and just for a general reorganisation):
 
     - renamed '__globals' to 'system'
     - renamed 'mouseInteraction' to 'mouse'

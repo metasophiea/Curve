@@ -1,13 +1,18 @@
 canvas.system.core.callback.onmousedown = function(x,y,event){ 
-    // console.log( canvas.system.core.getElementUnderPoint(x,y) );
+    // console.log( canvas.system.core.element.getElementUnderPoint(x,y) );
+
     canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onmousedown)(event);
 };
 canvas.system.core.callback.onwheel = function(x,y,event){
     canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onwheel)(event);
 };
 
+
+
 this.tmp = {};
 this.functionList = {};
+
+
 this.functionList.onmousedown = [
     {
         'specialKeys':[],
@@ -25,8 +30,8 @@ this.functionList.onmousedown = [
                 canvas.onmousemove = function(event){
                     //update the viewport position
                         canvas.system.core.viewport.position = {
-                            x: canvas.system.mouse.tmp.oldPosition.x - ((canvas.system.mouse.tmp.clickPosition.x-event.x) / canvas.system.core.viewport.zoom),
-                            y: canvas.system.mouse.tmp.oldPosition.y - ((canvas.system.mouse.tmp.clickPosition.y-event.y) / canvas.system.core.viewport.zoom),
+                            x: canvas.system.mouse.tmp.oldPosition.x - ((canvas.system.mouse.tmp.clickPosition.x-event.x) / canvas.system.core.viewport.scale),
+                            y: canvas.system.mouse.tmp.oldPosition.y - ((canvas.system.mouse.tmp.clickPosition.y-event.y) / canvas.system.core.viewport.scale),
                         };
                 };
 
@@ -59,7 +64,7 @@ this.functionList.onwheel = [
 
             //get the viewport position and zoom
                 var position = canvas.system.core.viewport.position;
-                var zoom = canvas.system.core.viewport.zoom;
+                var zoom = canvas.system.core.viewport.scale;
 
             //perform zoom and associated pan
                 //discover point under mouse
@@ -68,7 +73,7 @@ this.functionList.onwheel = [
                     zoom -= zoom*(event.deltaY/100);
                     if( zoom > zoomLimits.max ){zoom = zoomLimits.max;}
                     if( zoom < zoomLimits.min ){zoom = zoomLimits.min;}
-                    canvas.system.core.viewport.zoom = zoom;
+                    canvas.system.core.viewport.scale = zoom;
                 //discover point under mouse
                     var newPoint = canvas.system.core.adapter.windowPoint2workspacePoint(event.x,event.y);
                 //pan so we're back at the old point (accounting for angle)

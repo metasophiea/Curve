@@ -1,3 +1,4 @@
+this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
 this.cartesian2polar = function(x,y){
     var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
 
@@ -107,15 +108,4 @@ this.functionListRunner = function(list){
                 }
             }
     }
-};
-this.vectorAddition = function(vector_1, vector_2){
-    if(!vector_1){return vector_2;}
-    if(!vector_2){return vector_1;}
-
-    var outputObject = {};
-    var keys = Object.keys(vector_1);
-    for(var a = 0; a < keys.length; a++){
-        outputObject[keys[a]] = vector_1[keys[a]] + vector_2[keys[a]];
-    }
-    return outputObject;
 };
