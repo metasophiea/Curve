@@ -76,13 +76,19 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 ];
             };
             this.detectOverlap = new function(){
-                this.boundingBoxOnly = function(a, b){
+                this.boundingBoxes = function(a, b){
                     return !(
                         (a.bottomRight.y < b.topLeft.y) ||
                         (a.topLeft.y > b.bottomRight.y) ||
                         (a.bottomRight.x < b.topLeft.x) ||
                         (a.topLeft.x > b.bottomRight.x)   
                     );};
+                this.pointWithinBoundingBox = function(point,box){
+                    return !(
+                        point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
+                        point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
+                    );
+                };
                 this.pointWithinPoly = function(point,points){
                     var inside = false;
                     for(var a = 0, b = points.length - 1; a < points.length; b = a++) {
@@ -118,51 +124,336 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         canvas.system.core = new function(){
-            //stored values
                 this.imageCache = {};
-                this.stats = {
-                    active:false,
-                    average:60,
-                };
-                this.element = {};
+                this.count = 0;
+            
+            //viewport 
                 this.viewport = {
-                    position:{x:0,y:0},
-                    scale:3,
-                    angle:0,
+                    location:{
+                        position:{x:0,y:0},
+                        scale:1,
+                        angle:0,
+                    },
                     corners:{ tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
                     boundingBox:{ topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} }
                 };
+                this.viewport.position = function(x,y){
+                    if(x == undefined || y == undefined){return {x:this.location.position.x,y:this.location.position.y};}
+                    this.location.position.x = x;
+                    this.location.position.y = y;
+                };
+                this.viewport.scale = function(s){
+                    if(s == undefined ){return this.location.scale;}
+                    this.location.scale = s;
+                };
+                this.viewport.angle = function(a){
+                    if(a == undefined ){return this.location.angle;}
+                    this.location.angle = a;
+                };
+            
             
             //"workspace -> canvas" and "canvas -> workspace" adaptation
-                this.adapter = new function(){
-                    this.angle = function(a=0){
-                        return canvas.system.core.viewport.angle - a;
-                    };
-                    this.point_cache = [];
-                    this.point = function(x,y){
-                        return this.workspacePoint2windowPoint(x,y);
-                    };
-                    this.length = function(l){
-                        return l*canvas.system.core.viewport.scale;
-                    };
-                    this.windowPoint2workspacePoint = function(x,y){
-                        x = (x/canvas.system.core.viewport.scale) - canvas.system.core.viewport.position.x;
-                        y = (y/canvas.system.core.viewport.scale) - canvas.system.core.viewport.position.y;
+                this.adapter = {};
+                this.adapter.angle = function(a=0){
+                    return canvas.system.core.viewport.location.angle - a;
+                };
+                this.adapter.point_cache = [];
+                this.adapter.point = function(x,y){
+                    return this.workspacePoint2windowPoint(x,y);
+                };
+                this.adapter.length = function(l){
+                    return l*canvas.system.core.viewport.location.scale;
+                };
+                this.adapter.windowPoint2workspacePoint = function(x,y){
+                    x = (x/canvas.system.core.viewport.location.scale) - canvas.system.core.viewport.location.position.x;
+                    y = (y/canvas.system.core.viewport.location.scale) - canvas.system.core.viewport.location.position.y;
             
-                        return canvas.system.utility.cartesianAngleAdjust(x,y,-canvas.system.core.viewport.angle);
-                    };
-                    this.workspacePoint2windowPoint = function(x,y){
-                        var point = canvas.system.utility.cartesianAngleAdjust(x,y,canvas.system.core.viewport.angle);
+                    return canvas.system.utility.cartesianAngleAdjust(x,y,-canvas.system.core.viewport.location.angle);
+                };
+                this.adapter.workspacePoint2windowPoint = function(x,y){
+                    var point = canvas.system.utility.cartesianAngleAdjust(x,y,canvas.system.core.viewport.location.angle);
             
-                        return {
-                            x: (point.x+canvas.system.core.viewport.position.x) * canvas.system.core.viewport.scale,
-                            y: (point.y+canvas.system.core.viewport.position.y) * canvas.system.core.viewport.scale
-                        };
+                    return {
+                        x: (point.x+canvas.system.core.viewport.location.position.x) * canvas.system.core.viewport.location.scale,
+                        y: (point.y+canvas.system.core.viewport.location.position.y) * canvas.system.core.viewport.location.scale
                     };
                 };
             
-            //canvas adjustment
-                this.canvasSizeAdjust = function(){
+            //element
+                this.element = {};
+                this.element.arrangement = [];
+                this.element.draw = {
+                    context:canvas.getContext('2d', { alpha: false }),
+                    clear:function(){
+                        // this.context.clearRect(0, 0, canvas.width, canvas.height);
+            
+                        var context = canvas.system.core.element.draw.context;
+                        context.fillStyle = 'rgb(255,255,255)';
+                        context.fillRect(0, 0, canvas.width, canvas.height);
+                    },
+                    dot:function(x,y,r=1,fillStyle='rgba(255,0,0,1)',static=false){
+                        var context = this.context;
+            
+                        context.fillStyle = fillStyle;
+                        context.strokeStyle = '';
+                        context.lineWidth = '';
+                    
+                        context.save();
+                        var p = canvas.system.core.adapter.point(x,y); context.translate(p.x,p.y);
+                        context.beginPath();
+                        context.arc(0, 0, canvas.system.core.adapter.length(r), 0, 2 * Math.PI, false);
+                        context.fill();
+                        context.restore();
+                    },
+                    rect:function(x,y,width,height,angle=0,anchor={x:0,y:0},fillStyle='rgba(255,100,255,1)',strokeStyle='rgba(0,0,0,0)',lineWidth=1,static=false){
+                        var context = canvas.system.core.element.draw.context;
+            
+                        context.fillStyle = fillStyle;
+                        context.strokeStyle = strokeStyle;
+                        context.lineWidth = lineWidth;
+            
+                        var p = {p:{x:x,y:y}, angle:angle};
+                        if(!static){
+                            p.p = canvas.system.core.adapter.point(p.p.x,p.p.y);
+                            p.p = canvas.system.utility.cartesianAngleAdjust(p.p.x,p.p.y,p.angle);
+                            p.p.x += canvas.system.core.adapter.length(-anchor.x*width);
+                            p.p.y += canvas.system.core.adapter.length(-anchor.y*height);
+            
+                            width = canvas.system.core.adapter.length(width);
+                            height = canvas.system.core.adapter.length(height);
+                        }
+            
+                        context.save();
+                        context.rotate( p.angle );
+                        context.fillRect( p.p.x, p.p.y, width, height );
+                        context.strokeRect( p.p.x, p.p.y, width, height );
+                        context.restore();
+                    },
+                    poly:function(points,fillStyle='rgba(255,100,255,1)',strokeStyle='rgba(0,0,0,0)',lineWidth=1,static=false){
+                        var context = canvas.system.core.element.draw.context;
+            
+                        context.fillStyle = fillStyle;
+                        context.strokeStyle = strokeStyle;
+                        context.lineWidth = lineWidth;
+                    
+                        context.beginPath(); 
+                        var p = canvas.system.core.adapter.point(points[0].x,points[0].y); context.moveTo(p.x,p.y);
+                        for(var a = 1; a < points.length; a++){ 
+                            var p = canvas.system.core.adapter.point(points[a].x,points[a].y); context.lineTo(p.x,p.y);
+                        }
+                    
+                        context.closePath(); 
+                        context.fill(); 
+                        context.stroke();
+                    },
+                    image:function(x,y,width,height,angle=0,anchor={x:0,y:0},url,static=false){
+                        //if the url is missing; draw the default shape
+                            if(url == undefined){
+                                canvas.system.core.element.draw.rect(x,y,width,height,angle,anchor,"rgb(50,50,50)","rgb(255,0,0)",3);
+                                return;
+                            }
+            
+                        //if this image url is not cached; cache it
+                            if( !canvas.system.core.imageCache.hasOwnProperty(url) ){
+                                canvas.system.core.imageCache[url] = new Image(); 
+                                canvas.system.core.imageCache[url].src = url;
+                            }
+                    
+                        //main render (using cached image)
+                            var context = canvas.system.core.element.draw.context;
+                            context.save();
+                            var p = canvas.system.core.adapter.point(x,y); context.translate(p.x,p.y);
+                            context.rotate( canvas.system.core.adapter.angle(angle) );
+                            context.drawImage(canvas.system.core.imageCache[url], canvas.system.core.adapter.length(-anchor.x*width), canvas.system.core.adapter.length(-anchor.y*height), canvas.system.core.adapter.length(width), canvas.system.core.adapter.length(height));
+                            context.restore();
+                    },
+                };
+                this.element.computeExtremities = function(element){
+                //computes points and bounding box for provided element, and updates the bounding boxes for all all parents
+            
+                    //get and compute parent offsets
+                        //gather x, y, and angle data from this element up
+                            var offsetList = [];
+                            var temp = element;
+                            while((temp=temp.parent) != undefined){
+                                offsetList.unshift( {x:temp.data.x, y:temp.data.y, a:temp.data.angle} );
+                            }
+            
+                        //calculate them together into on offset
+                            var offset = { 
+                                x: offsetList[0]!=undefined ? offsetList[0].x : 0,
+                                y: offsetList[0]!=undefined ? offsetList[0].y : 0,
+                                a: 0
+                            };
+                            for(var a = 1; a < offsetList.length; a++){
+                                var point = canvas.system.utility.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,-(offset.a+offsetList[a-1].a));
+                                offset.a += offsetList[a-1].a;
+                                offset.x += point.x;
+                                offset.y += point.y;
+                            }
+                            offset.a += offsetList[offsetList.length-1]!=undefined ? offsetList[offsetList.length-1].a : 0;
+            
+                    //create points and bounding box for this element
+                        switch(element.type){
+                            case 'group':
+                                if(element.data == undefined){element.data = {x:0,y:0,angle:0};}
+                                else{
+                                    if(element.data.x == undefined){element.data.x = 0;}
+                                    if(element.data.y == undefined){element.data.y = 0;}
+                                    if(element.data.angle == undefined){element.data.angle = 0;}
+                                }
+                                if(element.children == undefined){element.children = [];}
+            
+                                element.points = [{x:element.data.x+offset.x, y:element.data.y+offset.y}];
+                                element.boundingBox = canvas.system.utility.boundingBoxFromPoints( element.points );
+                                for(var a = 0; a < element.children.length; a++){ this.computeExtremities(element.children[a]); }
+                            break;
+                            case 'dot': 
+                                element.points = [ canvas.system.utility.cartesianAngleAdjust(element.data.x,element.data.y,-offset.a) ].map(a => ({x:a.x+offset.x,y:a.y+offset.y}));
+                                element.boundingBox = canvas.system.utility.boundingBoxFromPoints( element.points );
+                            break;
+                            case 'poly': 
+                                element.points = element.data.points.map(function(point){
+                                    point = canvas.system.utility.cartesianAngleAdjust(point.x,point.y,-offset.a);
+                                    point.x += offset.x;
+                                    point.y += offset.y;
+                                    return point;
+                                });
+                                element.boundingBox = canvas.system.utility.boundingBoxFromPoints( element.points );
+                            break;
+                            case 'rect': case 'image':
+                                if(element.data.angle == undefined){element.data.angle = 0;}
+            
+                                element.points = canvas.system.utility.pointsOfRect(element.data.x, element.data.y, element.data.width, element.data.height, element.data.angle, element.data.anchor);
+                                element.points = element.points.map(function(point){
+                                    point = canvas.system.utility.cartesianAngleAdjust(point.x,point.y,-offset.a);
+                                    point.x += offset.x;
+                                    point.y += offset.y;
+                                    return point;
+                                });
+                                
+                                element.boundingBox = canvas.system.utility.boundingBoxFromPoints( element.points );
+                            break;
+                        }
+            
+                    //update all parents' bounding boxes (if there are no changes to a parent's bounding box; don't update and don't bother checking their parent (or higher))
+                        var temp = element;
+                        while((temp=temp.parent) != undefined){
+                            //discover if this new object would effect the bounding box of it's parent
+                                if( 
+                                    temp.boundingBox.topLeft.x > element.boundingBox.topLeft.x ||
+                                    temp.boundingBox.topLeft.y > element.boundingBox.topLeft.y ||
+                                    temp.boundingBox.bottomRight.x < element.boundingBox.bottomRight.x ||
+                                    temp.boundingBox.bottomRight.y < element.boundingBox.bottomRight.y 
+                                ){
+                                    //it does effect, thus combine the current bounding box with this element's bounding 
+                                    //box to determine the new bounding box for the parent
+                                        temp.boundingBox = canvas.system.utility.boundingBoxFromPoints([
+                                            temp.boundingBox.topLeft, temp.boundingBox.bottomRight,
+                                            element.boundingBox.topLeft, element.boundingBox.bottomRight 
+                                        ]);
+                                }else{
+                                    //it doesn't effect it, so don't bother going any higher
+                                        break;
+                                }
+                        }
+                };
+                this.element.add = function(element,name,parent,index){
+                    //check for name
+                        if(name == undefined){console.warn('element has no name'); return;}
+            
+                    //check that the name is not already taken in this grouping
+                        element.parent = parent;
+                        var destination = parent == undefined ? this.arrangement : parent.children;
+                        for(var a = 0; a < destination.length; a++){
+                            if( destination[a].name == name ){ console.warn('element with the name "'+name+'" already exists in the group "'+parent.name+'"'); return; }
+                        }
+                        element.name = name;
+            
+                    //add element to the group
+                        if(index == undefined){ destination.push(element);             }
+                        else{                   destination.splice(index, 0, element); }
+            
+                    this.computeExtremities(element);
+                    return element;
+                };
+                this.element.remove = function(element){
+                    if( element.parent == undefined ){
+                        var index = this.arrangement.indexOf(element);
+                        this.arrangement.splice(index, 1);
+                        this.computeExtremities(this.arrangement);
+                    }else{
+                        var index = element.parent.children.indexOf(element);
+                        element.parent.children.splice(index, 1);
+                        this.computeExtremities(element.parent);
+                    }
+                };
+                this.element.getArrangement = function(){ return this.arrangement; };
+                this.element.getByNameInGroup = function(name,group){
+                    var children = group == undefined ? this.arrangement : group.children;
+                    for(var a = 0; a < children.length; a++){
+                        if( children[a].name == name ){ return children[a]; }
+                    }
+                };
+                this.element.getAddress = function(element){
+                    var address = '';
+                    var temp = element;
+                    do{
+                        address = temp.name + '/' + address;
+                    }while((temp = temp.parent) != undefined)
+            
+                    return '/' + address.slice(0,address.length-1);
+                };
+                this.element.getByAddress = function(address){
+                    address = address.split('/').slice(1);
+            
+                    var temp;
+                    for(var a = 0; a < address.length; a++){
+                        temp = this.getByNameInGroup(address[a],temp);
+                    }
+            
+                    return temp;
+                };
+                this.element.getParent = function(element){ return element.parent; };
+                this.element.getChildren = function(element){ return element.children; };
+                this.element.getElementUnderPoint = function(x,y){
+            
+                    function recursiveTrawl(group,x,y){
+                        //go through group in reverse;
+                        //  if the item is group; check if the point is within its bounding box. If it is, use recursion
+                        //  otherwise; compute whether the point is within the poly
+                            for(var a = group.length-1; a >= 0; a--){
+                                var item = group[a];
+            
+                                //if the item declares that it should be ignored by this function; skip over it
+                                    if(item.ignoreMe){continue;}
+                                
+                                //if this is a static object, adjust the x and y values accordingly
+                                    if( item.static ){
+                                        var p = canvas.system.core.adapter.workspacePoint2windowPoint(x,y);
+                                        x = p.x; 
+                                        y = p.y;
+                                    }
+            
+                                //determine if the point lies within the bounds of this item
+                                    if(item.type == 'group'){
+                                        if( canvas.system.utility.detectOverlap.pointWithinBoundingBox({x:x,y:y},item.boundingBox)){
+                                            var temp = recursiveTrawl(item.children,x,y);
+                                            if(temp){return temp;}
+                                        }
+                                    }else{
+                                        if( !item.points ){continue;}//if this item doesn't have a bounding box; ignore all of this
+                                        if( canvas.system.utility.detectOverlap.pointWithinPoly( {x:x,y:y}, item.points )){ return item; }
+                                    }
+                            }
+                    }
+                    
+                    return recursiveTrawl(this.arrangement,x,y);
+                };
+            
+            //rendering and animation
+                this.render = {};
+                this.render.adjustCanvasSize = function(){
                     var element = canvas.system.core.element;
             
                     var width = canvas.getAttribute('workspaceWidth');
@@ -201,279 +492,21 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         canvas.system.core.viewport.width = canvas.height;
                     }
                 };
-            
-            //element
-                this.element = {};
-                this.element.arrangement = [];
-                this.element.draw = {
-                    context:canvas.getContext('2d', { alpha: false }),
-                    clear:function(){
-                        // this.context.clearRect(0, 0, canvas.width, canvas.height);
-            
-                        var context = canvas.system.core.element.draw.context;
-                        context.fillStyle = 'rgb(255,255,255)';
-                        context.fillRect(0, 0, canvas.width, canvas.height);
-                    },
-                    dot:function(x,y,r=1,fillStyle='rgba(255,0,0,1)'){
-                        var context = this.context;
-            
-                        context.fillStyle = fillStyle;
-                        context.strokeStyle = '';
-                        context.lineWidth = '';
-                    
-                        context.save();
-                        var p = canvas.system.core.adapter.point(x,y); context.translate(p.x,p.y);
-                        context.beginPath();
-                        context.arc(0, 0, canvas.system.core.adapter.length(r), 0, 2 * Math.PI, false);
-                        context.fill();
-                        context.restore();
-                    },
-                    rect:function(x,y,width,height,angle=0,anchor={x:0,y:0},fillStyle='rgba(255,100,255,1)',strokeStyle='rgba(0,0,0,0)',lineWidth=1){
-                        var context = canvas.system.core.element.draw.context;
-            
-                        context.fillStyle = fillStyle;
-                        context.strokeStyle = strokeStyle;
-                        context.lineWidth = lineWidth;
-            
-                        var p = canvas.system.core.adapter.point(x,y);
-                        p = canvas.system.utility.cartesianAngleAdjust(p.x,p.y,angle);
-            
-                        context.save();
-                        context.rotate( canvas.system.core.adapter.angle(angle) );
-                        context.fillRect(   
-                            canvas.system.core.adapter.length(-anchor.x*width) + p.x, 
-                            canvas.system.core.adapter.length(-anchor.y*height) + p.y, 
-                            canvas.system.core.adapter.length(width), 
-                            canvas.system.core.adapter.length(height)
-                        );
-                        context.strokeRect( 
-                            canvas.system.core.adapter.length(-anchor.x*width) + p.x, 
-                            canvas.system.core.adapter.length(-anchor.y*height) + p.y, 
-                            canvas.system.core.adapter.length(width), 
-                            canvas.system.core.adapter.length(height)
-                        );	
-                        context.restore();
-                    },
-                    poly:function(points,fillStyle='rgba(255,100,255,1)',strokeStyle='rgba(0,0,0,0)',lineWidth=1){
-                        var context = canvas.system.core.element.draw.context;
-            
-                        context.fillStyle = fillStyle;
-                        context.strokeStyle = strokeStyle;
-                        context.lineWidth = lineWidth;
-                    
-                        context.beginPath(); 
-                        var p = canvas.system.core.adapter.point(points[0].x,points[0].y); context.moveTo(p.x,p.y);
-                        for(var a = 1; a < points.length; a++){ 
-                            var p = canvas.system.core.adapter.point(points[a].x,points[a].y); context.lineTo(p.x,p.y);
+                this.render.element = function(element,offsetX=0,offsetY=0,offsetAngle=0,static=false){
+                    //if element is static, adjust the element's bounding box accordingly
+                        var tempBoundingBox = element.boundingBox;
+                        if(static){
+                            tempBoundingBox = Object.assign({}, element.boundingBox);
+                            tempBoundingBox.topLeft = canvas.system.core.adapter.workspacePoint2windowPoint(tempBoundingBox.topLeft.x,tempBoundingBox.topLeft.y);
+                            tempBoundingBox.bottomRight = canvas.system.core.adapter.workspacePoint2windowPoint(tempBoundingBox.bottomRight.x,tempBoundingBox.bottomRight.y);
                         }
-                    
-                        context.closePath(); 
-                        context.fill(); 
-                        context.stroke();
-                    },
-                    image:function(x,y,width,height,angle=0,anchor={x:0,y:0},url){
-                        //if the url is missing; draw the default shape
-                            if(url == undefined){
-                                canvas.system.core.element.draw.rect(x,y,width,height,angle,anchor,"rgb(50,50,50)","rgb(255,0,0)",3);
-                                return;
-                            }
+                        console.log(JSON.stringify(canvas.system.core.viewport.boundingBox));
+                        console.log(JSON.stringify(tempBoundingBox));
+                        console.log('');
             
-                        //if this image url is not cached; cache it
-                            if( !canvas.system.core.imageCache.hasOwnProperty(url) ){
-                                canvas.system.core.imageCache[url] = new Image(); 
-                                canvas.system.core.imageCache[url].src = url;
-                            }
-                    
-                        //main render (using cached image)
-                            var context = canvas.system.core.element.draw.context;
-                            context.save();
-                            var p = canvas.system.core.adapter.point(x,y); context.translate(p.x,p.y);
-                            context.rotate( canvas.system.core.adapter.angle(angle) );
-                            context.drawImage(canvas.system.core.imageCache[url], canvas.system.core.adapter.length(-anchor.x*width), canvas.system.core.adapter.length(-anchor.y*height), canvas.system.core.adapter.length(width), canvas.system.core.adapter.length(height));
-                            context.restore();
-                    },
-                };
-                // this.element.recompute = function(element,offset={x:0,y:0,angle:0},parent){
-                //     var data = element.data;
-                //     data.angle = data.angle?data.angle:0;
-            
-                //     // //collection of offset values from the element's parents (if it has any)
-                //     //     if(element.parent != undefined){
-                //     //         // console.log(element.parent);
-                //     //         var tempParent = element;
-            
-                //     //         do{
-                //     //             console.log(tempParent);
-                //     //             tempParent = tempParent.parent;
-                //     //         }while(tempParent != undefined)
-                //     //         console.log('--');
-                //     //     }
-                    
-                //     //computation of all outter points and bounding boxes for element (and it's children if it has any)
-                //     switch(element.type){
-                //         case 'group':
-                //             if(offset.angle != 0){
-                //                 var point = canvas.system.utility.cartesianAngleAdjust(data.x,data.y,-offset.angle);
-                //                 offset.x -= data.x - point.x;
-                //                 offset.y -= data.y - point.y;
-                //             }
-            
-                //             var points = [{x:data.x,y:data.y}];
-                //             for(var a = 0; a < element.children.length; a++){
-                //                 var bb = this.recompute( 
-                //                     element.children[a], 
-                //                     {x:data.x+offset.x, y:data.y+offset.y, angle:data.angle+offset.angle},
-                //                     element
-                //                 );
-                //                 points.push(
-                //                     {x:bb.topLeft.x, y:bb.topLeft.y},
-                //                     {x:bb.bottomRight.x, y:bb.bottomRight.y}
-                //                 );
-                //             }
-                            
-                //             element.boundingBox = canvas.system.utility.boundingBoxFromPoints(points);
-                //         break;
-                //         case 'dot': 
-                //             if(offset.angle != 0){
-                //                 var point = canvas.system.utility.cartesianAngleAdjust(data.x,data.y,-offset.angle);
-                //                 offset.x -= data.x - point.x;
-                //                 offset.y -= data.y - point.y;
-                //             }
-            
-                //             element.points = [{x:data.x+offset.x,y:data.y+offset.y}];
-                //             element.boundingBox = canvas.system.utility.boundingBoxFromPoints( element.points );
-                //         break;
-                //         case 'rect': case 'image':
-                //             if(offset.angle != 0){
-                //                 var point = canvas.system.utility.cartesianAngleAdjust(data.x,data.y,-offset.angle);
-                //                 offset.x -= data.x - point.x;
-                //                 offset.y -= data.y - point.y;
-                //             }
-            
-                //             element.points = canvas.system.utility.pointsOfRect(data.x+offset.x, data.y+offset.y, data.width, data.height, data.angle+offset.angle, data.anchor);
-                //             element.boundingBox = canvas.system.utility.boundingBoxFromPoints( element.points );
-                //         break;
-                //         case 'poly':
-                //             element.points = data.points.map( function(a){
-                //                 if(offset.angle != 0){ a = canvas.system.utility.cartesianAngleAdjust(a.x,a.y,-offset.angle); }
-                //                 return {x:a.x+offset.x, y:a.y+offset.y};
-                //             } );
-            
-                //             element.boundingBox = canvas.system.utility.boundingBoxFromPoints( element.points );
-                //         break;
-                //     }
-            
-                //     return element.boundingBox;
-                // };
-                this.element.recompute2 = function(element){
-                    //computes points and bounding box for provided element, and updates the bounding boxes for all all parents
-            
-                    //get and compute parent offsets
-                        //gather x, y, and angle data from this element up
-                            var offsetList = [];
-                            var temp = element;
-                            do{
-                                offsetList.unshift( {x:temp.data.x, y:temp.data.y, a:temp.data.angle} );
-                            }while((temp=temp.parent) != undefined)
-            
-                        //calculate them together into on offset
-                            var offset = { x:offsetList[0].x, y:offsetList[0].y, a:0 };
-                            for(var a = 1; a < offsetList.length; a++){
-                                var point = canvas.system.utility.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,-(offset.a+offsetList[a-1].a));
-                                offset.a += offsetList[a-1].a;
-                                offset.x += point.x;
-                                offset.y += point.y;
-                            }
-                            canvas.system.core.element.draw.dot( offset.x,offset.y,undefined,'rgba(255,0,0,1)' );
-            
-                    //create points and bouding box for this element
-                        switch(element.type){
-                            case 'group': 
-                                element.points = [{x:element.data.x, y:element.data.y}];
-                                element.boundingBox = canvas.system.utility.boundingBoxFromPoints( element.points );
-                            break;
-                            case 'dot': 
-                                element.points = [{x:element.data.x, y:element.data.y}];
-                                element.boundingBox = canvas.system.utility.boundingBoxFromPoints( element.points );
-                            break;
-                            case 'rect':
-                                element.points = canvas.system.utility.pointsOfRect(offset.x, offset.y, element.data.width, element.data.height, offset.a, element.data.anchor);
-                                element.boundingBox = canvas.system.utility.boundingBoxFromPoints( element.points );
-                                for(var a = 0; a < element.points.length; a++){ canvas.system.core.element.draw.dot( element.points[a].x,element.points[a].y,undefined,'rgba(0,255,0,1)' ); }
-                            break;
-                        }
-            
-                    //update all parents' bounding boxes
-                        var temp = element;
-                        while((temp=temp.parent) != undefined){
-                            var boundingBoxPoints = [];
-                            for(var a = 0; a < temp.children.length; a++){
-                                boundingBoxPoints.push( temp.children[a].boundingBox.topLeft );
-                                boundingBoxPoints.push( temp.children[a].boundingBox.bottomRight );
-                            }
-                            temp.boundingBox = canvas.system.utility.boundingBoxFromPoints( boundingBoxPoints );
-            
-                            canvas.system.core.element.draw.dot( temp.boundingBox.topLeft.x,temp.boundingBox.topLeft.y,undefined,'rgba(0,0,255,1)' );
-                            canvas.system.core.element.draw.dot( temp.boundingBox.bottomRight.x,temp.boundingBox.bottomRight.y,undefined,'rgba(0,0,255,1)' );
-                        }
-                };
-                this.element.add = function(element,parent,index){
-                    if(parent == undefined){
-                        if(index == undefined){ this.arrangement.push(element);             }
-                        else{                   this.arrangement.splice(index, 0, element); }
-                        // this.recompute(element);
-                        this.recompute2(element);
-                    }else{
-                        if(index == undefined){ 
-                            parent.children.push(element);
-                            element.parent = parent;
-                        }
-                        else{
-                            parent.children.splice(index, 0, element);
-                            element.parent = parent;
-                        }
-                        // this.recompute(parent);
-                        this.recompute2(element);
-                    }
-            
-                    // for(var a = 0; a < this.arrangement.length; a++){ this.recompute(this.arrangement[a]); }
-                    return element;
-                };
-                this.element.remove = function(element){
-                    var index = element.parent.children.indexOf(element);
-                    element.parent.children.splice(index, 1);
-                    this.recompute(element.parent);
-                };
-                this.element.getArrangement = function(){ return this.arrangement; };
-                this.element.getParent = function(element){ return element.parent; };
-                this.element.getChildren = function(element){ return element.children; };
-                this.element.getElementUnderPoint = function(x,y){
-            
-                    function recursiveTrawl(group,x,y){
-                        //go through group in reverse;
-                        //  if the item is group; use recursion
-                        //  otherwise; computer whether the point is within the poly
-                            for(var a = group.length-1; a >= 0; a--){
-                                var item = group[a];
-            
-                                if(item.type == 'group'){
-                                    var temp = recursiveTrawl(item.children,x,y);
-                                    if(temp){return temp;}
-                                }else{
-                                    if( !item.points ){continue;}//if this item doesn't have a bounding box; ignore all of this
-                                    if( canvas.system.utility.detectOverlap.pointWithinPoly( {x:x,y:y}, item.points )){ return item; }
-                                }
-            
-                            }
-                    }
-                    
-                    return recursiveTrawl(this.arrangement,x,y);
-                };
-            
-            //rendering and animation
-                this.renderElement = function(element,offsetX=0,offsetY=0,offsetAngle=0){
                     //use bounding box to determine whether this shape should be rendered
-                        if( !canvas.system.utility.detectOverlap.boundingBoxOnly(this.viewport.boundingBox, element.boundingBox) ){ return; }
+                        if( !canvas.system.utility.detectOverlap.boundingBoxes(canvas.system.core.viewport.boundingBox, tempBoundingBox) ){ return; }
+            
             
                     //main rendering area
                         var data = element.data;
@@ -491,7 +524,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     data.anchor = data.anchor ? data.anchor : {x:0,y:0};
             
                                 //render shape
-                                    this.element.draw[element.type]( 
+                                    canvas.system.core.element.draw.rect( 
                                         data.x+offsetX, 
                                         data.y+offsetY, 
                                         data.width, 
@@ -500,7 +533,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         data.anchor, 
                                         data.fillStyle, 
                                         data.strokeStyle, 
-                                        data.lineWidth 
+                                        data.lineWidth,
+                                        static
                                     );
                             break;
                             case 'poly':
@@ -515,11 +549,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     } );
             
                                 //render shape
-                                    this.element.draw[element.type]( 
+                                    canvas.system.core.element.draw.poly( 
                                         points, 
                                         data.fillStyle, 
                                         data.strokeStyle, 
-                                        data.lineWidth
+                                        data.lineWidth,
+                                        static
                                     );
                             break;
                             case 'image':
@@ -535,14 +570,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     data.anchor = data.anchor ? data.anchor : {x:0,y:0};
             
                                 //render shape
-                                    this.element.draw[element.type]( 
+                                    canvas.system.core.element.draw.image( 
                                         data.x+offsetX, 
                                         data.y+offsetY, 
                                         data.width, 
                                         data.height, 
                                         data.angle+offsetAngle,
                                         data.anchor, 
-                                        data.url
+                                        data.url,
+                                        static
                                     );
                             break;
                             case 'dot':
@@ -554,38 +590,38 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
             
                                 //render shape
-                                    this.element.draw[element.type]( 
+                                    canvas.system.core.element.draw.dot( 
                                         data.x+offsetX, 
                                         data.y+offsetY, 
                                         data.r, 
-                                        data.fillStyle
+                                        data.fillStyle,
+                                        static
                                     );
                             break;
                             default: console.warn('unknown shape type "'+element.type+'"'); break;
                         }
             
-                };
-                this.render = function(noClear=false){
-                    // canvas.system.core.element.arrangement[1].data.angle += -0.03;
-            
+                }; 
+                this.render.scene = function(noClear=false){
                     //perform resize of canvas
-                        this.canvasSizeAdjust();
+                        canvas.system.core.render.adjustCanvasSize();
             
                     //clear the canvas
-                        if(!noClear){ this.element.draw.clear(); }
+                        if(!noClear){ canvas.system.core.element.draw.clear(); }
             
                     //calculate viewport corner points, and bounding box
-                        var corners = this.viewport.corners;
-                        corners.tl = this.adapter.windowPoint2workspacePoint(0,0);
-                        corners.tr = this.adapter.windowPoint2workspacePoint(canvas.width,0);
-                        corners.bl = this.adapter.windowPoint2workspacePoint(0,canvas.height);
-                        corners.br = this.adapter.windowPoint2workspacePoint(canvas.width,canvas.height);
-                        this.viewport.boundingBox = canvas.system.utility.boundingBoxFromPoints([corners.tl, corners.tr, corners.br, corners.bl]);
+                        var corners = canvas.system.core.viewport.corners;
+                        corners.tl = canvas.system.core.adapter.windowPoint2workspacePoint(0,0);
+                        corners.tr = canvas.system.core.adapter.windowPoint2workspacePoint(canvas.width,0);
+                        corners.bl = canvas.system.core.adapter.windowPoint2workspacePoint(0,canvas.height);
+                        corners.br = canvas.system.core.adapter.windowPoint2workspacePoint(canvas.width,canvas.height);
+                        canvas.system.core.viewport.boundingBox = canvas.system.utility.boundingBoxFromPoints([corners.tl, corners.tr, corners.br, corners.bl]);
             
                     //sequentially - and recursively - render everything on the elements list
-                        function recursiveRender(group,offsetX=0,offsetY=0,offsetAngle=0){
+                        function recursiveRender(group,offsetX=0,offsetY=0,offsetAngle=0,static=false){
                             for(var a = 0; a < group.length; a++){
                                 var item = group[a];
+            
                                 if(item.type == 'group'){ 
                                     var angle = item.data.angle?item.data.angle:0;
             
@@ -595,32 +631,36 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         offsetY -= item.data.y-point.y;
                                     }
             
-                                    recursiveRender( item.children, item.data.x+offsetX, item.data.y+offsetY, angle+offsetAngle );
+                                    recursiveRender( item.children, item.data.x+offsetX, item.data.y+offsetY, angle+offsetAngle, (static||item.static) );
                                 }else{
-                                    canvas.system.core.renderElement( item, offsetX, offsetY, offsetAngle );
+                                    canvas.system.core.render.element( item, offsetX, offsetY, offsetAngle, (static||item.static) );
                                 }
                             }
                         }
                         recursiveRender(canvas.system.core.element.arrangement);
                 };
-                this.animate = function(timestamp){
-                    var requestId = requestAnimationFrame(canvas.system.core.animate);
+                this.render.animate = function(timestamp){
+                    var requestId = requestAnimationFrame(canvas.system.core.render.animate);
                     try{
-                        canvas.system.core.render();
+                        canvas.system.core.render.scene();
                     }catch(e){
                         cancelAnimationFrame(requestId);
                         console.error('major animation error');
                         console.error(e);
                     }
             
-                    canvas.system.core.statCollection.fps(timestamp);
+                    canvas.system.core.stats.collect.fps(timestamp);
                 };
             
             //stat collection
-                this.statCollection = new function(){
+                this.stats = {
+                    active:false,
+                    average:60,
+                };
+                this.stats.collect = new function(){
                     this.fps = function(timestamp){
-                        var stats = canvas.system.core.stats;
-                        if( stats.active ){
+                        if( canvas.system.core.stats.active ){
+                            var stats = canvas.system.core.stats;
                             if( !stats.hasOwnProperty('fpsCounter') ){
                                 stats.fpsCounter = {};
                                 stats.fpsCounter.frameTimeArray = [];
@@ -654,7 +694,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         };
         canvas.system.mouse = new function(){
             canvas.system.core.callback.onmousedown = function(x,y,event){ 
-                // console.log( canvas.system.core.element.getElementUnderPoint(x,y) );
+                console.log( canvas.system.core.element.getElementUnderPoint(x,y) );
+                // canvas.system.core.element.remove( canvas.system.core.element.getElementUnderPoint(x,y) );
             
                 canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onmousedown)(event);
             };
@@ -678,16 +719,16 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             canvas.system.mouse.tmp.onmouseup_old = canvas.onmouseup;
             
                         //save the viewport position and click position
-                            canvas.system.mouse.tmp.oldPosition = canvas.system.core.viewport.position;
+                            canvas.system.mouse.tmp.oldPosition = canvas.system.core.viewport.position();
                             canvas.system.mouse.tmp.clickPosition = {x:event.x, y:event.y};
             
                         //replace the canvas's listeners 
                             canvas.onmousemove = function(event){
                                 //update the viewport position
-                                    canvas.system.core.viewport.position = {
-                                        x: canvas.system.mouse.tmp.oldPosition.x - ((canvas.system.mouse.tmp.clickPosition.x-event.x) / canvas.system.core.viewport.scale),
-                                        y: canvas.system.mouse.tmp.oldPosition.y - ((canvas.system.mouse.tmp.clickPosition.y-event.y) / canvas.system.core.viewport.scale),
-                                    };
+                                    canvas.system.core.viewport.position(
+                                        canvas.system.mouse.tmp.oldPosition.x - ((canvas.system.mouse.tmp.clickPosition.x-event.x) / canvas.system.core.viewport.scale()),
+                                        canvas.system.mouse.tmp.oldPosition.y - ((canvas.system.mouse.tmp.clickPosition.y-event.y) / canvas.system.core.viewport.scale()),
+                                    );
                             };
             
                             canvas.onmouseup = function(){
@@ -715,30 +756,27 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 {
                     'specialKeys':[],
                     'function':function(event){
-                        var zoomLimits = {'max':10, 'min':0.1};
+                        var scaleLimits = {'max':10, 'min':0.1};
             
-                        //get the viewport position and zoom
-                            var position = canvas.system.core.viewport.position;
-                            var zoom = canvas.system.core.viewport.scale;
-            
-                        //perform zoom and associated pan
+                        //perform scale and associated pan
                             //discover point under mouse
                                 var originalPoint = canvas.system.core.adapter.windowPoint2workspacePoint(event.x,event.y);
                             //perform actual scaling
-                                zoom -= zoom*(event.deltaY/100);
-                                if( zoom > zoomLimits.max ){zoom = zoomLimits.max;}
-                                if( zoom < zoomLimits.min ){zoom = zoomLimits.min;}
-                                canvas.system.core.viewport.scale = zoom;
+                                var scale = canvas.system.core.viewport.scale();
+                                scale -= scale*(event.deltaY/100);
+                                if( scale > scaleLimits.max ){scale = scaleLimits.max;}
+                                if( scale < scaleLimits.min ){scale = scaleLimits.min;}
+                                canvas.system.core.viewport.scale(scale);
                             //discover point under mouse
                                 var newPoint = canvas.system.core.adapter.windowPoint2workspacePoint(event.x,event.y);
                             //pan so we're back at the old point (accounting for angle)
                                 var pan = canvas.system.utility.cartesianAngleAdjust(
                                     (newPoint.x - originalPoint.x),
                                     (newPoint.y - originalPoint.y),
-                                    canvas.system.core.viewport.angle
+                                    canvas.system.core.viewport.angle()
                                 );
-                                canvas.system.core.viewport.position.x += pan.x;
-                                canvas.system.core.viewport.position.y += pan.y;
+                                var temp = canvas.system.core.viewport.position();
+                                canvas.system.core.viewport.position(temp.x+pan.x,temp.y+pan.y)
             
                         //request that the function list stop here
                             return true;
@@ -747,61 +785,21 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             ];
         };
         
+        canvas.system.core.render.animate();
+        var staticBackground = canvas.system.core.element.add( {type:'group', ignoreMe:true, static:true}, 'staticBackground' );
+            var test = canvas.system.core.element.add( {type:'rect', data:{x:15, y:0, width:30, height:30, fillStyle:'rgba(255,0,0,0.3)'}}, 'test 1', staticBackground );
         
+        // var main = canvas.system.core.element.add( {type:'group'}, 'main' );
+        //     var background = canvas.system.core.element.add( {type:'group', ignoreMe:true}, 'background', main );
+        //         var test = canvas.system.core.element.add( {type:'rect', data:{x:30, y:30, width:30, height:30, fillStyle:'rgba(255,0,0,0.3)'}}, 'test 1', background );
+        //     var middleground = canvas.system.core.element.add( {type:'group'}, 'middleground', main );
+        //         var test = canvas.system.core.element.add( {type:'rect', data:{x:90, y:30, width:30, height:30}}, 'test 1', middleground );
+        //     var foreground = canvas.system.core.element.add( {type:'group', ignoreMe:true}, 'foreground', main );
+        //         var test = canvas.system.core.element.add( {type:'rect', data:{x:150, y:30, width:30, height:30, fillStyle:'rgba(255,0,0,0.3)'}}, 'test 1', foreground );
+                
+        // var control = canvas.system.core.element.add( {type:'group', static:true}, 'control' );
+        //     var test = canvas.system.core.element.add( {type:'rect', data:{x:45, y:60, width:30, height:30}}, 'test 1', control );
         
-        
-        canvas.system.core.render();
-        canvas.system.core.animate();
-        
-        // canvas.system.core.element.add( {type:'rect', data:{x:150, y:50, width:50, height:50, fillStyle:'rgba(0,255,0,1)'}} );
-        
-        var g = canvas.system.core.element.add( {type:'group', data:{x:0, y:0, angle:-0.2}, children:[]} );
-            canvas.system.core.element.add( {type:'dot', data:{x:0,y:0}}, g );
-            canvas.system.core.element.add( {type:'rect', data:{x:0, y:0, width:10, height:10}}, g );
-            canvas.system.core.element.add( {type:'rect', data:{x:20, y:0, width:10, height:10}}, g );
-            // canvas.system.core.element.add( {type:'poly', data:{points: [{x:0,y:20},{x:20,y:20},{x:20,y:0}] }}, g );
-            // canvas.system.core.element.add( {type:'image', data:{x:0, y:30, width:20, height:20, angle:0.3, url:'https://images-na.ssl-images-amazon.com/images/I/61Nx%2BIpgqQL._SY355_.jpg'}}, g );
-            canvas.system.core.element.add( {type:'dot', data:{x:40,y:40}}, g );
-        
-        // canvas.system.core.element.add( {type:'rect', data:{x:58, y:60, width:50, height:50, fillStyle:'rgba(255,0,0,1)'}} );
-        
-        var g = canvas.system.core.element.add( {type:'group', data:{x:58, y:60, angle:-0.5}, children:[]} );
-            canvas.system.core.element.add( {type:'dot', data:{x:0,y:0}}, g );
-            canvas.system.core.element.add( {type:'rect', data:{x:0, y:0, width:10, height:10}}, g );
-            var g = canvas.system.core.element.add( {type:'group', data:{x:10, y:10, angle:-0.5}, children:[]}, g );
-                canvas.system.core.element.add( {type:'dot', data:{x:0,y:0}}, g );
-                canvas.system.core.element.add( {type:'rect', data:{x:0, y:0, width:10, height:10}}, g );
-                canvas.system.core.element.add( {type:'rect', data:{x:10, y:10, width:10, height:10}}, g );
-        //         canvas.system.core.element.add( {type:'poly', data:{points: [{x:0,y:20},{x:20,y:20},{x:20,y:0}] }}, g );
-        
-        // canvas.system.core.element.add( {type:'image', data:{x:100, y:30, width:200, height:200, angle:0.3, url:'https://images-na.ssl-images-amazon.com/images/I/61Nx%2BIpgqQL._SY355_.jpg'}} );
-        
-        
-        
-        
-        
-        canvas.system.core.render(true);
-        
-        
-        
-        
-        
-        
-        //lots of rects test
-        // canvas.system.core.element.add( {type:'rect', data:{x:10, y:10, width:10, height:10, angle:-0.0, fillStyle:'rgba(0,255,0,1)'}} );
-        // canvas.system.core.element.add( {type:'rect', data:{x:25, y:10, width:10, height:10, angle:-0.1, fillStyle:'rgba(0,255,0,1)'}} );
-        // canvas.system.core.element.add( {type:'rect', data:{x:40, y:10, width:10, height:10, angle:-0.2, fillStyle:'rgba(0,255,0,1)'}} );
-        // canvas.system.core.element.add( {type:'rect', data:{x:55, y:10, width:10, height:10, angle:-0.3, fillStyle:'rgba(0,255,0,1)'}} );
-        // for(var a = 0; a < 1000; a++){
-        //     canvas.system.core.element.add( {type:'rect', data:{x:10, y:10, width:10, height:10, angle:-0.0, fillStyle:'rgba(0,255,0,1)'}} );
-        //     console.log(a);
-        // }
-        
-        
-        // //lots of polys test
-        // for(var a = 0; a < 1000; a++){
-        //     canvas.system.core.element.add( {type:'poly', data:{points: [{x:10,y:10},{x:20,y:10},{x:20,y:20},{x:10,y:20}] }} );
-        //     console.log(a);
-        // }
+        console.log(canvas.system.core.element.getArrangement());
     }
 }

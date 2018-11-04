@@ -69,13 +69,19 @@ this.pointsOfRect = function(x,y,width,height,angle=0,anchor={x:0,y:0}){
     ];
 };
 this.detectOverlap = new function(){
-    this.boundingBoxOnly = function(a, b){
+    this.boundingBoxes = function(a, b){
         return !(
             (a.bottomRight.y < b.topLeft.y) ||
             (a.topLeft.y > b.bottomRight.y) ||
             (a.bottomRight.x < b.topLeft.x) ||
             (a.topLeft.x > b.bottomRight.x)   
         );};
+    this.pointWithinBoundingBox = function(point,box){
+        return !(
+            point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
+            point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
+        );
+    };
     this.pointWithinPoly = function(point,points){
         var inside = false;
         for(var a = 0, b = points.length - 1; a < points.length; b = a++) {

@@ -1,5 +1,6 @@
 canvas.system.core.callback.onmousedown = function(x,y,event){ 
-    // console.log( canvas.system.core.element.getElementUnderPoint(x,y) );
+    console.log( canvas.system.core.element.getElementUnderPoint(x,y) );
+    // canvas.system.core.element.remove( canvas.system.core.element.getElementUnderPoint(x,y) );
 
     canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onmousedown)(event);
 };
@@ -23,16 +24,16 @@ this.functionList.onmousedown = [
                 canvas.system.mouse.tmp.onmouseup_old = canvas.onmouseup;
 
             //save the viewport position and click position
-                canvas.system.mouse.tmp.oldPosition = canvas.system.core.viewport.position;
+                canvas.system.mouse.tmp.oldPosition = canvas.system.core.viewport.position();
                 canvas.system.mouse.tmp.clickPosition = {x:event.x, y:event.y};
 
             //replace the canvas's listeners 
                 canvas.onmousemove = function(event){
                     //update the viewport position
-                        canvas.system.core.viewport.position = {
-                            x: canvas.system.mouse.tmp.oldPosition.x - ((canvas.system.mouse.tmp.clickPosition.x-event.x) / canvas.system.core.viewport.scale),
-                            y: canvas.system.mouse.tmp.oldPosition.y - ((canvas.system.mouse.tmp.clickPosition.y-event.y) / canvas.system.core.viewport.scale),
-                        };
+                        canvas.system.core.viewport.position(
+                            canvas.system.mouse.tmp.oldPosition.x - ((canvas.system.mouse.tmp.clickPosition.x-event.x) / canvas.system.core.viewport.scale()),
+                            canvas.system.mouse.tmp.oldPosition.y - ((canvas.system.mouse.tmp.clickPosition.y-event.y) / canvas.system.core.viewport.scale()),
+                        );
                 };
 
                 canvas.onmouseup = function(){
@@ -60,30 +61,27 @@ this.functionList.onwheel = [
     {
         'specialKeys':[],
         'function':function(event){
-            var zoomLimits = {'max':10, 'min':0.1};
+            var scaleLimits = {'max':10, 'min':0.1};
 
-            //get the viewport position and zoom
-                var position = canvas.system.core.viewport.position;
-                var zoom = canvas.system.core.viewport.scale;
-
-            //perform zoom and associated pan
+            //perform scale and associated pan
                 //discover point under mouse
                     var originalPoint = canvas.system.core.adapter.windowPoint2workspacePoint(event.x,event.y);
                 //perform actual scaling
-                    zoom -= zoom*(event.deltaY/100);
-                    if( zoom > zoomLimits.max ){zoom = zoomLimits.max;}
-                    if( zoom < zoomLimits.min ){zoom = zoomLimits.min;}
-                    canvas.system.core.viewport.scale = zoom;
+                    var scale = canvas.system.core.viewport.scale();
+                    scale -= scale*(event.deltaY/100);
+                    if( scale > scaleLimits.max ){scale = scaleLimits.max;}
+                    if( scale < scaleLimits.min ){scale = scaleLimits.min;}
+                    canvas.system.core.viewport.scale(scale);
                 //discover point under mouse
                     var newPoint = canvas.system.core.adapter.windowPoint2workspacePoint(event.x,event.y);
                 //pan so we're back at the old point (accounting for angle)
                     var pan = canvas.system.utility.cartesianAngleAdjust(
                         (newPoint.x - originalPoint.x),
                         (newPoint.y - originalPoint.y),
-                        canvas.system.core.viewport.angle
+                        canvas.system.core.viewport.angle()
                     );
-                    canvas.system.core.viewport.position.x += pan.x;
-                    canvas.system.core.viewport.position.y += pan.y;
+                    var temp = canvas.system.core.viewport.position();
+                    canvas.system.core.viewport.position(temp.x+pan.x,temp.y+pan.y)
 
             //request that the function list stop here
                 return true;

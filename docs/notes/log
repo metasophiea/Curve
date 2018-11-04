@@ -1,8 +1,33 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-11-04
+  - canvas experiment
+    - renamed element.recompute to element.computeExtremities
+    - element.getElementUnderPoint now checks a group's bounding box to see if 
+      the point is within it (no longer just checked every element everywhere)
+    - rearranged functions into objects
+    - added getters/setters to the viewport location values
+    - added element names and addressing
+    - added the ability to declare an object as to be ignored (thus,
+      getElementUnderPoint will not return it, or any of its children)
+    - working on static elements, have getElementUnderPoint functioning, general
+      rendering working, but derender still thinks they're moving 
+
+    test:
+    - my desktop seems quite happy to draw 10,000 rects. 20,000 slows things to
+      ~27 fps
+    
+    future ideas:
+    - the ability to set groups as immune to the viewport location values
+
+2018-11-03
+  - canvas experiment
+    - fixed up canvas.system.core.element.recompute
+
+
 2018-11-01
   - canvas experiment
     - expanded element.recompute to create bounding boxes for groups
-    - expanded element.recompute to add parent elements to element (if parnet is
+    - expanded element.recompute to add parent elements to element (if parent is
       undefined, it means that this element is at the top of the tree, making
       the parent the arrangement)
     - added element.getPerent and element.getChildren functions
@@ -37,6 +62,7 @@
     that it goes up through the tree collecting x, y and angle offsets; returns
     with these calculated then computes all the lower elements
     (adding lots of elememts is quite slow)
+
 
 2018-10-31
   - canvas experiment
