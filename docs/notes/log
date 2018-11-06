@@ -1,4 +1,11 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-11-06
+  - canvas experiment
+    - static derender adjustment working
+
+    future ideas:
+    - core probably needs some renaming and rearranging of handles
+
 2018-11-04
   - canvas experiment
     - renamed element.recompute to element.computeExtremities

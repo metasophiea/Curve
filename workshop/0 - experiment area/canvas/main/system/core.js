@@ -1,6 +1,3 @@
-    this.imageCache = {};
-    this.count = 0;
-
 //viewport 
     this.viewport = {
         location:{
@@ -55,6 +52,7 @@
 
 //element
     this.element = {};
+    this.element.imageCache = {};
     this.element.arrangement = [];
     this.element.draw = {
         context:canvas.getContext('2d', { alpha: false }),
@@ -128,9 +126,9 @@
                 }
 
             //if this image url is not cached; cache it
-                if( !canvas.system.core.imageCache.hasOwnProperty(url) ){
-                    canvas.system.core.imageCache[url] = new Image(); 
-                    canvas.system.core.imageCache[url].src = url;
+                if( !canvas.system.core.element.imageCache.hasOwnProperty(url) ){
+                    canvas.system.core.element.imageCache[url] = new Image(); 
+                    canvas.system.core.element.imageCache[url].src = url;
                 }
         
             //main render (using cached image)
@@ -138,12 +136,12 @@
                 context.save();
                 var p = canvas.system.core.adapter.point(x,y); context.translate(p.x,p.y);
                 context.rotate( canvas.system.core.adapter.angle(angle) );
-                context.drawImage(canvas.system.core.imageCache[url], canvas.system.core.adapter.length(-anchor.x*width), canvas.system.core.adapter.length(-anchor.y*height), canvas.system.core.adapter.length(width), canvas.system.core.adapter.length(height));
+                context.drawImage(canvas.system.core.element.imageCache[url], canvas.system.core.adapter.length(-anchor.x*width), canvas.system.core.adapter.length(-anchor.y*height), canvas.system.core.adapter.length(width), canvas.system.core.adapter.length(height));
                 context.restore();
         },
     };
     this.element.computeExtremities = function(element){
-    //computes points and bounding box for provided element, and updates the bounding boxes for all all parents
+    //compute points and bounding box for provided element, and update the bounding boxes for all parents
 
         //get and compute parent offsets
             //gather x, y, and angle data from this element up
@@ -327,61 +325,82 @@
 
 //rendering and animation
     this.render = {};
+    this.render.canvasData = {};
     this.render.adjustCanvasSize = function(){
-        var element = canvas.system.core.element;
+        var canvasData = canvas.system.core.render.canvasData;
 
-        var width = canvas.getAttribute('workspaceWidth');
-        if( element.width != width || element.windowWidth != window.innerWidth ){
-            element.width = width;
-            element.windowWidth = window.innerWidth;
+        //width adjustment
+            var width = canvas.getAttribute('workspaceWidth');
+            if( canvasData.width != width || canvasData.windowWidth != window.innerWidth ){
+                canvasData.width = width;
+                canvasData.windowWidth = window.innerWidth;
 
-            if(width == undefined){
-                canvas.width = 640;
-            }else if( width.indexOf('%') == (width.length-1) ){
-                var parentSize = canvas.parentElement.offsetWidth
-                var percent = parseFloat(width.slice(0,(width.length-1))) / 100;
-                canvas.width = parentSize * percent;
-            }else{
-                canvas.width = width;
+                if(width == undefined){
+                    canvas.width = 640;
+                }else if( width.indexOf('%') == (width.length-1) ){
+                    var parentSize = canvas.parentElement.offsetWidth
+                    var percent = parseFloat(width.slice(0,(width.length-1))) / 100;
+                    canvas.width = parentSize * percent;
+                }else{
+                    canvas.width = width;
+                }
+
+                canvas.system.core.viewport.width = canvas.width;
             }
 
-            canvas.system.core.viewport.width = canvas.width;
-        }
+        //height adjustment
+            var height = canvas.getAttribute('workspaceHeight');
+            if( canvasData.height != height || canvasData.windowHeight != window.innerHeight ){
+                canvasData.height = height;
+                canvasData.windowHeight = window.innerHeight;
 
-        var height = canvas.getAttribute('workspaceHeight');
-        if( element.height != height || element.windowHeight != window.innerHeight ){
-            element.height = height;
-            element.windowHeight = window.innerHeight;
+                if(height == undefined){
+                    canvas.height = 480;
+                }else if( height.indexOf('%') == (height.length-1) ){
+                    var parentSize = canvas.parentElement.offsetHeight
+                    var percent = parseFloat(height.slice(0,(height.length-1))) / 100;
+                    canvas.height = parentSize * percent;
+                }else{
+                    canvas.height = height;
+                }
 
-            if(height == undefined){
-                canvas.height = 480;
-            }else if( height.indexOf('%') == (height.length-1) ){
-                var parentSize = canvas.parentElement.offsetHeight
-                var percent = parseFloat(height.slice(0,(height.length-1))) / 100;
-                canvas.height = parentSize * percent;
-            }else{
-                canvas.height = height;
+                canvas.system.core.viewport.width = canvas.height;
             }
-
-            canvas.system.core.viewport.width = canvas.height;
-        }
     };
     this.render.element = function(element,offsetX=0,offsetY=0,offsetAngle=0,static=false){
-        //if element is static, adjust the element's bounding box accordingly (not working)
-            var tempBoundingBox = element.boundingBox;
-            // if(static){
-            //     tempBoundingBox = Object.assign({}, element.boundingBox);
-            //     tempBoundingBox.topLeft = canvas.system.core.adapter.workspacePoint2windowPoint(tempBoundingBox.topLeft.x,tempBoundingBox.topLeft.y);
-            //     tempBoundingBox.bottomRight = canvas.system.core.adapter.workspacePoint2windowPoint(tempBoundingBox.bottomRight.x,tempBoundingBox.bottomRight.y);
-            // }
-            
+        //if element is static, adjust the element's bounding box accordingly
+            if(static){
+                var tempBoundingBox = {
+                    topLeft:     canvas.system.core.adapter.windowPoint2workspacePoint(element.boundingBox.topLeft.x,element.boundingBox.topLeft.y),
+                    bottomRight: canvas.system.core.adapter.windowPoint2workspacePoint(element.boundingBox.bottomRight.x,element.boundingBox.bottomRight.y),
+                };
+            }else{
+                var tempBoundingBox = element.boundingBox;
+            }
+
         //use bounding box to determine whether this shape should be rendered
             if( !canvas.system.utility.detectOverlap.boundingBoxes(canvas.system.core.viewport.boundingBox, tempBoundingBox) ){ return; }
-
 
         //main rendering area
             var data = element.data;
             switch(element.type){
+                case 'dot':
+                    //assuming the offset angle is not zero; calculate the correct position of the anchor point
+                        if(offsetAngle != 0){
+                            var point = canvas.system.utility.cartesianAngleAdjust(data.x,data.y,-offsetAngle);
+                            offsetX -= data.x-point.x;
+                            offsetY -= data.y-point.y;
+                        }
+
+                    //render shape
+                        canvas.system.core.element.draw.dot( 
+                            data.x+offsetX, 
+                            data.y+offsetY, 
+                            data.r, 
+                            data.fillStyle,
+                            static
+                        );
+                break;
                 case 'rect':
                     //assuming the offset angle is not zero; calculate the correct position of the anchor point
                         if(offsetAngle != 0){
@@ -402,26 +421,6 @@
                             data.height, 
                             data.angle+offsetAngle, 
                             data.anchor, 
-                            data.fillStyle, 
-                            data.strokeStyle, 
-                            data.lineWidth,
-                            static
-                        );
-                break;
-                case 'poly':
-                    //run through all points in the poly, and account for the offsets
-                        var points = data.points.map( function(a){
-                            //assuming the offset angle is not zero; calculate the correct position of the anchor point
-                                if(offsetAngle != 0){
-                                    a = canvas.system.utility.cartesianAngleAdjust(a.x,a.y,-offsetAngle);
-                                }
-                            //add positional offset to point
-                                return {x:a.x+offsetX, y:a.y+offsetY};
-                        } );
-
-                    //render shape
-                        canvas.system.core.element.draw.poly( 
-                            points, 
                             data.fillStyle, 
                             data.strokeStyle, 
                             data.lineWidth,
@@ -452,20 +451,23 @@
                             static
                         );
                 break;
-                case 'dot':
-                    //assuming the offset angle is not zero; calculate the correct position of the anchor point
-                        if(offsetAngle != 0){
-                            var point = canvas.system.utility.cartesianAngleAdjust(data.x,data.y,-offsetAngle);
-                            offsetX -= data.x-point.x;
-                            offsetY -= data.y-point.y;
-                        }
+                case 'poly':
+                    //run through all points in the poly, and account for the offsets
+                        var points = data.points.map( function(a){
+                            //assuming the offset angle is not zero; calculate the correct position of the anchor point
+                                if(offsetAngle != 0){
+                                    a = canvas.system.utility.cartesianAngleAdjust(a.x,a.y,-offsetAngle);
+                                }
+                            //add positional offset to point
+                                return {x:a.x+offsetX, y:a.y+offsetY};
+                        } );
 
                     //render shape
-                        canvas.system.core.element.draw.dot( 
-                            data.x+offsetX, 
-                            data.y+offsetY, 
-                            data.r, 
-                            data.fillStyle,
+                        canvas.system.core.element.draw.poly( 
+                            points, 
+                            data.fillStyle, 
+                            data.strokeStyle, 
+                            data.lineWidth,
                             static
                         );
                 break;
@@ -526,7 +528,7 @@
 //stat collection
     this.stats = {
         active:false,
-        average:60,
+        average:30,
     };
     this.stats.collect = new function(){
         this.fps = function(timestamp){
