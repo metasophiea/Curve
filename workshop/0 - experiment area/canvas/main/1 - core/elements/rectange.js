@@ -32,11 +32,11 @@ this.rectangle = {
 
     render:function(context,element,offsetX=0,offsetY=0,offsetAngle=0,static=false){
         //assuming the offset angle is not zero; calculate the correct position of the anchor point
-        if(offsetAngle != 0){
-            var point = canvas.library.math.cartesianAngleAdjust(element.x,element.y,-offsetAngle);
-            offsetX -= element.x-point.x;
-            offsetY -= element.y-point.y;
-        }
+            if(offsetAngle != 0){
+                var point = canvas.library.math.cartesianAngleAdjust(element.x,element.y,-offsetAngle);
+                offsetX -= element.x-point.x;
+                offsetY -= element.y-point.y;
+            }
 
         //render shape
             coreElement.rectangle.draw( 

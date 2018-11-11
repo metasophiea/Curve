@@ -1,7 +1,7 @@
+var core = this;
 var coreElement = new function(){
     {{include:elements/*}} /**/
 }
-var core = this;
 var adapter = new function(){
     this.length = function(l){
         return l*core.viewport.scale();
@@ -183,7 +183,7 @@ this.arrangement = new function(){
     this.refresh = function(element){computeExtremities(element);};
 
     this.getElementIndex = function(element){
-        //if no parent was given; use the root as a destination
+        //if no parent was given; use the root as the destination
             var destination = element.parent == undefined ? design : element.parent.children;
 
         //run through elements to find the one that matches
@@ -198,7 +198,7 @@ this.arrangement = new function(){
         this.shiftElementIndex(parent,from,index);
     };
     this.shiftElementIndex = function(parent,from,to){
-        //if no parent was given; use the root as a destination
+        //if no parent was given; use the root as the destination
             var destination = parent == undefined ? design : parent.children;
 
         //make the shift
@@ -208,7 +208,7 @@ this.arrangement = new function(){
 
     this.getArrangement = function(element){return design;};
     this.getParent = function(element){return element.parent == undefined ? design : element.parent;};
-    this.getChildren = function(element){ return element.children;};
+    this.getChildren = function(element){ return element.children; };
 
     this.getElementUnderPoint = function(x,y,group=design){
         //go through group in reverse;
@@ -244,7 +244,7 @@ this.arrangement = new function(){
 
     this.getElementName = function(element){ return element.name; };
     this.setElementName = function(element,name){
-        //if no parent was given; use the root as a destination
+        //if no parent was given; use the root as the destination
             var destination = element.parent == undefined ? design : element.parent;
 
         //check that the name is not already taken in this grouping
@@ -258,7 +258,7 @@ this.arrangement = new function(){
         element.name = name;
     };
     this.getElementByName = function(parent,name){
-        //if no parent was given; use the root as a destination
+        //if no parent was given; use the root as the destination
             var destination = parent == undefined ? design : parent.children;
 
         //run through elements to find the one that matches
@@ -290,6 +290,7 @@ this.arrangement = new function(){
 
 this.viewport = new function(){
     var canvasData = {
+        defaultSize:{width:640, height:480},
         width:0, height:0,
         windowWidth:0, windowHeight:0,
     };
@@ -304,7 +305,6 @@ this.viewport = new function(){
 
     function adjustCanvasSize(){
         var changesMade = false;
-        var defaultSize = {width:640, height:480};
 
         function dimensionAdjust(direction){
             var Direction = direction.charAt(0).toUpperCase() + direction.slice(1)
@@ -317,7 +317,7 @@ this.viewport = new function(){
 
                 //adjust canvas dimension based on the size requirement set out in the workspace attribute
                     if(attribute == undefined){
-                        canvas[direction] = defaultSize[direction];
+                        canvas[direction] = canvasData.defaultSize[direction];
                     }else if( attribute.indexOf('%') == (attribute.length-1) ){
                         var parentSize = canvas.parentElement['offset'+Direction]
                         var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
@@ -333,8 +333,7 @@ this.viewport = new function(){
         dimensionAdjust('width');
         dimensionAdjust('height');
 
-        //if changes were made; recalculate the viewport extremities
-            if(changesMade == true){ recalculateViewportExtremities(); }
+        if(changesMade){ recalculateViewportExtremities(); }
     }
     function recalculateViewportExtremities(){
         //for each corner of the viewport; find out where they lie on the workspace
@@ -356,7 +355,7 @@ this.viewport = new function(){
         if(bool == undefined){return mouse.stopScrollActive;}
         mouse.stopScrollActive = bool;
 
-        //just incase; make sure that scrolling is allowed again
+        //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
         if(!bool){ document.body.style.overflow = ''; }
     };
 

@@ -131,6 +131,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         };
         canvas.library.audio = new function(){};
         canvas.core = new function(){
+            var core = this;
             var coreElement = new function(){
                 this.polygon = {
                 
@@ -375,7 +376,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                 };
             }
-            var core = this;
             var adapter = new function(){
                 this.length = function(l){
                     return l*core.viewport.scale();
@@ -582,7 +582,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             
                 this.getArrangement = function(element){return design;};
                 this.getParent = function(element){return element.parent == undefined ? design : element.parent;};
-                this.getChildren = function(element){ return element.children;};
+                this.getChildren = function(element){ return element.children; };
             
                 this.getElementUnderPoint = function(x,y,group=design){
                     //go through group in reverse;
