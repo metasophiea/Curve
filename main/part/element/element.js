@@ -1,12 +1,12 @@
 this.basic = new function(){
-    {{include:basic/*}}
+    {{include:basic/*}} /**/
 };
 this.display = new function(){
-    {{include:display/*}}
+    {{include:display/*}} /**/
 };
 this.control = new function(){
-    {{include:control/*}}
+    {{include:control/*}} /**/
 };
 this.dynamic = new function(){
-    {{include:dynamic/*}}
+    {{include:dynamic/*}} /**/
 };
