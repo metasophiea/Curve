@@ -33,7 +33,7 @@ this.deselectEverything = function(except=[]){
     system.selection.selectedObjects = newList;
 };
 this.selectObject = function(object){
-    //check if obbject is already selected
+    //check if object is already selected
         if( system.selection.selectedObjects.indexOf(object) != -1 ){return;}
 
     //shift object to front of view, (within it's particular pane)

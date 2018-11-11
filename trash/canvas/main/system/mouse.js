@@ -1,11 +1,22 @@
-canvas.system.core.callback.onmousedown = function(x,y,event){ 
-    console.log( canvas.system.core.element.getElementUnderPoint(x,y) );
-    // canvas.system.core.element.remove( canvas.system.core.element.getElementUnderPoint(x,y) );
-
-    canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onmousedown)(event);
+canvas.system.core.callback.onmousedown = function(x,y,event){
+    // console.log( canvas.system.core.arrangement.getElementUnderPoint(x,y) );
+    // canvas.system.core.arrangement.remove( canvas.system.core.arrangement.getElementUnderPoint(x,y) );
+    canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onmousedown)(event,{x:x,y:y});
+};
+canvas.system.core.callback.onmousemove = function(x,y,event){ 
+    canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onmousemove)(event,{x:x,y:y});
+};
+canvas.system.core.callback.onmouseup = function(x,y,event){ 
+    canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onmouseup)(event,{x:x,y:y});
+};
+canvas.system.core.callback.onmouseleave = function(x,y,event){ 
+    canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onmouseleave)(event,{x:x,y:y});
+};
+canvas.system.core.callback.onmouseenter = function(x,y,event){ 
+    canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onmouseenter)(event,{x:x,y:y});
 };
 canvas.system.core.callback.onwheel = function(x,y,event){
-    canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onwheel)(event);
+    canvas.system.utility.functionListRunner(canvas.system.mouse.functionList.onwheel)(event,{x:x,y:y});
 };
 
 
@@ -13,11 +24,10 @@ canvas.system.core.callback.onwheel = function(x,y,event){
 this.tmp = {};
 this.functionList = {};
 
-
 this.functionList.onmousedown = [
     {
         'specialKeys':[],
-        'function':function(event){
+        'function':function(event,data){
             //save the old listener functions of the canvas
                 canvas.system.mouse.tmp.onmousemove_old = canvas.onmousemove;
                 canvas.system.mouse.tmp.onmouseleave_old = canvas.onmouseleave;
@@ -60,12 +70,12 @@ this.functionList.onmouseenter = [];
 this.functionList.onwheel = [
     {
         'specialKeys':[],
-        'function':function(event){
+        'function':function(event,data){
             var scaleLimits = {'max':10, 'min':0.1};
 
             //perform scale and associated pan
                 //discover point under mouse
-                    var originalPoint = canvas.system.core.adapter.windowPoint2workspacePoint(event.x,event.y);
+                    var originalPoint = canvas.system.core.viewport.windowPoint2workspacePoint(event.x,event.y);
                 //perform actual scaling
                     var scale = canvas.system.core.viewport.scale();
                     scale -= scale*(event.deltaY/100);
@@ -73,7 +83,7 @@ this.functionList.onwheel = [
                     if( scale < scaleLimits.min ){scale = scaleLimits.min;}
                     canvas.system.core.viewport.scale(scale);
                 //discover point under mouse
-                    var newPoint = canvas.system.core.adapter.windowPoint2workspacePoint(event.x,event.y);
+                    var newPoint = canvas.system.core.viewport.windowPoint2workspacePoint(event.x,event.y);
                 //pan so we're back at the old point (accounting for angle)
                     var pan = canvas.system.utility.cartesianAngleAdjust(
                         (newPoint.x - originalPoint.x),

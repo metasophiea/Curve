@@ -2,13 +2,7 @@ var __canvasElements = document.getElementsByTagName('canvas');
 for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.length; __canvasElements_count++){
     if( __canvasElements[__canvasElements_count].hasAttribute('workspace') ){
         var canvas = __canvasElements[__canvasElements_count];
-        {{include:0 - library/main.js}}
-        {{include:1 - core/main.js}}
-        {{include:2 - system/main.js}}
-        {{include:3 - part/main.js}}
-        {{include:4 - object/main.js}}
-        {{include:5 - control/main.js}}
-
-        {{include:test/main.js}}
+        {{include:system/main.js}}
+        {{include:test/2.js}}
     }
 }

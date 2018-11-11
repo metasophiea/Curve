@@ -36,7 +36,7 @@ def includer(location, parentFile, inputfileName, outputObject, spacer=''):
                 print('\tlocation:', location)
                 print('\tparentFile:', parentFile)
                 print('\tinputfileName:', inputfileName)
-                print('\t('+location+'/'+inputfileName+')')
+                print('\t(I was looking for '+location+'/'+inputfileName+')')
                 print()
                 print('\terror:', sys.exc_info())
                 exit(1)

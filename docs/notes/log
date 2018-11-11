@@ -1,4 +1,71 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-11-11
+  - canvas experiment
+    - redid layout
+      the idea of the re-layout is to better enforce the concept of levels
+      within the code, and of how lower levels shouldn't have code that deals
+      with higher concepts (as described a little in 2018-11-10 's log)
+        In addition though, I add level 0 "library" which is for code that isn't
+      necessarily for any particular level, and could conceivably be used in an
+      entirely different project (eg. mathematical functions or a wrapper for
+      the browsers audio functions)
+ 
+      Conceptual Layout:
+        browser canvas -> core -> system -> parts -> objects
+        utility ->
+        audio ->
+      Actual Layout
+        0 - library
+            - main.js
+            - math.js
+            - audio.js
+            - structure.js
+        1 - core
+            - main.js
+            - core.js
+        2 - system
+            - main.js
+            - mouse.js
+            - keyboard.js
+        3 - part
+            - main.js
+        4 - object
+            - main.js
+        5 - object
+            - main.js
+
+    - added anti-page scrolling option to core
+    - started on part.builder
+    - developed version 3 of core, which pulls out the drawable shape's code
+      out into objects, within a separate 'coreElements' object
+
+2018-11-10
+  - canvas experiment
+    - added keyboard events
+
+  ideas:
+  I'm splitting out some of the functionality that is in the equivalent system
+  code chunks in the main version, as I want to create more of a distinction
+  between levels of functionality. For example; the "declareKeycaptureObject"
+  function should be up with the other object code, instead of down with the
+  lower system code.
+    Hopefully I can write in a way that will allow one to augment the system
+  level code at a later date (thus allowing this separation)
+
+2018-11-09
+  - canvas experiment
+    - added stat collection back into core (just frame rate right now)
+
+2018-11-08
+  - canvas experiment
+    - finished work on core2 (which is now just core) fixing some bugs along the
+      way) Things are pretty nice now I think
+
+2018-11-07
+  - canvas experiment
+    - began work on core2 (a second draft of core, which just lays things out a
+      little nicer)
+
 2018-11-06
   - canvas experiment
     - static derender adjustment working

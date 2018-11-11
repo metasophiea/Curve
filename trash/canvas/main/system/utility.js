@@ -24,6 +24,10 @@ this.cartesianAngleAdjust = function(x,y,angle){
     return this.polar2cartesian( polar.ang, polar.dis );
 };
 this.boundingBoxFromPoints = function(points){
+    if(points.length == 0){
+        return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
+    }
+
     var left = points[0].x; var right = points[0].x;
     var top = points[0].y;  var bottom = points[0].y;
 
@@ -96,7 +100,7 @@ this.detectOverlap = new function(){
 this.functionListRunner = function(list){
     //function builder for working with the 'functionList' format
 
-    return function(event){
+    return function(event,data){
         //run through function list, and activate functions where necessary
             for(var a = 0; a < list.length; a++){
                 var shouldRun = true;
@@ -110,7 +114,7 @@ this.functionListRunner = function(list){
                 //if all requirements were met, run the function
                 if(shouldRun){  
                     //if the function returns 'false', continue with the list; otherwise stop here
-                        if( list[a].function(event) ){ break; }
+                        if( list[a].function(event,data) ){ break; }
                 }
             }
     }
