@@ -1,3 +1,4 @@
 canvas.core = new function(){
-    {{include:core.js}}
+    // {{include:1/core.js}}
+    {{include:2/surface.js}}
 };

@@ -1,6 +1,6 @@
 var core = this;
-var coreElement = new function(){
-    {{include:elements/*}} /**/
+var elementLibrary = new function(){
+    {{include:element/*}} /**/
 }
 var adapter = new function(){
     this.length = function(l){
@@ -46,7 +46,7 @@ this.element = new function(){
         }
 
         try{
-            return coreElement[type].generate();
+            return elementLibrary[type].generate();
         }catch(e){
             console.warn('unable to create an element of type:',type);
         }
@@ -96,7 +96,7 @@ this.arrangement = new function(){
                     element.boundingBox = canvas.library.math.boundingBoxFromPoints( element.points );
                     for(var a = 0; a < element.children.length; a++){ computeExtremities(element.children[a]); }
                 }else{
-                    element = coreElement[element.type].computeExtremities(element,offset);
+                    element = elementLibrary[element.type].computeExtremities(element,offset);
                 }
     
             //update all parents' bounding boxes (if there are no changes to a parent's bounding box; don't update and don't bother checking their parent (or higher))
@@ -206,7 +206,7 @@ this.arrangement = new function(){
             destination.splice(to,0,temp);
     };
 
-    this.getArrangement = function(element){return design;};
+    this.getArrangement = function(){return design;};
     this.getParent = function(element){return element.parent == undefined ? design : element.parent;};
     this.getChildren = function(element){ return element.children; };
 
@@ -398,7 +398,7 @@ this.render = new function(){
         //clear the canvas
             if(!noClear){ clearFrame(); }
 
-        //sequentially - and recursively - render everything on the elements list (under construction)
+        //sequentially - and recursively - render everything on the elements list
             function renderElement(element,offsetX=0,offsetY=0,offsetAngle=0,static=false){
                 //if element is static, adjust the element's bounding box accordingly
                     if(static){
@@ -414,7 +414,7 @@ this.render = new function(){
                     if( !canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), tempBoundingBox) ){ return; }
                 
                 //main rendering area
-                    coreElement[element.type].render(context,element,offsetX,offsetY,offsetAngle,static);
+                    elementLibrary[element.type].render(context,element,offsetX,offsetY,offsetAngle,static);
             }; 
             function recursiveRender(group,offsetX=0,offsetY=0,offsetAngle=0,static=false){ 
                 for(var a = 0; a < group.length; a++){

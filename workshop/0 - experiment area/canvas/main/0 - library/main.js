@@ -5,4 +5,6 @@ canvas.library.math = new function(){
 canvas.library.structure = new function(){
     {{include:structure.js}}
 };
-canvas.library.audio = new function(){};
+canvas.library.audio = new function(){
+    {{include:audio.js}}
+};

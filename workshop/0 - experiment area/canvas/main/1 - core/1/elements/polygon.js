@@ -33,7 +33,7 @@ this.polygon = {
             } );
 
         //render shape
-            coreElement.polygon.draw( 
+            elementLibrary.polygon.draw( 
                 context,
                 points, 
                 element.fillStyle, 

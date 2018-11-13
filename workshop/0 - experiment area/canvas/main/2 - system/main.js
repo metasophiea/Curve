@@ -6,6 +6,6 @@ canvas.system.keyboard = new function(){
     {{include:keyboard.js}}
 };
 
-{{include:paneSetup.js}}
+// {{include:paneSetup.js}}
 
 canvas.core.render.active(true);

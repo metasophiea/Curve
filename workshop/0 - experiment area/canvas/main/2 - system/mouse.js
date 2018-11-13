@@ -1,6 +1,6 @@
 //connect callbacks to mouse function lists
     canvas.core.callback.onmousedown = function(x,y,event){
-        // console.log( canvas.core.arrangement.getElementUnderPoint(x,y) );
+        console.log( canvas.core.arrangement.getElementUnderPoint(x,y) );
         // canvas.core.arrangement.remove( canvas.core.arrangement.getElementUnderPoint(x,y) );
         canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousedown)(event,{x:x,y:y});
     };

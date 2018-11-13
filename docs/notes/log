@@ -1,4 +1,15 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-11-13
+  - canvas experiment
+    - started new version of core. This one wraps itself in a ‘surface’ object,
+      to cover over any important handles core uses publicly. It also has the
+      group element as a plugged-in element and further pushes code out into
+      those plugged-in element files. I’m planning on adding “.add” and
+      “.remove” methods to the group object
+      Hopefully this will be the last version; though the ‘surface’ object helps
+      separate the code out more; becoming essentially an interface. Potentially
+      making the upgrade to other graphical backends a little smoother.
+
 2018-11-11
   - canvas experiment
     - redid layout
