@@ -1,11 +1,8 @@
-this.rectangle = function(
+this.circle = function(
     name=null, 
     x=0, 
     y=0, 
-    width=10, 
-    height=10, 
-    angle=0,
-    anchor={x:0,y:0}, 
+    r=2,
     fillStyle='rgba(255,100,255,1)', 
     strokeStyle='rgba(0,0,0,1)', 
     lineWidth=1,
@@ -15,12 +12,10 @@ this.rectangle = function(
     shadowBlur=20,
     shadowOffset={x:20, y:20},
 ){
-    var temp = canvas.core.arrangement.createElement('rectangle');
+    var temp = canvas.core.arrangement.createElement('circle');
     temp.name = name;
     temp.x = x; temp.y = y;
-    temp.width = width; temp.height = height;
-    temp.angle = angle;
-    temp.anchor = anchor;
+    temp.r = r;
     temp.style.fill = fillStyle;
     temp.style.stroke = strokeStyle;
     temp.style.lineWidth = lineWidth;

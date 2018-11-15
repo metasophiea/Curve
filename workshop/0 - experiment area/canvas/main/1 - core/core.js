@@ -1,4 +1,82 @@
 var core = this;
+var computeExtremities = function(isInitial,element,offset,elementCalculation){
+    //if this is the initial object to have this command run upon it; compute points and
+    // bounding box for provided element, and update the bounding boxes for all parents
+        if(isInitial){
+            //get and compute parent offsets
+                //gather x, y, and angle data from this element up
+                    var offsetList = [];
+                    var temp = element;
+                    while((temp=temp.parent) != undefined){
+                        offsetList.unshift( {x:temp.x, y:temp.y, a:temp.angle} );
+                    }
+                //calculate them together into an offset
+                    offset = { 
+                        x: offsetList[0]!=undefined ? offsetList[0].x : 0,
+                        y: offsetList[0]!=undefined ? offsetList[0].y : 0,
+                        a: 0
+                    };
+                    for(var a = 1; a < offsetList.length; a++){
+                        var point = canvas.library.math.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,-(offset.a+offsetList[a-1].a));
+                        offset.a += offsetList[a-1].a;
+                        offset.x += point.x;
+                        offset.y += point.y;
+                    }
+                    offset.a += offsetList[offsetList.length-1]!=undefined ? offsetList[offsetList.length-1].a : 0;
+        }
+
+    //perform points and bounding box calculation for this element
+        elementCalculation(element,offset);
+
+    //if this is the initial object to have this command run upon it;; update all parents'
+    // bounding boxes (if there are no changes to a parent's bounding box; don't update
+    // and don't bother checking their parent (or higher))
+        if(isInitial){
+            var temp = element;
+            while((temp=temp.parent) != undefined){
+                //discover if this new object would effect the bounding box of it's parent
+                    if( 
+                        temp.extremities.boundingBox.topLeft.x > element.extremities.boundingBox.topLeft.x ||
+                        temp.extremities.boundingBox.topLeft.y > element.extremities.boundingBox.topLeft.y ||
+                        temp.extremities.boundingBox.bottomRight.x < element.extremities.boundingBox.bottomRight.x ||
+                        temp.extremities.boundingBox.bottomRight.y < element.extremities.boundingBox.bottomRight.y 
+                    ){
+                        //it does effect, thus combine the current bounding box with this element's bounding 
+                        //box to determine the new bounding box for the parent
+                            temp.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints([
+                                temp.extremities.boundingBox.topLeft, temp.extremities.boundingBox.bottomRight,
+                                element.extremities.boundingBox.topLeft, element.extremities.boundingBox.bottomRight 
+                            ]);
+                    }else{
+                        //it doesn't effect it, so don't bother going any higher
+                            break;
+                    }
+            }   
+        }
+
+};
+var makeDotFrame = function(element){
+    //if dotFrame is set; insert all the  extremity points for this shape (in the middleground.front pane)
+    if(element.dotFrame){
+        function makePoint(x,y,id,r,colour){
+            var el = core.arrangement.getChildByName(element.name+'_'+id);
+            core.arrangement.remove(el);
+
+            var point = canvas.core.arrangement.createElement('circle');
+                point.name = element.name+'_'+id;
+                point.x = x; point.y = y; point.r = r;
+                point.style.fill = colour;
+                point.ignored = true;
+                core.arrangement.append(point);
+        }
+
+        makePoint(element.extremities.boundingBox.topLeft.x, element.extremities.boundingBox.topLeft.y, 'topLeft', 1, 'rgba(100,100,255,1)');
+        makePoint(element.extremities.boundingBox.bottomRight.x, element.extremities.boundingBox.bottomRight.y, 'bottomRight', 1, 'rgba(100,100,255,1)');
+        for(var a = 0; a < element.extremities.points.length; a++){
+            makePoint(element.extremities.points[a].x, element.extremities.points[a].y, 'point_'+a, 0.5, 'rgba(255,100,100,1)');
+        }
+    }
+};
 var elementLibrary = new function(){
     {{include:elementLibrary/*}} /**/
 }
@@ -35,26 +113,17 @@ var adapter = new function(){
 this.arrangement = new function(){
     var design = [];
 
-    function checkElementIsValid(element, destination){
-        //check for name
-            if(element.name == undefined){return 'element has no name'}
-
-        //check that the name is not already taken in this grouping
-            for(var a = 0; a < destination.length; a++){
-                if( destination[a].name == element.name ){ 
-                    console.error('element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+parent.name+'"')+''); 
-                    return;
-                }
-            }
-        
-        return;
-    }
-
     this.get = function(){return design};
-    this.createElement = function(type){ return elementLibrary[type].create(); };
+    this.createElement = function(type){
+        try{
+            return elementLibrary[type].create();
+        }catch(e){
+            console.error('attempting to create unknown shape "'+type+'"');
+        }
+    };
     this.prepend = function(element){
         //check that the element is valid
-            var temp = checkElementIsValid(element, design);
+            var temp = this.checkElementIsValid(element, design);
             if(temp != undefined){console.error('element invalid:',temp); return;}
 
         design.unshift(element);
@@ -63,7 +132,7 @@ this.arrangement = new function(){
     };
     this.append = function(element){
         //check that the element is valid
-            var temp = checkElementIsValid(element, design);
+            var temp = this.checkElementIsValid(element, design);
             if(temp != undefined){console.error('element invalid:',temp); return;}
 
         design.push(element);
@@ -73,7 +142,9 @@ this.arrangement = new function(){
     this.remove = function(element){
         if(element == undefined){return;}
 
-        design.splice(design.indexOf(element), 1);
+        var index = design.indexOf(element);
+        if(index < 0){return;}
+        design.splice(index, 1);
     };
     this.getElementUnderPoint = function(x,y){
 
@@ -97,23 +168,46 @@ this.arrangement = new function(){
                     }
 
                 //determine if the point lies within the bounds of this item
-                    if(item.type == 'group'){
-                        if( canvas.library.math.detectOverlap.pointWithinBoundingBox({x:tempX,y:tempY},item.boundingBox)){
+                    if( canvas.library.math.detectOverlap.pointWithinBoundingBox({x:tempX,y:tempY},item.extremities.boundingBox) ){
+                        if(item.type == 'group'){
                             var temp = recursiveSearch(tempX,tempY,item.children);
-                            if(temp){return temp;}
+                            if(temp != undefined){return temp;}
+                        }else{
+                            if( elementLibrary[item.type].pointWithinCustomHitBox != undefined ){
+                                if( elementLibrary[item.type].pointWithinCustomHitBox(item,{x:temp.x,y:temp.y}) ){ return item; }
+                            }
+                            else if( item.extremities.points != undefined ){
+                                if( canvas.library.math.detectOverlap.pointWithinPoly( {x:tempX,y:tempY}, item.extremities.points )){ return item; }
+                            }
                         }
-                    }else{
-                        if( !item.points ){continue;}//if this item doesn't have a bounding box; ignore all of this
-                        if( canvas.library.math.detectOverlap.pointWithinPoly( {x:tempX,y:tempY}, item.points )){ return item; }
-                    }
+                    }      
             }
         }
 
         return recursiveSearch(x,y,design);
     };
 
+    this.getChildByName = function(name){
+        for(var a = 0; a < design.length; a++){
+            if( design[a].name == name ){return design[a];}
+        }
+    };
     this.forceRefresh = function(element){
         elementLibrary[element.type].computeExtremities(element);
+    };
+    this.checkElementIsValid = function(element,destination){
+        //check for name
+            if(element.name == undefined){return 'element has no name'}
+
+        //check that the name is not already taken in this grouping
+            for(var a = 0; a < destination.length; a++){
+                if( destination[a].name == element.name ){ 
+                    console.error('element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+parent.name+'"')+''); 
+                    return;
+                }
+            }
+        
+        return;
     };
 };
 this.viewport = new function(){
@@ -124,7 +218,7 @@ this.viewport = new function(){
     };
     var state = {
         position:{x:0,y:0},
-        scale:1,
+        scale:2,
         angle:0,
         points:{ tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
         boundingBox:{ topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} },
@@ -194,6 +288,7 @@ this.viewport = new function(){
         state.angle = a;
         calculateViewportExtremities();
     };
+    this.windowPoint2workspacePoint = function(x,y){ return adapter.windowPoint2workspacePoint(x,y); };
 
     this.refresh = function(){
         adjustCanvasSize();
@@ -310,7 +405,12 @@ this.stats = new function(){
     };
 };
 this.callback = new function(){
-    var callbacks = ['onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onkeydown', 'onkeyup'];
+    var callbacks = [
+        'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 
+        'onkeydown', 'onkeyup',
+        'touchstart', 'touchmove', 'touchend', 'touchenter', 'touchleave', 'touchcancel',
+    ];
+
     for(var a = 0; a < callbacks.length; a++){
         //interface
             this[callbacks[a]] = function(x,y,event){};

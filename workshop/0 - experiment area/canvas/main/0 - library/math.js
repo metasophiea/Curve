@@ -72,6 +72,29 @@ this.pointsOfRect = function(x,y,width,height,angle=0,anchor={x:0,y:0}){
         corners.bl, 
     ];
 };
+this.pointsOfCircle = function(x,y,r,pointCount=3){
+    var output = [];
+    for(var a = 0; a < pointCount; a++){
+        output.push({
+            x: x + r*Math.sin(2*Math.PI*(a/pointCount)),
+            y: y + r*Math.cos(2*Math.PI*(a/pointCount)),
+        });
+    }
+    return output;
+};
+this.pointsOfText = function(text, x, y, angle, size, font, alignment, baseline){
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+
+    context.font = font;
+    context.textAlign = alignment;
+    context.textBaseline = baseline;
+
+    var d = context.measureText(text);
+    var width = d.width*size;
+
+    return [{x:x, y:y}, {x:x+width, y:y}];
+};
 this.detectOverlap = new function(){
     this.boundingBoxes = function(a, b){
         return !(

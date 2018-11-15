@@ -1,11 +1,13 @@
-this.rectangle = function(
-    name=null, 
-    x=0, 
+this.text = function(
+    name=null,
+    x=0,
     y=0, 
-    width=10, 
-    height=10, 
-    angle=0,
-    anchor={x:0,y:0}, 
+    text='Hello',
+    angle=0, 
+    anchor={x:0,y:0},
+    font='30px Arial',
+    textAlign='start', //start/end/center/lief/right 
+    textBaseline='alphabetic', //alphabetic/top/hanging/middle/ideographic/bottom
     fillStyle='rgba(255,100,255,1)', 
     strokeStyle='rgba(0,0,0,1)', 
     lineWidth=1,
@@ -15,12 +17,16 @@ this.rectangle = function(
     shadowBlur=20,
     shadowOffset={x:20, y:20},
 ){
-    var temp = canvas.core.arrangement.createElement('rectangle');
+    var temp = canvas.core.arrangement.createElement('text');
     temp.name = name;
-    temp.x = x; temp.y = y;
-    temp.width = width; temp.height = height;
+    temp.x = x; 
+    temp.y = y;
+    temp.text = text;
     temp.angle = angle;
     temp.anchor = anchor;
+    temp.style.font = font;
+    temp.style.textAlign = textAlign;
+    temp.style.textBaseline = textBaseline;
     temp.style.fill = fillStyle;
     temp.style.stroke = strokeStyle;
     temp.style.lineWidth = lineWidth;

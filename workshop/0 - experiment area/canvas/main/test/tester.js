@@ -4,7 +4,12 @@ function tester(item1,item2){
     }
     function comparer(item1,item2){
         if(getType(item1) != getType(item2)){ return false; }
-        if(typeof item1 == 'boolean' || typeof item1 == 'number' || typeof item1 == 'string'){ return item1 === item2; }
+        if(typeof item1 == 'boolean' || typeof item1 == 'string'){ return item1 === item2; }
+        if(typeof item1 == 'number'){
+            if( Math.abs(item1) < 1.0e-14 ){item1 = 0;}
+            if( Math.abs(item2) < 1.0e-14 ){item2 = 0;}
+            return item1 === item2;
+        }
         if(typeof item1 === 'undefined' || typeof item2 === 'undefined' || item1 === null || item2 === null){ return item1 === item2;  }
         if(getType(item1) == 'function'){
             item1 = item1.toString();

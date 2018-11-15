@@ -1,4 +1,29 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-11-15
+  - canvas experiment
+    - added circle shape
+    - added 'library.math.pointsOfCircle' which can return a defined number of
+      points of a circle
+    - added "pointWithinCustomHitBox" function concept to core element library
+      shapes (used within arrangement.getElementUnderPoint) so that calculation
+      of whether a piont is within a shape's bounds doesn't have to rely on the
+      shapes extremities.points for judgement (which is easy for a rectangle,
+      hard for a circle, but frighful for text or any polygon of similar
+      complexity)
+        Calculation of extremities is still required though, mainly for
+      judgement on rendering (and anyting to do with boundingBoxes)
+
+2018-11-14
+  - canvas experiment
+    - added "append", "prepend" and "remove" methods to group element
+    - added image and polygon shapes to core
+    - connected new core to system and parts
+    - added functionality for touch events to core
+    - pulled common 'computeExtremities' code out of elements, and into a core
+      function that they can use
+    - expanded polygon functionality to deal with more complex connecting lines
+      (quite badly though)
+
 2018-11-13
   - canvas experiment
     - started new version of core. This one wraps itself in a ‘surface’ object,

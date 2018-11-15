@@ -78,6 +78,29 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     corners.bl, 
                 ];
             };
+            this.pointsOfCircle = function(x,y,r,pointCount=3){
+                var output = [];
+                for(var a = 0; a < pointCount; a++){
+                    output.push({
+                        x: x + r*Math.sin(2*Math.PI*(a/pointCount)),
+                        y: y + r*Math.cos(2*Math.PI*(a/pointCount)),
+                    });
+                }
+                return output;
+            };
+            this.pointsOfText = function(text, x, y, angle, size, font, alignment, baseline){
+                var canvas = document.createElement('canvas');
+                var context = canvas.getContext('2d');
+            
+                context.font = font;
+                context.textAlign = alignment;
+                context.textBaseline = baseline;
+            
+                var d = context.measureText(text);
+                var width = d.width*size;
+            
+                return [{x:x, y:y}, {x:x+width, y:y}];
+            };
             this.detectOverlap = new function(){
                 this.boundingBoxes = function(a, b){
                     return !(
@@ -136,7 +159,413 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         canvas.core = new function(){
             var core = new function(){
                 var core = this;
+                var computeExtremities = function(isInitial,element,offset,elementCalculation){
+                    //if this is the initial object to have this command run upon it; compute points and
+                    // bounding box for provided element, and update the bounding boxes for all parents
+                        if(isInitial){
+                            //get and compute parent offsets
+                                //gather x, y, and angle data from this element up
+                                    var offsetList = [];
+                                    var temp = element;
+                                    while((temp=temp.parent) != undefined){
+                                        offsetList.unshift( {x:temp.x, y:temp.y, a:temp.angle} );
+                                    }
+                                //calculate them together into an offset
+                                    offset = { 
+                                        x: offsetList[0]!=undefined ? offsetList[0].x : 0,
+                                        y: offsetList[0]!=undefined ? offsetList[0].y : 0,
+                                        a: 0
+                                    };
+                                    for(var a = 1; a < offsetList.length; a++){
+                                        var point = canvas.library.math.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,-(offset.a+offsetList[a-1].a));
+                                        offset.a += offsetList[a-1].a;
+                                        offset.x += point.x;
+                                        offset.y += point.y;
+                                    }
+                                    offset.a += offsetList[offsetList.length-1]!=undefined ? offsetList[offsetList.length-1].a : 0;
+                        }
+                
+                    //perform points and bounding box calculation for this element
+                        elementCalculation(element,offset);
+                
+                    //if this is the initial object to have this command run upon it;; update all parents'
+                    // bounding boxes (if there are no changes to a parent's bounding box; don't update
+                    // and don't bother checking their parent (or higher))
+                        if(isInitial){
+                            var temp = element;
+                            while((temp=temp.parent) != undefined){
+                                //discover if this new object would effect the bounding box of it's parent
+                                    if( 
+                                        temp.extremities.boundingBox.topLeft.x > element.extremities.boundingBox.topLeft.x ||
+                                        temp.extremities.boundingBox.topLeft.y > element.extremities.boundingBox.topLeft.y ||
+                                        temp.extremities.boundingBox.bottomRight.x < element.extremities.boundingBox.bottomRight.x ||
+                                        temp.extremities.boundingBox.bottomRight.y < element.extremities.boundingBox.bottomRight.y 
+                                    ){
+                                        //it does effect, thus combine the current bounding box with this element's bounding 
+                                        //box to determine the new bounding box for the parent
+                                            temp.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints([
+                                                temp.extremities.boundingBox.topLeft, temp.extremities.boundingBox.bottomRight,
+                                                element.extremities.boundingBox.topLeft, element.extremities.boundingBox.bottomRight 
+                                            ]);
+                                    }else{
+                                        //it doesn't effect it, so don't bother going any higher
+                                            break;
+                                    }
+                            }   
+                        }
+                
+                };
+                var makeDotFrame = function(element){
+                    //if dotFrame is set; insert all the  extremity points for this shape (in the middleground.front pane)
+                    if(element.dotFrame){
+                        function makePoint(x,y,id,r,colour){
+                            var el = core.arrangement.getChildByName(element.name+'_'+id);
+                            core.arrangement.remove(el);
+                
+                            var point = canvas.core.arrangement.createElement('circle');
+                                point.name = element.name+'_'+id;
+                                point.x = x; point.y = y; point.r = r;
+                                point.style.fill = colour;
+                                point.ignored = true;
+                                core.arrangement.append(point);
+                        }
+                
+                        makePoint(element.extremities.boundingBox.topLeft.x, element.extremities.boundingBox.topLeft.y, 'topLeft', 1, 'rgba(100,100,255,1)');
+                        makePoint(element.extremities.boundingBox.bottomRight.x, element.extremities.boundingBox.bottomRight.y, 'bottomRight', 1, 'rgba(100,100,255,1)');
+                        for(var a = 0; a < element.extremities.points.length; a++){
+                            makePoint(element.extremities.points[a].x, element.extremities.points[a].y, 'point_'+a, 0.5, 'rgba(255,100,100,1)');
+                        }
+                    }
+                };
                 var elementLibrary = new function(){
+                    this.polygon = {
+                    
+                        create:function(){
+                            var obj = new function(){
+                                this.type = 'polygon';
+                    
+                                this.name = '';
+                                this.ignored = false;
+                                this.static = false;
+                                this.parent = undefined;
+                                this.dotFrame = false;
+                    
+                                this.points = [];
+                    
+                                this.style = {
+                                    fill:'rgba(100,255,255,1)',
+                                    stroke:'rgba(0,0,0,0)',
+                                    lineWidth:1,
+                                    lineJoin:'round',
+                                    miterLimit:2,
+                                    shadowColour:'rgba(0,0,0,0)',
+                                    shadowBlur:20,
+                                    shadowOffset:{x:20, y:20},
+                                };
+                            };
+                    
+                            return obj;
+                        },
+                    
+                        computeExtremities:function(element,offset){
+                            //if this shape is to be ignored anyway, don't bother with any of this
+                                if(element.ignored){return;}
+                    
+                            //actual computation of extremities
+                                computeExtremities(
+                                    offset == undefined,
+                                    element,
+                                    offset,
+                                    function(element,offset){
+                                        element.extremities = {};
+                                        element.extremities.points = element.points.map(function(point){
+                                            point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,-offset.a);
+                                            point.x += offset.x;
+                                            point.y += offset.y;
+                                            return point;
+                                        });
+                                        element.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( element.extremities.points );
+                                    },
+                                );
+                    
+                            //perform dot frame render
+                                makeDotFrame(element);
+                        },
+                    
+                        render:function(context,element,offset={x:0,y:0,a:0,parentAngle:0},static=false){        
+                            //run through all points in the poly, and account for the offsets
+                                var points = element.points.map( function(a){
+                                    //assuming the offset angle is not zero; calculate the correct position of the anchor point
+                                        if(offset.a != 0){
+                                            a = canvas.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
+                                        }
+                                    //add positional offset to point
+                                        return {x:a.x+offset.x, y:a.y+offset.y};
+                                } );
+                    
+                            //draw polygon path
+                                //get initial point and line thickness - if this element isn't static; adjust it's position and line thickness to account for viewport position
+                                //otherwise just use the value as is
+                                    var point = static ? {x:points[0].x,y:points[0].y} : adapter.workspacePoint2windowPoint(points[0].x,points[0].y);
+                                    var lineWidth_temp = static ? element.style.lineWidth : adapter.length(element.style.lineWidth);
+                    
+                                //begin drawing and move the inital point
+                                    context.beginPath(); 
+                                    context.moveTo(point.x,point.y);
+                                
+                                //go through all points, drawing lines between each, still checking to see if this element is static, and adjusting
+                                //the point's position if not
+                                    for(var a = 1; a < points.length; a++){
+                                        point = static ? {x:points[a].x,y:points[a].y} : adapter.workspacePoint2windowPoint(points[a].x,points[a].y);
+                                        context.lineTo(point.x,point.y);
+                                    }
+                                    context.closePath(); 
+                    
+                    
+                                //if the element isn't static; adjust it's shadow positions to account for viewport position
+                                    var temp = {};
+                                    if(!static){                    
+                                        temp.shadowBlur = adapter.length(element.style.shadowBlur);
+                                        temp.shadowOffset = {
+                                            x:adapter.length(element.style.shadowOffset.x),
+                                            y:adapter.length(element.style.shadowOffset.y),
+                                        };
+                                    }
+                    
+                            //paint this shape as requested
+                                context.fillStyle = element.style.fill;
+                                context.strokeStyle = element.style.stroke;
+                                context.lineWidth = lineWidth_temp;
+                                context.lineJoin = element.style.lineJoin;
+                                context.miterLimit = element.style.miterLimit;
+                                context.shadowColor = element.style.shadowColour;
+                                context.shadowBlur = temp.shadowBlur;
+                                context.shadowOffsetX = temp.shadowOffset.x;
+                                context.shadowOffsetY = temp.shadowOffset.y;
+                                context.fill(); 
+                                context.stroke();
+                        },
+                    
+                    };
+                    this.circle = {
+                    
+                        create:function(){
+                            var obj = new function(){
+                                this.type = 'circle';
+                    
+                                this.name = '';
+                                this.ignored = false;
+                                this.static = false;
+                                this.parent = undefined;
+                                this.dotFrame = false;
+                    
+                                this.x = 0;
+                                this.y = 0;
+                                this.r = 2;
+                    
+                                this.style = {
+                                    fill:'rgba(255,100,255,1)',
+                                    stroke:'rgba(0,0,0,0)',
+                                    lineWidth:1,
+                                    shadowColour:'rgba(0,0,0,0)',
+                                    shadowBlur:2,
+                                    shadowOffset:{x:1, y:1},
+                                };
+                            };
+                    
+                            return obj;
+                        },
+                    
+                        computeExtremities:function(element,offset){
+                            //if this shape is to be ignored anyway, don't bother with any of this
+                                if(element.ignored){return;}
+                    
+                            //actual computation of extremities
+                                computeExtremities(
+                                    offset == undefined,
+                                    element,
+                                    offset,
+                                    function(element,offset){
+                                        element.extremities = {};
+                                        element.extremities.points = canvas.library.math.pointsOfCircle(element.x, element.y, element.r, 20);
+                                        element.extremities.points = element.extremities.points.map(function(point){
+                                            point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                            point.x += offset.x;
+                                            point.y += offset.y;
+                                            return point;
+                                        });
+                                        element.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( element.extremities.points );
+                                    },
+                                );
+                    
+                            //perform dot frame render
+                                makeDotFrame(element);
+                        },
+                    
+                        render:function(context,element,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                            //adjust offset for parent's angle
+                                var point = canvas.library.math.cartesianAngleAdjust(element.x,element.y,offset.parentAngle);
+                                offset.x += point.x-element.x;
+                                offset.y += point.y-element.y;
+                    
+                            //collect element position into a neat package
+                            //collect element position into a neat package
+                                var position = {
+                                    location:{
+                                        x:(element.x+offset.x),
+                                        y:(element.y+offset.y)
+                                    },
+                                };
+                                var temp = {
+                                    r: element.r,
+                                    lineWidth:element.style.lineWidth,
+                                    shadowBlur:element.style.shadowBlur,
+                                    shadowOffset:{
+                                        x:element.style.shadowOffset.x,
+                                        y:element.style.shadowOffset.y,
+                                    }
+                                };
+                    
+                            //if the element isn't static; adjust it's position and line thickness to account for viewport position
+                                if(!static){
+                                    position.location = adapter.workspacePoint2windowPoint(position.location.x,position.location.y);
+                    
+                                    temp.r = adapter.length(element.r);
+                                    temp.lineWidth = adapter.length(element.style.lineWidth);
+                                    temp.shadowBlur = adapter.length(element.style.shadowBlur);
+                                    temp.shadowOffset = {
+                                        x:adapter.length(element.style.shadowOffset.x),
+                                        y:adapter.length(element.style.shadowOffset.y),
+                                    };
+                                }
+                    
+                            //actual render
+                                context.fillStyle = element.style.fill;
+                                context.strokeStyle = element.style.stroke;
+                                context.lineWidth = temp.lineWidth;
+                                context.shadowColor = element.style.shadowColour;
+                                context.shadowBlur = temp.shadowBlur;
+                                context.shadowOffsetX = temp.shadowOffset.x;
+                                context.shadowOffsetY = temp.shadowOffset.y;
+                                context.beginPath();
+                                context.arc(position.location.x,position.location.y, temp.r, 0, 2 * Math.PI, false);
+                                context.closePath(); 
+                                context.fill();
+                        },
+                    
+                    };
+                    this.image = {
+                    
+                        cache:{},
+                    
+                        create:function(){
+                            var obj = new function(){
+                                this.type = 'image';
+                    
+                                this.name = '';
+                                this.ignored = false;
+                                this.static = false;
+                                this.parent = undefined;
+                                this.dotFrame = false;
+                    
+                                this.x = 0;
+                                this.y = 0;
+                                this.anchor = {x:0,y:0};
+                                this.angle = 0;
+                                this.width = 0;
+                                this.height = 0;
+                    
+                                this.url = '';
+                    
+                                this.style = {
+                                    shadowColour:'rgba(0,0,0,0)',
+                                    shadowBlur:20,
+                                    shadowOffset:{x:20, y:20},
+                                };
+                            };
+                    
+                            return obj;
+                        },
+                    
+                        computeExtremities:function(element,offset){
+                            //if this shape is to be ignored anyway, don't bother with any of this
+                                if(element.ignored){return;}
+                    
+                            //actual computation of extremities
+                                computeExtremities(
+                                    offset == undefined,
+                                    element,
+                                    offset,
+                                    function(element,offset){
+                                        element.extremities = {};
+                                        element.extremities.points = canvas.library.math.pointsOfRect(element.x, element.y, element.width, element.height, element.angle, element.anchor);
+                                        element.extremities.points = element.extremities.points.map(function(point){
+                                            point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                            point.x += offset.x;
+                                            point.y += offset.y;
+                                            return point;
+                                        });
+                                        element.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( element.extremities.points );
+                                    },
+                                );
+                    
+                            //perform dot frame render
+                                makeDotFrame(element);
+                        },
+                    
+                        render:function(context,element,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                            //adjust offset for parent's angle
+                                var point = canvas.library.math.cartesianAngleAdjust(element.x,element.y,offset.parentAngle);
+                                offset.x += point.x-element.x;
+                                offset.y += point.y-element.y;
+                    
+                            //collect element position into a neat package
+                                var position = {
+                                    location:{
+                                        x:(element.x+offset.x),
+                                        y:(element.y+offset.y)
+                                    },
+                                    angle:(element.angle+offset.a)
+                                };
+                                var temp = {
+                                    width: element.width,
+                                    height: element.height,
+                                };
+                    
+                            //if the element isn't static; adjust it's position to account for viewport position
+                                if(!static){
+                                    position.location = adapter.workspacePoint2windowPoint(position.location.x,position.location.y);
+                                    position.location = canvas.library.math.cartesianAngleAdjust(position.location.x,position.location.y,-position.angle);
+                                    position.location.x += adapter.length(-element.anchor.x*temp.width);
+                                    position.location.y += adapter.length(-element.anchor.y*temp.height);
+                    
+                                    temp.width = adapter.length(temp.width);
+                                    temp.height = adapter.length(temp.height);
+                    
+                                    temp.shadowBlur = adapter.length(element.style.shadowBlur);
+                                    temp.shadowOffset = {
+                                        x:adapter.length(element.style.shadowOffset.x),
+                                        y:adapter.length(element.style.shadowOffset.y),
+                                    };
+                                }
+                    
+                            //if this image url is not cached; cache it
+                                if( !this.cache.hasOwnProperty(element.url) ){
+                                    this.cache[element.url] = new Image(); 
+                                    this.cache[element.url].src = element.url;
+                                }
+                    
+                            //actual render
+                                context.shadowColor = element.style.shadowColour;
+                                context.shadowBlur = temp.shadowBlur;
+                                context.shadowOffsetX = temp.shadowOffset.x;
+                                context.shadowOffsetY = temp.shadowOffset.y;
+                                context.save();
+                                context.rotate( position.angle );
+                                context.drawImage( this.cache[element.url], position.location.x, position.location.y, temp.width, temp.height );
+                                context.restore();
+                        },
+                    };
                     this.rectangle = {
                     
                         create:function(){
@@ -147,18 +576,22 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 this.ignored = false;
                                 this.static = false;
                                 this.parent = undefined;
+                                this.dotFrame = false;
                     
                                 this.x = 0;
                                 this.y = 0;
                                 this.anchor = {x:0,y:0};
                                 this.angle = 0;
-                                this.width = 0;
-                                this.height = 0;
+                                this.width = 10;
+                                this.height = 10;
                     
                                 this.style = {
                                     fill:'rgba(255,100,255,1)',
                                     stroke:'rgba(0,0,0,0)',
                                     lineWidth:1,
+                                    shadowColour:'rgba(0,0,0,0)',
+                                    shadowBlur:2,
+                                    shadowOffset:{x:1, y:1},
                                 };
                             };
                     
@@ -166,73 +599,37 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         },
                     
                         computeExtremities:function(element,offset){
-                            var original = offset == undefined;
+                            //if this shape is to be ignored anyway, don't bother with any of this
+                                if(element.ignored){return;}
                     
-                            //if an offset has not been provided; compute points and bounding box for provided element, and
-                            // update the bounding boxes for all parents
-                                if(original){
-                                    //get and compute parent offsets
-                                        //gather x, y, and angle data from this element up
-                                            var offsetList = [];
-                                            var temp = element;
-                                            while((temp=temp.parent) != undefined){
-                                                offsetList.unshift( {x:temp.x, y:temp.y, a:temp.angle} );
-                                            }
-                                        //calculate them together into an offset
-                                            offset = { 
-                                                x: offsetList[0]!=undefined ? offsetList[0].x : 0,
-                                                y: offsetList[0]!=undefined ? offsetList[0].y : 0,
-                                                a: 0
-                                            };
-                                            for(var a = 1; a < offsetList.length; a++){
-                                                var point = canvas.library.math.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,-(offset.a+offsetList[a-1].a));
-                                                offset.a += offsetList[a-1].a;
-                                                offset.x += point.x;
-                                                offset.y += point.y;
-                                            }
-                                            offset.a += offsetList[offsetList.length-1]!=undefined ? offsetList[offsetList.length-1].a : 0;
-                                }
+                            //actual computation of extremities
+                                computeExtremities(
+                                    offset == undefined,
+                                    element,
+                                    offset,
+                                    function(element,offset){
+                                        element.extremities = {};
+                                        element.extremities.points = canvas.library.math.pointsOfRect(element.x, element.y, element.width, element.height, element.angle, element.anchor);
+                                        element.extremities.points = element.extremities.points.map(function(point){
+                                            point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                            point.x += offset.x;
+                                            point.y += offset.y;
+                                            return point;
+                                        });
+                                        element.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( element.extremities.points );
+                                    },
+                                );
                     
-                            //create points and bounding box for this element
-                                element.points = canvas.library.math.pointsOfRect(element.x, element.y, element.width, element.height, element.angle, element.anchor);
-                                element.points = element.points.map(function(point){
-                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                                    point.x += offset.x;
-                                    point.y += offset.y;
-                                    return point;
-                                });
-                    
-                                
-                                element.boundingBox = canvas.library.math.boundingBoxFromPoints( element.points );
-                    
-                            //if an offset has not been provided; update all parents' bounding boxes (if there are no
-                            // changes to a parent's bounding box; don't update and don't bother checking their parent
-                            // (or higher))
-                                if(original){
-                                    var temp = element;
-                                    while((temp=temp.parent) != undefined){
-                                        //discover if this new object would effect the bounding box of it's parent
-                                            if( 
-                                                temp.boundingBox.topLeft.x > element.boundingBox.topLeft.x ||
-                                                temp.boundingBox.topLeft.y > element.boundingBox.topLeft.y ||
-                                                temp.boundingBox.bottomRight.x < element.boundingBox.bottomRight.x ||
-                                                temp.boundingBox.bottomRight.y < element.boundingBox.bottomRight.y 
-                                            ){
-                                                //it does effect, thus combine the current bounding box with this element's bounding 
-                                                //box to determine the new bounding box for the parent
-                                                    temp.boundingBox = canvas.library.math.boundingBoxFromPoints([
-                                                        temp.boundingBox.topLeft, temp.boundingBox.bottomRight,
-                                                        element.boundingBox.topLeft, element.boundingBox.bottomRight 
-                                                    ]);
-                                            }else{
-                                                //it doesn't effect it, so don't bother going any higher
-                                                    break;
-                                            }
-                                    }   
-                                }
+                            //perform dot frame render
+                                makeDotFrame(element);
                         },
                     
-                        render:function(context,element,offset={x:0,y:0,a:0},static=false){
+                        render:function(context,element,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                            //adjust offset for parent's angle
+                                var point = canvas.library.math.cartesianAngleAdjust(element.x,element.y,offset.parentAngle);
+                                offset.x += point.x-element.x;
+                                offset.y += point.y-element.y;
+                    
                             //collect element position into a neat package
                                 var position = {
                                     location:{
@@ -258,18 +655,61 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     temp.height = adapter.length(temp.height);
                     
                                     temp.lineWidth = adapter.length(temp.lineWidth);
+                                    temp.shadowBlur = adapter.length(element.style.shadowBlur);
+                                    temp.shadowOffset = {
+                                        x:adapter.length(element.style.shadowOffset.x),
+                                        y:adapter.length(element.style.shadowOffset.y),
+                                    };
                                 }
                     
                             //actual render
                                 context.fillStyle = element.style.fill;
                                 context.strokeStyle = element.style.stroke;
                                 context.lineWidth = temp.lineWidth;
+                                context.shadowColor = element.style.shadowColour;
+                                context.shadowBlur = temp.shadowBlur;
+                                context.shadowOffsetX = temp.shadowOffset.x;
+                                context.shadowOffsetY = temp.shadowOffset.y;
                                 context.save();
                                 context.rotate( position.angle );
                                 context.fillRect( position.location.x, position.location.y, temp.width, temp.height );
                                 context.strokeRect( position.location.x, position.location.y, temp.width, temp.height );
                                 context.restore();
                         },
+                    
+                    };
+                    this.advancedPolygon = {
+                    
+                        create:function(){
+                            var obj = new function(){
+                                this.type = 'advancedPolygon';
+                    
+                                this.name = '';
+                                this.ignored = false;
+                                this.static = false;
+                                this.parent = undefined;
+                    
+                                this.points = [];
+                    
+                                this.style = {
+                                    fill:'rgba(100,255,255,1)',
+                                    stroke:'rgba(0,0,0,0)',
+                                    lineWidth:1,
+                                    lineJoin:'round',
+                                    miterLimit:2,
+                                    shadowColour:'rgba(0,0,0,0)',
+                                    shadowBlur:20,
+                                    shadowOffset:{x:20, y:20},
+                                };
+                            };
+                    
+                            return obj;
+                        },
+                    
+                        computeExtremities:function(element,offset){},
+                    
+                        render:function(context,element,offset={x:0,y:0,a:0,parentAngle:0},static=false){  },
+                    
                     };
                     this.group = {
                     
@@ -281,97 +721,229 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 this.ignored = false;
                                 this.static = false;
                                 this.parent = undefined;
+                                this.dotFrame = false;
                     
                                 this.x = 0;
                                 this.y = 0;
                                 this.angle = 0;
                                 this.children = [];
+                    
+                                this.prepend = function(element){
+                                    //check that the element is valid
+                                        var temp = core.arrangement.checkElementIsValid(element, this.children);
+                                        if(temp != undefined){console.error('element invalid:',temp); return;}
+                    
+                                    this.children.unshift(element);
+                    
+                                    element.parent = this;
+                                    
+                                    elementLibrary[element.type].computeExtremities(element);
+                                };
+                                this.append = function(element){            
+                                    //check that the element is valid
+                                        var temp = core.arrangement.checkElementIsValid(element, this.children);
+                                        if(temp != undefined){console.error('element invalid:',temp); return;}
+                    
+                                    this.children.push(element);
+                    
+                                    element.parent = this;
+                                    
+                                    elementLibrary[element.type].computeExtremities(element);
+                    
+                                };
+                                this.remove = function(element){
+                                    if(element == undefined){return;}
+                    
+                                    var index = this.children.indexOf(element);
+                                    if(index < 0){return;}
+                                    this.children.splice(index, 1);
+                    
+                                    element.parent = undefined;
+                                };
+                                this.getChildByName = function(name){
+                                    for(var a = 0; a < this.children.length; a++){
+                                        if( this.children[a].name == name ){return this.children[a];}
+                                    }
+                                };
                             };
                     
                             return obj;
                         },
                     
                         computeExtremities:function(element,offset){
-                            var original = offset == undefined;
+                            //if this shape is to be ignored anyway, don't bother with any of this
+                                if(element.ignored){return;}
                     
-                            //if an offset has not been provided; compute points and bounding box for provided element, and
-                            // update the bounding boxes for all parents
-                                if(original){
-                                    //get and compute parent offsets
-                                        //gather x, y, and angle data from this element up
-                                            var offsetList = [];
-                                            var temp = element;
-                                            while((temp=temp.parent) != undefined){
-                                                offsetList.unshift( {x:temp.x, y:temp.y, a:temp.angle} );
-                                            }
-                                        //calculate them together into an offset
-                                            offset = { 
-                                                x: offsetList[0]!=undefined ? offsetList[0].x : 0,
-                                                y: offsetList[0]!=undefined ? offsetList[0].y : 0,
-                                                a: 0
-                                            };
-                                            for(var a = 1; a < offsetList.length; a++){
-                                                var point = canvas.library.math.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,-(offset.a+offsetList[a-1].a));
-                                                offset.a += offsetList[a-1].a;
-                                                offset.x += point.x;
-                                                offset.y += point.y;
-                                            }
-                                            offset.a += offsetList[offsetList.length-1]!=undefined ? offsetList[offsetList.length-1].a : 0;
-                                }
+                            //actual computation of extremities
+                                computeExtremities(
+                                    offset == undefined,
+                                    element,
+                                    offset,
+                                    function(element,offset){
                     
-                            //create points and bounding box for this element
-                                element.points = [{x:element.x+offset.x, y:element.y+offset.y}];
-                                element.boundingBox = canvas.library.math.boundingBoxFromPoints( element.points );
-                                for(var a = 0; a < element.children.length; a++){
-                                    var child = element.children[a];
-                                    var temp = elementLibrary[child.type].computeExtremities(child,offset);
-                                }
+                                        element.extremities = {};
+                                        element.extremities.points = [{x:element.x+offset.x, y:element.y+offset.y}];
+                                        element.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( element.extremities.points );
+                                        for(var a = 0; a < element.children.length; a++){
+                                            var child = element.children[a];
+                                            elementLibrary[child.type].computeExtremities(child,offset);
+                                        }
                     
-                            //if an offset has not been provided; update all parents' bounding boxes (if there are no
-                            // changes to a parent's bounding box; don't update and don't bother checking their parent
-                            // (or higher))
-                                if(original){
-                                    var temp = element;
-                                    while((temp=temp.parent) != undefined){
-                                        //discover if this new object would effect the bounding box of it's parent
-                                            if( 
-                                                temp.boundingBox.topLeft.x > element.boundingBox.topLeft.x ||
-                                                temp.boundingBox.topLeft.y > element.boundingBox.topLeft.y ||
-                                                temp.boundingBox.bottomRight.x < element.boundingBox.bottomRight.x ||
-                                                temp.boundingBox.bottomRight.y < element.boundingBox.bottomRight.y 
-                                            ){
-                                                //it does effect, thus combine the current bounding box with this element's bounding 
-                                                //box to determine the new bounding box for the parent
-                                                    temp.boundingBox = canvas.library.math.boundingBoxFromPoints([
-                                                        temp.boundingBox.topLeft, temp.boundingBox.bottomRight,
-                                                        element.boundingBox.topLeft, element.boundingBox.bottomRight 
-                                                    ]);
-                                            }else{
-                                                //it doesn't effect it, so don't bother going any higher
-                                                    break;
-                                            }
-                                    }   
-                                }
+                                    },
+                                );
+                    
+                            //perform dot frame render
+                                makeDotFrame(element);
                         },
                     
-                        render:function(context,element,offset={x:0,y:0,a:0},static=false){
+                        render:function(context,element,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                            //adjust offset for parent's angle
+                                var point = canvas.library.math.cartesianAngleAdjust(element.x,element.y,offset.parentAngle);
+                                offset.x += point.x-element.x;
+                                offset.y += point.y-element.y;
                     
-                            for(var a = 0; a < element.children.length; a++){
-                                var item = element.children[a];
-                                var point = canvas.library.math.cartesianAngleAdjust(item.x,item.y,element.angle);
+                            //cycle through all children
+                                for(var a = 0; a < element.children.length; a++){
+                                    var item = element.children[a];
                     
-                                elementLibrary[item.type].render(
-                                    context,
-                                    item,
-                                    {
-                                        x: offset.x + element.x + ( point.x-item.x ),
-                                        y: offset.y + element.y + ( point.y-item.y ),
-                                        a: offset.a + element.angle,
+                                    elementLibrary[item.type].render(
+                                        context,
+                                        item,
+                                        {
+                                            a: offset.a + element.angle,
+                                            x: offset.x + element.x,
+                                            y: offset.y + element.y,
+                                            parentAngle: element.angle,
+                                        },
+                                        (static||item.static)
+                                    );
+                                }
+                    
+                        },
+                    
+                    };
+                    this.text = {
+                    
+                        create:function(){
+                            var obj = new function(){
+                                this.type = 'text';
+                    
+                                this.name = '';
+                                this.ignored = false;
+                                this.static = false;
+                                this.parent = undefined;
+                                this.dotFrame = true;
+                    
+                                this.x = 0;
+                                this.y = 0;
+                                this.text = 'Hello';
+                                this.angle = 0;
+                                this.size = 0.5;
+                    
+                                this.style = {
+                                    font:'100px Arial',
+                                    align:'start', //start/end/center/lief/right 
+                                    baseline:'alphabetic',  //alphabetic/top/hanging/middle/ideographic/bottom
+                                    fill:'rgba(255,100,100,1)',
+                                    stroke:'rgba(0,0,0,0)',
+                                    lineWidth:1,
+                                    shadowColour:'rgba(0,0,0,0.5)',
+                                    shadowBlur:2,
+                                    shadowOffset:{x:20, y:20},
+                                };
+                            };
+                    
+                            return obj;  
+                        },
+                    
+                        computeExtremities:function(element,offset){
+                            //if this shape is to be ignored anyway, don't bother with any of this
+                                if(element.ignored){return;}
+                    
+                            //actual computation of extremities
+                                computeExtremities(
+                                    offset == undefined,
+                                    element,
+                                    offset,
+                                    function(element,offset){
+                                        element.extremities = {};
+                                        element.extremities.points = canvas.library.math.pointsOfText(
+                                            element.text,
+                                            element.x, 
+                                            element.y, 
+                                            element.angle, 
+                                            element.size,
+                                            element.style.font,
+                                            element.style.align,
+                                            element.style.baseline,
+                                        );
+                                        element.extremities.points = element.extremities.points.map(function(point){
+                                            point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                            point.x += offset.x;
+                                            point.y += offset.y;
+                                            return point;
+                                        });
+                                        element.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( element.extremities.points );
                                     },
-                                    (static||item.static)
                                 );
-                            }
+                        
+                            //perform dot frame render
+                                makeDotFrame(element);
+                        },
                     
+                        render:function(context,element,offset={x:0,y:0,a:0,parentAngle:0},static=false){        
+                            //adjust offset for parent's angle
+                                var point = canvas.library.math.cartesianAngleAdjust(element.x,element.y,offset.parentAngle);
+                                offset.x += point.x-element.x;
+                                offset.y += point.y-element.y;
+                    
+                            //collect element adjustable attributes into neat package
+                                var package = {
+                                    location:{
+                                            x: (element.x+offset.x),
+                                            y: (element.y+offset.y)
+                                        },
+                                    angle: (element.angle+offset.a),
+                                    size: element.size,
+                    
+                                    lineWidth: element.style.lineWidth,
+                                    shadowBlur: element.style.shadowBlur,
+                                    shadowOffsetX: element.style.shadowOffset.x,
+                                    shadowOffsetY: element.style.shadowOffset.y,
+                                };
+                    
+                            //if the element isn't static; adjust the package
+                                if(!static){
+                                    package.location = adapter.workspacePoint2windowPoint(package.location.x,package.location.y);
+                                    package.location = canvas.library.math.cartesianAngleAdjust(package.location.x,package.location.y,-package.angle);
+                    
+                                    package.size = adapter.length(package.size);
+                                    
+                                    package.lineWidth = adapter.length(package.lineWidth);
+                                    package.shadowBlur = adapter.length(package.shadowBlur);
+                                    package.shadowOffsetX = adapter.length(package.shadowOffsetX);
+                                    package.shadowOffsetY = adapter.length(package.shadowOffsetY);
+                                }
+                    
+                            //actual render
+                                context.font = element.style.font;
+                                context.textAlign = element.style.align;
+                                context.textBaseline = element.style.baseline;
+                                context.fillStyle = element.style.fill;
+                                context.strokeStyle = element.style.stroke;
+                                context.lineWidth = package.lineWidth;
+                                context.shadowColor = element.style.shadowColour;
+                                context.shadowBlur = package.shadowBlur;
+                                context.shadowOffsetX = package.shadowOffsetX;
+                                context.shadowOffsetY = package.shadowOffsetY;
+                    
+                                context.save();
+                                context.rotate( package.angle );
+                                context.scale(package.size,package.size);
+                                context.fillText( element.text, package.location.x/package.size, package.location.y/package.size );
+                                context.shadowColor = 'rgba(0,0,0,0)'; //to stop stroke shadows drawing over the fill text (an uncreative solution)
+                                context.strokeText( element.text, package.location.x/package.size, package.location.y/package.size );
+                                context.restore();
                         },
                     
                     };
@@ -409,26 +981,17 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.arrangement = new function(){
                     var design = [];
                 
-                    function checkElementIsValid(element, destination){
-                        //check for name
-                            if(element.name == undefined){return 'element has no name'}
-                
-                        //check that the name is not already taken in this grouping
-                            for(var a = 0; a < destination.length; a++){
-                                if( destination[a].name == element.name ){ 
-                                    console.error('element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+parent.name+'"')+''); 
-                                    return;
-                                }
-                            }
-                        
-                        return;
-                    }
-                
                     this.get = function(){return design};
-                    this.createElement = function(type){ return elementLibrary[type].create(); };
+                    this.createElement = function(type){
+                        try{
+                            return elementLibrary[type].create();
+                        }catch(e){
+                            console.error('attempting to create unknown shape "'+type+'"');
+                        }
+                    };
                     this.prepend = function(element){
                         //check that the element is valid
-                            var temp = checkElementIsValid(element, design);
+                            var temp = this.checkElementIsValid(element, design);
                             if(temp != undefined){console.error('element invalid:',temp); return;}
                 
                         design.unshift(element);
@@ -437,7 +1000,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     this.append = function(element){
                         //check that the element is valid
-                            var temp = checkElementIsValid(element, design);
+                            var temp = this.checkElementIsValid(element, design);
                             if(temp != undefined){console.error('element invalid:',temp); return;}
                 
                         design.push(element);
@@ -447,7 +1010,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     this.remove = function(element){
                         if(element == undefined){return;}
                 
-                        design.splice(design.indexOf(element), 1);
+                        var index = design.indexOf(element);
+                        if(index < 0){return;}
+                        design.splice(index, 1);
                     };
                     this.getElementUnderPoint = function(x,y){
                 
@@ -471,23 +1036,46 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
                 
                                 //determine if the point lies within the bounds of this item
-                                    if(item.type == 'group'){
-                                        if( canvas.library.math.detectOverlap.pointWithinBoundingBox({x:tempX,y:tempY},item.boundingBox)){
+                                    if( canvas.library.math.detectOverlap.pointWithinBoundingBox({x:tempX,y:tempY},item.extremities.boundingBox) ){
+                                        if(item.type == 'group'){
                                             var temp = recursiveSearch(tempX,tempY,item.children);
-                                            if(temp){return temp;}
+                                            if(temp != undefined){return temp;}
+                                        }else{
+                                            if( elementLibrary[item.type].pointWithinCustomHitBox != undefined ){
+                                                if( elementLibrary[item.type].pointWithinCustomHitBox(item,{x:temp.x,y:temp.y}) ){ return item; }
+                                            }
+                                            else if( item.extremities.points != undefined ){
+                                                if( canvas.library.math.detectOverlap.pointWithinPoly( {x:tempX,y:tempY}, item.extremities.points )){ return item; }
+                                            }
                                         }
-                                    }else{
-                                        if( !item.points ){continue;}//if this item doesn't have a bounding box; ignore all of this
-                                        if( canvas.library.math.detectOverlap.pointWithinPoly( {x:tempX,y:tempY}, item.points )){ return item; }
-                                    }
+                                    }      
                             }
                         }
                 
                         return recursiveSearch(x,y,design);
                     };
                 
+                    this.getChildByName = function(name){
+                        for(var a = 0; a < design.length; a++){
+                            if( design[a].name == name ){return design[a];}
+                        }
+                    };
                     this.forceRefresh = function(element){
                         elementLibrary[element.type].computeExtremities(element);
+                    };
+                    this.checkElementIsValid = function(element,destination){
+                        //check for name
+                            if(element.name == undefined){return 'element has no name'}
+                
+                        //check that the name is not already taken in this grouping
+                            for(var a = 0; a < destination.length; a++){
+                                if( destination[a].name == element.name ){ 
+                                    console.error('element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+parent.name+'"')+''); 
+                                    return;
+                                }
+                            }
+                        
+                        return;
                     };
                 };
                 this.viewport = new function(){
@@ -498,7 +1086,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     var state = {
                         position:{x:0,y:0},
-                        scale:1,
+                        scale:2,
                         angle:0,
                         points:{ tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
                         boundingBox:{ topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} },
@@ -568,6 +1156,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         state.angle = a;
                         calculateViewportExtremities();
                     };
+                    this.windowPoint2workspacePoint = function(x,y){ return adapter.windowPoint2workspacePoint(x,y); };
                 
                     this.refresh = function(){
                         adjustCanvasSize();
@@ -684,7 +1273,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                 };
                 this.callback = new function(){
-                    var callbacks = ['onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onkeydown', 'onkeyup'];
+                    var callbacks = [
+                        'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 
+                        'onkeydown', 'onkeyup',
+                        'touchstart', 'touchmove', 'touchend', 'touchenter', 'touchleave', 'touchcancel',
+                    ];
+                
                     for(var a = 0; a < callbacks.length; a++){
                         //interface
                             this[callbacks[a]] = function(x,y,event){};
@@ -746,12 +1340,14 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.prepend = function(element){return core.arrangement.prepend(element);};
                 this.remove = function(element){return core.arrangement.remove(element);};
                 this.getElementUnderPoint = function(x,y){return core.arrangement.getElementUnderPoint(x,y);};
+                
                 this.forceRefresh = function(element){return core.arrangement.forceRefresh(element);};
             };
             this.viewport = new function(){
                 this.position = function(x,y){return core.viewport.position(x,y);};
                 this.scale = function(s){return core.viewport.scale(s);};
                 this.angle = function(a){return core.viewport.angle(a);};
+                this.windowPoint2workspacePoint = function(x,y){ return core.viewport.windowPoint2workspacePoint(x,y); };
             };
             this.render = new function(){
                 this.frame = function(noClear=false){return core.render.frame(noClear);};
@@ -766,40 +1362,61 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 core.callback.onmousedown = function(surface){
                     return function(x,y,event){ surface.onmousedown(x,y,event); };
                 }(this);
-            
                 this.onmouseup = function(x,y,event){};
                 core.callback.onmouseup = function(surface){
                     return function(x,y,event){ surface.onmouseup(x,y,event); };
                 }(this);
-            
                 this.onmousemove = function(x,y,event){};
                 core.callback.onmousemove = function(surface){
                     return function(x,y,event){ surface.onmousemove(x,y,event); };
                 }(this);
-            
                 this.onmouseenter = function(x,y,event){};
                 core.callback.onmouseenter = function(surface){
                     return function(x,y,event){ surface.onmouseenter(x,y,event); };
                 }(this);
-            
                 this.onmouseleave = function(x,y,event){};
                 core.callback.onmouseleave = function(surface){
                     return function(x,y,event){ surface.onmouseleave(x,y,event); };
                 }(this);
-            
                 this.onwheel = function(x,y,event){};
                 core.callback.onwheel = function(surface){
                     return function(x,y,event){ surface.onwheel(x,y,event); };
                 }(this);
             
+            
                 this.onkeydown = function(x,y,event){};
                 core.callback.onkeydown = function(surface){
                     return function(x,y,event){ surface.onkeydown(x,y,event); };
                 }(this);
-                
                 this.onkeyup = function(x,y,event){};
                 core.callback.onkeyup = function(surface){
                     return function(x,y,event){ surface.onkeyup(x,y,event); };
+                }(this);
+            
+            
+                this.touchstart = function(x,y,event){};
+                core.callback.touchstart = function(surface){
+                    return function(x,y,event){ surface.touchstart(x,y,event); };
+                }(this);
+                this.touchmove = function(x,y,event){};
+                core.callback.touchmove = function(surface){
+                    return function(x,y,event){ surface.touchmove(x,y,event); };
+                }(this);
+                this.touchend = function(x,y,event){};
+                core.callback.touchend = function(surface){
+                    return function(x,y,event){ surface.touchend(x,y,event); };
+                }(this);
+                this.touchenter = function(x,y,event){};
+                core.callback.touchenter = function(surface){
+                    return function(x,y,event){ surface.touchenter(x,y,event); };
+                }(this);
+                this.touchleave = function(x,y,event){};
+                core.callback.touchleave = function(surface){
+                    return function(x,y,event){ surface.touchleave(x,y,event); };
+                }(this);
+                this.touchcancel = function(x,y,event){};
+                core.callback.touchcancel = function(surface){
+                    return function(x,y,event){ surface.touchcancel(x,y,event); };
                 }(this);
             };
         };
@@ -809,22 +1426,22 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 canvas.core.callback.onmousedown = function(x,y,event){
                     console.log( canvas.core.arrangement.getElementUnderPoint(x,y) );
                     // canvas.core.arrangement.remove( canvas.core.arrangement.getElementUnderPoint(x,y) );
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousedown)(event,{x:x,y:y});
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousedown)({event:event,x:x,y:y});
                 };
                 canvas.core.callback.onmousemove = function(x,y,event){ 
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousemove)(event,{x:x,y:y});
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousemove)({event:event,x:x,y:y});
                 };
                 canvas.core.callback.onmouseup = function(x,y,event){ 
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseup)(event,{x:x,y:y});
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseup)({event:event,x:x,y:y});
                 };
                 canvas.core.callback.onmouseleave = function(x,y,event){ 
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseleave)(event,{x:x,y:y});
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseleave)({event:event,x:x,y:y});
                 };
                 canvas.core.callback.onmouseenter = function(x,y,event){ 
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseenter)(event,{x:x,y:y});
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseenter)({event:event,x:x,y:y});
                 };
                 canvas.core.callback.onwheel = function(x,y,event){
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onwheel)(event,{x:x,y:y});
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onwheel)({event:event,x:x,y:y});
                 };
             
             
@@ -836,7 +1453,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.functionList.onmousedown = [
                     {
                         'specialKeys':[],
-                        'function':function(event,data){
+                        'function':function(data){
                             //save the old listener functions of the canvas
                                 canvas.system.mouse.tmp.onmousemove_old = canvas.onmousemove;
                                 canvas.system.mouse.tmp.onmouseleave_old = canvas.onmouseleave;
@@ -844,7 +1461,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             
                             //save the viewport position and click position
                                 canvas.system.mouse.tmp.oldPosition = canvas.core.viewport.position();
-                                canvas.system.mouse.tmp.clickPosition = {x:event.x, y:event.y};
+                                canvas.system.mouse.tmp.clickPosition = {x:data.event.x, y:data.event.y};
             
                             //replace the canvas's listeners 
                                 canvas.onmousemove = function(event){
@@ -879,20 +1496,20 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.functionList.onwheel = [
                 {
                     'specialKeys':[],
-                    'function':function(event,data){
+                    'function':function(data){
                         var scaleLimits = {'max':20, 'min':0.1};
             
                         //perform scale and associated pan
                             //discover point under mouse
-                                var originalPoint = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                var originalPoint = {x:data.x, y:data.y};
                             //perform actual scaling
                                 var scale = canvas.core.viewport.scale();
-                                scale -= scale*(event.deltaY/100);
+                                scale -= scale*(data.event.deltaY/100);
                                 if( scale > scaleLimits.max ){scale = scaleLimits.max;}
                                 if( scale < scaleLimits.min ){scale = scaleLimits.min;}
                                 canvas.core.viewport.scale(scale);
-                            //discover point under mouse
-                                var newPoint = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                            //discover new point under mouse
+                                var newPoint = canvas.core.viewport.windowPoint2workspacePoint(data.event.x,data.event.y);
                             //pan so we're back at the old point (accounting for angle)
                                 var pan = canvas.library.math.cartesianAngleAdjust(
                                     (newPoint.x - originalPoint.x),
@@ -952,6 +1569,50 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             ];
         };
         
+        //add main panes to arrangement
+        canvas.system.pane = {};
+        
+        //background
+            canvas.system.pane.background = canvas.core.arrangement.createElement('group');
+            canvas.system.pane.background.name = 'background'
+            canvas.system.pane.background.static = true;
+            canvas.system.pane.background.ignored = true;
+            canvas.core.arrangement.append( canvas.system.pane.background );
+        
+        //middleground
+            canvas.system.pane.middleground = canvas.core.arrangement.createElement('group');
+            canvas.system.pane.middleground.name = 'middleground'
+            canvas.core.arrangement.append( canvas.system.pane.middleground );
+        
+                //back
+                    canvas.system.pane.middleground.back = canvas.core.arrangement.createElement('group');
+                    canvas.system.pane.middleground.back.name = 'back'
+                    canvas.system.pane.middleground.append( canvas.system.pane.middleground.back );
+        
+                //middle
+                    canvas.system.pane.middleground.middle = canvas.core.arrangement.createElement('group');
+                    canvas.system.pane.middleground.middle.name = 'middle'
+                    canvas.system.pane.middleground.append( canvas.system.pane.middleground.middle );
+        
+                //front
+                    canvas.system.pane.middleground.front = canvas.core.arrangement.createElement('group');
+                    canvas.system.pane.middleground.front.name = 'front'
+                    canvas.system.pane.middleground.append( canvas.system.pane.middleground.front );
+        
+        //foreground
+            canvas.system.pane.foreground = canvas.core.arrangement.createElement('group');
+            canvas.system.pane.foreground.name = 'foreground'
+            canvas.system.pane.foreground.static = true;
+            canvas.core.arrangement.append( canvas.system.pane.foreground );
+        
+        
+            
+        //shortcuts
+            canvas.system.pane.b = canvas.system.pane.background;
+            canvas.system.pane.mb = canvas.system.pane.middleground.back;
+            canvas.system.pane.mm = canvas.system.pane.middleground.middle;
+            canvas.system.pane.mf = canvas.system.pane.middleground.front;
+            canvas.system.pane.f = canvas.system.pane.foreground;
         
         canvas.core.render.active(true);
 
@@ -961,7 +1622,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
             function comparer(item1,item2){
                 if(getType(item1) != getType(item2)){ return false; }
-                if(typeof item1 == 'boolean' || typeof item1 == 'number' || typeof item1 == 'string'){ return item1 === item2; }
+                if(typeof item1 == 'boolean' || typeof item1 == 'string'){ return item1 === item2; }
+                if(typeof item1 == 'number'){
+                    if( Math.abs(item1) < 1.0e-14 ){item1 = 0;}
+                    if( Math.abs(item2) < 1.0e-14 ){item2 = 0;}
+                    return item1 === item2;
+                }
                 if(typeof item1 === 'undefined' || typeof item2 === 'undefined' || item1 === null || item2 === null){ return item1 === item2;  }
                 if(getType(item1) == 'function'){
                     item1 = item1.toString();
@@ -1023,6 +1689,22 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             grou1.children.push(rect);
             rect.parent = grou1;
             canvas.core.arrangement.forceRefresh(rect);
+        
+        var rect = canvas.core.arrangement.createElement('rectangle');
+            rect.name = 'testRectangle2';
+            rect.x = 10; rect.y = 100;
+            rect.width = 30; rect.height = 30;
+            rect.style.fill = 'rgba(255,0,0,0.4)';
+            grou1.children.push(rect);
+            rect.parent = grou1;
+            canvas.core.arrangement.forceRefresh(rect);
+        var text = canvas.core.arrangement.createElement('text');
+            text.name = 'testText1';
+            text.x = 10; text.y = 100;
+            grou1.children.push(text);
+            text.parent = grou1;
+            canvas.core.arrangement.forceRefresh(text);
+        
         
         canvas.core.render.frame();
 
