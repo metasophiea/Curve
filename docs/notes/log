@@ -1,6 +1,34 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
 2018-11-15
   - canvas experiment
+    - core.js v4.1 ...ok, v5. But this really is the last one. This version
+      wraps shape functionality up into the shapes themselves (as opposed to
+      that sudo-object way I was doing before) It's cleaner. It also bites the
+      bullet and makes a group shape the root arrangement node. Things are 
+      pretty nice.
+      
+      To be implemented:
+      - static shapes
+      - ignored shapes
+      - the text shape's hit box function (it's currently just using the
+        rectangle)
+
+      To be Fixed:
+      - 'pointsOfText' function in library.math
+
+
+2018-11-16
+  - canvas experiment
+    - core.js v4. Last one, I really mean it this time.
+
+
+  general
+  - looks like we're heading for v4 of core. I need to rework static elements, 
+    add in the new extremities calculation methods and add render judgement.
+    ..this thing is getting pretty complex. Pretty advanced.
+
+2018-11-15
+  - canvas experiment
     - added circle shape
     - added 'library.math.pointsOfCircle' which can return a defined number of
       points of a circle

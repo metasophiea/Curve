@@ -1,4 +1,5 @@
 this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
+this.distanceBetweenTwoPoints = function(a, b){ return Math.pow(Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2),0.5) };
 this.cartesian2polar = function(x,y){
     var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
 
@@ -83,17 +84,39 @@ this.pointsOfCircle = function(x,y,r,pointCount=3){
     return output;
 };
 this.pointsOfText = function(text, x, y, angle, size, font, alignment, baseline){
-    var canvas = document.createElement('canvas');
-    var context = canvas.getContext('2d');
+    //determine text width
+        var width = 0;
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
 
-    context.font = font;
-    context.textAlign = alignment;
-    context.textBaseline = baseline;
+        context.font = font;
+        context.textAlign = alignment;
+        context.textBaseline = baseline;
 
-    var d = context.measureText(text);
-    var width = d.width*size;
+        var d = context.measureText(text);
+        width = d.width/size;
 
-    return [{x:x, y:y}, {x:x+width, y:y}];
+    //determine text height
+        var height = 0;
+        var div = document.createElement("div");
+            div.innerHTML = text;
+            div.style.position = 'absolute';
+            div.style.top  = '-9999px';
+            div.style.left = '-9999px';
+            div.style.fontFamily = font;
+        document.body.appendChild(div);
+        height = div.offsetHeight*size;
+        document.body.removeChild(div);
+
+    //adjust for angle
+        var points = [{x:x, y:y}, {x:x+width, y:y}, {x:x+width, y:y-height}, {x:x, y:y-height}];
+        for(var a = 0; a < points.length; a++){
+            points[a] = this.cartesianAngleAdjust(points[a].x-x,points[a].y-y,angle);
+            points[a].x += x;
+            points[a].y += y;
+        }
+
+    return points;
 };
 this.detectOverlap = new function(){
     this.boundingBoxes = function(a, b){
