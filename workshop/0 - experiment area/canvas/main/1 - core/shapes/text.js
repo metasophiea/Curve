@@ -6,6 +6,7 @@ this.text = function(){
     this.ignored = false;
     this.static = false;
     this.parent = undefined;
+    this.dotFrame = false;
     this.extremities = {
         points:[],
         boundingBox:{},
@@ -13,12 +14,12 @@ this.text = function(){
 
     this.x = 0;
     this.y = 0;
-    this.text = 'hello';
+    this.text = 'curvie-gH';
     this.angle = 0;
     this.size = 1;
 
     this.style = {
-        font:'100px Arial',
+        font:'30pt Arial',
         align:'start',                  // start/end/center/lief/right 
         baseline:'alphabetic',          // alphabetic/top/hanging/middle/ideographic/bottom
         fill:'rgba(255,100,100,1)',
@@ -29,7 +30,25 @@ this.text = function(){
         shadowOffset:{x:20, y:20},
     };
 
+    this.getAddress = function(){
+        var address = '';
+        var tmp = this;
+        do{
+            address = tmp.name + '/' + address;
+        }while((tmp = tmp.parent) != undefined)
+
+        return '/'+address;
+    };
+    
     this.computeExtremities = function(offset){
+        //discover if this shape should be static
+            var isStatic = this.static;
+            var tmp = this;
+            while((tmp = tmp.parent) != undefined && !isStatic){
+                isStatic = isStatic || tmp.static;
+            }
+            this.static = isStatic;
+
         //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
         //in which case; gather the offset of all parents. Otherwise just use what was provided
             offset = offset == undefined ? gatherParentOffset(this) : offset;
@@ -48,19 +67,9 @@ this.text = function(){
                 point.y += offset.y;
                 return point;
             });
-            //development drawing
-                for(var a = 0; a < this.extremities.points.length; a++){
-                    var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                    core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                }
 
         //calculate boundingBox
             this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-            //development drawing
-                var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                core.render.drawDot( temp.x, temp.y );
-                var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                core.render.drawDot( temp.x, temp.y );
 
         //update the points and bounding box of the parent
             if(this.parent != undefined){
@@ -83,10 +92,15 @@ this.text = function(){
         return false;
     };
 
-    function shouldRender(shape){ return true; return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox); };
+    function shouldRender(shape){ 
+        //if this shape is static, always render
+            if(shape.static){return true;}
+            
+        //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+            return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+    };
     this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
-        //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method)
-        //just bail on the whole thing
+        //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
 
         //adjust offset for parent's angle
@@ -111,7 +125,6 @@ this.text = function(){
             shapeValue.location = adapter.workspacePoint2windowPoint( shapeValue.location.x, shapeValue.location.y );   
       
             shapeValue.size = adapter.length(shapeValue.size);
-            shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
             shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
             shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
             shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
@@ -138,5 +151,19 @@ this.text = function(){
             context.shadowColor = 'rgba(0,0,0,0)'; //to stop stroke shadows drawing over the fill text (an uncreative solution)
             context.strokeText( this.text, shapeValue.location.x/shapeValue.size, shapeValue.location.y/shapeValue.size );
             context.restore();
+
+        //if dotFrame is set, draw in dots fot the points and bounding box extremities
+            if(this.dotFrame){
+                //points
+                    for(var a = 0; a < this.extremities.points.length; a++){
+                        var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                        core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                    }
+                //boudning box
+                    var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                    core.render.drawDot( temp.x, temp.y );
+                    var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                    core.render.drawDot( temp.x, temp.y );
+            }
     };
 };

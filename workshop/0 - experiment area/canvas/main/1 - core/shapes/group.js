@@ -6,6 +6,7 @@ this.group = function(){
     this.ignored = false;
     this.static = false;
     this.parent = undefined;
+    this.dotFrame = false;
     this.extremities = {
         points:[],
         boundingBox:{},
@@ -16,23 +17,33 @@ this.group = function(){
     this.angle = 0;
     this.children = [];
 
-    function checkElementIsValid(element,destination){
+    this.getAddress = function(){
+        var address = '';
+        var tmp = this;
+        do{
+            address = tmp.name + '/' + address;
+        }while((tmp = tmp.parent) != undefined)
+
+        return '/'+address;
+    };
+    
+    function checkElementIsValid(group,element){
+        if(element == undefined){return group.getAddress()+' >> no element provided';}
+
         //check for name
-            if(element.name == undefined || element.name == ''){return 'element has no name'}
+            if(element.name == undefined || element.name == ''){return group.getAddress()+' >> element has no name'}
     
         //check that the name is not already taken in this grouping
-            for(var a = 0; a < destination.length; a++){
-                if( destination[a].name == element.name ){ 
+            for(var a = 0; a < group.children.length; a++){
+                if( group.children[a].name == element.name ){ 
                     console.error('element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+parent.name+'"')+''); 
                     return;
                 }
             }
-        
-        return;
     }
     this.prepend = function(element){
         //check that the element is valid
-            var temp = checkElementIsValid(element, this.children);
+            var temp = checkElementIsValid(this,element);
             if(temp != undefined){console.error('element invalid:',temp); return;}
 
         //actually add the element
@@ -42,11 +53,11 @@ this.group = function(){
             element.parent = this;
 
         //computation of extremities
-            element.computeExtremities();
+            element.computeExtremities(undefined,true);
     };
     this.append = function(element){
         //check that the element is valid
-            var temp = checkElementIsValid(element, this.children);
+            var temp = checkElementIsValid(this, element);
             if(temp != undefined){console.error('element invalid:',temp); return;}
 
         //actually add the element
@@ -56,7 +67,7 @@ this.group = function(){
             element.parent = this;
 
         //computation of extremities
-            element.computeExtremities();
+            element.computeExtremities(undefined,true);
     };
     this.remove = function(element){
         //check that an element was provided
@@ -79,19 +90,54 @@ this.group = function(){
         //computation of extremities
             this.computeExtremities();
     };
-    this.getChildByName = function(name){};
+    this.getChildByName = function(name){
+        for(var a = 0; a < this.children.length; a++){
+            if( this.children[a].name == name ){ return this.children[a]; }
+        }
+    };
+    this.getElementsWithName = function(name){
+        var result = [];
+        for(var a = 0; a < this.children.length; a++){
+            if( this.children[a].name == name ){
+                result.push(this.children[a]);
+            }
+            if( this.children[a].type == 'group' ){
+                var list = this.children[a].getElementsWithName(name);
+                for(var b = 0; b < list.length; b++){ result.push( list[b] ); } //because concat doesn't work
+            }
+        }
+        return result;
+    };
 
-    this.computeExtremities = function(offset){
+    this.computeExtremities = function(offset,deepCompute=false){
+        //discover if this shape should be static
+            var isStatic = this.static;
+            var tmp = this;
+            while((tmp = tmp.parent) != undefined && !isStatic){
+                isStatic = isStatic || tmp.static;
+            }
+            this.static = isStatic;
+
         //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
         //in which case; gather the offset of all parents. Otherwise just use what was provided
             offset = offset == undefined ? gatherParentOffset(this) : offset;
+
+        //if 'deepCompute' is set, recalculate the extremities for all children
+            if(deepCompute){
+                for(var a = 0; a < this.children.length; a++){
+                    this.children[a].computeExtremities({
+                        x: this.x     + (offset.x != undefined ? offset.x : 0),
+                        y: this.y     + (offset.y != undefined ? offset.y : 0),
+                        a: this.angle + (offset.a != undefined ? offset.a : 0),
+                    },true);
+                }
+            }
 
         //reset variables
             this.extremities = {
                 points:[],
                 boundingBox:{},
             };
-
 
         //calculate points
             //the points for a group, is just the four corners of the bounding box, calculated using
@@ -109,19 +155,9 @@ this.group = function(){
                 { x: temp.bottomRight.x, y: temp.bottomRight.y, },
                 { x: temp.topLeft.x, y: temp.bottomRight.y, },
             ];
-            // //development drawing
-            //     for(var a = 0; a < this.extremities.points.length; a++){
-            //         var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-            //         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-            //     }
-
+            
         //calculate boundingBox
             this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-            // //development drawing
-            //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-            //     core.render.drawDot( temp.x, temp.y );
-            //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-            //     core.render.drawDot( temp.x, temp.y );
 
         //update the points and bounding box of the parent
             if(this.parent != undefined){
@@ -142,27 +178,41 @@ this.group = function(){
         }
         return false;
     };
-    this.getElementUnderPoint = function(x,y){
-        //go through the children in reverse order, discovering if the point is within their bounding box
+    this.getElementUnderPoint = function(x,y,static=false){
+        //go through the children in reverse order, discovering if
+        //  the object is not ignored and,
+        //  the point is within their bounding box
         //if so; if it's a group, follow the 'getElementUnderPoint' function down
         //if it's not, return that shape
+        //otherwise, carry onto the next shape
 
         for(var a = this.children.length-1; a >= 0; a--){
-            if( this.children[a].isPointWithin(x,y) ){
-                if( this.children[a].type == 'group' ){
-                    var temp = this.children[a].getElementUnderPoint(x,y);
-                    if(temp != undefined){return temp;}
-                }else{
-                    return this.children[a];
+            //if child shape is statc (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
+                var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
+
+                if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
+                    if( this.children[a].type == 'group' ){
+                        var temp = this.children[a].getElementUnderPoint(x,y,(this.children[a].static || static));
+                        if(temp != undefined){return temp;}
+                    }else{
+                        return this.children[a];
+                    }
                 }
-            }
         }
     };
 
-    function shouldRender(shape){ return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox); };
+    function shouldRender(shape){
+        //if this shape is static, always render
+            if(shape.static){return true;}
+
+        //if any of this shape's children are static, render the group (and let the individuals decide to render themselves or not)
+            for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
+
+        //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+            return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+    };
     this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
-        //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method)
-        //just bail on the whole thing
+        //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
 
         //adjust offset for parent's angle
@@ -186,5 +236,18 @@ this.group = function(){
                 );
             }
 
+        //if dotFrame is set, draw in dots fot the points and bounding box extremities
+            if(this.dotFrame){
+                //points
+                    for(var a = 0; a < this.extremities.points.length; a++){
+                        var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                        core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                    }
+                //boudning box
+                    var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                    core.render.drawDot( temp.x, temp.y );
+                    var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                    core.render.drawDot( temp.x, temp.y );
+            }
     };
 };

@@ -1,3 +1,7 @@
 this.basic = new function(){
-    {{include:basic/*}}
+    {{include:basic/*}} /**/
+};
+
+this.display = new function(){
+    {{include:display/*}} /**/
 };

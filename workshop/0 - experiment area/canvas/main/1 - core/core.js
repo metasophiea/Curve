@@ -61,6 +61,7 @@ function gatherParentOffset(element){
 
 this.arrangement = new function(){
     var design = new shapes.group;
+    design.name = 'root';
 
     this.createElement = function(type){ return new shapes[type]; };
     this.clear = function(){ design.clear(); };
@@ -70,6 +71,7 @@ this.arrangement = new function(){
     this.append = function(element){ design.append(element); };
     this.remove = function(element){ design.remove(element); };
     this.getElementUnderPoint = function(x,y){ return design.getElementUnderPoint(x,y); };
+    this.getElementsWithName = function(name){ return design.getElementsWithName(name); };
 };
 this.viewport = new function(){
     var pageData = {
@@ -79,7 +81,7 @@ this.viewport = new function(){
     };
     var state = {
         position:{x:0,y:0},
-        scale:2,
+        scale:1,
         angle:0,
         points:{ tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
         boundingBox:{ topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} },
@@ -178,7 +180,7 @@ this.render = new function(){
         context.fillStyle = 'rgb(255,255,255)';
         context.fillRect(0, 0, canvas.width, canvas.height);
     }
-    function renderFrame(noClear=!false){
+    function renderFrame(noClear=false){
         //clear the canvas
             if(!noClear){ clearFrame(); }
 
@@ -202,7 +204,7 @@ this.render = new function(){
             core.stats.collect(timestamp);
     }
 
-    this.drawDot = function(x,y,r=2,colour='rgba(255,0,0,1)'){
+    this.drawDot = function(x,y,r=2,colour='rgba(150,150,255,1)'){
         context.fillStyle = colour;
         context.beginPath();
         context.arc(x,y, r, 0, 2*Math.PI, false);
@@ -225,7 +227,7 @@ this.render = new function(){
     };
 };
 this.stats = new function(){
-    var active = true;
+    var active = false;
     var average = 30;
     var lastTimestamp = 0;
 

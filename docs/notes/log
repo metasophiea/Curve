@@ -1,4 +1,25 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-11-19
+  - canvas experiment
+    - it appears that html canvas doesn't have a way of measuring height, but if
+      you define a font's size in 'pt'; that number is the height. So,
+      'pointsOfText' now assumes that the font's size is set in this way. With
+      that said; this doesn't account for strings with no capitals, or letters
+      with hanging portions..from what I understand, they're working on
+      expanding the functionality to add ways of gathering this information, but
+      it seems a little while off yet. Either way, text is unlikly to be used
+      much, in favour of images of text. So I'm going to leave it like it is for
+      now.
+    - added path shape to core
+    - reintegrated core with 'parts', I'm now adding back in all the parts (some
+      rewriting necessary)
+      - glowbox_rect
+      - sevenSegmentDisplay
+      - sixteenSegmentDisplay
+      - readout_sixteenSegmentDisplay
+    - ignored shapes are now a thing
+    - static shapes are now a thing
+
 2018-11-15
   - canvas experiment
     - core.js v4.1 ...ok, v5. But this really is the last one. This version
@@ -15,7 +36,6 @@
 
       To be Fixed:
       - 'pointsOfText' function in library.math
-
 
 2018-11-16
   - canvas experiment

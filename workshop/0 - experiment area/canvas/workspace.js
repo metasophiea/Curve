@@ -90,10 +90,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 return output;
             };
             this.pointsOfText = function(text, x, y, angle, size, font, alignment, baseline){
+                //requires that the font size be in 'pt'
+            
                 //determine text width
                     var width = 0;
-                    var canvas = document.createElement('canvas');
-                    var context = canvas.getContext('2d');
+                    var cnv = document.createElement('canvas');
+                    var context = cnv.getContext('2d');
             
                     context.font = font;
                     context.textAlign = alignment;
@@ -103,16 +105,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     width = d.width/size;
             
                 //determine text height
-                    var height = 0;
-                    var div = document.createElement("div");
-                        div.innerHTML = text;
-                        div.style.position = 'absolute';
-                        div.style.top  = '-9999px';
-                        div.style.left = '-9999px';
-                        div.style.fontFamily = font;
-                    document.body.appendChild(div);
-                    height = div.offsetHeight*size;
-                    document.body.removeChild(div);
+                    var height = font.split('pt')[0].split(' ').pop();
+                    height = height/size;
             
                 //adjust for angle
                     var points = [{x:x, y:y}, {x:x+width, y:y}, {x:x+width, y:y-height}, {x:x, y:y-height}];
@@ -179,6 +173,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         canvas.library.audio = new function(){
 
         };
+        
+
         canvas.core = new function(){
             var core = new function(){
                 var core = this;
@@ -219,6 +215,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.ignored = false;
                         this.static = false;
                         this.parent = undefined;
+                        this.dotFrame = false;
                         this.extremities = {
                             points:[],
                             boundingBox:{},
@@ -237,7 +234,25 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             shadowOffset:{x:20, y:20},
                         };
                     
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
                         this.computeExtremities = function(offset){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
                             //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
                             //in which case; gather the offset of all parents. Otherwise just use what was provided
                                 offset = offset == undefined ? gatherParentOffset(this) : offset;
@@ -255,19 +270,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     point.y += offset.y;
                                     return point;
                                 });
-                                // //development drawing
-                                //     for(var a = 0; a < this.extremities.points.length; a++){
-                                //         var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                //         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                //     }
                     
                             //calculate boundingBox
                                 this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                                // //development drawing
-                                //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                //     core.render.drawDot( temp.x, temp.y );
-                                //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                //     core.render.drawDot( temp.x, temp.y );
                     
                             //update the points and bounding box of the parent
                                 if(this.parent != undefined){
@@ -290,10 +295,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             return false;
                         };
                     
-                        function shouldRender(shape){ return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox); };
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
                         this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method)
-                            //just bail on the whole thing
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                             
                             //collect and consolidate shape values into a neat package
@@ -311,7 +321,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
                                 shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
                                 shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset = adapter.workspacePoint2windowPoint(shapeValue.shadowOffset.x,shapeValue.shadowOffset.y);
+                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
                     
                             //paint this shape as requested
                                 context.fillStyle = this.style.fill;
@@ -333,6 +344,20 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     
                                 context.fill(); 
                                 context.stroke();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
                         };
                     
                     };
@@ -344,6 +369,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.ignored = false;
                         this.static = false;
                         this.parent = undefined;
+                        this.dotFrame = false;
                         this.extremities = {
                             points:[],
                             boundingBox:{},
@@ -362,7 +388,25 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             shadowOffset:{x:1, y:1},
                         };
                     
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
                         this.computeExtremities = function(offset){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
                             //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
                             //in which case; gather the offset of all parents. Otherwise just use what was provided
                                 offset = offset == undefined ? gatherParentOffset(this) : offset;
@@ -381,19 +425,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     point.y += offset.y;
                                     return point;
                                 });
-                                // //development drawing
-                                //     for(var a = 0; a < this.extremities.points.length; a++){
-                                //         var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                //         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                //     }
                     
                             //calculate boundingBox
                                 this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                                // //development drawing
-                                //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                //     core.render.drawDot( temp.x, temp.y );
-                                //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                //     core.render.drawDot( temp.x, temp.y );
                     
                             //update the points and bounding box of the parent
                                 if(this.parent != undefined){
@@ -415,10 +449,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             return false;
                         };
                     
-                        function shouldRender(shape){ return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox); };
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
                         this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method)
-                            //just bail on the whole thing
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                             if(!shouldRender(this)){return;}
                     
                             //adjust offset for parent's angle
@@ -443,7 +482,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 shapeValue.radius = adapter.length(shapeValue.radius);
                                 shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
                                 shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset = adapter.workspacePoint2windowPoint(shapeValue.shadowOffset.x,shapeValue.shadowOffset.y);
+                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
                     
                             //paint this shape as requested
                                 context.fillStyle = this.style.fill;
@@ -458,6 +498,20 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 context.arc(shapeValue.location.x,shapeValue.location.y, shapeValue.radius, 0, 2 * Math.PI, false);
                                 context.closePath(); 
                                 context.fill();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
                         };
                     };
                     this.image = function(){
@@ -468,6 +522,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.ignored = false;
                         this.static = false;
                         this.parent = undefined;
+                        this.dotFrame = false;
                         this.extremities = {
                             points:[],
                             boundingBox:{},
@@ -489,7 +544,25 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             shadowOffset:{x:1, y:1},
                         };
                     
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
                         this.computeExtremities = function(offset){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
                             //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
                             //in which case; gather the offset of all parents. Otherwise just use what was provided
                                 offset = offset == undefined ? gatherParentOffset(this) : offset;
@@ -508,19 +581,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     point.y += offset.y;
                                     return point;
                                 });
-                                // //development drawing
-                                //     for(var a = 0; a < this.extremities.points.length; a++){
-                                //         var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                //         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                //     }
                     
                             //calculate boundingBox
                                 this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                                // //development drawing
-                                //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                //     core.render.drawDot( temp.x, temp.y );
-                                //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                //     core.render.drawDot( temp.x, temp.y );
                     
                             //update the points and bounding box of the parent
                                 if(this.parent != undefined){
@@ -543,10 +606,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             return false;
                         };
                     
-                        function shouldRender(shape){ return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox); };
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
                         this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method)
-                            //just bail on the whole thing
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                     
                             //adjust offset for parent's angle
@@ -573,7 +641,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 shapeValue.height = adapter.length(shapeValue.height);
                                 shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
                                 shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset = adapter.workspacePoint2windowPoint(shapeValue.shadowOffset.x,shapeValue.shadowOffset.y);
+                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
                     
                             //post adaptation calculations
                                 shapeValue.location = canvas.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
@@ -593,39 +662,69 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 context.rotate( shapeValue.angle );
                                 context.drawImage( imageObject[this.url], shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
                                 context.restore();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
                         }
                     
                     };
-                    this.rectangle = function(){
+                    this.path = function(){
                     
-                        this.type = 'rectangle';
+                        this.type = 'path';
                     
                         this.name = '';
                         this.ignored = false;
                         this.static = false;
                         this.parent = undefined;
+                        this.dotFrame = false;
                         this.extremities = {
                             points:[],
                             boundingBox:{},
                         };
                     
-                        this.x = 0;
-                        this.y = 0;
-                        this.angle = 0;
-                        this.anchor = {x:0,y:0};
-                        this.width = 10;
-                        this.height = 10;
+                        this.points = [];
                     
                         this.style = {
-                            fill:'rgba(255,100,255,1)',
                             stroke:'rgba(0,0,0,0)',
                             lineWidth:1,
+                            lineCap:'round',
+                            lineJoin:'round',
+                            miterLimit:2,
                             shadowColour:'rgba(0,0,0,0)',
-                            shadowBlur:2,
-                            shadowOffset:{x:1, y:1},
+                            shadowBlur:20,
+                            shadowOffset:{x:20, y:20},
                         };
                     
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
                         this.computeExtremities = function(offset){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
                             //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
                             //in which case; gather the offset of all parents. Otherwise just use what was provided
                                 offset = offset == undefined ? gatherParentOffset(this) : offset;
@@ -637,26 +736,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                     
                             //calculate points
-                                this.extremities.points = canvas.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
-                                this.extremities.points = this.extremities.points.map(function(point){
+                                this.extremities.points = this.points.map(function(point){
                                     point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
                                     point.x += offset.x;
                                     point.y += offset.y;
                                     return point;
                                 });
-                                // //development drawing
-                                //     for(var a = 0; a < this.extremities.points.length; a++){
-                                //         var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                //         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                //     }
                     
                             //calculate boundingBox
                                 this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                                // //development drawing
-                                //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                //     core.render.drawDot( temp.x, temp.y );
-                                //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                //     core.render.drawDot( temp.x, temp.y );
                     
                             //update the points and bounding box of the parent
                                 if(this.parent != undefined){
@@ -679,10 +767,171 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             return false;
                         };
                     
-                        function shouldRender(shape){ return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox); };
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
                         this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method)
-                            //just bail on the whole thing
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                                if(!shouldRender(this)){return;}
+                            
+                            //collect and consolidate shape values into a neat package
+                                var shapeValue = {
+                                    points: this.points.map( function(a){
+                                        a = canvas.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
+                                        return { x:a.x+offset.x, y:a.y+offset.y };
+                                    } ),
+                                    lineWidth: this.style.lineWidth,
+                                    shadowBlur: this.style.shadowBlur,
+                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
+                                };
+                            
+                            //adapt values
+                                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
+                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                    
+                            //paint this shape as requested
+                                context.fillStyle = this.style.fill;
+                                context.strokeStyle = this.style.stroke;
+                                context.lineWidth = shapeValue.lineWidth;
+                                context.lineCap = this.style.lineCap;
+                                context.lineJoin = this.style.lineJoin;
+                                context.miterLimit = this.style.miterLimit;
+                                context.shadowColor = this.style.shadowColour;
+                                context.shadowBlur = shapeValue.shadowBlur;
+                                context.shadowOffsetX = shapeValue.shadowOffset.x;
+                                context.shadowOffsetY = shapeValue.shadowOffset.y;
+                    
+                                context.beginPath(); 
+                                context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                                for(var a = 1; a < shapeValue.points.length; a++){
+                                    context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                                }
+                    
+                                context.stroke();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
+                        };
+                    };
+                    this.rectangle = function(){
+                    
+                        this.type = 'rectangle';
+                    
+                        this.name = '';
+                        this.ignored = false;
+                        this.static = false;
+                        this.parent = undefined;
+                        this.dotFrame = false;
+                        this.extremities = {
+                            points:[],
+                            boundingBox:{},
+                        };
+                    
+                        this.x = 0;
+                        this.y = 0;
+                        this.angle = 0;
+                        this.anchor = {x:0,y:0};
+                        this.width = 10;
+                        this.height = 10;
+                    
+                        this.style = {
+                            fill:'rgba(255,100,255,1)',
+                            stroke:'rgba(0,0,0,0)',
+                            lineWidth:1,
+                            shadowColour:'rgba(0,0,0,0)',
+                            shadowBlur:2,
+                            shadowOffset:{x:1, y:1},
+                        };
+                    
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
+                        this.computeExtremities = function(offset){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
+                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
+                            //in which case; gather the offset of all parents. Otherwise just use what was provided
+                                offset = offset == undefined ? gatherParentOffset(this) : offset;
+                    
+                            //reset variables
+                                this.extremities = {
+                                    points:[],
+                                    boundingBox:{},
+                                };
+                    
+                            //calculate points
+                                this.extremities.points = canvas.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
+                                this.extremities.points = this.extremities.points.map(function(point){
+                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                    point.x += offset.x;
+                                    point.y += offset.y;
+                                    return point;
+                                });
+                    
+                            //calculate boundingBox
+                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+                    
+                            //update the points and bounding box of the parent
+                                if(this.parent != undefined){
+                                    this.parent.computeExtremities();
+                                }
+                        };
+                    
+                        function isPointWithinBoundingBox(x,y,shape){
+                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+                        }
+                        function isPointWithinHitBox(x,y,shape){
+                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+                        }
+                        this.isPointWithin = function(x,y){
+                            if( isPointWithinBoundingBox(x,y,this) ){
+                                return isPointWithinHitBox(x,y,this);
+                            }
+                            return false;
+                        };
+                    
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
+                        this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                     
                             //adjust offset for parent's angle
@@ -705,12 +954,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                             
                             //adapt values
-                                shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-                                shapeValue.width = adapter.length(shapeValue.width);
-                                shapeValue.height = adapter.length(shapeValue.height);
-                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset = adapter.workspacePoint2windowPoint(shapeValue.shadowOffset.x,shapeValue.shadowOffset.y);
+                                if(!static){
+                                    shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
+                                    shapeValue.width = adapter.length(shapeValue.width);
+                                    shapeValue.height = adapter.length(shapeValue.height);
+                                    shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                    shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                    shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                    shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                                }
                     
                             //post adaptation calculations
                                 shapeValue.location = canvas.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
@@ -728,6 +980,20 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 context.fillRect( shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
                                 context.strokeRect( shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
                                 context.restore();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
                         }
                     };
                     this.group = function(){
@@ -738,6 +1004,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.ignored = false;
                         this.static = false;
                         this.parent = undefined;
+                        this.dotFrame = false;
                         this.extremities = {
                             points:[],
                             boundingBox:{},
@@ -748,23 +1015,33 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.angle = 0;
                         this.children = [];
                     
-                        function checkElementIsValid(element,destination){
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
+                        function checkElementIsValid(group,element){
+                            if(element == undefined){return group.getAddress()+' >> no element provided';}
+                    
                             //check for name
-                                if(element.name == undefined || element.name == ''){return 'element has no name'}
+                                if(element.name == undefined || element.name == ''){return group.getAddress()+' >> element has no name'}
                         
                             //check that the name is not already taken in this grouping
-                                for(var a = 0; a < destination.length; a++){
-                                    if( destination[a].name == element.name ){ 
+                                for(var a = 0; a < group.children.length; a++){
+                                    if( group.children[a].name == element.name ){ 
                                         console.error('element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+parent.name+'"')+''); 
                                         return;
                                     }
                                 }
-                            
-                            return;
                         }
                         this.prepend = function(element){
                             //check that the element is valid
-                                var temp = checkElementIsValid(element, this.children);
+                                var temp = checkElementIsValid(this,element);
                                 if(temp != undefined){console.error('element invalid:',temp); return;}
                     
                             //actually add the element
@@ -774,11 +1051,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 element.parent = this;
                     
                             //computation of extremities
-                                element.computeExtremities();
+                                element.computeExtremities(undefined,true);
                         };
                         this.append = function(element){
                             //check that the element is valid
-                                var temp = checkElementIsValid(element, this.children);
+                                var temp = checkElementIsValid(this, element);
                                 if(temp != undefined){console.error('element invalid:',temp); return;}
                     
                             //actually add the element
@@ -788,7 +1065,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 element.parent = this;
                     
                             //computation of extremities
-                                element.computeExtremities();
+                                element.computeExtremities(undefined,true);
                         };
                         this.remove = function(element){
                             //check that an element was provided
@@ -811,19 +1088,54 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //computation of extremities
                                 this.computeExtremities();
                         };
-                        this.getChildByName = function(name){};
+                        this.getChildByName = function(name){
+                            for(var a = 0; a < this.children.length; a++){
+                                if( this.children[a].name == name ){ return this.children[a]; }
+                            }
+                        };
+                        this.getElementsWithName = function(name){
+                            var result = [];
+                            for(var a = 0; a < this.children.length; a++){
+                                if( this.children[a].name == name ){
+                                    result.push(this.children[a]);
+                                }
+                                if( this.children[a].type == 'group' ){
+                                    var list = this.children[a].getElementsWithName(name);
+                                    for(var b = 0; b < list.length; b++){ result.push( list[b] ); } //because concat doesn't work
+                                }
+                            }
+                            return result;
+                        };
                     
-                        this.computeExtremities = function(offset){
+                        this.computeExtremities = function(offset,deepCompute=false){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
                             //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
                             //in which case; gather the offset of all parents. Otherwise just use what was provided
                                 offset = offset == undefined ? gatherParentOffset(this) : offset;
+                    
+                            //if 'deepCompute' is set, recalculate the extremities for all children
+                                if(deepCompute){
+                                    for(var a = 0; a < this.children.length; a++){
+                                        this.children[a].computeExtremities({
+                                            x: this.x     + (offset.x != undefined ? offset.x : 0),
+                                            y: this.y     + (offset.y != undefined ? offset.y : 0),
+                                            a: this.angle + (offset.a != undefined ? offset.a : 0),
+                                        },true);
+                                    }
+                                }
                     
                             //reset variables
                                 this.extremities = {
                                     points:[],
                                     boundingBox:{},
                                 };
-                    
                     
                             //calculate points
                                 //the points for a group, is just the four corners of the bounding box, calculated using
@@ -841,19 +1153,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     { x: temp.bottomRight.x, y: temp.bottomRight.y, },
                                     { x: temp.topLeft.x, y: temp.bottomRight.y, },
                                 ];
-                                // //development drawing
-                                //     for(var a = 0; a < this.extremities.points.length; a++){
-                                //         var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                //         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                //     }
-                    
+                                
                             //calculate boundingBox
                                 this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                                // //development drawing
-                                //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                //     core.render.drawDot( temp.x, temp.y );
-                                //     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                //     core.render.drawDot( temp.x, temp.y );
                     
                             //update the points and bounding box of the parent
                                 if(this.parent != undefined){
@@ -874,27 +1176,41 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             }
                             return false;
                         };
-                        this.getElementUnderPoint = function(x,y){
-                            //go through the children in reverse order, discovering if the point is within their bounding box
+                        this.getElementUnderPoint = function(x,y,static=false){
+                            //go through the children in reverse order, discovering if
+                            //  the object is not ignored and,
+                            //  the point is within their bounding box
                             //if so; if it's a group, follow the 'getElementUnderPoint' function down
                             //if it's not, return that shape
+                            //otherwise, carry onto the next shape
                     
                             for(var a = this.children.length-1; a >= 0; a--){
-                                if( this.children[a].isPointWithin(x,y) ){
-                                    if( this.children[a].type == 'group' ){
-                                        var temp = this.children[a].getElementUnderPoint(x,y);
-                                        if(temp != undefined){return temp;}
-                                    }else{
-                                        return this.children[a];
+                                //if child shape is statc (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
+                                    var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
+                    
+                                    if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
+                                        if( this.children[a].type == 'group' ){
+                                            var temp = this.children[a].getElementUnderPoint(x,y,(this.children[a].static || static));
+                                            if(temp != undefined){return temp;}
+                                        }else{
+                                            return this.children[a];
+                                        }
                                     }
-                                }
                             }
                         };
                     
-                        function shouldRender(shape){ return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox); };
+                        function shouldRender(shape){
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                    
+                            //if any of this shape's children are static, render the group (and let the individuals decide to render themselves or not)
+                                for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
+                    
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
                         this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method)
-                            //just bail on the whole thing
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                     
                             //adjust offset for parent's angle
@@ -918,6 +1234,19 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     );
                                 }
                     
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
                         };
                     };
                     this.text = function(){
@@ -928,6 +1257,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.ignored = false;
                         this.static = false;
                         this.parent = undefined;
+                        this.dotFrame = false;
                         this.extremities = {
                             points:[],
                             boundingBox:{},
@@ -935,12 +1265,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     
                         this.x = 0;
                         this.y = 0;
-                        this.text = 'hello';
+                        this.text = 'curvie-gH';
                         this.angle = 0;
                         this.size = 1;
                     
                         this.style = {
-                            font:'100px Arial',
+                            font:'30pt Arial',
                             align:'start',                  // start/end/center/lief/right 
                             baseline:'alphabetic',          // alphabetic/top/hanging/middle/ideographic/bottom
                             fill:'rgba(255,100,100,1)',
@@ -951,7 +1281,25 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             shadowOffset:{x:20, y:20},
                         };
                     
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
                         this.computeExtremities = function(offset){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
                             //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
                             //in which case; gather the offset of all parents. Otherwise just use what was provided
                                 offset = offset == undefined ? gatherParentOffset(this) : offset;
@@ -970,19 +1318,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     point.y += offset.y;
                                     return point;
                                 });
-                                //development drawing
-                                    for(var a = 0; a < this.extremities.points.length; a++){
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                        core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                    }
                     
                             //calculate boundingBox
                                 this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                                //development drawing
-                                    var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                    core.render.drawDot( temp.x, temp.y );
-                                    var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                    core.render.drawDot( temp.x, temp.y );
                     
                             //update the points and bounding box of the parent
                                 if(this.parent != undefined){
@@ -1005,10 +1343,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             return false;
                         };
                     
-                        function shouldRender(shape){ return true; return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox); };
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
                         this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method)
-                            //just bail on the whole thing
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                     
                             //adjust offset for parent's angle
@@ -1033,7 +1376,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 shapeValue.location = adapter.workspacePoint2windowPoint( shapeValue.location.x, shapeValue.location.y );   
                           
                                 shapeValue.size = adapter.length(shapeValue.size);
-                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
                                 shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
                                 shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
                                 shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
@@ -1060,6 +1402,20 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 context.shadowColor = 'rgba(0,0,0,0)'; //to stop stroke shadows drawing over the fill text (an uncreative solution)
                                 context.strokeText( this.text, shapeValue.location.x/shapeValue.size, shapeValue.location.y/shapeValue.size );
                                 context.restore();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
                         };
                     };
                 }
@@ -1094,6 +1450,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                 this.arrangement = new function(){
                     var design = new shapes.group;
+                    design.name = 'root';
                 
                     this.createElement = function(type){ return new shapes[type]; };
                     this.clear = function(){ design.clear(); };
@@ -1103,6 +1460,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     this.append = function(element){ design.append(element); };
                     this.remove = function(element){ design.remove(element); };
                     this.getElementUnderPoint = function(x,y){ return design.getElementUnderPoint(x,y); };
+                    this.getElementsWithName = function(name){ return design.getElementsWithName(name); };
                 };
                 this.viewport = new function(){
                     var pageData = {
@@ -1112,7 +1470,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     var state = {
                         position:{x:0,y:0},
-                        scale:2,
+                        scale:1,
                         angle:0,
                         points:{ tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
                         boundingBox:{ topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} },
@@ -1211,7 +1569,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         context.fillStyle = 'rgb(255,255,255)';
                         context.fillRect(0, 0, canvas.width, canvas.height);
                     }
-                    function renderFrame(noClear=!false){
+                    function renderFrame(noClear=false){
                         //clear the canvas
                             if(!noClear){ clearFrame(); }
                 
@@ -1235,7 +1593,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             core.stats.collect(timestamp);
                     }
                 
-                    this.drawDot = function(x,y,r=2,colour='rgba(255,0,0,1)'){
+                    this.drawDot = function(x,y,r=2,colour='rgba(150,150,255,1)'){
                         context.fillStyle = colour;
                         context.beginPath();
                         context.arc(x,y, r, 0, 2*Math.PI, false);
@@ -1258,7 +1616,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                 };
                 this.stats = new function(){
-                    var active = true;
+                    var active = false;
                     var average = 30;
                     var lastTimestamp = 0;
                 
@@ -1633,6 +1991,1338 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             canvas.system.pane.f = canvas.system.pane.foreground;
         
         canvas.core.render.active(true);
+        canvas.part = new function(){};
+        
+        canvas.part.element = new function(){
+            this.basic = new function(){
+                this.polygon = function(
+                    name=null, 
+                    points=[], 
+                    fillStyle='rgba(255,100,255,1)', 
+                    strokeStyle='rgba(0,0,0,0)', 
+                    lineWidth=1,
+                    lineJoin='round',
+                    miterLimit=2,
+                    shadowColour='rgba(0,0,0,0)',
+                    shadowBlur=20,
+                    shadowOffset={x:20, y:20},
+                ){
+                    var temp = canvas.core.arrangement.createElement('polygon');
+                    temp.name = name;
+                    temp.points = points;
+                    temp.style.fill = fillStyle;
+                    temp.style.stroke = strokeStyle;
+                    temp.style.lineWidth = lineWidth;
+                    temp.style.lineJoin = lineJoin;
+                    temp.style.miterLimit = miterLimit;
+                    temp.style.shadowColour = shadowColour;
+                    temp.style.shadowBlur = shadowBlur;
+                    temp.style.shadowOffset = shadowOffset;
+                
+                    return temp;
+                };
+                
+                this.advancedPolygon = function(
+                    name=null, 
+                    points=[], 
+                    fillStyle='rgba(255,100,255,1)', 
+                    strokeStyle='rgba(0,0,0,1)', 
+                    lineWidth=1,
+                    lineJoin='round',
+                    miterLimit=2,
+                    shadowColour='rgba(0,0,0,0)',
+                    shadowBlur=20,
+                    shadowOffset={x:20, y:20},
+                ){
+                    var temp = canvas.core.arrangement.createElement('advancedPolygon');
+                    temp.name = name;
+                    temp.points = points;
+                    temp.style.fill = fillStyle;
+                    temp.style.stroke = strokeStyle;
+                    temp.style.lineWidth = lineWidth;
+                    temp.style.lineJoin = lineJoin;
+                    temp.style.miterLimit = miterLimit;
+                    temp.style.shadowColour = shadowColour;
+                    temp.style.shadowBlur = shadowBlur;
+                    temp.style.shadowOffset = shadowOffset;
+                
+                    return temp;
+                };
+                this.circle = function(
+                    name=null, 
+                    x=0, 
+                    y=0, 
+                    r=2,
+                    fillStyle='rgba(255,100,255,1)', 
+                    strokeStyle='rgba(0,0,0,1)', 
+                    lineWidth=1,
+                    lineJoin='round',
+                    miterLimit=2,
+                    shadowColour='rgba(0,0,0,0)',
+                    shadowBlur=20,
+                    shadowOffset={x:20, y:20},
+                ){
+                    var temp = canvas.core.arrangement.createElement('circle');
+                    temp.name = name;
+                    temp.x = x; temp.y = y;
+                    temp.r = r;
+                    temp.style.fill = fillStyle;
+                    temp.style.stroke = strokeStyle;
+                    temp.style.lineWidth = lineWidth;
+                    temp.style.lineJoin = lineJoin;
+                    temp.style.miterLimit = miterLimit;
+                    temp.style.shadowColour = shadowColour;
+                    temp.style.shadowBlur = shadowBlur;
+                    temp.style.shadowOffset = shadowOffset;
+                    return temp;
+                };
+                this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, url=''){
+                    var temp = canvas.core.arrangement.createElement('image');
+                    temp.name = name;
+                    temp.x = x; temp.y = y;
+                    temp.width = width; temp.height = height;
+                    temp.angle = angle;
+                    temp.anchor = anchor;
+                    temp.url = url;
+                    return temp;
+                };
+                this.path = function(
+                    name=null, 
+                    points=[],
+                    strokeStyle='rgba(0,0,0,1)', 
+                    lineWidth=1,
+                    lineCap='round',
+                    lineJoin='round',
+                    miterLimit=2,
+                    shadowColour='rgba(0,0,0,0)',
+                    shadowBlur=20,
+                    shadowOffset={x:20, y:20},
+                ){
+                    var temp = canvas.core.arrangement.createElement('path');
+                    temp.name = name;
+                    temp.points = points;
+                    temp.style.stroke = strokeStyle;
+                    temp.style.lineWidth = lineWidth;
+                    temp.style.lineCap = lineCap;
+                    temp.style.lineJoin = lineJoin;
+                    temp.style.miterLimit = miterLimit;
+                    temp.style.shadowColour = shadowColour;
+                    temp.style.shadowBlur = shadowBlur;
+                    temp.style.shadowOffset = shadowOffset;
+                    
+                    return temp;
+                };
+                this.rectangle = function(
+                    name=null, 
+                    x=0, 
+                    y=0, 
+                    width=10, 
+                    height=10, 
+                    angle=0,
+                    anchor={x:0,y:0}, 
+                    fillStyle='rgba(255,100,255,1)', 
+                    strokeStyle='rgba(0,0,0,0)', 
+                    lineWidth=1,
+                    lineJoin='round',
+                    miterLimit=2,
+                    shadowColour='rgba(0,0,0,0)',
+                    shadowBlur=20,
+                    shadowOffset={x:20, y:20},
+                ){
+                    var temp = canvas.core.arrangement.createElement('rectangle');
+                    temp.name = name;
+                    temp.x = x; temp.y = y;
+                    temp.width = width; temp.height = height;
+                    temp.angle = angle;
+                    temp.anchor = anchor;
+                    temp.style.fill = fillStyle;
+                    temp.style.stroke = strokeStyle;
+                    temp.style.lineWidth = lineWidth;
+                    temp.style.lineJoin = lineJoin;
+                    temp.style.miterLimit = miterLimit;
+                    temp.style.shadowColour = shadowColour;
+                    temp.style.shadowBlur = shadowBlur;
+                    temp.style.shadowOffset = shadowOffset;
+                    return temp;
+                };
+                this.group = function(name=null, x=0, y=0, angle=0){
+                    var temp = canvas.core.arrangement.createElement('group');
+                    temp.name = name;
+                    temp.x = x; 
+                    temp.y = y;
+                    temp.angle = angle;
+                    return temp;
+                };
+                this.text = function(
+                    name=null,
+                    x=0,
+                    y=0, 
+                    text='Hello',
+                    angle=0, 
+                    anchor={x:0,y:0},
+                    font='30pt Arial',
+                    textAlign='start', //start/end/center/lief/right 
+                    textBaseline='alphabetic', //alphabetic/top/hanging/middle/ideographic/bottom
+                    fillStyle='rgba(255,100,255,1)', 
+                    strokeStyle='rgba(0,0,0,0)', 
+                    lineWidth=1,
+                    lineJoin='round',
+                    miterLimit=2,
+                    shadowColour='rgba(0,0,0,0)',
+                    shadowBlur=20,
+                    shadowOffset={x:20, y:20},
+                ){
+                    var temp = canvas.core.arrangement.createElement('text');
+                    temp.name = name;
+                    temp.x = x; 
+                    temp.y = y;
+                    temp.text = text;
+                    temp.angle = angle;
+                    temp.anchor = anchor;
+                    temp.style.font = font;
+                    temp.style.textAlign = textAlign;
+                    temp.style.textBaseline = textBaseline;
+                    temp.style.fill = fillStyle;
+                    temp.style.stroke = strokeStyle;
+                    temp.style.lineWidth = lineWidth;
+                    temp.style.lineJoin = lineJoin;
+                    temp.style.miterLimit = miterLimit;
+                    temp.style.shadowColour = shadowColour;
+                    temp.style.shadowBlur = shadowBlur;
+                    temp.style.shadowOffset = shadowOffset;
+                    return temp;
+                };
+            };
+            
+            this.display = new function(){
+                this.sevenSegmentDisplay = function(
+                    name='sevenSegmentDisplay',
+                    x, y, width=20, height=30,
+                    backgroundStyle='rgb(0,0,0)',
+                    glowStyle='rgb(200,200,200)',
+                    dimStyle='rgb(20,20,20)'
+                ){
+                    var margin = width/8;
+                    var division = width/8;
+                    var shapes = {
+                        segments:{
+                            points: {
+                                top:{
+                                    left:[
+                                        {x:division*1.0+margin,         y:division*1.0+margin},
+                                        {x:division*0.5+margin,         y:division*0.5+margin},
+                                        {x:division*1.0+margin,         y:division*0.0+margin},
+                                        {x:division*0.0+margin,         y:division*1.0+margin},
+                                    ],
+                                    right:[
+                                        {x:width-division*1.0-margin,   y:division*0.0+margin},
+                                        {x:width-division*0.5-margin,   y:division*0.5+margin},
+                                        {x:width-division*1.0-margin,   y:division*1.0+margin},
+                                        {x:width-division*0.0-margin,   y:division*1.0+margin}
+                                    ]
+                                },
+                                middle: {
+                                    left:[
+                                        {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                        {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
+                                        {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                        {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                        {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                    ],
+                                    right:[
+                                        {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
+                                        {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
+                                        {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                        {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                        {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
+                                    ]
+                                },
+                                bottom: {
+                                    left:[
+                                        {x:division*1.0+margin,         y:height-division*1.0-margin},
+                                        {x:division*0.5+margin,         y:height-division*0.5-margin},
+                                        {x:division*1.0+margin,         y:height-division*0.0-margin},
+                                        {x:division*0.0+margin,         y:height-division*1.0-margin},
+                                    ],
+                                    right:[
+                                        {x:width-division*1.0-margin,   y:height-division*0.0-margin},
+                                        {x:width-division*0.5-margin,   y:height-division*0.5-margin},
+                                        {x:width-division*1.0-margin,   y:height-division*1.0-margin},
+                                        {x:width-division*0.0-margin,   y:height-division*1.0-margin}
+                                    ]
+                                }
+                            }
+                        }
+                    };
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y});
+                
+                        //backing
+                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backgroundStyle} });
+                                object.append(rect);
+                
+                        //segments
+                            var segments = [];
+                            var points = [
+                                [
+                                    shapes.segments.points.top.left[0],
+                                    shapes.segments.points.top.right[2],
+                                    shapes.segments.points.top.right[1],
+                                    shapes.segments.points.top.right[0],
+                                    shapes.segments.points.top.left[2],
+                                    shapes.segments.points.top.left[1],
+                                ],
+                                [
+                                    shapes.segments.points.top.left[1],
+                                    shapes.segments.points.top.left[3],
+                                    shapes.segments.points.middle.left[3],
+                                    shapes.segments.points.middle.left[1],
+                                    shapes.segments.points.middle.left[0],
+                                    shapes.segments.points.top.left[0],  
+                                ],
+                                [
+                                    shapes.segments.points.top.right[1],  
+                                    shapes.segments.points.top.right[3],  
+                                    shapes.segments.points.middle.right[3],
+                                    shapes.segments.points.middle.right[1],
+                                    shapes.segments.points.middle.right[2],
+                                    shapes.segments.points.top.right[2],  
+                                ],
+                                [
+                                    shapes.segments.points.middle.left[0], 
+                                    shapes.segments.points.middle.right[2],
+                                    shapes.segments.points.middle.right[1],
+                                    shapes.segments.points.middle.right[0],
+                                    shapes.segments.points.middle.left[2], 
+                                    shapes.segments.points.middle.left[1], 
+                                ],
+                                [
+                                    shapes.segments.points.middle.left[1],
+                                    shapes.segments.points.middle.left[4],
+                                    shapes.segments.points.bottom.left[3],
+                                    shapes.segments.points.bottom.left[1],
+                                    shapes.segments.points.bottom.left[0],
+                                    shapes.segments.points.middle.left[2],
+                                ],
+                                [
+                                    shapes.segments.points.middle.right[1],
+                                    shapes.segments.points.middle.right[4],
+                                    shapes.segments.points.bottom.right[3],
+                                    shapes.segments.points.bottom.right[1],
+                                    shapes.segments.points.bottom.right[2],
+                                    shapes.segments.points.middle.right[0],
+                                ],
+                                [
+                                    shapes.segments.points.bottom.left[0],
+                                    shapes.segments.points.bottom.right[2],
+                                    shapes.segments.points.bottom.right[1],
+                                    shapes.segments.points.bottom.right[0],
+                                    shapes.segments.points.bottom.left[2],
+                                    shapes.segments.points.bottom.left[1],
+                                ]
+                            ];
+                            for(var a = 0; a < points.length; a++){
+                                var temp = {
+                                    segment: canvas.part.builder('polygon','segment_'+a,{points:points[a], style:{fill:dimStyle}}),
+                                    state: false
+                                };
+                                segments.push( temp );
+                                object.append( temp.segment );
+                            }
+                
+                    //methods
+                        object.set = function(segment,state){
+                            segments[segment].state = state;
+                            if(state){ segments[segment].segment.style.fill = glowStyle; }
+                            else{ segments[segment].segment.style.fill = dimStyle; }
+                        };
+                        object.get = function(segment){ return segments[segment].state; };
+                        object.clear = function(){
+                            for(var a = 0; a < segments.length; a++){
+                                this.set(a,false);
+                            }
+                        };
+                
+                        object.enterCharacter = function(char){
+                            var stamp = [];
+                            switch(char){
+                                case 0: case '0': stamp = [1,1,1,0,1,1,1]; break;
+                                case 1: case '1': stamp = [0,0,1,0,0,1,0]; break;
+                                case 2: case '2': stamp = [1,0,1,1,1,0,1]; break;
+                                case 3: case '3': stamp = [1,0,1,1,0,1,1]; break;
+                                case 4: case '4': stamp = [0,1,1,1,0,1,0]; break;
+                                case 5: case '5': stamp = [1,1,0,1,0,1,1]; break;
+                                case 6: case '6': stamp = [1,1,0,1,1,1,1]; break;
+                                case 7: case '7': stamp = [1,0,1,0,0,1,0]; break;
+                                case 8: case '8': stamp = [1,1,1,1,1,1,1]; break;
+                                case 9: case '9': stamp = [1,1,1,1,0,1,1]; break;
+                                default:  stamp = [0,0,0,0,0,0,0]; break;
+                            }
+                
+                            for(var a = 0; a < stamp.length; a++){
+                                this.set(a, stamp[a]==1);
+                            }
+                        };
+                
+                    return object;
+                };
+                this.sixteenSegmentDisplay = function(
+                    name='sixteenSegmentDisplay',
+                    x, y, width=20, height=30,
+                    backgroundStyle='rgb(0,0,0)',
+                    glowStyle='rgb(200,200,200)',
+                    dimStyle='rgb(20,20,20)'
+                ){
+                    var margin = width/8;
+                    var division = width/8;
+                    var shapes = {
+                        segments:{
+                            points: {
+                                top:{
+                                    left:[
+                                        {x:division*0.5+margin,         y:division*0.5+margin},  //centre
+                                        {x:division*1.0+margin,         y:division*0.0+margin},  //top
+                                        {x:division*0.0+margin,         y:division*1.0+margin},  //left
+                                        {x:division*1.0+margin,         y:division*1.0+margin},  //inner point
+                                        {x:division*1.75+margin,        y:division*1.0+margin},  //inner point right
+                                        {x:division*1.0+margin,         y:division*1.75+margin}, //inner point down
+                                    ],
+                                    centre:[
+                                        {x:width/2,                     y:division*0.5+margin}, //central point
+                                        {x:width/2-division*0.5,        y:division*1.0+margin}, //lower left
+                                        {x:width/2+division*0.5,        y:division*1.0+margin}, //lower right
+                                        {x:width/2-division*0.5,        y:division*0.0+margin}, //upper left
+                                        {x:width/2+division*0.5,        y:division*0.0+margin}, //upper right
+                                    ],
+                                    right:[
+                                        {x:width-division*0.5-margin,   y:division*0.5+margin},  //centre
+                                        {x:width-division*1.0-margin,   y:division*0.0+margin},  //top
+                                        {x:width-division*0.0-margin,   y:division*1.0+margin},  //right
+                                        {x:width-division*1.0-margin,   y:division*1.0+margin},  //inner point
+                                        {x:width-division*1.0-margin,   y:division*1.75+margin}, //inner point down
+                                        {x:width-division*1.75-margin,  y:division*1.0+margin},  //inner point left
+                                    ]
+                                },
+                                middle:{
+                                    left:[
+                                        {x:division*0.0+margin,         y:height*0.5-division*0.5}, //top left
+                                        {x:division*1.0+margin,         y:height*0.5-division*0.5}, //top right
+                                        {x:division*0.5+margin,         y:height*0.5-division*0.0}, //centre
+                                        {x:division*0.0+margin,         y:height*0.5+division*0.5}, //bottom left
+                                        {x:division*1.0+margin,         y:height*0.5+division*0.5}, //bottom right
+                                    ],
+                                    centre:[
+                                        {x:width/2,                     y:height/2},                //central point
+                                        {x:width/2-division*0.5,        y:division*0.5+height/2},   //lower left
+                                        {x:width/2-division*0.25,       y:division*1.25+height/2},  //lower left down
+                                        {x:width/2-division*1.0,        y:division*0.5+height/2},   //lower left left
+                                        {x:width/2+division*0.5,        y:division*0.5+height/2},   //lower right
+                                        {x:width/2+division*0.5,        y:division*1.75+height/2},  //lower right down
+                                        {x:width/2+division*1.0,        y:division*0.5+height/2},   //lower right right
+                                        {x:width/2-division*0.5,        y:-division*0.5+height/2},  //upper left
+                                        {x:width/2-division*0.25,       y:-division*1.25+height/2}, //upper left up
+                                        {x:width/2-division*1.0,        y:-division*0.25+height/2}, //upper left left
+                                        {x:width/2+division*0.5,        y:-division*0.5+height/2},  //upper right
+                                        {x:width/2+division*0.5,        y:-division*1.75+height/2}, //upper right up
+                                        {x:width/2+division*1.0,        y:-division*0.25+height/2}, //upper right right
+                                    ],
+                                    right:[
+                                        {x:width-division*1.0-margin,   y:height*0.5-division*0.5}, //top left
+                                        {x:width-division*0.0-margin,   y:height*0.5-division*0.5}, //top right
+                                        {x:width-division*0.5-margin,   y:height*0.5-division*0.0}, //centre
+                                        {x:width-division*1.0-margin,   y:height*0.5+division*0.5}, //bottom left
+                                        {x:width-division*0.0-margin,   y:height*0.5+division*0.5}  //bottom right
+                                    ]
+                                },
+                                bottom: {
+                                    left:[
+                                        {x:division*0.5+margin,         y:height-division*0.5-margin}, //centre
+                                        {x:division*0.0+margin,         y:height-division*1.0-margin}, //left
+                                        {x:division*1.0+margin,         y:height-division*0.0-margin}, //bottom
+                                        {x:division*1.0+margin,         y:height-division*1.0-margin}, //inner point
+                                        {x:division*1.0+margin,         y:height-division*1.75-margin},//inner point up
+                                        {x:division*1.75+margin,        y:height-division*1.0-margin}, //inner point right
+                                    ],
+                                    centre:[
+                                        {x:width/2-division*0.5,        y:height-division*1.0-margin}, //upper left
+                                        {x:width/2+division*0.5,        y:height-division*1.0-margin}, //upper right
+                                        {x:width/2,                     y:height-division*0.5-margin}, //central point
+                                        {x:width/2-division*0.5,        y:height-division*0.0-margin}, //lower left
+                                        {x:width/2+division*0.5,        y:height-division*0.0-margin}, //lower right
+                                    ],
+                                    right:[
+                                        {x:width-division*0.5-margin,   y:height-division*0.5-margin}, //centre
+                                        {x:width-division*0.0-margin,   y:height-division*1.0-margin}, //right
+                                        {x:width-division*1.0-margin,   y:height-division*0.0-margin}, //bottom
+                                        {x:width-division*1.0-margin,   y:height-division*1.0-margin}, //inner point
+                                        {x:width-division*1.0-margin,   y:height-division*1.75-margin},//inner point up
+                                        {x:width-division*1.75-margin,  y:height-division*1.0-margin}, //inner point left
+                                    ]
+                                }
+                            }
+                        }
+                    };
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y});
+                
+                        //backing
+                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backgroundStyle} });
+                                object.append(rect);
+                
+                
+                        //segments
+                            var segments = [];
+                            var points = [
+                                [
+                                    shapes.segments.points.top.left[1],
+                                    shapes.segments.points.top.left[0],
+                                    shapes.segments.points.top.left[3],
+                                    shapes.segments.points.top.centre[1],
+                                    shapes.segments.points.top.centre[0],
+                                    shapes.segments.points.top.centre[3],
+                                ],
+                                [
+                                    shapes.segments.points.top.centre[4],
+                                    shapes.segments.points.top.centre[0],
+                                    shapes.segments.points.top.centre[2],
+                                    shapes.segments.points.top.right[3],
+                                    shapes.segments.points.top.right[0],
+                                    shapes.segments.points.top.right[1],
+                                ],
+                
+                                [
+                                    shapes.segments.points.top.left[0],
+                                    shapes.segments.points.top.left[2],
+                                    shapes.segments.points.middle.left[0],
+                                    shapes.segments.points.middle.left[2],
+                                    shapes.segments.points.middle.left[1],
+                                    shapes.segments.points.top.left[3],
+                                ],
+                                [
+                                    shapes.segments.points.top.left[4],
+                                    shapes.segments.points.top.left[3],
+                                    shapes.segments.points.top.left[5],
+                                    shapes.segments.points.middle.centre[9],
+                                    shapes.segments.points.middle.centre[7],
+                                    shapes.segments.points.middle.centre[8],
+                                ],
+                                [
+                                    shapes.segments.points.top.centre[0],
+                                    shapes.segments.points.top.centre[1],
+                                    shapes.segments.points.middle.centre[7],
+                                    shapes.segments.points.middle.centre[0],
+                                    shapes.segments.points.middle.centre[10],
+                                    shapes.segments.points.top.centre[2],
+                                ],
+                                [
+                                    shapes.segments.points.top.right[4],
+                                    shapes.segments.points.top.right[3],
+                                    shapes.segments.points.top.right[5],
+                                    shapes.segments.points.middle.centre[11],
+                                    shapes.segments.points.middle.centre[10],
+                                    shapes.segments.points.middle.centre[12],
+                                ],
+                                [
+                                    shapes.segments.points.top.right[0],
+                                    shapes.segments.points.top.right[2],
+                                    shapes.segments.points.middle.right[1],
+                                    shapes.segments.points.middle.right[2],
+                                    shapes.segments.points.middle.right[0],
+                                    shapes.segments.points.top.right[3],
+                                ],
+                
+                                [
+                                    shapes.segments.points.middle.left[4],
+                                    shapes.segments.points.middle.left[2],
+                                    shapes.segments.points.middle.left[1],
+                                    shapes.segments.points.middle.centre[7],
+                                    shapes.segments.points.middle.centre[0],
+                                    shapes.segments.points.middle.centre[1],
+                                ],
+                                [
+                                    shapes.segments.points.middle.right[3],
+                                    shapes.segments.points.middle.right[2],
+                                    shapes.segments.points.middle.right[0],
+                                    shapes.segments.points.middle.centre[10],
+                                    shapes.segments.points.middle.centre[0],
+                                    shapes.segments.points.middle.centre[4],
+                                ],
+                
+                                [
+                                    shapes.segments.points.bottom.left[0],
+                                    shapes.segments.points.bottom.left[1],
+                                    shapes.segments.points.middle.left[3],
+                                    shapes.segments.points.middle.left[2],
+                                    shapes.segments.points.middle.left[4],
+                                    shapes.segments.points.bottom.left[3],
+                                ],
+                                [
+                                    shapes.segments.points.bottom.left[4],
+                                    shapes.segments.points.bottom.left[3],
+                                    shapes.segments.points.bottom.left[5],
+                                    shapes.segments.points.middle.centre[2],
+                                    shapes.segments.points.middle.centre[1],
+                                    shapes.segments.points.middle.centre[3],
+                                ],
+                                [
+                                    shapes.segments.points.bottom.centre[0],
+                                    shapes.segments.points.bottom.centre[2],
+                                    shapes.segments.points.bottom.centre[1],
+                                    shapes.segments.points.middle.centre[4],
+                                    shapes.segments.points.middle.centre[0],
+                                    shapes.segments.points.middle.centre[1],
+                                ],
+                                [
+                                    shapes.segments.points.bottom.right[4],
+                                    shapes.segments.points.bottom.right[3],
+                                    shapes.segments.points.bottom.right[5],
+                                    shapes.segments.points.middle.centre[5],
+                                    shapes.segments.points.middle.centre[4],
+                                    shapes.segments.points.middle.centre[6],
+                                ],
+                                [
+                                    shapes.segments.points.bottom.right[3],
+                                    shapes.segments.points.middle.right[3],
+                                    shapes.segments.points.middle.right[2],
+                                    shapes.segments.points.middle.right[4],
+                                    shapes.segments.points.bottom.right[1],
+                                    shapes.segments.points.bottom.right[0],
+                                ],
+                
+                                [
+                                    shapes.segments.points.bottom.left[2],
+                                    shapes.segments.points.bottom.left[0],
+                                    shapes.segments.points.bottom.left[3],
+                                    shapes.segments.points.bottom.centre[0],
+                                    shapes.segments.points.bottom.centre[2],
+                                    shapes.segments.points.bottom.centre[3],
+                                ],
+                                [
+                                    shapes.segments.points.bottom.right[2],
+                                    shapes.segments.points.bottom.right[0],
+                                    shapes.segments.points.bottom.right[3],
+                                    shapes.segments.points.bottom.centre[1],
+                                    shapes.segments.points.bottom.centre[2],
+                                    shapes.segments.points.bottom.centre[4],
+                                ],
+                            ];
+                            for(var a = 0; a < points.length; a++){
+                                var temp = {
+                                    segment: canvas.part.builder('polygon','segment_'+a,{points:points[a], style:{fill:dimStyle}}),
+                                    state: false
+                                };
+                                segments.push( temp );
+                                object.append( temp.segment );
+                            }
+                
+                
+                    //methods
+                        object.set = function(segment,state){
+                            segments[segment].state = state;
+                            if(state){ segments[segment].segment.style.fill = glowStyle; }
+                            else{ segments[segment].segment.style.fill = dimStyle; }
+                        };
+                        object.get = function(segment){ return segments[segment].state; };
+                        object.clear = function(){
+                            for(var a = 0; a < segments.length; a++){
+                                this.set(a,false);
+                            }
+                        };
+                
+                        object.enterCharacter = function(char){
+                            var stamp = [];
+                            switch(char){
+                                case '!': 
+                                    stamp = [
+                                        1,1,
+                                        0,1,1,1,0,
+                                        0,0,
+                                        0,0,0,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '?': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,0,0,1,
+                                        0,1,
+                                        0,0,0,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '.': 
+                                    stamp = [
+                                        0,0,
+                                        0,0,0,0,0,
+                                        0,0,
+                                        0,0,0,0,0,
+                                        1,0,
+                                    ]; 
+                                break;
+                                case ',': 
+                                    stamp = [
+                                        0,0,
+                                        0,0,0,0,0,
+                                        0,0,
+                                        0,0,1,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '\'': 
+                                    stamp = [
+                                        0,0,
+                                        1,0,0,0,0,
+                                        0,0,
+                                        0,0,0,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case ':':
+                                    stamp = [
+                                        0,0,
+                                        0,1,0,1,0,
+                                        0,0,
+                                        0,1,0,1,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '"': 
+                                    stamp = [
+                                        0,0,
+                                        1,0,1,0,0,
+                                        0,0,
+                                        0,0,0,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '_': 
+                                    stamp = [
+                                        0,0,
+                                        0,0,0,0,0,
+                                        0,0,
+                                        0,0,0,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '-': 
+                                    stamp = [
+                                        0,0,
+                                        0,0,0,0,0,
+                                        1,1,
+                                        0,0,0,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '\\': 
+                                    stamp = [
+                                        0,0,
+                                        0,1,0,0,0,
+                                        0,0,
+                                        0,0,0,1,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '/': 
+                                    stamp = [
+                                        0,0,
+                                        0,0,0,1,0,
+                                        0,0,
+                                        0,1,0,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '*': 
+                                    stamp = [
+                                        0,0,
+                                        0,1,1,1,0,
+                                        1,1,
+                                        0,1,1,1,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '#': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,1,0,1,
+                                        1,1,
+                                        1,0,1,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '<': 
+                                    stamp = [
+                                        0,0,
+                                        0,0,0,1,0,
+                                        0,0,
+                                        0,0,0,1,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '>': 
+                                    stamp = [
+                                        0,0,
+                                        0,1,0,0,0,
+                                        0,0,
+                                        0,1,0,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '(': 
+                                    stamp = [
+                                        0,1,
+                                        0,0,1,0,0,
+                                        0,0,
+                                        0,0,1,0,0,
+                                        0,1,
+                                    ]; 
+                                break;
+                                case ')': 
+                                    stamp = [
+                                        1,0,
+                                        0,0,1,0,0,
+                                        0,0,
+                                        0,0,1,0,0,
+                                        1,0,
+                                    ]; 
+                                break;
+                                case '[': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,0,
+                                        0,0,
+                                        1,0,0,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case ']': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,0,0,1,
+                                        0,0,
+                                        0,0,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '{': 
+                                    stamp = [
+                                        1,1,
+                                        0,1,0,0,0,
+                                        1,0,
+                                        0,1,0,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '}': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,0,1,0,
+                                        0,1,
+                                        0,0,0,1,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                
+                                case '0': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,1,1,
+                                        0,0,
+                                        1,1,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '1': 
+                                    stamp = [
+                                        1,0,
+                                        0,0,1,0,0,
+                                        0,0,
+                                        0,0,1,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '2': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,0,0,1,
+                                        0,1,
+                                        0,1,0,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '3': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,0,0,1,
+                                        1,1,
+                                        0,0,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '4': 
+                                    stamp = [
+                                        0,0,
+                                        1,0,0,0,1,
+                                        1,1,
+                                        0,0,0,0,1,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '5': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,0,
+                                        1,1,
+                                        0,0,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '6': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,0,
+                                        1,1,
+                                        1,0,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '7': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,0,1,0,
+                                        0,0,
+                                        0,1,0,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case '8': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,1,
+                                        1,1,
+                                        1,0,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case '9': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,1,
+                                        1,1,
+                                        0,0,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                
+                                case 'a': case 'A': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,1,
+                                        1,1,
+                                        1,0,0,0,1,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'b': case 'B': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,1,0,1,
+                                        0,1,
+                                        0,0,1,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 'c': case 'C': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,0,
+                                        0,0,
+                                        1,0,0,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 'd': case 'D': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,1,0,1,
+                                        0,0,
+                                        0,0,1,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 'e': case 'E': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,0,
+                                        1,1,
+                                        1,0,0,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 'f': case 'F': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,0,
+                                        1,1,
+                                        1,0,0,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'g': case 'G': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,0,
+                                        0,1,
+                                        1,0,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 'h': case 'H': 
+                                    stamp = [
+                                        0,0,
+                                        1,0,0,0,1,
+                                        1,1,
+                                        1,0,0,0,1,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'i': case 'I': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,1,0,0,
+                                        0,0,
+                                        0,0,1,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 'j': case 'J': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,1,0,0,
+                                        0,0,
+                                        0,0,1,0,0,
+                                        1,0,
+                                    ]; 
+                                break;
+                                case 'k': case 'K': 
+                                    stamp = [
+                                        0,0,
+                                        1,0,0,1,0,
+                                        1,0,
+                                        1,0,0,1,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'l': case 'L': 
+                                    stamp = [
+                                        0,0,
+                                        1,0,0,0,0,
+                                        0,0,
+                                        1,0,0,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 'm': case 'M': 
+                                    stamp = [
+                                        0,0,
+                                        1,1,0,1,1,
+                                        0,0,
+                                        1,0,0,0,1,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'n': case 'N': 
+                                    stamp = [
+                                        0,0,
+                                        1,1,0,0,1,
+                                        0,0,
+                                        1,0,0,1,1,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'o': case 'O': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,1,
+                                        0,0,
+                                        1,0,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 'p': case 'P': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,1,
+                                        1,1,
+                                        1,0,0,0,0,
+                                        0,0,
+                                    ];
+                                break;
+                                case 'q': case 'Q': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,1,
+                                        0,0,
+                                        1,0,0,1,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 'r': case 'R': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,1,
+                                        1,1,
+                                        1,0,0,1,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 's': case 'S': 
+                                    stamp = [
+                                        1,1,
+                                        1,0,0,0,0,
+                                        1,1,
+                                        0,0,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 't': case 'T': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,1,0,0,
+                                        0,0,
+                                        0,0,1,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'u': case 'U': 
+                                    stamp = [
+                                        0,0,
+                                        1,0,0,0,1,
+                                        0,0,
+                                        1,0,0,0,1,
+                                        1,1,
+                                    ]; 
+                                break;
+                                case 'v': case 'V': 
+                                    stamp = [
+                                        0,0,
+                                        1,0,0,1,0,
+                                        0,0,
+                                        1,1,0,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'w': case 'W': 
+                                    stamp = [
+                                        0,0,
+                                        1,0,0,0,1,
+                                        0,0,
+                                        1,1,0,1,1,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'x': case 'X': 
+                                    stamp = [
+                                        0,0,
+                                        0,1,0,1,0,
+                                        0,0,
+                                        0,1,0,1,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'y': case 'Y': 
+                                    stamp = [
+                                        0,0,
+                                        0,1,0,1,0,
+                                        0,0,
+                                        0,0,1,0,0,
+                                        0,0,
+                                    ]; 
+                                break;
+                                case 'z': case 'Z': 
+                                    stamp = [
+                                        1,1,
+                                        0,0,0,1,0,
+                                        0,0,
+                                        0,1,0,0,0,
+                                        1,1,
+                                    ]; 
+                                break;
+                
+                                case 'all': stamp = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]; break;
+                                default:
+                                    stamp = [
+                                        0,0,
+                                        0,0,0,0,0,
+                                        0,0,
+                                        0,0,0,0,0,
+                                        0,0,
+                                    ];
+                                break;
+                            }
+                
+                            for(var a = 0; a < stamp.length; a++){
+                                this.set(a, stamp[a]==1);
+                            }
+                        };
+                
+                
+                    return object;      
+                };
+                this.glowbox_rect = function(
+                    name='glowbox_rect',
+                    x, y, width=30, height=30, angle=0,
+                    glowStyle = 'rgba(244,234,141,1)',
+                    dimStyle = 'rgba(80,80,80,1)'
+                ){
+                
+                    //elements 
+                        var object = canvas.part.builder('group',name,{x:x, y:y});
+                        var rect = canvas.part.builder('rectangle','light',{ width:width, height:height, angle:angle, style:{fill:dimStyle} });
+                            object.append(rect);
+                
+                    //methods
+                        object.on = function(){
+                            rect.style.fill = glowStyle;
+                        };
+                        object.off = function(){
+                            rect.style.fill = dimStyle;
+                        };
+                
+                    return object;
+                };
+                this.readout_sixteenSegmentDisplay = function(
+                    name='readout_sixteenSegmentDisplay',
+                    x, y, width=100, height=30, count=5, angle=0,
+                    backgroundStyle='rgb(0,0,0)',
+                    glowStyle='rgb(200,200,200)',
+                    dimStyle='rgb(20,20,20)'
+                ){
+                    //values
+                        var text = '';
+                        var displayInterval = null;
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y});
+                
+                        //display units
+                            var units = [];
+                            for(var a = 0; a < count; a++){
+                                var temp = canvas.part.builder('sixteenSegmentDisplay', ''+a, {
+                                    x:(width/count)*a, width:width/count, height:height, 
+                                    style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                });
+                                object.append( temp );
+                                units.push(temp);
+                            }
+                
+                    //methods
+                        object.text = function(a){
+                            if(a==null){return text;}
+                            text = a;
+                        };
+                
+                        object.print = function(style){
+                            clearInterval(displayInterval);
+                            switch(style){
+                                case 'smart':
+                                    if(text.length > units.length){this.print('r2lSweep');}
+                                    else{this.print('regular')}
+                                break;
+                                case 'r2lSweep':
+                                    var displayIntervalTime = 100;
+                                    var displayStage = 0;
+                
+                                    displayInterval = setInterval(function(){
+                                        for(var a = units.length-1; a >= 0; a--){
+                                            units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                        }
+                
+                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                    },displayIntervalTime);
+                                break;
+                                case 'regular': default:
+                                    for(var a = 0; a < units.length; a++){
+                                        units[a].enterCharacter(text[a]);
+                                    }
+                                break;
+                            }
+                        };
+                
+                    return object;
+                };
+            };
+        };
+        
+        canvas.part.builder = function(type,name,data){
+            if(!data){data={};}
+            if(data.style == undefined){data.style={};}
+        
+            switch(type){
+                default: console.warn('Unknown element: '+ type); return null; break;
+        
+                //basic
+                    case 'group': return this.element.basic.group(
+                        name, data.x, data.y, data.angle
+                    );
+                    case 'rectangle': return this.element.basic.rectangle(
+                        name, data.x, data.y, data.width, data.height, data.angle, data.anchor, 
+                        data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin,
+                        data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffset
+                    );
+                    case 'image': return this.element.basic.image(
+                        name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.url
+                    );
+                    case 'polygon': return this.element.basic.polygon(
+                        name, data.points, 
+                        data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, 
+                        data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffse
+                        );
+                    case 'text':   return this.element.basic.text(
+                        name, data.x, data.y, data.text, data.angle, data.anchor, 
+                        data.style.font, data.style.textAlign, data.style.textBaseLine,
+                        data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, 
+                        data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffset
+                        ); break;
+                    case 'circle': return this.element.basic.circle(
+                        name, data.x, data.y, data.r, data.angle, 
+                        data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, 
+                        data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffset
+                    ); break;
+                    case 'path':   return this.element.basic.path(
+                        name, data.points, 
+                        data.style.stroke, data.style.lineWidth, data.style.lineCap,  data.style.lineJoin, 
+                        data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffse
+                    ); break;
+            
+                //display
+                    case 'glowbox_rect': return this.element.display.glowbox_rect(
+                        name, data.x, data.y, data.width, data.height, data.angle, 
+                        data.style.glow, data.style.dim
+                    ); break;
+                    case 'sevenSegmentDisplay': return this.element.display.sevenSegmentDisplay(
+                        name, data.x, data.y, data.width, data.height,
+                        data.style.background, data.style.glow, data.style.dim
+                    ); break;
+                    case 'sixteenSegmentDisplay': return this.element.display.sixteenSegmentDisplay(
+                        name, data.x, data.y, data.width, data.height, 
+                        data.style.background, data.style.glow, data.style.dim
+                    ); break;
+                    case 'readout_sixteenSegmentDisplay': return this.element.display.readout_sixteenSegmentDisplay(
+                        name, data.x, data.y, data.width, data.height, data.count, data.angle, 
+                        data.style.background, data.style.glow, data.style.dime
+                    ); break;
+                    
+                    
+                    
+            }
+            
+        }
+
 
         function tester(item1,item2){
             function getType(obj){
@@ -1684,62 +3374,25 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
 
         
         // -- Only one test per time -- //
-        var rect = canvas.core.arrangement.createElement('rectangle');
-            rect.name = 'testRectangle1';
-            rect.x = 0; rect.y = 0;
-            rect.width = 30; rect.height = 30;
-            rect.style.fill = 'rgba(0,255,0,0.3)';
-            canvas.system.pane.mm.append(rect);
-        var rect = canvas.core.arrangement.createElement('rectangle');
-            rect.name = 'testRectangle2';
-            rect.x = 200; rect.y = 0;
-            rect.width = 30; rect.height = 30;
-            rect.angle = 0.2;
-            rect.anchor = {x:0.5,y:0.5};
-            rect.style.fill = 'rgba(0,255,0,0.3)';
-            canvas.system.pane.mm.append(rect);
+        //basic
+            var basicGroup = canvas.part.builder( 'group', 'basic', { x:10, y:10, angle:0 } );
+            canvas.system.pane.mm.append( basicGroup );
+            basicGroup.append( canvas.part.builder( 'rectangle', 'testRectangle', { x:5, y:5, width:30, height:30, style:{ fill:'rgba(255,0,0,1)' } } ) );
+            basicGroup.append( canvas.part.builder( 'circle', 'testCircle', { x:20, y:55, r:15 } ) );
+            basicGroup.append( canvas.part.builder( 'image', 'testImage', { x:40, y:40, width:30, height:30, url:'https://t2.genius.com/unsafe/300x300/https%3A%2F%2Fimages.genius.com%2F72ee0b753f056baa410c17a6ad9fea70.588x588x1.jpg' } ) );
+            basicGroup.append( canvas.part.builder( 'polygon', 'testPolygon', { points:[{x:55,y:5}, {x:70,y:35}, {x:40,y:35}], style:{ fill:'rgba(0,255,0,1)' } } ) );
+            basicGroup.append( canvas.part.builder( 'text', 'testText', { x:7.5, y:95, text:'Hello', style:{font:'20pt Arial', fill:'rgba(150,150,255,1)' } } ) );
+            basicGroup.append( canvas.part.builder( 'path', 'testPath', { points:[{x:0,y:0},{x:0,y:90},{x:2.5,y:90},{x:2.5,y:72.5},{x:75,y:72.5}] }) );
         
-        var img = canvas.core.arrangement.createElement('image');
-            img.name = 'testImage1';
-            img.x = 50; img.y = 10;
-            img.width = 100; img.height = 100;
-            img.angle = -0.2;
-            img.url = 'https://t2.genius.com/unsafe/300x300/https%3A%2F%2Fimages.genius.com%2F72ee0b753f056baa410c17a6ad9fea70.588x588x1.jpg';
-            canvas.system.pane.mm.append(img);
+        //display
+            var displayGroup = canvas.part.builder( 'group', 'display', { x:100, y:10, angle:0 } );
+            canvas.system.pane.mm.append( displayGroup );
+            displayGroup.append( canvas.part.builder( 'glowbox_rect', 'test_glowbox_rect', {x:0,y:0} ) );
+            displayGroup.append( canvas.part.builder( 'sevenSegmentDisplay', 'test_sevenSegmentDisplay', {x:35,y:0} ) );
+            displayGroup.append( canvas.part.builder( 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay', {x:60,y:0} ) );
+            displayGroup.append( canvas.part.builder( 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay', {x:85,y:0} ) );
         
-        var g = canvas.core.arrangement.createElement('group');
-            g.name = 'testGroup1';
-            g.x = 50; g.y = 10;
-            g.angle = 0.2;
-            canvas.system.pane.mm.append(g);
-        var rect = canvas.core.arrangement.createElement('rectangle');
-            rect.name = 'testRectangle1';
-            rect.x = 0; rect.y = 0;
-            rect.width = 30; rect.height = 30;
-            rect.style.fill = 'rgba(0,255,0,0.9)';
-            g.append(rect);
-        var rect = canvas.core.arrangement.createElement('rectangle');
-            rect.name = 'testRectangle2';
-            rect.x = 40; rect.y = 0;
-            rect.width = 30; rect.height = 30;
-            rect.style.fill = 'rgba(0,255,0,0.9)';
-            g.append(rect);
-        var poly = canvas.core.arrangement.createElement('polygon');
-            poly.name = 'testPolygon1';
-            poly.points = [{x:0,y:0}, {x:50,y:0}, {x:50,y:50}, {x:40,y:50}, {x:40,y:20}, {x:20,y:20}, {x:20,y:50}, {x:0,y:50}];
-            g.append(poly);
         
-        var circ = canvas.core.arrangement.createElement('circle');
-            circ.name = 'testCircle1';
-            circ.x = 100; circ.y = 30;
-            circ.r = 15;
-            canvas.system.pane.mm.append(circ);
-        
-        var text = canvas.core.arrangement.createElement('text');
-            text.name = 'testText1';
-            text.x = 200; text.y = 50;
-            text.angle = 0.4;
-            canvas.system.pane.mm.append(text);
 
 
 

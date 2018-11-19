@@ -84,10 +84,12 @@ this.pointsOfCircle = function(x,y,r,pointCount=3){
     return output;
 };
 this.pointsOfText = function(text, x, y, angle, size, font, alignment, baseline){
+    //requires that the font size be in 'pt'
+
     //determine text width
         var width = 0;
-        var canvas = document.createElement('canvas');
-        var context = canvas.getContext('2d');
+        var cnv = document.createElement('canvas');
+        var context = cnv.getContext('2d');
 
         context.font = font;
         context.textAlign = alignment;
@@ -97,16 +99,8 @@ this.pointsOfText = function(text, x, y, angle, size, font, alignment, baseline)
         width = d.width/size;
 
     //determine text height
-        var height = 0;
-        var div = document.createElement("div");
-            div.innerHTML = text;
-            div.style.position = 'absolute';
-            div.style.top  = '-9999px';
-            div.style.left = '-9999px';
-            div.style.fontFamily = font;
-        document.body.appendChild(div);
-        height = div.offsetHeight*size;
-        document.body.removeChild(div);
+        var height = font.split('pt')[0].split(' ').pop();
+        height = height/size;
 
     //adjust for angle
         var points = [{x:x, y:y}, {x:x+width, y:y}, {x:x+width, y:y-height}, {x:x, y:y-height}];
