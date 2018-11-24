@@ -3,6 +3,7 @@ this.circle = function(
     x=0, 
     y=0, 
     r=2,
+    ignored=false,
     fillStyle='rgba(255,100,255,1)', 
     strokeStyle='rgba(0,0,0,1)', 
     lineWidth=1,
@@ -16,6 +17,7 @@ this.circle = function(
     temp.name = name;
     temp.x = x; temp.y = y;
     temp.r = r;
+    temp.ignored = ignored;
     temp.style.fill = fillStyle;
     temp.style.stroke = strokeStyle;
     temp.style.lineWidth = lineWidth;

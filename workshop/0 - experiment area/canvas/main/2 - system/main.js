@@ -8,4 +8,5 @@ canvas.system.keyboard = new function(){
 
 {{include:paneSetup.js}}
 
+canvas.core.viewport.stopMouseScroll(true);
 canvas.core.render.active(true);

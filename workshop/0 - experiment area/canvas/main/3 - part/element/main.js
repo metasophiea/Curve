@@ -5,3 +5,11 @@ this.basic = new function(){
 this.display = new function(){
     {{include:display/*}} /**/
 };
+
+this.control = new function(){
+    {{include:control/*}} /**/
+};
+
+this.dynamic = new function(){
+    {{include:dynamic/*}} /**/
+};

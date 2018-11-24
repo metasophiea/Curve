@@ -28,6 +28,17 @@ this.rectangle = function(){
         shadowOffset:{x:1, y:1},
     };
 
+    
+    this.parameter = {};
+    this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
+    this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
+    this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
+    this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
+    this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities();} }(this);
+    this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities();} }(this);
+
+
+
     this.getAddress = function(){
         var address = '';
         var tmp = this;
@@ -38,7 +49,8 @@ this.rectangle = function(){
         return '/'+address;
     };
     
-    this.computeExtremities = function(offset){
+    this.getOffset = function(){return gatherParentOffset(this);};
+    this.computeExtremities = function(offset,deepCompute){
         //discover if this shape should be static
             var isStatic = this.static;
             var tmp = this;
@@ -94,15 +106,15 @@ this.rectangle = function(){
         //if this shape is static, always render
             if(shape.static){return true;}
             
-        //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+        //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
-    this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+    this.render = function(context,offset={x:0,y:0,a:0},static=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
 
         //adjust offset for parent's angle
-            var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.parentAngle);
+            var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
             offset.x += point.x - this.x;
             offset.y += point.y - this.y;
         
@@ -142,6 +154,7 @@ this.rectangle = function(){
             context.shadowBlur = shapeValue.shadowBlur;
             context.shadowOffsetX = shapeValue.shadowOffset.x;
             context.shadowOffsetY = shapeValue.shadowOffset.y;
+            
             context.save();
             context.rotate( shapeValue.angle );
             context.fillRect( shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );

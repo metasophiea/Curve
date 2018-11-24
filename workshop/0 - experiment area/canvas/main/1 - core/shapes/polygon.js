@@ -25,6 +25,13 @@ this.polygon = function(){
         shadowOffset:{x:20, y:20},
     };
 
+    
+    this.parameter = {};
+    this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
+
+
+
+
     this.getAddress = function(){
         var address = '';
         var tmp = this;
@@ -93,7 +100,7 @@ this.polygon = function(){
         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
-    this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+    this.render = function(context,offset={x:0,y:0,a:0},static=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
         

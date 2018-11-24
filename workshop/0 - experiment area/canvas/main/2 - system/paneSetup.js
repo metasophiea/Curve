@@ -42,3 +42,13 @@ canvas.system.pane = {};
     canvas.system.pane.mm = canvas.system.pane.middleground.middle;
     canvas.system.pane.mf = canvas.system.pane.middleground.front;
     canvas.system.pane.f = canvas.system.pane.foreground;
+
+//utility
+    canvas.system.pane.getMiddlegroundPane = function(element){
+        var tmp = element;
+        do{
+            if(tmp == canvas.system.pane.mb){return canvas.system.pane.mb;}
+            else if(tmp == canvas.system.pane.mm){return canvas.system.pane.mm;}
+            else if(tmp == canvas.system.pane.mf){return canvas.system.pane.mf;}
+        }while((tmp=tmp.parent) != undefined);
+    };

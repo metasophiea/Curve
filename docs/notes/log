@@ -1,4 +1,83 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-11-24
+  - canvas experiment
+    - fixed that weird problem with the button_rect sometimes having an outline
+      (something to do with setting the strokeStyle to undefined)
+    - finished up on the connectionNode_data (in blue)
+    - addded connectionNode_signal (in red)
+    - addded connectionNode_audio (in orange)
+    - jiggered cable adding about as in the past, shape names weren't mandatory
+      as they are in this system. Cables are still added to the
+      middle/middleground pane, but now have a name based off their owner's
+      address, for example:
+      "cable-/root/middleground/middle/dynamic/test_connectionNode_audio2/"
+
+  notes
+  - one could argue that the connectionNodes should all be based of some generic
+    connection node part thing, but I've already written them now, and it feels
+    unlikely that I'll need to make new ones any time soon. Something to do once
+    we've fully replaced the SVG version I guess.
+    ....the signal version needs a rethink anyway.
+  - parts left to do
+      display
+      - grapher
+      - grapher_audioScope
+      - grapher_periodicWave
+      control 
+      - list
+      - grapher_waveWorkspace
+      - needleOverlay
+      - sequencer
+
+2018-11-23
+  - canvas experiment
+    - button_rect unborked. There's still an odd problem though when you
+      position the viewport just right, that an outline appears around the
+      backing rectangle.
+    - added level, meter_level and half of audio_meter_level (it needs the audio
+      library stuff)
+    - added 'stopMouseScroll' setting to core's surface, and changed things so
+      one has to enable the functionality (which is now done in system/main.js)
+    - added rastorGrid
+    - added cable, halfway though adding the connectionNode_data
+
+2018-11-22
+  - canvas experiment
+    - rewrote dial_continuous a bit to be a little nicer
+    - added dial_discrete (which now uses the dial_continuous dial as it's base)
+    - added button_rect (only a little bit of a mess. The text points calculator
+      is still a bit iffy. The style arguments are crazy)(it's borked when
+      rotated ):/ )
+    - added checkbox_rect
+    - added rastorgrid
+
+2018-11-21
+  - canvas experiment
+    - turns out, 'deep compute' was broken
+    - improved 'computeExtremities' a little, so that deepCompute-ing a shape,
+      doesn't make ever shape update all parents (it's kinda complicated, but it
+      works)
+    - added rangeslide
+    - added getters and setters to shapes, so that they will recalculate their
+      extremities (groups do deepCompute) upon any change
+    - added dial_continuous (which could do with a rewrite to look a bit more
+      like the slider code. Thankfully the construction of the system means
+      that poor coding can be easily contained)
+      
+2018-11-20
+  - canvas experiment
+    - added onclick and ondblclick to core callbacks
+    - expanded mouse.js to iteratie over shape's (and their parent's) listeners
+    - fix: group wasn't passing parent angle through correctly
+    - created 'system.mouse.mouseInteractionHandler' function, for handling
+      mouse interaction that centres around taking over the canvas mousemove
+      input while the mouse is down
+    - 'slide' part is now fully interactive
+
+  bugs:
+  - there's something wrong with how extremities are being calculated..or how
+    rendering is being done...it's totally broken, basically
+
 2018-11-19
   - canvas experiment
     - it appears that html canvas doesn't have a way of measuring height, but if

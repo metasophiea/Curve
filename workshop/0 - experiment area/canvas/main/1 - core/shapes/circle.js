@@ -25,6 +25,16 @@ this.circle = function(){
         shadowOffset:{x:1, y:1},
     };
 
+    
+    this.parameter = {};
+    this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
+    this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
+    this.parameter.r = function(shape){ return function(a){if(a==undefined){return shape.r;} shape.r = a; shape.computeExtremities();} }(this);
+
+
+
+
+
     this.getAddress = function(){
         var address = '';
         var tmp = this;
@@ -52,6 +62,14 @@ this.circle = function(){
             this.extremities = {
                 points:[],
                 boundingBox:{},
+                origin:{},
+            };
+
+        //calculate origin
+            point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+            this.extremities.origin = {
+                x: this.x + offset.x,
+                y: this.y + offset.y,
             };
 
         //calculate points
@@ -77,7 +95,12 @@ this.circle = function(){
         return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
     }
     function isPointWithinHitBox(x,y,shape){
-        return canvas.library.math.distanceBetweenTwoPoints( {x:x,y:y},shape ) <= shape.r;
+        var circleCentre = {
+            x: shape.x + shape.extremities.origin.x,
+            y: shape.y + shape.extremities.origin.y,
+        };
+
+        return canvas.library.math.distanceBetweenTwoPoints( {x:x,y:y},circleCentre ) <= shape.r;
     }
     this.isPointWithin = function(x,y){
         if( isPointWithinBoundingBox(x,y,this) ){
@@ -93,12 +116,12 @@ this.circle = function(){
         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
-    this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+    this.render = function(context,offset={x:0,y:0,a:0},static=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
         if(!shouldRender(this)){return;}
 
         //adjust offset for parent's angle
-            var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.parentAngle);
+            var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
             offset.x += point.x - this.x;
             offset.y += point.y - this.y;
         
@@ -147,6 +170,9 @@ this.circle = function(){
                     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
                     core.render.drawDot( temp.x, temp.y );
                     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                    core.render.drawDot( temp.x, temp.y );
+
+                    var temp = adapter.workspacePoint2windowPoint(this.extremities.origin.x,this.extremities.origin.y);
                     core.render.drawDot( temp.x, temp.y );
             }
     };

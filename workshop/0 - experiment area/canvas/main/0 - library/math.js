@@ -102,8 +102,17 @@ this.pointsOfText = function(text, x, y, angle, size, font, alignment, baseline)
         var height = font.split('pt')[0].split(' ').pop();
         height = height/size;
 
-    //adjust for angle
+    //generate points
         var points = [{x:x, y:y}, {x:x+width, y:y}, {x:x+width, y:y-height}, {x:x, y:y-height}];
+
+    //adjust for alignment and baseline
+        var leftPush = { start:0, end:0, center:width/2, left:width, right:width };
+        var downPush = { alphabetic:height, top:0, hanging:0, middle:height/2, ideographic:0, bottom:height };
+        for(var a = 0; a < points.length; a++){
+            points[a] = { x:points[a].x-leftPush[alignment], y:points[a].y+downPush[baseline] };
+        }
+    
+    //adjust for angle
         for(var a = 0; a < points.length; a++){
             points[a] = this.cartesianAngleAdjust(points[a].x-x,points[a].y-y,angle);
             points[a].x += x;

@@ -108,8 +108,17 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     var height = font.split('pt')[0].split(' ').pop();
                     height = height/size;
             
-                //adjust for angle
+                //generate points
                     var points = [{x:x, y:y}, {x:x+width, y:y}, {x:x+width, y:y-height}, {x:x, y:y-height}];
+            
+                //adjust for alignment and baseline
+                    var leftPush = { start:0, end:0, center:width/2, left:width, right:width };
+                    var downPush = { alphabetic:height, top:0, hanging:0, middle:height/2, ideographic:0, bottom:height };
+                    for(var a = 0; a < points.length; a++){
+                        points[a] = { x:points[a].x-leftPush[alignment], y:points[a].y+downPush[baseline] };
+                    }
+                
+                //adjust for angle
                     for(var a = 0; a < points.length; a++){
                         points[a] = this.cartesianAngleAdjust(points[a].x-x,points[a].y-y,angle);
                         points[a].x += x;
@@ -171,7 +180,205 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
 
         };
         canvas.library.audio = new function(){
-
+            //master context
+                this.context = new (window.AudioContext || window.webkitAudioContext)();
+            
+            
+            
+            
+                
+            
+            
+                
+            //utility functions
+                this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
+                    if(target==null){return audioParam.value;}
+                
+                    if(cancelScheduledValues){ audioParam.cancelScheduledValues(context.currentTime); }
+                
+                    try{
+                        switch(curve){
+                            case 'linear': 
+                                audioParam.linearRampToValueAtTime(target, context.currentTime+time);
+                            break;
+                            case 'exponential':
+                                console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
+                                if(target == 0){target = 1/10000;}
+                                audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
+                            break;
+                            case 's':
+                                var mux = target - audioParam.value;
+                                var array = system.utility.math.curveGenerator.s(10);
+                                for(var a = 0; a < array.length; a++){
+                                    array[a] = audioParam.value + array[a]*mux;
+                                }
+                                audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
+                            break;
+                            case 'instant': default:
+                                audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                            break;
+                        }
+                    }catch(e){
+                        console.log('could not change param (possibly due to an overlap, or bad target value)');
+                        console.log('audioParam:',audioParam,'target:',target,'time:',time,'curve:',curve,'cancelScheduledValues:',cancelScheduledValues);
+                        console.log(e);
+                    }
+                };
+                this.loadAudioFile = function(callback,type='file',url=''){
+                    switch(type){
+                        case 'url': 
+                            var request = new XMLHttpRequest();
+                            request.open('GET', url, true);
+                            request.responseType = 'arraybuffer';
+                            request.onload = function(){
+                                system.audio.context.decodeAudioData(this.response, function(data){
+                                    callback({
+                                        buffer:data,
+                                        name:(url.split('/')).pop(),
+                                        duration:data.duration,
+                                    });
+                                }, function(e){console.warn("Error with decoding audio data" + e.err);});
+                            }
+                            request.send();
+                        break;
+                        case 'file': default:
+                            var inputObject = document.createElement('input');
+                            inputObject.type = 'file';
+                            inputObject.onchange = function(){
+                                var file = this.files[0];
+                                var fileReader = new FileReader();
+                                fileReader.readAsArrayBuffer(file);
+                                fileReader.onload = function(data){
+                                    system.audio.context.decodeAudioData(data.target.result, function(buffer){
+                                        callback({
+                                            buffer:buffer,
+                                            name:file.name,
+                                            duration:buffer.duration,
+                                        });
+                                    });
+                                }
+                            };
+                            document.body.appendChild(inputObject);
+                            inputObject.click();
+                        break;
+                    }
+                };
+                this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}){
+                    var waveform = audioBuffer.getChannelData(0);
+                    // var channelCount = audioBuffer.numberOfChannels;
+                
+                    bounds.start = bounds.start ? bounds.start : 0;
+                    bounds.end = bounds.end ? bounds.end : 1;
+                    var resolution = 10000;
+                    var start = audioBuffer.length*bounds.start;
+                    var end = audioBuffer.length*bounds.end;
+                    var step = (end - start)/resolution;
+                
+                    var outputArray = [];
+                    for(var a = start; a < end; a+=Math.round(step)){
+                        outputArray.push( 
+                            system.utility.math.largestValueFound(
+                                waveform.slice(a, a+Math.round(step))
+                            )
+                        );
+                    }
+                
+                    return outputArray;
+                };
+                this.loadBuffer = function(context, data, destination, onended){
+                    var temp = context.createBufferSource();
+                    temp.buffer = data;
+                    temp.connect(destination);
+                    temp.onended = onended;
+                    return temp;
+                };
+                
+            
+            
+            
+            
+            
+            
+            
+            //destination
+                this.destination = this.context.createGain();
+                this.destination.connect(this.context.destination);
+                this.destination._gain = 1;
+                this.destination.masterGain = function(value){
+                    if(value == undefined){return this.destination._gain;}
+                    this._gain = value;
+                    canvas.library.audio.utility.changeAudioParam(canvas.library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
+                };
+            
+            
+            
+            
+            
+            
+            
+            
+            //conversion
+                //frequencies index
+                    this.names_frequencies_split = {
+                        0:{ 'C':16.35, 'C#':17.32, 'D':18.35, 'D#':19.45, 'E':20.60, 'F':21.83, 'F#':23.12, 'G':24.50, 'G#':25.96, 'A':27.50, 'A#':29.14, 'B':30.87  },
+                        1:{ 'C':32.70, 'C#':34.65, 'D':36.71, 'D#':38.89, 'E':41.20, 'F':43.65, 'F#':46.25, 'G':49.00, 'G#':51.91, 'A':55.00, 'A#':58.27, 'B':61.74, },    
+                        2:{ 'C':65.41, 'C#':69.30, 'D':73.42, 'D#':77.78, 'E':82.41, 'F':87.31, 'F#':92.50, 'G':98.00, 'G#':103.8, 'A':110.0, 'A#':116.5, 'B':123.5, },
+                        3:{ 'C':130.8, 'C#':138.6, 'D':146.8, 'D#':155.6, 'E':164.8, 'F':174.6, 'F#':185.0, 'G':196.0, 'G#':207.7, 'A':220.0, 'A#':233.1, 'B':246.9, },    
+                        4:{ 'C':261.6, 'C#':277.2, 'D':293.7, 'D#':311.1, 'E':329.6, 'F':349.2, 'F#':370.0, 'G':392.0, 'G#':415.3, 'A':440.0, 'A#':466.2, 'B':493.9, },
+                        5:{ 'C':523.3, 'C#':554.4, 'D':587.3, 'D#':622.3, 'E':659.3, 'F':698.5, 'F#':740.0, 'G':784.0, 'G#':830.6, 'A':880.0, 'A#':932.3, 'B':987.8, },    
+                        6:{ 'C':1047,  'C#':1109,  'D':1175,  'D#':1245,  'E':1319,  'F':1397,  'F#':1480,  'G':1568,  'G#':1661,  'A':1760,  'A#':1865,  'B':1976,  },
+                        7:{ 'C':2093,  'C#':2217,  'D':2349,  'D#':2489,  'E':2637,  'F':2794,  'F#':2960,  'G':3136,  'G#':3322,  'A':3520,  'A#':3729,  'B':3951,  },    
+                        8:{ 'C':4186,  'C#':4435,  'D':4699,  'D#':4978,  'E':5274,  'F':5588,  'F#':5920,  'G':6272,  'G#':6645,  'A':7040,  'A#':7459,  'B':7902   }, 
+                    };
+                    //generate forward index
+                    // eg. {... '4C':261.6, '4C#':277.2 ...}
+                        this.names_frequencies = {};
+                        var octaves = Object.entries(this.names_frequencies_split);
+                        for(var a = 0; a < octaves.length; a++){
+                            var names = Object.entries(this.names_frequencies_split[a]);
+                            for(var b = 0; b < names.length; b++){
+                                this.names_frequencies[ octaves[a][0]+names[b][0] ] = names[b][1];
+                            }
+                        }
+                    //generate backward index
+                    // eg. {... 261.6:'4C', 277.2:'4C#' ...}
+                        this.frequencies_names = {};
+                        var temp = Object.entries(this.names_frequencies);
+                        for(var a = 0; a < temp.length; a++){ this.frequencies_names[temp[a][1]] = temp[a][0]; }
+            
+                //generate midi notes index
+                    var temp = [
+                        '0C', '0C#', '0D', '0D#', '0E', '0F', '0F#', '0G', '0G#', '0A', '0A#', '0B',
+                        '1C', '1C#', '1D', '1D#', '1E', '1F', '1F#', '1G', '1G#', '1A', '1A#', '1B',
+                        '2C', '2C#', '2D', '2D#', '2E', '2F', '2F#', '2G', '2G#', '2A', '2A#', '2B',
+                        '3C', '3C#', '3D', '3D#', '3E', '3F', '3F#', '3G', '3G#', '3A', '3A#', '3B',
+                        '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B',
+                        '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B',
+                        '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B',
+                        '7C', '7C#', '7D', '7D#', '7E', '7F', '7F#', '7G', '7G#', '7A', '7A#', '7B',
+                        '8C', '8C#', '8D', '8D#', '8E', '8F', '8F#', '8G', '8G#', '8A', '8A#', '8B',
+                    ];
+                    //generate forward index
+                        this.midinumbers_names = {};
+                        for(var a = 0; a < temp.length; a++){
+                            this.midinumbers_names[a+24] = temp[a];
+                        }
+                    //generate backward index
+                        this.names_midinumbers = {};
+                        var temp = Object.entries(this.midinumbers_names);
+                        for(var a = 0; a < temp.length; a++){ 
+                            this.names_midinumbers[temp[a][1]] = parseInt(temp[a][0]);
+                        }
+            
+                //lead functions
+                    this.num2name = function(num){ return this.midinumbers_names[num]; };
+                    this.num2freq = function(num){ return this.names_frequencies[this.midinumbers_names[num]]; };
+            
+                    this.name2num = function(name){ return this.names_midinumbers[name]; };
+                    this.name2freq = function(name){ return this.names_frequencies[name]; };
+            
+                    this.freq2num = function(freq){ return this.names_midinumbers[this.frequencies_names[freq]]; };
+                    this.freq2name = function(freq){ return this.frequencies_names[freq]; };
         };
         
 
@@ -233,6 +440,13 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             shadowBlur:20,
                             shadowOffset:{x:20, y:20},
                         };
+                    
+                        
+                        this.parameter = {};
+                        this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
+                    
+                    
+                    
                     
                         this.getAddress = function(){
                             var address = '';
@@ -302,7 +516,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                 return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                         };
-                        this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
                             //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                             
@@ -388,6 +602,16 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             shadowOffset:{x:1, y:1},
                         };
                     
+                        
+                        this.parameter = {};
+                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
+                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
+                        this.parameter.r = function(shape){ return function(a){if(a==undefined){return shape.r;} shape.r = a; shape.computeExtremities();} }(this);
+                    
+                    
+                    
+                    
+                    
                         this.getAddress = function(){
                             var address = '';
                             var tmp = this;
@@ -415,6 +639,14 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 this.extremities = {
                                     points:[],
                                     boundingBox:{},
+                                    origin:{},
+                                };
+                    
+                            //calculate origin
+                                point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                this.extremities.origin = {
+                                    x: this.x + offset.x,
+                                    y: this.y + offset.y,
                                 };
                     
                             //calculate points
@@ -440,7 +672,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
                         }
                         function isPointWithinHitBox(x,y,shape){
-                            return canvas.library.math.distanceBetweenTwoPoints( {x:x,y:y},shape ) <= shape.r;
+                            var circleCentre = {
+                                x: shape.x + shape.extremities.origin.x,
+                                y: shape.y + shape.extremities.origin.y,
+                            };
+                    
+                            return canvas.library.math.distanceBetweenTwoPoints( {x:x,y:y},circleCentre ) <= shape.r;
                         }
                         this.isPointWithin = function(x,y){
                             if( isPointWithinBoundingBox(x,y,this) ){
@@ -456,12 +693,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                 return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                         };
-                        this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
                             //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                             if(!shouldRender(this)){return;}
                     
                             //adjust offset for parent's angle
-                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.parentAngle);
+                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
                                 offset.x += point.x - this.x;
                                 offset.y += point.y - this.y;
                             
@@ -511,6 +748,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         core.render.drawDot( temp.x, temp.y );
                                         var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
                                         core.render.drawDot( temp.x, temp.y );
+                    
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.origin.x,this.extremities.origin.y);
+                                        core.render.drawDot( temp.x, temp.y );
                                 }
                         };
                     };
@@ -543,6 +783,18 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             shadowBlur:2,
                             shadowOffset:{x:1, y:1},
                         };
+                    
+                        
+                        this.parameter = {};
+                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
+                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
+                        this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
+                        this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
+                        this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities();} }(this);
+                        this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities();} }(this);
+                    
+                    
+                        
                     
                         this.getAddress = function(){
                             var address = '';
@@ -613,12 +865,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                 return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                         };
-                        this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
                             //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                     
                             //adjust offset for parent's angle
-                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.parentAngle);
+                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
                                 offset.x += point.x - this.x;
                                 offset.y += point.y - this.y;
                             
@@ -698,13 +950,28 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.style = {
                             stroke:'rgba(0,0,0,0)',
                             lineWidth:1,
-                            lineCap:'round',
-                            lineJoin:'round',
+                            lineCap:'butt',
+                            lineJoin:'miter',
                             miterLimit:2,
                             shadowColour:'rgba(0,0,0,0)',
                             shadowBlur:20,
                             shadowOffset:{x:20, y:20},
                         };
+                    
+                        
+                        this.parameter = {};
+                        this.parameter.points = function(shape){ 
+                            return function(a){
+                                if(a==undefined){
+                                    return shape.points;
+                                } 
+                                shape.points = a; 
+                                shape.computeExtremities();
+                            } 
+                        }(this);
+                    
+                    
+                        
                     
                         this.getAddress = function(){
                             var address = '';
@@ -771,10 +1038,10 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //if this shape is static, always render
                                 if(shape.static){return true;}
                                 
-                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                            //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                 return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                         };
-                        this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
                             //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                             
@@ -823,7 +1090,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
                                             core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
                                         }
-                                    //boudning box
+                                    //bounding box
                                         var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
                                         core.render.drawDot( temp.x, temp.y );
                                         var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
@@ -861,6 +1128,17 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             shadowOffset:{x:1, y:1},
                         };
                     
+                        
+                        this.parameter = {};
+                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
+                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
+                        this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
+                        this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
+                        this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities();} }(this);
+                        this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities();} }(this);
+                    
+                    
+                    
                         this.getAddress = function(){
                             var address = '';
                             var tmp = this;
@@ -871,7 +1149,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             return '/'+address;
                         };
                         
-                        this.computeExtremities = function(offset){
+                        this.getOffset = function(){return gatherParentOffset(this);};
+                        this.computeExtremities = function(offset,deepCompute){
                             //discover if this shape should be static
                                 var isStatic = this.static;
                                 var tmp = this;
@@ -927,15 +1206,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //if this shape is static, always render
                                 if(shape.static){return true;}
                                 
-                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                            //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                 return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                         };
-                        this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
                             //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                     
                             //adjust offset for parent's angle
-                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.parentAngle);
+                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
                                 offset.x += point.x - this.x;
                                 offset.y += point.y - this.y;
                             
@@ -975,6 +1254,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 context.shadowBlur = shapeValue.shadowBlur;
                                 context.shadowOffsetX = shapeValue.shadowOffset.x;
                                 context.shadowOffsetY = shapeValue.shadowOffset.y;
+                                
                                 context.save();
                                 context.rotate( shapeValue.angle );
                                 context.fillRect( shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
@@ -1015,6 +1295,14 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.angle = 0;
                         this.children = [];
                     
+                    
+                        this.parameter = {};
+                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities(undefined,true);} }(this);
+                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities(undefined,true);} }(this);
+                        this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities(undefined,true);} }(this);
+                    
+                        
+                    
                         this.getAddress = function(){
                             var address = '';
                             var tmp = this;
@@ -1034,8 +1322,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //check that the name is not already taken in this grouping
                                 for(var a = 0; a < group.children.length; a++){
                                     if( group.children[a].name == element.name ){ 
-                                        console.error('element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+parent.name+'"')+''); 
-                                        return;
+                                        return 'element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+group.name+'"'); 
                                     }
                                 }
                         }
@@ -1107,7 +1394,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             return result;
                         };
                     
+                        this.getOffset = function(){return gatherParentOffset(this);};
                         this.computeExtremities = function(offset,deepCompute=false){
+                            //root calculation element
+                                var rootCalculationElement = offset == undefined;
+                    
                             //discover if this shape should be static
                                 var isStatic = this.static;
                                 var tmp = this;
@@ -1122,13 +1413,16 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     
                             //if 'deepCompute' is set, recalculate the extremities for all children
                                 if(deepCompute){
-                                    for(var a = 0; a < this.children.length; a++){
-                                        this.children[a].computeExtremities({
-                                            x: this.x     + (offset.x != undefined ? offset.x : 0),
-                                            y: this.y     + (offset.y != undefined ? offset.y : 0),
-                                            a: this.angle + (offset.a != undefined ? offset.a : 0),
-                                        },true);
-                                    }
+                                    //calculate offset to be sent down to this group's children
+                                        var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
+                                        var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                            combinedOffset.x += point.x;
+                                            combinedOffset.y += point.y;
+                    
+                                    //request deep calculation from all children
+                                        for(var a = 0; a < this.children.length; a++){
+                                            this.children[a].computeExtremities(combinedOffset,true);
+                                        }
                                 }
                     
                             //reset variables
@@ -1148,17 +1442,17 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                                 temp = canvas.library.math.boundingBoxFromPoints( temp );
                                 this.extremities.points = [
-                                    { x: temp.topLeft.x, y: temp.topLeft.y, },
-                                    { x: temp.bottomRight.x, y: temp.topLeft.y, },
+                                    { x: temp.topLeft.x,     y: temp.topLeft.y,     },
+                                    { x: temp.bottomRight.x, y: temp.topLeft.y,     },
                                     { x: temp.bottomRight.x, y: temp.bottomRight.y, },
-                                    { x: temp.topLeft.x, y: temp.bottomRight.y, },
-                                ];
-                                
+                                    { x: temp.topLeft.x,     y: temp.bottomRight.y, },
+                                ];            
+                    
                             //calculate boundingBox
                                 this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
                     
                             //update the points and bounding box of the parent
-                                if(this.parent != undefined){
+                                if(this.parent != undefined && rootCalculationElement){
                                     this.parent.computeExtremities();
                                 }
                         };
@@ -1185,7 +1479,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //otherwise, carry onto the next shape
                     
                             for(var a = this.children.length-1; a >= 0; a--){
-                                //if child shape is statc (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
+                                //if child shape is static (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
                                     var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
                     
                                     if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
@@ -1209,12 +1503,13 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                 return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                         };
-                        this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
                             //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                     
                             //adjust offset for parent's angle
-                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.parentAngle);
+                                // console.log(this.name,'group>',JSON.stringify(offset));
+                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
                                 offset.x += point.x - this.x;
                                 offset.y += point.y - this.y;
                     
@@ -1271,7 +1566,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     
                         this.style = {
                             font:'30pt Arial',
-                            align:'start',                  // start/end/center/lief/right 
+                            align:'start',                  // start/end/center/left/right 
                             baseline:'alphabetic',          // alphabetic/top/hanging/middle/ideographic/bottom
                             fill:'rgba(255,100,100,1)',
                             stroke:'rgba(0,0,0,0)',
@@ -1280,6 +1575,16 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             shadowBlur:2,
                             shadowOffset:{x:20, y:20},
                         };
+                    
+                        
+                        this.parameter = {};
+                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
+                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
+                        this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
+                    
+                    
+                    
+                    
                     
                         this.getAddress = function(){
                             var address = '';
@@ -1350,12 +1655,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                 return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                         };
-                        this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
                             //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                 if(!shouldRender(this)){return;}
                     
                             //adjust offset for parent's angle
-                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.parentAngle);
+                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
                                 offset.x += point.x - this.x;
                                 offset.y += point.y - this.y;
                             
@@ -1427,19 +1732,19 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             while((temp=temp.parent) != undefined){
                                 offsetList.unshift( {x:temp.x, y:temp.y, a:temp.angle} );
                             }
+                
                         //calculate them together into an offset
                             offset = { 
                                 x: offsetList[0]!=undefined ? offsetList[0].x : 0,
                                 y: offsetList[0]!=undefined ? offsetList[0].y : 0,
-                                a: 0
+                                a: offsetList[0]!=undefined ? offsetList[0].a : 0,
                             };
                             for(var a = 1; a < offsetList.length; a++){
-                                var point = canvas.library.math.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,-(offset.a+offsetList[a-1].a));
-                                offset.a += offsetList[a-1].a;
+                                var point = canvas.library.math.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,offsetList[a-1].a);
+                                offset.a += offsetList[a].a;
                                 offset.x += point.x;
                                 offset.y += point.y;
                             }
-                            offset.a += offsetList[offsetList.length-1]!=undefined ? offsetList[offsetList.length-1].a : 0;
                 
                     return offset;
                 }
@@ -1478,7 +1783,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     var mouseData = { 
                         x:undefined, 
                         y:undefined, 
-                        stopScrollActive:true
+                        stopScrollActive:false
                     };
                 
                     function adjustCanvasSize(){
@@ -1649,7 +1954,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 };
                 this.callback = new function(){
                     var callbacks = [
-                        'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 
+                        'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick',
                         'onkeydown', 'onkeyup',
                         'touchstart', 'touchmove', 'touchend', 'touchenter', 'touchleave', 'touchcancel',
                     ];
@@ -1664,7 +1969,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     return function(event){
                                         if( !core.callback[callback] ){return;}
                                         var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                                        core.callback[callback](p.x,p.y,event);
+                                        var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                                        core.callback[callback](p.x,p.y,event,shape);
                                     }
                                 }(callbacks[a]);
                 
@@ -1674,31 +1980,46 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                     if( !core.callback.onmouseover ){return;}
                                     var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                                    core.callback.onmouseover(p.x,p.y,event);
+                                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                                    core.callback.onmouseover(p.x,p.y,event,shape);
                                 };
                                 canvas.onmouseout = function(event){
                                     if(core.viewport.stopMouseScroll()){ document.body.style.overflow = ''; }
                                     
                                     if( !core.callback.onmouseout ){return;}
                                     var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                                    core.callback.onmouseout(p.x,p.y,event);
+                                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                                    core.callback.onmouseout(p.x,p.y,event,shape);
                                 };
+                                var lastShape;
                                 canvas.onmousemove = function(event){
                                     if( !core.callback.onmousemove ){return;}
                                     var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                                    core.callback.onmousemove(p.x,p.y,event);
+                                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                
+                                    if( lastShape != shape ){
+                                        core.callback.onmouseleave(p.x,p.y,event,lastShape);
+                                        core.callback.onmouseenter(p.x,p.y,event,shape);
+                                    }
+                                    lastShape = shape;
+                                    
+                                    core.callback.onmousemove(p.x,p.y,event,shape);
                                     core.viewport.mousePosition(p.x,p.y);
                                 };
+                
                                 canvas.onkeydown = function(event){
                                     if( !core.callback.onkeydown ){return;}
                                     var p = core.viewport.mousePosition();
-                                    core.callback.onkeydown(p.x,p.y,event);
+                                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                                    core.callback.onkeydown(p.x,p.y,event,shape);
                                 };
                                 canvas.onkeyup = function(event){
                                     if( !core.callback.onkeyup ){return;}
                                     var p = core.viewport.mousePosition();
-                                    core.callback.onkeyup(p.x,p.y,event);
+                                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                                    core.callback.onkeyup(p.x,p.y,event,shape);
                                 };
+                
                     }
                 };
                 
@@ -1716,6 +2037,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.prepend = function(element){return core.arrangement.prepend(element);};
                 this.remove = function(element){return core.arrangement.remove(element);};
                 this.getElementUnderPoint = function(x,y){return core.arrangement.getElementUnderPoint(x,y);};
+                this.getElementsWithName = function(name){ return core.arrangement.getElementsWithName(name); };
                 
                 this.forceRefresh = function(element){return core.arrangement.forceRefresh(element);};
             };
@@ -1724,6 +2046,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.scale = function(s){return core.viewport.scale(s);};
                 this.angle = function(a){return core.viewport.angle(a);};
                 this.windowPoint2workspacePoint = function(x,y){ return core.viewport.windowPoint2workspacePoint(x,y); };
+                this.stopMouseScroll = function(bool){ return core.viewport.stopMouseScroll(bool); };
             };
             this.render = new function(){
                 this.frame = function(noClear=false){return core.render.frame(noClear);};
@@ -1734,131 +2057,170 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.getReport = function(){return core.stats.getReport();};
             };
             this.callback = new function(){
-                this.onmousedown = function(x,y,event){};
+                this.onmousedown = function(x,y,event,shape){};
                 core.callback.onmousedown = function(surface){
-                    return function(x,y,event){ surface.onmousedown(x,y,event); };
+                    return function(x,y,event,shape){ surface.onmousedown(x,y,event,shape); };
                 }(this);
-                this.onmouseup = function(x,y,event){};
+                this.onmouseup = function(x,y,event,shape){};
                 core.callback.onmouseup = function(surface){
-                    return function(x,y,event){ surface.onmouseup(x,y,event); };
+                    return function(x,y,event,shape){ surface.onmouseup(x,y,event,shape); };
                 }(this);
-                this.onmousemove = function(x,y,event){};
+                this.onmousemove = function(x,y,event,shape){};
                 core.callback.onmousemove = function(surface){
-                    return function(x,y,event){ surface.onmousemove(x,y,event); };
+                    return function(x,y,event,shape){ surface.onmousemove(x,y,event,shape); };
                 }(this);
-                this.onmouseenter = function(x,y,event){};
+                this.onmouseenter = function(x,y,event,shape){};
                 core.callback.onmouseenter = function(surface){
-                    return function(x,y,event){ surface.onmouseenter(x,y,event); };
+                    return function(x,y,event,shape){ surface.onmouseenter(x,y,event,shape); };
                 }(this);
-                this.onmouseleave = function(x,y,event){};
+                this.onmouseleave = function(x,y,event,shape){};
                 core.callback.onmouseleave = function(surface){
-                    return function(x,y,event){ surface.onmouseleave(x,y,event); };
+                    return function(x,y,event,shape){ surface.onmouseleave(x,y,event,shape); };
                 }(this);
-                this.onwheel = function(x,y,event){};
+                this.onwheel = function(x,y,event,shape){};
                 core.callback.onwheel = function(surface){
-                    return function(x,y,event){ surface.onwheel(x,y,event); };
+                    return function(x,y,event,shape){ surface.onwheel(x,y,event,shape); };
+                }(this);
+                this.onclick = function(x,y,event,shape){};
+                core.callback.onclick = function(surface){
+                    return function(x,y,event,shape){ surface.onclick(x,y,event,shape); };
+                }(this);
+                this.ondblclick = function(x,y,event,shape){};
+                core.callback.ondblclick = function(surface){
+                    return function(x,y,event,shape){ surface.ondblclick(x,y,event,shape); };
                 }(this);
             
             
-                this.onkeydown = function(x,y,event){};
+                this.onkeydown = function(x,y,event,shape){};
                 core.callback.onkeydown = function(surface){
-                    return function(x,y,event){ surface.onkeydown(x,y,event); };
+                    return function(x,y,event,shape){ surface.onkeydown(x,y,event,shape); };
                 }(this);
-                this.onkeyup = function(x,y,event){};
+                this.onkeyup = function(x,y,event,shape){};
                 core.callback.onkeyup = function(surface){
-                    return function(x,y,event){ surface.onkeyup(x,y,event); };
+                    return function(x,y,event,shape){ surface.onkeyup(x,y,event,shape); };
                 }(this);
             
             
                 this.touchstart = function(x,y,event){};
                 core.callback.touchstart = function(surface){
-                    return function(x,y,event){ surface.touchstart(x,y,event); };
+                    return function(x,y,event,shape){ surface.touchstart(x,y,event); };
                 }(this);
                 this.touchmove = function(x,y,event){};
                 core.callback.touchmove = function(surface){
-                    return function(x,y,event){ surface.touchmove(x,y,event); };
+                    return function(x,y,event,shape){ surface.touchmove(x,y,event); };
                 }(this);
                 this.touchend = function(x,y,event){};
                 core.callback.touchend = function(surface){
-                    return function(x,y,event){ surface.touchend(x,y,event); };
+                    return function(x,y,event,shape){ surface.touchend(x,y,event); };
                 }(this);
                 this.touchenter = function(x,y,event){};
                 core.callback.touchenter = function(surface){
-                    return function(x,y,event){ surface.touchenter(x,y,event); };
+                    return function(x,y,event,shape){ surface.touchenter(x,y,event); };
                 }(this);
                 this.touchleave = function(x,y,event){};
                 core.callback.touchleave = function(surface){
-                    return function(x,y,event){ surface.touchleave(x,y,event); };
+                    return function(x,y,event,shape){ surface.touchleave(x,y,event); };
                 }(this);
                 this.touchcancel = function(x,y,event){};
                 core.callback.touchcancel = function(surface){
-                    return function(x,y,event){ surface.touchcancel(x,y,event); };
+                    return function(x,y,event,shape){ surface.touchcancel(x,y,event); };
                 }(this);
             };
         };
         canvas.system = new function(){};
         canvas.system.mouse = new function(){
-            //connect callbacks to mouse function lists
-                canvas.core.callback.onmousedown = function(x,y,event){
-                    console.log( canvas.core.arrangement.getElementUnderPoint(x,y) );
-                    // canvas.core.arrangement.remove( canvas.core.arrangement.getElementUnderPoint(x,y) );
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousedown)({event:event,x:x,y:y});
-                };
-                canvas.core.callback.onmousemove = function(x,y,event){ 
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousemove)({event:event,x:x,y:y});
-                };
-                canvas.core.callback.onmouseup = function(x,y,event){ 
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseup)({event:event,x:x,y:y});
-                };
-                canvas.core.callback.onmouseleave = function(x,y,event){ 
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseleave)({event:event,x:x,y:y});
-                };
-                canvas.core.callback.onmouseenter = function(x,y,event){ 
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseenter)({event:event,x:x,y:y});
-                };
-                canvas.core.callback.onwheel = function(x,y,event){
-                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onwheel)({event:event,x:x,y:y});
-                };
-            
-            
-            //setup basic function lists
-            //(plus a '.tmp' for storing values)
-                this.tmp = {};
+            //setup
+                this.tmp = {}; //for storing values
                 this.functionList = {};
             
+            //utility functions
+                function activateShapeFunctions(listenerName, x,y,event,shape){
+                    //starting with the shape under this point and climbing through all it's parents; look
+                    //for 'listenerName' listeners. If one is found, activate it, stop climbing and return 'true'
+                    //if no shape has a listener, return 'false'
+            
+                        var tmp = shape;
+                        if(tmp == undefined){return false;}
+                        do{
+                            if( tmp[listenerName] != undefined ){ tmp[listenerName](x,y,event); return true; }
+                        }while( (tmp = tmp.parent) != undefined )
+            
+                        return false;
+                }
+                this.mouseInteractionHandler = function(moveCode, stopCode){
+                    //save the old listener functions of the canvas
+                        canvas.system.mouse.tmp.onmousemove_old = canvas.onmousemove;
+                        canvas.system.mouse.tmp.onmouseleave_old = canvas.onmouseleave;
+                        canvas.system.mouse.tmp.onmouseup_old = canvas.onmouseup;
+            
+                    //replace listener code
+                        //movement code
+                            canvas.onmousemove = function(event){ if(moveCode!=undefined){moveCode(event);} };
+                        //stopping code
+                            canvas.onmouseup = function(event){
+                                if(stopCode != undefined){ stopCode(event); }
+                                canvas.onmousemove = canvas.system.mouse.tmp.onmousemove_old;
+                                canvas.onmouseleave = canvas.system.mouse.tmp.onmouseleave_old;
+                                canvas.onmouseup = canvas.system.mouse.tmp.onmouseup_old;
+                            };
+                            canvas.onmouseleave = canvas.onmouseup;
+                };
+                
+            //connect callbacks to mouse function lists
+                canvas.core.callback.onmousedown = function(x,y,event,shape){
+                    if(activateShapeFunctions('onmousedown',x,y,event,shape)){return;}
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousedown)({event:event,x:x,y:y});
+                };
+                canvas.core.callback.onmousemove = function(x,y,event,shape){
+                    if(activateShapeFunctions('onmousemove',x,y,event,shape)){return;}
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousemove)({event:event,x:x,y:y});
+                };
+                canvas.core.callback.onmouseup = function(x,y,event,shape){ 
+                    if(activateShapeFunctions('onmouseup',x,y,event,shape)){return;}
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseup)({event:event,x:x,y:y});
+                };
+                canvas.core.callback.onmouseleave = function(x,y,event,shape){
+                    if(activateShapeFunctions('onmouseleave',x,y,event,shape)){return;}
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseleave)({event:event,x:x,y:y});
+                };
+                canvas.core.callback.onmouseenter = function(x,y,event,shape){
+                    if(activateShapeFunctions('onmouseenter',x,y,event,shape)){return;}
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseenter)({event:event,x:x,y:y});
+                };
+                canvas.core.callback.onwheel = function(x,y,event,shape){
+                    if(activateShapeFunctions('onwheel',x,y,event,shape)){return;}
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onwheel)({event:event,x:x,y:y});
+                };
+                canvas.core.callback.onclick = function(x,y,event,shape){
+                    if(activateShapeFunctions('onclick',x,y,event,shape)){return;}
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onclick)({event:event,x:x,y:y});
+                };
+                canvas.core.callback.ondblclick = function(x,y,event,shape){
+                    if(activateShapeFunctions('ondblclick',x,y,event,shape)){return;}
+                    canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.ondblclick)({event:event,x:x,y:y});
+                };
+            
+            //creating the function lists (and adding a few basic functions)
                 this.functionList.onmousedown = [
                     {
                         'specialKeys':[],
                         'function':function(data){
-                            //save the old listener functions of the canvas
-                                canvas.system.mouse.tmp.onmousemove_old = canvas.onmousemove;
-                                canvas.system.mouse.tmp.onmouseleave_old = canvas.onmouseleave;
-                                canvas.system.mouse.tmp.onmouseup_old = canvas.onmouseup;
             
                             //save the viewport position and click position
                                 canvas.system.mouse.tmp.oldPosition = canvas.core.viewport.position();
                                 canvas.system.mouse.tmp.clickPosition = {x:data.event.x, y:data.event.y};
             
-                            //replace the canvas's listeners 
-                                canvas.onmousemove = function(event){
-                                    //update the viewport position
-                                        canvas.core.viewport.position(
-                                            canvas.system.mouse.tmp.oldPosition.x - ((canvas.system.mouse.tmp.clickPosition.x-event.x) / canvas.core.viewport.scale()),
-                                            canvas.system.mouse.tmp.oldPosition.y - ((canvas.system.mouse.tmp.clickPosition.y-event.y) / canvas.core.viewport.scale()),
-                                        );
-                                };
-            
-                                canvas.onmouseup = function(){
-                                    //put back the old listeners 
-                                        this.onmousemove = canvas.system.mouse.tmp.onmousemove_old;
-                                        this.onmouseleave = canvas.system.mouse.tmp.onmouseleave_old;
-                                        this.onmouseup = canvas.system.mouse.tmp.onmouseup_old;
-            
-                                    //delete all the tmp data
-                                        canvas.system.mouse.tmp = {};
-                                };
-            
-                                canvas.onmouseleave = canvas.onmouseup;
+                            //perform viewport movement
+                                canvas.system.mouse.mouseInteractionHandler(
+                                    function(event){
+                                        //update the viewport position
+                                            canvas.core.viewport.position(
+                                                canvas.system.mouse.tmp.oldPosition.x - ((canvas.system.mouse.tmp.clickPosition.x-event.x) / canvas.core.viewport.scale()),
+                                                canvas.system.mouse.tmp.oldPosition.y - ((canvas.system.mouse.tmp.clickPosition.y-event.y) / canvas.core.viewport.scale()),
+                                            );
+                                    },
+                                    function(event){},
+                                );
             
                             //request that the function list stop here
                                 return true;
@@ -1900,6 +2262,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     }
                 }
             ];
+                this.functionList.onclick = [];
+                this.functionList.ondblclick = [];
+
         };
         canvas.system.keyboard = new function(){
             canvas.core.callback.onkeydown = function(x,y,event){
@@ -1990,14 +2355,78 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             canvas.system.pane.mf = canvas.system.pane.middleground.front;
             canvas.system.pane.f = canvas.system.pane.foreground;
         
+        //utility
+            canvas.system.pane.getMiddlegroundPane = function(element){
+                var tmp = element;
+                do{
+                    if(tmp == canvas.system.pane.mb){return canvas.system.pane.mb;}
+                    else if(tmp == canvas.system.pane.mm){return canvas.system.pane.mm;}
+                    else if(tmp == canvas.system.pane.mf){return canvas.system.pane.mf;}
+                }while((tmp=tmp.parent) != undefined);
+            };
+        
+        canvas.core.viewport.stopMouseScroll(true);
         canvas.core.render.active(true);
         canvas.part = new function(){};
+        
+        canvas.part.circuit = new function(){
+            this.audio = new function(){
+                this.audio2percentage = function(){
+                    return new function(){
+                        var analyser = {
+                            timeDomainDataArray: null,
+                            frequencyData: null,
+                            refreshRate: 30,
+                            refreshInterval: null,
+                            returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                            resolution: 128
+                        };
+                        analyser.analyserNode = canvas.library.audio.context.createAnalyser();
+                        analyser.analyserNode.fftSize = analyser.resolution;
+                        analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
+                        analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
+                
+                        this.__render = function(){
+                                analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
+                
+                                var numbers = [];
+                                for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
+                                    numbers.push(
+                                        analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
+                                    );
+                                }
+                
+                                var val = 0;
+                                numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
+                
+                                this.newValue(val);
+                        }
+                
+                        //audio connections
+                            this.audioIn = function(){return analyser.analyserNode;};
+                
+                        //methods
+                            this.start = function(){
+                                analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
+                            };
+                            this.stop = function(){
+                                clearInterval(analyser.refreshInterval);
+                            };
+                
+                        //callbacks
+                            this.newValue = function(a){};
+                    };
+                };
+            };
+
+        };
         
         canvas.part.element = new function(){
             this.basic = new function(){
                 this.polygon = function(
                     name=null, 
                     points=[], 
+                    ignored=false,
                     fillStyle='rgba(255,100,255,1)', 
                     strokeStyle='rgba(0,0,0,0)', 
                     lineWidth=1,
@@ -2010,6 +2439,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     var temp = canvas.core.arrangement.createElement('polygon');
                     temp.name = name;
                     temp.points = points;
+                    temp.ignored = ignored;
                     temp.style.fill = fillStyle;
                     temp.style.stroke = strokeStyle;
                     temp.style.lineWidth = lineWidth;
@@ -2053,6 +2483,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     x=0, 
                     y=0, 
                     r=2,
+                    ignored=false,
                     fillStyle='rgba(255,100,255,1)', 
                     strokeStyle='rgba(0,0,0,1)', 
                     lineWidth=1,
@@ -2066,6 +2497,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     temp.name = name;
                     temp.x = x; temp.y = y;
                     temp.r = r;
+                    temp.ignored = ignored;
                     temp.style.fill = fillStyle;
                     temp.style.stroke = strokeStyle;
                     temp.style.lineWidth = lineWidth;
@@ -2076,23 +2508,25 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     temp.style.shadowOffset = shadowOffset;
                     return temp;
                 };
-                this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, url=''){
+                this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
                     var temp = canvas.core.arrangement.createElement('image');
                     temp.name = name;
                     temp.x = x; temp.y = y;
                     temp.width = width; temp.height = height;
                     temp.angle = angle;
                     temp.anchor = anchor;
+                    temp.ignored = ignored;
                     temp.url = url;
                     return temp;
                 };
                 this.path = function(
                     name=null, 
                     points=[],
+                    ignored=false,
                     strokeStyle='rgba(0,0,0,1)', 
                     lineWidth=1,
-                    lineCap='round',
-                    lineJoin='round',
+                    lineCap='butt',
+                    lineJoin='miter',
                     miterLimit=2,
                     shadowColour='rgba(0,0,0,0)',
                     shadowBlur=20,
@@ -2101,6 +2535,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     var temp = canvas.core.arrangement.createElement('path');
                     temp.name = name;
                     temp.points = points;
+                    temp.ignored = ignored;
                     temp.style.stroke = strokeStyle;
                     temp.style.lineWidth = lineWidth;
                     temp.style.lineCap = lineCap;
@@ -2120,6 +2555,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     height=10, 
                     angle=0,
                     anchor={x:0,y:0}, 
+                    ignored=false,
                     fillStyle='rgba(255,100,255,1)', 
                     strokeStyle='rgba(0,0,0,0)', 
                     lineWidth=1,
@@ -2135,6 +2571,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     temp.width = width; temp.height = height;
                     temp.angle = angle;
                     temp.anchor = anchor;
+                    temp.ignored = ignored;
                     temp.style.fill = fillStyle;
                     temp.style.stroke = strokeStyle;
                     temp.style.lineWidth = lineWidth;
@@ -2145,12 +2582,13 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     temp.style.shadowOffset = shadowOffset;
                     return temp;
                 };
-                this.group = function(name=null, x=0, y=0, angle=0){
+                this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
                     var temp = canvas.core.arrangement.createElement('group');
                     temp.name = name;
                     temp.x = x; 
                     temp.y = y;
                     temp.angle = angle;
+                    temp.ignored = ignored;
                     return temp;
                 };
                 this.text = function(
@@ -2160,6 +2598,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     text='Hello',
                     angle=0, 
                     anchor={x:0,y:0},
+                    ignored=false,
                     font='30pt Arial',
                     textAlign='start', //start/end/center/lief/right 
                     textBaseline='alphabetic', //alphabetic/top/hanging/middle/ideographic/bottom
@@ -2179,9 +2618,10 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     temp.text = text;
                     temp.angle = angle;
                     temp.anchor = anchor;
+                    temp.ignored = ignored;
                     temp.style.font = font;
-                    temp.style.textAlign = textAlign;
-                    temp.style.textBaseline = textBaseline;
+                    temp.style.align = textAlign;
+                    temp.style.baseline = textBaseline;
                     temp.style.fill = fillStyle;
                     temp.style.stroke = strokeStyle;
                     temp.style.lineWidth = lineWidth;
@@ -2195,6 +2635,84 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
             
             this.display = new function(){
+                this.rastorDisplay = function(
+                    name='rastorDisplay',
+                    x, y, angle=0, width=60, height=60,
+                    xCount=8, yCount=8, xGappage=0.1, yGappage=0.1,
+                    backing='rgba(50,50,50)', defaultPixelValue='rgba(0,0,0)',
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //backing
+                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backing} });
+                            object.append(rect);
+                        //pixels
+                            var pixelGroup = canvas.part.builder('group','pixels');
+                            object.append(pixelGroup);
+                
+                            var pixels = [];
+                            var pixelValues = [];
+                            var pixWidth = width/xCount;
+                            var pixHeight = height/yCount;
+                
+                            for(var x = 0; x < xCount; x++){
+                                var temp_pixels = [];
+                                var temp_pixelValues = [];
+                                for(var y = 0; y < yCount; y++){
+                                    var rect = canvas.part.builder('rectangle',x+'_'+y,{ 
+                                        x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
+                                        width:pixWidth-xGappage,    height:pixHeight-yGappage,
+                                        style:{fill:defaultPixelValue},
+                                    });
+                                        
+                                    temp_pixels.push(rect);
+                                    temp_pixelValues.push([0,0,0]);
+                                    pixelGroup.append(rect);
+                                }
+                                pixels.push(temp_pixels);
+                                pixelValues.push(temp_pixelValues);
+                            }
+                
+                    //graphical update
+                        function render(){
+                            for(var x = 0; x < xCount; x++){
+                                for(var y = 0; y < yCount; y++){
+                                    pixels[x][y].style.fill = 'rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')';
+                                }
+                            }
+                        }
+                
+                    //control
+                        object.get = function(x,y){ return pixelValues[x][y]; };
+                        object.set = function(x,y,state){ pixelValues[x][y] = state; render(); };
+                        object.import = function(data){
+                            for(var x = 0; x < xCount; x++){
+                                for(var y = 0; y < yCount; y++){
+                                    this.set(x,y,data[x][y]);
+                                }
+                            }
+                            render();
+                        };
+                        object.export = function(){ return pixelValues; }
+                        object.setAll = function(value){
+                            for(var x = 0; x < xCount; x++){
+                                for(var y = 0; y < yCount; y++){
+                                    this.set(x,y,value);
+                                }
+                            }
+                        }
+                        object.test = function(){
+                            this.setAll([1,1,1]);
+                            this.set(1,1,[1,0.5,0.5]);
+                            this.set(2,2,[0.5,1,0.5]);
+                            this.set(3,3,[0.5,0.5,1]);
+                            this.set(4,4,[1,0.5,1]);
+                            render();
+                        };
+                
+                    return object;
+                };
                 this.sevenSegmentDisplay = function(
                     name='sevenSegmentDisplay',
                     x, y, width=20, height=30,
@@ -3178,7 +3696,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     glowStyle = 'rgba(244,234,141,1)',
                     dimStyle = 'rgba(80,80,80,1)'
                 ){
-                
                     //elements 
                         var object = canvas.part.builder('group',name,{x:x, y:y});
                         var rect = canvas.part.builder('rectangle','light',{ width:width, height:height, angle:angle, style:{fill:dimStyle} });
@@ -3190,6 +3707,118 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         };
                         object.off = function(){
                             rect.style.fill = dimStyle;
+                        };
+                
+                    return object;
+                };
+                this.audio_meter_level = function(
+                    name='audio_meter_level',
+                    x, y, angle=0,
+                    width=20, height=60,
+                    markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                
+                    backingStyle='rgb(10,10,10)',
+                    levelStyles=['rgba(250,250,250,1)','rgb(100,100,100)'],
+                    markingStyle_fill='rgba(220,220,220,1)',
+                    markingStyle_font='1pt Courier New',
+                ){
+                    //elements
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //meter
+                            var meter = canvas.part.builder('meter_level','meter',{
+                                width:width, height:height, markings:markings,
+                                style:{
+                                    backing:backingStyle,
+                                    levels:levelStyles,
+                                    markingStyle_fill:markingStyle_fill,
+                                    markingStyle_font:markingStyle_font,
+                                },
+                            });
+                            object.append(meter);
+                
+                    //circuitry
+                        var converter = canvas.part.circuit.audio.audio2percentage()
+                        converter.newValue = function(val){object.set( val );};
+                
+                    //audio connections
+                        object.audioIn = function(){ return converter.audioIn(); }
+                
+                    //methods
+                        object.start = function(){ converter.start(); };
+                        object.stop = function(){ converter.stop(); };
+                
+                    return object;
+                };
+                this.meter_level = function(
+                    name='meter_level',
+                    x, y, angle=0,
+                    width=20, height=60,
+                    markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                
+                    backingStyle='rgb(10,10,10)',
+                    levelStyles=['rgba(250,250,250,1)','fill:rgb(100,100,100)'],
+                    markingStyle_fill='rgba(220,220,220,1)',
+                    markingStyle_font='1pt Courier New',
+                ){
+                
+                    //elements
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //level
+                            var level = canvas.part.builder('level','level',{
+                                width:width, height:height,
+                                style:{
+                                    backing:backingStyle,
+                                    levels:levelStyles,
+                                },
+                            });
+                            object.append(level);
+                
+                        //markings
+                            var marks = canvas.part.builder('group','markings');
+                                object.append(marks);
+                
+                            function makeMark(y){
+                                var markThickness = 0.2;
+                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
+                                return canvas.part.builder('polygon', 'mark_'+y, {points:path, style:{fill:markingStyle_fill}});
+                            }
+                            function insertText(y,text){
+                                return canvas.part.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
+                            }
+                
+                            for(var a = 0; a < markings.length; a++){
+                                marks.append( makeMark(height*(1-markings[a])) );
+                                marks.append( insertText(height*(1-markings[a]),markings[a]) );
+                            }
+                
+                
+                
+                
+                    //update intervals
+                        var framesPerSecond = 15;
+                        var coolDownSpeed = ( 3/4 )/10;
+                
+                        var coolDownSub = coolDownSpeed/framesPerSecond;
+                
+                        var coolDown = 0;
+                        var mostRecentSetting = 0;
+                        setInterval(function(){        
+                            level.layer(mostRecentSetting,0);
+                
+                            if(coolDown>0){coolDown-=coolDownSub;}
+                            level.layer(coolDown,1);
+                
+                            if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                        },1000/framesPerSecond);
+                
+                
+                
+                
+                    //method
+                        object.set = function(a){
+                            mostRecentSetting = a;
                         };
                 
                     return object;
@@ -3255,6 +3884,1563 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return object;
                 };
+                this.level = function(
+                    name='level',
+                    x, y, angle=0,
+                    width=20, height=60,
+                    backingStyle='rgb(10,10,10)',
+                    levelStyles=['rgb(250,250,250)','rgb(200,200,200)']
+                ){
+                    var values = [];
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //backing
+                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+                                object.append(rect);
+                        //levels
+                            var levels = canvas.part.builder('group','levels');
+                                object.append(levels);
+                
+                            var level = [];
+                            for(var a = 0; a < levelStyles.length; a++){
+                                values.push(0);
+                                level.push( canvas.part.builder('rectangle','movingRect_'+a,{
+                                    y:height,
+                                    width:width, height:0,
+                                    style:{fill:levelStyles[a]},
+                                }) );
+                                levels.prepend(level[a]);
+                            }
+                
+                
+                        
+                
+                        //methods
+                            object.layer = function(value,layer=0){
+                                if(layer == undefined){return values;}
+                                if(value==null){return values[layer];}
+                
+                                value = (value>1 ? 1 : value);
+                                value = (value<0 ? 0 : value);
+                
+                                values[layer] = value;
+                
+                                level[layer].parameter.height( height*value );
+                                level[layer].parameter.y( height - height*value );
+                            };
+                
+                    return object;
+                };
+            };
+            
+            this.control = new function(){
+                this.rastorgrid = function(
+                    name='rastorgrid', 
+                    x, y, width=80, height=80, angle=0,
+                    xcount=5, ycount=5,
+                    backingStyle = 'rgba(200,200,200,1)',
+                    checkStyle = 'rgba(150,150,150,1)',
+                    backingGlowStyle = 'rgba(220,220,220,1)',
+                    checkGlowStyle = 'rgba(220,220,220,1)',
+                    onchange = function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //checkboxes
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    var temp = canvas.part.builder('checkbox_rect',y+'_'+x,{
+                                        x:x*(width/xcount),  y:y*(height/ycount), 
+                                        width:width/xcount,  height:height/ycount, 
+                                        style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
+                                        onchange:function(){ if(object.onchange){object.onchange(object.get());} },
+                                    });
+                                    object.append(temp);
+                                }
+                            }
+                
+                
+                
+                
+                    //methods
+                        object.box = function(x,y){ return object.getChildByName(y+'_'+x); };
+                        object.get = function(){
+                            var outputArray = [];
+                    
+                            for(var y = 0; y < ycount; y++){
+                                var temp = [];
+                                for(var x = 0; x < xcount; x++){
+                                    temp.push(this.box(x,y).get());
+                                }
+                                outputArray.push(temp);
+                            }
+                    
+                            return outputArray;
+                        };
+                        object.set = function(value, update=true){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(value[y][x],false);
+                                }
+                            }
+                        };
+                        object.clear = function(){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(false,false);
+                                }
+                            }
+                        };
+                        object.light = function(x,y,state){
+                            object.box(x,y).light(state);
+                        };
+                
+                
+                
+                
+                    //callback
+                        object.onchange = onchange;
+                
+                    return object;
+                };
+                this.button_rect = function(
+                    name='button_rect',
+                    x, y, width=30, height=20, angle=0,
+                    text_centre='button', text_left='', text_right='',
+                    textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
+                    
+                    active=true, hoverable=true, selectable=false, pressable=true,
+                
+                    text_font = '5pt Arial',
+                    text_textBaseline = 'alphabetic',
+                    text_fill = 'rgba(0,0,0,1)',
+                    text_stroke = 'rgba(0,0,0,0)',
+                    text_lineWidth = 1,
+                
+                    backing__off__fill=                          'rgba(180,180,180,1)',
+                    backing__off__stroke=                        'rgba(0,0,0,0)',
+                    backing__off__lineWidth=                     0,
+                    backing__up__fill=                           'rgba(200,200,200,1)',
+                    backing__up__stroke=                         'rgba(0,0,0,0)',
+                    backing__up__lineWidth=                      0,
+                    backing__press__fill=                        'rgba(230,230,230,1)',
+                    backing__press__stroke=                      'rgba(0,0,0,0)',
+                    backing__press__lineWidth=                   0,
+                    backing__select__fill=                       'rgba(200,200,200,1)',
+                    backing__select__stroke=                     'rgba(120,120,120,1)',
+                    backing__select__lineWidth=                  2,
+                    backing__select_press__fill=                 'rgba(230,230,230,1)',
+                    backing__select_press__stroke=               'rgba(120,120,120,1)',
+                    backing__select_press__lineWidth=            2,
+                    backing__glow__fill=                         'rgba(220,220,220,1)',
+                    backing__glow__stroke=                       'rgba(0,0,0,0)',
+                    backing__glow__lineWidth=                    0,
+                    backing__glow_press__fill=                   'rgba(250,250,250,1)',
+                    backing__glow_press__stroke=                 'rgba(0,0,0,0)',
+                    backing__glow_press__lineWidth=              0,
+                    backing__glow_select__fill=                  'rgba(220,220,220,1)',
+                    backing__glow_select__stroke=                'rgba(120,120,120,1)',
+                    backing__glow_select__lineWidth=             2,
+                    backing__glow_select_press__fill=            'rgba(250,250,250,1)',
+                    backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                    backing__glow_select_press__lineWidth=       2,
+                    backing__hover__fill=                        'rgba(220,220,220,1)',
+                    backing__hover__stroke=                      'rgba(0,0,0,0)',
+                    backing__hover__lineWidth=                   0,
+                    backing__hover_press__fill=                  'rgba(240,240,240,1)',
+                    backing__hover_press__stroke=                'rgba(0,0,0,0)',
+                    backing__hover_press__lineWidth=             0,
+                    backing__hover_select__fill=                 'rgba(220,220,220,1)',
+                    backing__hover_select__stroke=               'rgba(120,120,120,1)',
+                    backing__hover_select__lineWidth=            2,
+                    backing__hover_select_press__fill=           'rgba(240,240,240,1)',
+                    backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                    backing__hover_select_press__lineWidth=      2,
+                    backing__hover_glow__fill=                   'rgba(240,240,240,1)',
+                    backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                    backing__hover_glow__lineWidth=              0,
+                    backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                    backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                    backing__hover_glow_press__lineWidth=        0,
+                    backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                    backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                    backing__hover_glow_select__lineWidth=       2,
+                    backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                    backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                    backing__hover_glow_select_press__lineWidth= 2,
+                
+                    onenter = function(object, event){},
+                    onleave = function(object, event){},
+                    onpress = function(object, event){},
+                    ondblpress = function(object, event){},
+                    onrelease = function(object, event){},
+                    onselect = function(object, event){},
+                    ondeselect = function(object, event){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //backing
+                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{
+                                fill:backing__off__fill,
+                                stroke:backing__off__stroke,
+                                lineWidth:backing__off__lineWidth,
+                            }});
+                            object.append(backing);
+                
+                        //text
+                            var text_centre = canvas.part.builder('text','centre', {
+                                x:width/2, 
+                                y:height*textVerticalOffsetMux, 
+                                text:text_centre, 
+                                style:{
+                                    font:text_font,
+                                    testBaseline:text_textBaseline,
+                                    fill:text_fill,
+                                    stroke:text_stroke,
+                                    lineWidth:text_lineWidth,
+                                    textAlign:'center',
+                                    textBaseline:'middle',
+                                }
+                            });
+                            object.append(text_centre);
+                            var text_left = canvas.part.builder('text','left',     {
+                                x:width*textHorizontalOffsetMux, 
+                                y:height*textVerticalOffsetMux, 
+                                text:text_left, 
+                                style:{
+                                    font:text_font,
+                                    testBaseline:text_textBaseline,
+                                    fill:text_fill,
+                                    stroke:text_stroke,
+                                    lineWidth:text_lineWidth,
+                                    textAlign:'left',
+                                    textBaseline:'middle',
+                                }
+                            });
+                            object.append(text_left);
+                            var text_right = canvas.part.builder('text','right',   {
+                                x:width-(width*textHorizontalOffsetMux), 
+                                y:height*textVerticalOffsetMux, 
+                                text:text_right, 
+                                style:{
+                                    font:text_font,
+                                    testBaseline:text_textBaseline,
+                                    fill:text_fill,
+                                    stroke:text_stroke,
+                                    lineWidth:text_lineWidth,
+                                    textAlign:'right',
+                                    textBaseline:'middle',
+                                }
+                            });
+                            object.append(text_right);
+                
+                        //cover
+                            var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                            object.append(cover);
+                
+                
+                
+                
+                    //state
+                        object.state = {
+                            hovering:false,
+                            glowing:false,
+                            selected:false,
+                            pressed:false,
+                        };
+                
+                        function activateGraphicalState(){
+                            if(!active){ 
+                                backing.style.fill = backing__off__fill;
+                                backing.style.stroke = backing__off__stroke;
+                                backing.style.lineWidth = backing__off__lineWidth;
+                                return;
+                            }
+                
+                            var styles = [
+                                { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
+                                { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
+                                { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
+                                { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
+                                { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
+                                { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
+                                { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
+                                { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
+                                { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
+                                { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
+                                { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
+                                { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
+                                { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
+                                { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
+                                { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
+                                { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
+                            ];
+                
+                            if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
+                            if(!selectable && object.state.selected ){ object.state.selected = false; }
+                
+                            var i = object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + (pressable && object.state.pressed)*1;
+                            backing.style.fill =       styles[i].fill;
+                            backing.style.stroke =     styles[i].stroke;
+                            backing.style.lineWidth =  styles[i].lineWidth;
+                        };
+                        activateGraphicalState();
+                
+                
+                
+                
+                    //control
+                        object.press = function(event){
+                            if(this.state.pressed){return;}
+                            this.state.pressed = true;
+                            activateGraphicalState();
+                            if(this.onpress){this.onpress(this, event);}
+                            this.select( !this.select(), event );
+                        };
+                        object.release = function(event){
+                            if(!this.state.pressed){return;}
+                            this.state.pressed = false;
+                            activateGraphicalState();
+                            if(this.onrelease){this.onrelease(this, event);}
+                        };
+                        object.active = function(bool){ if(bool == undefined){return active;} active = bool; activateGraphicalState(); };
+                        object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  activateGraphicalState(); };
+                        object.select = function(bool,event,callback=true){ 
+                            if(bool == undefined){return this.state.selected;} 
+                            if(!selectable){return;}
+                            if(this.state.selected == bool){return;}
+                            this.state.selected = bool; activateGraphicalState();
+                            if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
+                        };
+                
+                
+                
+                
+                    //interactivity
+                        cover.onmouseenter = function(x,y,event){
+                            object.state.hovering = true;  
+                            activateGraphicalState();
+                            if(object.onenter){object.onenter(object, event);}
+                            if(event.buttons == 1){cover.onmousedown(event);} 
+                        };
+                        cover.onmouseleave = function(event){ 
+                            object.state.hovering = false; 
+                            object.release(event); 
+                            activateGraphicalState(); 
+                            if(object.onleave){object.onleave(object, event);}
+                        };
+                        cover.onmouseup = function(event){   object.release(event); };
+                        cover.onmousedown = function(event){ object.press(event); };
+                        cover.ondblclick = function(event){ if(object.ondblpress){object.ondblpress(object, event);} };
+                        
+                
+                
+                
+                    //callbacks
+                        object.onenter = onenter;
+                        object.onleave = onleave;
+                        object.onpress = onpress;
+                        object.ondblpress = ondblpress;
+                        object.onrelease = onrelease;
+                        object.onselect = onselect;
+                        object.ondeselect = ondeselect;
+                
+                    return object;
+                };
+                this.checkbox_rect = function(
+                    name='checkbox_rect',
+                    x, y, width=20, height=20, angle=0,
+                    checkStyle = 'rgba(150,150,150,1)',
+                    backingStyle = 'rgba(200,200,200,1)',
+                    checkGlowStyle = 'rgba(220,220,220,1)',
+                    backingGlowStyle = 'rgba(220,220,220,1)',
+                    onchange = function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //backing
+                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                            object.append(backing);
+                        //check
+                            var checkrect = canvas.part.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:{fill:'rgba(0,0,0,0)'}});
+                            object.append(checkrect);
+                        //cover
+                            var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                            object.append(cover);
+                
+                
+                
+                
+                
+                    //state
+                        var state = {
+                            checked:false,
+                            glowing:false,
+                        }
+                
+                        function updateGraphics(){
+                            if(state.glowing){
+                                backing.style.fill = backingGlowStyle;
+                                checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
+                            }else{
+                                backing.style.fill = backingStyle;
+                                checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
+                            }
+                        }
+                
+                
+                
+                
+                    //methods
+                        object.get = function(){ return state.checked; };
+                        object.set = function(value, update=true){
+                            state.checked = value;
+                            
+                            updateGraphics();
+                    
+                            if(update&&this.onchange){ this.onchange(value); }
+                        };
+                        object.light = function(state){
+                            if(state == undefined){ return state.glowing; }
+                
+                            state.glowing = state;
+                
+                            updateGraphics();
+                        };
+                
+                
+                
+                
+                    //interactivity
+                        cover.onclick = function(event){
+                            object.set(!object.get());
+                        };
+                        cover.onmousedown = function(){};
+                
+                
+                
+                
+                    //callbacks
+                        object.onchange = onchange;
+                
+                    return object;
+                };
+                this.slide = function(
+                    name='slide', 
+                    x, y, width=10, height=95, angle=0,
+                    handleHeight=0.1, value=0, resetValue=-1,
+                    handleStyle = 'rgba(200,200,200,1)',
+                    backingStyle = 'rgba(150,150,150,1)',
+                    slotStyle = 'rgba(50,50,50,1)',
+                    invisibleHandleStyle = 'rgba(255,0,0,0)',
+                    onchange=function(){},
+                    onrelease=function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //backing and slot group
+                            var backingAndSlot = canvas.part.builder('group','backingAndSlotGroup');
+                            object.append(backingAndSlot);
+                            //backing
+                                var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                                backingAndSlot.append(backing);
+                            //slot
+                                var slot = canvas.part.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
+                                backingAndSlot.append(slot);
+                            //backing and slot cover
+                                var backingAndSlotCover = canvas.part.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                backingAndSlot.append(backingAndSlotCover);
+                        //handle
+                            var handle = canvas.part.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
+                            object.append(handle);
+                        //invisible handle
+                            var invisibleHandleHeight = height*handleHeight + height*0.01;
+                            var invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                            object.append(invisibleHandle);
+                
+                
+                
+                
+                    //graphical adjust
+                        function set(a,update=true){
+                            a = (a>1 ? 1 : a);
+                            a = (a<0 ? 0 : a);
+                
+                            if(update && object.change != undefined){object.onchange(a);}
+                            
+                            value = a;
+                            handle.y = a*height*(1-handleHeight);
+                            invisibleHandle.y = a*height*(1-handleHeight);
+                
+                            handle.computeExtremities();
+                            invisibleHandle.computeExtremities();
+                        }
+                        object.__calculationAngle = angle;
+                        function currentMousePosition(event){
+                            return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
+                        }
+                
+                
+                
+                
+                    //methods
+                        var grappled = false;
+                
+                        object.set = function(value,update){
+                            if(grappled){return;}
+                            set(value,update);
+                        };
+                        object.get = function(){return value;};
+                
+                
+                
+                
+                    //interaction
+                        object.ondblclick = function(){
+                            if(resetValue<0){return;}
+                            if(grappled){return;}
+                
+                            set(resetValue);
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        object.onwheel = function(){
+                            if(grappled){return;}
+                
+                            var move = event.deltaY/100;
+                            var globalScale = canvas.core.viewport.scale();
+                            set( value + move/(10*globalScale) );
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        backingAndSlot.onclick = function(x,y,event){
+                            if(grappled){return;}
+                
+                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                var offset = backingAndSlot.getOffset();
+                                var delta = {
+                                    x: x - (backingAndSlot.x     + offset.x),
+                                    y: y - (backingAndSlot.y     + offset.y),
+                                    a: 0 - (backingAndSlot.angle + offset.a),
+                                };
+                                var d = canvas.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                
+                            //use the distance to calculate the correct value to set the slide to
+                            //taking into account the slide handle's size also
+                                var value = d + 0.5*handleHeight*((2*d)-1);
+                
+                            set(value);
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        invisibleHandle.onmousedown = function(x,y,event){
+                            grappled = true;
+                
+                            var initialValue = value;
+                            var initialY = currentMousePosition(event);
+                            var mux = height - height*handleHeight;
+                
+                            canvas.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    var numerator = initialY-currentMousePosition(event);
+                                    var divider = canvas.core.viewport.scale();
+                                    set( initialValue - numerator/(divider*mux) );
+                                },
+                                function(event){
+                                    var numerator = initialY-currentMousePosition(event);
+                                    var divider = canvas.core.viewport.scale();
+                                    object.onrelease(initialValue - numerator/(divider*mux));
+                                    grappled = false;
+                                }
+                            );
+                        };
+                
+                
+                
+                
+                    //callbacks
+                        object.onchange = onchange; 
+                        object.onrelease = onrelease;
+                
+                    return object;
+                };
+                this.dial_continuous = function(
+                    name='dial_continuous',
+                    x, y, r=15, angle=0,
+                    value=0, resetValue=-1,
+                    startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                
+                    handleStyle = 'rgba(200,200,200,1)',
+                    slotStyle = 'rgba(50,50,50,1)',
+                    needleStyle = 'rgba(250,100,100,1)',
+                
+                    onchange=function(){},
+                    onrelease=function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //slot
+                            var slot = canvas.part.builder('circle','slot',{r:r*1.1, style:{fill:slotStyle}});
+                            object.append(slot);
+                
+                        //handle
+                            var handle = canvas.part.builder('circle','handle',{r:r, style:{fill:handleStyle}});
+                                object.append(handle);
+                
+                        //needle group
+                            var needleGroup = canvas.part.builder('group','needleGroup',{ignored:true});
+                            object.append(needleGroup);
+                
+                            //needle
+                                var needleWidth = r/5;
+                                var needleLength = r;
+                                var needle = canvas.part.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{fill:needleStyle}});
+                                    needleGroup.append(needle);
+                
+                
+                
+                
+                    //graphical adjust
+                        function set(a,update=true){
+                            a = (a>1 ? 1 : a);
+                            a = (a<0 ? 0 : a);
+                
+                            if(update && object.change != undefined){object.onchange(a);}
+                
+                            value = a;
+                            needleGroup.parameter.angle(startAngle + maxAngle*value);
+                        }
+                
+                
+                
+                
+                    //methods
+                        var grappled = false;
+                
+                        object.set = function(value,update){
+                            if(grappled){return;}
+                            set(value,update);
+                        };
+                        object.get = function(){return value;};
+                
+                
+                
+                
+                    //interaction
+                        var turningSpeed = r*4;
+                        
+                        handle.ondblclick = function(){
+                            if(resetValue<0){return;}
+                            if(grappled){return;}
+                            
+                            set(resetValue); 
+                
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        handle.onwheel = function(x,y,event){
+                            if(grappled){return;}
+                            
+                            var move = event.deltaY/100;
+                            var globalScale = canvas.core.viewport.scale();
+                            set( value - move/(10*globalScale) );
+                
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        handle.onmousedown = function(x,y,event){
+                            var initialValue = value;
+                            var initialY = event.y;
+                
+                            grappled = true;
+                            canvas.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    var value = initialValue;
+                                    var numerator = event.y - initialY;
+                                    var divider = canvas.core.viewport.scale();
+                                    set( value - numerator/(divider*turningSpeed), true );
+                                },
+                                function(event){
+                                    grappled = false;
+                                    if(object.onrelease != undefined){object.onrelease(value);}
+                                }
+                            );
+                        };
+                
+                
+                
+                
+                    //callbacks
+                        object.onchange = onchange; 
+                        object.onrelease = onrelease;
+                
+                    //setup
+                        set(0);
+                
+                    return object;
+                };
+                this.slidePanel = function(
+                    name='slidePanel', 
+                    x, y, width=80, height=95, angle=0,
+                    handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                    handleStyle = 'rgba(200,200,200,1)',
+                    backingStyle = 'rgba(150,150,150,1)',
+                    slotStyle = 'rgba(50,50,50,1)'
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //slides
+                            for(var a = 0; a < count; a++){
+                                var temp = canvas.part.builder(
+                                    'slide', 'slide_'+a, {
+                                        x:a*(width/count), y:0,
+                                        width:width/count, height:height,
+                                        value:startValue, resetValue:resetValue,
+                                        style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
+                                        function(value){ object.onchange(this.id,value); },
+                                        function(value){ object.onrelease(this.id,value); },
+                                    }
+                                );
+                                // temp.dotFrame = true;
+                                temp.__calculationAngle = angle;
+                                object.append(temp);
+                            }
+                
+                    return object;
+                };
+                this.dial_discrete = function(
+                    name='dial_discrete',
+                    x, y, r=15, angle=0,
+                    value=0, resetValue=0, optionCount=5,
+                    startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                
+                    handleStyle = 'rgba(175,175,175,1)',
+                    slotStyle = 'rgba(50,50,50,1)',
+                    needleStyle = 'rgba(250,100,100,1)',
+                
+                    onchange=function(){},
+                    onrelease=function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //dial
+                            var dial = canvas.part.builder('dial_continuous',name,{
+                                x:0, y:0, r:r, angle:0,
+                                startAngle:startAngle, smaxAngle:maxAngle,
+                                style:{ handleStyle:handleStyle, slotStyle:slotStyle, needleStyle:needleStyle }
+                            });
+                            //clean out built-in interation
+                            dial.getChildByName('handle').ondblclick = undefined;
+                            dial.getChildByName('handle').onwheel = undefined;
+                            dial.getChildByName('handle').onmousedown = undefined;
+                
+                            object.append(dial);
+                        
+                
+                
+                
+                
+                
+                    //graphical adjust
+                        function set(a,update=true){
+                            a = (a>(optionCount-1) ? (optionCount-1) : a);
+                            a = (a<0 ? 0 : a);
+                
+                            if(update && object.change != undefined){object.onchange(a);}
+                
+                            a = Math.round(a);
+                            value = a;
+                            dial.set( value/(optionCount-1) );
+                        };
+                
+                
+                
+                
+                    //methods
+                        var grappled = false;
+                
+                        object.set = function(value,update){
+                            if(grappled){return;}
+                            set(value,update);
+                        };
+                        object.get = function(){return value;};
+                
+                
+                
+                
+                    //interaction
+                        var acc = 0;
+                
+                        dial.getChildByName('handle').ondblclick = function(){
+                            if(resetValue<0){return;}
+                            if(grappled){return;}
+                            
+                            set(resetValue);
+                
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        dial.getChildByName('handle').onwheel = function(x,y,event){
+                            if(grappled){return;}
+                
+                            var move = event.deltaY/100;
+                
+                            acc += move;
+                            if( Math.abs(acc) >= 1 ){
+                                set( value -1*Math.sign(acc) );
+                                acc = 0;
+                                if(object.onrelease != undefined){object.onrelease(value);}
+                            }
+                        };
+                        dial.getChildByName('handle').onmousedown = function(x,y,event){
+                            var initialValue = value;
+                            var initialY = event.y;
+                
+                            grappled = true;
+                            canvas.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    var diff = Math.round( (event.y - initialY)/25 );
+                                    set( initialValue - diff );
+                                    if(object.onchange != undefined){object.onchange(value);}
+                                },
+                                function(event){
+                                    grappled = false;
+                                    if(object.onrelease != undefined){object.onrelease(value);}
+                                }
+                            );
+                        };
+                
+                
+                
+                
+                    //callbacks
+                        object.onchange = onchange; 
+                        object.onrelease = onrelease;
+                
+                    //setup
+                        set(0);
+                
+                    return object;
+                };
+                this.rangeslide = function(
+                    name='rangeslide', 
+                    x, y, width=10, height=95, angle=0,
+                    handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
+                    handleStyle = 'rgba(200,200,200,1)',
+                    backingStyle = 'rgba(150,150,150,1)',
+                    slotStyle = 'rgba(50,50,50,1)',
+                    invisibleHandleStyle = 'rgba(255,0,0,0)',
+                    spanStyle='rgba(200,0,200,0.5)',
+                    onchange=function(){},
+                    onrelease=function(){},
+                ){
+                    var grappled = false;
+                    var handleNames = ['start','end'];
+                
+                
+                
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //backing and slot group
+                            var backingAndSlot = canvas.part.builder('group','backingAndSlotGroup');
+                            // backingAndSlot.dotFrame = true;
+                            object.append(backingAndSlot);
+                            //backing
+                                var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                                backingAndSlot.append(backing);
+                            //slot
+                                var slot = canvas.part.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
+                                backingAndSlot.append(slot);
+                            //backing and slot cover
+                                var backingAndSlotCover = canvas.part.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                backingAndSlot.append(backingAndSlotCover);
+                
+                        //span
+                            var span = canvas.part.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, style:{fill:spanStyle} });
+                            object.append(span);
+                
+                        //handles
+                            var handles = {}
+                            for(var a = 0; a < handleNames.length; a++){
+                                //grouping
+                                    handles[handleNames[a]] = canvas.part.builder('group','handle_'+a,{})
+                                    object.append(handles[handleNames[a]]);
+                                //handle
+                                    var handle = canvas.part.builder('rectangle','handle',{width:width,height:height*handleHeight, style:{fill:handleStyle}});
+                                    handles[handleNames[a]].append(handle);
+                                //invisible handle
+                                    var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                    var invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                                    handles[handleNames[a]].append(invisibleHandle);
+                            }
+                
+                
+                
+                
+                    //graphical adjust
+                        function set(a,handle,update=true){
+                            a = (a>1 ? 1 : a);
+                            a = (a<0 ? 0 : a);
+                
+                            //make sure the handle order is maintained
+                            //if necessary, one handle should push the other, though not past the ends
+                                switch(handle){
+                                    default: console.error('unknown handle to adjust'); break;
+                                    case 'start':
+                                        //don't allow start slide to encrouch on end slider's space
+                                            if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                
+                                        //if start slide bumps up against end slide; move end slide accordingly
+                                            var start_rightEdge = a + (1-a)*handleHeight;
+                                            var end_leftEdge = values.end - (values.end)*handleHeight;
+                                            if( start_rightEdge >= end_leftEdge ){
+                                                values.end = start_rightEdge/(1-handleHeight);
+                                            }
+                                    break;
+                                    case 'end':
+                                        //don't allow end slide to encrouch on start slider's space
+                                            if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                
+                                        //if end slide bumps up against start slide; move start slide accordingly
+                                            var start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                            var end_leftEdge = a - (a)*handleHeight;
+                                            if( start_rightEdge >= end_leftEdge ){
+                                                values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
+                                            }
+                                    break;
+                                }
+                
+                            //fill in data
+                                values[handle] = a;
+                
+                            //adjust y positions
+                                handles.start.parameter.y( values.start*height*(1-handleHeight) );
+                                handles.end.parameter.y( values.end*height*(1-handleHeight) );
+                
+                            //adjust span height (with a little bit of padding so the span is under the handles a little)
+                                span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
+                                span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
+                
+                            if(update && object.onchange){object.onchange(values);}
+                        }
+                        function pan(a){
+                            var diff = values.end - values.start;
+                
+                            var newPositions = [ a, a+diff ];
+                            if(newPositions[0] <= 0){
+                                newPositions[1] = newPositions[1] - newPositions[0];
+                                newPositions[0] = 0;
+                            }
+                            else if(newPositions[1] >= 1){
+                                newPositions[0] = newPositions[0] - (newPositions[1]-1);
+                                newPositions[1] = 1;
+                            }
+                
+                            set( newPositions[0],'start' );
+                            set( newPositions[1],'end' );
+                        }
+                
+                
+                
+                
+                    //methods
+                        object.get = function(){return values;};
+                        object.set = function(values,update){
+                            if(grappled){return;}
+                            if(values.start != undefined){set(values.start,'start',update);}
+                            if(values.end != undefined){set(values.end,'end',update);}
+                        };
+                
+                
+                
+                        
+                    //interaction
+                        function getPositionWithinFromMouse(x,y){
+                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                var offset = backingAndSlot.getOffset();
+                                var delta = {
+                                    x: x - (backingAndSlot.x     + offset.x),
+                                    y: y - (backingAndSlot.y     + offset.y),
+                                    a: 0 - (backingAndSlot.angle + offset.a),
+                                };
+                
+                            return canvas.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                        }
+                
+                        //background click
+                            backingAndSlot.onclick = function(x,y,event){
+                                if(grappled){return;}
+                
+                                //calculate the distance the click is from the top of the slider (accounting for angle)
+                                    var d = getPositionWithinFromMouse(x,y);
+                
+                                //use the distance to calculate the correct value to set the slide to
+                                //taking into account the slide handle's size also
+                                    var value = d + 0.5*handleHeight*((2*d)-1);
+                
+                                //whichever handle is closer; move that handle to the mouse's position
+                                    Math.abs(values.start-value) < Math.abs(values.end-value) ? set(value,'start') : set(value,'end');
+                            };
+                
+                        //double-click reset
+                            object.ondblclick = function(){
+                                if(resetValues.start<0 || resetValues.end<0){return;}
+                                if(grappled){return;}
+                
+                                set(resetValues.start,'start');
+                                set(resetValues.end,'end');
+                                object.onrelease(values);
+                            };
+                
+                        //span panning - expand/shrink
+                            object.onwheel = function(){
+                                if(grappled){return;}
+                
+                                var move = event.deltaY/100;
+                                var globalScale = canvas.core.viewport.scale();
+                                var val = move/(10*globalScale);
+                
+                                set(values.start-val,'start');
+                                set(values.end+val,'end');
+                            };
+                
+                        // span panning - drag
+                            span.onmousedown = function(x,y,event){
+                                grappled = true;
+                
+                                var initialValue = values.start;
+                                var initialPosition = getPositionWithinFromMouse(x,y);
+                
+                                canvas.system.mouse.mouseInteractionHandler(
+                                    function(event){
+                                        var point = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                        var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                        pan( initialValue+(livePosition-initialPosition) )
+                                        object.onchange(values);
+                                    },
+                                    function(event){
+                                        object.onrelease(values);
+                                        grappled = false;
+                                    }
+                                );
+                            };
+                
+                        //handle movement
+                            for(var a = 0; a < handleNames.length; a++){
+                                handles[handleNames[a]].onmousedown = (function(a){
+                                    return function(x,y,event){
+                                        grappled = true;
+                            
+                                        var initialValue = values[handleNames[a]];
+                                        var initialPosition = getPositionWithinFromMouse(x,y);
+                                        
+                                        canvas.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var point = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                                var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
+                                                object.onchange(values);
+                                            },
+                                            function(event){
+                                                object.onrelease(values);
+                                                grappled = false;
+                                            }
+                                        );
+                                    }
+                                })(a);
+                            }
+                  
+                
+                
+                
+                    //callbacks
+                        object.onchange = onchange;
+                        object.onrelease = onrelease;  
+                
+                    //setup
+                        set(0,'start');
+                        set(1,'end');
+                
+                    return object;
+                };
+            };
+            
+            this.dynamic = new function(){
+                this.cable = function(
+                    name='path', 
+                    x1=0, y1=0, x2=0, y2=0,
+                    dimStyle='rgb(255,0,0)',
+                    glowStyle='rgb(255,100,100)',
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name);
+                        //cable shape
+                            var path = canvas.part.builder('path','cable',{
+                                points:[{x:x1,y:y1},{x:x2,y:y2}],
+                                style:{
+                                    stroke:dimStyle,
+                                    lineWidth:5,
+                                }
+                            });
+                            object.append(path);
+                    
+                    //controls
+                        object.activate = function(){ path.style.stroke = glowStyle; };
+                        object.deactivate = function(){ path.style.stroke = dimStyle; };
+                        object.draw = function(new_x1,new_y1,new_x2,new_y2){
+                            x1 = (new_x1!=undefined ? new_x1 : x1); 
+                            y1 = (new_y1!=undefined ? new_y1 : y1);
+                            x2 = (new_x2!=undefined ? new_x2 : x2); 
+                            y2 = (new_y2!=undefined ? new_y2 : y2);
+                            path.parameter.points([{x:x1,y:y1},{x:x2,y:y2}]);
+                        };
+                
+                    return object;
+                };
+                this.connectionNode_audio = function(
+                    name='connectionNode_audio',
+                    x, y, angle=0, width=20, height=20, isAudioOutput=false, audioContext,
+                    dimStyle='rgba(255, 244, 220, 1)',
+                    glowStyle='rgba(255, 244, 244, 1)',
+                    cable_dimStyle='rgb(247, 146, 84)',
+                    cable_glowStyle='rgb(242, 168, 123)',
+                    onconnect=function(){},
+                    ondisconnect=function(){},
+                ){
+                    //elements
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                            object._connectionNode = true;
+                            object._type = 'audio';
+                            object._direction = isAudioOutput ? 'output' : 'input';
+                        //node
+                            var rectangle = canvas.part.builder('rectangle','node',{ width:width, height:height, style:{fill:dimStyle} });
+                                object.append(rectangle);
+                
+                    //control
+                        var audioNode = audioContext.createAnalyser();
+                        object._getAudioNode = function(){return audioNode;}
+                
+                    //audio connections
+                        object.out = function(){return audioNode;};
+                        object.in = function(){return audioNode;};
+                
+                    //network functions
+                        var foreignNode = undefined;
+                
+                        object.connectTo = function(new_foreignNode){
+                            if( new_foreignNode == this ){ return; }
+                            if( new_foreignNode._type != this._type ){ return; } 
+                            if( new_foreignNode._direction == this._direction ){ return; }
+                            if( new_foreignNode == foreignNode ){ return; }
+                
+                            this.disconnect();
+                
+                            foreignNode = new_foreignNode;
+                            if(isAudioOutput){ audioNode.connect(foreignNode._getAudioNode()); }
+                            foreignNode._receiveConnection(this);
+                            this.onconnect();
+                
+                
+                            this._addCable(this);
+                        };
+                        object._receiveConnection = function(new_foreignNode){
+                            this.disconnect();
+                            foreignNode = new_foreignNode;
+                            if(isAudioOutput){ audioNode.connect(foreignNode._getAudioNode()); }
+                            this.onconnect();
+                        };
+                        object.disconnect = function(){
+                            if( foreignNode == undefined ){return;}
+                
+                            this._removeCable();
+                            if(isAudioOutput){ audioNode.disconnect(foreignNode._getAudioNode()); }
+                            foreignNode._receiveDisconnection();
+                            foreignNode = null;
+                
+                            this.ondisconnect();
+                        };
+                        object._receiveDisconnection = function(){
+                            if(isAudioOutput){ audioNode.disconnect(foreignNode._getAudioNode()); }
+                            foreignNode = null;
+                            this.ondisconnect();
+                        };
+                
+                    //mouse interaction
+                        rectangle.onmousedown = function(x,y,event){
+                            canvas.system.mouse.mouseInteractionHandler(
+                                undefined,
+                                function(event){
+                                    var point = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                    var element = canvas.core.arrangement.getElementUnderPoint(point.x,point.y);
+                                    if(element == undefined){return;}
+                                    
+                                    var node = element.parent;
+                                    if( node._connectionNode ){ object.connectTo(node); }
+                                }
+                            );
+                        };
+                        rectangle.ondblclick = function(x,y,event){
+                            object.disconnect();
+                        };
+                
+                    //cabling
+                        var cable;
+                
+                        object._addCable = function(){
+                            cable = canvas.part.builder('cable','cable-'+this.getAddress(),{ x1:0,y1:0,x2:100,y2:100, style:{dimStyle:cable_dimStyle, glowStyle:cable_glowStyle}});
+                            foreignNode._receiveCable(cable);
+                            canvas.system.pane.getMiddlegroundPane(this).append(cable);
+                            this.draw();
+                        }
+                        object._receiveCable = function(new_cable){
+                            cable = new_cable;
+                        };
+                        object._removeCable = function(){
+                            cable.parent.remove(cable);
+                            cable = undefined;
+                            foreignNode._loseCable();
+                        };
+                        object._loseCable = function(){
+                            cable = undefined;
+                        };
+                        object.getCablePoint = function(){
+                            var offset = this.getOffset();
+                            var point = canvas.library.math.cartesianAngleAdjust(x,y,offset.a); 
+                            point.x += offset.x + width/2;
+                            point.y += offset.y + height/2;
+                            return point;
+                        };
+                        object.draw = function(){
+                            if( cable == undefined ){return;}
+                
+                            var pointA = this.getCablePoint();
+                            var pointB = foreignNode.getCablePoint();
+                
+                            cable.draw(pointA.x,pointA.y,pointB.x,pointB.y);
+                        };
+                
+                    //graphical
+                        object.activate = function(){ 
+                            rectangle.style.fill = glowStyle;
+                            if(cable!=undefined){ cable.activate(); }
+                        }
+                        object.deactivate = function(){ 
+                            rectangle.style.fill = dimStyle;
+                            if(cable!=undefined){ cable.deactivate(); }
+                        }
+                
+                    //callbacks
+                        object.onconnect = onconnect;
+                        object.ondisconnect = ondisconnect;
+                
+                    return object;
+                };
+                this.connectionNode_data = function(
+                    name='connectionNode_data',
+                    x, y, angle=0, width=20, height=20,
+                    dimStyle='rgba(220, 244, 255,1)',
+                    glowStyle='rgba(244, 244, 255, 1)',
+                    cable_dimStyle='rgb(84, 146, 247)',
+                    cable_glowStyle='rgb(123, 168, 242)',
+                    onreceive=function(address, data){},
+                    ongive=function(address){},
+                    onconnect=function(){},
+                    ondisconnect=function(){},
+                ){
+                    //elements
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                            object._connectionNode = true;
+                            object._type = 'data';
+                        //node
+                            var rectangle = canvas.part.builder('rectangle','node',{ width:width, height:height, style:{fill:dimStyle} });
+                                object.append(rectangle);
+                
+                    //control
+                        object.send = function(address,data){
+                            object.activate();
+                            setTimeout(function(){ if(object==undefined){return;} object.deactivate(); },100);
+                
+                            if(foreignNode==undefined){return;}
+                            if(foreignNode.onreceive){foreignNode.onreceive(address, data);}
+                        };
+                        object.request = function(address){
+                            if(foreignNode==undefined){return;}
+                            if(foreignNode.ongive){foreignNode.ongive(address, data);}
+                        };
+                
+                    //network functions
+                        var foreignNode = undefined;
+                
+                        object.connectTo = function(new_foreignNode){
+                            if( new_foreignNode == this ){ return; }
+                            if( new_foreignNode._type != this._type ){ return; }
+                            if( new_foreignNode == foreignNode ){ return; }
+                
+                            this.disconnect();
+                
+                            foreignNode = new_foreignNode;
+                            foreignNode._receiveConnection(this);
+                            this.onconnect();
+                
+                            this._addCable(this);
+                        };
+                        object._receiveConnection = function(new_foreignNode){
+                            this.disconnect();
+                            foreignNode = new_foreignNode;
+                            this.onconnect();
+                        };
+                        object.disconnect = function(){
+                            if( foreignNode == undefined ){return;}
+                
+                            this._removeCable();
+                            foreignNode._receiveDisconnection();
+                            foreignNode = null;
+                
+                            this.ondisconnect();
+                        };
+                        object._receiveDisconnection = function(){
+                            foreignNode = null;
+                            this.ondisconnect();
+                        };
+                
+                    //mouse interaction
+                        rectangle.onmousedown = function(x,y,event){
+                            canvas.system.mouse.mouseInteractionHandler(
+                                undefined,
+                                function(event){
+                                    var point = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                    var element = canvas.core.arrangement.getElementUnderPoint(point.x,point.y);
+                                    if(element == undefined){return;}
+                                    
+                                    var node = element.parent;
+                                    if( node._connectionNode ){ object.connectTo(node); }
+                                }
+                            );
+                        };
+                        rectangle.ondblclick = function(x,y,event){
+                            object.disconnect();
+                        };
+                
+                    //cabling
+                        var cable;
+                
+                        object._addCable = function(){
+                            cable = canvas.part.builder('cable','cable-'+this.getAddress(),{ x1:0,y1:0,x2:100,y2:100, style:{dimStyle:cable_dimStyle, glowStyle:cable_glowStyle}});
+                            foreignNode._receiveCable(cable);
+                            canvas.system.pane.getMiddlegroundPane(this).append(cable);
+                            this.draw();
+                        }
+                        object._receiveCable = function(new_cable){
+                            cable = new_cable;
+                        };
+                        object._removeCable = function(){
+                            cable.parent.remove(cable);
+                            cable = undefined;
+                            foreignNode._loseCable();
+                        };
+                        object._loseCable = function(){
+                            cable = undefined;
+                        };
+                        object.getCablePoint = function(){
+                            var offset = this.getOffset();
+                            var point = canvas.library.math.cartesianAngleAdjust(x,y,offset.a); 
+                            point.x += offset.x + width/2;
+                            point.y += offset.y + height/2;
+                            return point;
+                        };
+                        object.draw = function(){
+                            if( cable == undefined ){return;}
+                
+                            var pointA = this.getCablePoint();
+                            var pointB = foreignNode.getCablePoint();
+                
+                            cable.draw(pointA.x,pointA.y,pointB.x,pointB.y);
+                        };
+                
+                    //graphical
+                        object.activate = function(){ 
+                            rectangle.style.fill = glowStyle;
+                            if(cable!=undefined){ cable.activate(); }
+                        }
+                        object.deactivate = function(){ 
+                            rectangle.style.fill = dimStyle;
+                            if(cable!=undefined){ cable.deactivate(); }
+                        }
+                
+                    //callbacks
+                        object.onreceive = onreceive;
+                        object.ongive = ongive;
+                        object.onconnect = onconnect;
+                        object.ondisconnect = ondisconnect;
+                
+                    return object;
+                };
+                this.connectionNode_signal = function(
+                    name='connectionNode_signal',
+                    x, y, angle=0, width=20, height=20,
+                    dimStyle='rgb(255, 220, 244)',
+                    glowStyle='rgb(255, 244, 244)',
+                    cable_dimStyle='rgb(247, 84, 146)',
+                    cable_glowStyle='rgb(247, 195, 215)',
+                    onchange=function(value){},
+                    onconnect=function(){},
+                    ondisconnect=function(){},
+                ){
+                    //elements
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                            object._connectionNode = true;
+                            object._type = 'signal';
+                        //node
+                            var rectangle = canvas.part.builder('rectangle','node',{ width:width, height:height, style:{fill:dimStyle} });
+                                object.append(rectangle);
+                
+                
+                    //control
+                        var value = 0;
+                
+                        object._set = function(a){
+                            value = a;
+                            if(onchange!=undefined){this.onchange(a);}
+                
+                            object.updateGraphics();
+                        };
+                        object.set = function(a){
+                            this._set(a);
+                            if(foreignNode!=undefined){foreignNode._set(a);}
+                        };
+                        object.read = function(){
+                            return value;
+                        };
+                
+                    //network functions
+                        var foreignNode = undefined;
+                
+                        object.connectTo = function(new_foreignNode){
+                            if( new_foreignNode == this ){ return; }
+                            if( new_foreignNode._type != this._type ){ return; }
+                            if( new_foreignNode == foreignNode ){ return; }
+                
+                            this.disconnect();
+                
+                            foreignNode = new_foreignNode;
+                            foreignNode._receiveConnection(this);
+                            if(onconnect!=undefined){this.onconnect();}
+                
+                            this._addCable(this);
+                            object.updateGraphics();
+                        };
+                        object._receiveConnection = function(new_foreignNode){
+                            this.disconnect();
+                            foreignNode = new_foreignNode;
+                            this._set( foreignNode.read() );
+                            if(onconnect!=undefined){this.onconnect();}
+                        };
+                        object.disconnect = function(){
+                            if( foreignNode == undefined ){return;}
+                
+                            this._removeCable();
+                            object.updateGraphics();
+                            foreignNode._receiveDisconnection();
+                            foreignNode = null;
+                
+                            if(ondisconnect!=undefined){this.ondisconnect();}
+                        };
+                        object._receiveDisconnection = function(){
+                            foreignNode = null;
+                            object.updateGraphics();
+                            if(ondisconnect!=undefined){this.ondisconnect();}
+                        };
+                
+                
+                    //mouse interaction
+                        rectangle.onmousedown = function(x,y,event){
+                            canvas.system.mouse.mouseInteractionHandler(
+                                undefined,
+                                function(event){
+                                    var point = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                    var element = canvas.core.arrangement.getElementUnderPoint(point.x,point.y);
+                                    if(element == undefined){return;}
+                                    
+                                    var node = element.parent;
+                                    if( node._connectionNode ){ object.connectTo(node); }
+                                }
+                            );
+                        };
+                        rectangle.ondblclick = function(x,y,event){
+                            object.disconnect();
+                        };
+                
+                    //cabling
+                        var cable;
+                
+                        object._addCable = function(){
+                            cable = canvas.part.builder('cable','cable-'+this.getAddress(),{ x1:0,y1:0,x2:100,y2:100, style:{dimStyle:cable_dimStyle, glowStyle:cable_glowStyle}});
+                            foreignNode._receiveCable(cable);
+                            canvas.system.pane.getMiddlegroundPane(this).append(cable);
+                            this.draw();
+                        }
+                        object._receiveCable = function(new_cable){
+                            cable = new_cable;
+                        };
+                        object._removeCable = function(){
+                            cable.parent.remove(cable);
+                            cable = undefined;
+                            foreignNode._loseCable();
+                        };
+                        object._loseCable = function(){
+                            cable = undefined;
+                        };
+                        object.getCablePoint = function(){
+                            var offset = this.getOffset();
+                            var point = canvas.library.math.cartesianAngleAdjust(x,y,offset.a); 
+                            point.x += offset.x + width/2;
+                            point.y += offset.y + height/2;
+                            return point;
+                        };
+                        object.draw = function(){
+                            if( cable == undefined ){return;}
+                
+                            var pointA = this.getCablePoint();
+                            var pointB = foreignNode.getCablePoint();
+                
+                            cable.draw(pointA.x,pointA.y,pointB.x,pointB.y);
+                        };
+                
+                    //graphical
+                        object.updateGraphics = function(){
+                            if(value > 0){object.activate();}
+                            else{object.deactivate();}
+                        };
+                        object.activate = function(){ 
+                            rectangle.style.fill = glowStyle;
+                            if(cable!=undefined){ cable.activate(); }
+                        }
+                        object.deactivate = function(){ 
+                            rectangle.style.fill = dimStyle;
+                            if(cable!=undefined){ cable.deactivate(); }
+                        }
+                
+                    //callbacks
+                        object.onchange = onchange;
+                        object.onconnect = onconnect;
+                        object.ondisconnect = ondisconnect;
+                
+                    return object;
+                };
             };
         };
         
@@ -3263,62 +5449,172 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             if(data.style == undefined){data.style={};}
         
             switch(type){
-                default: console.warn('Unknown element: '+ type); return null; break;
+                default: console.warn('Unknown element: '+ type); return null;  
         
                 //basic
                     case 'group': return this.element.basic.group(
-                        name, data.x, data.y, data.angle
+                        name, data.x, data.y, data.angle, data.ignored,
                     );
                     case 'rectangle': return this.element.basic.rectangle(
-                        name, data.x, data.y, data.width, data.height, data.angle, data.anchor, 
+                        name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored,
                         data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin,
                         data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffset
                     );
                     case 'image': return this.element.basic.image(
-                        name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.url
+                        name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url
                     );
                     case 'polygon': return this.element.basic.polygon(
-                        name, data.points, 
+                        name, data.points, data.ignored,
                         data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, 
                         data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffse
-                        );
-                    case 'text':   return this.element.basic.text(
-                        name, data.x, data.y, data.text, data.angle, data.anchor, 
-                        data.style.font, data.style.textAlign, data.style.textBaseLine,
+                    );
+                    case 'text': return this.element.basic.text(
+                        name, data.x, data.y, data.text, data.angle, data.anchor, data.ignored,
+                        data.style.font, data.style.textAlign, data.style.textBaseline,
                         data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, 
                         data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffset
-                        ); break;
+                    );
                     case 'circle': return this.element.basic.circle(
-                        name, data.x, data.y, data.r, data.angle, 
+                        name, data.x, data.y, data.r, data.ignored,
                         data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, 
                         data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffset
-                    ); break;
-                    case 'path':   return this.element.basic.path(
-                        name, data.points, 
+                    );
+                    case 'path': return this.element.basic.path(
+                        name, data.points, data.ignored,
                         data.style.stroke, data.style.lineWidth, data.style.lineCap,  data.style.lineJoin, 
                         data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffse
-                    ); break;
+                    );
             
                 //display
                     case 'glowbox_rect': return this.element.display.glowbox_rect(
                         name, data.x, data.y, data.width, data.height, data.angle, 
                         data.style.glow, data.style.dim
-                    ); break;
+                    );
                     case 'sevenSegmentDisplay': return this.element.display.sevenSegmentDisplay(
                         name, data.x, data.y, data.width, data.height,
                         data.style.background, data.style.glow, data.style.dim
-                    ); break;
+                    );
                     case 'sixteenSegmentDisplay': return this.element.display.sixteenSegmentDisplay(
                         name, data.x, data.y, data.width, data.height, 
                         data.style.background, data.style.glow, data.style.dim
-                    ); break;
+                    );
                     case 'readout_sixteenSegmentDisplay': return this.element.display.readout_sixteenSegmentDisplay(
                         name, data.x, data.y, data.width, data.height, data.count, data.angle, 
                         data.style.background, data.style.glow, data.style.dime
-                    ); break;
-                    
-                    
-                    
+                    );
+                    case 'level': return this.element.display.level(
+                        name, data.x, data.y, data.angle, data.width, data.height, 
+                        data.style.backing, data.style.levels
+                    );
+                    case 'meter_level': return this.element.display.meter_level(
+                        name, data.x, data.y, data.angle, data.width, data.height, data.markings,
+                        data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font,
+                    );
+                    case 'audio_meter_level': return this.element.display.audio_meter_level(
+                        name, data.x, data.y, data.angle, data.width, data.height, data.markings, 
+                        data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font,
+                    );
+                    case 'rastorDisplay': return this.element.display.rastorDisplay(
+                        name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
+                    );   
+        
+                //control
+                    case 'slide': return this.element.control.slide(
+                        name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.value, data.resetValue, 
+                        data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+                        data.onchange, data.onrelease
+                    );
+                    case 'slidePanel': return this.element.control.slidePanel(
+                        name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.count, data.value, data.resetValue, 
+                        data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+                        data.onchange, data.onrelease
+                    );
+                    case 'rangeslide': return this.element.control.rangeslide(
+                        name, data.x, data.y, data.width, data.height, data.angle, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
+                        data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span,
+                        data.onchange, data.onrelease
+                    );
+                    case 'dial_continuous': return this.element.control.dial_continuous(
+                            name,
+                            data.x, data.y, data.r, data.angle,
+                            data.value, data.resetValue,
+                            data.startAngle, data.maxAngle,
+                            data.style.handle, data.style.slot, data.style.needle,
+                            data.onchange, data.onrelease
+                    );
+                    case 'dial_discrete': return this.element.control.dial_discrete(
+                            name,
+                            data.x, data.y, data.r, data.angle,
+                            data.value, data.resetValue, data.optionCount,
+                            data.startAngle, data.maxAngle,
+                            data.style.handle, data.style.slot, data.style.needle,
+                            data.onchange, data.onrelease
+                    );
+                    case 'button_rect': return this.element.control.button_rect(
+                            name, data.x, data.y, data.width, data.height, data.angle,
+                            data.text_centre, data.text_left, data.text_right,
+                            data.textVerticalOffsetMux, data.extHorizontalOffsetMux,
+                            data.active, data.hoverable, data.selectable, data.pressable,
+        
+                            data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
+        
+                            data.style.background__off__fill,                     data.style.background__off__stroke,                     data.style.background__off__strokeWidth,
+                            data.style.background__up__fill,                      data.style.background__up__stroke,                      data.style.background__up__strokeWidth,
+                            data.style.background__press__fill,                   data.style.background__press__stroke,                   data.style.background__press__strokeWidth,
+                            data.style.background__select__fill,                  data.style.background__select__stroke,                  data.style.background__select__strokeWidth,
+                            data.style.background__select_press__fill,            data.style.background__select_press__stroke,            data.style.background__select_press__strokeWidth,
+                            data.style.background__glow__fill,                    data.style.background__glow__stroke,                    data.style.background__glow__strokeWidth,
+                            data.style.background__glow_press__fill,              data.style.background__glow_press__stroke,              data.style.background__glow_press__strokeWidth,
+                            data.style.background__glow_select__fill,             data.style.background__glow_select__stroke,             data.style.background__glow_select__strokeWidth,
+                            data.style.background__glow_select_press__fill,       data.style.background__glow_select_press__stroke,       data.style.background__glow_select_press__strokeWidth,
+                            data.style.background__hover__fill,                   data.style.background__hover__stroke,                   data.style.background__hover__strokeWidth,
+                            data.style.background__hover_press__fill,             data.style.background__hover_press__stroke,             data.style.background__hover_press__strokeWidth,
+                            data.style.background__hover_select__fill,            data.style.background__hover_select__stroke,            data.style.background__hover_select__strokeWidth,
+                            data.style.background__hover_select_press__fill,      data.style.background__hover_select_press__stroke,      data.style.background__hover_select_press__strokeWidth,
+                            data.style.background__hover_glow__fill,              data.style.background__hover_glow__stroke,              data.style.background__hover_glow__strokeWidth,
+                            data.style.background__hover_glow_press__fill,        data.style.background__hover_glow_press__stroke,        data.style.background__hover_glow_press__strokeWidth,
+                            data.style.background__hover_glow_select__fill,       data.style.background__hover_glow_select__stroke,       data.style.background__hover_glow_select__strokeWidth,
+                            data.style.background__hover_glow_select_press__fill, data.style.background__hover_glow_select_press__stroke, data.style.background__hover_glow_select_press__strokeWidth,
+                        
+                            data.onenter,
+                            data.onleave,
+                            data.onpress,
+                            data.ondblpress,
+                            data.onrelease,
+                            data.onselect,
+                            data.ondeselect,
+                    );
+                    case 'checkbox_rect': return this.element.control.checkbox_rect(
+                        name, data.x, data.y, data.width, data.height, data.angle, 
+                        data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                        data.onchange, 
+                    );
+                    case 'rastorgrid': return this.element.control.rastorgrid(
+                        name, data.x, data.y, data.width, data.height, data.xCount, data.yCount,
+                        data.style.backing, data.style.check, data.style.backingGlow, data.style.checkGlow,
+                        data.onchange
+                    );
+        
+                //dynamic
+                    case 'cable': return this.element.dynamic.cable(
+                        name, data.x1, data.y1, data.x2, data.y2,
+                        data.style.dimStyle, data.style.glowStyle,
+                    );
+                    case 'connectionNode_signal': return this.element.dynamic.connectionNode_signal(
+                        name, data.x, data.y, data.angle, data.width, data.height,
+                        data.style.dimStyle, data.style.glowStyle, data.style.cable_dimStyle, data.style.cable_glowStyle, 
+                        data.onchange, data.onconnect, data.ondisconnect,
+                    );
+                    case 'connectionNode_data': return this.element.dynamic.connectionNode_data(
+                        name, data.x, data.y, data.angle, data.width, data.height,
+                        data.style.dimStyle, data.style.glowStyle, data.style.cable_dimStyle, data.style.cable_glowStyle, 
+                        data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
+                    );
+                    case 'connectionNode_audio': return this.element.dynamic.connectionNode_audio(
+                        name, data.x, data.y, data.angle, data.width, data.height, data.isAudioOutput, canvas.library.audio.context,
+                        data.style.dimStyle, data.style.glowStyle, data.style.cable_dimStyle, data.style.cable_glowStyle, 
+                        data.onconnect, data.ondisconnect,
+                    );
             }
             
         }
@@ -3391,9 +5687,39 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             displayGroup.append( canvas.part.builder( 'sevenSegmentDisplay', 'test_sevenSegmentDisplay', {x:35,y:0} ) );
             displayGroup.append( canvas.part.builder( 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay', {x:60,y:0} ) );
             displayGroup.append( canvas.part.builder( 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay', {x:85,y:0} ) );
+            displayGroup.append( canvas.part.builder( 'level', 'test_level1', {x:0, y:35} ) );
+            displayGroup.append( canvas.part.builder( 'meter_level', 'test_meterLevel1', {x:25, y:35} ) );
+            displayGroup.append( canvas.part.builder( 'audio_meter_level', 'test_audioMeterLevel1', {x:50, y:35} ) );
+            displayGroup.append( canvas.part.builder( 'rastorDisplay', 'test_rastorDisplay1', {x:75, y:35} ) );
         
+        //control
+            var controlGroup = canvas.part.builder( 'group', 'control', { x:10, y:120, angle:0 } );
+            canvas.system.pane.mm.append( controlGroup );
+            controlGroup.append( canvas.part.builder( 'slide', 'test_slide1', {x:0,y:0} ) );
+            controlGroup.append( canvas.part.builder( 'slidePanel', 'test_slidePanel1', {x:15,y:0} ) );
+            controlGroup.append( canvas.part.builder( 'slide', 'test_slide2', {x:0,y:110,angle:-Math.PI/2} ) );
+            controlGroup.append( canvas.part.builder( 'slidePanel', 'test_slidePanel2', {x:0,y:195,angle:-Math.PI/2} ) );
+            controlGroup.append( canvas.part.builder( 'rangeslide', 'test_rangeslide1', {x:100,y:0} ) );
+            controlGroup.append( canvas.part.builder( 'rangeslide', 'test_rangeslide2', {x:100,y:110,angle:-Math.PI/2} ) );
+            controlGroup.append( canvas.part.builder( 'dial_continuous', 'test_dial_continuous1', {x:130,y:15} ) );
+            controlGroup.append( canvas.part.builder( 'dial_discrete', 'test_dial_discrete1', {x:170,y:15} ) );
+            controlGroup.append( canvas.part.builder( 'button_rect', 'test_button_rect1', {x:115,y:35} ) );
+            controlGroup.append( canvas.part.builder( 'checkbox_rect', 'test_checkbox_rect1', {x:150,y:35} ) );
+            controlGroup.append( canvas.part.builder( 'rastorgrid', 'test_rastorgrid1', {x:100,y:115} ) );
         
-
+        //dynamic
+            var dynamicGroup = canvas.part.builder( 'group', 'dynamic', { x:240, y:120, angle:0 } );
+            canvas.system.pane.mm.append( dynamicGroup );
+            dynamicGroup.append( canvas.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:25, y:25 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:0,  y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:50, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:125, y:25 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:100, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:150, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:225, y:25, isAudioOutput:true} ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:200, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:250, y:75 } ) );
 
 
     }

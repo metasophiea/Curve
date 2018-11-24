@@ -17,6 +17,14 @@ this.group = function(){
     this.angle = 0;
     this.children = [];
 
+
+    this.parameter = {};
+    this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities(undefined,true);} }(this);
+    this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities(undefined,true);} }(this);
+    this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities(undefined,true);} }(this);
+
+    
+
     this.getAddress = function(){
         var address = '';
         var tmp = this;
@@ -36,8 +44,7 @@ this.group = function(){
         //check that the name is not already taken in this grouping
             for(var a = 0; a < group.children.length; a++){
                 if( group.children[a].name == element.name ){ 
-                    console.error('element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+parent.name+'"')+''); 
-                    return;
+                    return 'element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+group.name+'"'); 
                 }
             }
     }
@@ -109,7 +116,11 @@ this.group = function(){
         return result;
     };
 
+    this.getOffset = function(){return gatherParentOffset(this);};
     this.computeExtremities = function(offset,deepCompute=false){
+        //root calculation element
+            var rootCalculationElement = offset == undefined;
+
         //discover if this shape should be static
             var isStatic = this.static;
             var tmp = this;
@@ -124,13 +135,16 @@ this.group = function(){
 
         //if 'deepCompute' is set, recalculate the extremities for all children
             if(deepCompute){
-                for(var a = 0; a < this.children.length; a++){
-                    this.children[a].computeExtremities({
-                        x: this.x     + (offset.x != undefined ? offset.x : 0),
-                        y: this.y     + (offset.y != undefined ? offset.y : 0),
-                        a: this.angle + (offset.a != undefined ? offset.a : 0),
-                    },true);
-                }
+                //calculate offset to be sent down to this group's children
+                    var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
+                    var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                        combinedOffset.x += point.x;
+                        combinedOffset.y += point.y;
+
+                //request deep calculation from all children
+                    for(var a = 0; a < this.children.length; a++){
+                        this.children[a].computeExtremities(combinedOffset,true);
+                    }
             }
 
         //reset variables
@@ -150,17 +164,17 @@ this.group = function(){
             }
             temp = canvas.library.math.boundingBoxFromPoints( temp );
             this.extremities.points = [
-                { x: temp.topLeft.x, y: temp.topLeft.y, },
-                { x: temp.bottomRight.x, y: temp.topLeft.y, },
+                { x: temp.topLeft.x,     y: temp.topLeft.y,     },
+                { x: temp.bottomRight.x, y: temp.topLeft.y,     },
                 { x: temp.bottomRight.x, y: temp.bottomRight.y, },
-                { x: temp.topLeft.x, y: temp.bottomRight.y, },
-            ];
-            
+                { x: temp.topLeft.x,     y: temp.bottomRight.y, },
+            ];            
+
         //calculate boundingBox
             this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
 
         //update the points and bounding box of the parent
-            if(this.parent != undefined){
+            if(this.parent != undefined && rootCalculationElement){
                 this.parent.computeExtremities();
             }
     };
@@ -187,7 +201,7 @@ this.group = function(){
         //otherwise, carry onto the next shape
 
         for(var a = this.children.length-1; a >= 0; a--){
-            //if child shape is statc (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
+            //if child shape is static (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
                 var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
 
                 if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
@@ -211,12 +225,13 @@ this.group = function(){
         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
-    this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+    this.render = function(context,offset={x:0,y:0,a:0},static=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
 
         //adjust offset for parent's angle
-            var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.parentAngle);
+            // console.log(this.name,'group>',JSON.stringify(offset));
+            var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
             offset.x += point.x - this.x;
             offset.y += point.y - this.y;
 

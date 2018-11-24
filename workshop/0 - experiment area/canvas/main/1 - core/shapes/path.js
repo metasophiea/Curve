@@ -17,13 +17,28 @@ this.path = function(){
     this.style = {
         stroke:'rgba(0,0,0,0)',
         lineWidth:1,
-        lineCap:'round',
-        lineJoin:'round',
+        lineCap:'butt',
+        lineJoin:'miter',
         miterLimit:2,
         shadowColour:'rgba(0,0,0,0)',
         shadowBlur:20,
         shadowOffset:{x:20, y:20},
     };
+
+    
+    this.parameter = {};
+    this.parameter.points = function(shape){ 
+        return function(a){
+            if(a==undefined){
+                return shape.points;
+            } 
+            shape.points = a; 
+            shape.computeExtremities();
+        } 
+    }(this);
+
+
+    
 
     this.getAddress = function(){
         var address = '';
@@ -90,10 +105,10 @@ this.path = function(){
         //if this shape is static, always render
             if(shape.static){return true;}
             
-        //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+        //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
-    this.render = function(context,offset={x:0,y:0,a:0,parentAngle:0},static=false){
+    this.render = function(context,offset={x:0,y:0,a:0},static=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
         
@@ -142,7 +157,7 @@ this.path = function(){
                         var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
                         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
                     }
-                //boudning box
+                //bounding box
                     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
                     core.render.drawDot( temp.x, temp.y );
                     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);

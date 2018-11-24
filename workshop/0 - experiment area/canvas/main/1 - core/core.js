@@ -38,19 +38,19 @@ function gatherParentOffset(element){
             while((temp=temp.parent) != undefined){
                 offsetList.unshift( {x:temp.x, y:temp.y, a:temp.angle} );
             }
+
         //calculate them together into an offset
             offset = { 
                 x: offsetList[0]!=undefined ? offsetList[0].x : 0,
                 y: offsetList[0]!=undefined ? offsetList[0].y : 0,
-                a: 0
+                a: offsetList[0]!=undefined ? offsetList[0].a : 0,
             };
             for(var a = 1; a < offsetList.length; a++){
-                var point = canvas.library.math.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,-(offset.a+offsetList[a-1].a));
-                offset.a += offsetList[a-1].a;
+                var point = canvas.library.math.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,offsetList[a-1].a);
+                offset.a += offsetList[a].a;
                 offset.x += point.x;
                 offset.y += point.y;
             }
-            offset.a += offsetList[offsetList.length-1]!=undefined ? offsetList[offsetList.length-1].a : 0;
 
     return offset;
 }
@@ -89,7 +89,7 @@ this.viewport = new function(){
     var mouseData = { 
         x:undefined, 
         y:undefined, 
-        stopScrollActive:true
+        stopScrollActive:false
     };
 
     function adjustCanvasSize(){
@@ -260,7 +260,7 @@ this.stats = new function(){
 };
 this.callback = new function(){
     var callbacks = [
-        'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 
+        'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick',
         'onkeydown', 'onkeyup',
         'touchstart', 'touchmove', 'touchend', 'touchenter', 'touchleave', 'touchcancel',
     ];
@@ -275,7 +275,8 @@ this.callback = new function(){
                     return function(event){
                         if( !core.callback[callback] ){return;}
                         var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                        core.callback[callback](p.x,p.y,event);
+                        var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                        core.callback[callback](p.x,p.y,event,shape);
                     }
                 }(callbacks[a]);
 
@@ -285,31 +286,46 @@ this.callback = new function(){
 
                     if( !core.callback.onmouseover ){return;}
                     var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                    core.callback.onmouseover(p.x,p.y,event);
+                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                    core.callback.onmouseover(p.x,p.y,event,shape);
                 };
                 canvas.onmouseout = function(event){
                     if(core.viewport.stopMouseScroll()){ document.body.style.overflow = ''; }
                     
                     if( !core.callback.onmouseout ){return;}
                     var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                    core.callback.onmouseout(p.x,p.y,event);
+                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                    core.callback.onmouseout(p.x,p.y,event,shape);
                 };
+                var lastShape;
                 canvas.onmousemove = function(event){
                     if( !core.callback.onmousemove ){return;}
                     var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                    core.callback.onmousemove(p.x,p.y,event);
+                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+
+                    if( lastShape != shape ){
+                        core.callback.onmouseleave(p.x,p.y,event,lastShape);
+                        core.callback.onmouseenter(p.x,p.y,event,shape);
+                    }
+                    lastShape = shape;
+                    
+                    core.callback.onmousemove(p.x,p.y,event,shape);
                     core.viewport.mousePosition(p.x,p.y);
                 };
+
                 canvas.onkeydown = function(event){
                     if( !core.callback.onkeydown ){return;}
                     var p = core.viewport.mousePosition();
-                    core.callback.onkeydown(p.x,p.y,event);
+                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                    core.callback.onkeydown(p.x,p.y,event,shape);
                 };
                 canvas.onkeyup = function(event){
                     if( !core.callback.onkeyup ){return;}
                     var p = core.viewport.mousePosition();
-                    core.callback.onkeyup(p.x,p.y,event);
+                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                    core.callback.onkeyup(p.x,p.y,event,shape);
                 };
+
     }
 };
 

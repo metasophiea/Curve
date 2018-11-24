@@ -6,6 +6,7 @@ this.rectangle = function(
     height=10, 
     angle=0,
     anchor={x:0,y:0}, 
+    ignored=false,
     fillStyle='rgba(255,100,255,1)', 
     strokeStyle='rgba(0,0,0,0)', 
     lineWidth=1,
@@ -21,6 +22,7 @@ this.rectangle = function(
     temp.width = width; temp.height = height;
     temp.angle = angle;
     temp.anchor = anchor;
+    temp.ignored = ignored;
     temp.style.fill = fillStyle;
     temp.style.stroke = strokeStyle;
     temp.style.lineWidth = lineWidth;
