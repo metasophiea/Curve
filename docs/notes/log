@@ -1,4 +1,11 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-11-25
+  - canvas experiment
+    - connectionNode_signal was kinda shaky, which just led me to redoing all
+      the connection nodes, resulting in the generic connection node from which
+      all others are made. Works pretty well too. There's now one for audio,
+      data, voltage (a number) and signals (true/false)
+
 2018-11-24
   - canvas experiment
     - fixed that weird problem with the button_rect sometimes having an outline

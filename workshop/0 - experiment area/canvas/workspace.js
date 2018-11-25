@@ -4976,6 +4976,53 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
             
             this.dynamic = new function(){
+                this.connectionNode_voltage = function(
+                    name='connectionNode_voltage',
+                    x, y, angle=0, width=20, height=20,
+                    dimStyle='rgb(222, 255, 220)',
+                    glowStyle='rgb(240, 252, 239)',
+                    cable_dimStyle='rgb(84, 247, 111)',
+                    cable_glowStyle='rgb(159, 252, 174)',
+                    onchange=function(value){},
+                    onconnect=function(instigator){},
+                    ondisconnect=function(instigator){},
+                ){
+                    //elements
+                        var object = canvas.part.builder('connectionNode',name,{
+                            x:x, y:y, angle:angle, width:width, height:height, type:'voltage',
+                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                        });
+                
+                    //circuitry
+                        var localValue = 0;
+                
+                        object._getLocalValue = function(){ return localValue; };
+                        object._update = function(a){
+                            var val = a;
+                            if(val>0){ object.activate(); }
+                            else{ object.deactivate(); }
+                            onchange(val);
+                        }
+                
+                        object.set = function(a){
+                            localValue = a;
+                
+                            object._update(object.read());
+                            if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(object.read()); }
+                        };
+                        object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                
+                        object.onconnect = function(instigator){
+                            if(onconnect){onconnect(instigator);}
+                            object._update(object.read());
+                        };
+                        object.ondisconnect = function(instigator){
+                            if(ondisconnect){ondisconnect(instigator);}
+                            object._update(localValue);
+                        };
+                
+                    return object;
+                };
                 this.cable = function(
                     name='path', 
                     x1=0, y1=0, x2=0, y2=0,
@@ -5019,132 +5066,28 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     ondisconnect=function(){},
                 ){
                     //elements
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                            object._connectionNode = true;
-                            object._type = 'audio';
-                            object._direction = isAudioOutput ? 'output' : 'input';
-                        //node
-                            var rectangle = canvas.part.builder('rectangle','node',{ width:width, height:height, style:{fill:dimStyle} });
-                                object.append(rectangle);
+                        var object = canvas.part.builder('connectionNode',name,{
+                            x:x, y:y, angle:angle, width:width, height:height, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
+                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                        });
+                        object._direction = isAudioOutput ? 'out' : 'in';
                 
-                    //control
-                        var audioNode = audioContext.createAnalyser();
-                        object._getAudioNode = function(){return audioNode;}
+                    //circuitry
+                        object.audioNode = audioContext.createAnalyser();
                 
-                    //audio connections
-                        object.out = function(){return audioNode;};
-                        object.in = function(){return audioNode;};
+                        //audio connections
+                            object.out = function(){return audioNode;};
+                            object.in = function(){return audioNode;};
                 
-                    //network functions
-                        var foreignNode = undefined;
-                
-                        object.connectTo = function(new_foreignNode){
-                            if( new_foreignNode == this ){ return; }
-                            if( new_foreignNode._type != this._type ){ return; } 
-                            if( new_foreignNode._direction == this._direction ){ return; }
-                            if( new_foreignNode == foreignNode ){ return; }
-                
-                            this.disconnect();
-                
-                            foreignNode = new_foreignNode;
-                            if(isAudioOutput){ audioNode.connect(foreignNode._getAudioNode()); }
-                            foreignNode._receiveConnection(this);
-                            this.onconnect();
-                
-                
-                            this._addCable(this);
+                        object.onconnect = function(instigator){
+                            if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
+                            if(onconnect){onconnect(instigator);}
                         };
-                        object._receiveConnection = function(new_foreignNode){
-                            this.disconnect();
-                            foreignNode = new_foreignNode;
-                            if(isAudioOutput){ audioNode.connect(foreignNode._getAudioNode()); }
-                            this.onconnect();
+                        object.ondisconnect = function(instigator){
+                            if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
+                            if(ondisconnect){ondisconnect(instigator);}
                         };
-                        object.disconnect = function(){
-                            if( foreignNode == undefined ){return;}
-                
-                            this._removeCable();
-                            if(isAudioOutput){ audioNode.disconnect(foreignNode._getAudioNode()); }
-                            foreignNode._receiveDisconnection();
-                            foreignNode = null;
-                
-                            this.ondisconnect();
-                        };
-                        object._receiveDisconnection = function(){
-                            if(isAudioOutput){ audioNode.disconnect(foreignNode._getAudioNode()); }
-                            foreignNode = null;
-                            this.ondisconnect();
-                        };
-                
-                    //mouse interaction
-                        rectangle.onmousedown = function(x,y,event){
-                            canvas.system.mouse.mouseInteractionHandler(
-                                undefined,
-                                function(event){
-                                    var point = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                    var element = canvas.core.arrangement.getElementUnderPoint(point.x,point.y);
-                                    if(element == undefined){return;}
-                                    
-                                    var node = element.parent;
-                                    if( node._connectionNode ){ object.connectTo(node); }
-                                }
-                            );
-                        };
-                        rectangle.ondblclick = function(x,y,event){
-                            object.disconnect();
-                        };
-                
-                    //cabling
-                        var cable;
-                
-                        object._addCable = function(){
-                            cable = canvas.part.builder('cable','cable-'+this.getAddress(),{ x1:0,y1:0,x2:100,y2:100, style:{dimStyle:cable_dimStyle, glowStyle:cable_glowStyle}});
-                            foreignNode._receiveCable(cable);
-                            canvas.system.pane.getMiddlegroundPane(this).append(cable);
-                            this.draw();
-                        }
-                        object._receiveCable = function(new_cable){
-                            cable = new_cable;
-                        };
-                        object._removeCable = function(){
-                            cable.parent.remove(cable);
-                            cable = undefined;
-                            foreignNode._loseCable();
-                        };
-                        object._loseCable = function(){
-                            cable = undefined;
-                        };
-                        object.getCablePoint = function(){
-                            var offset = this.getOffset();
-                            var point = canvas.library.math.cartesianAngleAdjust(x,y,offset.a); 
-                            point.x += offset.x + width/2;
-                            point.y += offset.y + height/2;
-                            return point;
-                        };
-                        object.draw = function(){
-                            if( cable == undefined ){return;}
-                
-                            var pointA = this.getCablePoint();
-                            var pointB = foreignNode.getCablePoint();
-                
-                            cable.draw(pointA.x,pointA.y,pointB.x,pointB.y);
-                        };
-                
-                    //graphical
-                        object.activate = function(){ 
-                            rectangle.style.fill = glowStyle;
-                            if(cable!=undefined){ cable.activate(); }
-                        }
-                        object.deactivate = function(){ 
-                            rectangle.style.fill = dimStyle;
-                            if(cable!=undefined){ cable.deactivate(); }
-                        }
-                
-                    //callbacks
-                        object.onconnect = onconnect;
-                        object.ondisconnect = ondisconnect;
-                
+                    
                     return object;
                 };
                 this.connectionNode_data = function(
@@ -5154,32 +5097,63 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     glowStyle='rgba(244, 244, 255, 1)',
                     cable_dimStyle='rgb(84, 146, 247)',
                     cable_glowStyle='rgb(123, 168, 242)',
-                    onreceive=function(address, data){},
-                    ongive=function(address){},
+                    onreceivedata=function(address, data){console.log(name,address,data);},
+                    ongivedata=function(address){console.log(name,address);},
                     onconnect=function(){},
                     ondisconnect=function(){},
+                ){
+                    //elements
+                        var object = canvas.part.builder('connectionNode',name,{
+                            x:x, y:y, angle:angle, width:width, height:height, type:'data',
+                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                            onconnect, ondisconnect
+                        });
+                
+                    //circuitry
+                        function flash(obj){
+                            obj.activate();
+                            setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
+                            if(obj.getForeignNode()!=undefined){
+                                obj.getForeignNode().activate();
+                                setTimeout(function(){ if(obj==undefined){return;} obj.getForeignNode().deactivate(); },100);
+                            }
+                        }
+                
+                        object.send = function(address,data){
+                            flash(object);
+                
+                            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
+                        };
+                        object.request = function(address){
+                            flash(object);
+                
+                            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
+                        };
+                
+                        object.onreceivedata = onreceivedata;
+                        object.ongivedata = ongivedata;
+                
+                    return object;
+                };
+                this.connectionNode = function(
+                    name='connectionNode',
+                    x, y, angle=0, width=20, height=20, type='none', direction='',
+                    dimStyle='rgb(220, 220, 220)',
+                    glowStyle='rgb(244, 244, 244)',
+                    cable_dimStyle='rgb(146, 146, 146)',
+                    cable_glowStyle='rgb(215, 215, 215)',
+                    onconnect=function(instigator){},
+                    ondisconnect=function(instigator){},
                 ){
                     //elements
                         //main
                             var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
                             object._connectionNode = true;
-                            object._type = 'data';
+                            object._type = type;
+                            object._direction = direction;
                         //node
                             var rectangle = canvas.part.builder('rectangle','node',{ width:width, height:height, style:{fill:dimStyle} });
                                 object.append(rectangle);
-                
-                    //control
-                        object.send = function(address,data){
-                            object.activate();
-                            setTimeout(function(){ if(object==undefined){return;} object.deactivate(); },100);
-                
-                            if(foreignNode==undefined){return;}
-                            if(foreignNode.onreceive){foreignNode.onreceive(address, data);}
-                        };
-                        object.request = function(address){
-                            if(foreignNode==undefined){return;}
-                            if(foreignNode.ongive){foreignNode.ongive(address, data);}
-                        };
                 
                     //network functions
                         var foreignNode = undefined;
@@ -5187,34 +5161,36 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         object.connectTo = function(new_foreignNode){
                             if( new_foreignNode == this ){ return; }
                             if( new_foreignNode._type != this._type ){ return; }
+                            if( (this._direction == '' || new_foreignNode._direction == '') && this._direction != new_foreignNode._direction){ return; }
+                            if( this._direction != '' && (new_foreignNode._direction == this._direction) ){ return; }
                             if( new_foreignNode == foreignNode ){ return; }
                 
                             this.disconnect();
                 
                             foreignNode = new_foreignNode;
+                            if(onconnect!=undefined){this.onconnect(true);}
                             foreignNode._receiveConnection(this);
-                            this.onconnect();
                 
                             this._addCable(this);
                         };
                         object._receiveConnection = function(new_foreignNode){
                             this.disconnect();
                             foreignNode = new_foreignNode;
-                            this.onconnect();
+                            if(onconnect!=undefined){this.onconnect(false);}
                         };
                         object.disconnect = function(){
                             if( foreignNode == undefined ){return;}
                 
                             this._removeCable();
+                            if(ondisconnect!=undefined){this.ondisconnect(true);}
                             foreignNode._receiveDisconnection();
                             foreignNode = null;
-                
-                            this.ondisconnect();
                         };
                         object._receiveDisconnection = function(){
+                            if(ondisconnect!=undefined){this.ondisconnect(false);}
                             foreignNode = null;
-                            this.ondisconnect();
                         };
+                        object.getForeignNode = function(){ return foreignNode; };
                 
                     //mouse interaction
                         rectangle.onmousedown = function(x,y,event){
@@ -5238,7 +5214,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         var cable;
                 
                         object._addCable = function(){
-                            cable = canvas.part.builder('cable','cable-'+this.getAddress(),{ x1:0,y1:0,x2:100,y2:100, style:{dimStyle:cable_dimStyle, glowStyle:cable_glowStyle}});
+                            cable = canvas.part.builder('cable','cable-'+this.getAddress(),{ x1:0,y1:0,x2:100,y2:100, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
                             foreignNode._receiveCable(cable);
                             canvas.system.pane.getMiddlegroundPane(this).append(cable);
                             this.draw();
@@ -5281,8 +5257,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         }
                 
                     //callbacks
-                        object.onreceive = onreceive;
-                        object.ongive = ongive;
                         object.onconnect = onconnect;
                         object.ondisconnect = ondisconnect;
                 
@@ -5296,148 +5270,42 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     cable_dimStyle='rgb(247, 84, 146)',
                     cable_glowStyle='rgb(247, 195, 215)',
                     onchange=function(value){},
-                    onconnect=function(){},
-                    ondisconnect=function(){},
+                    onconnect=function(instigator){},
+                    ondisconnect=function(instigator){},
                 ){
                     //elements
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                            object._connectionNode = true;
-                            object._type = 'signal';
-                        //node
-                            var rectangle = canvas.part.builder('rectangle','node',{ width:width, height:height, style:{fill:dimStyle} });
-                                object.append(rectangle);
+                        var object = canvas.part.builder('connectionNode',name,{
+                            x:x, y:y, angle:angle, width:width, height:height, type:'signal',
+                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                        });
                 
+                    //circuitry
+                        var localValue = false;
                 
-                    //control
-                        var value = 0;
+                        object._getLocalValue = function(){ return localValue; };
+                        object._update = function(){
+                            var val = object.read();
+                            if(val){ object.activate(); }
+                            else{ object.deactivate(); }
+                            onchange(val);
+                        }
                 
-                        object._set = function(a){
-                            value = a;
-                            if(onchange!=undefined){this.onchange(a);}
-                
-                            object.updateGraphics();
-                        };
                         object.set = function(a){
-                            this._set(a);
-                            if(foreignNode!=undefined){foreignNode._set(a);}
+                            localValue = a;
+                
+                            object._update();
+                            if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(); }
                         };
-                        object.read = function(){
-                            return value;
+                        object.read = function(){ return localValue || (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                
+                        object.onconnect = function(instigator){
+                            if(onconnect){onconnect(instigator);}
+                            object._update();
                         };
-                
-                    //network functions
-                        var foreignNode = undefined;
-                
-                        object.connectTo = function(new_foreignNode){
-                            if( new_foreignNode == this ){ return; }
-                            if( new_foreignNode._type != this._type ){ return; }
-                            if( new_foreignNode == foreignNode ){ return; }
-                
-                            this.disconnect();
-                
-                            foreignNode = new_foreignNode;
-                            foreignNode._receiveConnection(this);
-                            if(onconnect!=undefined){this.onconnect();}
-                
-                            this._addCable(this);
-                            object.updateGraphics();
+                        object.ondisconnect = function(instigator){
+                            if(ondisconnect){ondisconnect(instigator);}
+                            object._update();
                         };
-                        object._receiveConnection = function(new_foreignNode){
-                            this.disconnect();
-                            foreignNode = new_foreignNode;
-                            this._set( foreignNode.read() );
-                            if(onconnect!=undefined){this.onconnect();}
-                        };
-                        object.disconnect = function(){
-                            if( foreignNode == undefined ){return;}
-                
-                            this._removeCable();
-                            object.updateGraphics();
-                            foreignNode._receiveDisconnection();
-                            foreignNode = null;
-                
-                            if(ondisconnect!=undefined){this.ondisconnect();}
-                        };
-                        object._receiveDisconnection = function(){
-                            foreignNode = null;
-                            object.updateGraphics();
-                            if(ondisconnect!=undefined){this.ondisconnect();}
-                        };
-                
-                
-                    //mouse interaction
-                        rectangle.onmousedown = function(x,y,event){
-                            canvas.system.mouse.mouseInteractionHandler(
-                                undefined,
-                                function(event){
-                                    var point = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                    var element = canvas.core.arrangement.getElementUnderPoint(point.x,point.y);
-                                    if(element == undefined){return;}
-                                    
-                                    var node = element.parent;
-                                    if( node._connectionNode ){ object.connectTo(node); }
-                                }
-                            );
-                        };
-                        rectangle.ondblclick = function(x,y,event){
-                            object.disconnect();
-                        };
-                
-                    //cabling
-                        var cable;
-                
-                        object._addCable = function(){
-                            cable = canvas.part.builder('cable','cable-'+this.getAddress(),{ x1:0,y1:0,x2:100,y2:100, style:{dimStyle:cable_dimStyle, glowStyle:cable_glowStyle}});
-                            foreignNode._receiveCable(cable);
-                            canvas.system.pane.getMiddlegroundPane(this).append(cable);
-                            this.draw();
-                        }
-                        object._receiveCable = function(new_cable){
-                            cable = new_cable;
-                        };
-                        object._removeCable = function(){
-                            cable.parent.remove(cable);
-                            cable = undefined;
-                            foreignNode._loseCable();
-                        };
-                        object._loseCable = function(){
-                            cable = undefined;
-                        };
-                        object.getCablePoint = function(){
-                            var offset = this.getOffset();
-                            var point = canvas.library.math.cartesianAngleAdjust(x,y,offset.a); 
-                            point.x += offset.x + width/2;
-                            point.y += offset.y + height/2;
-                            return point;
-                        };
-                        object.draw = function(){
-                            if( cable == undefined ){return;}
-                
-                            var pointA = this.getCablePoint();
-                            var pointB = foreignNode.getCablePoint();
-                
-                            cable.draw(pointA.x,pointA.y,pointB.x,pointB.y);
-                        };
-                
-                    //graphical
-                        object.updateGraphics = function(){
-                            if(value > 0){object.activate();}
-                            else{object.deactivate();}
-                        };
-                        object.activate = function(){ 
-                            rectangle.style.fill = glowStyle;
-                            if(cable!=undefined){ cable.activate(); }
-                        }
-                        object.deactivate = function(){ 
-                            rectangle.style.fill = dimStyle;
-                            if(cable!=undefined){ cable.deactivate(); }
-                        }
-                
-                    //callbacks
-                        object.onchange = onchange;
-                        object.onconnect = onconnect;
-                        object.ondisconnect = ondisconnect;
                 
                     return object;
                 };
@@ -5598,21 +5466,31 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 //dynamic
                     case 'cable': return this.element.dynamic.cable(
                         name, data.x1, data.y1, data.x2, data.y2,
-                        data.style.dimStyle, data.style.glowStyle,
+                        data.style.dim, data.style.glow,
+                    );
+                    case 'connectionNode': return this.element.dynamic.connectionNode(
+                        name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction,
+                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                        data.onconnect, data.ondisconnect,
                     );
                     case 'connectionNode_signal': return this.element.dynamic.connectionNode_signal(
                         name, data.x, data.y, data.angle, data.width, data.height,
-                        data.style.dimStyle, data.style.glowStyle, data.style.cable_dimStyle, data.style.cable_glowStyle, 
+                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                        data.onchange, data.onconnect, data.ondisconnect,
+                    );
+                    case 'connectionNode_voltage': return this.element.dynamic.connectionNode_voltage(
+                        name, data.x, data.y, data.angle, data.width, data.height,
+                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
                         data.onchange, data.onconnect, data.ondisconnect,
                     );
                     case 'connectionNode_data': return this.element.dynamic.connectionNode_data(
                         name, data.x, data.y, data.angle, data.width, data.height,
-                        data.style.dimStyle, data.style.glowStyle, data.style.cable_dimStyle, data.style.cable_glowStyle, 
+                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
                         data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
                     );
                     case 'connectionNode_audio': return this.element.dynamic.connectionNode_audio(
                         name, data.x, data.y, data.angle, data.width, data.height, data.isAudioOutput, canvas.library.audio.context,
-                        data.style.dimStyle, data.style.glowStyle, data.style.cable_dimStyle, data.style.cable_glowStyle, 
+                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
                         data.onconnect, data.ondisconnect,
                     );
             }
@@ -5711,15 +5589,22 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             var dynamicGroup = canvas.part.builder( 'group', 'dynamic', { x:240, y:120, angle:0 } );
             canvas.system.pane.mm.append( dynamicGroup );
             dynamicGroup.append( canvas.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:25, y:25 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:0,  y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:50, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:125, y:25 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:100, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:150, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:225, y:25, isAudioOutput:true} ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:200, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:250, y:75 } ) );
+        
+            dynamicGroup.append( canvas.part.builder( 'connectionNode', 'test_connectionNode1', { x:25, y:25 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode', 'test_connectionNode2', { x:0,  y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode', 'test_connectionNode3', { x:50, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:125, y:25 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:100, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:150, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage1', { x:225, y:25 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage2', { x:200, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage3', { x:250, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:325, y:25 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:300, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:350, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ) );
+            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:75 } ) );
 
 
     }

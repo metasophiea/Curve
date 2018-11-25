@@ -152,21 +152,31 @@ canvas.part.builder = function(type,name,data){
         //dynamic
             case 'cable': return this.element.dynamic.cable(
                 name, data.x1, data.y1, data.x2, data.y2,
-                data.style.dimStyle, data.style.glowStyle,
+                data.style.dim, data.style.glow,
+            );
+            case 'connectionNode': return this.element.dynamic.connectionNode(
+                name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction,
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                data.onconnect, data.ondisconnect,
             );
             case 'connectionNode_signal': return this.element.dynamic.connectionNode_signal(
                 name, data.x, data.y, data.angle, data.width, data.height,
-                data.style.dimStyle, data.style.glowStyle, data.style.cable_dimStyle, data.style.cable_glowStyle, 
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                data.onchange, data.onconnect, data.ondisconnect,
+            );
+            case 'connectionNode_voltage': return this.element.dynamic.connectionNode_voltage(
+                name, data.x, data.y, data.angle, data.width, data.height,
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
                 data.onchange, data.onconnect, data.ondisconnect,
             );
             case 'connectionNode_data': return this.element.dynamic.connectionNode_data(
                 name, data.x, data.y, data.angle, data.width, data.height,
-                data.style.dimStyle, data.style.glowStyle, data.style.cable_dimStyle, data.style.cable_glowStyle, 
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
                 data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
             );
             case 'connectionNode_audio': return this.element.dynamic.connectionNode_audio(
                 name, data.x, data.y, data.angle, data.width, data.height, data.isAudioOutput, canvas.library.audio.context,
-                data.style.dimStyle, data.style.glowStyle, data.style.cable_dimStyle, data.style.cable_glowStyle, 
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
                 data.onconnect, data.ondisconnect,
             );
     }
