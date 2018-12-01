@@ -9,7 +9,7 @@ this.needleOverlay = function(
         //main
             var object = part.builder('g',id,{x:x, y:y});
         //backing
-            var backing = part.builder('rect','backing',{width:width,height:height,style:'fill:rgba(100,100,100, 0);'});
+            var backing = part.builder('rect','backing',{width:width,height:height,style:'fill:rgba(100,100,100,0);'});
             object.appendChild(backing);
         //control objects
             var invisibleHandleWidth = width*needleWidth + width*0.005;

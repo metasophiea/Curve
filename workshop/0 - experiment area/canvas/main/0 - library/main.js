@@ -8,4 +8,6 @@ canvas.library.structure = new function(){
 canvas.library.audio = new function(){
     {{include:audio.js}}
 };
-
+canvas.library.misc = new function(){
+    {{include:misc.js}}
+};

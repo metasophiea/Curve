@@ -70,7 +70,7 @@ this.arrangement = new function(){
     this.prepend = function(element){ design.prepend(element); };
     this.append = function(element){ design.append(element); };
     this.remove = function(element){ design.remove(element); };
-    this.getElementUnderPoint = function(x,y){ return design.getElementUnderPoint(x,y); };
+    this.getElementUnderPoint = function(x,y,static=false,getList=false){ return design.getElementUnderPoint(x,y,static,getList); };
     this.getElementsWithName = function(name){ return design.getElementsWithName(name); };
 };
 this.viewport = new function(){
@@ -89,7 +89,7 @@ this.viewport = new function(){
     var mouseData = { 
         x:undefined, 
         y:undefined, 
-        stopScrollActive:false
+        stopScrollActive:false,
     };
 
     function adjustCanvasSize(){
@@ -170,6 +170,11 @@ this.viewport = new function(){
 
         //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
         if(!bool){ document.body.style.overflow = ''; }
+    };
+    this.cursor = function(type){
+        //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
+        if(type == undefined){return document.body.style.cursor;}
+        document.body.style.cursor = type;
     };
 };
 this.render = new function(){
@@ -270,60 +275,145 @@ this.callback = new function(){
             this[callbacks[a]] = function(x,y,event){};
 
         //attachment to canvas
+            var lastPoint = {x:0,y:0};
+            function getRelivantShape(x,y,callback){
+                //find the frontmost shape under this point
+                    var shape = core.arrangement.getElementUnderPoint(x,y);
+
+                //if the shape found doesn't have an appropiate callback, get the list of all shapes that 
+                //this point touches, and find the one that does (in order of front to back)
+                //if none is found, just return the frontmost shape
+                    if(shape != undefined && shape[callback] == undefined){
+                        var shapeList = core.arrangement.getElementUnderPoint(x,y,undefined,true);
+                        for(var a = 0; a < shapeList.length; a++){
+                            if( shapeList[a][callback] != undefined ){ shape = shapeList[a]; break; }
+                        }
+                    }
+
+                return shape;
+            }
+
             //default
                 canvas[callbacks[a]] = function(callback){
                     return function(event){
-                        if( !core.callback[callback] ){return;}
-                        var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                        var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
-                        core.callback[callback](p.x,p.y,event,shape);
+                        //if core doesn't have this callback set up, just bail
+                            if( !core.callback[callback] ){return;}
+
+                        //convert the point
+                            var p = adapter.windowPoint2workspacePoint(event.x,event.y);
+
+                        //get the shape under this point that has this callback (if no shape
+                        //meeting that criteria is found, just return the frontmost shape)
+                            var shape = getRelivantShape(p.x,p.y,callback);
+                    
+                        //activate core's callback, providing the converted point, original event, and shape
+                            core.callback[callback](p.x,p.y,event,shape);
                     }
                 }(callbacks[a]);
 
             //special cases
                 canvas.onmouseover = function(event){
-                    if(core.viewport.stopMouseScroll()){ document.body.style.overflow = 'hidden'; }
+                    var callback = 'onmouseover';
 
-                    if( !core.callback.onmouseover ){return;}
-                    var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
-                    core.callback.onmouseover(p.x,p.y,event,shape);
+                    //if appropiate, remove the window scrollbars
+                        if(core.viewport.stopMouseScroll()){ document.body.style.overflow = 'hidden'; }
+
+                    //if core doesn't have this callback set up, just bail
+                        if( !core.callback[callback] ){return;}
+
+                    //convert the point
+                        var p = adapter.windowPoint2workspacePoint(event.x,event.y);
+
+                    //get the shape under this point that has this callback (if no shape
+                    //meeting that criteria is found, just return the frontmost shape)
+                        var shape = getRelivantShape(p.x,p.y,callback);
+                
+                    //activate core's callback, providing the converted point, original event, and shape
+                        core.callback[callback](p.x,p.y,event,shape);
                 };
                 canvas.onmouseout = function(event){
-                    if(core.viewport.stopMouseScroll()){ document.body.style.overflow = ''; }
-                    
-                    if( !core.callback.onmouseout ){return;}
-                    var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
-                    core.callback.onmouseout(p.x,p.y,event,shape);
-                };
-                var lastShape;
-                canvas.onmousemove = function(event){
-                    if( !core.callback.onmousemove ){return;}
-                    var p = adapter.windowPoint2workspacePoint(event.x,event.y);
-                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
+                    var callback = 'onmouseout';
 
-                    if( lastShape != shape ){
-                        core.callback.onmouseleave(p.x,p.y,event,lastShape);
-                        core.callback.onmouseenter(p.x,p.y,event,shape);
-                    }
-                    lastShape = shape;
+                    //if appropiate, replace the window scrollbars
+                        if(core.viewport.stopMouseScroll()){ document.body.style.overflow = ''; }
+
+                    //if core doesn't have this callback set up, just bail
+                        if( !core.callback[callback] ){return;}
+
+                    //convert the point
+                        var p = adapter.windowPoint2workspacePoint(event.x,event.y);
+
+                    //get the shape under this point that has this callback (if no shape
+                    //meeting that criteria is found, just return the frontmost shape)
+                        var shape = getRelivantShape(p.x,p.y,callback);
+                
+                    //activate core's callback, providing the converted point, original event, and shape
+                        core.callback[callback](p.x,p.y,event,shape);
+                };
+                canvas.onmousemove = function(event){
+                    var callback = 'onmousemove';
+
+                    //if core doesn't have this callback set up, just bail
+                        if( !core.callback[callback] ){return;}
+
+                    //convert the point
+                        var p = adapter.windowPoint2workspacePoint(event.x,event.y);
+
+                    //update the stored mouse position (used in keydown callbacks)
+                        core.viewport.mousePosition(p.x,p.y);
                     
-                    core.callback.onmousemove(p.x,p.y,event,shape);
-                    core.viewport.mousePosition(p.x,p.y);
+                    //get the shapes under this point that have the callbacks "onmouseleave",
+                    //"onmouseenter" and "onmousemove" However; use the 'lastPoint' for "onmouseleave"
+                    //(as usual - for each callback - if no shape meeting that criteria is found,
+                    //just return the frontmost shape)
+                        var shape_mouseleave = getRelivantShape(lastPoint.x,lastPoint.y,'onmouseleave');
+                        var shape_mouseenter = getRelivantShape(p.x,p.y,'onmouseenter');
+                        var shape_mousemove = getRelivantShape(p.x,p.y,callback);
+                    
+                    //activate core's callbacks, providing the converted point, original event, and appropiate shape
+                    //(only activate the "onmouseenter" and "onmouseleave" callbacks, if the shapes found for them
+                    //are not the same)
+                        if( shape_mouseleave != shape_mouseenter ){
+                            core.callback['onmouseleave'](p.x,p.y,event,shape_mouseleave);
+                            core.callback['onmouseenter'](p.x,p.y,event,shape_mouseenter);
+                        }
+                        core.callback[callback](p.x,p.y,event,shape_mousemove);
+
+                    //update lastPoint data with the new point
+                        lastPoint = {x:p.x,y:p.y};
                 };
 
                 canvas.onkeydown = function(event){
-                    if( !core.callback.onkeydown ){return;}
-                    var p = core.viewport.mousePosition();
-                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
-                    core.callback.onkeydown(p.x,p.y,event,shape);
+                    var callback = 'onkeydown';
+
+                    //if core doesn't have this callback set up, just bail
+                        if( !core.callback[callback] ){return;}
+
+                    //gather the last (converted) mouse point
+                        var p = core.viewport.mousePosition();
+
+                    //get the shape under this point that has this callback (if no shape
+                    //meeting that criteria is found, just return the frontmost shape)
+                        var shape = getRelivantShape(p.x,p.y,callback);
+                
+                    //activate core's callback, providing the converted point, original event, and shape
+                        core.callback[callback](p.x,p.y,event,shape);
                 };
                 canvas.onkeyup = function(event){
-                    if( !core.callback.onkeyup ){return;}
-                    var p = core.viewport.mousePosition();
-                    var shape = canvas.core.arrangement.getElementUnderPoint(p.x,p.y);
-                    core.callback.onkeyup(p.x,p.y,event,shape);
+                    var callback = 'onkeyup';
+
+                    //if core doesn't have this callback set up, just bail
+                        if( !core.callback[callback] ){return;}
+
+                    //gather the last (converted) mouse point
+                        var p = core.viewport.mousePosition();
+
+                    //get the shape under this point that has this callback (if no shape
+                    //meeting that criteria is found, just return the frontmost shape)
+                        var shape = getRelivantShape(p.x,p.y,callback);
+                
+                    //activate core's callback, providing the converted point, original event, and shape
+                        core.callback[callback](p.x,p.y,event,shape);
                 };
 
     }

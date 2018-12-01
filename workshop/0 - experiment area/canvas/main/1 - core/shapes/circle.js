@@ -116,7 +116,7 @@ this.circle = function(){
         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
-    this.render = function(context,offset={x:0,y:0,a:0},static=false){
+    this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
         if(!shouldRender(this)){return;}
 
@@ -145,6 +145,14 @@ this.circle = function(){
             shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
             shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
 
+        //clipping
+            if(isClipper){
+                var region = new Path2D();
+                region.arc(shapeValue.location.x,shapeValue.location.y, shapeValue.radius, 0, 2 * Math.PI, false);
+                context.clip(region);
+                return;
+            }
+            
         //paint this shape as requested
             context.fillStyle = this.style.fill;
             context.strokeStyle = this.style.stroke;
@@ -154,6 +162,7 @@ this.circle = function(){
             context.shadowOffsetX = shapeValue.shadowOffset.x;
             context.shadowOffsetY = shapeValue.shadowOffset.y;
 
+        //actual render
             context.beginPath();
             context.arc(shapeValue.location.x,shapeValue.location.y, shapeValue.radius, 0, 2 * Math.PI, false);
             context.closePath(); 

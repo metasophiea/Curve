@@ -14,7 +14,7 @@ this.text = function(){
 
     this.x = 0;
     this.y = 0;
-    this.text = 'curvie-gH';
+    this.text = 'curve';
     this.angle = 0;
     this.size = 1;
 
@@ -35,6 +35,7 @@ this.text = function(){
     this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
     this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
     this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
+    this.parameter.size = function(shape){ return function(a){if(a==undefined){return shape.size;} shape.size = a; shape.computeExtremities();} }(this);
 
 
 
@@ -109,7 +110,7 @@ this.text = function(){
         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
-    this.render = function(context,offset={x:0,y:0,a:0},static=false){
+    this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
 
@@ -141,6 +142,12 @@ this.text = function(){
 
         //post adaptation calculations
             shapeValue.location = canvas.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
+
+        //clipping
+            if(isClipper){
+                console.warn('no clipping available for text shape');
+                return;
+            }
 
         //actual render
             context.font = this.style.font;

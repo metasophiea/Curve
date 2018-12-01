@@ -109,7 +109,7 @@ this.rectangle = function(){
         //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
-    this.render = function(context,offset={x:0,y:0,a:0},static=false){
+    this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
 
@@ -145,6 +145,16 @@ this.rectangle = function(){
 
         //post adaptation calculations
             shapeValue.location = canvas.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
+            
+        //clipping
+            if(isClipper){
+                context.rotate( shapeValue.angle );
+                var region = new Path2D();
+                region.rect(shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height);
+                context.clip(region);
+                context.rotate( -shapeValue.angle );
+                return;
+            }
 
         //actual render
             context.fillStyle = this.style.fill;

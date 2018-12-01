@@ -13,9 +13,6 @@ this.rangeslide = function(
     var grappled = false;
     var handleNames = ['start','end'];
 
-
-
-
     //elements 
         //main
             var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});

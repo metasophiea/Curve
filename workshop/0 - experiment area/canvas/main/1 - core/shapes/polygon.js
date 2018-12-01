@@ -100,7 +100,7 @@ this.polygon = function(){
         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
-    this.render = function(context,offset={x:0,y:0,a:0},static=false){
+    this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
         
@@ -121,6 +121,17 @@ this.polygon = function(){
             shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
             shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
             shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+
+        //clipping
+            if(isClipper){
+                var region = new Path2D();
+                region.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                for(var a = 1; a < shapeValue.points.length; a++){
+                    region.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                }
+                context.clip(region);
+                return;
+            }
 
         //paint this shape as requested
             context.fillStyle = this.style.fill;

@@ -23,10 +23,10 @@ this.button_rect = function(
     backing__press__lineWidth=                   0,
     backing__select__fill=                       'rgba(200,200,200,1)',
     backing__select__stroke=                     'rgba(120,120,120,1)',
-    backing__select__lineWidth=                  2,
+    backing__select__lineWidth=                  0.75,
     backing__select_press__fill=                 'rgba(230,230,230,1)',
     backing__select_press__stroke=               'rgba(120,120,120,1)',
-    backing__select_press__lineWidth=            2,
+    backing__select_press__lineWidth=            0.75,
     backing__glow__fill=                         'rgba(220,220,220,1)',
     backing__glow__stroke=                       'rgba(0,0,0,0)',
     backing__glow__lineWidth=                    0,
@@ -35,10 +35,10 @@ this.button_rect = function(
     backing__glow_press__lineWidth=              0,
     backing__glow_select__fill=                  'rgba(220,220,220,1)',
     backing__glow_select__stroke=                'rgba(120,120,120,1)',
-    backing__glow_select__lineWidth=             2,
+    backing__glow_select__lineWidth=             0.75,
     backing__glow_select_press__fill=            'rgba(250,250,250,1)',
     backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
-    backing__glow_select_press__lineWidth=       2,
+    backing__glow_select_press__lineWidth=       0.75,
     backing__hover__fill=                        'rgba(220,220,220,1)',
     backing__hover__stroke=                      'rgba(0,0,0,0)',
     backing__hover__lineWidth=                   0,
@@ -47,10 +47,10 @@ this.button_rect = function(
     backing__hover_press__lineWidth=             0,
     backing__hover_select__fill=                 'rgba(220,220,220,1)',
     backing__hover_select__stroke=               'rgba(120,120,120,1)',
-    backing__hover_select__lineWidth=            2,
+    backing__hover_select__lineWidth=            0.75,
     backing__hover_select_press__fill=           'rgba(240,240,240,1)',
     backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
-    backing__hover_select_press__lineWidth=      2,
+    backing__hover_select_press__lineWidth=      0.75,
     backing__hover_glow__fill=                   'rgba(240,240,240,1)',
     backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
     backing__hover_glow__lineWidth=              0,
@@ -59,18 +59,18 @@ this.button_rect = function(
     backing__hover_glow_press__lineWidth=        0,
     backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
     backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-    backing__hover_glow_select__lineWidth=       2,
+    backing__hover_glow_select__lineWidth=       0.75,
     backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
     backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-    backing__hover_glow_select_press__lineWidth= 2,
+    backing__hover_glow_select_press__lineWidth= 0.75,
 
-    onenter = function(object, event){},
-    onleave = function(object, event){},
-    onpress = function(object, event){},
-    ondblpress = function(object, event){},
-    onrelease = function(object, event){},
-    onselect = function(object, event){},
-    ondeselect = function(object, event){},
+    onenter = function(event){},
+    onleave = function(event){},
+    onpress = function(event){},
+    ondblpress = function(event){},
+    onrelease = function(event){},
+    onselect = function(event){},
+    ondeselect = function(event){},
 ){
     //elements 
         //main
@@ -188,13 +188,21 @@ this.button_rect = function(
 
     //control
         object.press = function(event){
-            if(this.state.pressed){return;}
-            this.state.pressed = true;
-            activateGraphicalState();
-            if(this.onpress){this.onpress(this, event);}
+            if(!active){return;}
+
+            if( pressable ){
+                if(this.state.pressed){return;}
+                this.state.pressed = true;
+                if(this.onpress){this.onpress(this, event);}
+            }
+            
             this.select( !this.select(), event );
+
+            activateGraphicalState();
         };
         object.release = function(event){
+            if(!active || !pressable){return;}
+
             if(!this.state.pressed){return;}
             this.state.pressed = false;
             activateGraphicalState();
@@ -203,7 +211,9 @@ this.button_rect = function(
         object.active = function(bool){ if(bool == undefined){return active;} active = bool; activateGraphicalState(); };
         object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  activateGraphicalState(); };
         object.select = function(bool,event,callback=true){ 
-            if(bool == undefined){return this.state.selected;} 
+            if(!active){return;}
+
+            if(bool == undefined){return this.state.selected;}
             if(!selectable){return;}
             if(this.state.selected == bool){return;}
             this.state.selected = bool; activateGraphicalState();
@@ -217,18 +227,18 @@ this.button_rect = function(
         cover.onmouseenter = function(x,y,event){
             object.state.hovering = true;  
             activateGraphicalState();
-            if(object.onenter){object.onenter(object, event);}
+            if(object.onenter){object.onenter(event);}
             if(event.buttons == 1){cover.onmousedown(event);} 
         };
-        cover.onmouseleave = function(event){ 
+        cover.onmouseleave = function(x,y,event){ 
             object.state.hovering = false; 
             object.release(event); 
             activateGraphicalState(); 
-            if(object.onleave){object.onleave(object, event);}
+            if(object.onleave){object.onleave(event);}
         };
-        cover.onmouseup = function(event){   object.release(event); };
-        cover.onmousedown = function(event){ object.press(event); };
-        cover.ondblclick = function(event){ if(object.ondblpress){object.ondblpress(object, event);} };
+        cover.onmouseup = function(x,y,event){   object.release(event); };
+        cover.onmousedown = function(x,y,event){ object.press(event); };
+        cover.ondblclick = function(x,y,event){ if(!active){return;} if(object.ondblpress){object.ondblpress(event);} };
         
 
 

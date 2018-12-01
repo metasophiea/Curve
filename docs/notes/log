@@ -1,10 +1,95 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-11-30
+  - canvas experiment
+    - added the ability to change the cursor, in core.viewport
+    - still working on this needleOverlay (getting mouse interaction to work)
+
+
+2018-11-29
+  - canvas experiment
+    - updated grapher a little to make the drawing of lines more efficient. No
+      longer are lines drawn in segments, but the entire line is a single 'path'
+      shape. Thus where once there was a thousand little straight paths in the
+      group making up the line; now there is a single path.
+        Also added back in the functionality to turn background text printing
+      on and off, and also access to the text offset
+    - added grapher_periodicWave display part
+    - added grapher_audioScope display part
+    - added 'contains' method to the group shape
+    - began on needleOverlay
+
+    - parts left to do
+        control
+        - needleOverlay
+        - grapher_waveWorkspace
+        - sequencer
+
+  problems found:
+  - if you click-and-drag a slider handle, then release the mouse button over
+    the 'backingAndSlot' group of a different slider; that slider will take that
+    as an 'onclick' call and subsequently move the handle to that spot.
+
+
+2018-11-28
+  - canvas experiment
+    - added clipping functionality too the cirle and polygon shapes (and updated
+      rectangle's a little) Text doesn't have a simple way of being added, image
+      is just a rectangle and I've just left path out.
+    - updated text shape a little, to allow one to set the text size (instead of
+      just the font size)
+    - wrote up the grapher display part
+
+    - parts left to do
+        display
+        - grapher_audioScope
+        - grapher_periodicWave
+        control
+        - needleOverlay
+        - grapher_waveWorkspace
+        - sequencer
+
+
+2018-11-27
+  - canvas experiment (which is now just the canvas future, now that I think
+    about it)
+    - wrote up the guts of the list control part, though it still doesn't have
+      any way of hiding items
+    - fixed up button_rect along the way
+    - wrote up modifications to the 'group' shape, which allow for clipping.
+      It works with other shapes to do the actual job of clipping, and requires
+      them to have clipping ability (currently, only rect has this) It also
+      doesn't do render-judgement for internally clipped shapes..it seems to
+      work though
+    - modifications to 'group' shape make hiding quite straight-forward for the
+      'list' part
+    - little bit of streamlining to group's render function
+
+
+2018-11-26
+  - canvas experiment
+    - updated 'getElementUnderPoint' function, to add an argument that allows
+      the function to gather every shape that the point touches (as an array)
+    - updated core's callbacks, so that if the shape under a point doesn't have
+      the callback core's looking for; it will search again and look for the
+      next shape that does. (the callback 'onmousemove' seems pretty
+      inefficient :/ ) Heavily commented
+
+  continue:
+  -> writing up the list shape
+
+
 2018-11-25
   - canvas experiment
-    - connectionNode_signal was kinda shaky, which just led me to redoing all
+    - connectionNode_signal was kinda shaky, which just lead me to redoing all
       the connection nodes, resulting in the generic connection node from which
       all others are made. Works pretty well too. There's now one for audio,
       data, voltage (a number) and signals (true/false)
+
+  future ideas:
+  - tiny thing; stop mouse-wheel when mousedown event occurs? Sometimes when I'm
+    on the mac and click-dragging it scrolls around sometimes. It's a little
+    annoying.
+
 
 2018-11-24
   - canvas experiment
@@ -36,6 +121,7 @@
       - needleOverlay
       - sequencer
 
+
 2018-11-23
   - canvas experiment
     - button_rect unborked. There's still an odd problem though when you
@@ -48,6 +134,7 @@
     - added rastorGrid
     - added cable, halfway though adding the connectionNode_data
 
+
 2018-11-22
   - canvas experiment
     - rewrote dial_continuous a bit to be a little nicer
@@ -58,12 +145,13 @@
     - added checkbox_rect
     - added rastorgrid
 
+
 2018-11-21
   - canvas experiment
-    - turns out, 'deep compute' was broken
+    - turns out, 'deep compute' was broken, so that's now fixed
     - improved 'computeExtremities' a little, so that deepCompute-ing a shape,
-      doesn't make ever shape update all parents (it's kinda complicated, but it
-      works)
+      doesn't make every shape update all parents (it's kinda complicated, but 
+      it works)
     - added rangeslide
     - added getters and setters to shapes, so that they will recalculate their
       extremities (groups do deepCompute) upon any change
@@ -71,6 +159,7 @@
       like the slider code. Thankfully the construction of the system means
       that poor coding can be easily contained)
       
+
 2018-11-20
   - canvas experiment
     - added onclick and ondblclick to core callbacks
@@ -84,6 +173,7 @@
   bugs:
   - there's something wrong with how extremities are being calculated..or how
     rendering is being done...it's totally broken, basically
+
 
 2018-11-19
   - canvas experiment
@@ -106,6 +196,7 @@
     - ignored shapes are now a thing
     - static shapes are now a thing
 
+
 2018-11-15
   - canvas experiment
     - core.js v4.1 ...ok, v5. But this really is the last one. This version
@@ -123,15 +214,16 @@
       To be Fixed:
       - 'pointsOfText' function in library.math
 
+
 2018-11-16
   - canvas experiment
     - core.js v4. Last one, I really mean it this time.
 
-
-  general
+  notes
   - looks like we're heading for v4 of core. I need to rework static elements, 
     add in the new extremities calculation methods and add render judgement.
     ..this thing is getting pretty complex. Pretty advanced.
+
 
 2018-11-15
   - canvas experiment
@@ -147,6 +239,7 @@
         Calculation of extremities is still required though, mainly for
       judgement on rendering (and anyting to do with boundingBoxes)
 
+
 2018-11-14
   - canvas experiment
     - added "append", "prepend" and "remove" methods to group element
@@ -158,6 +251,7 @@
     - expanded polygon functionality to deal with more complex connecting lines
       (quite badly though)
 
+
 2018-11-13
   - canvas experiment
     - started new version of core. This one wraps itself in a ‘surface’ object,
@@ -168,6 +262,7 @@
       Hopefully this will be the last version; though the ‘surface’ object helps
       separate the code out more; becoming essentially an interface. Potentially
       making the upgrade to other graphical backends a little smoother.
+
 
 2018-11-11
   - canvas experiment
@@ -181,7 +276,7 @@
       the browsers audio functions)
  
       Conceptual Layout:
-        browser canvas -> core -> system -> parts -> objects
+        browser canvas -> core -> system -> parts -> objects -> control
         utility ->
         audio ->
       Actual Layout
@@ -201,13 +296,14 @@
             - main.js
         4 - object
             - main.js
-        5 - object
+        5 - control
             - main.js
 
     - added anti-page scrolling option to core
     - started on part.builder
     - developed version 3 of core, which pulls out the drawable shape's code
       out into objects, within a separate 'coreElements' object
+
 
 2018-11-10
   - canvas experiment
@@ -222,19 +318,23 @@
     Hopefully I can write in a way that will allow one to augment the system
   level code at a later date (thus allowing this separation)
 
+
 2018-11-09
   - canvas experiment
     - added stat collection back into core (just frame rate right now)
+
 
 2018-11-08
   - canvas experiment
     - finished work on core2 (which is now just core) fixing some bugs along the
       way) Things are pretty nice now I think
 
+
 2018-11-07
   - canvas experiment
     - began work on core2 (a second draft of core, which just lays things out a
       little nicer)
+
 
 2018-11-06
   - canvas experiment
@@ -242,6 +342,7 @@
 
     future ideas:
     - core probably needs some renaming and rearranging of handles
+
 
 2018-11-04
   - canvas experiment
@@ -263,6 +364,7 @@
     future ideas:
     - the ability to set groups as immune to the viewport location values
 
+
 2018-11-03
   - canvas experiment
     - fixed up canvas.system.core.element.recompute
@@ -281,8 +383,8 @@
       function)
     - replaced context.translate in element.draw.rect with custom a function for
       performing the same task. Things are a bit faster now
-    - no-render judgement moved so now it's the first thing that happens when any
-      element is rendered
+    - no-render judgement moved so now it's the first thing that happens when 
+      any element is rendered
     - began work on new element.recompute code. Going well but needs testing
 
   findings
@@ -1243,7 +1345,7 @@
 
 2018-06-12
   - created rudimentary audio recording object. Currently all it does is record 
-    the audio given to it, and then save that audio to a file when you  press
+    the audio given to it, and then save that audio to a file when you press
     the stop button.
 
   future ideas

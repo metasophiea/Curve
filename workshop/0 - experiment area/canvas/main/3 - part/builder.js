@@ -23,7 +23,7 @@ canvas.part.builder = function(type,name,data){
                 data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffse
             );
             case 'text': return this.element.basic.text(
-                name, data.x, data.y, data.text, data.angle, data.anchor, data.ignored,
+                name, data.x, data.y, data.text, data.angle, data.anchor, data.size, data.ignored,
                 data.style.font, data.style.textAlign, data.style.textBaseline,
                 data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, 
                 data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffset
@@ -70,7 +70,28 @@ canvas.part.builder = function(type,name,data){
             );
             case 'rastorDisplay': return this.element.display.rastorDisplay(
                 name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
-            );   
+            );
+            case 'grapher': return this.element.display.grapher(
+                name, data.x, data.y, data.width, data.height, data.angle,
+                data.style.foregrounds, data.style.foregroundText,
+                data.style.background_stroke, data.style.background_lineWidth,
+                data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                data.style.backing,
+            );
+            case 'grapher_periodicWave': return this.element.display.grapher_periodicWave(
+                name, data.x, data.y, data.width, data.height, data.angle,
+                data.style.foregrounds, data.style.foregroundText,
+                data.style.background_stroke, data.style.background_lineWidth,
+                data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                data.style.backing,
+            );
+            case 'grapher_audioScope': return this.element.display.grapher_audioScope(
+                name, data.x, data.y, data.width, data.height, data.angle,
+                data.style.foregrounds, data.style.foregroundText,
+                data.style.background_stroke, data.style.background_lineWidth,
+                data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                data.style.backing,
+            );
 
         //control
             case 'slide': return this.element.control.slide(
@@ -107,7 +128,7 @@ canvas.part.builder = function(type,name,data){
             case 'button_rect': return this.element.control.button_rect(
                     name, data.x, data.y, data.width, data.height, data.angle,
                     data.text_centre, data.text_left, data.text_right,
-                    data.textVerticalOffsetMux, data.extHorizontalOffsetMux,
+                    data.textVerticalOffsetMux, data.textHorizontalOffsetMux,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
                     data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
@@ -138,6 +159,37 @@ canvas.part.builder = function(type,name,data){
                     data.onselect,
                     data.ondeselect,
             );
+            case 'list': return this.element.control.list(
+                name, data.x, data.y, data.width, data.height, data.angle, data.list,
+                data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
+                data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
+
+                data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
+                data.breakHeightMux, data.breakWidthMux, 
+                data.spacingHeightMux,
+
+                data.style.backing, data.style.break,
+                data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
+                data.style.item__off__fill,                     data.style.item__off__stroke,                     data.style.item__off__strokeWidth,
+                data.style.item__up__fill,                      data.style.item__up__stroke,                      data.style.item__up__strokeWidth,
+                data.style.item__press__fill,                   data.style.item__press__stroke,                   data.style.item__press__strokeWidth,
+                data.style.item__select__fill,                  data.style.item__select__stroke,                  data.style.item__select__strokeWidth,
+                data.style.item__select_press__fill,            data.style.item__select_press__stroke,            data.style.item__select_press__strokeWidth,
+                data.style.item__glow__fill,                    data.style.item__glow__stroke,                    data.style.item__glow__strokeWidth,
+                data.style.item__glow_press__fill,              data.style.item__glow_press__stroke,              data.style.item__glow_press__strokeWidth,
+                data.style.item__glow_select__fill,             data.style.item__glow_select__stroke,             data.style.item__glow_select__strokeWidth,
+                data.style.item__glow_select_press__fill,       data.style.item__glow_select_press__stroke,       data.style.item__glow_select_press__strokeWidth,
+                data.style.item__hover__fill,                   data.style.item__hover__stroke,                   data.style.item__hover__strokeWidth,
+                data.style.item__hover_press__fill,             data.style.item__hover_press__stroke,             data.style.item__hover_press__strokeWidth,
+                data.style.item__hover_select__fill,            data.style.item__hover_select__stroke,            data.style.item__hover_select__strokeWidth,
+                data.style.item__hover_select_press__fill,      data.style.item__hover_select_press__stroke,      data.style.item__hover_select_press__strokeWidth,
+                data.style.item__hover_glow__fill,              data.style.item__hover_glow__stroke,              data.style.item__hover_glow__strokeWidth,
+                data.style.item__hover_glow_press__fill,        data.style.item__hover_glow_press__stroke,        data.style.item__hover_glow_press__strokeWidth,
+                data.style.item__hover_glow_select__fill,       data.style.item__hover_glow_select__stroke,       data.style.item__hover_glow_select__strokeWidth,
+                data.style.item__hover_glow_select_press__fill, data.style.item__hover_glow_select_press__stroke, data.style.item__hover_glow_select_press__strokeWidth,
+            
+                data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
+            );
             case 'checkbox_rect': return this.element.control.checkbox_rect(
                 name, data.x, data.y, data.width, data.height, data.angle, 
                 data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
@@ -147,6 +199,11 @@ canvas.part.builder = function(type,name,data){
                 name, data.x, data.y, data.width, data.height, data.xCount, data.yCount,
                 data.style.backing, data.style.check, data.style.backingGlow, data.style.checkGlow,
                 data.onchange
+            );
+            case 'needleOverlay': return this.element.control.needleOverlay(
+                name, data.x, data.y, data.width, data.height, data.angle, 
+                data.needleWidth, data.selectNeedle, data.selectionArea, data.style.needles,
+                data.onchange, data.onrelease, data.selectionAreaToggle,
             );
 
         //dynamic
@@ -180,5 +237,4 @@ canvas.part.builder = function(type,name,data){
                 data.onconnect, data.ondisconnect,
             );
     }
-    
 }

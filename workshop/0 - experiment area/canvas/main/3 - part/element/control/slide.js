@@ -40,7 +40,7 @@ this.slide = function(
             a = (a>1 ? 1 : a);
             a = (a<0 ? 0 : a);
 
-            if(update && object.change != undefined){object.onchange(a);}
+            if(update && object.onchange != undefined){object.onchange(a);}
             
             value = a;
             handle.y = a*height*(1-handleHeight);
