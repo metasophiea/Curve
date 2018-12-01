@@ -15,7 +15,7 @@ this.needleOverlay = function(
         //main
             var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
         //backing
-            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:'rgba(0,0,0,1)'}});
+            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
             object.append(backing);
         //control objects
             var controlObjectsGroup = canvas.part.builder('group','controlObjectsGroup');
@@ -41,7 +41,7 @@ this.needleOverlay = function(
                     height:height,
                     style:{ fill:'rgba(255,0,0,0)' },
                 }));
-            //selction_A
+            //selection_A
                 controlObjects.selection_A = canvas.part.builder('group','selection_A');
                 controlObjects.selection_A.append( canvas.part.builder('rectangle','handle',{
                     width:needleWidth*width,
@@ -53,7 +53,7 @@ this.needleOverlay = function(
                     width:invisibleHandleWidth,height:height,
                     style:{fill:'rgba(255,0,0,0)'},
                 }));
-            //selction_B
+            //selection_B
                 controlObjects.selection_B = canvas.part.builder('group','selection_B');
                 controlObjects.selection_B.append( canvas.part.builder('rectangle','handle',{
                     width:needleWidth*width,
@@ -65,7 +65,7 @@ this.needleOverlay = function(
                     width:invisibleHandleWidth,height:height,
                     style:{fill:'rgba(255,0,0,0)'},
                 }));
-            //selction_area
+            //selection_area
                 controlObjects.selection_area = canvas.part.builder('rectangle','selection_area',{
                     height:height,
                     style:{fill:canvas.library.misc.blendColours(needleStyles[1],'rgba(0,0,0,0)',0.5)},
@@ -81,25 +81,21 @@ this.needleOverlay = function(
             return event.x*Math.cos(object.__calculationAngle) - event.y*Math.sin(object.__calculationAngle);
         }
         function needleJumpTo(needle,location){
+            var group = needle == 'lead' ? controlObjectsGroup_front : controlObjectsGroup_back;
+
             //if the location is wrong, remove the needle and return
                 if(location == undefined || location < 0 || location > 1){
-                    controlObjectsGroup.remove(controlObjects[needle]);
+                    group.remove(controlObjects[needle]);
                     delete needleData[needle];
                     return;
                 }
 
             //if the needle isn't in the scene, add it
-                if( needle == 'lead' ){
-                    if( !controlObjectsGroup_front.contains(controlObjects[needle]) ){
-                        controlObjectsGroup_front.append(controlObjects[needle]);
-                    }
-                }else{
-                    if( !controlObjectsGroup_back.contains(controlObjects[needle]) ){
-                        controlObjectsGroup_back.append(controlObjects[needle]);
-                    }
+                if( !group.contains(controlObjects[needle]) ){
+                    group.append(controlObjects[needle]);
                 }
 
-            //actualy set the location of the needle (adjusting for the size of needle)
+            //actually set the location of the needle (adjusting for the size of needle)
                 controlObjects[needle].parameter.x( location*width - width*needleWidth*location );
             //save this value
                 needleData[needle] = location;
@@ -107,7 +103,7 @@ this.needleOverlay = function(
         function computeSelectionArea(){
             //if the selection needles' data are missing (or they are the same position) remove the area element and return
                 if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
-                    controlObjectsGroup.remove(controlObjects.selection_area);
+                    controlObjectsGroup_back.remove(controlObjects.selection_area);
                     if(object.selectionAreaToggle){object.selectionAreaToggle(false);}
                     delete needleData.selection_area;
                     return;
@@ -267,6 +263,7 @@ this.needleOverlay = function(
             controlObjects.selection_area.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('grab');};
             controlObjects.selection_area.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
             controlObjects.selection_area.onmousedown = function(x,y,event){
+                canvas.core.viewport.cursor('grabbing');
                 selectionArea_grappled = true;
 
                 var areaSize = needleData.selection_B - needleData.selection_A;
@@ -292,6 +289,7 @@ this.needleOverlay = function(
                         area(location.A,location.B);
                     },
                     function(event){
+                        canvas.core.viewport.cursor('grab');
                         var numerator = initialX - currentMousePosition_x(event);
                         var divider = canvas.core.viewport.scale();
 
@@ -312,20 +310,24 @@ this.needleOverlay = function(
                     },
                 );
 
-                canvas.core.viewport.cursor('grabbing');
+                
             };
 
         //doubleclick to destroy selection area
-            controlObjects.selection_A.ondblclick = function(x,y,event,shape){};
+            controlObjects.selection_A.ondblclick = function(x,y,event,shape){ area(-1,-1); };
             controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
             controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
     
     //control
         object.select = function(position,update=true){
+            if(position == undefined){return select();}
+
             if(leadNeedle_grappled){return;}
             select(position,update);
         };
         object.area = function(positionA,positionB,update=true){
+            if(positionA == undefined && positionB == undefined){ return area(); }
+            if(selectionArea_grappled){return;}
             if(positionA != undefined && selectionNeedleA_grappled){return;}
             if(positionB != undefined && selectionNeedleB_grappled){return;}
             area(positionA,positionB,update);

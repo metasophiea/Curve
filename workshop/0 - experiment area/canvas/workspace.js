@@ -458,6 +458,178 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                 };
                 var shapes = new function(){
+                    this.polygon = function(){
+                    
+                        this.type = 'polygon';
+                    
+                        this.name = '';
+                        this.ignored = false;
+                        this.static = false;
+                        this.parent = undefined;
+                        this.dotFrame = false;
+                        this.extremities = {
+                            points:[],
+                            boundingBox:{},
+                        };
+                    
+                        this.points = [];
+                    
+                        this.style = {
+                            fill:'rgba(100,255,255,1)',
+                            stroke:'rgba(0,0,0,0)',
+                            lineWidth:1,
+                            lineJoin:'round',
+                            miterLimit:2,
+                            shadowColour:'rgba(0,0,0,0)',
+                            shadowBlur:20,
+                            shadowOffset:{x:20, y:20},
+                        };
+                    
+                        
+                        this.parameter = {};
+                        this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
+                    
+                    
+                    
+                    
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
+                        this.computeExtremities = function(offset){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
+                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
+                            //in which case; gather the offset of all parents. Otherwise just use what was provided
+                                offset = offset == undefined ? gatherParentOffset(this) : offset;
+                    
+                            //reset variables
+                                this.extremities = {
+                                    points:[],
+                                    boundingBox:{},
+                                };
+                    
+                            //calculate points
+                                this.extremities.points = this.points.map(function(point){
+                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                    point.x += offset.x;
+                                    point.y += offset.y;
+                                    return point;
+                                });
+                    
+                            //calculate boundingBox
+                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+                    
+                            //update the points and bounding box of the parent
+                                if(this.parent != undefined){
+                                    this.parent.computeExtremities();
+                                }
+                        };
+                    
+                        function isPointWithinBoundingBox(x,y,shape){
+                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+                        }
+                        function isPointWithinHitBox(x,y,shape){
+                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+                        }
+                        this.isPointWithin = function(x,y){
+                            if( isPointWithinBoundingBox(x,y,this) ){
+                                return isPointWithinHitBox(x,y,this);
+                            }
+                            return false;
+                        };
+                    
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                                if(!shouldRender(this)){return;}
+                            
+                            //collect and consolidate shape values into a neat package
+                                var shapeValue = {
+                                    points: this.points.map( function(a){
+                                        a = canvas.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
+                                        return { x:a.x+offset.x, y:a.y+offset.y };
+                                    } ),
+                                    lineWidth: this.style.lineWidth,
+                                    shadowBlur: this.style.shadowBlur,
+                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
+                                };
+                            
+                            //adapt values
+                                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
+                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                    
+                            //clipping
+                                if(isClipper){
+                                    var region = new Path2D();
+                                    region.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                                    for(var a = 1; a < shapeValue.points.length; a++){
+                                        region.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                                    }
+                                    context.clip(region);
+                                    return;
+                                }
+                    
+                            //paint this shape as requested
+                                context.fillStyle = this.style.fill;
+                                context.strokeStyle = this.style.stroke;
+                                context.lineWidth = shapeValue.lineWidth;
+                                context.lineJoin = this.style.lineJoin;
+                                context.miterLimit = this.style.miterLimit;
+                                context.shadowColor = this.style.shadowColour;
+                                context.shadowBlur = shapeValue.shadowBlur;
+                                context.shadowOffsetX = shapeValue.shadowOffset.x;
+                                context.shadowOffsetY = shapeValue.shadowOffset.y;
+                    
+                                context.beginPath(); 
+                                context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                                for(var a = 1; a < shapeValue.points.length; a++){
+                                    context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                                }
+                                context.closePath(); 
+                    
+                                context.fill(); 
+                                context.stroke();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
+                        };
+                    
+                    };
                     this.circle = function(){
                     
                         this.type = 'circle';
@@ -646,632 +818,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                         };
                     };
-                    this.group = function(){
-                    
-                        this.type = 'group';
-                    
-                        this.name = '';
-                        this.ignored = false;
-                        this.static = false;
-                        this.clipActive = false;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = {
-                            points:[],
-                            boundingBox:{},
-                        };
-                    
-                        this.x = 0;
-                        this.y = 0;
-                        this.angle = 0;
-                        this.children = [];
-                        this.clippingStencile;
-                    
-                    
-                        this.parameter = {};
-                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities(undefined,true);} }(this);
-                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities(undefined,true);} }(this);
-                        this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities(undefined,true);} }(this);
-                    
-                    
-                    
-                        function checkElementIsValid(group,element){
-                            if(element == undefined){return group.getAddress()+' >> no element provided';}
-                    
-                            //check for name
-                                if(element.name == undefined || element.name == ''){return group.getAddress()+' >> element has no name'}
-                        
-                            //check that the name is not already taken in this grouping
-                                for(var a = 0; a < group.children.length; a++){
-                                    if( group.children[a].name == element.name ){ 
-                                        return 'element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+group.name+'"'); 
-                                    }
-                                }
-                        }
-                    
-                        this.getAddress = function(){
-                            var address = '';
-                            var tmp = this;
-                            do{
-                                address = tmp.name + '/' + address;
-                            }while((tmp = tmp.parent) != undefined)
-                    
-                            return '/'+address;
-                        };
-                        this.clip = function(bool){
-                            if(bool == undefined){return this.clipActive;}
-                            this.clipActive = (this.clippingStencile == undefined) ? false : bool;
-                    
-                            //computation of extremities
-                                this.computeExtremities();
-                        };
-                        this.stencile = function(shape){
-                            if(shape == undefined){return this.clippingStencile;}
-                            this.clippingStencile = shape;
-                    
-                            //computation of extremities
-                                this.computeExtremities();
-                        };
-                        this.prepend = function(element){
-                            //check that the element is valid
-                                var temp = checkElementIsValid(this,element);
-                                if(temp != undefined){console.error('element invalid:',temp); return;}
-                    
-                            //actually add the element
-                                this.children.unshift(element);
-                    
-                            //inform element of who it's parent is
-                                element.parent = this;
-                    
-                            //computation of extremities
-                                element.computeExtremities(undefined,true);
-                        };
-                        this.append = function(element){
-                            //check that the element is valid
-                                var temp = checkElementIsValid(this, element);
-                                if(temp != undefined){console.error('element invalid:',temp); return;}
-                    
-                            //actually add the element
-                                this.children.push(element);
-                    
-                            //inform element of who it's parent is
-                                element.parent = this;
-                    
-                            //computation of extremities
-                                element.computeExtremities(undefined,true);
-                        };
-                        this.remove = function(element){
-                            //check that an element was provided
-                                if(element == undefined){return;}
-                    
-                            //get index of element (if this element isn't in the group, just bail)
-                                var index = this.children.indexOf(element);
-                                if(index < 0){return;}
-                    
-                            //actual removal
-                                this.children.splice(index, 1);
-                    
-                            //computation of extremities
-                                this.computeExtremities();
-                        };
-                        this.clear = function(){
-                            //empty out children
-                                this.children = [];
-                    
-                            //computation of extremities
-                                this.computeExtremities();
-                        };
-                        this.contains = function(element){
-                            for(var a = 0; a < this.children.length; a++){
-                                if(this.children[a] == element){return true;}
-                            }
-                    
-                            return false;
-                        };
-                        this.getChildByName = function(name){
-                            for(var a = 0; a < this.children.length; a++){
-                                if( this.children[a].name == name ){ return this.children[a]; }
-                            }
-                        };
-                        this.getElementsWithName = function(name){
-                            var result = [];
-                            for(var a = 0; a < this.children.length; a++){
-                                if( this.children[a].name == name ){
-                                    result.push(this.children[a]);
-                                }
-                                if( this.children[a].type == 'group' ){
-                                    var list = this.children[a].getElementsWithName(name);
-                                    for(var b = 0; b < list.length; b++){ result.push( list[b] ); } //because concat doesn't work
-                                }
-                            }
-                            return result;
-                        };
-                    
-                        this.getOffset = function(){return gatherParentOffset(this);};
-                        this.computeExtremities = function(offset,deepCompute=false){
-                            //root calculation element
-                                var rootCalculationElement = offset == undefined;
-                    
-                            //discover if this shape should be static
-                                var isStatic = this.static;
-                                var tmp = this;
-                                while((tmp = tmp.parent) != undefined && !isStatic){
-                                    isStatic = isStatic || tmp.static;
-                                }
-                                this.static = isStatic;
-                    
-                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                            //in which case; gather the offset of all parents. Otherwise just use what was provided
-                                offset = offset == undefined ? gatherParentOffset(this) : offset;
-                    
-                            //if 'deepCompute' is set, recalculate the extremities for all children
-                                if(deepCompute){
-                                    //calculate offset to be sent down to this group's children
-                                        var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
-                                        var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                            combinedOffset.x += point.x;
-                                            combinedOffset.y += point.y;
-                    
-                                    //request deep calculation from all children
-                                        for(var a = 0; a < this.children.length; a++){
-                                            this.children[a].computeExtremities(combinedOffset,true);
-                                        }
-                                }
-                    
-                            //reset variables
-                                this.extremities = {
-                                    points:[],
-                                    boundingBox:{},
-                                };
-                    
-                            //calculate points
-                                //assuming clipping is turned off
-                                    if(!this.clipActive){
-                                        //the points for a group, is just the four corners of the bounding box, calculated using
-                                        //the bounding boxes of all the children
-                                        //  -> this method needs to be trashed <-
-                                            var temp = [];
-                                            for(var a = 0; a < this.children.length; a++){
-                                                temp.push(this.children[a].extremities.boundingBox.topLeft);
-                                                temp.push(this.children[a].extremities.boundingBox.bottomRight);
-                                            }
-                                            temp = canvas.library.math.boundingBoxFromPoints( temp );
-                                            this.extremities.points = [
-                                                { x: temp.topLeft.x,     y: temp.topLeft.y,     },
-                                                { x: temp.bottomRight.x, y: temp.topLeft.y,     },
-                                                { x: temp.bottomRight.x, y: temp.bottomRight.y, },
-                                                { x: temp.topLeft.x,     y: temp.bottomRight.y, },
-                                            ];
-                                //assuming clipping is turned on
-                                    }else{
-                                        //the points for this group are the same as the stencile shape's
-                                            var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
-                                            var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                                combinedOffset.x += point.x;
-                                                combinedOffset.y += point.y;
-                                            this.clippingStencile.computeExtremities(combinedOffset);
-                                            this.extremities.points = this.clippingStencile.extremities.points;
-                                    }
-                    
-                            //calculate boundingBox
-                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                    
-                            //update the points and bounding box of the parent
-                                if(this.parent != undefined && rootCalculationElement){
-                                    this.parent.computeExtremities();
-                                }
-                        };
-                    
-                        function isPointWithinBoundingBox(x,y,shape){
-                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                        }
-                        function isPointWithinHitBox(x,y,shape){
-                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                        }
-                        this.isPointWithin = function(x,y){
-                            if(this.clipActive){ return this.clippingStencile.isPointWithin(x,y); }
-                    
-                            if( isPointWithinBoundingBox(x,y,this) ){
-                                return isPointWithinHitBox(x,y,this);
-                            }
-                            return false;
-                        };
-                        this.getElementUnderPoint = function(x,y,static=false,getList=false){
-                            //go through the children in reverse order, discovering if
-                            //  the object is not ignored and,
-                            //  the point is within their bounding box
-                            //if so; if it's a group, follow the 'getElementUnderPoint' function down
-                            //if it's not, return that shape
-                            //otherwise, carry onto the next shape
-                    
-                            var returnList = [];
-                    
-                            for(var a = this.children.length-1; a >= 0; a--){
-                                //if child shape is static (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
-                                    var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
-                    
-                                    if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
-                                        if( this.children[a].type == 'group' ){
-                                            var temp = this.children[a].getElementUnderPoint(x,y,(this.children[a].static || static),getList);
-                                            if(temp != undefined){
-                                                if(getList){ returnList = returnList.concat(temp); }
-                                                else{ return temp; }
-                                            }
-                                        }else{
-                                            if(getList){ returnList.push(this.children[a]); }
-                                            else{ return this.children[a]; }
-                                        }
-                                    }
-                            }
-                    
-                            if(getList){return returnList;}
-                        };
-                    
-                        function shouldRender(shape){
-                            //if this shape is static, always render
-                                if(shape.static){return true;}
-                    
-                            //if any of this shape's children are static, render the group (and let the individuals decide to render themselves or not)
-                                for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
-                    
-                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                        };
-                        this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                                if(!shouldRender(this)){return;}
-                    
-                            //adjust offset for parent's angle
-                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                var packagedOffset = {
-                                    a: offset.a + this.angle,
-                                    x: offset.x + point.x,
-                                    y: offset.y + point.y,
-                                };
-                    
-                    
-                            //draw clipping (if active)
-                                if(this.clipActive || isClipper){
-                                    context.save();
-                                    this.clippingStencile.render( context, Object.assign({},packagedOffset), (static||this.clippingStencile.static), (isClipper||this.clipActive) );
-                                }
-                    
-                            //cycle through all children, activating their render functions
-                                for(var a = 0; a < this.children.length; a++){
-                                    var item = this.children[a];
-                                    item.render( context, Object.assign({},packagedOffset), (static||item.static) );
-                                }
-                    
-                            //undo the clipping (only if there was clipping, ofcourse)
-                                if(this.clipActive){ context.restore(); }
-                    
-                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                                if(this.dotFrame){
-                                    //points
-                                        for(var a = 0; a < this.extremities.points.length; a++){
-                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                        }
-                                    //boudning box
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                }
-                        };
-                    };
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    // this.group = function(){
-                    
-                    //     this.type = 'group';
-                    
-                    //     this.name = '';
-                    //     this.ignored = false;
-                    //     this.static = false;
-                    //     this.parent = undefined;
-                    //     this.dotFrame = false;
-                    //     this.extremities = {
-                    //         points:[],
-                    //         boundingBox:{},
-                    //     };
-                    
-                    //     this.x = 0;
-                    //     this.y = 0;
-                    //     this.angle = 0;
-                    //     this.children = [];
-                    
-                    
-                    //     this.parameter = {};
-                    //     this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities(undefined,true);} }(this);
-                    //     this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities(undefined,true);} }(this);
-                    //     this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities(undefined,true);} }(this);
-                    
-                        
-                    
-                    //     this.getAddress = function(){
-                    //         var address = '';
-                    //         var tmp = this;
-                    //         do{
-                    //             address = tmp.name + '/' + address;
-                    //         }while((tmp = tmp.parent) != undefined)
-                    
-                    //         return '/'+address;
-                    //     };
-                        
-                    //     function checkElementIsValid(group,element){
-                    //         if(element == undefined){return group.getAddress()+' >> no element provided';}
-                    
-                    //         //check for name
-                    //             if(element.name == undefined || element.name == ''){return group.getAddress()+' >> element has no name'}
-                        
-                    //         //check that the name is not already taken in this grouping
-                    //             for(var a = 0; a < group.children.length; a++){
-                    //                 if( group.children[a].name == element.name ){ 
-                    //                     return 'element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+group.name+'"'); 
-                    //                 }
-                    //             }
-                    //     }
-                    //     this.prepend = function(element){
-                    //         //check that the element is valid
-                    //             var temp = checkElementIsValid(this,element);
-                    //             if(temp != undefined){console.error('element invalid:',temp); return;}
-                    
-                    //         //actually add the element
-                    //             this.children.unshift(element);
-                    
-                    //         //inform element of who it's parent is
-                    //             element.parent = this;
-                    
-                    //         //computation of extremities
-                    //             element.computeExtremities(undefined,true);
-                    //     };
-                    //     this.append = function(element){
-                    //         //check that the element is valid
-                    //             var temp = checkElementIsValid(this, element);
-                    //             if(temp != undefined){console.error('element invalid:',temp); return;}
-                    
-                    //         //actually add the element
-                    //             this.children.push(element);
-                    
-                    //         //inform element of who it's parent is
-                    //             element.parent = this;
-                    
-                    //         //computation of extremities
-                    //             element.computeExtremities(undefined,true);
-                    //     };
-                    //     this.remove = function(element){
-                    //         //check that an element was provided
-                    //             if(element == undefined){return;}
-                    
-                    //         //get index of element (if this element isn't in the group, just bail)
-                    //             var index = this.children.indexOf(element);
-                    //             if(index < 0){return;}
-                    
-                    //         //actual removal
-                    //             this.children.splice(index, 1);
-                    
-                    //         //computation of extremities
-                    //             this.computeExtremities();
-                    //     };
-                    //     this.clear = function(){
-                    //         //empty out children
-                    //             this.children = [];
-                    
-                    //         //computation of extremities
-                    //             this.computeExtremities();
-                    //     };
-                    //     this.getChildByName = function(name){
-                    //         for(var a = 0; a < this.children.length; a++){
-                    //             if( this.children[a].name == name ){ return this.children[a]; }
-                    //         }
-                    //     };
-                    //     this.getElementsWithName = function(name){
-                    //         var result = [];
-                    //         for(var a = 0; a < this.children.length; a++){
-                    //             if( this.children[a].name == name ){
-                    //                 result.push(this.children[a]);
-                    //             }
-                    //             if( this.children[a].type == 'group' ){
-                    //                 var list = this.children[a].getElementsWithName(name);
-                    //                 for(var b = 0; b < list.length; b++){ result.push( list[b] ); } //because concat doesn't work
-                    //             }
-                    //         }
-                    //         return result;
-                    //     };
-                    
-                    //     this.getOffset = function(){return gatherParentOffset(this);};
-                    //     this.computeExtremities = function(offset,deepCompute=false){
-                    //         //root calculation element
-                    //             var rootCalculationElement = offset == undefined;
-                    
-                    //         //discover if this shape should be static
-                    //             var isStatic = this.static;
-                    //             var tmp = this;
-                    //             while((tmp = tmp.parent) != undefined && !isStatic){
-                    //                 isStatic = isStatic || tmp.static;
-                    //             }
-                    //             this.static = isStatic;
-                    
-                    //         //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                    //         //in which case; gather the offset of all parents. Otherwise just use what was provided
-                    //             offset = offset == undefined ? gatherParentOffset(this) : offset;
-                    
-                    //         //if 'deepCompute' is set, recalculate the extremities for all children
-                    //             if(deepCompute){
-                    //                 //calculate offset to be sent down to this group's children
-                    //                     var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
-                    //                     var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                    //                         combinedOffset.x += point.x;
-                    //                         combinedOffset.y += point.y;
-                    
-                    //                 //request deep calculation from all children
-                    //                     for(var a = 0; a < this.children.length; a++){
-                    //                         this.children[a].computeExtremities(combinedOffset,true);
-                    //                     }
-                    //             }
-                    
-                    //         //reset variables
-                    //             this.extremities = {
-                    //                 points:[],
-                    //                 boundingBox:{},
-                    //             };
-                    
-                    //         //calculate points
-                    //             //the points for a group, is just the four corners of the bounding box, calculated using
-                    //             //the bounding boxes of all the children
-                    //             //  -> this method needs to be trashed <-
-                    //             var temp = [];
-                    //             for(var a = 0; a < this.children.length; a++){
-                    //                 temp.push(this.children[a].extremities.boundingBox.topLeft);
-                    //                 temp.push(this.children[a].extremities.boundingBox.bottomRight);
-                    //             }
-                    //             temp = canvas.library.math.boundingBoxFromPoints( temp );
-                    //             this.extremities.points = [
-                    //                 { x: temp.topLeft.x,     y: temp.topLeft.y,     },
-                    //                 { x: temp.bottomRight.x, y: temp.topLeft.y,     },
-                    //                 { x: temp.bottomRight.x, y: temp.bottomRight.y, },
-                    //                 { x: temp.topLeft.x,     y: temp.bottomRight.y, },
-                    //             ];            
-                    
-                    //         //calculate boundingBox
-                    //             this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                    
-                    //         //update the points and bounding box of the parent
-                    //             if(this.parent != undefined && rootCalculationElement){
-                    //                 this.parent.computeExtremities();
-                    //             }
-                    //     };
-                    //     function isPointWithinBoundingBox(x,y,shape){
-                    //         if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                    //         return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                    //     }
-                    //     function isPointWithinHitBox(x,y,shape){
-                    //         if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                    //         return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                    //     }
-                    //     this.isPointWithin = function(x,y){
-                    //         if( isPointWithinBoundingBox(x,y,this) ){
-                    //             return isPointWithinHitBox(x,y,this);
-                    //         }
-                    //         return false;
-                    //     };
-                    //     this.getElementUnderPoint = function(x,y,static=false,getList=false){
-                    //         //go through the children in reverse order, discovering if
-                    //         //  the object is not ignored and,
-                    //         //  the point is within their bounding box
-                    //         //if so; if it's a group, follow the 'getElementUnderPoint' function down
-                    //         //if it's not, return that shape
-                    //         //otherwise, carry onto the next shape
-                    
-                    //         var returnList = [];
-                    
-                    //         for(var a = this.children.length-1; a >= 0; a--){
-                    //             //if child shape is static (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
-                    //                 var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
-                    
-                    //                 if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
-                    //                     if( this.children[a].type == 'group' ){
-                    //                         var temp = this.children[a].getElementUnderPoint(x,y,(this.children[a].static || static),getList);
-                    //                         if(temp != undefined){
-                    //                             if(getList){ returnList = returnList.concat(temp); }
-                    //                             else{ return temp; }
-                    //                         }
-                    //                     }else{
-                    //                         if(getList){ returnList.push(this.children[a]); }
-                    //                         else{ return this.children[a]; }
-                    //                     }
-                    //                 }
-                    //         }
-                    
-                    //         if(getList){return returnList;}
-                    //     };
-                    
-                    //     function shouldRender(shape){
-                    //         //if this shape is static, always render
-                    //             if(shape.static){return true;}
-                    
-                    //         //if any of this shape's children are static, render the group (and let the individuals decide to render themselves or not)
-                    //             for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
-                    
-                    //         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                    //             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                    //     };
-                    //     this.render = function(context,offset={x:0,y:0,a:0},static=false){
-                    //         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                    //             if(!shouldRender(this)){return;}
-                    
-                    //         //adjust offset for parent's angle
-                    //             var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                    //             offset.x += point.x - this.x;
-                    //             offset.y += point.y - this.y;
-                    
-                    //         //cycle through all children, activating their render functions
-                    //             for(var a = 0; a < this.children.length; a++){
-                    //                 var item = this.children[a];
-                    
-                    //                 item.render(
-                    //                     context,
-                    //                     {
-                    //                         a: offset.a + this.angle,
-                    //                         x: offset.x + this.x,
-                    //                         y: offset.y + this.y,
-                    //                         parentAngle: this.angle,
-                    //                     },
-                    //                     (static||item.static)
-                    //                 );
-                    //             }
-                    
-                    //         //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                    //             if(this.dotFrame){
-                    //                 //points
-                    //                     for(var a = 0; a < this.extremities.points.length; a++){
-                    //                         var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                    //                         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                    //                     }
-                    //                 //boudning box
-                    //                     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                    //                     core.render.drawDot( temp.x, temp.y );
-                    //                     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                    //                     core.render.drawDot( temp.x, temp.y );
-                    //             }
-                    //     };
-                    // };
                     this.image = function(){
                     
                         this.type = 'image';
@@ -1616,178 +1162,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                         };
                     };
-                    this.polygon = function(){
-                    
-                        this.type = 'polygon';
-                    
-                        this.name = '';
-                        this.ignored = false;
-                        this.static = false;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = {
-                            points:[],
-                            boundingBox:{},
-                        };
-                    
-                        this.points = [];
-                    
-                        this.style = {
-                            fill:'rgba(100,255,255,1)',
-                            stroke:'rgba(0,0,0,0)',
-                            lineWidth:1,
-                            lineJoin:'round',
-                            miterLimit:2,
-                            shadowColour:'rgba(0,0,0,0)',
-                            shadowBlur:20,
-                            shadowOffset:{x:20, y:20},
-                        };
-                    
-                        
-                        this.parameter = {};
-                        this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
-                    
-                    
-                    
-                    
-                        this.getAddress = function(){
-                            var address = '';
-                            var tmp = this;
-                            do{
-                                address = tmp.name + '/' + address;
-                            }while((tmp = tmp.parent) != undefined)
-                    
-                            return '/'+address;
-                        };
-                        
-                        this.computeExtremities = function(offset){
-                            //discover if this shape should be static
-                                var isStatic = this.static;
-                                var tmp = this;
-                                while((tmp = tmp.parent) != undefined && !isStatic){
-                                    isStatic = isStatic || tmp.static;
-                                }
-                                this.static = isStatic;
-                    
-                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                            //in which case; gather the offset of all parents. Otherwise just use what was provided
-                                offset = offset == undefined ? gatherParentOffset(this) : offset;
-                    
-                            //reset variables
-                                this.extremities = {
-                                    points:[],
-                                    boundingBox:{},
-                                };
-                    
-                            //calculate points
-                                this.extremities.points = this.points.map(function(point){
-                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                                    point.x += offset.x;
-                                    point.y += offset.y;
-                                    return point;
-                                });
-                    
-                            //calculate boundingBox
-                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                    
-                            //update the points and bounding box of the parent
-                                if(this.parent != undefined){
-                                    this.parent.computeExtremities();
-                                }
-                        };
-                    
-                        function isPointWithinBoundingBox(x,y,shape){
-                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                        }
-                        function isPointWithinHitBox(x,y,shape){
-                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                        }
-                        this.isPointWithin = function(x,y){
-                            if( isPointWithinBoundingBox(x,y,this) ){
-                                return isPointWithinHitBox(x,y,this);
-                            }
-                            return false;
-                        };
-                    
-                        function shouldRender(shape){ 
-                            //if this shape is static, always render
-                                if(shape.static){return true;}
-                                
-                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                        };
-                        this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                                if(!shouldRender(this)){return;}
-                            
-                            //collect and consolidate shape values into a neat package
-                                var shapeValue = {
-                                    points: this.points.map( function(a){
-                                        a = canvas.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
-                                        return { x:a.x+offset.x, y:a.y+offset.y };
-                                    } ),
-                                    lineWidth: this.style.lineWidth,
-                                    shadowBlur: this.style.shadowBlur,
-                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
-                                };
-                            
-                            //adapt values
-                                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
-                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
-                    
-                            //clipping
-                                if(isClipper){
-                                    var region = new Path2D();
-                                    region.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-                                    for(var a = 1; a < shapeValue.points.length; a++){
-                                        region.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
-                                    }
-                                    context.clip(region);
-                                    return;
-                                }
-                    
-                            //paint this shape as requested
-                                context.fillStyle = this.style.fill;
-                                context.strokeStyle = this.style.stroke;
-                                context.lineWidth = shapeValue.lineWidth;
-                                context.lineJoin = this.style.lineJoin;
-                                context.miterLimit = this.style.miterLimit;
-                                context.shadowColor = this.style.shadowColour;
-                                context.shadowBlur = shapeValue.shadowBlur;
-                                context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                context.shadowOffsetY = shapeValue.shadowOffset.y;
-                    
-                                context.beginPath(); 
-                                context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-                                for(var a = 1; a < shapeValue.points.length; a++){
-                                    context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
-                                }
-                                context.closePath(); 
-                    
-                                context.fill(); 
-                                context.stroke();
-                    
-                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                                if(this.dotFrame){
-                                    //points
-                                        for(var a = 0; a < this.extremities.points.length; a++){
-                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                        }
-                                    //boudning box
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                }
-                        };
-                    
-                    };
                     this.rectangle = function(){
                     
                         this.type = 'rectangle';
@@ -1976,6 +1350,632 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                         }
                     };
+                    this.group = function(){
+                    
+                        this.type = 'group';
+                    
+                        this.name = '';
+                        this.ignored = false;
+                        this.static = false;
+                        this.clipActive = false;
+                        this.parent = undefined;
+                        this.dotFrame = false;
+                        this.extremities = {
+                            points:[],
+                            boundingBox:{},
+                        };
+                    
+                        this.x = 0;
+                        this.y = 0;
+                        this.angle = 0;
+                        this.children = [];
+                        this.clippingStencil;
+                    
+                    
+                        this.parameter = {};
+                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities(undefined,true);} }(this);
+                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities(undefined,true);} }(this);
+                        this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities(undefined,true);} }(this);
+                    
+                    
+                    
+                        function checkElementIsValid(group,element){
+                            if(element == undefined){return group.getAddress()+' >> no element provided';}
+                    
+                            //check for name
+                                if(element.name == undefined || element.name == ''){return group.getAddress()+' >> element has no name'}
+                        
+                            //check that the name is not already taken in this grouping
+                                for(var a = 0; a < group.children.length; a++){
+                                    if( group.children[a].name == element.name ){ 
+                                        return 'element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+group.name+'"'); 
+                                    }
+                                }
+                        }
+                    
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        this.clip = function(bool){
+                            if(bool == undefined){return this.clipActive;}
+                            this.clipActive = (this.clippingStencil == undefined) ? false : bool;
+                    
+                            //computation of extremities
+                                this.computeExtremities();
+                        };
+                        this.stencil = function(shape){
+                            if(shape == undefined){return this.clippingStencil;}
+                            this.clippingStencil = shape;
+                    
+                            //computation of extremities
+                                this.computeExtremities();
+                        };
+                        this.prepend = function(element){
+                            //check that the element is valid
+                                var temp = checkElementIsValid(this,element);
+                                if(temp != undefined){console.error('element invalid:',temp); return;}
+                    
+                            //actually add the element
+                                this.children.unshift(element);
+                    
+                            //inform element of who it's parent is
+                                element.parent = this;
+                    
+                            //computation of extremities
+                                element.computeExtremities(undefined,true);
+                        };
+                        this.append = function(element){
+                            //check that the element is valid
+                                var temp = checkElementIsValid(this, element);
+                                if(temp != undefined){console.error('element invalid:',temp); return;}
+                    
+                            //actually add the element
+                                this.children.push(element);
+                    
+                            //inform element of who it's parent is
+                                element.parent = this;
+                    
+                            //computation of extremities
+                                element.computeExtremities(undefined,true);
+                        };
+                        this.remove = function(element){
+                            //check that an element was provided
+                                if(element == undefined){return;}
+                    
+                            //get index of element (if this element isn't in the group, just bail)
+                                var index = this.children.indexOf(element);
+                                if(index < 0){return;}
+                    
+                            //actual removal
+                                this.children.splice(index, 1);
+                    
+                            //computation of extremities
+                                this.computeExtremities();
+                        };
+                        this.clear = function(){
+                            //empty out children
+                                this.children = [];
+                    
+                            //computation of extremities
+                                this.computeExtremities();
+                        };
+                        this.contains = function(element){
+                            for(var a = 0; a < this.children.length; a++){
+                                if(this.children[a] == element){return true;}
+                            }
+                    
+                            return false;
+                        };
+                        this.getChildByName = function(name){
+                            for(var a = 0; a < this.children.length; a++){
+                                if( this.children[a].name == name ){ return this.children[a]; }
+                            }
+                        };
+                        this.getElementsWithName = function(name){
+                            var result = [];
+                            for(var a = 0; a < this.children.length; a++){
+                                if( this.children[a].name == name ){
+                                    result.push(this.children[a]);
+                                }
+                                if( this.children[a].type == 'group' ){
+                                    var list = this.children[a].getElementsWithName(name);
+                                    for(var b = 0; b < list.length; b++){ result.push( list[b] ); } //because concat doesn't work
+                                }
+                            }
+                            return result;
+                        };
+                    
+                        this.getOffset = function(){return gatherParentOffset(this);};
+                        this.computeExtremities = function(offset,deepCompute=false){
+                            //root calculation element
+                                var rootCalculationElement = offset == undefined;
+                    
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
+                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
+                            //in which case; gather the offset of all parents. Otherwise just use what was provided
+                                offset = offset == undefined ? gatherParentOffset(this) : offset;
+                    
+                            //if 'deepCompute' is set, recalculate the extremities for all children
+                                if(deepCompute){
+                                    //calculate offset to be sent down to this group's children
+                                        var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
+                                        var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                            combinedOffset.x += point.x;
+                                            combinedOffset.y += point.y;
+                    
+                                    //request deep calculation from all children
+                                        for(var a = 0; a < this.children.length; a++){
+                                            this.children[a].computeExtremities(combinedOffset,true);
+                                        }
+                                }
+                    
+                            //reset variables
+                                this.extremities = {
+                                    points:[],
+                                    boundingBox:{},
+                                };
+                    
+                            //calculate points
+                                //assuming clipping is turned off
+                                    if(!this.clipActive){
+                                        //the points for a group, is just the four corners of the bounding box, calculated using
+                                        //the bounding boxes of all the children
+                                        //  -> this method needs to be trashed <-
+                                            var temp = [];
+                                            for(var a = 0; a < this.children.length; a++){
+                                                temp.push(this.children[a].extremities.boundingBox.topLeft);
+                                                temp.push(this.children[a].extremities.boundingBox.bottomRight);
+                                            }
+                                            temp = canvas.library.math.boundingBoxFromPoints( temp );
+                                            this.extremities.points = [
+                                                { x: temp.topLeft.x,     y: temp.topLeft.y,     },
+                                                { x: temp.bottomRight.x, y: temp.topLeft.y,     },
+                                                { x: temp.bottomRight.x, y: temp.bottomRight.y, },
+                                                { x: temp.topLeft.x,     y: temp.bottomRight.y, },
+                                            ];
+                                //assuming clipping is turned on
+                                    }else{
+                                        //the points for this group are the same as the stencil shape's
+                                            var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
+                                            var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                                combinedOffset.x += point.x;
+                                                combinedOffset.y += point.y;
+                                            this.clippingStencil.computeExtremities(combinedOffset);
+                                            this.extremities.points = this.clippingStencil.extremities.points;
+                                    }
+                    
+                            //calculate boundingBox
+                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+                    
+                            //update the points and bounding box of the parent
+                                if(this.parent != undefined && rootCalculationElement){
+                                    this.parent.computeExtremities();
+                                }
+                        };
+                    
+                        function isPointWithinBoundingBox(x,y,shape){
+                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+                        }
+                        function isPointWithinHitBox(x,y,shape){
+                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+                        }
+                        this.isPointWithin = function(x,y){
+                            if(this.clipActive){ return this.clippingStencil.isPointWithin(x,y); }
+                    
+                            if( isPointWithinBoundingBox(x,y,this) ){
+                                return isPointWithinHitBox(x,y,this);
+                            }
+                            return false;
+                        };
+                        this.getElementUnderPoint = function(x,y,static=false,getList=false){
+                            //go through the children in reverse order, discovering if
+                            //  the object is not ignored and,
+                            //  the point is within their bounding box
+                            //if so; if it's a group, follow the 'getElementUnderPoint' function down
+                            //if it's not, return that shape
+                            //otherwise, carry onto the next shape
+                    
+                            var returnList = [];
+                    
+                            for(var a = this.children.length-1; a >= 0; a--){
+                                //if child shape is static (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
+                                    var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
+                    
+                                    if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
+                                        if( this.children[a].type == 'group' ){
+                                            var temp = this.children[a].getElementUnderPoint(x,y,(this.children[a].static || static),getList);
+                                            if(temp != undefined){
+                                                if(getList){ returnList = returnList.concat(temp); }
+                                                else{ return temp; }
+                                            }
+                                        }else{
+                                            if(getList){ returnList.push(this.children[a]); }
+                                            else{ return this.children[a]; }
+                                        }
+                                    }
+                            }
+                    
+                            if(getList){return returnList;}
+                        };
+                    
+                        function shouldRender(shape){
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                    
+                            //if any of this shape's children are static, render the group (and let the individuals decide to render themselves or not)
+                                for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
+                    
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                                if(!shouldRender(this)){return;}
+                    
+                            //adjust offset for parent's angle
+                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                var packagedOffset = {
+                                    a: offset.a + this.angle,
+                                    x: offset.x + point.x,
+                                    y: offset.y + point.y,
+                                };
+                    
+                    
+                            //draw clipping (if active)
+                                if(this.clipActive || isClipper){
+                                    context.save();
+                                    this.clippingStencil.render( context, Object.assign({},packagedOffset), (static||this.clippingStencil.static), (isClipper||this.clipActive) );
+                                }
+                    
+                            //cycle through all children, activating their render functions
+                                for(var a = 0; a < this.children.length; a++){
+                                    var item = this.children[a];
+                                    item.render( context, Object.assign({},packagedOffset), (static||item.static) );
+                                }
+                    
+                            //undo the clipping (only if there was clipping, ofcourse)
+                                if(this.clipActive){ context.restore(); }
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
+                        };
+                    };
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    // this.group = function(){
+                    
+                    //     this.type = 'group';
+                    
+                    //     this.name = '';
+                    //     this.ignored = false;
+                    //     this.static = false;
+                    //     this.parent = undefined;
+                    //     this.dotFrame = false;
+                    //     this.extremities = {
+                    //         points:[],
+                    //         boundingBox:{},
+                    //     };
+                    
+                    //     this.x = 0;
+                    //     this.y = 0;
+                    //     this.angle = 0;
+                    //     this.children = [];
+                    
+                    
+                    //     this.parameter = {};
+                    //     this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities(undefined,true);} }(this);
+                    //     this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities(undefined,true);} }(this);
+                    //     this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities(undefined,true);} }(this);
+                    
+                        
+                    
+                    //     this.getAddress = function(){
+                    //         var address = '';
+                    //         var tmp = this;
+                    //         do{
+                    //             address = tmp.name + '/' + address;
+                    //         }while((tmp = tmp.parent) != undefined)
+                    
+                    //         return '/'+address;
+                    //     };
+                        
+                    //     function checkElementIsValid(group,element){
+                    //         if(element == undefined){return group.getAddress()+' >> no element provided';}
+                    
+                    //         //check for name
+                    //             if(element.name == undefined || element.name == ''){return group.getAddress()+' >> element has no name'}
+                        
+                    //         //check that the name is not already taken in this grouping
+                    //             for(var a = 0; a < group.children.length; a++){
+                    //                 if( group.children[a].name == element.name ){ 
+                    //                     return 'element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+group.name+'"'); 
+                    //                 }
+                    //             }
+                    //     }
+                    //     this.prepend = function(element){
+                    //         //check that the element is valid
+                    //             var temp = checkElementIsValid(this,element);
+                    //             if(temp != undefined){console.error('element invalid:',temp); return;}
+                    
+                    //         //actually add the element
+                    //             this.children.unshift(element);
+                    
+                    //         //inform element of who it's parent is
+                    //             element.parent = this;
+                    
+                    //         //computation of extremities
+                    //             element.computeExtremities(undefined,true);
+                    //     };
+                    //     this.append = function(element){
+                    //         //check that the element is valid
+                    //             var temp = checkElementIsValid(this, element);
+                    //             if(temp != undefined){console.error('element invalid:',temp); return;}
+                    
+                    //         //actually add the element
+                    //             this.children.push(element);
+                    
+                    //         //inform element of who it's parent is
+                    //             element.parent = this;
+                    
+                    //         //computation of extremities
+                    //             element.computeExtremities(undefined,true);
+                    //     };
+                    //     this.remove = function(element){
+                    //         //check that an element was provided
+                    //             if(element == undefined){return;}
+                    
+                    //         //get index of element (if this element isn't in the group, just bail)
+                    //             var index = this.children.indexOf(element);
+                    //             if(index < 0){return;}
+                    
+                    //         //actual removal
+                    //             this.children.splice(index, 1);
+                    
+                    //         //computation of extremities
+                    //             this.computeExtremities();
+                    //     };
+                    //     this.clear = function(){
+                    //         //empty out children
+                    //             this.children = [];
+                    
+                    //         //computation of extremities
+                    //             this.computeExtremities();
+                    //     };
+                    //     this.getChildByName = function(name){
+                    //         for(var a = 0; a < this.children.length; a++){
+                    //             if( this.children[a].name == name ){ return this.children[a]; }
+                    //         }
+                    //     };
+                    //     this.getElementsWithName = function(name){
+                    //         var result = [];
+                    //         for(var a = 0; a < this.children.length; a++){
+                    //             if( this.children[a].name == name ){
+                    //                 result.push(this.children[a]);
+                    //             }
+                    //             if( this.children[a].type == 'group' ){
+                    //                 var list = this.children[a].getElementsWithName(name);
+                    //                 for(var b = 0; b < list.length; b++){ result.push( list[b] ); } //because concat doesn't work
+                    //             }
+                    //         }
+                    //         return result;
+                    //     };
+                    
+                    //     this.getOffset = function(){return gatherParentOffset(this);};
+                    //     this.computeExtremities = function(offset,deepCompute=false){
+                    //         //root calculation element
+                    //             var rootCalculationElement = offset == undefined;
+                    
+                    //         //discover if this shape should be static
+                    //             var isStatic = this.static;
+                    //             var tmp = this;
+                    //             while((tmp = tmp.parent) != undefined && !isStatic){
+                    //                 isStatic = isStatic || tmp.static;
+                    //             }
+                    //             this.static = isStatic;
+                    
+                    //         //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
+                    //         //in which case; gather the offset of all parents. Otherwise just use what was provided
+                    //             offset = offset == undefined ? gatherParentOffset(this) : offset;
+                    
+                    //         //if 'deepCompute' is set, recalculate the extremities for all children
+                    //             if(deepCompute){
+                    //                 //calculate offset to be sent down to this group's children
+                    //                     var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
+                    //                     var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                    //                         combinedOffset.x += point.x;
+                    //                         combinedOffset.y += point.y;
+                    
+                    //                 //request deep calculation from all children
+                    //                     for(var a = 0; a < this.children.length; a++){
+                    //                         this.children[a].computeExtremities(combinedOffset,true);
+                    //                     }
+                    //             }
+                    
+                    //         //reset variables
+                    //             this.extremities = {
+                    //                 points:[],
+                    //                 boundingBox:{},
+                    //             };
+                    
+                    //         //calculate points
+                    //             //the points for a group, is just the four corners of the bounding box, calculated using
+                    //             //the bounding boxes of all the children
+                    //             //  -> this method needs to be trashed <-
+                    //             var temp = [];
+                    //             for(var a = 0; a < this.children.length; a++){
+                    //                 temp.push(this.children[a].extremities.boundingBox.topLeft);
+                    //                 temp.push(this.children[a].extremities.boundingBox.bottomRight);
+                    //             }
+                    //             temp = canvas.library.math.boundingBoxFromPoints( temp );
+                    //             this.extremities.points = [
+                    //                 { x: temp.topLeft.x,     y: temp.topLeft.y,     },
+                    //                 { x: temp.bottomRight.x, y: temp.topLeft.y,     },
+                    //                 { x: temp.bottomRight.x, y: temp.bottomRight.y, },
+                    //                 { x: temp.topLeft.x,     y: temp.bottomRight.y, },
+                    //             ];            
+                    
+                    //         //calculate boundingBox
+                    //             this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+                    
+                    //         //update the points and bounding box of the parent
+                    //             if(this.parent != undefined && rootCalculationElement){
+                    //                 this.parent.computeExtremities();
+                    //             }
+                    //     };
+                    //     function isPointWithinBoundingBox(x,y,shape){
+                    //         if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
+                    //         return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+                    //     }
+                    //     function isPointWithinHitBox(x,y,shape){
+                    //         if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
+                    //         return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+                    //     }
+                    //     this.isPointWithin = function(x,y){
+                    //         if( isPointWithinBoundingBox(x,y,this) ){
+                    //             return isPointWithinHitBox(x,y,this);
+                    //         }
+                    //         return false;
+                    //     };
+                    //     this.getElementUnderPoint = function(x,y,static=false,getList=false){
+                    //         //go through the children in reverse order, discovering if
+                    //         //  the object is not ignored and,
+                    //         //  the point is within their bounding box
+                    //         //if so; if it's a group, follow the 'getElementUnderPoint' function down
+                    //         //if it's not, return that shape
+                    //         //otherwise, carry onto the next shape
+                    
+                    //         var returnList = [];
+                    
+                    //         for(var a = this.children.length-1; a >= 0; a--){
+                    //             //if child shape is static (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
+                    //                 var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
+                    
+                    //                 if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
+                    //                     if( this.children[a].type == 'group' ){
+                    //                         var temp = this.children[a].getElementUnderPoint(x,y,(this.children[a].static || static),getList);
+                    //                         if(temp != undefined){
+                    //                             if(getList){ returnList = returnList.concat(temp); }
+                    //                             else{ return temp; }
+                    //                         }
+                    //                     }else{
+                    //                         if(getList){ returnList.push(this.children[a]); }
+                    //                         else{ return this.children[a]; }
+                    //                     }
+                    //                 }
+                    //         }
+                    
+                    //         if(getList){return returnList;}
+                    //     };
+                    
+                    //     function shouldRender(shape){
+                    //         //if this shape is static, always render
+                    //             if(shape.static){return true;}
+                    
+                    //         //if any of this shape's children are static, render the group (and let the individuals decide to render themselves or not)
+                    //             for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
+                    
+                    //         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                    //             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                    //     };
+                    //     this.render = function(context,offset={x:0,y:0,a:0},static=false){
+                    //         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                    //             if(!shouldRender(this)){return;}
+                    
+                    //         //adjust offset for parent's angle
+                    //             var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                    //             offset.x += point.x - this.x;
+                    //             offset.y += point.y - this.y;
+                    
+                    //         //cycle through all children, activating their render functions
+                    //             for(var a = 0; a < this.children.length; a++){
+                    //                 var item = this.children[a];
+                    
+                    //                 item.render(
+                    //                     context,
+                    //                     {
+                    //                         a: offset.a + this.angle,
+                    //                         x: offset.x + this.x,
+                    //                         y: offset.y + this.y,
+                    //                         parentAngle: this.angle,
+                    //                     },
+                    //                     (static||item.static)
+                    //                 );
+                    //             }
+                    
+                    //         //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                    //             if(this.dotFrame){
+                    //                 //points
+                    //                     for(var a = 0; a < this.extremities.points.length; a++){
+                    //                         var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                    //                         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                    //                     }
+                    //                 //boudning box
+                    //                     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                    //                     core.render.drawDot( temp.x, temp.y );
+                    //                     var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                    //                     core.render.drawDot( temp.x, temp.y );
+                    //             }
+                    //     };
+                    // };
                     this.text = function(){
                     
                         this.type = 'text';
@@ -2953,84 +2953,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         
         canvas.part.element = new function(){
             this.basic = new function(){
-                this.circle = function(
-                    name=null, 
-                    x=0, 
-                    y=0, 
-                    r=2,
-                    ignored=false,
-                    fillStyle='rgba(255,100,255,1)', 
-                    strokeStyle='rgba(0,0,0,1)', 
-                    lineWidth=1,
-                    lineJoin='round',
-                    miterLimit=2,
-                    shadowColour='rgba(0,0,0,0)',
-                    shadowBlur=20,
-                    shadowOffset={x:20, y:20},
-                ){
-                    var temp = canvas.core.arrangement.createElement('circle');
-                    temp.name = name;
-                    temp.x = x; temp.y = y;
-                    temp.r = r;
-                    temp.ignored = ignored;
-                    temp.style.fill = fillStyle;
-                    temp.style.stroke = strokeStyle;
-                    temp.style.lineWidth = lineWidth;
-                    temp.style.lineJoin = lineJoin;
-                    temp.style.miterLimit = miterLimit;
-                    temp.style.shadowColour = shadowColour;
-                    temp.style.shadowBlur = shadowBlur;
-                    temp.style.shadowOffset = shadowOffset;
-                    return temp;
-                };
-                this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
-                    var temp = canvas.core.arrangement.createElement('group');
-                    temp.name = name;
-                    temp.x = x; 
-                    temp.y = y;
-                    temp.angle = angle;
-                    temp.ignored = ignored;
-                    return temp;
-                };
-                this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
-                    var temp = canvas.core.arrangement.createElement('image');
-                    temp.name = name;
-                    temp.x = x; temp.y = y;
-                    temp.width = width; temp.height = height;
-                    temp.angle = angle;
-                    temp.anchor = anchor;
-                    temp.ignored = ignored;
-                    temp.url = url;
-                    return temp;
-                };
-                this.path = function(
-                    name=null, 
-                    points=[],
-                    ignored=false,
-                    strokeStyle='rgba(0,0,0,1)', 
-                    lineWidth=1,
-                    lineCap='butt',
-                    lineJoin='miter',
-                    miterLimit=2,
-                    shadowColour='rgba(0,0,0,0)',
-                    shadowBlur=20,
-                    shadowOffset={x:20, y:20},
-                ){
-                    var temp = canvas.core.arrangement.createElement('path');
-                    temp.name = name;
-                    temp.points = points;
-                    temp.ignored = ignored;
-                    temp.style.stroke = strokeStyle;
-                    temp.style.lineWidth = lineWidth;
-                    temp.style.lineCap = lineCap;
-                    temp.style.lineJoin = lineJoin;
-                    temp.style.miterLimit = miterLimit;
-                    temp.style.shadowColour = shadowColour;
-                    temp.style.shadowBlur = shadowBlur;
-                    temp.style.shadowOffset = shadowOffset;
-                    
-                    return temp;
-                };
                 this.polygon = function(
                     name=null, 
                     points=[], 
@@ -3086,6 +3008,75 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return temp;
                 };
+                this.circle = function(
+                    name=null, 
+                    x=0, 
+                    y=0, 
+                    r=2,
+                    ignored=false,
+                    fillStyle='rgba(255,100,255,1)', 
+                    strokeStyle='rgba(0,0,0,1)', 
+                    lineWidth=1,
+                    lineJoin='round',
+                    miterLimit=2,
+                    shadowColour='rgba(0,0,0,0)',
+                    shadowBlur=20,
+                    shadowOffset={x:20, y:20},
+                ){
+                    var temp = canvas.core.arrangement.createElement('circle');
+                    temp.name = name;
+                    temp.x = x; temp.y = y;
+                    temp.r = r;
+                    temp.ignored = ignored;
+                    temp.style.fill = fillStyle;
+                    temp.style.stroke = strokeStyle;
+                    temp.style.lineWidth = lineWidth;
+                    temp.style.lineJoin = lineJoin;
+                    temp.style.miterLimit = miterLimit;
+                    temp.style.shadowColour = shadowColour;
+                    temp.style.shadowBlur = shadowBlur;
+                    temp.style.shadowOffset = shadowOffset;
+                    return temp;
+                };
+                this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
+                    var temp = canvas.core.arrangement.createElement('image');
+                    temp.name = name;
+                    temp.x = x; temp.y = y;
+                    temp.width = width; temp.height = height;
+                    temp.angle = angle;
+                    temp.anchor = anchor;
+                    temp.ignored = ignored;
+                    temp.url = url;
+                    return temp;
+                };
+                this.path = function(
+                    name=null, 
+                    points=[],
+                    ignored=false,
+                    strokeStyle='rgba(0,0,0,1)', 
+                    lineWidth=1,
+                    lineCap='butt',
+                    lineJoin='miter',
+                    miterLimit=2,
+                    shadowColour='rgba(0,0,0,0)',
+                    shadowBlur=20,
+                    shadowOffset={x:20, y:20},
+                ){
+                    var temp = canvas.core.arrangement.createElement('path');
+                    temp.name = name;
+                    temp.points = points;
+                    temp.ignored = ignored;
+                    temp.style.stroke = strokeStyle;
+                    temp.style.lineWidth = lineWidth;
+                    temp.style.lineCap = lineCap;
+                    temp.style.lineJoin = lineJoin;
+                    temp.style.miterLimit = miterLimit;
+                    temp.style.shadowColour = shadowColour;
+                    temp.style.shadowBlur = shadowBlur;
+                    temp.style.shadowOffset = shadowOffset;
+                    
+                    return temp;
+                };
                 this.rectangle = function(
                     name=null, 
                     x=0, 
@@ -3119,6 +3110,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     temp.style.shadowColour = shadowColour;
                     temp.style.shadowBlur = shadowBlur;
                     temp.style.shadowOffset = shadowOffset;
+                    return temp;
+                };
+                this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
+                    var temp = canvas.core.arrangement.createElement('group');
+                    temp.name = name;
+                    temp.x = x; 
+                    temp.y = y;
+                    temp.angle = angle;
+                    temp.ignored = ignored;
                     return temp;
                 };
                 this.text = function(
@@ -3167,188 +3167,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
             
             this.display = new function(){
-                this.audio_meter_level = function(
-                    name='audio_meter_level',
-                    x, y, angle=0,
-                    width=20, height=60,
-                    markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                
-                    backingStyle='rgb(10,10,10)',
-                    levelStyles=['rgba(250,250,250,1)','rgb(100,100,100)'],
-                    markingStyle_fill='rgba(220,220,220,1)',
-                    markingStyle_font='1pt Courier New',
-                ){
-                    //elements
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //meter
-                            var meter = canvas.part.builder('meter_level','meter',{
-                                width:width, height:height, markings:markings,
-                                style:{
-                                    backing:backingStyle,
-                                    levels:levelStyles,
-                                    markingStyle_fill:markingStyle_fill,
-                                    markingStyle_font:markingStyle_font,
-                                },
-                            });
-                            object.append(meter);
-                
-                    //circuitry
-                        var converter = canvas.part.circuit.audio.audio2percentage()
-                        converter.newValue = function(val){object.set( val );};
-                
-                    //audio connections
-                        object.audioIn = function(){ return converter.audioIn(); }
-                
-                    //methods
-                        object.start = function(){ converter.start(); };
-                        object.stop = function(){ converter.stop(); };
-                
-                    return object;
-                };
-                this.glowbox_rect = function(
-                    name='glowbox_rect',
-                    x, y, width=30, height=30, angle=0,
-                    glowStyle = 'rgba(244,234,141,1)',
-                    dimStyle = 'rgba(80,80,80,1)'
-                ){
-                    //elements 
-                        var object = canvas.part.builder('group',name,{x:x, y:y});
-                        var rect = canvas.part.builder('rectangle','light',{ width:width, height:height, angle:angle, style:{fill:dimStyle} });
-                            object.append(rect);
-                
-                    //methods
-                        object.on = function(){
-                            rect.style.fill = glowStyle;
-                        };
-                        object.off = function(){
-                            rect.style.fill = dimStyle;
-                        };
-                
-                    return object;
-                };
-                this.level = function(
-                    name='level',
-                    x, y, angle=0,
-                    width=20, height=60,
-                    backingStyle='rgb(10,10,10)',
-                    levelStyles=['rgb(250,250,250)','rgb(200,200,200)']
-                ){
-                    var values = [];
-                
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //backing
-                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
-                                object.append(rect);
-                        //levels
-                            var levels = canvas.part.builder('group','levels');
-                                object.append(levels);
-                
-                            var level = [];
-                            for(var a = 0; a < levelStyles.length; a++){
-                                values.push(0);
-                                level.push( canvas.part.builder('rectangle','movingRect_'+a,{
-                                    y:height,
-                                    width:width, height:0,
-                                    style:{fill:levelStyles[a]},
-                                }) );
-                                levels.prepend(level[a]);
-                            }
-                
-                
-                        
-                
-                        //methods
-                            object.layer = function(value,layer=0){
-                                if(layer == undefined){return values;}
-                                if(value==null){return values[layer];}
-                
-                                value = (value>1 ? 1 : value);
-                                value = (value<0 ? 0 : value);
-                
-                                values[layer] = value;
-                
-                                level[layer].parameter.height( height*value );
-                                level[layer].parameter.y( height - height*value );
-                            };
-                
-                    return object;
-                };
-                this.meter_level = function(
-                    name='meter_level',
-                    x, y, angle=0,
-                    width=20, height=60,
-                    markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                
-                    backingStyle='rgb(10,10,10)',
-                    levelStyles=['rgba(250,250,250,1)','fill:rgb(100,100,100)'],
-                    markingStyle_fill='rgba(220,220,220,1)',
-                    markingStyle_font='1pt Courier New',
-                ){
-                
-                    //elements
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //level
-                            var level = canvas.part.builder('level','level',{
-                                width:width, height:height,
-                                style:{
-                                    backing:backingStyle,
-                                    levels:levelStyles,
-                                },
-                            });
-                            object.append(level);
-                
-                        //markings
-                            var marks = canvas.part.builder('group','markings');
-                                object.append(marks);
-                
-                            function makeMark(y){
-                                var markThickness = 0.2;
-                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                                return canvas.part.builder('polygon', 'mark_'+y, {points:path, style:{fill:markingStyle_fill}});
-                            }
-                            function insertText(y,text){
-                                return canvas.part.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
-                            }
-                
-                            for(var a = 0; a < markings.length; a++){
-                                marks.append( makeMark(height*(1-markings[a])) );
-                                marks.append( insertText(height*(1-markings[a]),markings[a]) );
-                            }
-                
-                
-                
-                
-                    //update intervals
-                        var framesPerSecond = 15;
-                        var coolDownSpeed = ( 3/4 )/10;
-                
-                        var coolDownSub = coolDownSpeed/framesPerSecond;
-                
-                        var coolDown = 0;
-                        var mostRecentSetting = 0;
-                        setInterval(function(){        
-                            level.layer(mostRecentSetting,0);
-                
-                            if(coolDown>0){coolDown-=coolDownSub;}
-                            level.layer(coolDown,1);
-                
-                            if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
-                        },1000/framesPerSecond);
-                
-                
-                
-                
-                    //method
-                        object.set = function(a){
-                            mostRecentSetting = a;
-                        };
-                
-                    return object;
-                };
                 this.rastorDisplay = function(
                     name='rastorDisplay',
                     x, y, angle=0, width=60, height=60,
@@ -3427,64 +3245,99 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return object;
                 };
-                this.readout_sixteenSegmentDisplay = function(
-                    name='readout_sixteenSegmentDisplay',
-                    x, y, width=100, height=30, count=5, angle=0,
-                    backgroundStyle='rgb(0,0,0)',
-                    glowStyle='rgb(200,200,200)',
-                    dimStyle='rgb(20,20,20)'
+                this.grapher_audioScope = function(
+                    name='grapher_audioScope',
+                    x, y, width=120, height=60, angle=0,
+                
+                    foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                    foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                
+                    backgroundStyle_stroke='rgba(0,100,0,1)',
+                    backgroundStyle_lineWidth=0.25,
+                    backgroundTextStyle_fill='rgba(0,150,0,1)',
+                    backgroundTextStyle_size=0.1,
+                    backgroundTextStyle_font='Helvetica',
+                
+                    backingStyle='rgba(50,50,50,1)',
                 ){
-                    //values
-                        var text = '';
-                        var displayInterval = null;
+                    //attributes
+                        var attributes = {
+                            analyser:{
+                                analyserNode: canvas.library.audio.context.createAnalyser(),
+                                timeDomainDataArray: null,
+                                frequencyData: null,
+                                refreshRate: 10,
+                                scopeRefreshInterval: null,
+                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                            },
+                            graph:{
+                                resolution: 256
+                            }
+                        };
+                        attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
+                        attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                        attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
                 
                     //elements 
                         //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y});
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //grapher
+                            var grapher = canvas.part.builder('grapher',name,{
+                                x:0, y:0, width:width, height:height,
+                                foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                backgroundStyle_stroke:backgroundStyle_stroke, 
+                                backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                backgroundTextStyle_size:backgroundTextStyle_size,
+                                backgroundTextStyle_font:backgroundTextStyle_font,
+                                backingStyle:backingStyle,
+                            });
+                            object.append(grapher);
                 
-                        //display units
-                            var units = [];
-                            for(var a = 0; a < count; a++){
-                                var temp = canvas.part.builder('sixteenSegmentDisplay', ''+a, {
-                                    x:(width/count)*a, width:width/count, height:height, 
-                                    style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                });
-                                object.append( temp );
-                                units.push(temp);
+                    //utility functions
+                        function render(){
+                            var numbers = [];
+                            attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
+                            for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
+                                numbers.push(
+                                    attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
+                                );
                             }
-                
-                    //methods
-                        object.text = function(a){
-                            if(a==null){return text;}
-                            text = a;
+                            grapher.draw(numbers);
+                        }
+                        function setBackground(){
+                            grapher.viewbox( {'l':-1.1,'h':1.1} );
+                            grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+                            grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
+                            grapher.drawBackground();
                         };
                 
-                        object.print = function(style){
-                            clearInterval(displayInterval);
-                            switch(style){
-                                case 'smart':
-                                    if(text.length > units.length){this.print('r2lSweep');}
-                                    else{this.print('regular')}
-                                break;
-                                case 'r2lSweep':
-                                    var displayIntervalTime = 100;
-                                    var displayStage = 0;
-                
-                                    displayInterval = setInterval(function(){
-                                        for(var a = units.length-1; a >= 0; a--){
-                                            units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                        }
-                
-                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                    },displayIntervalTime);
-                                break;
-                                case 'regular': default:
-                                    for(var a = 0; a < units.length; a++){
-                                        units[a].enterCharacter(text[a]);
-                                    }
-                                break;
+                    //controls
+                        object.start = function(){
+                            if(attributes.analyser.scopeRefreshInterval == null){
+                                attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
                             }
                         };
+                        object.stop = function(){
+                            clearInterval(attributes.analyser.scopeRefreshInterval);
+                            attributes.analyser.scopeRefreshInterval = null;
+                        };
+                        object.getNode = function(){return attributes.analyser.analyserNode;};
+                        object.resolution = function(res=null){
+                            if(res==null){return attributes.graph.resolution;}
+                            attributes.graph.resolution = res;
+                            this.stop();
+                            this.start();
+                        };
+                        object.refreshRate = function(a){
+                            if(a==null){return attributes.analyser.refreshRate;}
+                            attributes.analyser.refreshRate = a;
+                            this.stop();
+                            this.start();
+                        };
+                
+                    //setup
+                        setBackground();
                 
                     return object;
                 };
@@ -4465,6 +4318,66 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return object;      
                 };
+                this.glowbox_rect = function(
+                    name='glowbox_rect',
+                    x, y, width=30, height=30, angle=0,
+                    glowStyle = 'rgba(244,234,141,1)',
+                    dimStyle = 'rgba(80,80,80,1)'
+                ){
+                    //elements 
+                        var object = canvas.part.builder('group',name,{x:x, y:y});
+                        var rect = canvas.part.builder('rectangle','light',{ width:width, height:height, angle:angle, style:{fill:dimStyle} });
+                            object.append(rect);
+                
+                    //methods
+                        object.on = function(){
+                            rect.style.fill = glowStyle;
+                        };
+                        object.off = function(){
+                            rect.style.fill = dimStyle;
+                        };
+                
+                    return object;
+                };
+                this.audio_meter_level = function(
+                    name='audio_meter_level',
+                    x, y, angle=0,
+                    width=20, height=60,
+                    markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                
+                    backingStyle='rgb(10,10,10)',
+                    levelStyles=['rgba(250,250,250,1)','rgb(100,100,100)'],
+                    markingStyle_fill='rgba(220,220,220,1)',
+                    markingStyle_font='1pt Courier New',
+                ){
+                    //elements
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //meter
+                            var meter = canvas.part.builder('meter_level','meter',{
+                                width:width, height:height, markings:markings,
+                                style:{
+                                    backing:backingStyle,
+                                    levels:levelStyles,
+                                    markingStyle_fill:markingStyle_fill,
+                                    markingStyle_font:markingStyle_font,
+                                },
+                            });
+                            object.append(meter);
+                
+                    //circuitry
+                        var converter = canvas.part.circuit.audio.audio2percentage()
+                        converter.newValue = function(val){object.set( val );};
+                
+                    //audio connections
+                        object.audioIn = function(){ return converter.audioIn(); }
+                
+                    //methods
+                        object.start = function(){ converter.start(); };
+                        object.stop = function(){ converter.stop(); };
+                
+                    return object;
+                };
                 this.grapher = function(
                     name='grapher',
                     x, y, width=120, height=60, angle=0,
@@ -4487,8 +4400,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     backingStyle='rgba(50,50,50,1)',
                 ){
                     var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-                    var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], textPositionOffset:{x:1,y:-0.5}, printText:true };
-                    var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], textPositionOffset:{x:1,y:-0.5}, printText:true };
+                    var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                    var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
                     var foregroundElementsGroup = [];
                 
                     //elements 
@@ -4503,9 +4416,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         //foreground group
                             var foregroundGroup = canvas.part.builder( 'group', 'foreground' );
                             object.append(foregroundGroup);
-                        //stencle
-                            var stencle = canvas.part.builder('rectangle','stencle',{width:width, height:height});
-                            object.stencile(stencle);
+                        //stencil
+                            var stencil = canvas.part.builder('rectangle','stencil',{width:width, height:height});
+                            object.stencil(stencil);
                             object.clip(true);
                 
                     //graphics
@@ -4514,7 +4427,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                             //horizontal lines
                                 //calculate the x value for all parts of this section
-                                    var x = canvas.library.math.relativeDistance(width, viewbox.left,viewbox.right, ((viewbox.right-viewbox.left)/2 + viewbox.left) );
+                                    var x = canvas.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
                 
                                 //add all horizontal markings
                                     for(var a = 0; a < horizontalMarkings.points.length; a++){
@@ -4545,7 +4458,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                             //vertical lines
                                 //calculate the y value for all parts of this section
-                                    var y = height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, 0 );
+                                    var y = height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
                 
                                 //add all vertical markings
                                     for(var a = 0; a < verticalMarkings.points.length; a++){
@@ -4575,7 +4488,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             }
                                     }
                         }
-                        function drawForground(y,x,layer=0){
+                        function drawForeground(y,x,layer=0){
                             foregroundGroup.clear();
                 
                             //if both data sets of a layer are being set to undefined; set the whole layer to undefined
@@ -4653,8 +4566,81 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
                         };
                         object.drawBackground = function(){ drawBackground(); };
-                        object.drawForground = function(y,x,layer=0){ drawForground(y,x,layer); };
-                        object.draw = function(y,x,layer=0){ drawBackground(); drawForground(y,x,layer); };
+                        object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
+                        object.draw = function(y,x,layer=0){ drawBackground(); drawForeground(y,x,layer); };
+                
+                    return object;
+                };
+                this.meter_level = function(
+                    name='meter_level',
+                    x, y, angle=0,
+                    width=20, height=60,
+                    markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                
+                    backingStyle='rgb(10,10,10)',
+                    levelStyles=['rgba(250,250,250,1)','fill:rgb(100,100,100)'],
+                    markingStyle_fill='rgba(220,220,220,1)',
+                    markingStyle_font='1pt Courier New',
+                ){
+                
+                    //elements
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //level
+                            var level = canvas.part.builder('level','level',{
+                                width:width, height:height,
+                                style:{
+                                    backing:backingStyle,
+                                    levels:levelStyles,
+                                },
+                            });
+                            object.append(level);
+                
+                        //markings
+                            var marks = canvas.part.builder('group','markings');
+                                object.append(marks);
+                
+                            function makeMark(y){
+                                var markThickness = 0.2;
+                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
+                                return canvas.part.builder('polygon', 'mark_'+y, {points:path, style:{fill:markingStyle_fill}});
+                            }
+                            function insertText(y,text){
+                                return canvas.part.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
+                            }
+                
+                            for(var a = 0; a < markings.length; a++){
+                                marks.append( makeMark(height*(1-markings[a])) );
+                                marks.append( insertText(height*(1-markings[a]),markings[a]) );
+                            }
+                
+                
+                
+                
+                    //update intervals
+                        var framesPerSecond = 15;
+                        var coolDownSpeed = ( 3/4 )/10;
+                
+                        var coolDownSub = coolDownSpeed/framesPerSecond;
+                
+                        var coolDown = 0;
+                        var mostRecentSetting = 0;
+                        setInterval(function(){        
+                            level.layer(mostRecentSetting,0);
+                
+                            if(coolDown>0){coolDown-=coolDownSub;}
+                            level.layer(coolDown,1);
+                
+                            if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                        },1000/framesPerSecond);
+                
+                
+                
+                
+                    //method
+                        object.set = function(a){
+                            mostRecentSetting = a;
+                        };
                 
                     return object;
                 };
@@ -4753,105 +4739,532 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                     return object;
                 };
-                this.grapher_audioScope = function(
-                    name='grapher_audioScope',
-                    x, y, width=120, height=60, angle=0,
-                
-                    foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                    foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                
-                    backgroundStyle_stroke='rgba(0,100,0,1)',
-                    backgroundStyle_lineWidth=0.25,
-                    backgroundTextStyle_fill='rgba(0,150,0,1)',
-                    backgroundTextStyle_size=0.1,
-                    backgroundTextStyle_font='Helvetica',
-                
-                    backingStyle='rgba(50,50,50,1)',
+                this.readout_sixteenSegmentDisplay = function(
+                    name='readout_sixteenSegmentDisplay',
+                    x, y, width=100, height=30, count=5, angle=0,
+                    backgroundStyle='rgb(0,0,0)',
+                    glowStyle='rgb(200,200,200)',
+                    dimStyle='rgb(20,20,20)'
                 ){
-                    //attributes
-                        var attributes = {
-                            analyser:{
-                                analyserNode: canvas.library.audio.context.createAnalyser(),
-                                timeDomainDataArray: null,
-                                frequencyData: null,
-                                refreshRate: 10,
-                                scopeRefreshInterval: null,
-                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                            },
-                            graph:{
-                                resolution: 256
+                    //values
+                        var text = '';
+                        var displayInterval = null;
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y});
+                
+                        //display units
+                            var units = [];
+                            for(var a = 0; a < count; a++){
+                                var temp = canvas.part.builder('sixteenSegmentDisplay', ''+a, {
+                                    x:(width/count)*a, width:width/count, height:height, 
+                                    style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                });
+                                object.append( temp );
+                                units.push(temp);
+                            }
+                
+                    //methods
+                        object.text = function(a){
+                            if(a==null){return text;}
+                            text = a;
+                        };
+                
+                        object.print = function(style){
+                            clearInterval(displayInterval);
+                            switch(style){
+                                case 'smart':
+                                    if(text.length > units.length){this.print('r2lSweep');}
+                                    else{this.print('regular')}
+                                break;
+                                case 'r2lSweep':
+                                    var displayIntervalTime = 100;
+                                    var displayStage = 0;
+                
+                                    displayInterval = setInterval(function(){
+                                        for(var a = units.length-1; a >= 0; a--){
+                                            units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                        }
+                
+                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                    },displayIntervalTime);
+                                break;
+                                case 'regular': default:
+                                    for(var a = 0; a < units.length; a++){
+                                        units[a].enterCharacter(text[a]);
+                                    }
+                                break;
                             }
                         };
-                        attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
-                        attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                        attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                
+                    return object;
+                };
+                this.level = function(
+                    name='level',
+                    x, y, angle=0,
+                    width=20, height=60,
+                    backingStyle='rgb(10,10,10)',
+                    levelStyles=['rgb(250,250,250)','rgb(200,200,200)']
+                ){
+                    var values = [];
                 
                     //elements 
                         //main
                             var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //grapher
-                            var grapher = canvas.part.builder('grapher',name,{
-                                x:0, y:0, width:width, height:height,
-                                foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                backgroundStyle_stroke:backgroundStyle_stroke, 
-                                backgroundStyle_lineWidth:backgroundStyle_lineWidth,
-                                backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                backgroundTextStyle_size:backgroundTextStyle_size,
-                                backgroundTextStyle_font:backgroundTextStyle_font,
-                                backingStyle:backingStyle,
-                            });
-                            object.append(grapher);
+                        //backing
+                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+                                object.append(rect);
+                        //levels
+                            var levels = canvas.part.builder('group','levels');
+                                object.append(levels);
                 
-                    //utility functions
-                        function render(){
-                            var numbers = [];
-                            attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
-                            for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
-                                numbers.push(
-                                    attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
-                                );
+                            var level = [];
+                            for(var a = 0; a < levelStyles.length; a++){
+                                values.push(0);
+                                level.push( canvas.part.builder('rectangle','movingRect_'+a,{
+                                    y:height,
+                                    width:width, height:0,
+                                    style:{fill:levelStyles[a]},
+                                }) );
+                                levels.prepend(level[a]);
                             }
-                            grapher.draw(numbers);
-                        }
-                        function setBackground(){
-                            grapher.viewbox( {'l':-1.1,'h':1.1} );
-                            grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
-                            grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
-                            grapher.drawBackground();
-                        };
                 
-                    //controls
-                        object.start = function(){
-                            if(attributes.analyser.scopeRefreshInterval == null){
-                                attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
-                            }
-                        };
-                        object.stop = function(){
-                            clearInterval(attributes.analyser.scopeRefreshInterval);
-                            attributes.analyser.scopeRefreshInterval = null;
-                        };
-                        object.getNode = function(){return attributes.analyser.analyserNode;};
-                        object.resolution = function(res=null){
-                            if(res==null){return attributes.graph.resolution;}
-                            attributes.graph.resolution = res;
-                            this.stop();
-                            this.start();
-                        };
-                        object.refreshRate = function(a){
-                            if(a==null){return attributes.analyser.refreshRate;}
-                            attributes.analyser.refreshRate = a;
-                            this.stop();
-                            this.start();
-                        };
                 
-                    //setup
-                        setBackground();
+                        
+                
+                        //methods
+                            object.layer = function(value,layer=0){
+                                if(layer == undefined){return values;}
+                                if(value==null){return values[layer];}
+                
+                                value = (value>1 ? 1 : value);
+                                value = (value<0 ? 0 : value);
+                
+                                values[layer] = value;
+                
+                                level[layer].parameter.height( height*value );
+                                level[layer].parameter.y( height - height*value );
+                            };
                 
                     return object;
                 };
             };
             
             this.control = new function(){
+                this.rastorgrid = function(
+                    name='rastorgrid', 
+                    x, y, width=80, height=80, angle=0,
+                    xcount=5, ycount=5,
+                    backingStyle = 'rgba(200,200,200,1)',
+                    checkStyle = 'rgba(150,150,150,1)',
+                    backingGlowStyle = 'rgba(220,220,220,1)',
+                    checkGlowStyle = 'rgba(220,220,220,1)',
+                    onchange = function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //checkboxes
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    var temp = canvas.part.builder('checkbox_rect',y+'_'+x,{
+                                        x:x*(width/xcount),  y:y*(height/ycount), 
+                                        width:width/xcount,  height:height/ycount, 
+                                        style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
+                                        onchange:function(){ if(object.onchange){object.onchange(object.get());} },
+                                    });
+                                    object.append(temp);
+                                }
+                            }
+                
+                
+                
+                
+                    //methods
+                        object.box = function(x,y){ return object.getChildByName(y+'_'+x); };
+                        object.get = function(){
+                            var outputArray = [];
+                    
+                            for(var y = 0; y < ycount; y++){
+                                var temp = [];
+                                for(var x = 0; x < xcount; x++){
+                                    temp.push(this.box(x,y).get());
+                                }
+                                outputArray.push(temp);
+                            }
+                    
+                            return outputArray;
+                        };
+                        object.set = function(value, update=true){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(value[y][x],false);
+                                }
+                            }
+                        };
+                        object.clear = function(){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(false,false);
+                                }
+                            }
+                        };
+                        object.light = function(x,y,state){
+                            object.box(x,y).light(state);
+                        };
+                
+                
+                
+                
+                    //callback
+                        object.onchange = onchange;
+                
+                    return object;
+                };
+                this.needleOverlay = function(
+                    name='needleOverlay',
+                    x, y, width=120, height=60, angle=0, needleWidth=0.003125, selectNeedle=true, selectionArea=true,
+                    needleStyles=[
+                        'rgba(240, 240, 240, 1)',
+                        'rgba(255, 231, 114, 1)'
+                    ],
+                    onchange=function(needle,value){}, 
+                    onrelease=function(needle,value){}, 
+                    selectionAreaToggle=function(bool){},
+                ){
+                    var needleData = {};
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //backing
+                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                            object.append(backing);
+                        //control objects
+                            var controlObjectsGroup = canvas.part.builder('group','controlObjectsGroup');
+                            object.append(controlObjectsGroup);
+                                var controlObjectsGroup_back = canvas.part.builder('group','back');
+                                controlObjectsGroup.append(controlObjectsGroup_back);
+                                var controlObjectsGroup_front = canvas.part.builder('group','front');
+                                controlObjectsGroup.append(controlObjectsGroup_front);
+                
+                
+                            var invisibleHandleWidth = width*needleWidth + width*0.005;
+                            var controlObjects = {};
+                            //lead
+                                controlObjects.lead = canvas.part.builder('group','lead');
+                                controlObjects.lead.append( canvas.part.builder('rectangle','handle',{
+                                    width:needleWidth*width,
+                                    height:height,
+                                    style:{ fill:needleStyles[0] },
+                                }));
+                                controlObjects.lead.append( canvas.part.builder('rectangle','invisibleHandle',{
+                                    x:(width*needleWidth - invisibleHandleWidth)/2, 
+                                    width:invisibleHandleWidth,
+                                    height:height,
+                                    style:{ fill:'rgba(255,0,0,0)' },
+                                }));
+                            //selection_A
+                                controlObjects.selection_A = canvas.part.builder('group','selection_A');
+                                controlObjects.selection_A.append( canvas.part.builder('rectangle','handle',{
+                                    width:needleWidth*width,
+                                    height:height,
+                                    style:{fill:needleStyles[1]},
+                                }));
+                                controlObjects.selection_A.append( canvas.part.builder('rectangle','invisibleHandle',{
+                                    x:(width*needleWidth - invisibleHandleWidth)/2, 
+                                    width:invisibleHandleWidth,height:height,
+                                    style:{fill:'rgba(255,0,0,0)'},
+                                }));
+                            //selection_B
+                                controlObjects.selection_B = canvas.part.builder('group','selection_B');
+                                controlObjects.selection_B.append( canvas.part.builder('rectangle','handle',{
+                                    width:needleWidth*width,
+                                    height:height,
+                                    style:{fill:needleStyles[1]},
+                                }));
+                                controlObjects.selection_B.append( canvas.part.builder('rectangle','invisibleHandle',{
+                                    x:(width*needleWidth - invisibleHandleWidth)/2, 
+                                    width:invisibleHandleWidth,height:height,
+                                    style:{fill:'rgba(255,0,0,0)'},
+                                }));
+                            //selection_area
+                                controlObjects.selection_area = canvas.part.builder('rectangle','selection_area',{
+                                    height:height,
+                                    style:{fill:canvas.library.misc.blendColours(needleStyles[1],'rgba(0,0,0,0)',0.5)},
+                                });
+                
+                    //internal functions
+                        object.__calculationAngle = angle;
+                        var leadNeedle_grappled = false;
+                        var selectionArea_grappled = false;
+                        var selectionNeedleA_grappled = false;
+                        var selectionNeedleB_grappled = false;
+                        function currentMousePosition_x(event){
+                            return event.x*Math.cos(object.__calculationAngle) - event.y*Math.sin(object.__calculationAngle);
+                        }
+                        function needleJumpTo(needle,location){
+                            var group = needle == 'lead' ? controlObjectsGroup_front : controlObjectsGroup_back;
+                
+                            //if the location is wrong, remove the needle and return
+                                if(location == undefined || location < 0 || location > 1){
+                                    group.remove(controlObjects[needle]);
+                                    delete needleData[needle];
+                                    return;
+                                }
+                
+                            //if the needle isn't in the scene, add it
+                                if( !group.contains(controlObjects[needle]) ){
+                                    group.append(controlObjects[needle]);
+                                }
+                
+                            //actually set the location of the needle (adjusting for the size of needle)
+                                controlObjects[needle].parameter.x( location*width - width*needleWidth*location );
+                            //save this value
+                                needleData[needle] = location;
+                        }
+                        function computeSelectionArea(){
+                            //if the selection needles' data are missing (or they are the same position) remove the area element and return
+                                if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
+                                    controlObjectsGroup_back.remove(controlObjects.selection_area);
+                                    if(object.selectionAreaToggle){object.selectionAreaToggle(false);}
+                                    delete needleData.selection_area;
+                                    return;
+                                }
+                
+                            //if the area isn't in the scene, add it
+                                if( !controlObjectsGroup_back.contains(controlObjects.selection_area) ){
+                                    controlObjectsGroup_back.append(controlObjects.selection_area);
+                                    if(object.selectionAreaToggle){object.selectionAreaToggle(true);}
+                                }
+                
+                            //compute area position and size
+                                if(needleData.selection_A < needleData.selection_B){
+                                    var A = needleData.selection_A;
+                                    var B = needleData.selection_B;
+                                }else{
+                                    var A = needleData.selection_B;
+                                    var B = needleData.selection_A;
+                                }
+                                var start = A - needleWidth*A + needleWidth
+                                var area = B - needleWidth*B - start; 
+                                if(area < 0){area = 0}
+                
+                                controlObjects.selection_area.parameter.x(width*start);
+                                controlObjects.selection_area.parameter.width(width*area);
+                        }
+                        function select(position,update=true){
+                            if(!selectNeedle){return;}
+                            //if there's no input, return the value
+                            //if input is out of bounds, remove the needle
+                            //otherwise, set the position
+                            if(position == undefined){ return needleData.lead; }
+                            else if(position > 1 || position < 0){ needleJumpTo('lead'); }
+                            else{ needleJumpTo('lead',position); }
+                
+                            if(update && object.onchange != undefined){object.onchange('lead',position);}
+                        }
+                        function area(positionA,positionB,update=true){
+                            if(!selectionArea){return;}
+                
+                            //if there's no input, return the values
+                            //if input is out of bounds, remove the needles
+                            //otherwise, set the position
+                                if(positionA == undefined || positionB == undefined){
+                                    return {A:needleData.selection_A, B:needleData.selection_B};
+                                }else if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 ){
+                                    needleJumpTo('selection_A');
+                                    needleJumpTo('selection_B');
+                                }else{
+                                    needleJumpTo('selection_A',positionA);
+                                    needleJumpTo('selection_B',positionB);
+                                }
+                
+                            //you always gotta compute the selection area
+                                computeSelectionArea();
+                
+                            if(update && object.onchange != undefined){object.onchange('selection_A',positionA);}
+                            if(update && object.onchange != undefined){object.onchange('selection_B',positionB);}
+                        }
+                
+                    //interaction
+                        //generic onmousedown code for interaction
+                            backing.onmousedown = function(x,y,event){};
+                            controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+                            controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+                            controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                leadNeedle_grappled = true;
+                
+                                var initialValue = needleData.lead;
+                                var initialX = currentMousePosition_x(event);
+                                var mux = width - width*needleWidth;
+                
+                                canvas.system.mouse.mouseInteractionHandler(
+                                    function(event){
+                                        var numerator = initialX - currentMousePosition_x(event);
+                                        var divider = canvas.core.viewport.scale();
+                                        var location = initialValue - numerator/(divider*mux);
+                                        location = location < 0 ? 0 : location;
+                                        location = location > 1 ? 1 : location;
+                                        select(location);
+                                    },
+                                    function(event){
+                                        var numerator = initialX - currentMousePosition_x(event);
+                                        var divider = canvas.core.viewport.scale();
+                                        var location = initialValue - numerator/(divider*mux);
+                                        location = location < 0 ? 0 : location;
+                                        location = location > 1 ? 1 : location;
+                                        leadNeedle_grappled = false;
+                                        select(location);
+                                        if(object.onrelease != undefined){object.onrelease('lead',location);}
+                                    },       
+                                );
+                            };
+                
+                            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+                            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+                            controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                selectionNeedleA_grappled = true;
+                
+                                var initialValue = needleData.selection_A;
+                                var initialX = currentMousePosition_x(event);
+                                var mux = width - width*needleWidth;
+                
+                                canvas.system.mouse.mouseInteractionHandler(
+                                    function(event){
+                                        var numerator = initialX - currentMousePosition_x(event);
+                                        var divider = canvas.core.viewport.scale();
+                                        var location = initialValue - numerator/(divider*mux);
+                                        location = location < 0 ? 0 : location;
+                                        location = location > 1 ? 1 : location;
+                                        area(location,needleData.selection_B);
+                                    },
+                                    function(event){
+                                        var numerator = initialX - currentMousePosition_x(event);
+                                        var divider = canvas.core.viewport.scale();
+                                        var location = initialValue - numerator/(divider*mux);
+                                        location = location < 0 ? 0 : location;
+                                        location = location > 1 ? 1 : location;
+                                        selectionNeedleA_grappled = false;
+                                        area(location,needleData.selection_B);
+                                        if(object.onrelease != undefined){object.onrelease('selection_A',location);}
+                                    },       
+                                );
+                            };
+                
+                            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+                            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+                            controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                selectionNeedleB_grappled = true;
+                
+                                var initialValue = needleData.selection_B;
+                                var initialX = currentMousePosition_x(event);
+                                var mux = width - width*needleWidth;
+                
+                                canvas.system.mouse.mouseInteractionHandler(
+                                    function(event){
+                                        var numerator = initialX - currentMousePosition_x(event);
+                                        var divider = canvas.core.viewport.scale();
+                                        var location = initialValue - numerator/(divider*mux);
+                                        location = location < 0 ? 0 : location;
+                                        location = location > 1 ? 1 : location;
+                                        area(needleData.selection_A,location);
+                                    },
+                                    function(event){
+                                        var numerator = initialX - currentMousePosition_x(event);
+                                        var divider = canvas.core.viewport.scale();
+                                        var location = initialValue - numerator/(divider*mux);
+                                        location = location < 0 ? 0 : location;
+                                        location = location > 1 ? 1 : location;
+                                        selectionNeedleB_grappled = false;
+                                        area(needleData.selection_A,location);
+                                        if(object.onrelease != undefined){object.onrelease('selection_B',location);}
+                                    },       
+                                );
+                            };
+                
+                            controlObjects.selection_area.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('grab');};
+                            controlObjects.selection_area.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+                            controlObjects.selection_area.onmousedown = function(x,y,event){
+                                canvas.core.viewport.cursor('grabbing');
+                                selectionArea_grappled = true;
+                
+                                var areaSize = needleData.selection_B - needleData.selection_A;
+                                var initialValues = {A:needleData.selection_A, B:needleData.selection_B};
+                                var initialX = currentMousePosition_x(event);
+                                var mux = width - width*needleWidth;
+                
+                                canvas.system.mouse.mouseInteractionHandler(
+                                    function(event){
+                                        var numerator = initialX - currentMousePosition_x(event);
+                                        var divider = canvas.core.viewport.scale();
+                
+                                        var location = {
+                                            A: initialValues.A - numerator/(divider*mux),
+                                            B: initialValues.B - numerator/(divider*mux),
+                                        };
+                
+                                        if( location.A > 1 ){ location.A = 1; location.B = 1 + areaSize; }
+                                        if( location.B > 1 ){ location.B = 1; location.A = 1 - areaSize; }
+                                        if( location.A < 0 ){ location.A = 0; location.B = areaSize; }
+                                        if( location.B < 0 ){ location.B = 0; location.A = -areaSize; }
+                
+                                        area(location.A,location.B);
+                                    },
+                                    function(event){
+                                        canvas.core.viewport.cursor('grab');
+                                        var numerator = initialX - currentMousePosition_x(event);
+                                        var divider = canvas.core.viewport.scale();
+                
+                                        var location = {
+                                            A: initialValues.A - numerator/(divider*mux),
+                                            B: initialValues.B - numerator/(divider*mux),
+                                        };
+                
+                                        if( location.A > 1 ){ location.A = 1; location.B = 1 + areaSize; }
+                                        if( location.B > 1 ){ location.B = 1; location.A = 1 - areaSize; }
+                                        if( location.A < 0 ){ location.A = 0; location.B = areaSize; }
+                                        if( location.B < 0 ){ location.B = 0; location.A = -areaSize; }
+                
+                                        selectionArea_grappled = false;
+                                        area(location.A,location.B);
+                                        if(object.onrelease != undefined){object.onrelease('selection_A',location.A);}
+                                        if(object.onrelease != undefined){object.onrelease('selection_B',location.B);}
+                                    },
+                                );
+                
+                                
+                            };
+                
+                        //doubleclick to destroy selection area
+                            controlObjects.selection_A.ondblclick = function(x,y,event,shape){ area(-1,-1); };
+                            controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
+                            controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
+                    
+                    //control
+                        object.select = function(position,update=true){
+                            if(position == undefined){return select();}
+                
+                            if(leadNeedle_grappled){return;}
+                            select(position,update);
+                        };
+                        object.area = function(positionA,positionB,update=true){
+                            if(positionA == undefined && positionB == undefined){ return area(); }
+                            if(selectionArea_grappled){return;}
+                            if(positionA != undefined && selectionNeedleA_grappled){return;}
+                            if(positionB != undefined && selectionNeedleB_grappled){return;}
+                            area(positionA,positionB,update);
+                        };
+                
+                    //callback
+                        object.onchange = onchange;
+                        object.onrelease = onrelease;
+                        object.selectionAreaToggle = selectionAreaToggle;
+                        
+                    return object;
+                };
                 this.button_rect = function(
                     name='button_rect',
                     x, y, width=30, height=20, angle=0,
@@ -5188,6 +5601,143 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return object;
                 };
+                this.slide = function(
+                    name='slide', 
+                    x, y, width=10, height=95, angle=0,
+                    handleHeight=0.1, value=0, resetValue=-1,
+                    handleStyle = 'rgba(200,200,200,1)',
+                    backingStyle = 'rgba(150,150,150,1)',
+                    slotStyle = 'rgba(50,50,50,1)',
+                    invisibleHandleStyle = 'rgba(255,0,0,0)',
+                    onchange=function(){},
+                    onrelease=function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //backing and slot group
+                            var backingAndSlot = canvas.part.builder('group','backingAndSlotGroup');
+                            object.append(backingAndSlot);
+                            //backing
+                                var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                                backingAndSlot.append(backing);
+                            //slot
+                                var slot = canvas.part.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
+                                backingAndSlot.append(slot);
+                            //backing and slot cover
+                                var backingAndSlotCover = canvas.part.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                backingAndSlot.append(backingAndSlotCover);
+                        //handle
+                            var handle = canvas.part.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
+                            object.append(handle);
+                        //invisible handle
+                            var invisibleHandleHeight = height*handleHeight + height*0.01;
+                            var invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                            object.append(invisibleHandle);
+                
+                
+                
+                
+                    //graphical adjust
+                        function set(a,update=true){
+                            a = (a>1 ? 1 : a);
+                            a = (a<0 ? 0 : a);
+                
+                            if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                            value = a;
+                            handle.y = a*height*(1-handleHeight);
+                            invisibleHandle.y = a*height*(1-handleHeight);
+                
+                            handle.computeExtremities();
+                            invisibleHandle.computeExtremities();
+                        }
+                        object.__calculationAngle = angle;
+                        function currentMousePosition(event){
+                            return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
+                        }
+                
+                
+                
+                
+                    //methods
+                        var grappled = false;
+                
+                        object.set = function(value,update){
+                            if(grappled){return;}
+                            set(value,update);
+                        };
+                        object.get = function(){return value;};
+                
+                
+                
+                
+                    //interaction
+                        object.ondblclick = function(){
+                            if(resetValue<0){return;}
+                            if(grappled){return;}
+                
+                            set(resetValue);
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        object.onwheel = function(){
+                            if(grappled){return;}
+                
+                            var move = event.deltaY/100;
+                            var globalScale = canvas.core.viewport.scale();
+                            set( value + move/(10*globalScale) );
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        backingAndSlot.onclick = function(x,y,event){
+                            if(grappled){return;}
+                
+                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                var offset = backingAndSlot.getOffset();
+                                var delta = {
+                                    x: x - (backingAndSlot.x     + offset.x),
+                                    y: y - (backingAndSlot.y     + offset.y),
+                                    a: 0 - (backingAndSlot.angle + offset.a),
+                                };
+                                var d = canvas.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                
+                            //use the distance to calculate the correct value to set the slide to
+                            //taking into account the slide handle's size also
+                                var value = d + 0.5*handleHeight*((2*d)-1);
+                
+                            set(value);
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        invisibleHandle.onmousedown = function(x,y,event){
+                            grappled = true;
+                
+                            var initialValue = value;
+                            var initialY = currentMousePosition(event);
+                            var mux = height - height*handleHeight;
+                
+                            canvas.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    var numerator = initialY-currentMousePosition(event);
+                                    var divider = canvas.core.viewport.scale();
+                                    set( initialValue - numerator/(divider*mux) );
+                                },
+                                function(event){
+                                    var numerator = initialY-currentMousePosition(event);
+                                    var divider = canvas.core.viewport.scale();
+                                    object.onrelease(initialValue - numerator/(divider*mux));
+                                    grappled = false;
+                                }
+                            );
+                        };
+                
+                
+                
+                
+                    //callbacks
+                        object.onchange = onchange; 
+                        object.onrelease = onrelease;
+                
+                    return object;
+                };
                 this.dial_continuous = function(
                     name='dial_continuous',
                     x, y, r=15, angle=0,
@@ -5300,6 +5850,450 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     //setup
                         set(0);
+                
+                    return object;
+                };
+                this.slidePanel = function(
+                    name='slidePanel', 
+                    x, y, width=80, height=95, angle=0,
+                    handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                    handleStyle = 'rgba(200,200,200,1)',
+                    backingStyle = 'rgba(150,150,150,1)',
+                    slotStyle = 'rgba(50,50,50,1)'
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //slides
+                            for(var a = 0; a < count; a++){
+                                var temp = canvas.part.builder(
+                                    'slide', 'slide_'+a, {
+                                        x:a*(width/count), y:0,
+                                        width:width/count, height:height,
+                                        value:startValue, resetValue:resetValue,
+                                        style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
+                                        function(value){ object.onchange(this.id,value); },
+                                        function(value){ object.onrelease(this.id,value); },
+                                    }
+                                );
+                                // temp.dotFrame = true;
+                                temp.__calculationAngle = angle;
+                                object.append(temp);
+                            }
+                
+                    return object;
+                };
+                this.list = function(
+                    name='list', 
+                    x, y, width=50, height=100, angle=0,
+                    list=[],
+                
+                    itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                    active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                
+                    itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                    breakHeightMux=0.0025, breakWidthMux=0.9, 
+                    spacingHeightMux=0.005,
+                    backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
+                
+                    text_font = '5pt Arial',
+                    text_textBaseline = 'alphabetic',
+                    text_fill = 'rgba(0,0,0,1)',
+                    text_stroke = 'rgba(0,0,0,0)',
+                    text_lineWidth = 1,
+                
+                    item__off__fill=                          'rgba(180,180,180,1)',
+                    item__off__stroke=                        'rgba(0,0,0,0)',
+                    item__off__lineWidth=                     0,
+                    item__up__fill=                           'rgba(200,200,200,1)',
+                    item__up__stroke=                         'rgba(0,0,0,0)',
+                    item__up__lineWidth=                      0,
+                    item__press__fill=                        'rgba(230,230,230,1)',
+                    item__press__stroke=                      'rgba(0,0,0,0)',
+                    item__press__lineWidth=                   0,
+                    item__select__fill=                       'rgba(200,200,200,1)',
+                    item__select__stroke=                     'rgba(120,120,120,1)',
+                    item__select__lineWidth=                  2,
+                    item__select_press__fill=                 'rgba(230,230,230,1)',
+                    item__select_press__stroke=               'rgba(120,120,120,1)',
+                    item__select_press__lineWidth=            2,
+                    item__glow__fill=                         'rgba(220,220,220,1)',
+                    item__glow__stroke=                       'rgba(0,0,0,0)',
+                    item__glow__lineWidth=                    0,
+                    item__glow_press__fill=                   'rgba(250,250,250,1)',
+                    item__glow_press__stroke=                 'rgba(0,0,0,0)',
+                    item__glow_press__lineWidth=              0,
+                    item__glow_select__fill=                  'rgba(220,220,220,1)',
+                    item__glow_select__stroke=                'rgba(120,120,120,1)',
+                    item__glow_select__lineWidth=             2,
+                    item__glow_select_press__fill=            'rgba(250,250,250,1)',
+                    item__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                    item__glow_select_press__lineWidth=       2,
+                    item__hover__fill=                        'rgba(220,220,220,1)',
+                    item__hover__stroke=                      'rgba(0,0,0,0)',
+                    item__hover__lineWidth=                   0,
+                    item__hover_press__fill=                  'rgba(240,240,240,1)',
+                    item__hover_press__stroke=                'rgba(0,0,0,0)',
+                    item__hover_press__lineWidth=             0,
+                    item__hover_select__fill=                 'rgba(220,220,220,1)',
+                    item__hover_select__stroke=               'rgba(120,120,120,1)',
+                    item__hover_select__lineWidth=            2,
+                    item__hover_select_press__fill=           'rgba(240,240,240,1)',
+                    item__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                    item__hover_select_press__lineWidth=      2,
+                    item__hover_glow__fill=                   'rgba(240,240,240,1)',
+                    item__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                    item__hover_glow__lineWidth=              0,
+                    item__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                    item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                    item__hover_glow_press__lineWidth=        0,
+                    item__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                    item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                    item__hover_glow_select__lineWidth=       2,
+                    item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                    item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                    item__hover_glow_select_press__lineWidth= 2,
+                
+                    onenter=function(){},
+                    onleave=function(){},
+                    onpress=function(){},
+                    ondblpress=function(){},
+                    onrelease=function(){},
+                    onselection=function(){},
+                    onpositionchange=function(){},
+                ){
+                    //state
+                        var itemArray = [];
+                        var selectedItems = [];
+                        var lastNonShiftClicked = 0;
+                        var position = 0;
+                        var calculatedListHeight;
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //backing
+                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{
+                                fill:backing_style,
+                            }});
+                            object.append(backing);
+                        //item collection
+                            var itemCollection = canvas.part.builder('group','itemCollection');
+                            object.append(itemCollection);
+                            function refreshList(){
+                                //clean out all values
+                                    itemArray = [];
+                                    itemCollection.clear();
+                                    selectedItems = [];
+                                    position = 0;
+                                    lastNonShiftClicked = 0;
+                
+                                //populate list
+                                    var accumulativeHeight = 0;
+                                    for(var a = 0; a < list.length; a++){
+                                        switch(list[a]){
+                                            case 'space':
+                                                var temp = canvas.part.builder( 'rectangle', ''+a, {
+                                                    x:0, y:accumulativeHeight,
+                                                    width:width, height:height*spacingHeightMux,
+                                                    style:{fill:'rgba(255,0,0,0)'}
+                                                });
+                
+                                                accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                itemCollection.append( temp );
+                                            break;
+                                            case 'break':
+                                                var temp = canvas.part.builder( 'rectangle', ''+a, {
+                                                    x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                    width:width*breakWidthMux, height:height*breakHeightMux,
+                                                    style:{fill:break_style}
+                                                });
+                
+                                                accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                itemCollection.append( temp );
+                                            break;
+                                            default:
+                                                var temp = canvas.part.builder( 'button_rect', ''+a, {
+                                                    x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                    width:width*itemWidthMux, height:height*itemHeightMux, 
+                                                    text_left: list[a].text_left,
+                                                    text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                                                    text_right: list[a].text_right,
+                
+                                                    textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
+                                                    active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                
+                                                    style:{
+                                                        text_font:text_font,
+                                                        text_textBaseline:text_textBaseline,
+                                                        text_fill:text_fill,
+                                                        text_stroke:text_stroke,
+                                                        text_lineWidth:text_lineWidth,
+                
+                                                        item__off__fill:                            item__off__fill,
+                                                        item__off__stroke:                          item__off__stroke,
+                                                        item__off__lineWidth:                       item__off__lineWidth,
+                                                        item__up__fill:                             item__up__fill,
+                                                        item__up__stroke:                           item__up__stroke,
+                                                        item__up__lineWidth:                        item__up__lineWidth,
+                                                        item__press__fill:                          item__press__fill,
+                                                        item__press__stroke:                        item__press__stroke,
+                                                        item__press__lineWidth:                     item__press__lineWidth,
+                                                        item__select__fill:                         item__select__fill,
+                                                        item__select__stroke:                       item__select__stroke,
+                                                        item__select__lineWidth:                    item__select__lineWidth,
+                                                        item__select_press__fill:                   item__select_press__fill,
+                                                        item__select_press__stroke:                 item__select_press__stroke,
+                                                        item__select_press__lineWidth:              item__select_press__lineWidth,
+                                                        item__glow__fill:                           item__glow__fill,
+                                                        item__glow__stroke:                         item__glow__stroke,
+                                                        item__glow__lineWidth:                      item__glow__lineWidth,
+                                                        item__glow_press__fill:                     item__glow_press__fill,
+                                                        item__glow_press__stroke:                   item__glow_press__stroke,
+                                                        item__glow_press__lineWidth:                item__glow_press__lineWidth,
+                                                        item__glow_select__fill:                    item__glow_select__fill,
+                                                        item__glow_select__stroke:                  item__glow_select__stroke,
+                                                        item__glow_select__lineWidth:               item__glow_select__lineWidth,
+                                                        item__glow_select_press__fill:              item__glow_select_press__fill,
+                                                        item__glow_select_press__stroke:            item__glow_select_press__stroke,
+                                                        item__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
+                                                        item__hover__fill:                          item__hover__fill,
+                                                        item__hover__stroke:                        item__hover__stroke,
+                                                        item__hover__lineWidth:                     item__hover__lineWidth,
+                                                        item__hover_press__fill:                    item__hover_press__fill,
+                                                        item__hover_press__stroke:                  item__hover_press__stroke,
+                                                        item__hover_press__lineWidth:               item__hover_press__lineWidth,
+                                                        item__hover_select__fill:                   item__hover_select__fill,
+                                                        item__hover_select__stroke:                 item__hover_select__stroke,
+                                                        item__hover_select__lineWidth:              item__hover_select__lineWidth,
+                                                        item__hover_select_press__fill:             item__hover_select_press__fill,
+                                                        item__hover_select_press__stroke:           item__hover_select_press__stroke,
+                                                        item__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
+                                                        item__hover_glow__fill:                     item__hover_glow__fill,
+                                                        item__hover_glow__stroke:                   item__hover_glow__stroke,
+                                                        item__hover_glow__lineWidth:                item__hover_glow__lineWidth,
+                                                        item__hover_glow_press__fill:               item__hover_glow_press__fill,
+                                                        item__hover_glow_press__stroke:             item__hover_glow_press__stroke,
+                                                        item__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
+                                                        item__hover_glow_select__fill:              item__hover_glow_select__fill,
+                                                        item__hover_glow_select__stroke:            item__hover_glow_select__stroke,
+                                                        item__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
+                                                        item__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
+                                                        item__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
+                                                        item__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
+                                                    }
+                                                });
+                
+                                                temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                temp.onrelease = function(a){
+                                                    return function(){
+                                                        if( list[a].function ){ list[a].function(); }
+                                                        object.onrelease(a);
+                                                    }
+                                                }(a);
+                                                temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                
+                                                accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                itemCollection.append( temp );
+                                                itemArray.push( temp );
+                                            break;
+                                        }
+                                    }
+                
+                                return accumulativeHeight - height*itemSpacingMux;
+                            }
+                            calculatedListHeight = refreshList();
+                        //cover
+                            var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                            object.append(cover);
+                        //stencil
+                            var stencil = canvas.part.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                            object.stencil(stencil);
+                            object.clip(true);
+                
+                
+                    //interaction
+                        cover.onwheel = function(x,y,event){
+                            var move = event.deltaY/100;
+                            object.position( object.position() + move/10 );
+                        };
+                    
+                    //controls
+                        object.position = function(a,update=true){
+                            if(a == undefined){return position;}
+                            a = a < 0 ? 0 : a;
+                            a = a > 1 ? 1 : a;
+                            position = a;
+                
+                            if( calculatedListHeight < height ){return;}
+                            var movementSpace = calculatedListHeight - height;
+                            itemCollection.parameter.y( -a*movementSpace );
+                            
+                            if(update&&this.onpositionchange){this.onpositionchange(a);}
+                        };
+                        object.select = function(a,state,event,update=true){
+                            if(!selectable){return;}
+                
+                            //where multi selection is not allowed
+                                if(!multiSelect){
+                                    //where we want to select an item, which is not already selected
+                                        if(state && !selectedItems.includes(a) ){
+                                            //deselect all other items
+                                                while( selectedItems.length > 0 ){
+                                                    itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                    selectedItems.shift();
+                                                }
+                
+                                            //select current item
+                                                selectedItems.push(a);
+                
+                                    //where we want to deselect an item that is selected
+                                        }else if(!state && selectedItems.includes(a)){
+                                            selectedItems = [];
+                                        }
+                
+                                //do not update the item itself, in the case that it was the item that sent this command
+                                //(which would cause a little loop)
+                                    if(update){ itemCollection.children[a].select(true,undefined,false); }
+                
+                            //where multi selection is allowed
+                                }else{
+                                    //wherer range-selection is to be done
+                                        if( event != undefined && event.shiftKey ){
+                                            //gather top and bottom item
+                                            //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                var min = Math.min(lastNonShiftClicked, a);
+                                                var max = Math.max(lastNonShiftClicked, a);
+                                                for(var b = 0; b < itemArray.length; b++){
+                                                    if( itemArray[b].name == ''+min ){min = b;}
+                                                    if( itemArray[b].name == ''+max ){max = b;}
+                                                }
+                
+                                            //deselect all outside the range
+                                                selectedItems = [];
+                                                for(var b = 0; b < itemArray.length; b++){
+                                                    if( b > max || b < min ){
+                                                        if( itemArray[b].select() ){
+                                                            itemArray[b].select(false,undefined,false);
+                                                        }
+                                                    }
+                                                }
+                
+                                            //select those within the range (that aren't already selected)
+                                                for(var b = min; b <= max; b++){
+                                                    if( !itemArray[b].select() ){
+                                                        itemArray[b].select(true,undefined,false);
+                                                        selectedItems.push(b);
+                                                    }
+                                                }
+                                    //where range-selection is not to be done
+                                        }else{
+                                            if(update){ itemArray[a].select(state); }
+                                            if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                            else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                            lastNonShiftClicked = a;
+                                        }
+                                }
+                
+                            object.onselection(selectedItems);
+                        };
+                        object.add = function(item){
+                            list.push(item);
+                            calculatedListHeight = refreshList();
+                        };
+                        object.remove = function(a){
+                            list.splice(a,1);
+                            calculatedListHeight = refreshList();
+                        };
+                
+                    //callbacks
+                        object.onenter = onenter;
+                        object.onleave = onleave;
+                        object.onpress = onpress;
+                        object.ondblpress = ondblpress;
+                        object.onrelease = onrelease;
+                        object.onselection = onselection;
+                        object.onpositionchange = onpositionchange;
+                        
+                    return object;
+                };
+                this.grapher_waveWorkspace = function(
+                    name='grapher_waveWorkspace',
+                    x, y, width=120, height=60, angle=0, selectNeedle=true, selectionArea=true,
+                
+                    foregroundStyles=[
+                        {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                        {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                    ],
+                    foregroundTextStyles=[
+                        {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                        {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+                    ],
+                
+                    backgroundStyle_stroke='rgba(0,100,0,1)',
+                    backgroundStyle_lineWidth=0.25,
+                    backgroundTextStyle_fill='rgba(0,150,0,1)',
+                    backgroundTextStyle_size=0.1,
+                    backgroundTextStyle_font='Helvetica',
+                
+                    backingStyle='rgba(50,50,50,1)',
+                
+                    onchange=function(needle,value){}, 
+                    onrelease=function(needle,value){}, 
+                    selectionAreaToggle=function(bool){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //main graph
+                            var graph = canvas.part.builder('grapher', 'graph', {
+                                width:width, height:height,
+                                style:{
+                                    foregrounds:foregroundStyles,   
+                                    foregroundText:foregroundTextStyles,
+                                    background_stroke:backgroundStyle_stroke,
+                                    background_lineWidth:backgroundStyle_lineWidth,
+                                    backgroundText_fill:backgroundTextStyle_fill,
+                                    backgroundText_size:backgroundTextStyle_size,
+                                    backgroundText_font:backgroundTextStyle_font,
+                                    backing:backingStyle,
+                                }
+                            });
+                            object.append(graph);
+                        //needle overlay
+                            var overlay = canvas.part.builder('needleOverlay', 'overlay', {
+                                width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                                needleStyles:foregroundStyles.map(a => a.stroke),
+                            });
+                            object.append(overlay);
+                
+                    //controls
+                        //grapher
+                            object.horizontalMarkings = graph.horizontalMarkings;
+                            object.verticalMarkings = graph.verticalMarkings;
+                            object.drawBackground = graph.drawBackground;
+                            object.drawForeground = graph.drawForeground;
+                            object.draw = graph.draw;
+                        //needle overlay
+                            object.select = overlay.select;
+                            object.area = overlay.area;
+                
+                    //callbacks
+                        object.onchange = onchange;
+                        object.onrelease = onrelease;
+                        object.selectionAreaToggle = selectionAreaToggle;
+                        overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
+                        overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
+                        overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
+                
+                    //setup
+                        graph.viewbox({left:0});
+                        graph.drawBackground();
+                        overlay.select(0);
                 
                     return object;
                 };
@@ -5658,925 +6652,56 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return object;
                 };
-                this.rastorgrid = function(
-                    name='rastorgrid', 
-                    x, y, width=80, height=80, angle=0,
-                    xcount=5, ycount=5,
-                    backingStyle = 'rgba(200,200,200,1)',
-                    checkStyle = 'rgba(150,150,150,1)',
-                    backingGlowStyle = 'rgba(220,220,220,1)',
-                    checkGlowStyle = 'rgba(220,220,220,1)',
-                    onchange = function(){},
-                ){
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        
-                        //checkboxes
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    var temp = canvas.part.builder('checkbox_rect',y+'_'+x,{
-                                        x:x*(width/xcount),  y:y*(height/ycount), 
-                                        width:width/xcount,  height:height/ycount, 
-                                        style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
-                                        onchange:function(){ if(object.onchange){object.onchange(object.get());} },
-                                    });
-                                    object.append(temp);
-                                }
-                            }
-                
-                
-                
-                
-                    //methods
-                        object.box = function(x,y){ return object.getChildByName(y+'_'+x); };
-                        object.get = function(){
-                            var outputArray = [];
-                    
-                            for(var y = 0; y < ycount; y++){
-                                var temp = [];
-                                for(var x = 0; x < xcount; x++){
-                                    temp.push(this.box(x,y).get());
-                                }
-                                outputArray.push(temp);
-                            }
-                    
-                            return outputArray;
-                        };
-                        object.set = function(value, update=true){
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    object.box(x,y).set(value[y][x],false);
-                                }
-                            }
-                        };
-                        object.clear = function(){
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    object.box(x,y).set(false,false);
-                                }
-                            }
-                        };
-                        object.light = function(x,y,state){
-                            object.box(x,y).light(state);
-                        };
-                
-                
-                
-                
-                    //callback
-                        object.onchange = onchange;
-                
-                    return object;
-                };
-                this.slide = function(
-                    name='slide', 
-                    x, y, width=10, height=95, angle=0,
-                    handleHeight=0.1, value=0, resetValue=-1,
-                    handleStyle = 'rgba(200,200,200,1)',
-                    backingStyle = 'rgba(150,150,150,1)',
-                    slotStyle = 'rgba(50,50,50,1)',
-                    invisibleHandleStyle = 'rgba(255,0,0,0)',
-                    onchange=function(){},
-                    onrelease=function(){},
-                ){
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //backing and slot group
-                            var backingAndSlot = canvas.part.builder('group','backingAndSlotGroup');
-                            object.append(backingAndSlot);
-                            //backing
-                                var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
-                                backingAndSlot.append(backing);
-                            //slot
-                                var slot = canvas.part.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
-                                backingAndSlot.append(slot);
-                            //backing and slot cover
-                                var backingAndSlotCover = canvas.part.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                backingAndSlot.append(backingAndSlotCover);
-                        //handle
-                            var handle = canvas.part.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
-                            object.append(handle);
-                        //invisible handle
-                            var invisibleHandleHeight = height*handleHeight + height*0.01;
-                            var invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
-                            object.append(invisibleHandle);
-                
-                
-                
-                
-                    //graphical adjust
-                        function set(a,update=true){
-                            a = (a>1 ? 1 : a);
-                            a = (a<0 ? 0 : a);
-                
-                            if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                            value = a;
-                            handle.y = a*height*(1-handleHeight);
-                            invisibleHandle.y = a*height*(1-handleHeight);
-                
-                            handle.computeExtremities();
-                            invisibleHandle.computeExtremities();
-                        }
-                        object.__calculationAngle = angle;
-                        function currentMousePosition(event){
-                            return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
-                        }
-                
-                
-                
-                
-                    //methods
-                        var grappled = false;
-                
-                        object.set = function(value,update){
-                            if(grappled){return;}
-                            set(value,update);
-                        };
-                        object.get = function(){return value;};
-                
-                
-                
-                
-                    //interaction
-                        object.ondblclick = function(){
-                            if(resetValue<0){return;}
-                            if(grappled){return;}
-                
-                            set(resetValue);
-                            if(object.onrelease != undefined){object.onrelease(value);}
-                        };
-                        object.onwheel = function(){
-                            if(grappled){return;}
-                
-                            var move = event.deltaY/100;
-                            var globalScale = canvas.core.viewport.scale();
-                            set( value + move/(10*globalScale) );
-                            if(object.onrelease != undefined){object.onrelease(value);}
-                        };
-                        backingAndSlot.onclick = function(x,y,event){
-                            if(grappled){return;}
-                
-                            //calculate the distance the click is from the top of the slider (accounting for angle)
-                                var offset = backingAndSlot.getOffset();
-                                var delta = {
-                                    x: x - (backingAndSlot.x     + offset.x),
-                                    y: y - (backingAndSlot.y     + offset.y),
-                                    a: 0 - (backingAndSlot.angle + offset.a),
-                                };
-                                var d = canvas.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
-                
-                            //use the distance to calculate the correct value to set the slide to
-                            //taking into account the slide handle's size also
-                                var value = d + 0.5*handleHeight*((2*d)-1);
-                
-                            set(value);
-                            if(object.onrelease != undefined){object.onrelease(value);}
-                        };
-                        invisibleHandle.onmousedown = function(x,y,event){
-                            grappled = true;
-                
-                            var initialValue = value;
-                            var initialY = currentMousePosition(event);
-                            var mux = height - height*handleHeight;
-                
-                            canvas.system.mouse.mouseInteractionHandler(
-                                function(event){
-                                    var numerator = initialY-currentMousePosition(event);
-                                    var divider = canvas.core.viewport.scale();
-                                    set( initialValue - numerator/(divider*mux) );
-                                },
-                                function(event){
-                                    var numerator = initialY-currentMousePosition(event);
-                                    var divider = canvas.core.viewport.scale();
-                                    object.onrelease(initialValue - numerator/(divider*mux));
-                                    grappled = false;
-                                }
-                            );
-                        };
-                
-                
-                
-                
-                    //callbacks
-                        object.onchange = onchange; 
-                        object.onrelease = onrelease;
-                
-                    return object;
-                };
-                this.slidePanel = function(
-                    name='slidePanel', 
-                    x, y, width=80, height=95, angle=0,
-                    handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
-                    handleStyle = 'rgba(200,200,200,1)',
-                    backingStyle = 'rgba(150,150,150,1)',
-                    slotStyle = 'rgba(50,50,50,1)'
-                ){
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //slides
-                            for(var a = 0; a < count; a++){
-                                var temp = canvas.part.builder(
-                                    'slide', 'slide_'+a, {
-                                        x:a*(width/count), y:0,
-                                        width:width/count, height:height,
-                                        value:startValue, resetValue:resetValue,
-                                        style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
-                                        function(value){ object.onchange(this.id,value); },
-                                        function(value){ object.onrelease(this.id,value); },
-                                    }
-                                );
-                                // temp.dotFrame = true;
-                                temp.__calculationAngle = angle;
-                                object.append(temp);
-                            }
-                
-                    return object;
-                };
-                this.list = function(
-                    name='list', 
-                    x, y, width=50, height=100, angle=0,
-                    list=[],
-                
-                    itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
-                    active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
-                
-                    itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
-                    breakHeightMux=0.0025, breakWidthMux=0.9, 
-                    spacingHeightMux=0.005,
-                    backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
-                
-                    text_font = '5pt Arial',
-                    text_textBaseline = 'alphabetic',
-                    text_fill = 'rgba(0,0,0,1)',
-                    text_stroke = 'rgba(0,0,0,0)',
-                    text_lineWidth = 1,
-                
-                    item__off__fill=                          'rgba(180,180,180,1)',
-                    item__off__stroke=                        'rgba(0,0,0,0)',
-                    item__off__lineWidth=                     0,
-                    item__up__fill=                           'rgba(200,200,200,1)',
-                    item__up__stroke=                         'rgba(0,0,0,0)',
-                    item__up__lineWidth=                      0,
-                    item__press__fill=                        'rgba(230,230,230,1)',
-                    item__press__stroke=                      'rgba(0,0,0,0)',
-                    item__press__lineWidth=                   0,
-                    item__select__fill=                       'rgba(200,200,200,1)',
-                    item__select__stroke=                     'rgba(120,120,120,1)',
-                    item__select__lineWidth=                  2,
-                    item__select_press__fill=                 'rgba(230,230,230,1)',
-                    item__select_press__stroke=               'rgba(120,120,120,1)',
-                    item__select_press__lineWidth=            2,
-                    item__glow__fill=                         'rgba(220,220,220,1)',
-                    item__glow__stroke=                       'rgba(0,0,0,0)',
-                    item__glow__lineWidth=                    0,
-                    item__glow_press__fill=                   'rgba(250,250,250,1)',
-                    item__glow_press__stroke=                 'rgba(0,0,0,0)',
-                    item__glow_press__lineWidth=              0,
-                    item__glow_select__fill=                  'rgba(220,220,220,1)',
-                    item__glow_select__stroke=                'rgba(120,120,120,1)',
-                    item__glow_select__lineWidth=             2,
-                    item__glow_select_press__fill=            'rgba(250,250,250,1)',
-                    item__glow_select_press__stroke=          'rgba(120,120,120,1)',
-                    item__glow_select_press__lineWidth=       2,
-                    item__hover__fill=                        'rgba(220,220,220,1)',
-                    item__hover__stroke=                      'rgba(0,0,0,0)',
-                    item__hover__lineWidth=                   0,
-                    item__hover_press__fill=                  'rgba(240,240,240,1)',
-                    item__hover_press__stroke=                'rgba(0,0,0,0)',
-                    item__hover_press__lineWidth=             0,
-                    item__hover_select__fill=                 'rgba(220,220,220,1)',
-                    item__hover_select__stroke=               'rgba(120,120,120,1)',
-                    item__hover_select__lineWidth=            2,
-                    item__hover_select_press__fill=           'rgba(240,240,240,1)',
-                    item__hover_select_press__stroke=         'rgba(120,120,120,1)',
-                    item__hover_select_press__lineWidth=      2,
-                    item__hover_glow__fill=                   'rgba(240,240,240,1)',
-                    item__hover_glow__stroke=                 'rgba(0,0,0,0)',
-                    item__hover_glow__lineWidth=              0,
-                    item__hover_glow_press__fill=             'rgba(250,250,250,1)',
-                    item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-                    item__hover_glow_press__lineWidth=        0,
-                    item__hover_glow_select__fill=            'rgba(240,240,240,1)',
-                    item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-                    item__hover_glow_select__lineWidth=       2,
-                    item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-                    item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-                    item__hover_glow_select_press__lineWidth= 2,
-                
-                    onenter=function(){},
-                    onleave=function(){},
-                    onpress=function(){},
-                    ondblpress=function(){},
-                    onrelease=function(){},
-                    onselection=function(){},
-                    onpositionchange=function(){},
-                ){
-                    //state
-                        var itemArray = [];
-                        var selectedItems = [];
-                        var lastNonShiftClicked = 0;
-                        var position = 0;
-                        var calculatedListHeight;
-                
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //backing
-                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{
-                                fill:backing_style,
-                            }});
-                            object.append(backing);
-                        //item collection
-                            var itemCollection = canvas.part.builder('group','itemCollection');
-                            object.append(itemCollection);
-                            function refreshList(){
-                                //clean out all values
-                                    itemArray = [];
-                                    itemCollection.clear();
-                                    selectedItems = [];
-                                    position = 0;
-                                    lastNonShiftClicked = 0;
-                
-                                //populate list
-                                    var accumulativeHeight = 0;
-                                    for(var a = 0; a < list.length; a++){
-                                        switch(list[a]){
-                                            case 'space':
-                                                var temp = canvas.part.builder( 'rectangle', ''+a, {
-                                                    x:0, y:accumulativeHeight,
-                                                    width:width, height:height*spacingHeightMux,
-                                                    style:{fill:'rgba(255,0,0,0)'}
-                                                });
-                
-                                                accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                itemCollection.append( temp );
-                                            break;
-                                            case 'break':
-                                                var temp = canvas.part.builder( 'rectangle', ''+a, {
-                                                    x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                    width:width*breakWidthMux, height:height*breakHeightMux,
-                                                    style:{fill:break_style}
-                                                });
-                
-                                                accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                itemCollection.append( temp );
-                                            break;
-                                            default:
-                                                var temp = canvas.part.builder( 'button_rect', ''+a, {
-                                                    x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                    width:width*itemWidthMux, height:height*itemHeightMux, 
-                                                    text_left: list[a].text_left,
-                                                    text_centre: (list[a].text?list[a].text:list[a].text_centre),
-                                                    text_right: list[a].text_right,
-                
-                                                    textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
-                                                    active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                
-                                                    style:{
-                                                        text_font:text_font,
-                                                        text_textBaseline:text_textBaseline,
-                                                        text_fill:text_fill,
-                                                        text_stroke:text_stroke,
-                                                        text_lineWidth:text_lineWidth,
-                
-                                                        item__off__fill:                            item__off__fill,
-                                                        item__off__stroke:                          item__off__stroke,
-                                                        item__off__lineWidth:                       item__off__lineWidth,
-                                                        item__up__fill:                             item__up__fill,
-                                                        item__up__stroke:                           item__up__stroke,
-                                                        item__up__lineWidth:                        item__up__lineWidth,
-                                                        item__press__fill:                          item__press__fill,
-                                                        item__press__stroke:                        item__press__stroke,
-                                                        item__press__lineWidth:                     item__press__lineWidth,
-                                                        item__select__fill:                         item__select__fill,
-                                                        item__select__stroke:                       item__select__stroke,
-                                                        item__select__lineWidth:                    item__select__lineWidth,
-                                                        item__select_press__fill:                   item__select_press__fill,
-                                                        item__select_press__stroke:                 item__select_press__stroke,
-                                                        item__select_press__lineWidth:              item__select_press__lineWidth,
-                                                        item__glow__fill:                           item__glow__fill,
-                                                        item__glow__stroke:                         item__glow__stroke,
-                                                        item__glow__lineWidth:                      item__glow__lineWidth,
-                                                        item__glow_press__fill:                     item__glow_press__fill,
-                                                        item__glow_press__stroke:                   item__glow_press__stroke,
-                                                        item__glow_press__lineWidth:                item__glow_press__lineWidth,
-                                                        item__glow_select__fill:                    item__glow_select__fill,
-                                                        item__glow_select__stroke:                  item__glow_select__stroke,
-                                                        item__glow_select__lineWidth:               item__glow_select__lineWidth,
-                                                        item__glow_select_press__fill:              item__glow_select_press__fill,
-                                                        item__glow_select_press__stroke:            item__glow_select_press__stroke,
-                                                        item__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
-                                                        item__hover__fill:                          item__hover__fill,
-                                                        item__hover__stroke:                        item__hover__stroke,
-                                                        item__hover__lineWidth:                     item__hover__lineWidth,
-                                                        item__hover_press__fill:                    item__hover_press__fill,
-                                                        item__hover_press__stroke:                  item__hover_press__stroke,
-                                                        item__hover_press__lineWidth:               item__hover_press__lineWidth,
-                                                        item__hover_select__fill:                   item__hover_select__fill,
-                                                        item__hover_select__stroke:                 item__hover_select__stroke,
-                                                        item__hover_select__lineWidth:              item__hover_select__lineWidth,
-                                                        item__hover_select_press__fill:             item__hover_select_press__fill,
-                                                        item__hover_select_press__stroke:           item__hover_select_press__stroke,
-                                                        item__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
-                                                        item__hover_glow__fill:                     item__hover_glow__fill,
-                                                        item__hover_glow__stroke:                   item__hover_glow__stroke,
-                                                        item__hover_glow__lineWidth:                item__hover_glow__lineWidth,
-                                                        item__hover_glow_press__fill:               item__hover_glow_press__fill,
-                                                        item__hover_glow_press__stroke:             item__hover_glow_press__stroke,
-                                                        item__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
-                                                        item__hover_glow_select__fill:              item__hover_glow_select__fill,
-                                                        item__hover_glow_select__stroke:            item__hover_glow_select__stroke,
-                                                        item__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
-                                                        item__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
-                                                        item__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
-                                                        item__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
-                                                    }
-                                                });
-                
-                                                temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                temp.onrelease = function(a){
-                                                    return function(){
-                                                        if( list[a].function ){ list[a].function(); }
-                                                        object.onrelease(a);
-                                                    }
-                                                }(a);
-                                                temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-                
-                                                accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                itemCollection.append( temp );
-                                                itemArray.push( temp );
-                                            break;
-                                        }
-                                    }
-                
-                                return accumulativeHeight - height*itemSpacingMux;
-                            }
-                            calculatedListHeight = refreshList();
-                        //cover
-                            var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                            object.append(cover);
-                        //stencle
-                            var stencle = canvas.part.builder('rectangle','stencle',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                            object.stencile(stencle);
-                            object.clip(true);
-                
-                
-                    //interaction
-                        cover.onwheel = function(x,y,event){
-                            var move = event.deltaY/100;
-                            object.position( object.position() + move/10 );
-                        };
-                    
-                    //controls
-                        object.position = function(a,update=true){
-                            if(a == undefined){return position;}
-                            a = a < 0 ? 0 : a;
-                            a = a > 1 ? 1 : a;
-                            position = a;
-                
-                            if( calculatedListHeight < height ){return;}
-                            var movementSpace = calculatedListHeight - height;
-                            itemCollection.parameter.y( -a*movementSpace );
-                            
-                            if(update&&this.onpositionchange){this.onpositionchange(a);}
-                        };
-                        object.select = function(a,state,event,update=true){
-                            if(!selectable){return;}
-                
-                            //where multi selection is not allowed
-                                if(!multiSelect){
-                                    //where we want to select an item, which is not already selected
-                                        if(state && !selectedItems.includes(a) ){
-                                            //deselect all other items
-                                                while( selectedItems.length > 0 ){
-                                                    itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
-                                                    selectedItems.shift();
-                                                }
-                
-                                            //select current item
-                                                selectedItems.push(a);
-                
-                                    //where we want to deselect an item that is selected
-                                        }else if(!state && selectedItems.includes(a)){
-                                            selectedItems = [];
-                                        }
-                
-                                //do not update the item itself, in the case that it was the item that sent this command
-                                //(which would cause a little loop)
-                                    if(update){ itemCollection.children[a].select(true,undefined,false); }
-                
-                            //where multi selection is allowed
-                                }else{
-                                    //wherer range-selection is to be done
-                                        if( event != undefined && event.shiftKey ){
-                                            //gather top and bottom item
-                                            //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
-                                                var min = Math.min(lastNonShiftClicked, a);
-                                                var max = Math.max(lastNonShiftClicked, a);
-                                                for(var b = 0; b < itemArray.length; b++){
-                                                    if( itemArray[b].name == ''+min ){min = b;}
-                                                    if( itemArray[b].name == ''+max ){max = b;}
-                                                }
-                
-                                            //deselect all outside the range
-                                                selectedItems = [];
-                                                for(var b = 0; b < itemArray.length; b++){
-                                                    if( b > max || b < min ){
-                                                        if( itemArray[b].select() ){
-                                                            itemArray[b].select(false,undefined,false);
-                                                        }
-                                                    }
-                                                }
-                
-                                            //select those within the range (that aren't already selected)
-                                                for(var b = min; b <= max; b++){
-                                                    if( !itemArray[b].select() ){
-                                                        itemArray[b].select(true,undefined,false);
-                                                        selectedItems.push(b);
-                                                    }
-                                                }
-                                    //where range-selection is not to be done
-                                        }else{
-                                            if(update){ itemArray[a].select(state); }
-                                            if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
-                                            else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                            lastNonShiftClicked = a;
-                                        }
-                                }
-                
-                            object.onselection(selectedItems);
-                        };
-                        object.add = function(item){
-                            list.push(item);
-                            calculatedListHeight = refreshList();
-                        };
-                        object.remove = function(a){
-                            list.splice(a,1);
-                            calculatedListHeight = refreshList();
-                        };
-                
-                    //callbacks
-                        object.onenter = onenter;
-                        object.onleave = onleave;
-                        object.onpress = onpress;
-                        object.ondblpress = ondblpress;
-                        object.onrelease = onrelease;
-                        object.onselection = onselection;
-                        object.onpositionchange = onpositionchange;
-                        
-                    return object;
-                };
-                this.needleOverlay = function(
-                    name='needleOverlay',
-                    x, y, width=120, height=60, angle=0, needleWidth=0.003125, selectNeedle=true, selectionArea=true,
-                    needleStyles=[
-                        'rgba(240, 240, 240, 1)',
-                        'rgba(255, 231, 114, 1)'
-                    ],
-                    onchange=function(needle,value){}, 
-                    onrelease=function(needle,value){}, 
-                    selectionAreaToggle=function(bool){},
-                ){
-                    var needleData = {};
-                
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //backing
-                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:'rgba(0,0,0,1)'}});
-                            object.append(backing);
-                        //control objects
-                            var controlObjectsGroup = canvas.part.builder('group','controlObjectsGroup');
-                            object.append(controlObjectsGroup);
-                                var controlObjectsGroup_back = canvas.part.builder('group','back');
-                                controlObjectsGroup.append(controlObjectsGroup_back);
-                                var controlObjectsGroup_front = canvas.part.builder('group','front');
-                                controlObjectsGroup.append(controlObjectsGroup_front);
-                
-                
-                            var invisibleHandleWidth = width*needleWidth + width*0.005;
-                            var controlObjects = {};
-                            //lead
-                                controlObjects.lead = canvas.part.builder('group','lead');
-                                controlObjects.lead.append( canvas.part.builder('rectangle','handle',{
-                                    width:needleWidth*width,
-                                    height:height,
-                                    style:{ fill:needleStyles[0] },
-                                }));
-                                controlObjects.lead.append( canvas.part.builder('rectangle','invisibleHandle',{
-                                    x:(width*needleWidth - invisibleHandleWidth)/2, 
-                                    width:invisibleHandleWidth,
-                                    height:height,
-                                    style:{ fill:'rgba(255,0,0,0)' },
-                                }));
-                            //selction_A
-                                controlObjects.selection_A = canvas.part.builder('group','selection_A');
-                                controlObjects.selection_A.append( canvas.part.builder('rectangle','handle',{
-                                    width:needleWidth*width,
-                                    height:height,
-                                    style:{fill:needleStyles[1]},
-                                }));
-                                controlObjects.selection_A.append( canvas.part.builder('rectangle','invisibleHandle',{
-                                    x:(width*needleWidth - invisibleHandleWidth)/2, 
-                                    width:invisibleHandleWidth,height:height,
-                                    style:{fill:'rgba(255,0,0,0)'},
-                                }));
-                            //selction_B
-                                controlObjects.selection_B = canvas.part.builder('group','selection_B');
-                                controlObjects.selection_B.append( canvas.part.builder('rectangle','handle',{
-                                    width:needleWidth*width,
-                                    height:height,
-                                    style:{fill:needleStyles[1]},
-                                }));
-                                controlObjects.selection_B.append( canvas.part.builder('rectangle','invisibleHandle',{
-                                    x:(width*needleWidth - invisibleHandleWidth)/2, 
-                                    width:invisibleHandleWidth,height:height,
-                                    style:{fill:'rgba(255,0,0,0)'},
-                                }));
-                            //selction_area
-                                controlObjects.selection_area = canvas.part.builder('rectangle','selection_area',{
-                                    height:height,
-                                    style:{fill:canvas.library.misc.blendColours(needleStyles[1],'rgba(0,0,0,0)',0.5)},
-                                });
-                
-                    //internal functions
-                        object.__calculationAngle = angle;
-                        var leadNeedle_grappled = false;
-                        var selectionArea_grappled = false;
-                        var selectionNeedleA_grappled = false;
-                        var selectionNeedleB_grappled = false;
-                        function currentMousePosition_x(event){
-                            return event.x*Math.cos(object.__calculationAngle) - event.y*Math.sin(object.__calculationAngle);
-                        }
-                        function needleJumpTo(needle,location){
-                            //if the location is wrong, remove the needle and return
-                                if(location == undefined || location < 0 || location > 1){
-                                    controlObjectsGroup.remove(controlObjects[needle]);
-                                    delete needleData[needle];
-                                    return;
-                                }
-                
-                            //if the needle isn't in the scene, add it
-                                if( needle == 'lead' ){
-                                    if( !controlObjectsGroup_front.contains(controlObjects[needle]) ){
-                                        controlObjectsGroup_front.append(controlObjects[needle]);
-                                    }
-                                }else{
-                                    if( !controlObjectsGroup_back.contains(controlObjects[needle]) ){
-                                        controlObjectsGroup_back.append(controlObjects[needle]);
-                                    }
-                                }
-                
-                            //actualy set the location of the needle (adjusting for the size of needle)
-                                controlObjects[needle].parameter.x( location*width - width*needleWidth*location );
-                            //save this value
-                                needleData[needle] = location;
-                        }
-                        function computeSelectionArea(){
-                            //if the selection needles' data are missing (or they are the same position) remove the area element and return
-                                if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
-                                    controlObjectsGroup.remove(controlObjects.selection_area);
-                                    if(object.selectionAreaToggle){object.selectionAreaToggle(false);}
-                                    delete needleData.selection_area;
-                                    return;
-                                }
-                
-                            //if the area isn't in the scene, add it
-                                if( !controlObjectsGroup_back.contains(controlObjects.selection_area) ){
-                                    controlObjectsGroup_back.append(controlObjects.selection_area);
-                                    if(object.selectionAreaToggle){object.selectionAreaToggle(true);}
-                                }
-                
-                            //compute area position and size
-                                if(needleData.selection_A < needleData.selection_B){
-                                    var A = needleData.selection_A;
-                                    var B = needleData.selection_B;
-                                }else{
-                                    var A = needleData.selection_B;
-                                    var B = needleData.selection_A;
-                                }
-                                var start = A - needleWidth*A + needleWidth
-                                var area = B - needleWidth*B - start; 
-                                if(area < 0){area = 0}
-                
-                                controlObjects.selection_area.parameter.x(width*start);
-                                controlObjects.selection_area.parameter.width(width*area);
-                        }
-                        function select(position,update=true){
-                            if(!selectNeedle){return;}
-                            //if there's no input, return the value
-                            //if input is out of bounds, remove the needle
-                            //otherwise, set the position
-                            if(position == undefined){ return needleData.lead; }
-                            else if(position > 1 || position < 0){ needleJumpTo('lead'); }
-                            else{ needleJumpTo('lead',position); }
-                
-                            if(update && object.onchange != undefined){object.onchange('lead',position);}
-                        }
-                        function area(positionA,positionB,update=true){
-                            if(!selectionArea){return;}
-                
-                            //if there's no input, return the values
-                            //if input is out of bounds, remove the needles
-                            //otherwise, set the position
-                                if(positionA == undefined || positionB == undefined){
-                                    return {A:needleData.selection_A, B:needleData.selection_B};
-                                }else if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 ){
-                                    needleJumpTo('selection_A');
-                                    needleJumpTo('selection_B');
-                                }else{
-                                    needleJumpTo('selection_A',positionA);
-                                    needleJumpTo('selection_B',positionB);
-                                }
-                
-                            //you always gotta compute the selection area
-                                computeSelectionArea();
-                
-                            if(update && object.onchange != undefined){object.onchange('selection_A',positionA);}
-                            if(update && object.onchange != undefined){object.onchange('selection_B',positionB);}
-                        }
-                
-                    //interaction
-                        //generic onmousedown code for interaction
-                            backing.onmousedown = function(x,y,event){};
-                            controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
-                            controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
-                            controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
-                                leadNeedle_grappled = true;
-                
-                                var initialValue = needleData.lead;
-                                var initialX = currentMousePosition_x(event);
-                                var mux = width - width*needleWidth;
-                
-                                canvas.system.mouse.mouseInteractionHandler(
-                                    function(event){
-                                        var numerator = initialX - currentMousePosition_x(event);
-                                        var divider = canvas.core.viewport.scale();
-                                        var location = initialValue - numerator/(divider*mux);
-                                        location = location < 0 ? 0 : location;
-                                        location = location > 1 ? 1 : location;
-                                        select(location);
-                                    },
-                                    function(event){
-                                        var numerator = initialX - currentMousePosition_x(event);
-                                        var divider = canvas.core.viewport.scale();
-                                        var location = initialValue - numerator/(divider*mux);
-                                        location = location < 0 ? 0 : location;
-                                        location = location > 1 ? 1 : location;
-                                        leadNeedle_grappled = false;
-                                        select(location);
-                                        if(object.onrelease != undefined){object.onrelease('lead',location);}
-                                    },       
-                                );
-                            };
-                
-                            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
-                            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
-                            controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
-                                selectionNeedleA_grappled = true;
-                
-                                var initialValue = needleData.selection_A;
-                                var initialX = currentMousePosition_x(event);
-                                var mux = width - width*needleWidth;
-                
-                                canvas.system.mouse.mouseInteractionHandler(
-                                    function(event){
-                                        var numerator = initialX - currentMousePosition_x(event);
-                                        var divider = canvas.core.viewport.scale();
-                                        var location = initialValue - numerator/(divider*mux);
-                                        location = location < 0 ? 0 : location;
-                                        location = location > 1 ? 1 : location;
-                                        area(location,needleData.selection_B);
-                                    },
-                                    function(event){
-                                        var numerator = initialX - currentMousePosition_x(event);
-                                        var divider = canvas.core.viewport.scale();
-                                        var location = initialValue - numerator/(divider*mux);
-                                        location = location < 0 ? 0 : location;
-                                        location = location > 1 ? 1 : location;
-                                        selectionNeedleA_grappled = false;
-                                        area(location,needleData.selection_B);
-                                        if(object.onrelease != undefined){object.onrelease('selection_A',location);}
-                                    },       
-                                );
-                            };
-                
-                            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
-                            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
-                            controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
-                                selectionNeedleB_grappled = true;
-                
-                                var initialValue = needleData.selection_B;
-                                var initialX = currentMousePosition_x(event);
-                                var mux = width - width*needleWidth;
-                
-                                canvas.system.mouse.mouseInteractionHandler(
-                                    function(event){
-                                        var numerator = initialX - currentMousePosition_x(event);
-                                        var divider = canvas.core.viewport.scale();
-                                        var location = initialValue - numerator/(divider*mux);
-                                        location = location < 0 ? 0 : location;
-                                        location = location > 1 ? 1 : location;
-                                        area(needleData.selection_A,location);
-                                    },
-                                    function(event){
-                                        var numerator = initialX - currentMousePosition_x(event);
-                                        var divider = canvas.core.viewport.scale();
-                                        var location = initialValue - numerator/(divider*mux);
-                                        location = location < 0 ? 0 : location;
-                                        location = location > 1 ? 1 : location;
-                                        selectionNeedleB_grappled = false;
-                                        area(needleData.selection_A,location);
-                                        if(object.onrelease != undefined){object.onrelease('selection_B',location);}
-                                    },       
-                                );
-                            };
-                
-                            controlObjects.selection_area.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('grab');};
-                            controlObjects.selection_area.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
-                            controlObjects.selection_area.onmousedown = function(x,y,event){
-                                selectionArea_grappled = true;
-                
-                                var areaSize = needleData.selection_B - needleData.selection_A;
-                                var initialValues = {A:needleData.selection_A, B:needleData.selection_B};
-                                var initialX = currentMousePosition_x(event);
-                                var mux = width - width*needleWidth;
-                
-                                canvas.system.mouse.mouseInteractionHandler(
-                                    function(event){
-                                        var numerator = initialX - currentMousePosition_x(event);
-                                        var divider = canvas.core.viewport.scale();
-                
-                                        var location = {
-                                            A: initialValues.A - numerator/(divider*mux),
-                                            B: initialValues.B - numerator/(divider*mux),
-                                        };
-                
-                                        if( location.A > 1 ){ location.A = 1; location.B = 1 + areaSize; }
-                                        if( location.B > 1 ){ location.B = 1; location.A = 1 - areaSize; }
-                                        if( location.A < 0 ){ location.A = 0; location.B = areaSize; }
-                                        if( location.B < 0 ){ location.B = 0; location.A = -areaSize; }
-                
-                                        area(location.A,location.B);
-                                    },
-                                    function(event){
-                                        var numerator = initialX - currentMousePosition_x(event);
-                                        var divider = canvas.core.viewport.scale();
-                
-                                        var location = {
-                                            A: initialValues.A - numerator/(divider*mux),
-                                            B: initialValues.B - numerator/(divider*mux),
-                                        };
-                
-                                        if( location.A > 1 ){ location.A = 1; location.B = 1 + areaSize; }
-                                        if( location.B > 1 ){ location.B = 1; location.A = 1 - areaSize; }
-                                        if( location.A < 0 ){ location.A = 0; location.B = areaSize; }
-                                        if( location.B < 0 ){ location.B = 0; location.A = -areaSize; }
-                
-                                        selectionArea_grappled = false;
-                                        area(location.A,location.B);
-                                        if(object.onrelease != undefined){object.onrelease('selection_A',location.A);}
-                                        if(object.onrelease != undefined){object.onrelease('selection_B',location.B);}
-                                    },
-                                );
-                
-                                canvas.core.viewport.cursor('grabbing');
-                            };
-                
-                        //doubleclick to destroy selection area
-                            controlObjects.selection_A.ondblclick = function(x,y,event,shape){};
-                            controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
-                            controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
-                    
-                    //control
-                        object.select = function(position,update=true){
-                            if(leadNeedle_grappled){return;}
-                            select(position,update);
-                        };
-                        object.area = function(positionA,positionB,update=true){
-                            if(positionA != undefined && selectionNeedleA_grappled){return;}
-                            if(positionB != undefined && selectionNeedleB_grappled){return;}
-                            area(positionA,positionB,update);
-                        };
-                
-                    //callback
-                        object.onchange = onchange;
-                        object.onrelease = onrelease;
-                        object.selectionAreaToggle = selectionAreaToggle;
-                        
-                    return object;
-                };
             };
             
             this.dynamic = new function(){
+                this.connectionNode_voltage = function(
+                    name='connectionNode_voltage',
+                    x, y, angle=0, width=20, height=20,
+                    dimStyle='rgb(222, 255, 220)',
+                    glowStyle='rgb(240, 252, 239)',
+                    cable_dimStyle='rgb(84, 247, 111)',
+                    cable_glowStyle='rgb(159, 252, 174)',
+                    onchange=function(value){},
+                    onconnect=function(instigator){},
+                    ondisconnect=function(instigator){},
+                ){
+                    //elements
+                        var object = canvas.part.builder('connectionNode',name,{
+                            x:x, y:y, angle:angle, width:width, height:height, type:'voltage',
+                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                        });
+                
+                    //circuitry
+                        var localValue = 0;
+                
+                        object._getLocalValue = function(){ return localValue; };
+                        object._update = function(a){
+                            if(a>0){ object.activate(); }
+                            else{ object.deactivate(); }
+                            onchange(a);
+                        }
+                
+                        object.set = function(a){
+                            localValue = a;
+                
+                            var val = object.read();
+                            object._update(val);
+                            if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
+                        };
+                        object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                
+                        object.onconnect = function(instigator){
+                            if(onconnect){onconnect(instigator);}
+                            object._update(object.read());
+                        };
+                        object.ondisconnect = function(instigator){
+                            if(ondisconnect){ondisconnect(instigator);}
+                            object._update(localValue);
+                        };
+                
+                    return object;
+                };
                 this.cable = function(
                     name='path', 
                     x1=0, y1=0, x2=0, y2=0,
@@ -6606,6 +6731,86 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             y2 = (new_y2!=undefined ? new_y2 : y2);
                             path.parameter.points([{x:x1,y:y1},{x:x2,y:y2}]);
                         };
+                
+                    return object;
+                };
+                this.connectionNode_audio = function(
+                    name='connectionNode_audio',
+                    x, y, angle=0, width=20, height=20, isAudioOutput=false, audioContext,
+                    dimStyle='rgba(255, 244, 220, 1)',
+                    glowStyle='rgba(255, 244, 244, 1)',
+                    cable_dimStyle='rgb(247, 146, 84)',
+                    cable_glowStyle='rgb(242, 168, 123)',
+                    onconnect=function(){},
+                    ondisconnect=function(){},
+                ){
+                    //elements
+                        var object = canvas.part.builder('connectionNode',name,{
+                            x:x, y:y, angle:angle, width:width, height:height, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
+                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                        });
+                        object._direction = isAudioOutput ? 'out' : 'in';
+                
+                    //circuitry
+                        object.audioNode = audioContext.createAnalyser();
+                
+                        //audio connections
+                            object.out = function(){return audioNode;};
+                            object.in = function(){return audioNode;};
+                
+                        object.onconnect = function(instigator){
+                            if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
+                            if(onconnect){onconnect(instigator);}
+                        };
+                        object.ondisconnect = function(instigator){
+                            if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
+                            if(ondisconnect){ondisconnect(instigator);}
+                        };
+                    
+                    return object;
+                };
+                this.connectionNode_data = function(
+                    name='connectionNode_data',
+                    x, y, angle=0, width=20, height=20,
+                    dimStyle='rgba(220, 244, 255,1)',
+                    glowStyle='rgba(244, 244, 255, 1)',
+                    cable_dimStyle='rgb(84, 146, 247)',
+                    cable_glowStyle='rgb(123, 168, 242)',
+                    onreceivedata=function(address, data){console.log(name,address,data);},
+                    ongivedata=function(address){console.log(name,address);},
+                    onconnect=function(){},
+                    ondisconnect=function(){},
+                ){
+                    //elements
+                        var object = canvas.part.builder('connectionNode',name,{
+                            x:x, y:y, angle:angle, width:width, height:height, type:'data',
+                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                            onconnect, ondisconnect
+                        });
+                
+                    //circuitry
+                        function flash(obj){
+                            obj.activate();
+                            setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
+                            if(obj.getForeignNode()!=undefined){
+                                obj.getForeignNode().activate();
+                                setTimeout(function(){ if(obj==undefined){return;} obj.getForeignNode().deactivate(); },100);
+                            }
+                        }
+                
+                        object.send = function(address,data){
+                            flash(object);
+                
+                            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
+                        };
+                        object.request = function(address){
+                            flash(object);
+                
+                            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
+                        };
+                
+                        object.onreceivedata = onreceivedata;
+                        object.ongivedata = ongivedata;
                 
                     return object;
                 };
@@ -6736,86 +6941,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return object;
                 };
-                this.connectionNode_audio = function(
-                    name='connectionNode_audio',
-                    x, y, angle=0, width=20, height=20, isAudioOutput=false, audioContext,
-                    dimStyle='rgba(255, 244, 220, 1)',
-                    glowStyle='rgba(255, 244, 244, 1)',
-                    cable_dimStyle='rgb(247, 146, 84)',
-                    cable_glowStyle='rgb(242, 168, 123)',
-                    onconnect=function(){},
-                    ondisconnect=function(){},
-                ){
-                    //elements
-                        var object = canvas.part.builder('connectionNode',name,{
-                            x:x, y:y, angle:angle, width:width, height:height, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
-                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                        });
-                        object._direction = isAudioOutput ? 'out' : 'in';
-                
-                    //circuitry
-                        object.audioNode = audioContext.createAnalyser();
-                
-                        //audio connections
-                            object.out = function(){return audioNode;};
-                            object.in = function(){return audioNode;};
-                
-                        object.onconnect = function(instigator){
-                            if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
-                            if(onconnect){onconnect(instigator);}
-                        };
-                        object.ondisconnect = function(instigator){
-                            if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
-                            if(ondisconnect){ondisconnect(instigator);}
-                        };
-                    
-                    return object;
-                };
-                this.connectionNode_data = function(
-                    name='connectionNode_data',
-                    x, y, angle=0, width=20, height=20,
-                    dimStyle='rgba(220, 244, 255,1)',
-                    glowStyle='rgba(244, 244, 255, 1)',
-                    cable_dimStyle='rgb(84, 146, 247)',
-                    cable_glowStyle='rgb(123, 168, 242)',
-                    onreceivedata=function(address, data){console.log(name,address,data);},
-                    ongivedata=function(address){console.log(name,address);},
-                    onconnect=function(){},
-                    ondisconnect=function(){},
-                ){
-                    //elements
-                        var object = canvas.part.builder('connectionNode',name,{
-                            x:x, y:y, angle:angle, width:width, height:height, type:'data',
-                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                            onconnect, ondisconnect
-                        });
-                
-                    //circuitry
-                        function flash(obj){
-                            obj.activate();
-                            setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
-                            if(obj.getForeignNode()!=undefined){
-                                obj.getForeignNode().activate();
-                                setTimeout(function(){ if(obj==undefined){return;} obj.getForeignNode().deactivate(); },100);
-                            }
-                        }
-                
-                        object.send = function(address,data){
-                            flash(object);
-                
-                            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
-                        };
-                        object.request = function(address){
-                            flash(object);
-                
-                            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
-                        };
-                
-                        object.onreceivedata = onreceivedata;
-                        object.ongivedata = ongivedata;
-                
-                    return object;
-                };
                 this.connectionNode_signal = function(
                     name='connectionNode_signal',
                     x, y, angle=0, width=20, height=20,
@@ -6859,53 +6984,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         object.ondisconnect = function(instigator){
                             if(ondisconnect){ondisconnect(instigator);}
                             object._update();
-                        };
-                
-                    return object;
-                };
-                this.connectionNode_voltage = function(
-                    name='connectionNode_voltage',
-                    x, y, angle=0, width=20, height=20,
-                    dimStyle='rgb(222, 255, 220)',
-                    glowStyle='rgb(240, 252, 239)',
-                    cable_dimStyle='rgb(84, 247, 111)',
-                    cable_glowStyle='rgb(159, 252, 174)',
-                    onchange=function(value){},
-                    onconnect=function(instigator){},
-                    ondisconnect=function(instigator){},
-                ){
-                    //elements
-                        var object = canvas.part.builder('connectionNode',name,{
-                            x:x, y:y, angle:angle, width:width, height:height, type:'voltage',
-                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                        });
-                
-                    //circuitry
-                        var localValue = 0;
-                
-                        object._getLocalValue = function(){ return localValue; };
-                        object._update = function(a){
-                            if(a>0){ object.activate(); }
-                            else{ object.deactivate(); }
-                            onchange(a);
-                        }
-                
-                        object.set = function(a){
-                            localValue = a;
-                
-                            var val = object.read();
-                            object._update(val);
-                            if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
-                        };
-                        object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
-                
-                        object.onconnect = function(instigator){
-                            if(onconnect){onconnect(instigator);}
-                            object._update(object.read());
-                        };
-                        object.ondisconnect = function(instigator){
-                            if(ondisconnect){ondisconnect(instigator);}
-                            object._update(localValue);
                         };
                 
                     return object;
@@ -7120,6 +7198,14 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         data.needleWidth, data.selectNeedle, data.selectionArea, data.style.needles,
                         data.onchange, data.onrelease, data.selectionAreaToggle,
                     );
+                    case 'grapher_waveWorkspace': return this.element.control.grapher_waveWorkspace(
+                        name, data.x, data.y, data.width, data.height, data.angle, data.selectNeedle, data.selectionArea,
+                        data.style.foregrounds, data.style.foregroundText,
+                        data.style.background_stroke, data.style.background_lineWidth,
+                        data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                        data.style.backing,
+                        data.onchange, data.onrelease, data.selectionAreaToggle
+                    );
         
                 //dynamic
                     case 'cable': return this.element.dynamic.cable(
@@ -7278,6 +7364,10 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 controlGroup.append( no );
                 no.select(0.25);
                 no.area(0.5,0.75)
+            var gww = canvas.part.builder( 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:0,y:265} );
+                controlGroup.append( gww );
+                gww.select(0.2);
+                gww.area(0.5,0.7)
         
         
         //dynamic

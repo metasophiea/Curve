@@ -20,8 +20,8 @@ this.grapher = function(
     backingStyle='rgba(50,50,50,1)',
 ){
     var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-    var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], textPositionOffset:{x:1,y:-0.5}, printText:true };
-    var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], textPositionOffset:{x:1,y:-0.5}, printText:true };
+    var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+    var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
     var foregroundElementsGroup = [];
 
     //elements 
@@ -36,9 +36,9 @@ this.grapher = function(
         //foreground group
             var foregroundGroup = canvas.part.builder( 'group', 'foreground' );
             object.append(foregroundGroup);
-        //stencle
-            var stencle = canvas.part.builder('rectangle','stencle',{width:width, height:height});
-            object.stencile(stencle);
+        //stencil
+            var stencil = canvas.part.builder('rectangle','stencil',{width:width, height:height});
+            object.stencil(stencil);
             object.clip(true);
 
     //graphics
@@ -47,7 +47,7 @@ this.grapher = function(
 
             //horizontal lines
                 //calculate the x value for all parts of this section
-                    var x = canvas.library.math.relativeDistance(width, viewbox.left,viewbox.right, ((viewbox.right-viewbox.left)/2 + viewbox.left) );
+                    var x = canvas.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
 
                 //add all horizontal markings
                     for(var a = 0; a < horizontalMarkings.points.length; a++){
@@ -78,7 +78,7 @@ this.grapher = function(
 
             //vertical lines
                 //calculate the y value for all parts of this section
-                    var y = height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, 0 );
+                    var y = height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
 
                 //add all vertical markings
                     for(var a = 0; a < verticalMarkings.points.length; a++){
@@ -108,7 +108,7 @@ this.grapher = function(
                             }
                     }
         }
-        function drawForground(y,x,layer=0){
+        function drawForeground(y,x,layer=0){
             foregroundGroup.clear();
 
             //if both data sets of a layer are being set to undefined; set the whole layer to undefined
@@ -186,8 +186,8 @@ this.grapher = function(
             if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
         };
         object.drawBackground = function(){ drawBackground(); };
-        object.drawForground = function(y,x,layer=0){ drawForground(y,x,layer); };
-        object.draw = function(y,x,layer=0){ drawBackground(); drawForground(y,x,layer); };
+        object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
+        object.draw = function(y,x,layer=0){ drawBackground(); drawForeground(y,x,layer); };
 
     return object;
 };

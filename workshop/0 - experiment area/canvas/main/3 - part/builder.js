@@ -205,6 +205,14 @@ canvas.part.builder = function(type,name,data){
                 data.needleWidth, data.selectNeedle, data.selectionArea, data.style.needles,
                 data.onchange, data.onrelease, data.selectionAreaToggle,
             );
+            case 'grapher_waveWorkspace': return this.element.control.grapher_waveWorkspace(
+                name, data.x, data.y, data.width, data.height, data.angle, data.selectNeedle, data.selectionArea,
+                data.style.foregrounds, data.style.foregroundText,
+                data.style.background_stroke, data.style.background_lineWidth,
+                data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                data.style.backing,
+                data.onchange, data.onrelease, data.selectionAreaToggle
+            );
 
         //dynamic
             case 'cable': return this.element.dynamic.cable(

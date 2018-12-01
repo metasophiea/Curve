@@ -71,6 +71,10 @@
         controlGroup.append( no );
         no.select(0.25);
         no.area(0.5,0.75)
+    var gww = canvas.part.builder( 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:0,y:265} );
+        controlGroup.append( gww );
+        gww.select(0.2);
+        gww.area(0.5,0.7)
 
 
 //dynamic

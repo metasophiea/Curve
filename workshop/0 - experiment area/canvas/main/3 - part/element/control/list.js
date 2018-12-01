@@ -225,9 +225,9 @@ this.list = function(
         //cover
             var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
             object.append(cover);
-        //stencle
-            var stencle = canvas.part.builder('rectangle','stencle',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-            object.stencile(stencle);
+        //stencil
+            var stencil = canvas.part.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+            object.stencil(stencil);
             object.clip(true);
 
 

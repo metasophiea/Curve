@@ -17,7 +17,7 @@ this.group = function(){
     this.y = 0;
     this.angle = 0;
     this.children = [];
-    this.clippingStencile;
+    this.clippingStencil;
 
 
     this.parameter = {};
@@ -52,14 +52,14 @@ this.group = function(){
     };
     this.clip = function(bool){
         if(bool == undefined){return this.clipActive;}
-        this.clipActive = (this.clippingStencile == undefined) ? false : bool;
+        this.clipActive = (this.clippingStencil == undefined) ? false : bool;
 
         //computation of extremities
             this.computeExtremities();
     };
-    this.stencile = function(shape){
-        if(shape == undefined){return this.clippingStencile;}
-        this.clippingStencile = shape;
+    this.stencil = function(shape){
+        if(shape == undefined){return this.clippingStencil;}
+        this.clippingStencil = shape;
 
         //computation of extremities
             this.computeExtremities();
@@ -196,13 +196,13 @@ this.group = function(){
                         ];
             //assuming clipping is turned on
                 }else{
-                    //the points for this group are the same as the stencile shape's
+                    //the points for this group are the same as the stencil shape's
                         var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
                         var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
                             combinedOffset.x += point.x;
                             combinedOffset.y += point.y;
-                        this.clippingStencile.computeExtremities(combinedOffset);
-                        this.extremities.points = this.clippingStencile.extremities.points;
+                        this.clippingStencil.computeExtremities(combinedOffset);
+                        this.extremities.points = this.clippingStencil.extremities.points;
                 }
 
         //calculate boundingBox
@@ -223,7 +223,7 @@ this.group = function(){
         return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
     }
     this.isPointWithin = function(x,y){
-        if(this.clipActive){ return this.clippingStencile.isPointWithin(x,y); }
+        if(this.clipActive){ return this.clippingStencil.isPointWithin(x,y); }
 
         if( isPointWithinBoundingBox(x,y,this) ){
             return isPointWithinHitBox(x,y,this);
@@ -287,7 +287,7 @@ this.group = function(){
         //draw clipping (if active)
             if(this.clipActive || isClipper){
                 context.save();
-                this.clippingStencile.render( context, Object.assign({},packagedOffset), (static||this.clippingStencile.static), (isClipper||this.clipActive) );
+                this.clippingStencil.render( context, Object.assign({},packagedOffset), (static||this.clippingStencil.static), (isClipper||this.clipActive) );
             }
 
         //cycle through all children, activating their render functions
