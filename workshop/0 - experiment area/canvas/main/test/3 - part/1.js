@@ -75,6 +75,9 @@
         controlGroup.append( gww );
         gww.select(0.2);
         gww.area(0.5,0.7)
+    var seq = canvas.part.builder( 'sequencer', 'test_sequencer1', {x:125,y:220} );
+        controlGroup.append( seq );
+        seq.addBlock( 1,1,2 );
 
 
 //dynamic

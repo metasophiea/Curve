@@ -1,4 +1,16 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-12-03
+  - canvas experiment
+    - work continues on the sequencer
+    - added blockRegistry to structures list (in library. Previously this was
+      called the noteRegistry)
+
+
+2018-12-02
+  - canvas experiment
+    - work begins on the sequencer
+
+
 2018-12-01
   - canvas experiment
     - finished up on the needleOverlay

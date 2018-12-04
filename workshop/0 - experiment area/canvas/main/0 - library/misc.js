@@ -18,3 +18,11 @@ this.blendColours = function(rgba_1,rgba_2,ratio){
     //pack
         return 'rgba('+rgba_out[0]+','+rgba_out[1]+','+rgba_out[2]+','+rgba_out[3]+')';            
 };
+this.multiBlendColours = function(rgbaList,ratio){
+    //special cases
+        if(ratio == 0){return rgbaList[0];}
+        if(ratio == 1){return rgbaList[rgbaList.length-1];}
+    //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
+        var p = ratio*(rgbaList.length-1);
+        return canvas.library.misc.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+};

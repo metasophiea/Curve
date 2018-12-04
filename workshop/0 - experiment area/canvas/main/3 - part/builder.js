@@ -213,6 +213,15 @@ canvas.part.builder = function(type,name,data){
                 data.style.backing,
                 data.onchange, data.onrelease, data.selectionAreaToggle
             );
+            case 'sequencer': return this.element.control.sequencer(
+                name, data.x, data.y, data.width, data.height, data.angle,                
+                data.xCount, data.yCount, data.zoomLevel_x, data.zoomLevel_y,
+                data.backingStyle, data.selectionAreaStyle,
+                data.blockStyle_body, data.blockStyle_bodyGlow, data.blockStyle_handle, data.blockStyle_handleWidth,
+                data.horizontalStripStyle_pattern, data.horizontalStripStyle_glow, data.horizontalStripStyle_styles,
+                data.verticalStripStyle_pattern,   data.verticalStripStyle_glow,   data.verticalStripStyle_styles,
+                data.playheadStyle,
+            );
 
         //dynamic
             case 'cable': return this.element.dynamic.cable(
