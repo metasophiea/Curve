@@ -8,7 +8,7 @@ this.sequencer = function(
     backingStyle='rgba(20,20,20,1)',
     selectionAreaStyle='rgba(209, 189, 222, 1)',
 
-    blockStyle_body=[
+    signalStyle_body=[
         {fill:'rgba(138,138,138,0.6)', stroke:'rgba(175,175,175,0.95)', lineWidth:0.5},
         {fill:'rgba(130,199,208,0.6)', stroke:'rgba(130,199,208,0.95)', lineWidth:0.5},
         {fill:'rgba(129,209,173,0.6)', stroke:'rgba(129,209,173,0.95)', lineWidth:0.5},
@@ -16,7 +16,7 @@ this.sequencer = function(
         {fill:'rgba(249,178,103,0.6)', stroke:'rgba(249,178,103,0.95)', lineWidth:0.5},
         {fill:'rgba(255, 69, 69,0.6)', stroke:'rgba(255, 69, 69,0.95)', lineWidth:0.5},
     ],
-    blockStyle_bodyGlow=[
+    signalStyle_bodyGlow=[
         {fill:'rgba(138,138,138,0.8)', stroke:'rgba(175,175,175,1)', lineWidth:0.5},
         {fill:'rgba(130,199,208,0.8)', stroke:'rgba(130,199,208,1)', lineWidth:0.5},
         {fill:'rgba(129,209,173,0.8)', stroke:'rgba(129,209,173,1)', lineWidth:0.5},
@@ -24,8 +24,8 @@ this.sequencer = function(
         {fill:'rgba(249,178,103,0.8)', stroke:'rgba(249,178,103,1)', lineWidth:0.5},
         {fill:'rgba(255, 69, 69,0.8)', stroke:'rgba(255, 69, 69,1)', lineWidth:0.5},
     ],    
-    blockStyle_handle='rgba(200,0,0,0)',
-    blockStyle_handleWidth=3,
+    signalStyle_handle='rgba(200,0,0,0)',
+    signalStyle_handleWidth=3,
 
     horizontalStripStyle_pattern=[0,1],
     horizontalStripStyle_glow={fill:'rgba(120,120,120,0.8)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
@@ -58,13 +58,13 @@ this.sequencer = function(
                 bottomRight: {x:zoomLevel_x, y:zoomLevel_y},
             }
         };
-        const blocks = {
+        const signals = {
             step:1/1,
             snapping: true,
             defaultStrength: 0.5,
-            selectedBlocks: [],
-            activeBlocks: [],
-            blockRegistry: new canvas.library.structure.blockRegistry(xCount,yCount),
+            selectedSignals: [],
+            activeSignals: [],
+            signalRegistry: new canvas.library.structure.signalRegistry(xCount,yCount),
         };
         const loop = {
             active:false, 
@@ -111,29 +111,37 @@ this.sequencer = function(
                 var interactionPlane = canvas.part.builder('rectangle','interactionPlane',{width:viewport.totalSize.width, height:viewport.totalSize.height, style:{fill:'rgba(0,0,0,0)'}});
                 workarea.append(interactionPlane);
                 interactionPlane.onwheel = function(x,y,event){};
-            //block block area
-                var blockPane = canvas.part.builder('group','blockPane');
-                workarea.append(blockPane);
+            //signal block area
+                var signalPane = canvas.part.builder('group','signalPane');
+                workarea.append(signalPane);
 
     //internal
         object.__calculationAngle = angle;
         function currentMousePosition(event){
+            var workspacePoint = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+            var point = {
+                x: workspacePoint.x - backing.extremities.points[0].x, 
+                y: workspacePoint.y - backing.extremities.points[0].y,
+            };
             return {
-                x: (event.x*Math.cos(object.__calculationAngle) - event.y*Math.sin(object.__calculationAngle)) / width,
-                y: (event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle)) / height,
+                x: (point.x*Math.cos(object.__calculationAngle) - point.y*Math.sin(object.__calculationAngle)) / width,
+                y: (point.y*Math.cos(object.__calculationAngle) - point.x*Math.sin(object.__calculationAngle)) / height,
             };
         }
-        function visible2coordinates(xy){
-            return {
-                x: zoomLevel_x*(xy.x - viewport.viewposition.x) + viewport.viewposition.x,
-                y: zoomLevel_y*(xy.y - viewport.viewposition.y) + viewport.viewposition.y,
-            };
+        function viewportPosition2internalPosition(xy){
+            return {x: viewport.viewArea.topLeft.x + xy.x*zoomLevel_x, y:viewport.viewArea.topLeft.y + xy.y*zoomLevel_y };
         }
+        // function visible2coordinates(xy){
+        //     return {
+        //         x: zoomLevel_x*(xy.x - viewport.viewposition.x) + viewport.viewposition.x,
+        //         y: zoomLevel_y*(xy.y - viewport.viewposition.y) + viewport.viewposition.y,
+        //     };
+        // }
         function coordinates2lineposition(xy){
             xy.y = Math.floor(xy.y*yCount);
             if(xy.y >= yCount){xy.y = yCount-1;}
         
-            xy.x = blocks.snapping ? Math.round((xy.x*xCount)/step)*step : xy.x*xCount;
+            xy.x = signals.snapping ? Math.round((xy.x*xCount)/signals.step)*signals.step : xy.x*xCount;
             if(xy.x < 0){xy.x =0;}
         
             return {line:xy.y, position:xy.x};
@@ -223,9 +231,9 @@ this.sequencer = function(
                         backgroundDrawArea_horizontal.children[a].parameter.width( viewport.totalSize.width );
                     }
 
-                //update blocks
-                    for(var a = 0; a < blockPane.children.length; a++){
-                        blockPane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
+                //update signals
+                    for(var a = 0; a < signalPane.children.length; a++){
+                        signalPane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
                     }
 
                 //update playhead (if there is one)
@@ -254,9 +262,9 @@ this.sequencer = function(
                         backgroundDrawArea_horizontal.children[a].parameter.width( viewport.totalSize.width );
                     }
 
-                //update blocks
-                    for(var a = 0; a < blockPane.children.length; a++){
-                        blockPane.children[a].unit(width/(xCount*zoomLevel_x), undefined);
+                //update signals
+                    for(var a = 0; a < signalPane.children.length; a++){
+                        signalPane.children[a].unit(width/(xCount*zoomLevel_x), undefined);
                     }
 
                 //update playhead (if there is one)
@@ -283,9 +291,9 @@ this.sequencer = function(
                         backgroundDrawArea_horizontal.children[a].parameter.height( height/(yCount*zoomLevel_y) );
                     }
 
-                //update blocks
-                    for(var a = 0; a < blockPane.children.length; a++){
-                        blockPane.children[a].unit(undefined, height/(yCount*zoomLevel_y));
+                //update signals
+                    for(var a = 0; a < signalPane.children.length; a++){
+                        signalPane.children[a].unit(undefined, height/(yCount*zoomLevel_y));
                     }
 
                 //update playhead (if there is one)
@@ -350,25 +358,214 @@ this.sequencer = function(
 
             playhead.present = true;
         }
-        function makeNote(line, position, length, strength=defaultStrength){
-            //register block and get new id. From the registry, get the approved block values
-                var newID = blocks.blockRegistry.add({ line:line, position:position, length:length, strength:strength });
-                var approvedData = blocks.blockRegistry.getNote(newID);
+        function makeSignal(line, position, length, strength=signals.defaultStrength){
+            //register signal and get new id. From the registry, get the approved signal values
+                var newID = signals.signalRegistry.add({ line:line, position:position, length:length, strength:strength });
+                var approvedData = signals.signalRegistry.getSignal(newID);
 
-            //create graphical block with approved values and append it to the pane
-                var newEventBlock = canvas.part.element.control.sequencer.eventBlock(newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), approvedData.line, approvedData.position, approvedData.length, approvedData.strength, false, blockStyle_body, blockStyle_bodyGlow, blockStyle_handle, blockStyle_handleWidth);
-                blockPane.append(newEventBlock);
+            //create graphical signal with approved values and append it to the pane
+                var newSignalBlock = canvas.part.element.control.sequencer.signalBlock(
+                    newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), 
+                    approvedData.line, approvedData.position, approvedData.length, approvedData.strength, 
+                    false, signalStyle_body, signalStyle_bodyGlow, signalStyle_handle, signalStyle_handleWidth
+                );
+                signalPane.append(newSignalBlock);
 
-            //add block controls to graphical block
-                newEventBlock.select = function(remainSelected=false){};
-                newEventBlock.deselect = function(){};
-                newEventBlock.delete = function(){};
-                newEventBlock.ondblclick = function(event){};
-                newEventBlock.body.onmousedown = function(event){};
-                newEventBlock.leftHandle.onmousedown = function(event){};
-                newEventBlock.rightHandle.onmousedown = function(event){};
+            //add signal controls to graphical signal block
+                newSignalBlock.select = function(remainSelected=false){
+                    if(signals.selectedSignals.indexOf(this) != -1){ if(!remainSelected){this.deselect();} return; }
+                    this.selected(true);
+                    signals.selectedSignals.push(this);
+                    this.glow(true);
+                };
+                newSignalBlock.deselect = function(){
+                    signals.selectedSignals.splice(signals.selectedSignals.indexOf(this),1);
+                    this.selected(false);
+                    this.glow(false);
+                };
+                newSignalBlock.delete = function(){
+                    this.deselect();
+                    signals.signalRegistry.remove(parseInt(this.name));
+                    this.parent.remove(this);
+                };
 
-            return {id:newID, noteBlock:newEventBlock};
+            //add interactions to graphical signal block
+                newSignalBlock.ondblclick = function(x,y,event){
+                    if(!event.ctrlKey){return;}
+                    for(var a = 0; a < signals.selectedSignals.length; a++){
+                        signals.selectedSignals[a].strength(signals.defaultStrength);
+                        signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
+                    }
+                };
+                newSignalBlock.body.onmousedown = function(x,y,event){
+                    //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                        if(canvas.system.keyboard.pressedKeys.hasOwnProperty('Space') && canvas.system.keyboard.pressedKeys){
+                            interactionPlane.onmousedown(x,y,event); return;
+                        }
+
+                    //if the shift key is not pressed and this note is not already selected; deselect everything
+                        if(!event.shiftKey && !newSignalBlock.selected()){
+                            while(signals.selectedSignals.length > 0){
+                                signals.selectedSignals[0].deselect();
+                            }
+                        }
+
+                    //select this block
+                        newSignalBlock.select(true);
+
+                    //gather data for all the blocks that we're about to affect
+                        var activeBlocks = [];
+                        for(var a = 0; a < signals.selectedSignals.length; a++){
+                            activeBlocks.push({
+                                name: parseInt(signals.selectedSignals[a].name),
+                                block: signals.selectedSignals[a],
+                                starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
+                            });
+                        }
+
+                    //if control key is pressed; this is a strength-change operation
+                        if(event.ctrlKey){
+                            var mux = 4;
+                            var initialStrengths = activeBlocks.map(a => a.block.strength());
+                            var initial = event.offsetY;
+                            canvas.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    var diff = (initial - event.offsetY)/(canvas.core.viewport.scale()*height*mux);
+                                    for(var a = 0; a < activeBlocks.length; a++){
+                                        activeBlocks[a].block.strength(initialStrengths[a] + diff);
+                                        signals.signalRegistry.update(activeBlocks[a].name, { strength: initialStrengths[a] + diff });
+                                    }
+                                }
+                            );
+                            return;
+                        }
+
+                    //if the alt key is pressed, clone the block
+                    //(but don't select it, this is the 'alt-click-and-drag to clone' trick)
+                    //this function isn't run until the first sign of movement
+                        var cloned = false;
+                        function cloneFunc(){
+                            if(cloned){return;} cloned = true;
+                            if(event.altKey){
+                                for(var a = 0; a < signals.selectedSignals.length; a++){
+                                    var temp = signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name));
+                                    makeSignal(temp.line, temp.position, temp.length, temp.strength);
+                                }
+                            }
+                        }
+
+                    //block movement
+                        var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                        canvas.system.mouse.mouseInteractionHandler(
+                            function(event){
+                                //clone that block
+                                    cloneFunc();
+
+                                var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                var diff = {
+                                    line: livePosition.line - initialPosition.line,
+                                    position: livePosition.position - initialPosition.position,
+                                };
+        
+                                for(var a = 0; a < activeBlocks.length; a++){
+                                    signals.signalRegistry.update(activeBlocks[a].name, {
+                                        line:activeBlocks[a].starting.line+diff.line,
+                                        position:activeBlocks[a].starting.position+diff.position,
+                                    });
+        
+                                    var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+        
+                                    activeBlocks[a].block.line( temp.line );
+                                    activeBlocks[a].block.position( temp.position );
+                                }
+                            },
+                        );
+                };          
+                newSignalBlock.leftHandle.onmousedown = function(x,y,event){
+                    //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
+                        if(!event.shiftKey && !newSignalBlock.selected()){
+                            while(signals.selectedSignals.length > 0){
+                                signals.selectedSignals[0].deselect();
+                            }
+                        }
+                
+                    //select this block
+                        newSignalBlock.select(true);
+
+                    //gather data for all the blocks that we're about to affect
+                        var activeBlocks = [];
+                        for(var a = 0; a < signals.selectedSignals.length; a++){
+                            activeBlocks.push({
+                                name: parseInt(signals.selectedSignals[a].name),
+                                block: signals.selectedSignals[a],
+                                starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
+                            });
+                        }
+                    
+                    //perform block length adjustment 
+                        var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                        canvas.system.mouse.mouseInteractionHandler(
+                            function(event){
+                                var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                var diff = {position: initialPosition.position-livePosition.position};
+        
+                                for(var a = 0; a < activeBlocks.length; a++){
+                                    if( activeBlocks[a].starting.position-diff.position < 0 ){ continue; } //this stops a block from getting longer, when it is unable to move any further to the left
+                                    
+                                    signals.signalRegistry.update(activeBlocks[a].name, {
+                                        length: activeBlocks[a].starting.length+diff.position,
+                                        position: activeBlocks[a].starting.position-diff.position,
+                                    });
+                                    var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                                    activeBlocks[a].block.position( temp.position );
+                                    activeBlocks[a].block.length( temp.length );
+                                }
+                            }
+                        );
+                };
+                newSignalBlock.leftHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('w-resize');};
+                newSignalBlock.leftHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+                newSignalBlock.rightHandle.onmousedown = function(x,y,event){
+                    //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
+                        if(!event.shiftKey && !newSignalBlock.selected()){
+                            while(signals.selectedSignals.length > 0){
+                                signals.selectedSignals[0].deselect();
+                            }
+                        }
+                    
+                    //select this block
+                        newSignalBlock.select(true);
+
+                    //gather data for all the blocks that we're about to affect
+                        var activeBlocks = [];
+                        for(var a = 0; a < signals.selectedSignals.length; a++){
+                            activeBlocks.push({
+                                name: parseInt(signals.selectedSignals[a].name),
+                                block: signals.selectedSignals[a],
+                                starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
+                            });
+                        }
+
+                    //perform block length adjustment 
+                        var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                        canvas.system.mouse.mouseInteractionHandler(
+                            function(event){
+                                var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                var diff = {position: livePosition.position - initialPosition.position};
+        
+                                for(var a = 0; a < activeBlocks.length; a++){
+                                    signals.signalRegistry.update(activeBlocks[a].name, {length: activeBlocks[a].starting.length+diff.position});
+                                    var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                                    activeBlocks[a].block.position( temp.position );
+                                    activeBlocks[a].block.length( temp.length );
+                                }
+                            }
+                        );
+                };
+                newSignalBlock.rightHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('e-resize');};
+                newSignalBlock.rightHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+
+            return {id:newID, signalBlock:newSignalBlock};
         }
 
     //controls
@@ -425,124 +622,40 @@ this.sequencer = function(
                 }
             };
 
-        //playhead
-            object.automove = function(bool){
-                if(bool == undefined){return playhead.automoveViewposition;}
-                playhead.automoveViewposition = bool;
-            };
-            object.playheadPosition = function(val,stopActive=true){
-                if(val == undefined){return playhead.position;}
-    
-                playhead.position = val;
-    
-                //send stop events for all active blocks
-                    if(stopActive){
-                        var events = [];
-                        for(var a = 0; a < blocks.activeBlocks.length; a++){
-                            var tmp = blockRegistry.getBlock(blocks.activeBlocks[a]); if(tmp == null){continue;}
-                            events.unshift( {blockID:blocks.activeBlocks[a], line:tmp.line, position:loop.period.start, strength:0} );
-                        }
-                        blocks.activeBlocks = [];
-                        if(object.event && events.length > 0){object.event(events);}
-                    }
-    
-                //reposition graphical playhead
-                    if(playhead.position < 0 || playhead.position > xCount){
-                        //outside viable bounds, so remove
-                        if( playhead.present ){ workarea.remove(workarea.getElementsWithName('playhead')[0]); playhead.present = false; }
-                    }else{ 
-                        //within viable bounds, so either create or adjust
-                        if( !playhead.present ){ makePlayhead(); }
-                        workarea.getElementsWithName('playhead')[0].parameter.x( 
-                            playhead.position*(viewport.totalSize.width/xCount) - playhead.width/2
-                        );
-
-                        //if the new position is beyond the view in the viewport, adjust the viewport (putting the playhead on the leftmost side)
-                        //(assuming automoveViewposition is set)
-                        if(playhead.automoveViewposition){
-                            var remainderSpace = xCount-(xCount*zoomLevel_x);
-                            if( playhead.position < Math.floor(viewposition.x*remainderSpace)   || 
-                                playhead.position > Math.floor(viewposition.x*remainderSpace) + (xCount*zoomLevel_x)  
-                            ){ object.viewposition( (playhead.position > remainderSpace ? remainderSpace : playhead.position)/remainderSpace ); }
-                        }
-                    }
-            };
-            object.progress = function(){
-                //if the playhead is being held, just bail completely
-                    if(playhead.held){return;}
-                    
-                //if there's no playhead; create one and set its position to 0
-                    if(!playhead.present){makePlayhead(); playhead.position = 0; }
-    
-                //gather together all the current events
-                    var events = object.eventsBetween(playhead.position, playhead.position+blocks.step);
-    
-                //upon loop; any blocks that are still active are to be ended
-                //(so create end events for them, and push those into the current events list)
-                    if(loop.active && playhead.position == loop.period.start){
-                        for(var a = 0; a < blocks.activeBlocks.length; a++){
-                            var tmp = blockRegistry.getBlock(activeBlocks[a]); if(tmp == null){continue;}
-                            events.unshift( {blockID:blocks.activeBlocks[a], line:tmp.line, position:loop.period.start, strength:0} );
-                        }
-                        blocks.activeBlocks = [];
-                    }
-    
-                //add newly started blocks to - and remove newly finished blocks from - 'blocks.activeBlocks'
-                    for(var a = 0; a < events.length; a++){
-                        var index = blocks.activeBlocks.indexOf(events[a].blockID);
-                        if(index != -1 && events[a].strength == 0){
-                            blocks.activeBlocks.splice(index);
-                        }else{
-                            if( events[a].strength > 0 ){
-                                blocks.activeBlocks.push(events[a].blockID);
-                            }
-                        }
-                    }
-    
-                //progress position
-                    if( loop.active && (playhead.position+blocks.step == loop.period.end) ){
-                        playhead.position = loop.period.start;
-                    }else{
-                        playhead.position = playhead.position+step;
-                    }
-    
-                //update graphical playhead
-                    object.playheadPosition(playhead.position,false);
-    
-                //perform event callback
-                    if(object.event && events.length > 0){object.event(events);}
-            };
-
-        //blocks
-            object.addBlock = function(line, position, length, strength=1){ makeNote(line, position, length, strength); };
+        //signals
+            object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
 
     //interaction
         interactionPlane.onmousedown = function(x,y,event){
             if(event.shiftKey){ //click-n-drag group select
-            }else if(event.altKey){ //create block
+            }else if(event.altKey){ //create signal
             }else if(canvas.system.keyboard.pressedKeys.Space){//panning
+                canvas.core.viewport.cursor('grabbing');
+
                 var initialPosition = currentMousePosition(event);
                 var old_viewport = {x:viewport.viewposition.x, y:viewport.viewposition.y};
                 canvas.system.mouse.mouseInteractionHandler(
                     function(event){
                         var livePosition = currentMousePosition(event);
                         var diffPosition = {x:initialPosition.x-livePosition.x, y:initialPosition.y-livePosition.y};
-                        var scale = canvas.core.viewport.scale();
                         setViewposition(
-                            old_viewport.x - (diffPosition.x*zoomLevel_x)/((zoomLevel_x-1)*scale),
-                            old_viewport.y - (diffPosition.y*zoomLevel_y)/((zoomLevel_y-1)*scale),
+                            old_viewport.x - (diffPosition.x*zoomLevel_x)/(zoomLevel_x-1),
+                            old_viewport.y - (diffPosition.y*zoomLevel_y)/(zoomLevel_y-1),
                         );
                     },
-                    function(event){},
+                    function(event){
+                        canvas.core.viewport.cursor('grab');
+                    },
                 );
             }else{//elsewhere click
                 //deselect everything
-                    while(blocks.selectedblocks.length > 0){
-                        blocks.selectedblocks[0].deselect();
+                    while(signals.selectedSignals.length > 0){
+                        signals.selectedSignals[0].deselect();
                     }
             }
         };
-
+        interactionPlane.onkeydown = function(x,y,event){ if(canvas.system.keyboard.pressedKeys.Space){ canvas.core.viewport.cursor('grab'); } };
+        interactionPlane.onkeyup = function(x,y,event){   if(!canvas.system.keyboard.pressedKeys.Space){ canvas.core.viewport.cursor('default'); } };
     //callbacks
         object.onpan = onpan;
         object.onchangeviewarea = onchangeviewarea;
@@ -561,7 +674,7 @@ this.sequencer = function(
 
 
 
-this.sequencer.eventBlock = function(
+this.sequencer.signalBlock = function(
     name, unit_x, unit_y,
     line, position, length, strength=1, glow=false, 
     bodyStyle=[
@@ -591,46 +704,46 @@ this.sequencer.eventBlock = function(
     };
     
     //elements
-        var obj = canvas.part.builder('group',String(name),{x:position*unit_x, y:line*unit_y});
-        obj.body = canvas.part.builder('rectangle','body',{width:length*unit_x, height:unit_y, style:currentStyles.body});
-        obj.leftHandle = canvas.part.builder('rectangle','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y, style:{fill:handleStyle}});
-        obj.rightHandle = canvas.part.builder('rectangle','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:{fill:handleStyle}});
-        obj.append(obj.body);
-        obj.append(obj.leftHandle);
-        obj.append(obj.rightHandle);
+        var object = canvas.part.builder('group',String(name),{x:position*unit_x, y:line*unit_y});
+        object.body = canvas.part.builder('rectangle','body',{width:length*unit_x, height:unit_y, style:{fill:currentStyles.body.fill, stroke:currentStyles.body.stroke, lineWidth:currentStyles.body.lineWidth}});
+        object.leftHandle = canvas.part.builder('rectangle','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y, style:{fill:handleStyle}});
+        object.rightHandle = canvas.part.builder('rectangle','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:{fill:handleStyle}});
+        object.append(object.body);
+        object.append(object.leftHandle);
+        object.append(object.rightHandle);
 
     //internal functions
         function updateHeight(){
-            obj.body.parameter.height(unit_y);
-            obj.leftHandle.parameter.height(unit_y);
-            obj.rightHandle.parameter.height(unit_y);
+            object.body.parameter.height(unit_y);
+            object.leftHandle.parameter.height(unit_y);
+            object.rightHandle.parameter.height(unit_y);
         }
         function updateLength(){
-            obj.body.parameter.width(length*unit_x);
-            obj.rightHandle.parameter.x(length*unit_x-handleWidth/2);
+            object.body.parameter.width(length*unit_x);
+            object.rightHandle.parameter.x(length*unit_x-handleWidth/2);
         }
         function updateLineAndPosition(){ updateLine(); updatePosition(); }
-        function updateLine(){ obj.parameter.y(line*unit_y); }
-        function updatePosition(){ obj.parameter.x(position*unit_x); }
+        function updateLengthAndHeight(){ updateLength(); updateHeight(); }
+        function updateLine(){ object.parameter.y(line*unit_y); }
+        function updatePosition(){ object.parameter.x(position*unit_x); }
         function getBlendedColour(swatch,ratio){
-            var outputStyle = swatch[0];
+            var outputStyle = Object.assign({},swatch[0]);
 
-            //if there's a fill attribute; blend it and add it to the template
+            //if there's a fill attribute; blend it and add it to the output 
                 if( swatch[0].hasOwnProperty('fill') ){
                     outputStyle.fill = canvas.library.misc.multiBlendColours(swatch.map(a => a.fill),ratio);
                 }
 
-            //if there's a stroke attribute; blend it and add it to the template
+            //if there's a stroke attribute; blend it and add it to the output
                 if( swatch[0].hasOwnProperty('stroke') ){
                     outputStyle.stroke = canvas.library.misc.multiBlendColours(swatch.map(a => a.stroke),ratio);
                 }
 
-            //pack up the template and return
-                return outputStyle;
+            return outputStyle;
         }
 
     //controls
-        obj.unit = function(x,y){
+        object.unit = function(x,y){
             if(x == undefined && y == undefined){return {x:unit_x,y:unit_y};}
             //(awkward bid for speed)
             else if( x == undefined ){
@@ -644,27 +757,26 @@ this.sequencer.eventBlock = function(
             }else{
                 unit_x = x;
                 unit_y = y;
-                updateHeight();
-                updateLength();
+                updateLengthAndHeight();
                 updateLineAndPosition();
             }
         };
-        obj.line = function(a){
+        object.line = function(a){
             if(a == undefined){return line;}
             line = a;
             updateLine();
         };
-        obj.position = function(a){
+        object.position = function(a){
             if(a == undefined){return position;}
             position = a;
             updatePosition();
         };
-        obj.length = function(a){
+        object.length = function(a){
             if(a == undefined){return length;}
             length = a < (minLength/unit_x) ? (minLength/unit_x) : a;
             updateLength();
         };
-        obj.strength = function(a){
+        object.strength = function(a){
             if(a == undefined){return strength;}
             a = a > 1 ? 1 : a; a = a < 0 ? 0 : a;
             strength = a;
@@ -672,18 +784,27 @@ this.sequencer.eventBlock = function(
                 body:getBlendedColour(bodyStyle,strength),
                 glow:getBlendedColour(bodyGlowStyle,strength),
             };
-            obj.glow(glow);
+            object.glow(glow);
         };
-        obj.glow = function(a){
+        object.glow = function(a){
             if(a == undefined){return glow;}
             glow = a;
-            if(glow){ obj.body.style = currentStyles.glow; }
-            else{     obj.body.style = currentStyles.body; }
+            if(glow){ 
+                object.body.style.fill = currentStyles.glow.fill;
+                object.body.style.stroke = currentStyles.glow.stroke;
+                object.body.style.lineWidth = currentStyles.glow.lineWidth;
+            }else{    
+                object.body.style.fill = currentStyles.body.fill;
+                object.body.style.stroke = currentStyles.body.stroke;
+                object.body.style.lineWidth = currentStyles.body.lineWidth;
+            }            
         };
-        obj.selected = function(a){
+        object.selected = function(a){
             if(a == undefined){return selected;}
             selected = a;
         };
 
-    return obj;
+        object.cs = function(){return currentStyles;};
+
+    return object;
 };

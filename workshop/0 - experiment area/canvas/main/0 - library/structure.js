@@ -21,25 +21,25 @@ this.functionListRunner = function(list){
     }
 };
 
-this.blockRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
-    var blocks = [];
-    var selectedBlocks = [];
+this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1){
+    var signals = [];
+    var selectedSignals = [];
     var events = [];
     var events_byID = [];
     var events_byPosition = {};
     var positions = [];
 
     this.__dump = function(){
-        console.log('---- blockRegistry dump ----');
+        console.log('---- signalRegistry dump ----');
 
-        console.log('\tblocks');
-        for(var a = 0; a < blocks.length; a++){ 
-            console.log( '\t\t', a, ' ' + JSON.stringify(blocks[a]) );
+        console.log('\tsignals');
+        for(var a = 0; a < signals.length; a++){ 
+            console.log( '\t\t', a, ' ' + JSON.stringify(signals[a]) );
         }
 
-        console.log('\tselectedBlocks');
-        for(var a = 0; a < tselectedBlocks.length; a++){ 
-            console.log( '\t\t', a, ' ' + JSON.stringify(tselectedBlocks[a]) );
+        console.log('\tselectedSignals');
+        for(var a = 0; a < tselectedSignals.length; a++){ 
+            console.log( '\t\t', a, ' ' + JSON.stringify(tselectedSignals[a]) );
         }
 
         console.log('\tevents');
@@ -67,8 +67,8 @@ this.blockRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
     this.export = function(){
         return JSON.parse(JSON.stringify(
             {
-                blocks:             blocks,
-                selectedBlocks:     selectedBlocks,
+                signals:             signals,
+                selectedSignals:     selectedSignals,
                 events:             events,
                 events_byID:        events_byID,
                 events_byPosition:  events_byPosition,
@@ -77,19 +77,19 @@ this.blockRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
         ));
     };
     this.import = function(data){
-        blocks =             JSON.parse(JSON.stringify(data.blocks));
-        selectedBlocks =     JSON.parse(JSON.stringify(data.selectedBlocks));
+        signals =             JSON.parse(JSON.stringify(data.signals));
+        selectedSignals =     JSON.parse(JSON.stringify(data.selectedSignals));
         events =            JSON.parse(JSON.stringify(data.events));
         events_byID =       JSON.parse(JSON.stringify(data.events_byID));
         events_byPosition = JSON.parse(JSON.stringify(data.events_byPosition));
         positions =         JSON.parse(JSON.stringify(data.positions));
     };
 
-    this.getAllBlocks = function(){ return JSON.parse(JSON.stringify(blocks)); };
+    this.getAllSignals = function(){ return JSON.parse(JSON.stringify(signals)); };
     this.getAllEvents = function(){ return JSON.parse(JSON.stringify(events)); };
-    this.getNote = function(id){
-        if( blocks[id] == undefined ){return;}
-        return JSON.parse(JSON.stringify(blocks[id]));
+    this.getSignal = function(id){
+        if( signals[id] == undefined ){return;}
+        return JSON.parse(JSON.stringify(signals[id]));
     };
     this.eventsBetween = function(start,end){
         //depending on whether theres an end position or not; get all the events positions that 
@@ -127,25 +127,25 @@ this.blockRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
             if(data.strength < 0){data.strength = 0;}
 
             if(bottomLimit > -1 && (data.line > bottomLimit-1)){data.line = bottomLimit-1;}
-            if(blockLengthLimit > -1 && (data.length > blockLengthLimit)){data.length = blockLengthLimit;}
+            if(signalLengthLimit > -1 && (data.length > signalLengthLimit)){data.length = signalLengthLimit;}
             if(rightLimit > -1 && (data.position > rightLimit) ){data.position = rightLimit-data.length;}
             if(rightLimit > -1 && (data.position+data.length > rightLimit)){ data.length = rightLimit-data.position; }
             if(rightLimit > -1 && (data.position+data.length > rightLimit)){data.position = rightLimit-data.length;}
             if(data.strength > 1){data.strength = 1;}
 
-        //generate note ID
+        //generate signal ID
             var newID = 0;
             if(forceID == undefined){
-                while(blocks[newID] != undefined){newID++;}
+                while(signals[newID] != undefined){newID++;}
             }else{newID = forceID;}
 
-        //add note to storage
-            blocks[newID] = JSON.parse(JSON.stringify(data));
+        //add signal to storage
+            signals[newID] = JSON.parse(JSON.stringify(data));
 
         //generate event data
             var newEvents = [
-                {noteID:newID, line:data.line, position:data.position,               strength:data.strength},
-                {noteID:newID, line:data.line, position:(data.position+data.length), strength:0}
+                {signalID:newID, line:data.line, position:data.position,               strength:data.strength},
+                {signalID:newID, line:data.line, position:(data.position+data.length), strength:0}
             ];
 
         //add event data to storage
@@ -174,9 +174,9 @@ this.blockRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
         return newID;
     };
     this.remove = function(id){
-        if( blocks[id] == undefined ){return;}
+        if( signals[id] == undefined ){return;}
 
-        delete blocks[id];
+        delete signals[id];
 
         for(var a = 0; a < events_byID[id].length; a++){
             var tmp = events_byID[id][a];
@@ -191,11 +191,11 @@ this.blockRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
     this.update = function(id,data){
         //clean input
             if(data == undefined){return;}
-            if(!('line' in data)){data.line = blocks[id].line;}
+            if(!('line' in data)){data.line = signals[id].line;}
 
-            //Special cases where either by movement or lengthening, the note stretches further than the rightLimit
-            //will allow. In these cases the note either has to be clipped, or prevented from moving further to the
-            //right. In the case where a note is being lengthened and moved to the right; the system should opt to
+            //Special cases where either by movement or lengthening, the signal stretches further than the rightLimit
+            //will allow. In these cases the signal either has to be clipped, or prevented from moving further to the
+            //right. In the case where a signal is being lengthened and moved to the right; the system should opt to
             //clip it's length
             //Obviously, if there's no right limit don't bother
             if(rightLimit > -1){
@@ -203,22 +203,22 @@ this.blockRegistry = function(rightLimit=-1,bottomLimit=-1,blockLengthLimit=-1){
                     if(data.length+data.position > rightLimit){ data.length = rightLimit-data.position; }
                 }else{
                     if('position' in data){//prevent movement
-                        if(blocks[id].length+data.position >= rightLimit){ data.position = rightLimit - blocks[id].length; }
-                    }else{ data.position = blocks[id].position; }
+                        if(signals[id].length+data.position >= rightLimit){ data.position = rightLimit - signals[id].length; }
+                    }else{ data.position = signals[id].position; }
                     if('length' in data){//clip length
                         if(data.length+data.position > rightLimit){ data.length = rightLimit-data.position; }
-                    }else{ data.length = blocks[id].length; }
+                    }else{ data.length = signals[id].length; }
                 }
             }
 
-            if(!('strength' in data)){data.strength = blocks[id].strength;}
+            if(!('strength' in data)){data.strength = signals[id].strength;}
         
         this.remove(id);
         this.add(data,id);
     };
     this.reset = function(){
-        blocks = [];
-        selectedBlocks = [];
+        signals = [];
+        selectedSignals = [];
         events = [];
         events_byID = [];
         events_byPosition = {};

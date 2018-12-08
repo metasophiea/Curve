@@ -1,4 +1,24 @@
+ 
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-12-08
+  - added CNAME to docs, so now curve.metasophiea.com is a thing n_n
+
+
+2018-12-07
+  - canvas experiment
+    - started add cursor types to sequencer events
+    - added shape-related callback detection to system
+
+
+2018-12-05
+  - canvas experiment
+    - renamed blockRegistry to signalRegistry
+    - added in signalRegistry test code (just the noteRegistry test code from
+      before)
+    - more sequencer work (added in block movement and resize)(which also works
+      with multi selected blocks)
+
+
 2018-12-03
   - canvas experiment
     - work continues on the sequencer
