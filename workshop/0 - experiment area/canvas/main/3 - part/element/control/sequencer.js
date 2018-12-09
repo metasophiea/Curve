@@ -6,7 +6,7 @@ this.sequencer = function(
     zoomLevel_x=1/2, zoomLevel_y=1/2,
 
     backingStyle='rgba(20,20,20,1)',
-    selectionAreaStyle='rgba(209, 189, 222, 1)',
+    selectionAreaStyle='rgba(209, 189, 222, 0.5)',
 
     signalStyle_body=[
         {fill:'rgba(138,138,138,0.6)', stroke:'rgba(175,175,175,0.95)', lineWidth:0.5},
@@ -107,14 +107,17 @@ this.sequencer = function(
                 backgroundDrawArea.append(backgroundDrawArea_horizontal);
                 var backgroundDrawArea_vertical = canvas.part.builder('group','backgroundDrawArea_vertical');
                 backgroundDrawArea.append(backgroundDrawArea_vertical);
-            //interaction pane
-                var interactionPlane = canvas.part.builder('rectangle','interactionPlane',{width:viewport.totalSize.width, height:viewport.totalSize.height, style:{fill:'rgba(0,0,0,0)'}});
-                workarea.append(interactionPlane);
-                interactionPlane.onwheel = function(x,y,event){};
+            //interaction pane back
+                var interactionPlane_back = canvas.part.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, style:{fill:'rgba(0,0,0,0)'}});
+                workarea.append(interactionPlane_back);
+                interactionPlane_back.onwheel = function(x,y,event){};
             //signal block area
                 var signalPane = canvas.part.builder('group','signalPane');
                 workarea.append(signalPane);
-
+            //interaction pane back
+                var interactionPlane_front = canvas.part.builder('rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, style:{fill:'rgba(0,0,0,0)'}});
+                workarea.append(interactionPlane_front);
+                interactionPlane_front.onwheel = function(x,y,event){};
     //internal
         object.__calculationAngle = angle;
         function currentMousePosition(event){
@@ -131,12 +134,12 @@ this.sequencer = function(
         function viewportPosition2internalPosition(xy){
             return {x: viewport.viewArea.topLeft.x + xy.x*zoomLevel_x, y:viewport.viewArea.topLeft.y + xy.y*zoomLevel_y };
         }
-        // function visible2coordinates(xy){
-        //     return {
-        //         x: zoomLevel_x*(xy.x - viewport.viewposition.x) + viewport.viewposition.x,
-        //         y: zoomLevel_y*(xy.y - viewport.viewposition.y) + viewport.viewposition.y,
-        //     };
-        // }
+        function visible2coordinates(xy){
+            return {
+                x: zoomLevel_x*(xy.x - viewport.viewposition.x) + viewport.viewposition.x,
+                y: zoomLevel_y*(xy.y - viewport.viewposition.y) + viewport.viewposition.y,
+            };
+        }
         function coordinates2lineposition(xy){
             xy.y = Math.floor(xy.y*yCount);
             if(xy.y >= yCount){xy.y = yCount-1;}
@@ -215,9 +218,9 @@ this.sequencer = function(
                     viewport.totalSize.width = width/zoomLevel_x;
                     viewport.totalSize.height = height/zoomLevel_y;
 
-                //update interactionPlane
-                    interactionPlane.parameter.width( viewport.totalSize.width );
-                    interactionPlane.parameter.height( viewport.totalSize.width );
+                //update interactionPlane_back
+                    interactionPlane_back.parameter.width( viewport.totalSize.width );
+                    interactionPlane_back.parameter.height( viewport.totalSize.width );
 
                 //update background strips
                     for(var a = 0; a < xCount; a++){
@@ -250,8 +253,8 @@ this.sequencer = function(
                     zoomLevel_x = x;
                     viewport.totalSize.width = width/zoomLevel_x;
 
-                //update interactionPlane
-                    interactionPlane.parameter.width( viewport.totalSize.width );
+                //update interactionPlane_back
+                    interactionPlane_back.parameter.width( viewport.totalSize.width );
 
                 //update background strips
                     for(var a = 0; a < xCount; a++){
@@ -279,8 +282,8 @@ this.sequencer = function(
                     zoomLevel_y = y;
                     viewport.totalSize.height = height/zoomLevel_y;
 
-                //update interactionPlane
-                    interactionPlane.parameter.height( viewport.totalSize.width );
+                //update interactionPlane_back
+                    interactionPlane_back.parameter.height( viewport.totalSize.width );
                 
                 //update background strips
                     for(var a = 0; a < xCount; a++){
@@ -326,38 +329,38 @@ this.sequencer = function(
             //update state
                 viewport.viewArea = Object.assign(d,{});
         }
-        function makePlayhead(){
-            var newPlayhead = canvas.part.builder('group','playhead');
-            workarea.append(newPlayhead);
+        // function makePlayhead(){
+        //     var newPlayhead = canvas.part.builder('group','playhead');
+        //     workarea.append(newPlayhead);
 
-            newPlayhead.main = canvas.part.builder('rectangle','main',{
-                width:playhead.width,
-                height:viewport.totalSize.height,
-                style:{ fill:playheadStyle },
-            });
-            newPlayhead.append(newPlayhead.main);
+        //     newPlayhead.main = canvas.part.builder('rectangle','main',{
+        //         width:playhead.width,
+        //         height:viewport.totalSize.height,
+        //         style:{ fill:playheadStyle },
+        //     });
+        //     newPlayhead.append(newPlayhead.main);
 
-            newPlayhead.invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{
-                x:-playhead.width*playhead.invisibleHandleMux/2 + playhead.width/2, 
-                width: playhead.width*playhead.invisibleHandleMux,
-                height:viewport.totalSize.height,
-                style:{ fill:'rgba(255,0,0,0.5)' },
-            })
-            newPlayhead.append(newPlayhead.invisibleHandle);
+        //     newPlayhead.invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{
+        //         x:-playhead.width*playhead.invisibleHandleMux/2 + playhead.width/2, 
+        //         width: playhead.width*playhead.invisibleHandleMux,
+        //         height:viewport.totalSize.height,
+        //         style:{ fill:'rgba(255,0,0,0.5)' },
+        //     })
+        //     newPlayhead.append(newPlayhead.invisibleHandle);
 
-            newPlayhead.invisibleHandle.onmousedown = function(){
-                playhead.held = true;
-                canvas.system.mouse.mouseInteractionHandler(
-                    function(event){ object.playheadPosition( coordinates2lineposition(currentMousePosition()).position ); },
-                    function(){playhead.held = false;}
-                );
-            };
+        //     newPlayhead.invisibleHandle.onmousedown = function(){
+        //         playhead.held = true;
+        //         canvas.system.mouse.mouseInteractionHandler(
+        //             function(event){ object.playheadPosition( coordinates2lineposition(currentMousePosition()).position ); },
+        //             function(){playhead.held = false;}
+        //         );
+        //     };
 
-            newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
-            newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+        //     newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+        //     newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
 
-            playhead.present = true;
-        }
+        //     playhead.present = true;
+        // }
         function makeSignal(line, position, length, strength=signals.defaultStrength){
             //register signal and get new id. From the registry, get the approved signal values
                 var newID = signals.signalRegistry.add({ line:line, position:position, length:length, strength:strength });
@@ -400,7 +403,7 @@ this.sequencer = function(
                 newSignalBlock.body.onmousedown = function(x,y,event){
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
                         if(canvas.system.keyboard.pressedKeys.hasOwnProperty('Space') && canvas.system.keyboard.pressedKeys){
-                            interactionPlane.onmousedown(x,y,event); return;
+                            interactionPlane_back.onmousedown(x,y,event); return;
                         }
 
                     //if the shift key is not pressed and this note is not already selected; deselect everything
@@ -430,6 +433,9 @@ this.sequencer = function(
                             var initial = event.offsetY;
                             canvas.system.mouse.mouseInteractionHandler(
                                 function(event){
+                                    //check if ctrl is still pressed
+                                        if(!canvas.system.keyboard.pressedKeys.ControlLeft && !canvas.system.keyboard.pressedKeys.ControlRight){ canvas.system.mouse.forceMouseUp(); }
+
                                     var diff = (initial - event.offsetY)/(canvas.core.viewport.scale()*height*mux);
                                     for(var a = 0; a < activeBlocks.length; a++){
                                         activeBlocks[a].block.strength(initialStrengths[a] + diff);
@@ -478,9 +484,21 @@ this.sequencer = function(
                                     activeBlocks[a].block.line( temp.line );
                                     activeBlocks[a].block.position( temp.position );
                                 }
-                            },
+                            }
                         );
-                };          
+                };
+                newSignalBlock.body.onmousemove = function(x,y,event){
+                    var pressedKeys = canvas.system.keyboard.pressedKeys;
+                    canvas.core.viewport.cursor( (pressedKeys.AltLeft || pressedKeys.AltRight) ? 'copy' : 'default' );
+                };
+                newSignalBlock.body.onkeydown = function(x,y,event){
+                    var pressedKeys = canvas.system.keyboard.pressedKeys;
+                    if(pressedKeys.AltLeft || pressedKeys.AltRight){ canvas.core.viewport.cursor('copy'); }
+                };
+                newSignalBlock.body.onkeyup = function(x,y,event){
+                    var pressedKeys = canvas.system.keyboard.pressedKeys;
+                    if(!(pressedKeys.AltLeft || pressedKeys.AltRight)){ canvas.core.viewport.cursor('default'); }
+                };
                 newSignalBlock.leftHandle.onmousedown = function(x,y,event){
                     //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
                         if(!event.shiftKey && !newSignalBlock.selected()){
@@ -523,7 +541,7 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.leftHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('w-resize');};
+                newSignalBlock.leftHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
                 newSignalBlock.leftHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
                 newSignalBlock.rightHandle.onmousedown = function(x,y,event){
                     //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
@@ -562,7 +580,7 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.rightHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('e-resize');};
+                newSignalBlock.rightHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
                 newSignalBlock.rightHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
 
             return {id:newID, signalBlock:newSignalBlock};
@@ -626,14 +644,19 @@ this.sequencer = function(
             object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
 
     //interaction
-        interactionPlane.onmousedown = function(x,y,event){
-            if(event.shiftKey){ //click-n-drag group select
-            }else if(event.altKey){ //create signal
-            }else if(canvas.system.keyboard.pressedKeys.Space){//panning
+        var tmp = {};
+        var panningCode = {
+            start:function(x,y,event){
+                tmp.onmousemove = interactionPlane_front.onmousemove;
+                interactionPlane_front.onmousemove = function(){};
+                tmp.onmouseleave = interactionPlane_front.onmouseleave;
+                interactionPlane_front.onmouseleave = function(){};
+
                 canvas.core.viewport.cursor('grabbing');
 
                 var initialPosition = currentMousePosition(event);
                 var old_viewport = {x:viewport.viewposition.x, y:viewport.viewposition.y};
+
                 canvas.system.mouse.mouseInteractionHandler(
                     function(event){
                         var livePosition = currentMousePosition(event);
@@ -647,15 +670,138 @@ this.sequencer = function(
                         canvas.core.viewport.cursor('grab');
                     },
                 );
-            }else{//elsewhere click
+            },
+            stop:function(x,y,event){
+                interactionPlane_front.onmousemove = tmp.onmousemove;
+                interactionPlane_front.onmouseleave = tmp.onmouseleave;
+            },
+        };
+        var click_n_drag = function(x,y,event){
+            var initialPositionData = currentMousePosition(event);
+            var livePositionData =    currentMousePosition(event);
+
+            var selectionArea = canvas.part.builder('rectangle','selectionArea',{
+                x:initialPositionData.x*width, y:initialPositionData.y*height,
+                width:0, height:0,
+                style:{fill:selectionAreaStyle}
+            });
+            object.append(selectionArea);
+
+            canvas.system.mouse.mouseInteractionHandler(
+                function(event){
+                    //get live position, and correct it so it's definitely within in the relevant area
+                        livePositionData = currentMousePosition(event);
+                        livePositionData.x < 0 ? 0 : livePositionData.x;
+                        livePositionData.y < 0 ? 0 : livePositionData.y;
+                        livePositionData.x > 1 ? 1 : livePositionData.x;
+                        livePositionData.y > 1 ? 1 : livePositionData.y;
+                        
+                    //gather difference between this point and the initial
+                        var diff = {
+                            x:livePositionData.x - initialPositionData.x, 
+                            y:livePositionData.y - initialPositionData.y
+                        };
+
+                    //account for an inverse rectangle
+                        var transform = {
+                            x: initialPositionData.x, y: initialPositionData.y, 
+                            width: 1, height: 1,
+                        };
+                        
+                        if(diff.x < 0){ transform.width = -1;  transform.x += diff.x; }
+                        if(diff.y < 0){ transform.height = -1; transform.y += diff.y; }
+
+                    //update rectangle 
+                        selectionArea.parameter.x(transform.x*width);
+                        selectionArea.parameter.y(transform.y*height);
+                        selectionArea.parameter.width(  transform.width  * diff.x*width  );
+                        selectionArea.parameter.height( transform.height * diff.y*height );
+                },
+                function(event){
+                    //remove selection box
+                        selectionArea.parent.remove(selectionArea);
+
+                    //gather the corner points
+                        var finishingPositionData = {
+                            a: visible2coordinates(initialPositionData),
+                            b: visible2coordinates(livePositionData),
+                        };
+                        finishingPositionData.a.x *= viewport.totalSize.width; finishingPositionData.b.y *= viewport.totalSize.height;
+                        finishingPositionData.b.x *= viewport.totalSize.width; finishingPositionData.a.y *= viewport.totalSize.height;
+
+                        var selectionBox = { topLeft:{ x:0, y:0 }, bottomRight:{ x:0, y:0 } };
+                        if( finishingPositionData.a.x < finishingPositionData.b.x ){
+                            selectionBox.topLeft.x =     finishingPositionData.a.x;
+                            selectionBox.bottomRight.x = finishingPositionData.b.x;
+                        }else{
+                            selectionBox.topLeft.x =     finishingPositionData.b.x;
+                            selectionBox.bottomRight.x = finishingPositionData.a.x;
+                        }
+                        if( finishingPositionData.a.y < finishingPositionData.b.y ){
+                            selectionBox.topLeft.y =     finishingPositionData.a.y;
+                            selectionBox.bottomRight.y = finishingPositionData.b.y;
+                        }else{
+                            selectionBox.topLeft.y =     finishingPositionData.b.y;
+                            selectionBox.bottomRight.y = finishingPositionData.a.y;
+                        }
+
+                    //deselect everything
+                        while(signals.selectedSignals.length > 0){
+                            signals.selectedSignals[0].deselect();
+                        }
+
+                    //select the notes that overlap with the selection area
+                        for(var a = 0; a < signalPane.children.length; a++){
+                            var temp = signals.signalRegistry.getSignal(parseInt(signalPane.children[a].name));
+                            var block = { 
+                                    topLeft:{
+                                        x:temp.position * (viewport.totalSize.width/xCount), 
+                                        y:temp.line *     (viewport.totalSize.height/yCount)},
+                                    bottomRight:{
+                                        x:(temp.position+temp.length) * (viewport.totalSize.width/xCount), 
+                                        y:(temp.line+1)*                (viewport.totalSize.height/yCount)
+                                    },
+                            };
+
+                            if( canvas.library.math.detectOverlap.boundingBoxes( block, selectionBox ) ){signalPane.children[a].select(true);}
+                        }
+                },
+            );
+        };
+        var createSignal = function(x,y,event){};
+
+        interactionPlane_front.onkeydown = function(x,y,event){
+            var pressedKeys = canvas.system.keyboard.pressedKeys;
+            if(pressedKeys.Delete || pressedKeys.Backspace){
+                //delete all selected notes
+                while(signals.selectedSignals.length > 0){
+                    signals.selectedSignals[0].delete();
+                }
+            }else if(pressedKeys.Space){
+                canvas.core.viewport.cursor('grab');
+                tmp.onmousedown = interactionPlane_front.onmousedown;
+                interactionPlane_front.onmousedown = panningCode.start;
+            }
+        };
+        interactionPlane_front.onkeyup = function(x,y,event){
+            if(!canvas.system.keyboard.pressedKeys.Space){
+                canvas.core.viewport.cursor('default');
+                panningCode.stop();
+                interactionPlane_front.onmousedown = tmp.onmousedown;
+            }
+        };
+
+        interactionPlane_back.onmousedown = function(x,y,event){
+            if(event.shiftKey){ click_n_drag(x,y,event); }
+            else if(event.altKey){ createSignal(x,y,event); }
+            else{//elsewhere click
                 //deselect everything
                     while(signals.selectedSignals.length > 0){
                         signals.selectedSignals[0].deselect();
                     }
             }
         };
-        interactionPlane.onkeydown = function(x,y,event){ if(canvas.system.keyboard.pressedKeys.Space){ canvas.core.viewport.cursor('grab'); } };
-        interactionPlane.onkeyup = function(x,y,event){   if(!canvas.system.keyboard.pressedKeys.Space){ canvas.core.viewport.cursor('default'); } };
+        interactionPlane_front.onmouseleave = function(x,y,event){ canvas.core.viewport.cursor('default'); };
     //callbacks
         object.onpan = onpan;
         object.onchangeviewarea = onchangeviewarea;
@@ -803,8 +949,6 @@ this.sequencer.signalBlock = function(
             if(a == undefined){return selected;}
             selected = a;
         };
-
-        object.cs = function(){return currentStyles;};
 
     return object;
 };

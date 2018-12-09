@@ -34,6 +34,7 @@
                 };
                 canvas.onmouseleave = canvas.onmouseup;
     };
+    this.forceMouseUp = function(){ canvas.onmouseup(); };
     
 //connect callbacks to mouse function lists
     canvas.core.callback.onmousedown = function(x,y,event,shape){

@@ -670,6 +670,178 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                 };
                 var shapes = new function(){
+                    this.polygon = function(){
+                    
+                        this.type = 'polygon';
+                    
+                        this.name = '';
+                        this.ignored = false;
+                        this.static = false;
+                        this.parent = undefined;
+                        this.dotFrame = false;
+                        this.extremities = {
+                            points:[],
+                            boundingBox:{},
+                        };
+                    
+                        this.points = [];
+                    
+                        this.style = {
+                            fill:'rgba(100,255,255,1)',
+                            stroke:'rgba(0,0,0,0)',
+                            lineWidth:1,
+                            lineJoin:'round',
+                            miterLimit:2,
+                            shadowColour:'rgba(0,0,0,0)',
+                            shadowBlur:20,
+                            shadowOffset:{x:20, y:20},
+                        };
+                    
+                        
+                        this.parameter = {};
+                        this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
+                    
+                    
+                    
+                    
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
+                        this.computeExtremities = function(offset){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
+                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
+                            //in which case; gather the offset of all parents. Otherwise just use what was provided
+                                offset = offset == undefined ? gatherParentOffset(this) : offset;
+                    
+                            //reset variables
+                                this.extremities = {
+                                    points:[],
+                                    boundingBox:{},
+                                };
+                    
+                            //calculate points
+                                this.extremities.points = this.points.map(function(point){
+                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                    point.x += offset.x;
+                                    point.y += offset.y;
+                                    return point;
+                                });
+                    
+                            //calculate boundingBox
+                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+                    
+                            //update the points and bounding box of the parent
+                                if(this.parent != undefined){
+                                    this.parent.computeExtremities();
+                                }
+                        };
+                    
+                        function isPointWithinBoundingBox(x,y,shape){
+                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+                        }
+                        function isPointWithinHitBox(x,y,shape){
+                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+                        }
+                        this.isPointWithin = function(x,y){
+                            if( isPointWithinBoundingBox(x,y,this) ){
+                                return isPointWithinHitBox(x,y,this);
+                            }
+                            return false;
+                        };
+                    
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                                if(!shouldRender(this)){return;}
+                            
+                            //collect and consolidate shape values into a neat package
+                                var shapeValue = {
+                                    points: this.points.map( function(a){
+                                        a = canvas.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
+                                        return { x:a.x+offset.x, y:a.y+offset.y };
+                                    } ),
+                                    lineWidth: this.style.lineWidth,
+                                    shadowBlur: this.style.shadowBlur,
+                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
+                                };
+                            
+                            //adapt values
+                                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
+                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                    
+                            //clipping
+                                if(isClipper){
+                                    var region = new Path2D();
+                                    region.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                                    for(var a = 1; a < shapeValue.points.length; a++){
+                                        region.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                                    }
+                                    context.clip(region);
+                                    return;
+                                }
+                    
+                            //paint this shape as requested
+                                context.fillStyle = this.style.fill;
+                                context.strokeStyle = this.style.stroke;
+                                context.lineWidth = shapeValue.lineWidth;
+                                context.lineJoin = this.style.lineJoin;
+                                context.miterLimit = this.style.miterLimit;
+                                context.shadowColor = this.style.shadowColour;
+                                context.shadowBlur = shapeValue.shadowBlur;
+                                context.shadowOffsetX = shapeValue.shadowOffset.x;
+                                context.shadowOffsetY = shapeValue.shadowOffset.y;
+                    
+                                context.beginPath(); 
+                                context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                                for(var a = 1; a < shapeValue.points.length; a++){
+                                    context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                                }
+                                context.closePath(); 
+                    
+                                context.fill(); 
+                                context.stroke();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
+                        };
+                    
+                    };
                     this.circle = function(){
                     
                         this.type = 'circle';
@@ -857,6 +1029,538 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         core.render.drawDot( temp.x, temp.y );
                                 }
                         };
+                    };
+                    this.image = function(){
+                    
+                        this.type = 'image';
+                    
+                        this.name = '';
+                        this.ignored = false;
+                        this.static = false;
+                        this.parent = undefined;
+                        this.dotFrame = false;
+                        this.extremities = {
+                            points:[],
+                            boundingBox:{},
+                        };
+                    
+                        this.x = 0;
+                        this.y = 0;
+                        this.angle = 0;
+                        this.anchor = {x:0,y:0};
+                        this.width = 10;
+                        this.height = 10;
+                    
+                        this.url = '';
+                        var imageObject = {};
+                    
+                        this.style = {
+                            shadowColour:'rgba(0,0,0,0)',
+                            shadowBlur:2,
+                            shadowOffset:{x:1, y:1},
+                        };
+                    
+                        
+                        this.parameter = {};
+                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
+                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
+                        this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
+                        this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
+                        this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities();} }(this);
+                        this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities();} }(this);
+                    
+                    
+                        
+                    
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
+                        this.computeExtremities = function(offset){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
+                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
+                            //in which case; gather the offset of all parents. Otherwise just use what was provided
+                                offset = offset == undefined ? gatherParentOffset(this) : offset;
+                    
+                            //reset variables
+                                this.extremities = {
+                                    points:[],
+                                    boundingBox:{},
+                                };
+                    
+                            //calculate points
+                                this.extremities.points = canvas.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
+                                this.extremities.points = this.extremities.points.map(function(point){
+                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                    point.x += offset.x;
+                                    point.y += offset.y;
+                                    return point;
+                                });
+                    
+                            //calculate boundingBox
+                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+                    
+                            //update the points and bounding box of the parent
+                                if(this.parent != undefined){
+                                    this.parent.computeExtremities();
+                                }
+                        };
+                    
+                        function isPointWithinBoundingBox(x,y,shape){
+                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+                        }
+                        function isPointWithinHitBox(x,y,shape){
+                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+                        }
+                        this.isPointWithin = function(x,y){
+                            if( isPointWithinBoundingBox(x,y,this) ){
+                                return isPointWithinHitBox(x,y,this);
+                            }
+                            return false;
+                        };
+                    
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                                if(!shouldRender(this)){return;}
+                    
+                            //adjust offset for parent's angle
+                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                offset.x += point.x - this.x;
+                                offset.y += point.y - this.y;
+                            
+                            //collect and consolidate shape values into a neat package
+                                var shapeValue = {
+                                    location:{
+                                        x:(this.x+offset.x),
+                                        y:(this.y+offset.y)
+                                    },
+                                    angle:(this.angle+offset.a),
+                                    width: this.width,
+                                    height: this.height,
+                                    lineWidth: this.style.lineWidth,
+                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
+                                };
+                            
+                            //adapt values
+                                shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
+                                shapeValue.width = adapter.length(shapeValue.width);
+                                shapeValue.height = adapter.length(shapeValue.height);
+                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                    
+                            //post adaptation calculations
+                                shapeValue.location = canvas.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
+                    
+                            //if this image url is not cached; cache it
+                                if( !imageObject.hasOwnProperty(this.url) ){
+                                    imageObject[this.url] = new Image(); 
+                                    imageObject[this.url].src = this.url;
+                                }
+                    
+                            //actual render
+                                context.shadowColor = this.style.shadowColour;
+                                context.shadowBlur = shapeValue.shadowBlur;
+                                context.shadowOffsetX = shapeValue.shadowOffset.x;
+                                context.shadowOffsetY = shapeValue.shadowOffset.y;
+                                context.save();
+                                context.rotate( shapeValue.angle );
+                                context.drawImage( imageObject[this.url], shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
+                                context.restore();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
+                        }
+                    
+                    };
+                    this.path = function(){
+                    
+                        this.type = 'path';
+                    
+                        this.name = '';
+                        this.ignored = false;
+                        this.static = false;
+                        this.parent = undefined;
+                        this.dotFrame = false;
+                        this.extremities = {
+                            points:[],
+                            boundingBox:{},
+                        };
+                    
+                        this.points = [];
+                    
+                        this.style = {
+                            stroke:'rgba(0,0,0,0)',
+                            lineWidth:1,
+                            lineCap:'butt',
+                            lineJoin:'miter',
+                            miterLimit:2,
+                            shadowColour:'rgba(0,0,0,0)',
+                            shadowBlur:20,
+                            shadowOffset:{x:20, y:20},
+                        };
+                    
+                        
+                        this.parameter = {};
+                        this.parameter.points = function(shape){ 
+                            return function(a){
+                                if(a==undefined){
+                                    return shape.points;
+                                } 
+                                shape.points = a; 
+                                shape.computeExtremities();
+                            } 
+                        }(this);
+                    
+                    
+                        
+                    
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
+                        this.computeExtremities = function(offset){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
+                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
+                            //in which case; gather the offset of all parents. Otherwise just use what was provided
+                                offset = offset == undefined ? gatherParentOffset(this) : offset;
+                    
+                            //reset variables
+                                this.extremities = {
+                                    points:[],
+                                    boundingBox:{},
+                                };
+                    
+                            //calculate points
+                                this.extremities.points = this.points.map(function(point){
+                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                    point.x += offset.x;
+                                    point.y += offset.y;
+                                    return point;
+                                });
+                    
+                            //calculate boundingBox
+                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+                    
+                            //update the points and bounding box of the parent
+                                if(this.parent != undefined){
+                                    this.parent.computeExtremities();
+                                }
+                        };
+                    
+                        function isPointWithinBoundingBox(x,y,shape){
+                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+                        }
+                        function isPointWithinHitBox(x,y,shape){
+                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+                        }
+                        this.isPointWithin = function(x,y){
+                            if( isPointWithinBoundingBox(x,y,this) ){
+                                return isPointWithinHitBox(x,y,this);
+                            }
+                            return false;
+                        };
+                    
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                                if(!shouldRender(this)){return;}
+                            
+                            //collect and consolidate shape values into a neat package
+                                var shapeValue = {
+                                    points: this.points.map( function(a){
+                                        a = canvas.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
+                                        return { x:a.x+offset.x, y:a.y+offset.y };
+                                    } ),
+                                    lineWidth: this.style.lineWidth,
+                                    shadowBlur: this.style.shadowBlur,
+                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
+                                };
+                            
+                            //adapt values
+                                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
+                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                    
+                            //paint this shape as requested
+                                context.fillStyle = this.style.fill;
+                                context.strokeStyle = this.style.stroke;
+                                context.lineWidth = shapeValue.lineWidth;
+                                context.lineCap = this.style.lineCap;
+                                context.lineJoin = this.style.lineJoin;
+                                context.miterLimit = this.style.miterLimit;
+                                context.shadowColor = this.style.shadowColour;
+                                context.shadowBlur = shapeValue.shadowBlur;
+                                context.shadowOffsetX = shapeValue.shadowOffset.x;
+                                context.shadowOffsetY = shapeValue.shadowOffset.y;
+                    
+                                context.beginPath(); 
+                                context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                                for(var a = 1; a < shapeValue.points.length; a++){
+                                    context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                                }
+                    
+                                context.stroke();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //bounding box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
+                        };
+                    };
+                    this.rectangle = function(){
+                    
+                        this.type = 'rectangle';
+                    
+                        this.name = '';
+                        this.ignored = false;
+                        this.static = false;
+                        this.parent = undefined;
+                        this.dotFrame = false;
+                        this.extremities = {
+                            points:[],
+                            boundingBox:{},
+                        };
+                    
+                        this.x = 0;
+                        this.y = 0;
+                        this.angle = 0;
+                        this.anchor = {x:0,y:0};
+                        this.width = 10;
+                        this.height = 10;
+                    
+                        this.style = {
+                            fill:'rgba(255,100,255,1)',
+                            stroke:'rgba(0,0,0,0)',
+                            lineWidth:1,
+                            shadowColour:'rgba(0,0,0,0)',
+                            shadowBlur:2,
+                            shadowOffset:{x:1, y:1},
+                        };
+                    
+                        
+                        this.parameter = {};
+                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
+                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
+                        this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
+                        this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
+                        this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities();} }(this);
+                        this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities();} }(this);
+                    
+                    
+                    
+                        this.getAddress = function(){
+                            var address = '';
+                            var tmp = this;
+                            do{
+                                address = tmp.name + '/' + address;
+                            }while((tmp = tmp.parent) != undefined)
+                    
+                            return '/'+address;
+                        };
+                        
+                        this.getOffset = function(){return gatherParentOffset(this);};
+                        this.computeExtremities = function(offset,deepCompute){
+                            //discover if this shape should be static
+                                var isStatic = this.static;
+                                var tmp = this;
+                                while((tmp = tmp.parent) != undefined && !isStatic){
+                                    isStatic = isStatic || tmp.static;
+                                }
+                                this.static = isStatic;
+                    
+                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
+                            //in which case; gather the offset of all parents. Otherwise just use what was provided
+                                offset = offset == undefined ? gatherParentOffset(this) : offset;
+                    
+                            //reset variables
+                                this.extremities = {
+                                    points:[],
+                                    boundingBox:{},
+                                };
+                    
+                            //calculate points
+                                this.extremities.points = canvas.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
+                                this.extremities.points = this.extremities.points.map(function(point){
+                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                    point.x += offset.x;
+                                    point.y += offset.y;
+                                    return point;
+                                });
+                    
+                            //calculate boundingBox
+                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+                    
+                            //update the points and bounding box of the parent
+                                if(this.parent != undefined){
+                                    this.parent.computeExtremities();
+                                }
+                        };
+                    
+                        function isPointWithinBoundingBox(x,y,shape){
+                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+                        }
+                        function isPointWithinHitBox(x,y,shape){
+                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
+                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+                        }
+                        this.isPointWithin = function(x,y){
+                            if( isPointWithinBoundingBox(x,y,this) ){
+                                return isPointWithinHitBox(x,y,this);
+                            }
+                            return false;
+                        };
+                    
+                        function shouldRender(shape){ 
+                            //if this shape is static, always render
+                                if(shape.static){return true;}
+                                
+                            //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                        };
+                        this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
+                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                                if(!shouldRender(this)){return;}
+                    
+                            //adjust offset for parent's angle
+                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                offset.x += point.x - this.x;
+                                offset.y += point.y - this.y;
+                            
+                            //collect and consolidate shape values into a neat package
+                                var shapeValue = {
+                                    location:{
+                                        x:(this.x+offset.x),
+                                        y:(this.y+offset.y)
+                                    },
+                                    angle:(this.angle+offset.a),
+                                    width: this.width,
+                                    height: this.height,
+                                    lineWidth: this.style.lineWidth,
+                                    shadowBlur: this.style.shadowBlur,
+                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
+                                };
+                            
+                            //adapt values
+                                if(!static){
+                                    shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
+                                    shapeValue.width = adapter.length(shapeValue.width);
+                                    shapeValue.height = adapter.length(shapeValue.height);
+                                    shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                    shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                    shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                    shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                                }
+                    
+                            //post adaptation calculations
+                                shapeValue.location = canvas.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
+                                
+                            //clipping
+                                if(isClipper){
+                                    context.rotate( shapeValue.angle );
+                                    var region = new Path2D();
+                                    region.rect(shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height);
+                                    context.clip(region);
+                                    context.rotate( -shapeValue.angle );
+                                    return;
+                                }
+                    
+                            //actual render
+                                context.fillStyle = this.style.fill;
+                                context.strokeStyle = this.style.stroke;
+                                context.lineWidth = shapeValue.lineWidth;
+                                context.shadowColor = this.style.shadowColour;
+                                context.shadowBlur = shapeValue.shadowBlur;
+                                context.shadowOffsetX = shapeValue.shadowOffset.x;
+                                context.shadowOffsetY = shapeValue.shadowOffset.y;
+                                
+                                context.save();
+                                context.rotate( shapeValue.angle );
+                                context.fillRect( shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
+                                context.strokeRect( shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
+                                context.restore();
+                    
+                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                if(this.dotFrame){
+                                    //points
+                                        for(var a = 0; a < this.extremities.points.length; a++){
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                        }
+                                    //boudning box
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                        core.render.drawDot( temp.x, temp.y );
+                                }
+                        }
                     };
                     this.group = function(){
                     
@@ -1484,710 +2188,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //             }
                     //     };
                     // };
-                    this.image = function(){
-                    
-                        this.type = 'image';
-                    
-                        this.name = '';
-                        this.ignored = false;
-                        this.static = false;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = {
-                            points:[],
-                            boundingBox:{},
-                        };
-                    
-                        this.x = 0;
-                        this.y = 0;
-                        this.angle = 0;
-                        this.anchor = {x:0,y:0};
-                        this.width = 10;
-                        this.height = 10;
-                    
-                        this.url = '';
-                        var imageObject = {};
-                    
-                        this.style = {
-                            shadowColour:'rgba(0,0,0,0)',
-                            shadowBlur:2,
-                            shadowOffset:{x:1, y:1},
-                        };
-                    
-                        
-                        this.parameter = {};
-                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
-                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
-                        this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
-                        this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
-                        this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities();} }(this);
-                        this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities();} }(this);
-                    
-                    
-                        
-                    
-                        this.getAddress = function(){
-                            var address = '';
-                            var tmp = this;
-                            do{
-                                address = tmp.name + '/' + address;
-                            }while((tmp = tmp.parent) != undefined)
-                    
-                            return '/'+address;
-                        };
-                        
-                        this.computeExtremities = function(offset){
-                            //discover if this shape should be static
-                                var isStatic = this.static;
-                                var tmp = this;
-                                while((tmp = tmp.parent) != undefined && !isStatic){
-                                    isStatic = isStatic || tmp.static;
-                                }
-                                this.static = isStatic;
-                    
-                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                            //in which case; gather the offset of all parents. Otherwise just use what was provided
-                                offset = offset == undefined ? gatherParentOffset(this) : offset;
-                    
-                            //reset variables
-                                this.extremities = {
-                                    points:[],
-                                    boundingBox:{},
-                                };
-                    
-                            //calculate points
-                                this.extremities.points = canvas.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
-                                this.extremities.points = this.extremities.points.map(function(point){
-                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                                    point.x += offset.x;
-                                    point.y += offset.y;
-                                    return point;
-                                });
-                    
-                            //calculate boundingBox
-                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                    
-                            //update the points and bounding box of the parent
-                                if(this.parent != undefined){
-                                    this.parent.computeExtremities();
-                                }
-                        };
-                    
-                        function isPointWithinBoundingBox(x,y,shape){
-                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                        }
-                        function isPointWithinHitBox(x,y,shape){
-                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                        }
-                        this.isPointWithin = function(x,y){
-                            if( isPointWithinBoundingBox(x,y,this) ){
-                                return isPointWithinHitBox(x,y,this);
-                            }
-                            return false;
-                        };
-                    
-                        function shouldRender(shape){ 
-                            //if this shape is static, always render
-                                if(shape.static){return true;}
-                                
-                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                        };
-                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                                if(!shouldRender(this)){return;}
-                    
-                            //adjust offset for parent's angle
-                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                offset.x += point.x - this.x;
-                                offset.y += point.y - this.y;
-                            
-                            //collect and consolidate shape values into a neat package
-                                var shapeValue = {
-                                    location:{
-                                        x:(this.x+offset.x),
-                                        y:(this.y+offset.y)
-                                    },
-                                    angle:(this.angle+offset.a),
-                                    width: this.width,
-                                    height: this.height,
-                                    lineWidth: this.style.lineWidth,
-                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
-                                };
-                            
-                            //adapt values
-                                shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-                                shapeValue.width = adapter.length(shapeValue.width);
-                                shapeValue.height = adapter.length(shapeValue.height);
-                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
-                    
-                            //post adaptation calculations
-                                shapeValue.location = canvas.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
-                    
-                            //if this image url is not cached; cache it
-                                if( !imageObject.hasOwnProperty(this.url) ){
-                                    imageObject[this.url] = new Image(); 
-                                    imageObject[this.url].src = this.url;
-                                }
-                    
-                            //actual render
-                                context.shadowColor = this.style.shadowColour;
-                                context.shadowBlur = shapeValue.shadowBlur;
-                                context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                context.shadowOffsetY = shapeValue.shadowOffset.y;
-                                context.save();
-                                context.rotate( shapeValue.angle );
-                                context.drawImage( imageObject[this.url], shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
-                                context.restore();
-                    
-                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                                if(this.dotFrame){
-                                    //points
-                                        for(var a = 0; a < this.extremities.points.length; a++){
-                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                        }
-                                    //boudning box
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                }
-                        }
-                    
-                    };
-                    this.path = function(){
-                    
-                        this.type = 'path';
-                    
-                        this.name = '';
-                        this.ignored = false;
-                        this.static = false;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = {
-                            points:[],
-                            boundingBox:{},
-                        };
-                    
-                        this.points = [];
-                    
-                        this.style = {
-                            stroke:'rgba(0,0,0,0)',
-                            lineWidth:1,
-                            lineCap:'butt',
-                            lineJoin:'miter',
-                            miterLimit:2,
-                            shadowColour:'rgba(0,0,0,0)',
-                            shadowBlur:20,
-                            shadowOffset:{x:20, y:20},
-                        };
-                    
-                        
-                        this.parameter = {};
-                        this.parameter.points = function(shape){ 
-                            return function(a){
-                                if(a==undefined){
-                                    return shape.points;
-                                } 
-                                shape.points = a; 
-                                shape.computeExtremities();
-                            } 
-                        }(this);
-                    
-                    
-                        
-                    
-                        this.getAddress = function(){
-                            var address = '';
-                            var tmp = this;
-                            do{
-                                address = tmp.name + '/' + address;
-                            }while((tmp = tmp.parent) != undefined)
-                    
-                            return '/'+address;
-                        };
-                        
-                        this.computeExtremities = function(offset){
-                            //discover if this shape should be static
-                                var isStatic = this.static;
-                                var tmp = this;
-                                while((tmp = tmp.parent) != undefined && !isStatic){
-                                    isStatic = isStatic || tmp.static;
-                                }
-                                this.static = isStatic;
-                    
-                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                            //in which case; gather the offset of all parents. Otherwise just use what was provided
-                                offset = offset == undefined ? gatherParentOffset(this) : offset;
-                    
-                            //reset variables
-                                this.extremities = {
-                                    points:[],
-                                    boundingBox:{},
-                                };
-                    
-                            //calculate points
-                                this.extremities.points = this.points.map(function(point){
-                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                                    point.x += offset.x;
-                                    point.y += offset.y;
-                                    return point;
-                                });
-                    
-                            //calculate boundingBox
-                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                    
-                            //update the points and bounding box of the parent
-                                if(this.parent != undefined){
-                                    this.parent.computeExtremities();
-                                }
-                        };
-                    
-                        function isPointWithinBoundingBox(x,y,shape){
-                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                        }
-                        function isPointWithinHitBox(x,y,shape){
-                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                        }
-                        this.isPointWithin = function(x,y){
-                            if( isPointWithinBoundingBox(x,y,this) ){
-                                return isPointWithinHitBox(x,y,this);
-                            }
-                            return false;
-                        };
-                    
-                        function shouldRender(shape){ 
-                            //if this shape is static, always render
-                                if(shape.static){return true;}
-                                
-                            //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                        };
-                        this.render = function(context,offset={x:0,y:0,a:0},static=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                                if(!shouldRender(this)){return;}
-                            
-                            //collect and consolidate shape values into a neat package
-                                var shapeValue = {
-                                    points: this.points.map( function(a){
-                                        a = canvas.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
-                                        return { x:a.x+offset.x, y:a.y+offset.y };
-                                    } ),
-                                    lineWidth: this.style.lineWidth,
-                                    shadowBlur: this.style.shadowBlur,
-                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
-                                };
-                            
-                            //adapt values
-                                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
-                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
-                    
-                            //paint this shape as requested
-                                context.fillStyle = this.style.fill;
-                                context.strokeStyle = this.style.stroke;
-                                context.lineWidth = shapeValue.lineWidth;
-                                context.lineCap = this.style.lineCap;
-                                context.lineJoin = this.style.lineJoin;
-                                context.miterLimit = this.style.miterLimit;
-                                context.shadowColor = this.style.shadowColour;
-                                context.shadowBlur = shapeValue.shadowBlur;
-                                context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                context.shadowOffsetY = shapeValue.shadowOffset.y;
-                    
-                                context.beginPath(); 
-                                context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-                                for(var a = 1; a < shapeValue.points.length; a++){
-                                    context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
-                                }
-                    
-                                context.stroke();
-                    
-                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                                if(this.dotFrame){
-                                    //points
-                                        for(var a = 0; a < this.extremities.points.length; a++){
-                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                        }
-                                    //bounding box
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                }
-                        };
-                    };
-                    this.polygon = function(){
-                    
-                        this.type = 'polygon';
-                    
-                        this.name = '';
-                        this.ignored = false;
-                        this.static = false;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = {
-                            points:[],
-                            boundingBox:{},
-                        };
-                    
-                        this.points = [];
-                    
-                        this.style = {
-                            fill:'rgba(100,255,255,1)',
-                            stroke:'rgba(0,0,0,0)',
-                            lineWidth:1,
-                            lineJoin:'round',
-                            miterLimit:2,
-                            shadowColour:'rgba(0,0,0,0)',
-                            shadowBlur:20,
-                            shadowOffset:{x:20, y:20},
-                        };
-                    
-                        
-                        this.parameter = {};
-                        this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
-                    
-                    
-                    
-                    
-                        this.getAddress = function(){
-                            var address = '';
-                            var tmp = this;
-                            do{
-                                address = tmp.name + '/' + address;
-                            }while((tmp = tmp.parent) != undefined)
-                    
-                            return '/'+address;
-                        };
-                        
-                        this.computeExtremities = function(offset){
-                            //discover if this shape should be static
-                                var isStatic = this.static;
-                                var tmp = this;
-                                while((tmp = tmp.parent) != undefined && !isStatic){
-                                    isStatic = isStatic || tmp.static;
-                                }
-                                this.static = isStatic;
-                    
-                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                            //in which case; gather the offset of all parents. Otherwise just use what was provided
-                                offset = offset == undefined ? gatherParentOffset(this) : offset;
-                    
-                            //reset variables
-                                this.extremities = {
-                                    points:[],
-                                    boundingBox:{},
-                                };
-                    
-                            //calculate points
-                                this.extremities.points = this.points.map(function(point){
-                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                                    point.x += offset.x;
-                                    point.y += offset.y;
-                                    return point;
-                                });
-                    
-                            //calculate boundingBox
-                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                    
-                            //update the points and bounding box of the parent
-                                if(this.parent != undefined){
-                                    this.parent.computeExtremities();
-                                }
-                        };
-                    
-                        function isPointWithinBoundingBox(x,y,shape){
-                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                        }
-                        function isPointWithinHitBox(x,y,shape){
-                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                        }
-                        this.isPointWithin = function(x,y){
-                            if( isPointWithinBoundingBox(x,y,this) ){
-                                return isPointWithinHitBox(x,y,this);
-                            }
-                            return false;
-                        };
-                    
-                        function shouldRender(shape){ 
-                            //if this shape is static, always render
-                                if(shape.static){return true;}
-                                
-                            //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                        };
-                        this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                                if(!shouldRender(this)){return;}
-                            
-                            //collect and consolidate shape values into a neat package
-                                var shapeValue = {
-                                    points: this.points.map( function(a){
-                                        a = canvas.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
-                                        return { x:a.x+offset.x, y:a.y+offset.y };
-                                    } ),
-                                    lineWidth: this.style.lineWidth,
-                                    shadowBlur: this.style.shadowBlur,
-                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
-                                };
-                            
-                            //adapt values
-                                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
-                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
-                    
-                            //clipping
-                                if(isClipper){
-                                    var region = new Path2D();
-                                    region.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-                                    for(var a = 1; a < shapeValue.points.length; a++){
-                                        region.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
-                                    }
-                                    context.clip(region);
-                                    return;
-                                }
-                    
-                            //paint this shape as requested
-                                context.fillStyle = this.style.fill;
-                                context.strokeStyle = this.style.stroke;
-                                context.lineWidth = shapeValue.lineWidth;
-                                context.lineJoin = this.style.lineJoin;
-                                context.miterLimit = this.style.miterLimit;
-                                context.shadowColor = this.style.shadowColour;
-                                context.shadowBlur = shapeValue.shadowBlur;
-                                context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                context.shadowOffsetY = shapeValue.shadowOffset.y;
-                    
-                                context.beginPath(); 
-                                context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-                                for(var a = 1; a < shapeValue.points.length; a++){
-                                    context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
-                                }
-                                context.closePath(); 
-                    
-                                context.fill(); 
-                                context.stroke();
-                    
-                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                                if(this.dotFrame){
-                                    //points
-                                        for(var a = 0; a < this.extremities.points.length; a++){
-                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                        }
-                                    //boudning box
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                }
-                        };
-                    
-                    };
-                    this.rectangle = function(){
-                    
-                        this.type = 'rectangle';
-                    
-                        this.name = '';
-                        this.ignored = false;
-                        this.static = false;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = {
-                            points:[],
-                            boundingBox:{},
-                        };
-                    
-                        this.x = 0;
-                        this.y = 0;
-                        this.angle = 0;
-                        this.anchor = {x:0,y:0};
-                        this.width = 10;
-                        this.height = 10;
-                    
-                        this.style = {
-                            fill:'rgba(255,100,255,1)',
-                            stroke:'rgba(0,0,0,0)',
-                            lineWidth:1,
-                            shadowColour:'rgba(0,0,0,0)',
-                            shadowBlur:2,
-                            shadowOffset:{x:1, y:1},
-                        };
-                    
-                        
-                        this.parameter = {};
-                        this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
-                        this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
-                        this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
-                        this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
-                        this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities();} }(this);
-                        this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities();} }(this);
-                    
-                    
-                    
-                        this.getAddress = function(){
-                            var address = '';
-                            var tmp = this;
-                            do{
-                                address = tmp.name + '/' + address;
-                            }while((tmp = tmp.parent) != undefined)
-                    
-                            return '/'+address;
-                        };
-                        
-                        this.getOffset = function(){return gatherParentOffset(this);};
-                        this.computeExtremities = function(offset,deepCompute){
-                            //discover if this shape should be static
-                                var isStatic = this.static;
-                                var tmp = this;
-                                while((tmp = tmp.parent) != undefined && !isStatic){
-                                    isStatic = isStatic || tmp.static;
-                                }
-                                this.static = isStatic;
-                    
-                            //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                            //in which case; gather the offset of all parents. Otherwise just use what was provided
-                                offset = offset == undefined ? gatherParentOffset(this) : offset;
-                    
-                            //reset variables
-                                this.extremities = {
-                                    points:[],
-                                    boundingBox:{},
-                                };
-                    
-                            //calculate points
-                                this.extremities.points = canvas.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
-                                this.extremities.points = this.extremities.points.map(function(point){
-                                    point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                                    point.x += offset.x;
-                                    point.y += offset.y;
-                                    return point;
-                                });
-                    
-                            //calculate boundingBox
-                                this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
-                    
-                            //update the points and bounding box of the parent
-                                if(this.parent != undefined){
-                                    this.parent.computeExtremities();
-                                }
-                        };
-                    
-                        function isPointWithinBoundingBox(x,y,shape){
-                            if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                        }
-                        function isPointWithinHitBox(x,y,shape){
-                            if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                            return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                        }
-                        this.isPointWithin = function(x,y){
-                            if( isPointWithinBoundingBox(x,y,this) ){
-                                return isPointWithinHitBox(x,y,this);
-                            }
-                            return false;
-                        };
-                    
-                        function shouldRender(shape){ 
-                            //if this shape is static, always render
-                                if(shape.static){return true;}
-                                
-                            //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                                return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                        };
-                        this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                                if(!shouldRender(this)){return;}
-                    
-                            //adjust offset for parent's angle
-                                var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                offset.x += point.x - this.x;
-                                offset.y += point.y - this.y;
-                            
-                            //collect and consolidate shape values into a neat package
-                                var shapeValue = {
-                                    location:{
-                                        x:(this.x+offset.x),
-                                        y:(this.y+offset.y)
-                                    },
-                                    angle:(this.angle+offset.a),
-                                    width: this.width,
-                                    height: this.height,
-                                    lineWidth: this.style.lineWidth,
-                                    shadowBlur: this.style.shadowBlur,
-                                    shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
-                                };
-                            
-                            //adapt values
-                                if(!static){
-                                    shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-                                    shapeValue.width = adapter.length(shapeValue.width);
-                                    shapeValue.height = adapter.length(shapeValue.height);
-                                    shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                    shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                    shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                    shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
-                                }
-                    
-                            //post adaptation calculations
-                                shapeValue.location = canvas.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
-                                
-                            //clipping
-                                if(isClipper){
-                                    context.rotate( shapeValue.angle );
-                                    var region = new Path2D();
-                                    region.rect(shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height);
-                                    context.clip(region);
-                                    context.rotate( -shapeValue.angle );
-                                    return;
-                                }
-                    
-                            //actual render
-                                context.fillStyle = this.style.fill;
-                                context.strokeStyle = this.style.stroke;
-                                context.lineWidth = shapeValue.lineWidth;
-                                context.shadowColor = this.style.shadowColour;
-                                context.shadowBlur = shapeValue.shadowBlur;
-                                context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                context.shadowOffsetY = shapeValue.shadowOffset.y;
-                                
-                                context.save();
-                                context.rotate( shapeValue.angle );
-                                context.fillRect( shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
-                                context.strokeRect( shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
-                                context.restore();
-                    
-                            //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                                if(this.dotFrame){
-                                    //points
-                                        for(var a = 0; a < this.extremities.points.length; a++){
-                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                            core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                        }
-                                    //boudning box
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                        var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                        core.render.drawDot( temp.x, temp.y );
-                                }
-                        }
-                    };
                     this.text = function(){
                     
                         this.type = 'text';
@@ -2621,11 +2621,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                         //attachment to canvas
                             var lastPoint = {x:0,y:0};
-                            function getRelivantShape(x,y,callback){
+                            function getRelevantShape(x,y,callback){
                                 //find the frontmost shape under this point
                                     var shape = core.arrangement.getElementUnderPoint(x,y);
                 
-                                //if the shape found doesn't have an appropiate callback, get the list of all shapes that 
+                                //if the shape found doesn't have an appropriate callback, get the list of all shapes that 
                                 //this point touches, and find the one that does (in order of front to back)
                                 //if none is found, just return the frontmost shape
                                     if(shape != undefined && shape[callback] == undefined){
@@ -2649,7 +2649,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                         //get the shape under this point that has this callback (if no shape
                                         //meeting that criteria is found, just return the frontmost shape)
-                                            var shape = getRelivantShape(p.x,p.y,callback);
+                                            var shape = getRelevantShape(p.x,p.y,callback);
                                     
                                         //activate core's callback, providing the converted point, original event, and shape
                                             core.callback[callback](p.x,p.y,event,shape);
@@ -2660,7 +2660,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 canvas.onmouseover = function(event){
                                     var callback = 'onmouseover';
                 
-                                    //if appropiate, remove the window scrollbars
+                                    //if appropriate, remove the window scrollbars
                                         if(core.viewport.stopMouseScroll()){ document.body.style.overflow = 'hidden'; }
                 
                                     //if core doesn't have this callback set up, just bail
@@ -2671,7 +2671,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                     //get the shape under this point that has this callback (if no shape
                                     //meeting that criteria is found, just return the frontmost shape)
-                                        var shape = getRelivantShape(p.x,p.y,callback);
+                                        var shape = getRelevantShape(p.x,p.y,callback);
                                 
                                     //activate core's callback, providing the converted point, original event, and shape
                                         core.callback[callback](p.x,p.y,event,shape);
@@ -2679,7 +2679,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 canvas.onmouseout = function(event){
                                     var callback = 'onmouseout';
                 
-                                    //if appropiate, replace the window scrollbars
+                                    //if appropriate, replace the window scrollbars
                                         if(core.viewport.stopMouseScroll()){ document.body.style.overflow = ''; }
                 
                                     //if core doesn't have this callback set up, just bail
@@ -2690,7 +2690,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                     //get the shape under this point that has this callback (if no shape
                                     //meeting that criteria is found, just return the frontmost shape)
-                                        var shape = getRelivantShape(p.x,p.y,callback);
+                                        var shape = getRelevantShape(p.x,p.y,callback);
                                 
                                     //activate core's callback, providing the converted point, original event, and shape
                                         core.callback[callback](p.x,p.y,event,shape);
@@ -2711,11 +2711,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     //"onmouseenter" and "onmousemove" However; use the 'lastPoint' for "onmouseleave"
                                     //(as usual - for each callback - if no shape meeting that criteria is found,
                                     //just return the frontmost shape)
-                                        var shape_mouseleave = getRelivantShape(lastPoint.x,lastPoint.y,'onmouseleave');
-                                        var shape_mouseenter = getRelivantShape(p.x,p.y,'onmouseenter');
-                                        var shape_mousemove = getRelivantShape(p.x,p.y,callback);
+                                        var shape_mouseleave = getRelevantShape(lastPoint.x,lastPoint.y,'onmouseleave');
+                                        var shape_mouseenter = getRelevantShape(p.x,p.y,'onmouseenter');
+                                        var shape_mousemove = getRelevantShape(p.x,p.y,callback);
                                     
-                                    //activate core's callbacks, providing the converted point, original event, and appropiate shape
+                                    //activate core's callbacks, providing the converted point, original event, and appropriate shape
                                     //(only activate the "onmouseenter" and "onmouseleave" callbacks, if the shapes found for them
                                     //are not the same)
                                         if( shape_mouseleave != shape_mouseenter ){
@@ -2739,7 +2739,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                     //get the shape under this point that has this callback (if no shape
                                     //meeting that criteria is found, just return the frontmost shape)
-                                        var shape = getRelivantShape(p.x,p.y,callback);
+                                        var shape = getRelevantShape(p.x,p.y,callback);
                                 
                                     //activate core's callback, providing the converted point, original event, and shape
                                         core.callback[callback](p.x,p.y,event,shape);
@@ -2755,7 +2755,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                     //get the shape under this point that has this callback (if no shape
                                     //meeting that criteria is found, just return the frontmost shape)
-                                        var shape = getRelivantShape(p.x,p.y,callback);
+                                        var shape = getRelevantShape(p.x,p.y,callback);
                                 
                                     //activate core's callback, providing the converted point, original event, and shape
                                         core.callback[callback](p.x,p.y,event,shape);
@@ -2907,6 +2907,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             canvas.onmouseleave = canvas.onmouseup;
                 };
+                this.forceMouseUp = function(){ canvas.onmouseup(); };
                 
             //connect callbacks to mouse function lists
                 canvas.core.callback.onmousedown = function(x,y,event,shape){
@@ -3183,84 +3184,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         
         canvas.part.element = new function(){
             this.basic = new function(){
-                this.circle = function(
-                    name=null, 
-                    x=0, 
-                    y=0, 
-                    r=2,
-                    ignored=false,
-                    fillStyle='rgba(255,100,255,1)', 
-                    strokeStyle='rgba(0,0,0,1)', 
-                    lineWidth=1,
-                    lineJoin='round',
-                    miterLimit=2,
-                    shadowColour='rgba(0,0,0,0)',
-                    shadowBlur=20,
-                    shadowOffset={x:20, y:20},
-                ){
-                    var temp = canvas.core.arrangement.createElement('circle');
-                    temp.name = name;
-                    temp.x = x; temp.y = y;
-                    temp.r = r;
-                    temp.ignored = ignored;
-                    temp.style.fill = fillStyle;
-                    temp.style.stroke = strokeStyle;
-                    temp.style.lineWidth = lineWidth;
-                    temp.style.lineJoin = lineJoin;
-                    temp.style.miterLimit = miterLimit;
-                    temp.style.shadowColour = shadowColour;
-                    temp.style.shadowBlur = shadowBlur;
-                    temp.style.shadowOffset = shadowOffset;
-                    return temp;
-                };
-                this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
-                    var temp = canvas.core.arrangement.createElement('group');
-                    temp.name = name;
-                    temp.x = x; 
-                    temp.y = y;
-                    temp.angle = angle;
-                    temp.ignored = ignored;
-                    return temp;
-                };
-                this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
-                    var temp = canvas.core.arrangement.createElement('image');
-                    temp.name = name;
-                    temp.x = x; temp.y = y;
-                    temp.width = width; temp.height = height;
-                    temp.angle = angle;
-                    temp.anchor = anchor;
-                    temp.ignored = ignored;
-                    temp.url = url;
-                    return temp;
-                };
-                this.path = function(
-                    name=null, 
-                    points=[],
-                    ignored=false,
-                    strokeStyle='rgba(0,0,0,1)', 
-                    lineWidth=1,
-                    lineCap='butt',
-                    lineJoin='miter',
-                    miterLimit=2,
-                    shadowColour='rgba(0,0,0,0)',
-                    shadowBlur=20,
-                    shadowOffset={x:20, y:20},
-                ){
-                    var temp = canvas.core.arrangement.createElement('path');
-                    temp.name = name;
-                    temp.points = points;
-                    temp.ignored = ignored;
-                    temp.style.stroke = strokeStyle;
-                    temp.style.lineWidth = lineWidth;
-                    temp.style.lineCap = lineCap;
-                    temp.style.lineJoin = lineJoin;
-                    temp.style.miterLimit = miterLimit;
-                    temp.style.shadowColour = shadowColour;
-                    temp.style.shadowBlur = shadowBlur;
-                    temp.style.shadowOffset = shadowOffset;
-                    
-                    return temp;
-                };
                 this.polygon = function(
                     name=null, 
                     points=[], 
@@ -3316,6 +3239,75 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return temp;
                 };
+                this.circle = function(
+                    name=null, 
+                    x=0, 
+                    y=0, 
+                    r=2,
+                    ignored=false,
+                    fillStyle='rgba(255,100,255,1)', 
+                    strokeStyle='rgba(0,0,0,1)', 
+                    lineWidth=1,
+                    lineJoin='round',
+                    miterLimit=2,
+                    shadowColour='rgba(0,0,0,0)',
+                    shadowBlur=20,
+                    shadowOffset={x:20, y:20},
+                ){
+                    var temp = canvas.core.arrangement.createElement('circle');
+                    temp.name = name;
+                    temp.x = x; temp.y = y;
+                    temp.r = r;
+                    temp.ignored = ignored;
+                    temp.style.fill = fillStyle;
+                    temp.style.stroke = strokeStyle;
+                    temp.style.lineWidth = lineWidth;
+                    temp.style.lineJoin = lineJoin;
+                    temp.style.miterLimit = miterLimit;
+                    temp.style.shadowColour = shadowColour;
+                    temp.style.shadowBlur = shadowBlur;
+                    temp.style.shadowOffset = shadowOffset;
+                    return temp;
+                };
+                this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
+                    var temp = canvas.core.arrangement.createElement('image');
+                    temp.name = name;
+                    temp.x = x; temp.y = y;
+                    temp.width = width; temp.height = height;
+                    temp.angle = angle;
+                    temp.anchor = anchor;
+                    temp.ignored = ignored;
+                    temp.url = url;
+                    return temp;
+                };
+                this.path = function(
+                    name=null, 
+                    points=[],
+                    ignored=false,
+                    strokeStyle='rgba(0,0,0,1)', 
+                    lineWidth=1,
+                    lineCap='butt',
+                    lineJoin='miter',
+                    miterLimit=2,
+                    shadowColour='rgba(0,0,0,0)',
+                    shadowBlur=20,
+                    shadowOffset={x:20, y:20},
+                ){
+                    var temp = canvas.core.arrangement.createElement('path');
+                    temp.name = name;
+                    temp.points = points;
+                    temp.ignored = ignored;
+                    temp.style.stroke = strokeStyle;
+                    temp.style.lineWidth = lineWidth;
+                    temp.style.lineCap = lineCap;
+                    temp.style.lineJoin = lineJoin;
+                    temp.style.miterLimit = miterLimit;
+                    temp.style.shadowColour = shadowColour;
+                    temp.style.shadowBlur = shadowBlur;
+                    temp.style.shadowOffset = shadowOffset;
+                    
+                    return temp;
+                };
                 this.rectangle = function(
                     name=null, 
                     x=0, 
@@ -3349,6 +3341,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     temp.style.shadowColour = shadowColour;
                     temp.style.shadowBlur = shadowBlur;
                     temp.style.shadowOffset = shadowOffset;
+                    return temp;
+                };
+                this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
+                    var temp = canvas.core.arrangement.createElement('group');
+                    temp.name = name;
+                    temp.x = x; 
+                    temp.y = y;
+                    temp.angle = angle;
+                    temp.ignored = ignored;
                     return temp;
                 };
                 this.text = function(
@@ -3397,256 +3398,81 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
             
             this.display = new function(){
-                this.audio_meter_level = function(
-                    name='audio_meter_level',
-                    x, y, angle=0,
-                    width=20, height=60,
-                    markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                
-                    backingStyle='rgb(10,10,10)',
-                    levelStyles=['rgba(250,250,250,1)','rgb(100,100,100)'],
-                    markingStyle_fill='rgba(220,220,220,1)',
-                    markingStyle_font='1pt Courier New',
+                this.rastorDisplay = function(
+                    name='rastorDisplay',
+                    x, y, angle=0, width=60, height=60,
+                    xCount=8, yCount=8, xGappage=0.1, yGappage=0.1,
+                    backing='rgba(50,50,50)', defaultPixelValue='rgba(0,0,0)',
                 ){
-                    //elements
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //meter
-                            var meter = canvas.part.builder('meter_level','meter',{
-                                width:width, height:height, markings:markings,
-                                style:{
-                                    backing:backingStyle,
-                                    levels:levelStyles,
-                                    markingStyle_fill:markingStyle_fill,
-                                    markingStyle_font:markingStyle_font,
-                                },
-                            });
-                            object.append(meter);
-                
-                    //circuitry
-                        var converter = canvas.part.circuit.audio.audio2percentage()
-                        converter.newValue = function(val){object.set( val );};
-                
-                    //audio connections
-                        object.audioIn = function(){ return converter.audioIn(); }
-                
-                    //methods
-                        object.start = function(){ converter.start(); };
-                        object.stop = function(){ converter.stop(); };
-                
-                    return object;
-                };
-                this.glowbox_rect = function(
-                    name='glowbox_rect',
-                    x, y, width=30, height=30, angle=0,
-                    glowStyle = 'rgba(244,234,141,1)',
-                    dimStyle = 'rgba(80,80,80,1)'
-                ){
-                    //elements 
-                        var object = canvas.part.builder('group',name,{x:x, y:y});
-                        var rect = canvas.part.builder('rectangle','light',{ width:width, height:height, angle:angle, style:{fill:dimStyle} });
-                            object.append(rect);
-                
-                    //methods
-                        object.on = function(){
-                            rect.style.fill = glowStyle;
-                        };
-                        object.off = function(){
-                            rect.style.fill = dimStyle;
-                        };
-                
-                    return object;
-                };
-                this.grapher = function(
-                    name='grapher',
-                    x, y, width=120, height=60, angle=0,
-                
-                    foregroundStyles=[
-                        {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                        {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                    ],
-                    foregroundTextStyles=[
-                        {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                        {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-                    ],
-                
-                    backgroundStyle_stroke='rgba(0,100,0,1)',
-                    backgroundStyle_lineWidth=0.25,
-                    backgroundTextStyle_fill='rgba(0,150,0,1)',
-                    backgroundTextStyle_size=0.1,
-                    backgroundTextStyle_font='Helvetica',
-                
-                    backingStyle='rgba(50,50,50,1)',
-                ){
-                    var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-                    var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                    var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                    var foregroundElementsGroup = [];
-                
                     //elements 
                         //main
                             var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
                         //backing
-                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backing} });
                             object.append(rect);
-                        //background group
-                            var backgroundGroup = canvas.part.builder( 'group', 'background' );
-                            object.append(backgroundGroup);
-                        //foreground group
-                            var foregroundGroup = canvas.part.builder( 'group', 'foreground' );
-                            object.append(foregroundGroup);
-                        //stencil
-                            var stencil = canvas.part.builder('rectangle','stencil',{width:width, height:height});
-                            object.stencil(stencil);
-                            object.clip(true);
+                        //pixels
+                            var pixelGroup = canvas.part.builder('group','pixels');
+                            object.append(pixelGroup);
                 
-                    //graphics
-                        function drawBackground(){
-                            backgroundGroup.clear();
+                            var pixels = [];
+                            var pixelValues = [];
+                            var pixWidth = width/xCount;
+                            var pixHeight = height/yCount;
                 
-                            //horizontal lines
-                                //calculate the x value for all parts of this section
-                                    var x = canvas.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
-                
-                                //add all horizontal markings
-                                    for(var a = 0; a < horizontalMarkings.points.length; a++){
-                                        //check if we should draw this line at all
-                                            if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
-                        
-                                        //calculate the y value for this section
-                                            var y = height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
-                
-                                        //add line and text to group
-                                            //lines
-                                                var path = canvas.part.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineWidth,style:{fill:backgroundStyle_stroke}} );
-                                                backgroundGroup.append(path);
-                                            //text
-                                                if( horizontalMarkings.printText ){
-                                                    var text = canvas.part.builder( 'text', 'horizontal_text_'+a, {
-                                                        x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y,
-                                                        text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                                                        size:backgroundTextStyle_size,
-                                                        style:{
-                                                            fill:backgroundTextStyle_fill,
-                                                            font:'15pt '+backgroundTextStyle_font
-                                                        }
-                                                    } );
-                                                    backgroundGroup.append(text);
-                                                }
-                                    }
-                
-                            //vertical lines
-                                //calculate the y value for all parts of this section
-                                    var y = height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
-                
-                                //add all vertical markings
-                                    for(var a = 0; a < verticalMarkings.points.length; a++){
-                                        //check if we should draw this line at all
-                                            if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
-                
-                                        //calculate the x value for this section
-                                            var x = canvas.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
-                
-                                        //add line and text to group
-                                            //lines
-                                                var path = canvas.part.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineWidth,height:height,style:{fill:backgroundStyle_stroke}} );
-                                                backgroundGroup.append(path);
+                            for(var x = 0; x < xCount; x++){
+                                var temp_pixels = [];
+                                var temp_pixelValues = [];
+                                for(var y = 0; y < yCount; y++){
+                                    var rect = canvas.part.builder('rectangle',x+'_'+y,{ 
+                                        x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
+                                        width:pixWidth-xGappage,    height:pixHeight-yGappage,
+                                        style:{fill:defaultPixelValue},
+                                    });
                                         
-                                            //text
-                                                if( verticalMarkings.printText ){
-                                                    var text = canvas.part.builder( 'text', 'vertical_text_'+a, {
-                                                        x:x+verticalMarkings.textPositionOffset.x, y:y+verticalMarkings.textPositionOffset.y,
-                                                        text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                                                        size:backgroundTextStyle_size,
-                                                        style:{
-                                                            fill:backgroundTextStyle_fill,
-                                                            font:'15pt '+backgroundTextStyle_font
-                                                        }
-                                                    } );
-                                                    backgroundGroup.append(text);
-                                            }
-                                    }
-                        }
-                        function drawForeground(y,x,layer=0){
-                            foregroundGroup.clear();
-                
-                            //if both data sets of a layer are being set to undefined; set the whole layer to undefined
-                            //otherwise, just update the layer's data sets
-                                if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
-                                else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
-                
-                            //input check
-                                if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
-                                    console.warn('grapher error',name,'attempting to add line with no y component');
-                                    console.warn('x:',foregroundElementsGroup[layer].x);
-                                    console.warn('y:',foregroundElementsGroup[layer].y);
-                                    return;
+                                    temp_pixels.push(rect);
+                                    temp_pixelValues.push([0,0,0]);
+                                    pixelGroup.append(rect);
                                 }
+                                pixels.push(temp_pixels);
+                                pixelValues.push(temp_pixelValues);
+                            }
                 
-                            //draw layers
-                                for(var L = 0; L < foregroundElementsGroup.length; L++){
-                                    if(foregroundElementsGroup[L] == undefined){continue;}
-                
-                                    var layer = foregroundElementsGroup[L];
-                                    var points = [];
-                
-                                    //generate path points
-                                        if( layer.y != undefined && layer.x == undefined ){ //auto x print
-                                            for(var a = 0; a < layer.y.length; a++){ 
-                                                points.push( {
-                                                    x: a*(width/(layer.y.length-1)), 
-                                                    y: height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
-                                                } );
-                                            }
-                                        }else if( layer.y.length == layer.x.length ){ //straight print
-                                            for(var a = 0; a < layer.y.length; a++){ 
-                                                points.push( {
-                                                    x:          canvas.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true), 
-                                                    y: height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
-                                                } );
-                                            }
-                                        }else{console.error('tell brandon about this -> grapher::',name,' ',layer.y,layer.x);}
-                
-                                    //create path shape and add it to the group
-                                        foregroundGroup.append(
-                                            canvas.part.builder( 'path', 'layer_'+L, { 
-                                                points:points, 
-                                                style:{
-                                                    stroke: foregroundStyles[L].stroke,
-                                                    lineWidth: foregroundStyles[L].lineWidth,
-                                                    lineJoin: foregroundStyles[L].lineJoin,
-                                                    lineCap: foregroundStyles[L].lineJoin,
-                                                }
-                                            })
-                                        );
+                    //graphical update
+                        function render(){
+                            for(var x = 0; x < xCount; x++){
+                                for(var y = 0; y < yCount; y++){
+                                    pixels[x][y].style.fill = 'rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')';
                                 }
+                            }
                         }
                 
-                    //controls
-                        object.viewbox = function(a){
-                            if(a==null){return viewbox;}
-                            if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
-                            if( a.top != undefined ){viewbox.top = a.top;}
-                            if( a.left != undefined ){viewbox.left = a.left;}
-                            if( a.right != undefined ){viewbox.right = a.right;}
+                    //control
+                        object.get = function(x,y){ return pixelValues[x][y]; };
+                        object.set = function(x,y,state){ pixelValues[x][y] = state; render(); };
+                        object.import = function(data){
+                            for(var x = 0; x < xCount; x++){
+                                for(var y = 0; y < yCount; y++){
+                                    this.set(x,y,data[x][y]);
+                                }
+                            }
+                            render();
                         };
-                        object.horizontalMarkings = function(a){
-                            if(a==null){return horizontalMarkings;}
-                            if( a.points != undefined ){horizontalMarkings.points = a.points;}
-                            if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
-                            if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
-                            if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
+                        object.export = function(){ return pixelValues; }
+                        object.setAll = function(value){
+                            for(var x = 0; x < xCount; x++){
+                                for(var y = 0; y < yCount; y++){
+                                    this.set(x,y,value);
+                                }
+                            }
+                        }
+                        object.test = function(){
+                            this.setAll([1,1,1]);
+                            this.set(1,1,[1,0.5,0.5]);
+                            this.set(2,2,[0.5,1,0.5]);
+                            this.set(3,3,[0.5,0.5,1]);
+                            this.set(4,4,[1,0.5,1]);
+                            render();
                         };
-                        object.verticalMarkings = function(a){
-                            if(a==null){return verticalMarkings;}
-                            if( a.points != undefined ){verticalMarkings.points = a.points;}
-                            if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
-                            if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
-                            if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
-                        };
-                        object.drawBackground = function(){ drawBackground(); };
-                        object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
-                        object.draw = function(y,x,layer=0){ drawBackground(); drawForeground(y,x,layer); };
                 
                     return object;
                 };
@@ -3743,362 +3569,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     //setup
                         setBackground();
-                
-                    return object;
-                };
-                this.grapher_periodicWave = function(
-                    name='grapher_periodicWave',
-                    x, y, width=120, height=60, angle=0,
-                
-                    foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                    foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                
-                    backgroundStyle_stroke='rgba(0,100,0,1)',
-                    backgroundStyle_lineWidth=0.25,
-                    backgroundTextStyle_fill='rgba(0,150,0,1)',
-                    backgroundTextStyle_size=0.1,
-                    backgroundTextStyle_font='Helvetica',
-                
-                    backingStyle='rgba(50,50,50,1)',
-                ){
-                    var wave = {'sin':[],'cos':[]};
-                    var resolution = 100;
-                
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //grapher
-                            var grapher = canvas.part.builder('grapher',name,{
-                                x:0, y:0, width:width, height:height,
-                                foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                backgroundStyle_stroke:backgroundStyle_stroke, 
-                                backgroundStyle_lineWidth:backgroundStyle_lineWidth,
-                                backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                backgroundTextStyle_size:backgroundTextStyle_size,
-                                backgroundTextStyle_font:backgroundTextStyle_font,
-                                backingStyle:backingStyle,
-                            });
-                            object.append(grapher);
-                
-                    //controls
-                        object.wave = function(a=null,type=null){
-                            if(a==null){
-                                while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
-                                while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
-                                for(var a = 0; a < wave['sin'].length; a++){
-                                    if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
-                                    if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
-                                }
-                                return wave;
-                            }
-                
-                            if(type==null){
-                                wave = a;
-                            }
-                            switch(type){
-                                case 'sin': wave.sin = a; break;
-                                case 'cos': wave.cos = a; break;
-                                default: break;
-                            }
-                        };
-                        object.waveElement = function(type, mux, a){
-                            if(a==null){return wave[type][mux];}
-                            wave[type][mux] = a;
-                        };
-                        object.resolution = function(a=null){
-                            if(a==null){return resolution;}
-                            resolution = a;
-                        };
-                        object.updateBackground = function(){
-                            grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
-                            grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
-                            grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
-                            grapher.drawBackground();
-                        };
-                        object.draw = function(){
-                            var data = [];
-                            var temp = 0;
-                            for(var a = 0; a <= resolution; a++){
-                                temp = 0;
-                                for(var b = 0; b < wave['sin'].length; b++){
-                                    if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
-                                    temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
-                                }
-                                for(var b = 0; b < wave['cos'].length; b++){
-                                    if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
-                                    temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
-                                }
-                                data.push(temp);
-                            }
-                    
-                            grapher.draw( data );
-                        };
-                        object.reset = function(){
-                            this.wave({'sin':[],'cos':[]});
-                            this.resolution(100);
-                            this.updateBackground();
-                        };
-                        
-                    return object;
-                };
-                this.level = function(
-                    name='level',
-                    x, y, angle=0,
-                    width=20, height=60,
-                    backingStyle='rgb(10,10,10)',
-                    levelStyles=['rgb(250,250,250)','rgb(200,200,200)']
-                ){
-                    var values = [];
-                
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //backing
-                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
-                                object.append(rect);
-                        //levels
-                            var levels = canvas.part.builder('group','levels');
-                                object.append(levels);
-                
-                            var level = [];
-                            for(var a = 0; a < levelStyles.length; a++){
-                                values.push(0);
-                                level.push( canvas.part.builder('rectangle','movingRect_'+a,{
-                                    y:height,
-                                    width:width, height:0,
-                                    style:{fill:levelStyles[a]},
-                                }) );
-                                levels.prepend(level[a]);
-                            }
-                
-                
-                        
-                
-                        //methods
-                            object.layer = function(value,layer=0){
-                                if(layer == undefined){return values;}
-                                if(value==null){return values[layer];}
-                
-                                value = (value>1 ? 1 : value);
-                                value = (value<0 ? 0 : value);
-                
-                                values[layer] = value;
-                
-                                level[layer].parameter.height( height*value );
-                                level[layer].parameter.y( height - height*value );
-                            };
-                
-                    return object;
-                };
-                this.meter_level = function(
-                    name='meter_level',
-                    x, y, angle=0,
-                    width=20, height=60,
-                    markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                
-                    backingStyle='rgb(10,10,10)',
-                    levelStyles=['rgba(250,250,250,1)','fill:rgb(100,100,100)'],
-                    markingStyle_fill='rgba(220,220,220,1)',
-                    markingStyle_font='1pt Courier New',
-                ){
-                
-                    //elements
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //level
-                            var level = canvas.part.builder('level','level',{
-                                width:width, height:height,
-                                style:{
-                                    backing:backingStyle,
-                                    levels:levelStyles,
-                                },
-                            });
-                            object.append(level);
-                
-                        //markings
-                            var marks = canvas.part.builder('group','markings');
-                                object.append(marks);
-                
-                            function makeMark(y){
-                                var markThickness = 0.2;
-                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                                return canvas.part.builder('polygon', 'mark_'+y, {points:path, style:{fill:markingStyle_fill}});
-                            }
-                            function insertText(y,text){
-                                return canvas.part.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
-                            }
-                
-                            for(var a = 0; a < markings.length; a++){
-                                marks.append( makeMark(height*(1-markings[a])) );
-                                marks.append( insertText(height*(1-markings[a]),markings[a]) );
-                            }
-                
-                
-                
-                
-                    //update intervals
-                        var framesPerSecond = 15;
-                        var coolDownSpeed = ( 3/4 )/10;
-                
-                        var coolDownSub = coolDownSpeed/framesPerSecond;
-                
-                        var coolDown = 0;
-                        var mostRecentSetting = 0;
-                        setInterval(function(){        
-                            level.layer(mostRecentSetting,0);
-                
-                            if(coolDown>0){coolDown-=coolDownSub;}
-                            level.layer(coolDown,1);
-                
-                            if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
-                        },1000/framesPerSecond);
-                
-                
-                
-                
-                    //method
-                        object.set = function(a){
-                            mostRecentSetting = a;
-                        };
-                
-                    return object;
-                };
-                this.rastorDisplay = function(
-                    name='rastorDisplay',
-                    x, y, angle=0, width=60, height=60,
-                    xCount=8, yCount=8, xGappage=0.1, yGappage=0.1,
-                    backing='rgba(50,50,50)', defaultPixelValue='rgba(0,0,0)',
-                ){
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //backing
-                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backing} });
-                            object.append(rect);
-                        //pixels
-                            var pixelGroup = canvas.part.builder('group','pixels');
-                            object.append(pixelGroup);
-                
-                            var pixels = [];
-                            var pixelValues = [];
-                            var pixWidth = width/xCount;
-                            var pixHeight = height/yCount;
-                
-                            for(var x = 0; x < xCount; x++){
-                                var temp_pixels = [];
-                                var temp_pixelValues = [];
-                                for(var y = 0; y < yCount; y++){
-                                    var rect = canvas.part.builder('rectangle',x+'_'+y,{ 
-                                        x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
-                                        width:pixWidth-xGappage,    height:pixHeight-yGappage,
-                                        style:{fill:defaultPixelValue},
-                                    });
-                                        
-                                    temp_pixels.push(rect);
-                                    temp_pixelValues.push([0,0,0]);
-                                    pixelGroup.append(rect);
-                                }
-                                pixels.push(temp_pixels);
-                                pixelValues.push(temp_pixelValues);
-                            }
-                
-                    //graphical update
-                        function render(){
-                            for(var x = 0; x < xCount; x++){
-                                for(var y = 0; y < yCount; y++){
-                                    pixels[x][y].style.fill = 'rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')';
-                                }
-                            }
-                        }
-                
-                    //control
-                        object.get = function(x,y){ return pixelValues[x][y]; };
-                        object.set = function(x,y,state){ pixelValues[x][y] = state; render(); };
-                        object.import = function(data){
-                            for(var x = 0; x < xCount; x++){
-                                for(var y = 0; y < yCount; y++){
-                                    this.set(x,y,data[x][y]);
-                                }
-                            }
-                            render();
-                        };
-                        object.export = function(){ return pixelValues; }
-                        object.setAll = function(value){
-                            for(var x = 0; x < xCount; x++){
-                                for(var y = 0; y < yCount; y++){
-                                    this.set(x,y,value);
-                                }
-                            }
-                        }
-                        object.test = function(){
-                            this.setAll([1,1,1]);
-                            this.set(1,1,[1,0.5,0.5]);
-                            this.set(2,2,[0.5,1,0.5]);
-                            this.set(3,3,[0.5,0.5,1]);
-                            this.set(4,4,[1,0.5,1]);
-                            render();
-                        };
-                
-                    return object;
-                };
-                this.readout_sixteenSegmentDisplay = function(
-                    name='readout_sixteenSegmentDisplay',
-                    x, y, width=100, height=30, count=5, angle=0,
-                    backgroundStyle='rgb(0,0,0)',
-                    glowStyle='rgb(200,200,200)',
-                    dimStyle='rgb(20,20,20)'
-                ){
-                    //values
-                        var text = '';
-                        var displayInterval = null;
-                
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y});
-                
-                        //display units
-                            var units = [];
-                            for(var a = 0; a < count; a++){
-                                var temp = canvas.part.builder('sixteenSegmentDisplay', ''+a, {
-                                    x:(width/count)*a, width:width/count, height:height, 
-                                    style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                });
-                                object.append( temp );
-                                units.push(temp);
-                            }
-                
-                    //methods
-                        object.text = function(a){
-                            if(a==null){return text;}
-                            text = a;
-                        };
-                
-                        object.print = function(style){
-                            clearInterval(displayInterval);
-                            switch(style){
-                                case 'smart':
-                                    if(text.length > units.length){this.print('r2lSweep');}
-                                    else{this.print('regular')}
-                                break;
-                                case 'r2lSweep':
-                                    var displayIntervalTime = 100;
-                                    var displayStage = 0;
-                
-                                    displayInterval = setInterval(function(){
-                                        for(var a = units.length-1; a >= 0; a--){
-                                            units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                        }
-                
-                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                    },displayIntervalTime);
-                                break;
-                                case 'regular': default:
-                                    for(var a = 0; a < units.length; a++){
-                                        units[a].enterCharacter(text[a]);
-                                    }
-                                break;
-                            }
-                        };
                 
                     return object;
                 };
@@ -5079,578 +4549,69 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return object;      
                 };
-            };
-            
-            this.control = new function(){
-                this.button_rect = function(
-                    name='button_rect',
-                    x, y, width=30, height=20, angle=0,
-                    text_centre='button', text_left='', text_right='',
-                    textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
-                    
-                    active=true, hoverable=true, selectable=false, pressable=true,
-                
-                    text_font = '5pt Arial',
-                    text_textBaseline = 'alphabetic',
-                    text_fill = 'rgba(0,0,0,1)',
-                    text_stroke = 'rgba(0,0,0,0)',
-                    text_lineWidth = 1,
-                
-                    backing__off__fill=                          'rgba(180,180,180,1)',
-                    backing__off__stroke=                        'rgba(0,0,0,0)',
-                    backing__off__lineWidth=                     0,
-                    backing__up__fill=                           'rgba(200,200,200,1)',
-                    backing__up__stroke=                         'rgba(0,0,0,0)',
-                    backing__up__lineWidth=                      0,
-                    backing__press__fill=                        'rgba(230,230,230,1)',
-                    backing__press__stroke=                      'rgba(0,0,0,0)',
-                    backing__press__lineWidth=                   0,
-                    backing__select__fill=                       'rgba(200,200,200,1)',
-                    backing__select__stroke=                     'rgba(120,120,120,1)',
-                    backing__select__lineWidth=                  0.75,
-                    backing__select_press__fill=                 'rgba(230,230,230,1)',
-                    backing__select_press__stroke=               'rgba(120,120,120,1)',
-                    backing__select_press__lineWidth=            0.75,
-                    backing__glow__fill=                         'rgba(220,220,220,1)',
-                    backing__glow__stroke=                       'rgba(0,0,0,0)',
-                    backing__glow__lineWidth=                    0,
-                    backing__glow_press__fill=                   'rgba(250,250,250,1)',
-                    backing__glow_press__stroke=                 'rgba(0,0,0,0)',
-                    backing__glow_press__lineWidth=              0,
-                    backing__glow_select__fill=                  'rgba(220,220,220,1)',
-                    backing__glow_select__stroke=                'rgba(120,120,120,1)',
-                    backing__glow_select__lineWidth=             0.75,
-                    backing__glow_select_press__fill=            'rgba(250,250,250,1)',
-                    backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
-                    backing__glow_select_press__lineWidth=       0.75,
-                    backing__hover__fill=                        'rgba(220,220,220,1)',
-                    backing__hover__stroke=                      'rgba(0,0,0,0)',
-                    backing__hover__lineWidth=                   0,
-                    backing__hover_press__fill=                  'rgba(240,240,240,1)',
-                    backing__hover_press__stroke=                'rgba(0,0,0,0)',
-                    backing__hover_press__lineWidth=             0,
-                    backing__hover_select__fill=                 'rgba(220,220,220,1)',
-                    backing__hover_select__stroke=               'rgba(120,120,120,1)',
-                    backing__hover_select__lineWidth=            0.75,
-                    backing__hover_select_press__fill=           'rgba(240,240,240,1)',
-                    backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
-                    backing__hover_select_press__lineWidth=      0.75,
-                    backing__hover_glow__fill=                   'rgba(240,240,240,1)',
-                    backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
-                    backing__hover_glow__lineWidth=              0,
-                    backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
-                    backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-                    backing__hover_glow_press__lineWidth=        0,
-                    backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
-                    backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-                    backing__hover_glow_select__lineWidth=       0.75,
-                    backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-                    backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-                    backing__hover_glow_select_press__lineWidth= 0.75,
-                
-                    onenter = function(event){},
-                    onleave = function(event){},
-                    onpress = function(event){},
-                    ondblpress = function(event){},
-                    onrelease = function(event){},
-                    onselect = function(event){},
-                    ondeselect = function(event){},
+                this.glowbox_rect = function(
+                    name='glowbox_rect',
+                    x, y, width=30, height=30, angle=0,
+                    glowStyle = 'rgba(244,234,141,1)',
+                    dimStyle = 'rgba(80,80,80,1)'
                 ){
                     //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        
-                        //backing
-                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{
-                                fill:backing__off__fill,
-                                stroke:backing__off__stroke,
-                                lineWidth:backing__off__lineWidth,
-                            }});
-                            object.append(backing);
+                        var object = canvas.part.builder('group',name,{x:x, y:y});
+                        var rect = canvas.part.builder('rectangle','light',{ width:width, height:height, angle:angle, style:{fill:dimStyle} });
+                            object.append(rect);
                 
-                        //text
-                            var text_centre = canvas.part.builder('text','centre', {
-                                x:width/2, 
-                                y:height*textVerticalOffsetMux, 
-                                text:text_centre, 
-                                style:{
-                                    font:text_font,
-                                    testBaseline:text_textBaseline,
-                                    fill:text_fill,
-                                    stroke:text_stroke,
-                                    lineWidth:text_lineWidth,
-                                    textAlign:'center',
-                                    textBaseline:'middle',
-                                }
-                            });
-                            object.append(text_centre);
-                            var text_left = canvas.part.builder('text','left',     {
-                                x:width*textHorizontalOffsetMux, 
-                                y:height*textVerticalOffsetMux, 
-                                text:text_left, 
-                                style:{
-                                    font:text_font,
-                                    testBaseline:text_textBaseline,
-                                    fill:text_fill,
-                                    stroke:text_stroke,
-                                    lineWidth:text_lineWidth,
-                                    textAlign:'left',
-                                    textBaseline:'middle',
-                                }
-                            });
-                            object.append(text_left);
-                            var text_right = canvas.part.builder('text','right',   {
-                                x:width-(width*textHorizontalOffsetMux), 
-                                y:height*textVerticalOffsetMux, 
-                                text:text_right, 
-                                style:{
-                                    font:text_font,
-                                    testBaseline:text_textBaseline,
-                                    fill:text_fill,
-                                    stroke:text_stroke,
-                                    lineWidth:text_lineWidth,
-                                    textAlign:'right',
-                                    textBaseline:'middle',
-                                }
-                            });
-                            object.append(text_right);
-                
-                        //cover
-                            var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                            object.append(cover);
-                
-                
-                
-                
-                    //state
-                        object.state = {
-                            hovering:false,
-                            glowing:false,
-                            selected:false,
-                            pressed:false,
+                    //methods
+                        object.on = function(){
+                            rect.style.fill = glowStyle;
                         };
-                
-                        function activateGraphicalState(){
-                            if(!active){ 
-                                backing.style.fill = backing__off__fill;
-                                backing.style.stroke = backing__off__stroke;
-                                backing.style.lineWidth = backing__off__lineWidth;
-                                return;
-                            }
-                
-                            var styles = [
-                                { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
-                                { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
-                                { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
-                                { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
-                                { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
-                                { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
-                                { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
-                                { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
-                                { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
-                                { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
-                                { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
-                                { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
-                                { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
-                                { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
-                                { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
-                                { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
-                            ];
-                
-                            if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
-                            if(!selectable && object.state.selected ){ object.state.selected = false; }
-                
-                            var i = object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + (pressable && object.state.pressed)*1;
-                            backing.style.fill =       styles[i].fill;
-                            backing.style.stroke =     styles[i].stroke;
-                            backing.style.lineWidth =  styles[i].lineWidth;
+                        object.off = function(){
+                            rect.style.fill = dimStyle;
                         };
-                        activateGraphicalState();
-                
-                
-                
-                
-                    //control
-                        object.press = function(event){
-                            if(!active){return;}
-                
-                            if( pressable ){
-                                if(this.state.pressed){return;}
-                                this.state.pressed = true;
-                                if(this.onpress){this.onpress(this, event);}
-                            }
-                            
-                            this.select( !this.select(), event );
-                
-                            activateGraphicalState();
-                        };
-                        object.release = function(event){
-                            if(!active || !pressable){return;}
-                
-                            if(!this.state.pressed){return;}
-                            this.state.pressed = false;
-                            activateGraphicalState();
-                            if(this.onrelease){this.onrelease(this, event);}
-                        };
-                        object.active = function(bool){ if(bool == undefined){return active;} active = bool; activateGraphicalState(); };
-                        object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  activateGraphicalState(); };
-                        object.select = function(bool,event,callback=true){ 
-                            if(!active){return;}
-                
-                            if(bool == undefined){return this.state.selected;}
-                            if(!selectable){return;}
-                            if(this.state.selected == bool){return;}
-                            this.state.selected = bool; activateGraphicalState();
-                            if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
-                        };
-                
-                
-                
-                
-                    //interactivity
-                        cover.onmouseenter = function(x,y,event){
-                            object.state.hovering = true;  
-                            activateGraphicalState();
-                            if(object.onenter){object.onenter(event);}
-                            if(event.buttons == 1){cover.onmousedown(event);} 
-                        };
-                        cover.onmouseleave = function(x,y,event){ 
-                            object.state.hovering = false; 
-                            object.release(event); 
-                            activateGraphicalState(); 
-                            if(object.onleave){object.onleave(event);}
-                        };
-                        cover.onmouseup = function(x,y,event){   object.release(event); };
-                        cover.onmousedown = function(x,y,event){ object.press(event); };
-                        cover.ondblclick = function(x,y,event){ if(!active){return;} if(object.ondblpress){object.ondblpress(event);} };
-                        
-                
-                
-                
-                    //callbacks
-                        object.onenter = onenter;
-                        object.onleave = onleave;
-                        object.onpress = onpress;
-                        object.ondblpress = ondblpress;
-                        object.onrelease = onrelease;
-                        object.onselect = onselect;
-                        object.ondeselect = ondeselect;
                 
                     return object;
                 };
-                this.checkbox_rect = function(
-                    name='checkbox_rect',
-                    x, y, width=20, height=20, angle=0,
-                    checkStyle = 'rgba(150,150,150,1)',
-                    backingStyle = 'rgba(200,200,200,1)',
-                    checkGlowStyle = 'rgba(220,220,220,1)',
-                    backingGlowStyle = 'rgba(220,220,220,1)',
-                    onchange = function(){},
+                this.audio_meter_level = function(
+                    name='audio_meter_level',
+                    x, y, angle=0,
+                    width=20, height=60,
+                    markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                
+                    backingStyle='rgb(10,10,10)',
+                    levelStyles=['rgba(250,250,250,1)','rgb(100,100,100)'],
+                    markingStyle_fill='rgba(220,220,220,1)',
+                    markingStyle_font='1pt Courier New',
                 ){
-                    //elements 
+                    //elements
                         //main
                             var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        
-                        //backing
-                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
-                            object.append(backing);
-                        //check
-                            var checkrect = canvas.part.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:{fill:'rgba(0,0,0,0)'}});
-                            object.append(checkrect);
-                        //cover
-                            var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                            object.append(cover);
-                
-                
-                
-                
-                
-                    //state
-                        var state = {
-                            checked:false,
-                            glowing:false,
-                        }
-                
-                        function updateGraphics(){
-                            if(state.glowing){
-                                backing.style.fill = backingGlowStyle;
-                                checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
-                            }else{
-                                backing.style.fill = backingStyle;
-                                checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
-                            }
-                        }
-                
-                
-                
-                
-                    //methods
-                        object.get = function(){ return state.checked; };
-                        object.set = function(value, update=true){
-                            state.checked = value;
-                            
-                            updateGraphics();
-                    
-                            if(update&&this.onchange){ this.onchange(value); }
-                        };
-                        object.light = function(state){
-                            if(state == undefined){ return state.glowing; }
-                
-                            state.glowing = state;
-                
-                            updateGraphics();
-                        };
-                
-                
-                
-                
-                    //interactivity
-                        cover.onclick = function(event){
-                            object.set(!object.get());
-                        };
-                        cover.onmousedown = function(){};
-                
-                
-                
-                
-                    //callbacks
-                        object.onchange = onchange;
-                
-                    return object;
-                };
-                this.dial_continuous = function(
-                    name='dial_continuous',
-                    x, y, r=15, angle=0,
-                    value=0, resetValue=-1,
-                    startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                
-                    handleStyle = 'rgba(200,200,200,1)',
-                    slotStyle = 'rgba(50,50,50,1)',
-                    needleStyle = 'rgba(250,100,100,1)',
-                
-                    onchange=function(){},
-                    onrelease=function(){},
-                ){
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        
-                        //slot
-                            var slot = canvas.part.builder('circle','slot',{r:r*1.1, style:{fill:slotStyle}});
-                            object.append(slot);
-                
-                        //handle
-                            var handle = canvas.part.builder('circle','handle',{r:r, style:{fill:handleStyle}});
-                                object.append(handle);
-                
-                        //needle group
-                            var needleGroup = canvas.part.builder('group','needleGroup',{ignored:true});
-                            object.append(needleGroup);
-                
-                            //needle
-                                var needleWidth = r/5;
-                                var needleLength = r;
-                                var needle = canvas.part.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{fill:needleStyle}});
-                                    needleGroup.append(needle);
-                
-                
-                
-                
-                    //graphical adjust
-                        function set(a,update=true){
-                            a = (a>1 ? 1 : a);
-                            a = (a<0 ? 0 : a);
-                
-                            if(update && object.change != undefined){object.onchange(a);}
-                
-                            value = a;
-                            needleGroup.parameter.angle(startAngle + maxAngle*value);
-                        }
-                
-                
-                
-                
-                    //methods
-                        var grappled = false;
-                
-                        object.set = function(value,update){
-                            if(grappled){return;}
-                            set(value,update);
-                        };
-                        object.get = function(){return value;};
-                
-                
-                
-                
-                    //interaction
-                        var turningSpeed = r*4;
-                        
-                        handle.ondblclick = function(){
-                            if(resetValue<0){return;}
-                            if(grappled){return;}
-                            
-                            set(resetValue); 
-                
-                            if(object.onrelease != undefined){object.onrelease(value);}
-                        };
-                        handle.onwheel = function(x,y,event){
-                            if(grappled){return;}
-                            
-                            var move = event.deltaY/100;
-                            var globalScale = canvas.core.viewport.scale();
-                            set( value - move/(10*globalScale) );
-                
-                            if(object.onrelease != undefined){object.onrelease(value);}
-                        };
-                        handle.onmousedown = function(x,y,event){
-                            var initialValue = value;
-                            var initialY = event.y;
-                
-                            grappled = true;
-                            canvas.system.mouse.mouseInteractionHandler(
-                                function(event){
-                                    var value = initialValue;
-                                    var numerator = event.y - initialY;
-                                    var divider = canvas.core.viewport.scale();
-                                    set( value - numerator/(divider*turningSpeed), true );
+                        //meter
+                            var meter = canvas.part.builder('meter_level','meter',{
+                                width:width, height:height, markings:markings,
+                                style:{
+                                    backing:backingStyle,
+                                    levels:levelStyles,
+                                    markingStyle_fill:markingStyle_fill,
+                                    markingStyle_font:markingStyle_font,
                                 },
-                                function(event){
-                                    grappled = false;
-                                    if(object.onrelease != undefined){object.onrelease(value);}
-                                }
-                            );
-                        };
-                
-                
-                
-                
-                    //callbacks
-                        object.onchange = onchange; 
-                        object.onrelease = onrelease;
-                
-                    //setup
-                        set(0);
-                
-                    return object;
-                };
-                this.dial_discrete = function(
-                    name='dial_discrete',
-                    x, y, r=15, angle=0,
-                    value=0, resetValue=0, optionCount=5,
-                    startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                
-                    handleStyle = 'rgba(175,175,175,1)',
-                    slotStyle = 'rgba(50,50,50,1)',
-                    needleStyle = 'rgba(250,100,100,1)',
-                
-                    onchange=function(){},
-                    onrelease=function(){},
-                ){
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        
-                        //dial
-                            var dial = canvas.part.builder('dial_continuous',name,{
-                                x:0, y:0, r:r, angle:0,
-                                startAngle:startAngle, smaxAngle:maxAngle,
-                                style:{ handleStyle:handleStyle, slotStyle:slotStyle, needleStyle:needleStyle }
                             });
-                            //clean out built-in interation
-                            dial.getChildByName('handle').ondblclick = undefined;
-                            dial.getChildByName('handle').onwheel = undefined;
-                            dial.getChildByName('handle').onmousedown = undefined;
+                            object.append(meter);
                 
-                            object.append(dial);
-                        
+                    //circuitry
+                        var converter = canvas.part.circuit.audio.audio2percentage()
+                        converter.newValue = function(val){object.set( val );};
                 
-                
-                
-                
-                
-                    //graphical adjust
-                        function set(a,update=true){
-                            a = (a>(optionCount-1) ? (optionCount-1) : a);
-                            a = (a<0 ? 0 : a);
-                
-                            if(update && object.change != undefined){object.onchange(a);}
-                
-                            a = Math.round(a);
-                            value = a;
-                            dial.set( value/(optionCount-1) );
-                        };
-                
-                
-                
+                    //audio connections
+                        object.audioIn = function(){ return converter.audioIn(); }
                 
                     //methods
-                        var grappled = false;
-                
-                        object.set = function(value,update){
-                            if(grappled){return;}
-                            set(value,update);
-                        };
-                        object.get = function(){return value;};
-                
-                
-                
-                
-                    //interaction
-                        var acc = 0;
-                
-                        dial.getChildByName('handle').ondblclick = function(){
-                            if(resetValue<0){return;}
-                            if(grappled){return;}
-                            
-                            set(resetValue);
-                
-                            if(object.onrelease != undefined){object.onrelease(value);}
-                        };
-                        dial.getChildByName('handle').onwheel = function(x,y,event){
-                            if(grappled){return;}
-                
-                            var move = event.deltaY/100;
-                
-                            acc += move;
-                            if( Math.abs(acc) >= 1 ){
-                                set( value -1*Math.sign(acc) );
-                                acc = 0;
-                                if(object.onrelease != undefined){object.onrelease(value);}
-                            }
-                        };
-                        dial.getChildByName('handle').onmousedown = function(x,y,event){
-                            var initialValue = value;
-                            var initialY = event.y;
-                
-                            grappled = true;
-                            canvas.system.mouse.mouseInteractionHandler(
-                                function(event){
-                                    var diff = Math.round( (event.y - initialY)/25 );
-                                    set( initialValue - diff );
-                                    if(object.onchange != undefined){object.onchange(value);}
-                                },
-                                function(event){
-                                    grappled = false;
-                                    if(object.onrelease != undefined){object.onrelease(value);}
-                                }
-                            );
-                        };
-                
-                
-                
-                
-                    //callbacks
-                        object.onchange = onchange; 
-                        object.onrelease = onrelease;
-                
-                    //setup
-                        set(0);
+                        object.start = function(){ converter.start(); };
+                        object.stop = function(){ converter.stop(); };
                 
                     return object;
                 };
-                this.grapher_waveWorkspace = function(
-                    name='grapher_waveWorkspace',
-                    x, y, width=120, height=60, angle=0, selectNeedle=true, selectionArea=true,
+                this.grapher = function(
+                    name='grapher',
+                    x, y, width=120, height=60, angle=0,
                 
                     foregroundStyles=[
                         {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
@@ -5668,398 +4629,529 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     backgroundTextStyle_font='Helvetica',
                 
                     backingStyle='rgba(50,50,50,1)',
-                
-                    onchange=function(needle,value){}, 
-                    onrelease=function(needle,value){}, 
-                    selectionAreaToggle=function(bool){},
                 ){
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //main graph
-                            var graph = canvas.part.builder('grapher', 'graph', {
-                                width:width, height:height,
-                                style:{
-                                    foregrounds:foregroundStyles,   
-                                    foregroundText:foregroundTextStyles,
-                                    background_stroke:backgroundStyle_stroke,
-                                    background_lineWidth:backgroundStyle_lineWidth,
-                                    backgroundText_fill:backgroundTextStyle_fill,
-                                    backgroundText_size:backgroundTextStyle_size,
-                                    backgroundText_font:backgroundTextStyle_font,
-                                    backing:backingStyle,
-                                }
-                            });
-                            object.append(graph);
-                        //needle overlay
-                            var overlay = canvas.part.builder('needleOverlay', 'overlay', {
-                                width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
-                                needleStyles:foregroundStyles.map(a => a.stroke),
-                            });
-                            object.append(overlay);
-                
-                    //controls
-                        //grapher
-                            object.horizontalMarkings = graph.horizontalMarkings;
-                            object.verticalMarkings = graph.verticalMarkings;
-                            object.drawBackground = graph.drawBackground;
-                            object.drawForeground = graph.drawForeground;
-                            object.draw = graph.draw;
-                        //needle overlay
-                            object.select = overlay.select;
-                            object.area = overlay.area;
-                
-                    //callbacks
-                        object.onchange = onchange;
-                        object.onrelease = onrelease;
-                        object.selectionAreaToggle = selectionAreaToggle;
-                        overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
-                        overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
-                        overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
-                
-                    //setup
-                        graph.viewbox({left:0});
-                        graph.drawBackground();
-                        overlay.select(0);
-                
-                    return object;
-                };
-                this.list = function(
-                    name='list', 
-                    x, y, width=50, height=100, angle=0,
-                    list=[],
-                
-                    itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
-                    active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
-                
-                    itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
-                    breakHeightMux=0.0025, breakWidthMux=0.9, 
-                    spacingHeightMux=0.005,
-                    backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
-                
-                    text_font = '5pt Arial',
-                    text_textBaseline = 'alphabetic',
-                    text_fill = 'rgba(0,0,0,1)',
-                    text_stroke = 'rgba(0,0,0,0)',
-                    text_lineWidth = 1,
-                
-                    item__off__fill=                          'rgba(180,180,180,1)',
-                    item__off__stroke=                        'rgba(0,0,0,0)',
-                    item__off__lineWidth=                     0,
-                    item__up__fill=                           'rgba(200,200,200,1)',
-                    item__up__stroke=                         'rgba(0,0,0,0)',
-                    item__up__lineWidth=                      0,
-                    item__press__fill=                        'rgba(230,230,230,1)',
-                    item__press__stroke=                      'rgba(0,0,0,0)',
-                    item__press__lineWidth=                   0,
-                    item__select__fill=                       'rgba(200,200,200,1)',
-                    item__select__stroke=                     'rgba(120,120,120,1)',
-                    item__select__lineWidth=                  2,
-                    item__select_press__fill=                 'rgba(230,230,230,1)',
-                    item__select_press__stroke=               'rgba(120,120,120,1)',
-                    item__select_press__lineWidth=            2,
-                    item__glow__fill=                         'rgba(220,220,220,1)',
-                    item__glow__stroke=                       'rgba(0,0,0,0)',
-                    item__glow__lineWidth=                    0,
-                    item__glow_press__fill=                   'rgba(250,250,250,1)',
-                    item__glow_press__stroke=                 'rgba(0,0,0,0)',
-                    item__glow_press__lineWidth=              0,
-                    item__glow_select__fill=                  'rgba(220,220,220,1)',
-                    item__glow_select__stroke=                'rgba(120,120,120,1)',
-                    item__glow_select__lineWidth=             2,
-                    item__glow_select_press__fill=            'rgba(250,250,250,1)',
-                    item__glow_select_press__stroke=          'rgba(120,120,120,1)',
-                    item__glow_select_press__lineWidth=       2,
-                    item__hover__fill=                        'rgba(220,220,220,1)',
-                    item__hover__stroke=                      'rgba(0,0,0,0)',
-                    item__hover__lineWidth=                   0,
-                    item__hover_press__fill=                  'rgba(240,240,240,1)',
-                    item__hover_press__stroke=                'rgba(0,0,0,0)',
-                    item__hover_press__lineWidth=             0,
-                    item__hover_select__fill=                 'rgba(220,220,220,1)',
-                    item__hover_select__stroke=               'rgba(120,120,120,1)',
-                    item__hover_select__lineWidth=            2,
-                    item__hover_select_press__fill=           'rgba(240,240,240,1)',
-                    item__hover_select_press__stroke=         'rgba(120,120,120,1)',
-                    item__hover_select_press__lineWidth=      2,
-                    item__hover_glow__fill=                   'rgba(240,240,240,1)',
-                    item__hover_glow__stroke=                 'rgba(0,0,0,0)',
-                    item__hover_glow__lineWidth=              0,
-                    item__hover_glow_press__fill=             'rgba(250,250,250,1)',
-                    item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-                    item__hover_glow_press__lineWidth=        0,
-                    item__hover_glow_select__fill=            'rgba(240,240,240,1)',
-                    item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-                    item__hover_glow_select__lineWidth=       2,
-                    item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-                    item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-                    item__hover_glow_select_press__lineWidth= 2,
-                
-                    onenter=function(){},
-                    onleave=function(){},
-                    onpress=function(){},
-                    ondblpress=function(){},
-                    onrelease=function(){},
-                    onselection=function(){},
-                    onpositionchange=function(){},
-                ){
-                    //state
-                        var itemArray = [];
-                        var selectedItems = [];
-                        var lastNonShiftClicked = 0;
-                        var position = 0;
-                        var calculatedListHeight;
+                    var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
+                    var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                    var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                    var foregroundElementsGroup = [];
                 
                     //elements 
                         //main
                             var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
                         //backing
-                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{
-                                fill:backing_style,
-                            }});
-                            object.append(backing);
-                        //item collection
-                            var itemCollection = canvas.part.builder('group','itemCollection');
-                            object.append(itemCollection);
-                            function refreshList(){
-                                //clean out all values
-                                    itemArray = [];
-                                    itemCollection.clear();
-                                    selectedItems = [];
-                                    position = 0;
-                                    lastNonShiftClicked = 0;
-                
-                                //populate list
-                                    var accumulativeHeight = 0;
-                                    for(var a = 0; a < list.length; a++){
-                                        switch(list[a]){
-                                            case 'space':
-                                                var temp = canvas.part.builder( 'rectangle', ''+a, {
-                                                    x:0, y:accumulativeHeight,
-                                                    width:width, height:height*spacingHeightMux,
-                                                    style:{fill:'rgba(255,0,0,0)'}
-                                                });
-                
-                                                accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                itemCollection.append( temp );
-                                            break;
-                                            case 'break':
-                                                var temp = canvas.part.builder( 'rectangle', ''+a, {
-                                                    x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                    width:width*breakWidthMux, height:height*breakHeightMux,
-                                                    style:{fill:break_style}
-                                                });
-                
-                                                accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                itemCollection.append( temp );
-                                            break;
-                                            default:
-                                                var temp = canvas.part.builder( 'button_rect', ''+a, {
-                                                    x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                    width:width*itemWidthMux, height:height*itemHeightMux, 
-                                                    text_left: list[a].text_left,
-                                                    text_centre: (list[a].text?list[a].text:list[a].text_centre),
-                                                    text_right: list[a].text_right,
-                
-                                                    textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
-                                                    active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                
-                                                    style:{
-                                                        text_font:text_font,
-                                                        text_textBaseline:text_textBaseline,
-                                                        text_fill:text_fill,
-                                                        text_stroke:text_stroke,
-                                                        text_lineWidth:text_lineWidth,
-                
-                                                        item__off__fill:                            item__off__fill,
-                                                        item__off__stroke:                          item__off__stroke,
-                                                        item__off__lineWidth:                       item__off__lineWidth,
-                                                        item__up__fill:                             item__up__fill,
-                                                        item__up__stroke:                           item__up__stroke,
-                                                        item__up__lineWidth:                        item__up__lineWidth,
-                                                        item__press__fill:                          item__press__fill,
-                                                        item__press__stroke:                        item__press__stroke,
-                                                        item__press__lineWidth:                     item__press__lineWidth,
-                                                        item__select__fill:                         item__select__fill,
-                                                        item__select__stroke:                       item__select__stroke,
-                                                        item__select__lineWidth:                    item__select__lineWidth,
-                                                        item__select_press__fill:                   item__select_press__fill,
-                                                        item__select_press__stroke:                 item__select_press__stroke,
-                                                        item__select_press__lineWidth:              item__select_press__lineWidth,
-                                                        item__glow__fill:                           item__glow__fill,
-                                                        item__glow__stroke:                         item__glow__stroke,
-                                                        item__glow__lineWidth:                      item__glow__lineWidth,
-                                                        item__glow_press__fill:                     item__glow_press__fill,
-                                                        item__glow_press__stroke:                   item__glow_press__stroke,
-                                                        item__glow_press__lineWidth:                item__glow_press__lineWidth,
-                                                        item__glow_select__fill:                    item__glow_select__fill,
-                                                        item__glow_select__stroke:                  item__glow_select__stroke,
-                                                        item__glow_select__lineWidth:               item__glow_select__lineWidth,
-                                                        item__glow_select_press__fill:              item__glow_select_press__fill,
-                                                        item__glow_select_press__stroke:            item__glow_select_press__stroke,
-                                                        item__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
-                                                        item__hover__fill:                          item__hover__fill,
-                                                        item__hover__stroke:                        item__hover__stroke,
-                                                        item__hover__lineWidth:                     item__hover__lineWidth,
-                                                        item__hover_press__fill:                    item__hover_press__fill,
-                                                        item__hover_press__stroke:                  item__hover_press__stroke,
-                                                        item__hover_press__lineWidth:               item__hover_press__lineWidth,
-                                                        item__hover_select__fill:                   item__hover_select__fill,
-                                                        item__hover_select__stroke:                 item__hover_select__stroke,
-                                                        item__hover_select__lineWidth:              item__hover_select__lineWidth,
-                                                        item__hover_select_press__fill:             item__hover_select_press__fill,
-                                                        item__hover_select_press__stroke:           item__hover_select_press__stroke,
-                                                        item__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
-                                                        item__hover_glow__fill:                     item__hover_glow__fill,
-                                                        item__hover_glow__stroke:                   item__hover_glow__stroke,
-                                                        item__hover_glow__lineWidth:                item__hover_glow__lineWidth,
-                                                        item__hover_glow_press__fill:               item__hover_glow_press__fill,
-                                                        item__hover_glow_press__stroke:             item__hover_glow_press__stroke,
-                                                        item__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
-                                                        item__hover_glow_select__fill:              item__hover_glow_select__fill,
-                                                        item__hover_glow_select__stroke:            item__hover_glow_select__stroke,
-                                                        item__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
-                                                        item__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
-                                                        item__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
-                                                        item__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
-                                                    }
-                                                });
-                
-                                                temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                temp.onrelease = function(a){
-                                                    return function(){
-                                                        if( list[a].function ){ list[a].function(); }
-                                                        object.onrelease(a);
-                                                    }
-                                                }(a);
-                                                temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-                
-                                                accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                itemCollection.append( temp );
-                                                itemArray.push( temp );
-                                            break;
-                                        }
-                                    }
-                
-                                return accumulativeHeight - height*itemSpacingMux;
-                            }
-                            calculatedListHeight = refreshList();
-                        //cover
-                            var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                            object.append(cover);
+                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+                            object.append(rect);
+                        //background group
+                            var backgroundGroup = canvas.part.builder( 'group', 'background' );
+                            object.append(backgroundGroup);
+                        //foreground group
+                            var foregroundGroup = canvas.part.builder( 'group', 'foreground' );
+                            object.append(foregroundGroup);
                         //stencil
-                            var stencil = canvas.part.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                            var stencil = canvas.part.builder('rectangle','stencil',{width:width, height:height});
                             object.stencil(stencil);
                             object.clip(true);
                 
+                    //graphics
+                        function drawBackground(){
+                            backgroundGroup.clear();
                 
-                    //interaction
-                        cover.onwheel = function(x,y,event){
-                            var move = event.deltaY/100;
-                            object.position( object.position() + move/10 );
-                        };
-                    
-                    //controls
-                        object.position = function(a,update=true){
-                            if(a == undefined){return position;}
-                            a = a < 0 ? 0 : a;
-                            a = a > 1 ? 1 : a;
-                            position = a;
+                            //horizontal lines
+                                //calculate the x value for all parts of this section
+                                    var x = canvas.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
                 
-                            if( calculatedListHeight < height ){return;}
-                            var movementSpace = calculatedListHeight - height;
-                            itemCollection.parameter.y( -a*movementSpace );
-                            
-                            if(update&&this.onpositionchange){this.onpositionchange(a);}
-                        };
-                        object.select = function(a,state,event,update=true){
-                            if(!selectable){return;}
+                                //add all horizontal markings
+                                    for(var a = 0; a < horizontalMarkings.points.length; a++){
+                                        //check if we should draw this line at all
+                                            if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
+                        
+                                        //calculate the y value for this section
+                                            var y = height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
                 
-                            //where multi selection is not allowed
-                                if(!multiSelect){
-                                    //where we want to select an item, which is not already selected
-                                        if(state && !selectedItems.includes(a) ){
-                                            //deselect all other items
-                                                while( selectedItems.length > 0 ){
-                                                    itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
-                                                    selectedItems.shift();
-                                                }
-                
-                                            //select current item
-                                                selectedItems.push(a);
-                
-                                    //where we want to deselect an item that is selected
-                                        }else if(!state && selectedItems.includes(a)){
-                                            selectedItems = [];
-                                        }
-                
-                                //do not update the item itself, in the case that it was the item that sent this command
-                                //(which would cause a little loop)
-                                    if(update){ itemCollection.children[a].select(true,undefined,false); }
-                
-                            //where multi selection is allowed
-                                }else{
-                                    //wherer range-selection is to be done
-                                        if( event != undefined && event.shiftKey ){
-                                            //gather top and bottom item
-                                            //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
-                                                var min = Math.min(lastNonShiftClicked, a);
-                                                var max = Math.max(lastNonShiftClicked, a);
-                                                for(var b = 0; b < itemArray.length; b++){
-                                                    if( itemArray[b].name == ''+min ){min = b;}
-                                                    if( itemArray[b].name == ''+max ){max = b;}
-                                                }
-                
-                                            //deselect all outside the range
-                                                selectedItems = [];
-                                                for(var b = 0; b < itemArray.length; b++){
-                                                    if( b > max || b < min ){
-                                                        if( itemArray[b].select() ){
-                                                            itemArray[b].select(false,undefined,false);
+                                        //add line and text to group
+                                            //lines
+                                                var path = canvas.part.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineWidth,style:{fill:backgroundStyle_stroke}} );
+                                                backgroundGroup.append(path);
+                                            //text
+                                                if( horizontalMarkings.printText ){
+                                                    var text = canvas.part.builder( 'text', 'horizontal_text_'+a, {
+                                                        x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y,
+                                                        text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                                                        size:backgroundTextStyle_size,
+                                                        style:{
+                                                            fill:backgroundTextStyle_fill,
+                                                            font:'15pt '+backgroundTextStyle_font
                                                         }
-                                                    }
+                                                    } );
+                                                    backgroundGroup.append(text);
                                                 }
+                                    }
                 
-                                            //select those within the range (that aren't already selected)
-                                                for(var b = min; b <= max; b++){
-                                                    if( !itemArray[b].select() ){
-                                                        itemArray[b].select(true,undefined,false);
-                                                        selectedItems.push(b);
-                                                    }
-                                                }
-                                    //where range-selection is not to be done
-                                        }else{
-                                            if(update){ itemArray[a].select(state); }
-                                            if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
-                                            else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                            lastNonShiftClicked = a;
-                                        }
+                            //vertical lines
+                                //calculate the y value for all parts of this section
+                                    var y = height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
+                
+                                //add all vertical markings
+                                    for(var a = 0; a < verticalMarkings.points.length; a++){
+                                        //check if we should draw this line at all
+                                            if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
+                
+                                        //calculate the x value for this section
+                                            var x = canvas.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                
+                                        //add line and text to group
+                                            //lines
+                                                var path = canvas.part.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineWidth,height:height,style:{fill:backgroundStyle_stroke}} );
+                                                backgroundGroup.append(path);
+                                        
+                                            //text
+                                                if( verticalMarkings.printText ){
+                                                    var text = canvas.part.builder( 'text', 'vertical_text_'+a, {
+                                                        x:x+verticalMarkings.textPositionOffset.x, y:y+verticalMarkings.textPositionOffset.y,
+                                                        text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                                                        size:backgroundTextStyle_size,
+                                                        style:{
+                                                            fill:backgroundTextStyle_fill,
+                                                            font:'15pt '+backgroundTextStyle_font
+                                                        }
+                                                    } );
+                                                    backgroundGroup.append(text);
+                                            }
+                                    }
+                        }
+                        function drawForeground(y,x,layer=0){
+                            foregroundGroup.clear();
+                
+                            //if both data sets of a layer are being set to undefined; set the whole layer to undefined
+                            //otherwise, just update the layer's data sets
+                                if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
+                                else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
+                
+                            //input check
+                                if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
+                                    console.warn('grapher error',name,'attempting to add line with no y component');
+                                    console.warn('x:',foregroundElementsGroup[layer].x);
+                                    console.warn('y:',foregroundElementsGroup[layer].y);
+                                    return;
                                 }
                 
-                            object.onselection(selectedItems);
+                            //draw layers
+                                for(var L = 0; L < foregroundElementsGroup.length; L++){
+                                    if(foregroundElementsGroup[L] == undefined){continue;}
+                
+                                    var layer = foregroundElementsGroup[L];
+                                    var points = [];
+                
+                                    //generate path points
+                                        if( layer.y != undefined && layer.x == undefined ){ //auto x print
+                                            for(var a = 0; a < layer.y.length; a++){ 
+                                                points.push( {
+                                                    x: a*(width/(layer.y.length-1)), 
+                                                    y: height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
+                                                } );
+                                            }
+                                        }else if( layer.y.length == layer.x.length ){ //straight print
+                                            for(var a = 0; a < layer.y.length; a++){ 
+                                                points.push( {
+                                                    x:          canvas.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true), 
+                                                    y: height - canvas.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
+                                                } );
+                                            }
+                                        }else{console.error('tell brandon about this -> grapher::',name,' ',layer.y,layer.x);}
+                
+                                    //create path shape and add it to the group
+                                        foregroundGroup.append(
+                                            canvas.part.builder( 'path', 'layer_'+L, { 
+                                                points:points, 
+                                                style:{
+                                                    stroke: foregroundStyles[L].stroke,
+                                                    lineWidth: foregroundStyles[L].lineWidth,
+                                                    lineJoin: foregroundStyles[L].lineJoin,
+                                                    lineCap: foregroundStyles[L].lineJoin,
+                                                }
+                                            })
+                                        );
+                                }
+                        }
+                
+                    //controls
+                        object.viewbox = function(a){
+                            if(a==null){return viewbox;}
+                            if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
+                            if( a.top != undefined ){viewbox.top = a.top;}
+                            if( a.left != undefined ){viewbox.left = a.left;}
+                            if( a.right != undefined ){viewbox.right = a.right;}
                         };
-                        object.add = function(item){
-                            list.push(item);
-                            calculatedListHeight = refreshList();
+                        object.horizontalMarkings = function(a){
+                            if(a==null){return horizontalMarkings;}
+                            if( a.points != undefined ){horizontalMarkings.points = a.points;}
+                            if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
+                            if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
+                            if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
                         };
-                        object.remove = function(a){
-                            list.splice(a,1);
-                            calculatedListHeight = refreshList();
+                        object.verticalMarkings = function(a){
+                            if(a==null){return verticalMarkings;}
+                            if( a.points != undefined ){verticalMarkings.points = a.points;}
+                            if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
+                            if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
+                            if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
+                        };
+                        object.drawBackground = function(){ drawBackground(); };
+                        object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
+                        object.draw = function(y,x,layer=0){ drawBackground(); drawForeground(y,x,layer); };
+                
+                    return object;
+                };
+                this.meter_level = function(
+                    name='meter_level',
+                    x, y, angle=0,
+                    width=20, height=60,
+                    markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                
+                    backingStyle='rgb(10,10,10)',
+                    levelStyles=['rgba(250,250,250,1)','fill:rgb(100,100,100)'],
+                    markingStyle_fill='rgba(220,220,220,1)',
+                    markingStyle_font='1pt Courier New',
+                ){
+                
+                    //elements
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //level
+                            var level = canvas.part.builder('level','level',{
+                                width:width, height:height,
+                                style:{
+                                    backing:backingStyle,
+                                    levels:levelStyles,
+                                },
+                            });
+                            object.append(level);
+                
+                        //markings
+                            var marks = canvas.part.builder('group','markings');
+                                object.append(marks);
+                
+                            function makeMark(y){
+                                var markThickness = 0.2;
+                                var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
+                                return canvas.part.builder('polygon', 'mark_'+y, {points:path, style:{fill:markingStyle_fill}});
+                            }
+                            function insertText(y,text){
+                                return canvas.part.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
+                            }
+                
+                            for(var a = 0; a < markings.length; a++){
+                                marks.append( makeMark(height*(1-markings[a])) );
+                                marks.append( insertText(height*(1-markings[a]),markings[a]) );
+                            }
+                
+                
+                
+                
+                    //update intervals
+                        var framesPerSecond = 15;
+                        var coolDownSpeed = ( 3/4 )/10;
+                
+                        var coolDownSub = coolDownSpeed/framesPerSecond;
+                
+                        var coolDown = 0;
+                        var mostRecentSetting = 0;
+                        setInterval(function(){        
+                            level.layer(mostRecentSetting,0);
+                
+                            if(coolDown>0){coolDown-=coolDownSub;}
+                            level.layer(coolDown,1);
+                
+                            if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                        },1000/framesPerSecond);
+                
+                
+                
+                
+                    //method
+                        object.set = function(a){
+                            mostRecentSetting = a;
                         };
                 
-                    //callbacks
-                        object.onenter = onenter;
-                        object.onleave = onleave;
-                        object.onpress = onpress;
-                        object.ondblpress = ondblpress;
-                        object.onrelease = onrelease;
-                        object.onselection = onselection;
-                        object.onpositionchange = onpositionchange;
+                    return object;
+                };
+                this.grapher_periodicWave = function(
+                    name='grapher_periodicWave',
+                    x, y, width=120, height=60, angle=0,
+                
+                    foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                    foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                
+                    backgroundStyle_stroke='rgba(0,100,0,1)',
+                    backgroundStyle_lineWidth=0.25,
+                    backgroundTextStyle_fill='rgba(0,150,0,1)',
+                    backgroundTextStyle_size=0.1,
+                    backgroundTextStyle_font='Helvetica',
+                
+                    backingStyle='rgba(50,50,50,1)',
+                ){
+                    var wave = {'sin':[],'cos':[]};
+                    var resolution = 100;
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //grapher
+                            var grapher = canvas.part.builder('grapher',name,{
+                                x:0, y:0, width:width, height:height,
+                                foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                backgroundStyle_stroke:backgroundStyle_stroke, 
+                                backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                backgroundTextStyle_size:backgroundTextStyle_size,
+                                backgroundTextStyle_font:backgroundTextStyle_font,
+                                backingStyle:backingStyle,
+                            });
+                            object.append(grapher);
+                
+                    //controls
+                        object.wave = function(a=null,type=null){
+                            if(a==null){
+                                while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
+                                while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
+                                for(var a = 0; a < wave['sin'].length; a++){
+                                    if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
+                                    if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
+                                }
+                                return wave;
+                            }
+                
+                            if(type==null){
+                                wave = a;
+                            }
+                            switch(type){
+                                case 'sin': wave.sin = a; break;
+                                case 'cos': wave.cos = a; break;
+                                default: break;
+                            }
+                        };
+                        object.waveElement = function(type, mux, a){
+                            if(a==null){return wave[type][mux];}
+                            wave[type][mux] = a;
+                        };
+                        object.resolution = function(a=null){
+                            if(a==null){return resolution;}
+                            resolution = a;
+                        };
+                        object.updateBackground = function(){
+                            grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
+                            grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
+                            grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
+                            grapher.drawBackground();
+                        };
+                        object.draw = function(){
+                            var data = [];
+                            var temp = 0;
+                            for(var a = 0; a <= resolution; a++){
+                                temp = 0;
+                                for(var b = 0; b < wave['sin'].length; b++){
+                                    if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
+                                    temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
+                                }
+                                for(var b = 0; b < wave['cos'].length; b++){
+                                    if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
+                                    temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
+                                }
+                                data.push(temp);
+                            }
+                    
+                            grapher.draw( data );
+                        };
+                        object.reset = function(){
+                            this.wave({'sin':[],'cos':[]});
+                            this.resolution(100);
+                            this.updateBackground();
+                        };
                         
+                    return object;
+                };
+                this.readout_sixteenSegmentDisplay = function(
+                    name='readout_sixteenSegmentDisplay',
+                    x, y, width=100, height=30, count=5, angle=0,
+                    backgroundStyle='rgb(0,0,0)',
+                    glowStyle='rgb(200,200,200)',
+                    dimStyle='rgb(20,20,20)'
+                ){
+                    //values
+                        var text = '';
+                        var displayInterval = null;
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y});
+                
+                        //display units
+                            var units = [];
+                            for(var a = 0; a < count; a++){
+                                var temp = canvas.part.builder('sixteenSegmentDisplay', ''+a, {
+                                    x:(width/count)*a, width:width/count, height:height, 
+                                    style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                });
+                                object.append( temp );
+                                units.push(temp);
+                            }
+                
+                    //methods
+                        object.text = function(a){
+                            if(a==null){return text;}
+                            text = a;
+                        };
+                
+                        object.print = function(style){
+                            clearInterval(displayInterval);
+                            switch(style){
+                                case 'smart':
+                                    if(text.length > units.length){this.print('r2lSweep');}
+                                    else{this.print('regular')}
+                                break;
+                                case 'r2lSweep':
+                                    var displayIntervalTime = 100;
+                                    var displayStage = 0;
+                
+                                    displayInterval = setInterval(function(){
+                                        for(var a = units.length-1; a >= 0; a--){
+                                            units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                        }
+                
+                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                    },displayIntervalTime);
+                                break;
+                                case 'regular': default:
+                                    for(var a = 0; a < units.length; a++){
+                                        units[a].enterCharacter(text[a]);
+                                    }
+                                break;
+                            }
+                        };
+                
+                    return object;
+                };
+                this.level = function(
+                    name='level',
+                    x, y, angle=0,
+                    width=20, height=60,
+                    backingStyle='rgb(10,10,10)',
+                    levelStyles=['rgb(250,250,250)','rgb(200,200,200)']
+                ){
+                    var values = [];
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //backing
+                            var rect = canvas.part.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+                                object.append(rect);
+                        //levels
+                            var levels = canvas.part.builder('group','levels');
+                                object.append(levels);
+                
+                            var level = [];
+                            for(var a = 0; a < levelStyles.length; a++){
+                                values.push(0);
+                                level.push( canvas.part.builder('rectangle','movingRect_'+a,{
+                                    y:height,
+                                    width:width, height:0,
+                                    style:{fill:levelStyles[a]},
+                                }) );
+                                levels.prepend(level[a]);
+                            }
+                
+                
+                        
+                
+                        //methods
+                            object.layer = function(value,layer=0){
+                                if(layer == undefined){return values;}
+                                if(value==null){return values[layer];}
+                
+                                value = (value>1 ? 1 : value);
+                                value = (value<0 ? 0 : value);
+                
+                                values[layer] = value;
+                
+                                level[layer].parameter.height( height*value );
+                                level[layer].parameter.y( height - height*value );
+                            };
+                
+                    return object;
+                };
+            };
+            
+            this.control = new function(){
+                this.rastorgrid = function(
+                    name='rastorgrid', 
+                    x, y, width=80, height=80, angle=0,
+                    xcount=5, ycount=5,
+                    backingStyle = 'rgba(200,200,200,1)',
+                    checkStyle = 'rgba(150,150,150,1)',
+                    backingGlowStyle = 'rgba(220,220,220,1)',
+                    checkGlowStyle = 'rgba(220,220,220,1)',
+                    onchange = function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //checkboxes
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    var temp = canvas.part.builder('checkbox_rect',y+'_'+x,{
+                                        x:x*(width/xcount),  y:y*(height/ycount), 
+                                        width:width/xcount,  height:height/ycount, 
+                                        style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
+                                        onchange:function(){ if(object.onchange){object.onchange(object.get());} },
+                                    });
+                                    object.append(temp);
+                                }
+                            }
+                
+                
+                
+                
+                    //methods
+                        object.box = function(x,y){ return object.getChildByName(y+'_'+x); };
+                        object.get = function(){
+                            var outputArray = [];
+                    
+                            for(var y = 0; y < ycount; y++){
+                                var temp = [];
+                                for(var x = 0; x < xcount; x++){
+                                    temp.push(this.box(x,y).get());
+                                }
+                                outputArray.push(temp);
+                            }
+                    
+                            return outputArray;
+                        };
+                        object.set = function(value, update=true){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(value[y][x],false);
+                                }
+                            }
+                        };
+                        object.clear = function(){
+                            for(var y = 0; y < ycount; y++){
+                                for(var x = 0; x < xcount; x++){
+                                    object.box(x,y).set(false,false);
+                                }
+                            }
+                        };
+                        object.light = function(x,y,state){
+                            object.box(x,y).light(state);
+                        };
+                
+                
+                
+                
+                    //callback
+                        object.onchange = onchange;
+                
                     return object;
                 };
                 this.needleOverlay = function(
@@ -6404,6 +5496,2107 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                     return object;
                 };
+                this.button_rect = function(
+                    name='button_rect',
+                    x, y, width=30, height=20, angle=0,
+                    text_centre='button', text_left='', text_right='',
+                    textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
+                    
+                    active=true, hoverable=true, selectable=false, pressable=true,
+                
+                    text_font = '5pt Arial',
+                    text_textBaseline = 'alphabetic',
+                    text_fill = 'rgba(0,0,0,1)',
+                    text_stroke = 'rgba(0,0,0,0)',
+                    text_lineWidth = 1,
+                
+                    backing__off__fill=                          'rgba(180,180,180,1)',
+                    backing__off__stroke=                        'rgba(0,0,0,0)',
+                    backing__off__lineWidth=                     0,
+                    backing__up__fill=                           'rgba(200,200,200,1)',
+                    backing__up__stroke=                         'rgba(0,0,0,0)',
+                    backing__up__lineWidth=                      0,
+                    backing__press__fill=                        'rgba(230,230,230,1)',
+                    backing__press__stroke=                      'rgba(0,0,0,0)',
+                    backing__press__lineWidth=                   0,
+                    backing__select__fill=                       'rgba(200,200,200,1)',
+                    backing__select__stroke=                     'rgba(120,120,120,1)',
+                    backing__select__lineWidth=                  0.75,
+                    backing__select_press__fill=                 'rgba(230,230,230,1)',
+                    backing__select_press__stroke=               'rgba(120,120,120,1)',
+                    backing__select_press__lineWidth=            0.75,
+                    backing__glow__fill=                         'rgba(220,220,220,1)',
+                    backing__glow__stroke=                       'rgba(0,0,0,0)',
+                    backing__glow__lineWidth=                    0,
+                    backing__glow_press__fill=                   'rgba(250,250,250,1)',
+                    backing__glow_press__stroke=                 'rgba(0,0,0,0)',
+                    backing__glow_press__lineWidth=              0,
+                    backing__glow_select__fill=                  'rgba(220,220,220,1)',
+                    backing__glow_select__stroke=                'rgba(120,120,120,1)',
+                    backing__glow_select__lineWidth=             0.75,
+                    backing__glow_select_press__fill=            'rgba(250,250,250,1)',
+                    backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                    backing__glow_select_press__lineWidth=       0.75,
+                    backing__hover__fill=                        'rgba(220,220,220,1)',
+                    backing__hover__stroke=                      'rgba(0,0,0,0)',
+                    backing__hover__lineWidth=                   0,
+                    backing__hover_press__fill=                  'rgba(240,240,240,1)',
+                    backing__hover_press__stroke=                'rgba(0,0,0,0)',
+                    backing__hover_press__lineWidth=             0,
+                    backing__hover_select__fill=                 'rgba(220,220,220,1)',
+                    backing__hover_select__stroke=               'rgba(120,120,120,1)',
+                    backing__hover_select__lineWidth=            0.75,
+                    backing__hover_select_press__fill=           'rgba(240,240,240,1)',
+                    backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                    backing__hover_select_press__lineWidth=      0.75,
+                    backing__hover_glow__fill=                   'rgba(240,240,240,1)',
+                    backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                    backing__hover_glow__lineWidth=              0,
+                    backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                    backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                    backing__hover_glow_press__lineWidth=        0,
+                    backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                    backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                    backing__hover_glow_select__lineWidth=       0.75,
+                    backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                    backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                    backing__hover_glow_select_press__lineWidth= 0.75,
+                
+                    onenter = function(event){},
+                    onleave = function(event){},
+                    onpress = function(event){},
+                    ondblpress = function(event){},
+                    onrelease = function(event){},
+                    onselect = function(event){},
+                    ondeselect = function(event){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //backing
+                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{
+                                fill:backing__off__fill,
+                                stroke:backing__off__stroke,
+                                lineWidth:backing__off__lineWidth,
+                            }});
+                            object.append(backing);
+                
+                        //text
+                            var text_centre = canvas.part.builder('text','centre', {
+                                x:width/2, 
+                                y:height*textVerticalOffsetMux, 
+                                text:text_centre, 
+                                style:{
+                                    font:text_font,
+                                    testBaseline:text_textBaseline,
+                                    fill:text_fill,
+                                    stroke:text_stroke,
+                                    lineWidth:text_lineWidth,
+                                    textAlign:'center',
+                                    textBaseline:'middle',
+                                }
+                            });
+                            object.append(text_centre);
+                            var text_left = canvas.part.builder('text','left',     {
+                                x:width*textHorizontalOffsetMux, 
+                                y:height*textVerticalOffsetMux, 
+                                text:text_left, 
+                                style:{
+                                    font:text_font,
+                                    testBaseline:text_textBaseline,
+                                    fill:text_fill,
+                                    stroke:text_stroke,
+                                    lineWidth:text_lineWidth,
+                                    textAlign:'left',
+                                    textBaseline:'middle',
+                                }
+                            });
+                            object.append(text_left);
+                            var text_right = canvas.part.builder('text','right',   {
+                                x:width-(width*textHorizontalOffsetMux), 
+                                y:height*textVerticalOffsetMux, 
+                                text:text_right, 
+                                style:{
+                                    font:text_font,
+                                    testBaseline:text_textBaseline,
+                                    fill:text_fill,
+                                    stroke:text_stroke,
+                                    lineWidth:text_lineWidth,
+                                    textAlign:'right',
+                                    textBaseline:'middle',
+                                }
+                            });
+                            object.append(text_right);
+                
+                        //cover
+                            var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                            object.append(cover);
+                
+                
+                
+                
+                    //state
+                        object.state = {
+                            hovering:false,
+                            glowing:false,
+                            selected:false,
+                            pressed:false,
+                        };
+                
+                        function activateGraphicalState(){
+                            if(!active){ 
+                                backing.style.fill = backing__off__fill;
+                                backing.style.stroke = backing__off__stroke;
+                                backing.style.lineWidth = backing__off__lineWidth;
+                                return;
+                            }
+                
+                            var styles = [
+                                { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
+                                { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
+                                { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
+                                { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
+                                { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
+                                { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
+                                { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
+                                { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
+                                { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
+                                { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
+                                { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
+                                { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
+                                { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
+                                { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
+                                { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
+                                { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
+                            ];
+                
+                            if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
+                            if(!selectable && object.state.selected ){ object.state.selected = false; }
+                
+                            var i = object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + (pressable && object.state.pressed)*1;
+                            backing.style.fill =       styles[i].fill;
+                            backing.style.stroke =     styles[i].stroke;
+                            backing.style.lineWidth =  styles[i].lineWidth;
+                        };
+                        activateGraphicalState();
+                
+                
+                
+                
+                    //control
+                        object.press = function(event){
+                            if(!active){return;}
+                
+                            if( pressable ){
+                                if(this.state.pressed){return;}
+                                this.state.pressed = true;
+                                if(this.onpress){this.onpress(this, event);}
+                            }
+                            
+                            this.select( !this.select(), event );
+                
+                            activateGraphicalState();
+                        };
+                        object.release = function(event){
+                            if(!active || !pressable){return;}
+                
+                            if(!this.state.pressed){return;}
+                            this.state.pressed = false;
+                            activateGraphicalState();
+                            if(this.onrelease){this.onrelease(this, event);}
+                        };
+                        object.active = function(bool){ if(bool == undefined){return active;} active = bool; activateGraphicalState(); };
+                        object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  activateGraphicalState(); };
+                        object.select = function(bool,event,callback=true){ 
+                            if(!active){return;}
+                
+                            if(bool == undefined){return this.state.selected;}
+                            if(!selectable){return;}
+                            if(this.state.selected == bool){return;}
+                            this.state.selected = bool; activateGraphicalState();
+                            if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
+                        };
+                
+                
+                
+                
+                    //interactivity
+                        cover.onmouseenter = function(x,y,event){
+                            object.state.hovering = true;  
+                            activateGraphicalState();
+                            if(object.onenter){object.onenter(event);}
+                            if(event.buttons == 1){cover.onmousedown(event);} 
+                        };
+                        cover.onmouseleave = function(x,y,event){ 
+                            object.state.hovering = false; 
+                            object.release(event); 
+                            activateGraphicalState(); 
+                            if(object.onleave){object.onleave(event);}
+                        };
+                        cover.onmouseup = function(x,y,event){   object.release(event); };
+                        cover.onmousedown = function(x,y,event){ object.press(event); };
+                        cover.ondblclick = function(x,y,event){ if(!active){return;} if(object.ondblpress){object.ondblpress(event);} };
+                        
+                
+                
+                
+                    //callbacks
+                        object.onenter = onenter;
+                        object.onleave = onleave;
+                        object.onpress = onpress;
+                        object.ondblpress = ondblpress;
+                        object.onrelease = onrelease;
+                        object.onselect = onselect;
+                        object.ondeselect = ondeselect;
+                
+                    return object;
+                };
+                this.checkbox_rect = function(
+                    name='checkbox_rect',
+                    x, y, width=20, height=20, angle=0,
+                    checkStyle = 'rgba(150,150,150,1)',
+                    backingStyle = 'rgba(200,200,200,1)',
+                    checkGlowStyle = 'rgba(220,220,220,1)',
+                    backingGlowStyle = 'rgba(220,220,220,1)',
+                    onchange = function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //backing
+                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                            object.append(backing);
+                        //check
+                            var checkrect = canvas.part.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:{fill:'rgba(0,0,0,0)'}});
+                            object.append(checkrect);
+                        //cover
+                            var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                            object.append(cover);
+                
+                
+                
+                
+                
+                    //state
+                        var state = {
+                            checked:false,
+                            glowing:false,
+                        }
+                
+                        function updateGraphics(){
+                            if(state.glowing){
+                                backing.style.fill = backingGlowStyle;
+                                checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
+                            }else{
+                                backing.style.fill = backingStyle;
+                                checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
+                            }
+                        }
+                
+                
+                
+                
+                    //methods
+                        object.get = function(){ return state.checked; };
+                        object.set = function(value, update=true){
+                            state.checked = value;
+                            
+                            updateGraphics();
+                    
+                            if(update&&this.onchange){ this.onchange(value); }
+                        };
+                        object.light = function(state){
+                            if(state == undefined){ return state.glowing; }
+                
+                            state.glowing = state;
+                
+                            updateGraphics();
+                        };
+                
+                
+                
+                
+                    //interactivity
+                        cover.onclick = function(event){
+                            object.set(!object.get());
+                        };
+                        cover.onmousedown = function(){};
+                
+                
+                
+                
+                    //callbacks
+                        object.onchange = onchange;
+                
+                    return object;
+                };
+                this.slide = function(
+                    name='slide', 
+                    x, y, width=10, height=95, angle=0,
+                    handleHeight=0.1, value=0, resetValue=-1,
+                    handleStyle = 'rgba(200,200,200,1)',
+                    backingStyle = 'rgba(150,150,150,1)',
+                    slotStyle = 'rgba(50,50,50,1)',
+                    invisibleHandleStyle = 'rgba(255,0,0,0)',
+                    onchange=function(){},
+                    onrelease=function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //backing and slot group
+                            var backingAndSlot = canvas.part.builder('group','backingAndSlotGroup');
+                            object.append(backingAndSlot);
+                            //backing
+                                var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                                backingAndSlot.append(backing);
+                            //slot
+                                var slot = canvas.part.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
+                                backingAndSlot.append(slot);
+                            //backing and slot cover
+                                var backingAndSlotCover = canvas.part.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                backingAndSlot.append(backingAndSlotCover);
+                        //handle
+                            var handle = canvas.part.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
+                            object.append(handle);
+                        //invisible handle
+                            var invisibleHandleHeight = height*handleHeight + height*0.01;
+                            var invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                            object.append(invisibleHandle);
+                
+                
+                
+                
+                    //graphical adjust
+                        function set(a,update=true){
+                            a = (a>1 ? 1 : a);
+                            a = (a<0 ? 0 : a);
+                
+                            if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                            value = a;
+                            handle.y = a*height*(1-handleHeight);
+                            invisibleHandle.y = a*height*(1-handleHeight);
+                
+                            handle.computeExtremities();
+                            invisibleHandle.computeExtremities();
+                        }
+                        object.__calculationAngle = angle;
+                        function currentMousePosition(event){
+                            return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
+                        }
+                
+                
+                
+                
+                    //methods
+                        var grappled = false;
+                
+                        object.set = function(value,update){
+                            if(grappled){return;}
+                            set(value,update);
+                        };
+                        object.get = function(){return value;};
+                
+                
+                
+                
+                    //interaction
+                        object.ondblclick = function(){
+                            if(resetValue<0){return;}
+                            if(grappled){return;}
+                
+                            set(resetValue);
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        object.onwheel = function(){
+                            if(grappled){return;}
+                
+                            var move = event.deltaY/100;
+                            var globalScale = canvas.core.viewport.scale();
+                            set( value + move/(10*globalScale) );
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        backingAndSlot.onclick = function(x,y,event){
+                            if(grappled){return;}
+                
+                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                var offset = backingAndSlot.getOffset();
+                                var delta = {
+                                    x: x - (backingAndSlot.x     + offset.x),
+                                    y: y - (backingAndSlot.y     + offset.y),
+                                    a: 0 - (backingAndSlot.angle + offset.a),
+                                };
+                                var d = canvas.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                
+                            //use the distance to calculate the correct value to set the slide to
+                            //taking into account the slide handle's size also
+                                var value = d + 0.5*handleHeight*((2*d)-1);
+                
+                            set(value);
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        invisibleHandle.onmousedown = function(x,y,event){
+                            grappled = true;
+                
+                            var initialValue = value;
+                            var initialY = currentMousePosition(event);
+                            var mux = height - height*handleHeight;
+                
+                            canvas.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    var numerator = initialY-currentMousePosition(event);
+                                    var divider = canvas.core.viewport.scale();
+                                    set( initialValue - numerator/(divider*mux) );
+                                },
+                                function(event){
+                                    var numerator = initialY-currentMousePosition(event);
+                                    var divider = canvas.core.viewport.scale();
+                                    object.onrelease(initialValue - numerator/(divider*mux));
+                                    grappled = false;
+                                }
+                            );
+                        };
+                
+                
+                
+                
+                    //callbacks
+                        object.onchange = onchange; 
+                        object.onrelease = onrelease;
+                
+                    return object;
+                };
+                this.dial_continuous = function(
+                    name='dial_continuous',
+                    x, y, r=15, angle=0,
+                    value=0, resetValue=-1,
+                    startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                
+                    handleStyle = 'rgba(200,200,200,1)',
+                    slotStyle = 'rgba(50,50,50,1)',
+                    needleStyle = 'rgba(250,100,100,1)',
+                
+                    onchange=function(){},
+                    onrelease=function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //slot
+                            var slot = canvas.part.builder('circle','slot',{r:r*1.1, style:{fill:slotStyle}});
+                            object.append(slot);
+                
+                        //handle
+                            var handle = canvas.part.builder('circle','handle',{r:r, style:{fill:handleStyle}});
+                                object.append(handle);
+                
+                        //needle group
+                            var needleGroup = canvas.part.builder('group','needleGroup',{ignored:true});
+                            object.append(needleGroup);
+                
+                            //needle
+                                var needleWidth = r/5;
+                                var needleLength = r;
+                                var needle = canvas.part.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{fill:needleStyle}});
+                                    needleGroup.append(needle);
+                
+                
+                
+                
+                    //graphical adjust
+                        function set(a,update=true){
+                            a = (a>1 ? 1 : a);
+                            a = (a<0 ? 0 : a);
+                
+                            if(update && object.change != undefined){object.onchange(a);}
+                
+                            value = a;
+                            needleGroup.parameter.angle(startAngle + maxAngle*value);
+                        }
+                
+                
+                
+                
+                    //methods
+                        var grappled = false;
+                
+                        object.set = function(value,update){
+                            if(grappled){return;}
+                            set(value,update);
+                        };
+                        object.get = function(){return value;};
+                
+                
+                
+                
+                    //interaction
+                        var turningSpeed = r*4;
+                        
+                        handle.ondblclick = function(){
+                            if(resetValue<0){return;}
+                            if(grappled){return;}
+                            
+                            set(resetValue); 
+                
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        handle.onwheel = function(x,y,event){
+                            if(grappled){return;}
+                            
+                            var move = event.deltaY/100;
+                            var globalScale = canvas.core.viewport.scale();
+                            set( value - move/(10*globalScale) );
+                
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        handle.onmousedown = function(x,y,event){
+                            var initialValue = value;
+                            var initialY = event.y;
+                
+                            grappled = true;
+                            canvas.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    var value = initialValue;
+                                    var numerator = event.y - initialY;
+                                    var divider = canvas.core.viewport.scale();
+                                    set( value - numerator/(divider*turningSpeed), true );
+                                },
+                                function(event){
+                                    grappled = false;
+                                    if(object.onrelease != undefined){object.onrelease(value);}
+                                }
+                            );
+                        };
+                
+                
+                
+                
+                    //callbacks
+                        object.onchange = onchange; 
+                        object.onrelease = onrelease;
+                
+                    //setup
+                        set(0);
+                
+                    return object;
+                };
+                this.slidePanel = function(
+                    name='slidePanel', 
+                    x, y, width=80, height=95, angle=0,
+                    handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                    handleStyle = 'rgba(200,200,200,1)',
+                    backingStyle = 'rgba(150,150,150,1)',
+                    slotStyle = 'rgba(50,50,50,1)'
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //slides
+                            for(var a = 0; a < count; a++){
+                                var temp = canvas.part.builder(
+                                    'slide', 'slide_'+a, {
+                                        x:a*(width/count), y:0,
+                                        width:width/count, height:height,
+                                        value:startValue, resetValue:resetValue,
+                                        style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
+                                        function(value){ object.onchange(this.id,value); },
+                                        function(value){ object.onrelease(this.id,value); },
+                                    }
+                                );
+                                // temp.dotFrame = true;
+                                temp.__calculationAngle = angle;
+                                object.append(temp);
+                            }
+                
+                    return object;
+                };
+                this.sequencer = function(
+                    name='sequencer',
+                    x, y, width=300, height=100, angle=0,
+                    
+                    xCount=64, yCount=16,
+                    zoomLevel_x=1/2, zoomLevel_y=1/2,
+                
+                    backingStyle='rgba(20,20,20,1)',
+                    selectionAreaStyle='rgba(209, 189, 222, 0.5)',
+                
+                    signalStyle_body=[
+                        {fill:'rgba(138,138,138,0.6)', stroke:'rgba(175,175,175,0.95)', lineWidth:0.5},
+                        {fill:'rgba(130,199,208,0.6)', stroke:'rgba(130,199,208,0.95)', lineWidth:0.5},
+                        {fill:'rgba(129,209,173,0.6)', stroke:'rgba(129,209,173,0.95)', lineWidth:0.5},
+                        {fill:'rgba(234,238,110,0.6)', stroke:'rgba(234,238,110,0.95)', lineWidth:0.5},
+                        {fill:'rgba(249,178,103,0.6)', stroke:'rgba(249,178,103,0.95)', lineWidth:0.5},
+                        {fill:'rgba(255, 69, 69,0.6)', stroke:'rgba(255, 69, 69,0.95)', lineWidth:0.5},
+                    ],
+                    signalStyle_bodyGlow=[
+                        {fill:'rgba(138,138,138,0.8)', stroke:'rgba(175,175,175,1)', lineWidth:0.5},
+                        {fill:'rgba(130,199,208,0.8)', stroke:'rgba(130,199,208,1)', lineWidth:0.5},
+                        {fill:'rgba(129,209,173,0.8)', stroke:'rgba(129,209,173,1)', lineWidth:0.5},
+                        {fill:'rgba(234,238,110,0.8)', stroke:'rgba(234,238,110,1)', lineWidth:0.5},
+                        {fill:'rgba(249,178,103,0.8)', stroke:'rgba(249,178,103,1)', lineWidth:0.5},
+                        {fill:'rgba(255, 69, 69,0.8)', stroke:'rgba(255, 69, 69,1)', lineWidth:0.5},
+                    ],    
+                    signalStyle_handle='rgba(200,0,0,0)',
+                    signalStyle_handleWidth=3,
+                
+                    horizontalStripStyle_pattern=[0,1],
+                    horizontalStripStyle_glow={fill:'rgba(120,120,120,0.8)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
+                    horizontalStripStyle_styles=[
+                        {fill:'rgba(120,120,120,0.5)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
+                        {fill:'rgba(100,100,100,  0)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
+                    ],
+                    verticalStripStyle_pattern=[0],
+                    verticalStripStyle_glow={fill:'rgba(229, 221, 112,0.25)', stroke:'rgba(252,244,128,0.5)', lineWidth:0.5},
+                    verticalStripStyle_styles=[
+                        {fill:'rgba(30,30,30,0.5)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
+                    ],
+                
+                    playheadStyle='rgb(240, 240, 240)',
+                
+                    onpan=function(data){},
+                    onchangeviewarea=function(data){},
+                    event=function(events){},
+                ){
+                
+                    //settings
+                        const viewport = {
+                            totalSize:{
+                                width:  width/zoomLevel_x,
+                                height: height/zoomLevel_y,
+                            },
+                            viewposition: {x:0,y:0},
+                            viewArea:{
+                                topLeft:     {x:0, y:0},
+                                bottomRight: {x:zoomLevel_x, y:zoomLevel_y},
+                            }
+                        };
+                        const signals = {
+                            step:1/1,
+                            snapping: true,
+                            defaultStrength: 0.5,
+                            selectedSignals: [],
+                            activeSignals: [],
+                            signalRegistry: new canvas.library.structure.signalRegistry(xCount,yCount),
+                        };
+                        const loop = {
+                            active:false, 
+                            period:{
+                                start:0, 
+                                end:xCount
+                            },
+                        };
+                        const playhead = {
+                            present:false,
+                            width:0.75,
+                            invisibleHandleMux:4,
+                            position:-1,
+                            held:false,
+                            automoveViewposition:false,
+                        };
+                
+                
+                
+                
+                    
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //static backing
+                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                            object.append(backing);
+                        //viewport stencil
+                            var stencil = canvas.part.builder('rectangle','stencil',{width:width, height:height});
+                            object.stencil(stencil);
+                            object.clip(true);
+                
+                        //workarea
+                            var workarea = canvas.part.builder('group','workarea');
+                            object.append(workarea);
+                            //moveable background
+                                var backgroundDrawArea = canvas.part.builder('group','backgroundDrawArea');
+                                workarea.append(backgroundDrawArea);
+                                var backgroundDrawArea_horizontal = canvas.part.builder('group','backgroundDrawArea_horizontal');
+                                backgroundDrawArea.append(backgroundDrawArea_horizontal);
+                                var backgroundDrawArea_vertical = canvas.part.builder('group','backgroundDrawArea_vertical');
+                                backgroundDrawArea.append(backgroundDrawArea_vertical);
+                            //interaction pane back
+                                var interactionPlane_back = canvas.part.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, style:{fill:'rgba(0,0,0,0)'}});
+                                workarea.append(interactionPlane_back);
+                                interactionPlane_back.onwheel = function(x,y,event){};
+                            //signal block area
+                                var signalPane = canvas.part.builder('group','signalPane');
+                                workarea.append(signalPane);
+                            //interaction pane back
+                                var interactionPlane_front = canvas.part.builder('rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, style:{fill:'rgba(0,0,0,0)'}});
+                                workarea.append(interactionPlane_front);
+                                interactionPlane_front.onwheel = function(x,y,event){};
+                    //internal
+                        object.__calculationAngle = angle;
+                        function currentMousePosition(event){
+                            var workspacePoint = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                            var point = {
+                                x: workspacePoint.x - backing.extremities.points[0].x, 
+                                y: workspacePoint.y - backing.extremities.points[0].y,
+                            };
+                            return {
+                                x: (point.x*Math.cos(object.__calculationAngle) - point.y*Math.sin(object.__calculationAngle)) / width,
+                                y: (point.y*Math.cos(object.__calculationAngle) - point.x*Math.sin(object.__calculationAngle)) / height,
+                            };
+                        }
+                        function viewportPosition2internalPosition(xy){
+                            return {x: viewport.viewArea.topLeft.x + xy.x*zoomLevel_x, y:viewport.viewArea.topLeft.y + xy.y*zoomLevel_y };
+                        }
+                        function visible2coordinates(xy){
+                            return {
+                                x: zoomLevel_x*(xy.x - viewport.viewposition.x) + viewport.viewposition.x,
+                                y: zoomLevel_y*(xy.y - viewport.viewposition.y) + viewport.viewposition.y,
+                            };
+                        }
+                        function coordinates2lineposition(xy){
+                            xy.y = Math.floor(xy.y*yCount);
+                            if(xy.y >= yCount){xy.y = yCount-1;}
+                        
+                            xy.x = signals.snapping ? Math.round((xy.x*xCount)/signals.step)*signals.step : xy.x*xCount;
+                            if(xy.x < 0){xy.x =0;}
+                        
+                            return {line:xy.y, position:xy.x};
+                        }
+                        function drawBackground(){
+                            //horizontal strips
+                                backgroundDrawArea_horizontal.clear();
+                                for(var a = 0; a < yCount; a++){
+                                    var style = horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
+                                    backgroundDrawArea_horizontal.append(
+                                        canvas.part.builder( 'rectangle', 'strip_horizontal_'+a,
+                                            {
+                                                x:0, y:a*(height/(yCount*zoomLevel_y)),
+                                                width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
+                                                style:{ fill:style.fill, stroke:style.stroke, lineWidth:style.lineWidth }
+                                            }
+                                        )
+                                    );
+                                }
+                
+                            //vertical strips
+                                backgroundDrawArea_vertical.clear();
+                                for(var a = 0; a < xCount; a++){
+                                    var style = verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
+                                    backgroundDrawArea_vertical.append(
+                                        canvas.part.builder( 'rectangle', 'strip_vertical_'+a,
+                                            {
+                                                x:a*(width/(xCount*zoomLevel_x)), y:0,
+                                                width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
+                                                style:{ fill:style.fill, stroke:style.stroke, lineWidth:style.lineWidth }
+                                            }
+                                        )
+                                    );
+                                }
+                        }
+                        function setViewposition(x,y,update=true){
+                            if(x == undefined && y == undefined){return viewport.viewposition;}
+                            if(x == undefined || isNaN(x)){ x = viewport.viewposition.x; }
+                            if(y == undefined || isNaN(y)){ y = viewport.viewposition.y; }
+                
+                            //make sure things are between 0 and 1
+                                x = x<0?0:x; x = x>1?1:x;
+                                y = y<0?0:y; y = y>1?1:y;
+                
+                            //perform transform
+                                viewport.viewposition.x = x;
+                                viewport.viewposition.y = y;
+                                workarea.parameter.x( -viewport.viewposition.x*(viewport.totalSize.width - width) );
+                                workarea.parameter.y( -viewport.viewposition.y*(viewport.totalSize.height - height) );
+                
+                            //update viewport.viewArea
+                                viewport.viewArea = {
+                                    topLeft:     { x:x - zoomLevel_x*x,     y:y - zoomLevel_y*y     },
+                                    bottomRight: { x:x + zoomLevel_x*(1-x), y:y + zoomLevel_y*(1-y) },
+                                };
+                        }
+                        function adjustZoom(x,y){
+                            if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
+                            var maxZoom = 0.01;
+                
+                            //(in a bid for speed, I've written the following code in an odd way, so that if both x and y scales are being changed, then
+                            //all the elements will be adjusted together (instead of having to repeat resizings of shapes))
+                            if(x != undefined && x != zoomLevel_x && y != undefined && y != zoomLevel_y ){
+                                //make sure things are between 0.01 and 1
+                                    x = x<maxZoom?maxZoom:x; x = x>1?1:x;
+                                    y = y<maxZoom?maxZoom:y; y = y>1?1:y;
+                
+                                //update state
+                                    zoomLevel_x = x;
+                                    zoomLevel_y = y;
+                                    viewport.totalSize.width = width/zoomLevel_x;
+                                    viewport.totalSize.height = height/zoomLevel_y;
+                
+                                //update interactionPlane_back
+                                    interactionPlane_back.parameter.width( viewport.totalSize.width );
+                                    interactionPlane_back.parameter.height( viewport.totalSize.width );
+                
+                                //update background strips
+                                    for(var a = 0; a < xCount; a++){
+                                        backgroundDrawArea_vertical.children[a].parameter.x( a*(width/(xCount*zoomLevel_x)) );
+                                        backgroundDrawArea_vertical.children[a].parameter.width( width/(xCount*zoomLevel_x) );
+                                        backgroundDrawArea_vertical.children[a].parameter.height( viewport.totalSize.height );
+                                    }
+                                    for(var a = 0; a < yCount; a++){
+                                        backgroundDrawArea_horizontal.children[a].parameter.y( a*(height/(yCount*zoomLevel_y)) );
+                                        backgroundDrawArea_horizontal.children[a].parameter.height( height/(yCount*zoomLevel_y) );
+                                        backgroundDrawArea_horizontal.children[a].parameter.width( viewport.totalSize.width );
+                                    }
+                
+                                //update signals
+                                    for(var a = 0; a < signalPane.children.length; a++){
+                                        signalPane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
+                                    }
+                
+                                //update playhead (if there is one)
+                                    if(playhead.present){
+                                        workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].parameter.height(viewport.totalSize.height);
+                                        workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].parameter.height(viewport.totalSize.height);
+                                        workarea.getElementsWithName('playhead')[0].parameter.x( playhead.position*(viewport.totalSize.width/xCount) );
+                                }
+                            }else if( x != undefined && x != zoomLevel_x ){
+                                //make sure things are between maxZoom and 1
+                                    x = x<maxZoom?maxZoom:x; x = x>1?1:x;
+                
+                                //update state
+                                    zoomLevel_x = x;
+                                    viewport.totalSize.width = width/zoomLevel_x;
+                
+                                //update interactionPlane_back
+                                    interactionPlane_back.parameter.width( viewport.totalSize.width );
+                
+                                //update background strips
+                                    for(var a = 0; a < xCount; a++){
+                                        backgroundDrawArea_vertical.children[a].parameter.x( a*(width/(xCount*zoomLevel_x)) );
+                                        backgroundDrawArea_vertical.children[a].parameter.width( width/(xCount*zoomLevel_x) );
+                                    }
+                                    for(var a = 0; a < yCount; a++){
+                                        backgroundDrawArea_horizontal.children[a].parameter.width( viewport.totalSize.width );
+                                    }
+                
+                                //update signals
+                                    for(var a = 0; a < signalPane.children.length; a++){
+                                        signalPane.children[a].unit(width/(xCount*zoomLevel_x), undefined);
+                                    }
+                
+                                //update playhead (if there is one)
+                                    if(playhead.present){
+                                        workarea.getElementsWithName('playhead')[0].parameter.x( playhead.position*(viewport.totalSize.width/xCount) );
+                                    }
+                            }else if( y != undefined && y != zoomLevel_y ){
+                                //make sure things are between maxZoom and 1
+                                    y = y<maxZoom?maxZoom:y; y = y>1?1:y;
+                
+                                //update state
+                                    zoomLevel_y = y;
+                                    viewport.totalSize.height = height/zoomLevel_y;
+                
+                                //update interactionPlane_back
+                                    interactionPlane_back.parameter.height( viewport.totalSize.width );
+                                
+                                //update background strips
+                                    for(var a = 0; a < xCount; a++){
+                                        backgroundDrawArea_vertical.children[a].parameter.height( viewport.totalSize.height );
+                                    }
+                                    for(var a = 0; a < yCount; a++){
+                                        backgroundDrawArea_horizontal.children[a].parameter.y( a*(height/(yCount*zoomLevel_y)) );
+                                        backgroundDrawArea_horizontal.children[a].parameter.height( height/(yCount*zoomLevel_y) );
+                                    }
+                
+                                //update signals
+                                    for(var a = 0; a < signalPane.children.length; a++){
+                                        signalPane.children[a].unit(undefined, height/(yCount*zoomLevel_y));
+                                    }
+                
+                                //update playhead (if there is one)
+                                    if(playhead.present){
+                                        workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].parameter.height(viewport.totalSize.height);
+                                        workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].parameter.height(viewport.totalSize.height);
+                                    }
+                            }
+                        }
+                        function setViewArea(d,update=true){
+                            //clean off input
+                                if(d == undefined || (d.topLeft == undefined && d.bottomRight == undefined)){return viewport.viewArea;}
+                                if(d.topLeft == undefined){ d.topLeft.x = viewport.viewArea.topLeft.x; d.topLeft.y = viewport.viewArea.topLeft.y; }
+                                if(d.bottomRight == undefined){ d.bottomRight.x = viewport.viewArea.topLeft.x; d.bottomRight.y = viewport.viewArea.topLeft.y; }
+                
+                            //first adjust the zoom, if the distance between the areas changed
+                                var x = (viewport.viewArea.bottomRight.x-viewport.viewArea.topLeft.x) != (d.bottomRight.x-d.topLeft.x);
+                                var y = (d.bottomRight.y-d.topLeft.y)!=(viewport.viewArea.bottomRight.y-viewport.viewArea.topLeft.y);
+                                
+                                if(x && y){ adjustZoom( (d.bottomRight.x-d.topLeft.x),(d.bottomRight.y-d.topLeft.y) ); }
+                                else if(x){ adjustZoom( (d.bottomRight.x-d.topLeft.x),undefined ); }
+                                else if(y){ adjustZoom( undefined,(d.bottomRight.y-d.topLeft.y) ); }
+                
+                            //update pan
+                                var newX = 0; var newY = 0;
+                                if( (1-(d.bottomRight.x-d.topLeft.x)) != 0 ){ newX = d.topLeft.x + d.topLeft.x*((d.bottomRight.x-d.topLeft.x)/(1-(d.bottomRight.x-d.topLeft.x))); }
+                                if( (1-(d.bottomRight.y-d.topLeft.y)) != 0 ){ newY = d.topLeft.y + d.topLeft.y*((d.bottomRight.y-d.topLeft.y)/(1-(d.bottomRight.y-d.topLeft.y))); }
+                                setviewport.viewposition(newX,newY,update);
+                
+                            //update state
+                                viewport.viewArea = Object.assign(d,{});
+                        }
+                        // function makePlayhead(){
+                        //     var newPlayhead = canvas.part.builder('group','playhead');
+                        //     workarea.append(newPlayhead);
+                
+                        //     newPlayhead.main = canvas.part.builder('rectangle','main',{
+                        //         width:playhead.width,
+                        //         height:viewport.totalSize.height,
+                        //         style:{ fill:playheadStyle },
+                        //     });
+                        //     newPlayhead.append(newPlayhead.main);
+                
+                        //     newPlayhead.invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{
+                        //         x:-playhead.width*playhead.invisibleHandleMux/2 + playhead.width/2, 
+                        //         width: playhead.width*playhead.invisibleHandleMux,
+                        //         height:viewport.totalSize.height,
+                        //         style:{ fill:'rgba(255,0,0,0.5)' },
+                        //     })
+                        //     newPlayhead.append(newPlayhead.invisibleHandle);
+                
+                        //     newPlayhead.invisibleHandle.onmousedown = function(){
+                        //         playhead.held = true;
+                        //         canvas.system.mouse.mouseInteractionHandler(
+                        //             function(event){ object.playheadPosition( coordinates2lineposition(currentMousePosition()).position ); },
+                        //             function(){playhead.held = false;}
+                        //         );
+                        //     };
+                
+                        //     newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+                        //     newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+                
+                        //     playhead.present = true;
+                        // }
+                        function makeSignal(line, position, length, strength=signals.defaultStrength){
+                            //register signal and get new id. From the registry, get the approved signal values
+                                var newID = signals.signalRegistry.add({ line:line, position:position, length:length, strength:strength });
+                                var approvedData = signals.signalRegistry.getSignal(newID);
+                
+                            //create graphical signal with approved values and append it to the pane
+                                var newSignalBlock = canvas.part.element.control.sequencer.signalBlock(
+                                    newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), 
+                                    approvedData.line, approvedData.position, approvedData.length, approvedData.strength, 
+                                    false, signalStyle_body, signalStyle_bodyGlow, signalStyle_handle, signalStyle_handleWidth
+                                );
+                                signalPane.append(newSignalBlock);
+                
+                            //add signal controls to graphical signal block
+                                newSignalBlock.select = function(remainSelected=false){
+                                    if(signals.selectedSignals.indexOf(this) != -1){ if(!remainSelected){this.deselect();} return; }
+                                    this.selected(true);
+                                    signals.selectedSignals.push(this);
+                                    this.glow(true);
+                                };
+                                newSignalBlock.deselect = function(){
+                                    signals.selectedSignals.splice(signals.selectedSignals.indexOf(this),1);
+                                    this.selected(false);
+                                    this.glow(false);
+                                };
+                                newSignalBlock.delete = function(){
+                                    this.deselect();
+                                    signals.signalRegistry.remove(parseInt(this.name));
+                                    this.parent.remove(this);
+                                };
+                
+                            //add interactions to graphical signal block
+                                newSignalBlock.ondblclick = function(x,y,event){
+                                    if(!event.ctrlKey){return;}
+                                    for(var a = 0; a < signals.selectedSignals.length; a++){
+                                        signals.selectedSignals[a].strength(signals.defaultStrength);
+                                        signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
+                                    }
+                                };
+                                newSignalBlock.body.onmousedown = function(x,y,event){
+                                    //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                                        if(canvas.system.keyboard.pressedKeys.hasOwnProperty('Space') && canvas.system.keyboard.pressedKeys){
+                                            interactionPlane_back.onmousedown(x,y,event); return;
+                                        }
+                
+                                    //if the shift key is not pressed and this note is not already selected; deselect everything
+                                        if(!event.shiftKey && !newSignalBlock.selected()){
+                                            while(signals.selectedSignals.length > 0){
+                                                signals.selectedSignals[0].deselect();
+                                            }
+                                        }
+                
+                                    //select this block
+                                        newSignalBlock.select(true);
+                
+                                    //gather data for all the blocks that we're about to affect
+                                        var activeBlocks = [];
+                                        for(var a = 0; a < signals.selectedSignals.length; a++){
+                                            activeBlocks.push({
+                                                name: parseInt(signals.selectedSignals[a].name),
+                                                block: signals.selectedSignals[a],
+                                                starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
+                                            });
+                                        }
+                
+                                    //if control key is pressed; this is a strength-change operation
+                                        if(event.ctrlKey){
+                                            var mux = 4;
+                                            var initialStrengths = activeBlocks.map(a => a.block.strength());
+                                            var initial = event.offsetY;
+                                            canvas.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    //check if ctrl is still pressed
+                                                        if(!canvas.system.keyboard.pressedKeys.ControlLeft && !canvas.system.keyboard.pressedKeys.ControlRight){ canvas.system.mouse.forceMouseUp(); }
+                
+                                                    var diff = (initial - event.offsetY)/(canvas.core.viewport.scale()*height*mux);
+                                                    for(var a = 0; a < activeBlocks.length; a++){
+                                                        activeBlocks[a].block.strength(initialStrengths[a] + diff);
+                                                        signals.signalRegistry.update(activeBlocks[a].name, { strength: initialStrengths[a] + diff });
+                                                    }
+                                                }
+                                            );
+                                            return;
+                                        }
+                
+                                    //if the alt key is pressed, clone the block
+                                    //(but don't select it, this is the 'alt-click-and-drag to clone' trick)
+                                    //this function isn't run until the first sign of movement
+                                        var cloned = false;
+                                        function cloneFunc(){
+                                            if(cloned){return;} cloned = true;
+                                            if(event.altKey){
+                                                for(var a = 0; a < signals.selectedSignals.length; a++){
+                                                    var temp = signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name));
+                                                    makeSignal(temp.line, temp.position, temp.length, temp.strength);
+                                                }
+                                            }
+                                        }
+                
+                                    //block movement
+                                        var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                        canvas.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                //clone that block
+                                                    cloneFunc();
+                
+                                                var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                                var diff = {
+                                                    line: livePosition.line - initialPosition.line,
+                                                    position: livePosition.position - initialPosition.position,
+                                                };
+                        
+                                                for(var a = 0; a < activeBlocks.length; a++){
+                                                    signals.signalRegistry.update(activeBlocks[a].name, {
+                                                        line:activeBlocks[a].starting.line+diff.line,
+                                                        position:activeBlocks[a].starting.position+diff.position,
+                                                    });
+                        
+                                                    var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                        
+                                                    activeBlocks[a].block.line( temp.line );
+                                                    activeBlocks[a].block.position( temp.position );
+                                                }
+                                            }
+                                        );
+                                };
+                                newSignalBlock.body.onmousemove = function(x,y,event){
+                                    var pressedKeys = canvas.system.keyboard.pressedKeys;
+                                    canvas.core.viewport.cursor( (pressedKeys.AltLeft || pressedKeys.AltRight) ? 'copy' : 'default' );
+                                };
+                                newSignalBlock.body.onkeydown = function(x,y,event){
+                                    var pressedKeys = canvas.system.keyboard.pressedKeys;
+                                    if(pressedKeys.AltLeft || pressedKeys.AltRight){ canvas.core.viewport.cursor('copy'); }
+                                };
+                                newSignalBlock.body.onkeyup = function(x,y,event){
+                                    var pressedKeys = canvas.system.keyboard.pressedKeys;
+                                    if(!(pressedKeys.AltLeft || pressedKeys.AltRight)){ canvas.core.viewport.cursor('default'); }
+                                };
+                                newSignalBlock.leftHandle.onmousedown = function(x,y,event){
+                                    //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
+                                        if(!event.shiftKey && !newSignalBlock.selected()){
+                                            while(signals.selectedSignals.length > 0){
+                                                signals.selectedSignals[0].deselect();
+                                            }
+                                        }
+                                
+                                    //select this block
+                                        newSignalBlock.select(true);
+                
+                                    //gather data for all the blocks that we're about to affect
+                                        var activeBlocks = [];
+                                        for(var a = 0; a < signals.selectedSignals.length; a++){
+                                            activeBlocks.push({
+                                                name: parseInt(signals.selectedSignals[a].name),
+                                                block: signals.selectedSignals[a],
+                                                starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
+                                            });
+                                        }
+                                    
+                                    //perform block length adjustment 
+                                        var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                        canvas.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                                var diff = {position: initialPosition.position-livePosition.position};
+                        
+                                                for(var a = 0; a < activeBlocks.length; a++){
+                                                    if( activeBlocks[a].starting.position-diff.position < 0 ){ continue; } //this stops a block from getting longer, when it is unable to move any further to the left
+                                                    
+                                                    signals.signalRegistry.update(activeBlocks[a].name, {
+                                                        length: activeBlocks[a].starting.length+diff.position,
+                                                        position: activeBlocks[a].starting.position-diff.position,
+                                                    });
+                                                    var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                                                    activeBlocks[a].block.position( temp.position );
+                                                    activeBlocks[a].block.length( temp.length );
+                                                }
+                                            }
+                                        );
+                                };
+                                newSignalBlock.leftHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+                                newSignalBlock.leftHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+                                newSignalBlock.rightHandle.onmousedown = function(x,y,event){
+                                    //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
+                                        if(!event.shiftKey && !newSignalBlock.selected()){
+                                            while(signals.selectedSignals.length > 0){
+                                                signals.selectedSignals[0].deselect();
+                                            }
+                                        }
+                                    
+                                    //select this block
+                                        newSignalBlock.select(true);
+                
+                                    //gather data for all the blocks that we're about to affect
+                                        var activeBlocks = [];
+                                        for(var a = 0; a < signals.selectedSignals.length; a++){
+                                            activeBlocks.push({
+                                                name: parseInt(signals.selectedSignals[a].name),
+                                                block: signals.selectedSignals[a],
+                                                starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
+                                            });
+                                        }
+                
+                                    //perform block length adjustment 
+                                        var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                        canvas.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                                var diff = {position: livePosition.position - initialPosition.position};
+                        
+                                                for(var a = 0; a < activeBlocks.length; a++){
+                                                    signals.signalRegistry.update(activeBlocks[a].name, {length: activeBlocks[a].starting.length+diff.position});
+                                                    var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                                                    activeBlocks[a].block.position( temp.position );
+                                                    activeBlocks[a].block.length( temp.length );
+                                                }
+                                            }
+                                        );
+                                };
+                                newSignalBlock.rightHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+                                newSignalBlock.rightHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+                
+                            return {id:newID, signalBlock:newSignalBlock};
+                        }
+                
+                    //controls
+                        object.viewport = setViewposition;
+                        object.viewarea = setViewArea;
+                
+                        //background
+                            object.glowHorizontal = function(state,start,end){
+                                if(end == undefined){end = start+1;}
+                
+                                for(var a = start; a <= end; a++){
+                                    var tmp = state ? horizontalStripStyle_glow : horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
+                                    backgroundDrawArea_horizontal.children[a].style.fill = tmp.fill;
+                                    backgroundDrawArea_horizontal.children[a].style.stroke = tmp.stroke;
+                                    backgroundDrawArea_horizontal.children[a].style.lineWidth = tmp.lineWidth;
+                                }
+                            };
+                            object.glowVertical = function(state,start,end){
+                                if(end == undefined){end = start+1;}
+                
+                                for(var a = start; a <= end; a++){
+                                    var tmp = state ? verticalStripStyle_glow : verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
+                                    backgroundDrawArea_vertical.children[a].style.fill = tmp.fill;
+                                    backgroundDrawArea_vertical.children[a].style.stroke = tmp.stroke;
+                                    backgroundDrawArea_vertical.children[a].style.lineWidth = tmp.lineWidth;
+                                }
+                            };
+                        
+                        //looping
+                            object.loopActive = function(bool){
+                                if(bool == undefined){return loop.active;}
+                                loop.active = bool;
+                
+                                object.glowVertical(false,0,xCount);
+                                if( loop.active ){
+                                    object.glowVertical(true, 
+                                        loop.period.start < 0 ? 0 : loop.period.start, 
+                                        loop.period.end > xCount ? xCount : loop.period.end,
+                                    );
+                                }
+                            };
+                            object.loopPeriod = function(start,end){
+                                if(start == undefined || end == undefined){return loop.period;}
+                                if(start > end || start < 0 || end < 0){return;}
+                
+                                loop.period = {start:start, end:end};
+                
+                                if( loop.active ){
+                                    object.glowVertical(false,0,xCount);
+                                    object.glowVertical(true,
+                                        start < 0 ? 0 : start, 
+                                        end > xCount ? xCount : end,
+                                    );
+                                }
+                            };
+                
+                        //signals
+                            object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
+                
+                    //interaction
+                        var tmp = {};
+                        var panningCode = {
+                            start:function(x,y,event){
+                                tmp.onmousemove = interactionPlane_front.onmousemove;
+                                interactionPlane_front.onmousemove = function(){};
+                                tmp.onmouseleave = interactionPlane_front.onmouseleave;
+                                interactionPlane_front.onmouseleave = function(){};
+                
+                                canvas.core.viewport.cursor('grabbing');
+                
+                                var initialPosition = currentMousePosition(event);
+                                var old_viewport = {x:viewport.viewposition.x, y:viewport.viewposition.y};
+                
+                                canvas.system.mouse.mouseInteractionHandler(
+                                    function(event){
+                                        var livePosition = currentMousePosition(event);
+                                        var diffPosition = {x:initialPosition.x-livePosition.x, y:initialPosition.y-livePosition.y};
+                                        setViewposition(
+                                            old_viewport.x - (diffPosition.x*zoomLevel_x)/(zoomLevel_x-1),
+                                            old_viewport.y - (diffPosition.y*zoomLevel_y)/(zoomLevel_y-1),
+                                        );
+                                    },
+                                    function(event){
+                                        canvas.core.viewport.cursor('grab');
+                                    },
+                                );
+                            },
+                            stop:function(x,y,event){
+                                interactionPlane_front.onmousemove = tmp.onmousemove;
+                                interactionPlane_front.onmouseleave = tmp.onmouseleave;
+                            },
+                        };
+                        var click_n_drag = function(x,y,event){
+                            var initialPositionData = currentMousePosition(event);
+                            var livePositionData =    currentMousePosition(event);
+                
+                            var selectionArea = canvas.part.builder('rectangle','selectionArea',{
+                                x:initialPositionData.x*width, y:initialPositionData.y*height,
+                                width:0, height:0,
+                                style:{fill:selectionAreaStyle}
+                            });
+                            object.append(selectionArea);
+                
+                            canvas.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    //get live position, and correct it so it's definitely within in the relevant area
+                                        livePositionData = currentMousePosition(event);
+                                        livePositionData.x < 0 ? 0 : livePositionData.x;
+                                        livePositionData.y < 0 ? 0 : livePositionData.y;
+                                        livePositionData.x > 1 ? 1 : livePositionData.x;
+                                        livePositionData.y > 1 ? 1 : livePositionData.y;
+                                        
+                                    //gather difference between this point and the initial
+                                        var diff = {
+                                            x:livePositionData.x - initialPositionData.x, 
+                                            y:livePositionData.y - initialPositionData.y
+                                        };
+                
+                                    //account for an inverse rectangle
+                                        var transform = {
+                                            x: initialPositionData.x, y: initialPositionData.y, 
+                                            width: 1, height: 1,
+                                        };
+                                        
+                                        if(diff.x < 0){ transform.width = -1;  transform.x += diff.x; }
+                                        if(diff.y < 0){ transform.height = -1; transform.y += diff.y; }
+                
+                                    //update rectangle 
+                                        selectionArea.parameter.x(transform.x*width);
+                                        selectionArea.parameter.y(transform.y*height);
+                                        selectionArea.parameter.width(  transform.width  * diff.x*width  );
+                                        selectionArea.parameter.height( transform.height * diff.y*height );
+                                },
+                                function(event){
+                                    //remove selection box
+                                        selectionArea.parent.remove(selectionArea);
+                
+                                    //gather the corner points
+                                        var finishingPositionData = {
+                                            a: visible2coordinates(initialPositionData),
+                                            b: visible2coordinates(livePositionData),
+                                        };
+                                        finishingPositionData.a.x *= viewport.totalSize.width; finishingPositionData.b.y *= viewport.totalSize.height;
+                                        finishingPositionData.b.x *= viewport.totalSize.width; finishingPositionData.a.y *= viewport.totalSize.height;
+                
+                                        var selectionBox = { topLeft:{ x:0, y:0 }, bottomRight:{ x:0, y:0 } };
+                                        if( finishingPositionData.a.x < finishingPositionData.b.x ){
+                                            selectionBox.topLeft.x =     finishingPositionData.a.x;
+                                            selectionBox.bottomRight.x = finishingPositionData.b.x;
+                                        }else{
+                                            selectionBox.topLeft.x =     finishingPositionData.b.x;
+                                            selectionBox.bottomRight.x = finishingPositionData.a.x;
+                                        }
+                                        if( finishingPositionData.a.y < finishingPositionData.b.y ){
+                                            selectionBox.topLeft.y =     finishingPositionData.a.y;
+                                            selectionBox.bottomRight.y = finishingPositionData.b.y;
+                                        }else{
+                                            selectionBox.topLeft.y =     finishingPositionData.b.y;
+                                            selectionBox.bottomRight.y = finishingPositionData.a.y;
+                                        }
+                
+                                    //deselect everything
+                                        while(signals.selectedSignals.length > 0){
+                                            signals.selectedSignals[0].deselect();
+                                        }
+                
+                                    //select the notes that overlap with the selection area
+                                        for(var a = 0; a < signalPane.children.length; a++){
+                                            var temp = signals.signalRegistry.getSignal(parseInt(signalPane.children[a].name));
+                                            var block = { 
+                                                    topLeft:{
+                                                        x:temp.position * (viewport.totalSize.width/xCount), 
+                                                        y:temp.line *     (viewport.totalSize.height/yCount)},
+                                                    bottomRight:{
+                                                        x:(temp.position+temp.length) * (viewport.totalSize.width/xCount), 
+                                                        y:(temp.line+1)*                (viewport.totalSize.height/yCount)
+                                                    },
+                                            };
+                
+                                            if( canvas.library.math.detectOverlap.boundingBoxes( block, selectionBox ) ){signalPane.children[a].select(true);}
+                                        }
+                                },
+                            );
+                        };
+                        var createSignal = function(x,y,event){};
+                
+                        interactionPlane_front.onkeydown = function(x,y,event){
+                            var pressedKeys = canvas.system.keyboard.pressedKeys;
+                            if(pressedKeys.Delete || pressedKeys.Backspace){
+                                //delete all selected notes
+                                while(signals.selectedSignals.length > 0){
+                                    signals.selectedSignals[0].delete();
+                                }
+                            }else if(pressedKeys.Space){
+                                canvas.core.viewport.cursor('grab');
+                                tmp.onmousedown = interactionPlane_front.onmousedown;
+                                interactionPlane_front.onmousedown = panningCode.start;
+                            }
+                        };
+                        interactionPlane_front.onkeyup = function(x,y,event){
+                            if(!canvas.system.keyboard.pressedKeys.Space){
+                                canvas.core.viewport.cursor('default');
+                                panningCode.stop();
+                                interactionPlane_front.onmousedown = tmp.onmousedown;
+                            }
+                        };
+                
+                        interactionPlane_back.onmousedown = function(x,y,event){
+                            if(event.shiftKey){ click_n_drag(x,y,event); }
+                            else if(event.altKey){ createSignal(x,y,event); }
+                            else{//elsewhere click
+                                //deselect everything
+                                    while(signals.selectedSignals.length > 0){
+                                        signals.selectedSignals[0].deselect();
+                                    }
+                            }
+                        };
+                        interactionPlane_front.onmouseleave = function(x,y,event){ canvas.core.viewport.cursor('default'); };
+                    //callbacks
+                        object.onpan = onpan;
+                        object.onchangeviewarea = onchangeviewarea;
+                        object.event = event;
+                
+                    //setup
+                        drawBackground();
+                
+                    return object;
+                };
+                
+                
+                
+                
+                
+                
+                
+                
+                this.sequencer.signalBlock = function(
+                    name, unit_x, unit_y,
+                    line, position, length, strength=1, glow=false, 
+                    bodyStyle=[
+                        {fill:'rgba(138,138,138,0.6)',stroke:'rgba(175,175,175,0.8)', lineWidth:0.5},
+                        {fill:'rgba(130,199,208,0.6)',stroke:'rgba(130,199,208,0.8)', lineWidth:0.5},
+                        {fill:'rgba(129,209,173,0.6)',stroke:'rgba(129,209,173,0.8)', lineWidth:0.5},
+                        {fill:'rgba(234,238,110,0.6)',stroke:'rgba(234,238,110,0.8)', lineWidth:0.5},
+                        {fill:'rgba(249,178,103,0.6)',stroke:'rgba(249,178,103,0.8)', lineWidth:0.5},
+                        {fill:'rgba(255, 69, 69,0.6)',stroke:'rgba(255, 69, 69,0.8)', lineWidth:0.5},
+                    ],
+                    bodyGlowStyle=[
+                        {fill:'rgba(138,138,138,0.8)',stroke:'rgba(175,175,175,1)',lineWidth:0.5},
+                        {fill:'rgba(130,199,208,0.8)',stroke:'rgba(130,199,208,1)',lineWidth:0.5},
+                        {fill:'rgba(129,209,173,0.8)',stroke:'rgba(129,209,173,1)',lineWidth:0.5},
+                        {fill:'rgba(234,238,110,0.8)',stroke:'rgba(234,238,110,1)',lineWidth:0.5},
+                        {fill:'rgba(249,178,103,0.8)',stroke:'rgba(249,178,103,1)',lineWidth:0.5},
+                        {fill:'rgba(255, 69, 69,0.8)',stroke:'rgba(255, 69, 69,1)',lineWidth:0.5},
+                    ],
+                    handleStyle='rgba(255,0,255,0)',
+                    handleWidth=5,
+                ){
+                    var selected = false;
+                    var minLength = handleWidth/4;
+                    var currentStyles = {
+                        body:getBlendedColour(bodyStyle,strength),
+                        glow:getBlendedColour(bodyGlowStyle,strength),
+                    };
+                    
+                    //elements
+                        var object = canvas.part.builder('group',String(name),{x:position*unit_x, y:line*unit_y});
+                        object.body = canvas.part.builder('rectangle','body',{width:length*unit_x, height:unit_y, style:{fill:currentStyles.body.fill, stroke:currentStyles.body.stroke, lineWidth:currentStyles.body.lineWidth}});
+                        object.leftHandle = canvas.part.builder('rectangle','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y, style:{fill:handleStyle}});
+                        object.rightHandle = canvas.part.builder('rectangle','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:{fill:handleStyle}});
+                        object.append(object.body);
+                        object.append(object.leftHandle);
+                        object.append(object.rightHandle);
+                
+                    //internal functions
+                        function updateHeight(){
+                            object.body.parameter.height(unit_y);
+                            object.leftHandle.parameter.height(unit_y);
+                            object.rightHandle.parameter.height(unit_y);
+                        }
+                        function updateLength(){
+                            object.body.parameter.width(length*unit_x);
+                            object.rightHandle.parameter.x(length*unit_x-handleWidth/2);
+                        }
+                        function updateLineAndPosition(){ updateLine(); updatePosition(); }
+                        function updateLengthAndHeight(){ updateLength(); updateHeight(); }
+                        function updateLine(){ object.parameter.y(line*unit_y); }
+                        function updatePosition(){ object.parameter.x(position*unit_x); }
+                        function getBlendedColour(swatch,ratio){
+                            var outputStyle = Object.assign({},swatch[0]);
+                
+                            //if there's a fill attribute; blend it and add it to the output 
+                                if( swatch[0].hasOwnProperty('fill') ){
+                                    outputStyle.fill = canvas.library.misc.multiBlendColours(swatch.map(a => a.fill),ratio);
+                                }
+                
+                            //if there's a stroke attribute; blend it and add it to the output
+                                if( swatch[0].hasOwnProperty('stroke') ){
+                                    outputStyle.stroke = canvas.library.misc.multiBlendColours(swatch.map(a => a.stroke),ratio);
+                                }
+                
+                            return outputStyle;
+                        }
+                
+                    //controls
+                        object.unit = function(x,y){
+                            if(x == undefined && y == undefined){return {x:unit_x,y:unit_y};}
+                            //(awkward bid for speed)
+                            else if( x == undefined ){
+                                unit_y = y;
+                                updateHeight();
+                                updateLine();
+                            }else if( y == undefined ){
+                                unit_x = x;
+                                updateLength();
+                                updatePosition();
+                            }else{
+                                unit_x = x;
+                                unit_y = y;
+                                updateLengthAndHeight();
+                                updateLineAndPosition();
+                            }
+                        };
+                        object.line = function(a){
+                            if(a == undefined){return line;}
+                            line = a;
+                            updateLine();
+                        };
+                        object.position = function(a){
+                            if(a == undefined){return position;}
+                            position = a;
+                            updatePosition();
+                        };
+                        object.length = function(a){
+                            if(a == undefined){return length;}
+                            length = a < (minLength/unit_x) ? (minLength/unit_x) : a;
+                            updateLength();
+                        };
+                        object.strength = function(a){
+                            if(a == undefined){return strength;}
+                            a = a > 1 ? 1 : a; a = a < 0 ? 0 : a;
+                            strength = a;
+                            currentStyles = {
+                                body:getBlendedColour(bodyStyle,strength),
+                                glow:getBlendedColour(bodyGlowStyle,strength),
+                            };
+                            object.glow(glow);
+                        };
+                        object.glow = function(a){
+                            if(a == undefined){return glow;}
+                            glow = a;
+                            if(glow){ 
+                                object.body.style.fill = currentStyles.glow.fill;
+                                object.body.style.stroke = currentStyles.glow.stroke;
+                                object.body.style.lineWidth = currentStyles.glow.lineWidth;
+                            }else{    
+                                object.body.style.fill = currentStyles.body.fill;
+                                object.body.style.stroke = currentStyles.body.stroke;
+                                object.body.style.lineWidth = currentStyles.body.lineWidth;
+                            }            
+                        };
+                        object.selected = function(a){
+                            if(a == undefined){return selected;}
+                            selected = a;
+                        };
+                
+                    return object;
+                };
+                this.list = function(
+                    name='list', 
+                    x, y, width=50, height=100, angle=0,
+                    list=[],
+                
+                    itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                    active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                
+                    itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                    breakHeightMux=0.0025, breakWidthMux=0.9, 
+                    spacingHeightMux=0.005,
+                    backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
+                
+                    text_font = '5pt Arial',
+                    text_textBaseline = 'alphabetic',
+                    text_fill = 'rgba(0,0,0,1)',
+                    text_stroke = 'rgba(0,0,0,0)',
+                    text_lineWidth = 1,
+                
+                    item__off__fill=                          'rgba(180,180,180,1)',
+                    item__off__stroke=                        'rgba(0,0,0,0)',
+                    item__off__lineWidth=                     0,
+                    item__up__fill=                           'rgba(200,200,200,1)',
+                    item__up__stroke=                         'rgba(0,0,0,0)',
+                    item__up__lineWidth=                      0,
+                    item__press__fill=                        'rgba(230,230,230,1)',
+                    item__press__stroke=                      'rgba(0,0,0,0)',
+                    item__press__lineWidth=                   0,
+                    item__select__fill=                       'rgba(200,200,200,1)',
+                    item__select__stroke=                     'rgba(120,120,120,1)',
+                    item__select__lineWidth=                  2,
+                    item__select_press__fill=                 'rgba(230,230,230,1)',
+                    item__select_press__stroke=               'rgba(120,120,120,1)',
+                    item__select_press__lineWidth=            2,
+                    item__glow__fill=                         'rgba(220,220,220,1)',
+                    item__glow__stroke=                       'rgba(0,0,0,0)',
+                    item__glow__lineWidth=                    0,
+                    item__glow_press__fill=                   'rgba(250,250,250,1)',
+                    item__glow_press__stroke=                 'rgba(0,0,0,0)',
+                    item__glow_press__lineWidth=              0,
+                    item__glow_select__fill=                  'rgba(220,220,220,1)',
+                    item__glow_select__stroke=                'rgba(120,120,120,1)',
+                    item__glow_select__lineWidth=             2,
+                    item__glow_select_press__fill=            'rgba(250,250,250,1)',
+                    item__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                    item__glow_select_press__lineWidth=       2,
+                    item__hover__fill=                        'rgba(220,220,220,1)',
+                    item__hover__stroke=                      'rgba(0,0,0,0)',
+                    item__hover__lineWidth=                   0,
+                    item__hover_press__fill=                  'rgba(240,240,240,1)',
+                    item__hover_press__stroke=                'rgba(0,0,0,0)',
+                    item__hover_press__lineWidth=             0,
+                    item__hover_select__fill=                 'rgba(220,220,220,1)',
+                    item__hover_select__stroke=               'rgba(120,120,120,1)',
+                    item__hover_select__lineWidth=            2,
+                    item__hover_select_press__fill=           'rgba(240,240,240,1)',
+                    item__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                    item__hover_select_press__lineWidth=      2,
+                    item__hover_glow__fill=                   'rgba(240,240,240,1)',
+                    item__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                    item__hover_glow__lineWidth=              0,
+                    item__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                    item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                    item__hover_glow_press__lineWidth=        0,
+                    item__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                    item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                    item__hover_glow_select__lineWidth=       2,
+                    item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                    item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                    item__hover_glow_select_press__lineWidth= 2,
+                
+                    onenter=function(){},
+                    onleave=function(){},
+                    onpress=function(){},
+                    ondblpress=function(){},
+                    onrelease=function(){},
+                    onselection=function(){},
+                    onpositionchange=function(){},
+                ){
+                    //state
+                        var itemArray = [];
+                        var selectedItems = [];
+                        var lastNonShiftClicked = 0;
+                        var position = 0;
+                        var calculatedListHeight;
+                
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //backing
+                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{
+                                fill:backing_style,
+                            }});
+                            object.append(backing);
+                        //item collection
+                            var itemCollection = canvas.part.builder('group','itemCollection');
+                            object.append(itemCollection);
+                            function refreshList(){
+                                //clean out all values
+                                    itemArray = [];
+                                    itemCollection.clear();
+                                    selectedItems = [];
+                                    position = 0;
+                                    lastNonShiftClicked = 0;
+                
+                                //populate list
+                                    var accumulativeHeight = 0;
+                                    for(var a = 0; a < list.length; a++){
+                                        switch(list[a]){
+                                            case 'space':
+                                                var temp = canvas.part.builder( 'rectangle', ''+a, {
+                                                    x:0, y:accumulativeHeight,
+                                                    width:width, height:height*spacingHeightMux,
+                                                    style:{fill:'rgba(255,0,0,0)'}
+                                                });
+                
+                                                accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                itemCollection.append( temp );
+                                            break;
+                                            case 'break':
+                                                var temp = canvas.part.builder( 'rectangle', ''+a, {
+                                                    x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                    width:width*breakWidthMux, height:height*breakHeightMux,
+                                                    style:{fill:break_style}
+                                                });
+                
+                                                accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                itemCollection.append( temp );
+                                            break;
+                                            default:
+                                                var temp = canvas.part.builder( 'button_rect', ''+a, {
+                                                    x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                    width:width*itemWidthMux, height:height*itemHeightMux, 
+                                                    text_left: list[a].text_left,
+                                                    text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                                                    text_right: list[a].text_right,
+                
+                                                    textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
+                                                    active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                
+                                                    style:{
+                                                        text_font:text_font,
+                                                        text_textBaseline:text_textBaseline,
+                                                        text_fill:text_fill,
+                                                        text_stroke:text_stroke,
+                                                        text_lineWidth:text_lineWidth,
+                
+                                                        item__off__fill:                            item__off__fill,
+                                                        item__off__stroke:                          item__off__stroke,
+                                                        item__off__lineWidth:                       item__off__lineWidth,
+                                                        item__up__fill:                             item__up__fill,
+                                                        item__up__stroke:                           item__up__stroke,
+                                                        item__up__lineWidth:                        item__up__lineWidth,
+                                                        item__press__fill:                          item__press__fill,
+                                                        item__press__stroke:                        item__press__stroke,
+                                                        item__press__lineWidth:                     item__press__lineWidth,
+                                                        item__select__fill:                         item__select__fill,
+                                                        item__select__stroke:                       item__select__stroke,
+                                                        item__select__lineWidth:                    item__select__lineWidth,
+                                                        item__select_press__fill:                   item__select_press__fill,
+                                                        item__select_press__stroke:                 item__select_press__stroke,
+                                                        item__select_press__lineWidth:              item__select_press__lineWidth,
+                                                        item__glow__fill:                           item__glow__fill,
+                                                        item__glow__stroke:                         item__glow__stroke,
+                                                        item__glow__lineWidth:                      item__glow__lineWidth,
+                                                        item__glow_press__fill:                     item__glow_press__fill,
+                                                        item__glow_press__stroke:                   item__glow_press__stroke,
+                                                        item__glow_press__lineWidth:                item__glow_press__lineWidth,
+                                                        item__glow_select__fill:                    item__glow_select__fill,
+                                                        item__glow_select__stroke:                  item__glow_select__stroke,
+                                                        item__glow_select__lineWidth:               item__glow_select__lineWidth,
+                                                        item__glow_select_press__fill:              item__glow_select_press__fill,
+                                                        item__glow_select_press__stroke:            item__glow_select_press__stroke,
+                                                        item__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
+                                                        item__hover__fill:                          item__hover__fill,
+                                                        item__hover__stroke:                        item__hover__stroke,
+                                                        item__hover__lineWidth:                     item__hover__lineWidth,
+                                                        item__hover_press__fill:                    item__hover_press__fill,
+                                                        item__hover_press__stroke:                  item__hover_press__stroke,
+                                                        item__hover_press__lineWidth:               item__hover_press__lineWidth,
+                                                        item__hover_select__fill:                   item__hover_select__fill,
+                                                        item__hover_select__stroke:                 item__hover_select__stroke,
+                                                        item__hover_select__lineWidth:              item__hover_select__lineWidth,
+                                                        item__hover_select_press__fill:             item__hover_select_press__fill,
+                                                        item__hover_select_press__stroke:           item__hover_select_press__stroke,
+                                                        item__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
+                                                        item__hover_glow__fill:                     item__hover_glow__fill,
+                                                        item__hover_glow__stroke:                   item__hover_glow__stroke,
+                                                        item__hover_glow__lineWidth:                item__hover_glow__lineWidth,
+                                                        item__hover_glow_press__fill:               item__hover_glow_press__fill,
+                                                        item__hover_glow_press__stroke:             item__hover_glow_press__stroke,
+                                                        item__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
+                                                        item__hover_glow_select__fill:              item__hover_glow_select__fill,
+                                                        item__hover_glow_select__stroke:            item__hover_glow_select__stroke,
+                                                        item__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
+                                                        item__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
+                                                        item__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
+                                                        item__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
+                                                    }
+                                                });
+                
+                                                temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                temp.onrelease = function(a){
+                                                    return function(){
+                                                        if( list[a].function ){ list[a].function(); }
+                                                        object.onrelease(a);
+                                                    }
+                                                }(a);
+                                                temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                
+                                                accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                itemCollection.append( temp );
+                                                itemArray.push( temp );
+                                            break;
+                                        }
+                                    }
+                
+                                return accumulativeHeight - height*itemSpacingMux;
+                            }
+                            calculatedListHeight = refreshList();
+                        //cover
+                            var cover = canvas.part.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                            object.append(cover);
+                        //stencil
+                            var stencil = canvas.part.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                            object.stencil(stencil);
+                            object.clip(true);
+                
+                
+                    //interaction
+                        cover.onwheel = function(x,y,event){
+                            var move = event.deltaY/100;
+                            object.position( object.position() + move/10 );
+                        };
+                    
+                    //controls
+                        object.position = function(a,update=true){
+                            if(a == undefined){return position;}
+                            a = a < 0 ? 0 : a;
+                            a = a > 1 ? 1 : a;
+                            position = a;
+                
+                            if( calculatedListHeight < height ){return;}
+                            var movementSpace = calculatedListHeight - height;
+                            itemCollection.parameter.y( -a*movementSpace );
+                            
+                            if(update&&this.onpositionchange){this.onpositionchange(a);}
+                        };
+                        object.select = function(a,state,event,update=true){
+                            if(!selectable){return;}
+                
+                            //where multi selection is not allowed
+                                if(!multiSelect){
+                                    //where we want to select an item, which is not already selected
+                                        if(state && !selectedItems.includes(a) ){
+                                            //deselect all other items
+                                                while( selectedItems.length > 0 ){
+                                                    itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                    selectedItems.shift();
+                                                }
+                
+                                            //select current item
+                                                selectedItems.push(a);
+                
+                                    //where we want to deselect an item that is selected
+                                        }else if(!state && selectedItems.includes(a)){
+                                            selectedItems = [];
+                                        }
+                
+                                //do not update the item itself, in the case that it was the item that sent this command
+                                //(which would cause a little loop)
+                                    if(update){ itemCollection.children[a].select(true,undefined,false); }
+                
+                            //where multi selection is allowed
+                                }else{
+                                    //wherer range-selection is to be done
+                                        if( event != undefined && event.shiftKey ){
+                                            //gather top and bottom item
+                                            //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                var min = Math.min(lastNonShiftClicked, a);
+                                                var max = Math.max(lastNonShiftClicked, a);
+                                                for(var b = 0; b < itemArray.length; b++){
+                                                    if( itemArray[b].name == ''+min ){min = b;}
+                                                    if( itemArray[b].name == ''+max ){max = b;}
+                                                }
+                
+                                            //deselect all outside the range
+                                                selectedItems = [];
+                                                for(var b = 0; b < itemArray.length; b++){
+                                                    if( b > max || b < min ){
+                                                        if( itemArray[b].select() ){
+                                                            itemArray[b].select(false,undefined,false);
+                                                        }
+                                                    }
+                                                }
+                
+                                            //select those within the range (that aren't already selected)
+                                                for(var b = min; b <= max; b++){
+                                                    if( !itemArray[b].select() ){
+                                                        itemArray[b].select(true,undefined,false);
+                                                        selectedItems.push(b);
+                                                    }
+                                                }
+                                    //where range-selection is not to be done
+                                        }else{
+                                            if(update){ itemArray[a].select(state); }
+                                            if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                            else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                            lastNonShiftClicked = a;
+                                        }
+                                }
+                
+                            object.onselection(selectedItems);
+                        };
+                        object.add = function(item){
+                            list.push(item);
+                            calculatedListHeight = refreshList();
+                        };
+                        object.remove = function(a){
+                            list.splice(a,1);
+                            calculatedListHeight = refreshList();
+                        };
+                
+                    //callbacks
+                        object.onenter = onenter;
+                        object.onleave = onleave;
+                        object.onpress = onpress;
+                        object.ondblpress = ondblpress;
+                        object.onrelease = onrelease;
+                        object.onselection = onselection;
+                        object.onpositionchange = onpositionchange;
+                        
+                    return object;
+                };
+                this.grapher_waveWorkspace = function(
+                    name='grapher_waveWorkspace',
+                    x, y, width=120, height=60, angle=0, selectNeedle=true, selectionArea=true,
+                
+                    foregroundStyles=[
+                        {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                        {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                    ],
+                    foregroundTextStyles=[
+                        {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                        {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+                    ],
+                
+                    backgroundStyle_stroke='rgba(0,100,0,1)',
+                    backgroundStyle_lineWidth=0.25,
+                    backgroundTextStyle_fill='rgba(0,150,0,1)',
+                    backgroundTextStyle_size=0.1,
+                    backgroundTextStyle_font='Helvetica',
+                
+                    backingStyle='rgba(50,50,50,1)',
+                
+                    onchange=function(needle,value){}, 
+                    onrelease=function(needle,value){}, 
+                    selectionAreaToggle=function(bool){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        //main graph
+                            var graph = canvas.part.builder('grapher', 'graph', {
+                                width:width, height:height,
+                                style:{
+                                    foregrounds:foregroundStyles,   
+                                    foregroundText:foregroundTextStyles,
+                                    background_stroke:backgroundStyle_stroke,
+                                    background_lineWidth:backgroundStyle_lineWidth,
+                                    backgroundText_fill:backgroundTextStyle_fill,
+                                    backgroundText_size:backgroundTextStyle_size,
+                                    backgroundText_font:backgroundTextStyle_font,
+                                    backing:backingStyle,
+                                }
+                            });
+                            object.append(graph);
+                        //needle overlay
+                            var overlay = canvas.part.builder('needleOverlay', 'overlay', {
+                                width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                                needleStyles:foregroundStyles.map(a => a.stroke),
+                            });
+                            object.append(overlay);
+                
+                    //controls
+                        //grapher
+                            object.horizontalMarkings = graph.horizontalMarkings;
+                            object.verticalMarkings = graph.verticalMarkings;
+                            object.drawBackground = graph.drawBackground;
+                            object.drawForeground = graph.drawForeground;
+                            object.draw = graph.draw;
+                        //needle overlay
+                            object.select = overlay.select;
+                            object.area = overlay.area;
+                
+                    //callbacks
+                        object.onchange = onchange;
+                        object.onrelease = onrelease;
+                        object.selectionAreaToggle = selectionAreaToggle;
+                        overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
+                        overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
+                        overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
+                
+                    //setup
+                        graph.viewbox({left:0});
+                        graph.drawBackground();
+                        overlay.select(0);
+                
+                    return object;
+                };
+                this.dial_discrete = function(
+                    name='dial_discrete',
+                    x, y, r=15, angle=0,
+                    value=0, resetValue=0, optionCount=5,
+                    startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                
+                    handleStyle = 'rgba(175,175,175,1)',
+                    slotStyle = 'rgba(50,50,50,1)',
+                    needleStyle = 'rgba(250,100,100,1)',
+                
+                    onchange=function(){},
+                    onrelease=function(){},
+                ){
+                    //elements 
+                        //main
+                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
+                        
+                        //dial
+                            var dial = canvas.part.builder('dial_continuous',name,{
+                                x:0, y:0, r:r, angle:0,
+                                startAngle:startAngle, smaxAngle:maxAngle,
+                                style:{ handleStyle:handleStyle, slotStyle:slotStyle, needleStyle:needleStyle }
+                            });
+                            //clean out built-in interation
+                            dial.getChildByName('handle').ondblclick = undefined;
+                            dial.getChildByName('handle').onwheel = undefined;
+                            dial.getChildByName('handle').onmousedown = undefined;
+                
+                            object.append(dial);
+                        
+                
+                
+                
+                
+                
+                    //graphical adjust
+                        function set(a,update=true){
+                            a = (a>(optionCount-1) ? (optionCount-1) : a);
+                            a = (a<0 ? 0 : a);
+                
+                            if(update && object.change != undefined){object.onchange(a);}
+                
+                            a = Math.round(a);
+                            value = a;
+                            dial.set( value/(optionCount-1) );
+                        };
+                
+                
+                
+                
+                    //methods
+                        var grappled = false;
+                
+                        object.set = function(value,update){
+                            if(grappled){return;}
+                            set(value,update);
+                        };
+                        object.get = function(){return value;};
+                
+                
+                
+                
+                    //interaction
+                        var acc = 0;
+                
+                        dial.getChildByName('handle').ondblclick = function(){
+                            if(resetValue<0){return;}
+                            if(grappled){return;}
+                            
+                            set(resetValue);
+                
+                            if(object.onrelease != undefined){object.onrelease(value);}
+                        };
+                        dial.getChildByName('handle').onwheel = function(x,y,event){
+                            if(grappled){return;}
+                
+                            var move = event.deltaY/100;
+                
+                            acc += move;
+                            if( Math.abs(acc) >= 1 ){
+                                set( value -1*Math.sign(acc) );
+                                acc = 0;
+                                if(object.onrelease != undefined){object.onrelease(value);}
+                            }
+                        };
+                        dial.getChildByName('handle').onmousedown = function(x,y,event){
+                            var initialValue = value;
+                            var initialY = event.y;
+                
+                            grappled = true;
+                            canvas.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    var diff = Math.round( (event.y - initialY)/25 );
+                                    set( initialValue - diff );
+                                    if(object.onchange != undefined){object.onchange(value);}
+                                },
+                                function(event){
+                                    grappled = false;
+                                    if(object.onrelease != undefined){object.onrelease(value);}
+                                }
+                            );
+                        };
+                
+                
+                
+                
+                    //callbacks
+                        object.onchange = onchange; 
+                        object.onrelease = onrelease;
+                
+                    //setup
+                        set(0);
+                
+                    return object;
+                };
                 this.rangeslide = function(
                     name='rangeslide', 
                     x, y, width=10, height=95, angle=0,
@@ -6644,1057 +7837,56 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return object;
                 };
-                this.rastorgrid = function(
-                    name='rastorgrid', 
-                    x, y, width=80, height=80, angle=0,
-                    xcount=5, ycount=5,
-                    backingStyle = 'rgba(200,200,200,1)',
-                    checkStyle = 'rgba(150,150,150,1)',
-                    backingGlowStyle = 'rgba(220,220,220,1)',
-                    checkGlowStyle = 'rgba(220,220,220,1)',
-                    onchange = function(){},
-                ){
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        
-                        //checkboxes
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    var temp = canvas.part.builder('checkbox_rect',y+'_'+x,{
-                                        x:x*(width/xcount),  y:y*(height/ycount), 
-                                        width:width/xcount,  height:height/ycount, 
-                                        style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
-                                        onchange:function(){ if(object.onchange){object.onchange(object.get());} },
-                                    });
-                                    object.append(temp);
-                                }
-                            }
-                
-                
-                
-                
-                    //methods
-                        object.box = function(x,y){ return object.getChildByName(y+'_'+x); };
-                        object.get = function(){
-                            var outputArray = [];
-                    
-                            for(var y = 0; y < ycount; y++){
-                                var temp = [];
-                                for(var x = 0; x < xcount; x++){
-                                    temp.push(this.box(x,y).get());
-                                }
-                                outputArray.push(temp);
-                            }
-                    
-                            return outputArray;
-                        };
-                        object.set = function(value, update=true){
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    object.box(x,y).set(value[y][x],false);
-                                }
-                            }
-                        };
-                        object.clear = function(){
-                            for(var y = 0; y < ycount; y++){
-                                for(var x = 0; x < xcount; x++){
-                                    object.box(x,y).set(false,false);
-                                }
-                            }
-                        };
-                        object.light = function(x,y,state){
-                            object.box(x,y).light(state);
-                        };
-                
-                
-                
-                
-                    //callback
-                        object.onchange = onchange;
-                
-                    return object;
-                };
-                this.sequencer = function(
-                    name='sequencer',
-                    x, y, width=300, height=100, angle=0,
-                    
-                    xCount=64, yCount=16,
-                    zoomLevel_x=1/2, zoomLevel_y=1/2,
-                
-                    backingStyle='rgba(20,20,20,1)',
-                    selectionAreaStyle='rgba(209, 189, 222, 1)',
-                
-                    signalStyle_body=[
-                        {fill:'rgba(138,138,138,0.6)', stroke:'rgba(175,175,175,0.95)', lineWidth:0.5},
-                        {fill:'rgba(130,199,208,0.6)', stroke:'rgba(130,199,208,0.95)', lineWidth:0.5},
-                        {fill:'rgba(129,209,173,0.6)', stroke:'rgba(129,209,173,0.95)', lineWidth:0.5},
-                        {fill:'rgba(234,238,110,0.6)', stroke:'rgba(234,238,110,0.95)', lineWidth:0.5},
-                        {fill:'rgba(249,178,103,0.6)', stroke:'rgba(249,178,103,0.95)', lineWidth:0.5},
-                        {fill:'rgba(255, 69, 69,0.6)', stroke:'rgba(255, 69, 69,0.95)', lineWidth:0.5},
-                    ],
-                    signalStyle_bodyGlow=[
-                        {fill:'rgba(138,138,138,0.8)', stroke:'rgba(175,175,175,1)', lineWidth:0.5},
-                        {fill:'rgba(130,199,208,0.8)', stroke:'rgba(130,199,208,1)', lineWidth:0.5},
-                        {fill:'rgba(129,209,173,0.8)', stroke:'rgba(129,209,173,1)', lineWidth:0.5},
-                        {fill:'rgba(234,238,110,0.8)', stroke:'rgba(234,238,110,1)', lineWidth:0.5},
-                        {fill:'rgba(249,178,103,0.8)', stroke:'rgba(249,178,103,1)', lineWidth:0.5},
-                        {fill:'rgba(255, 69, 69,0.8)', stroke:'rgba(255, 69, 69,1)', lineWidth:0.5},
-                    ],    
-                    signalStyle_handle='rgba(200,0,0,0)',
-                    signalStyle_handleWidth=3,
-                
-                    horizontalStripStyle_pattern=[0,1],
-                    horizontalStripStyle_glow={fill:'rgba(120,120,120,0.8)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
-                    horizontalStripStyle_styles=[
-                        {fill:'rgba(120,120,120,0.5)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
-                        {fill:'rgba(100,100,100,  0)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
-                    ],
-                    verticalStripStyle_pattern=[0],
-                    verticalStripStyle_glow={fill:'rgba(229, 221, 112,0.25)', stroke:'rgba(252,244,128,0.5)', lineWidth:0.5},
-                    verticalStripStyle_styles=[
-                        {fill:'rgba(30,30,30,0.5)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
-                    ],
-                
-                    playheadStyle='rgb(240, 240, 240)',
-                
-                    onpan=function(data){},
-                    onchangeviewarea=function(data){},
-                    event=function(events){},
-                ){
-                
-                    //settings
-                        const viewport = {
-                            totalSize:{
-                                width:  width/zoomLevel_x,
-                                height: height/zoomLevel_y,
-                            },
-                            viewposition: {x:0,y:0},
-                            viewArea:{
-                                topLeft:     {x:0, y:0},
-                                bottomRight: {x:zoomLevel_x, y:zoomLevel_y},
-                            }
-                        };
-                        const signals = {
-                            step:1/1,
-                            snapping: true,
-                            defaultStrength: 0.5,
-                            selectedSignals: [],
-                            activeSignals: [],
-                            signalRegistry: new canvas.library.structure.signalRegistry(xCount,yCount),
-                        };
-                        const loop = {
-                            active:false, 
-                            period:{
-                                start:0, 
-                                end:xCount
-                            },
-                        };
-                        const playhead = {
-                            present:false,
-                            width:0.75,
-                            invisibleHandleMux:4,
-                            position:-1,
-                            held:false,
-                            automoveViewposition:false,
-                        };
-                
-                
-                
-                
-                    
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //static backing
-                            var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
-                            object.append(backing);
-                        //viewport stencil
-                            var stencil = canvas.part.builder('rectangle','stencil',{width:width, height:height});
-                            object.stencil(stencil);
-                            object.clip(true);
-                
-                        //workarea
-                            var workarea = canvas.part.builder('group','workarea');
-                            object.append(workarea);
-                            //moveable background
-                                var backgroundDrawArea = canvas.part.builder('group','backgroundDrawArea');
-                                workarea.append(backgroundDrawArea);
-                                var backgroundDrawArea_horizontal = canvas.part.builder('group','backgroundDrawArea_horizontal');
-                                backgroundDrawArea.append(backgroundDrawArea_horizontal);
-                                var backgroundDrawArea_vertical = canvas.part.builder('group','backgroundDrawArea_vertical');
-                                backgroundDrawArea.append(backgroundDrawArea_vertical);
-                            //interaction pane
-                                var interactionPlane = canvas.part.builder('rectangle','interactionPlane',{width:viewport.totalSize.width, height:viewport.totalSize.height, style:{fill:'rgba(0,0,0,0)'}});
-                                workarea.append(interactionPlane);
-                                interactionPlane.onwheel = function(x,y,event){};
-                            //signal block area
-                                var signalPane = canvas.part.builder('group','signalPane');
-                                workarea.append(signalPane);
-                
-                    //internal
-                        object.__calculationAngle = angle;
-                        function currentMousePosition(event){
-                            var workspacePoint = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                            var point = {
-                                x: workspacePoint.x - backing.extremities.points[0].x, 
-                                y: workspacePoint.y - backing.extremities.points[0].y,
-                            };
-                            return {
-                                x: (point.x*Math.cos(object.__calculationAngle) - point.y*Math.sin(object.__calculationAngle)) / width,
-                                y: (point.y*Math.cos(object.__calculationAngle) - point.x*Math.sin(object.__calculationAngle)) / height,
-                            };
-                        }
-                        function viewportPosition2internalPosition(xy){
-                            return {x: viewport.viewArea.topLeft.x + xy.x*zoomLevel_x, y:viewport.viewArea.topLeft.y + xy.y*zoomLevel_y };
-                        }
-                        // function visible2coordinates(xy){
-                        //     return {
-                        //         x: zoomLevel_x*(xy.x - viewport.viewposition.x) + viewport.viewposition.x,
-                        //         y: zoomLevel_y*(xy.y - viewport.viewposition.y) + viewport.viewposition.y,
-                        //     };
-                        // }
-                        function coordinates2lineposition(xy){
-                            xy.y = Math.floor(xy.y*yCount);
-                            if(xy.y >= yCount){xy.y = yCount-1;}
-                        
-                            xy.x = signals.snapping ? Math.round((xy.x*xCount)/signals.step)*signals.step : xy.x*xCount;
-                            if(xy.x < 0){xy.x =0;}
-                        
-                            return {line:xy.y, position:xy.x};
-                        }
-                        function drawBackground(){
-                            //horizontal strips
-                                backgroundDrawArea_horizontal.clear();
-                                for(var a = 0; a < yCount; a++){
-                                    var style = horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
-                                    backgroundDrawArea_horizontal.append(
-                                        canvas.part.builder( 'rectangle', 'strip_horizontal_'+a,
-                                            {
-                                                x:0, y:a*(height/(yCount*zoomLevel_y)),
-                                                width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
-                                                style:{ fill:style.fill, stroke:style.stroke, lineWidth:style.lineWidth }
-                                            }
-                                        )
-                                    );
-                                }
-                
-                            //vertical strips
-                                backgroundDrawArea_vertical.clear();
-                                for(var a = 0; a < xCount; a++){
-                                    var style = verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
-                                    backgroundDrawArea_vertical.append(
-                                        canvas.part.builder( 'rectangle', 'strip_vertical_'+a,
-                                            {
-                                                x:a*(width/(xCount*zoomLevel_x)), y:0,
-                                                width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
-                                                style:{ fill:style.fill, stroke:style.stroke, lineWidth:style.lineWidth }
-                                            }
-                                        )
-                                    );
-                                }
-                        }
-                        function setViewposition(x,y,update=true){
-                            if(x == undefined && y == undefined){return viewport.viewposition;}
-                            if(x == undefined || isNaN(x)){ x = viewport.viewposition.x; }
-                            if(y == undefined || isNaN(y)){ y = viewport.viewposition.y; }
-                
-                            //make sure things are between 0 and 1
-                                x = x<0?0:x; x = x>1?1:x;
-                                y = y<0?0:y; y = y>1?1:y;
-                
-                            //perform transform
-                                viewport.viewposition.x = x;
-                                viewport.viewposition.y = y;
-                                workarea.parameter.x( -viewport.viewposition.x*(viewport.totalSize.width - width) );
-                                workarea.parameter.y( -viewport.viewposition.y*(viewport.totalSize.height - height) );
-                
-                            //update viewport.viewArea
-                                viewport.viewArea = {
-                                    topLeft:     { x:x - zoomLevel_x*x,     y:y - zoomLevel_y*y     },
-                                    bottomRight: { x:x + zoomLevel_x*(1-x), y:y + zoomLevel_y*(1-y) },
-                                };
-                        }
-                        function adjustZoom(x,y){
-                            if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
-                            var maxZoom = 0.01;
-                
-                            //(in a bid for speed, I've written the following code in an odd way, so that if both x and y scales are being changed, then
-                            //all the elements will be adjusted together (instead of having to repeat resizings of shapes))
-                            if(x != undefined && x != zoomLevel_x && y != undefined && y != zoomLevel_y ){
-                                //make sure things are between 0.01 and 1
-                                    x = x<maxZoom?maxZoom:x; x = x>1?1:x;
-                                    y = y<maxZoom?maxZoom:y; y = y>1?1:y;
-                
-                                //update state
-                                    zoomLevel_x = x;
-                                    zoomLevel_y = y;
-                                    viewport.totalSize.width = width/zoomLevel_x;
-                                    viewport.totalSize.height = height/zoomLevel_y;
-                
-                                //update interactionPlane
-                                    interactionPlane.parameter.width( viewport.totalSize.width );
-                                    interactionPlane.parameter.height( viewport.totalSize.width );
-                
-                                //update background strips
-                                    for(var a = 0; a < xCount; a++){
-                                        backgroundDrawArea_vertical.children[a].parameter.x( a*(width/(xCount*zoomLevel_x)) );
-                                        backgroundDrawArea_vertical.children[a].parameter.width( width/(xCount*zoomLevel_x) );
-                                        backgroundDrawArea_vertical.children[a].parameter.height( viewport.totalSize.height );
-                                    }
-                                    for(var a = 0; a < yCount; a++){
-                                        backgroundDrawArea_horizontal.children[a].parameter.y( a*(height/(yCount*zoomLevel_y)) );
-                                        backgroundDrawArea_horizontal.children[a].parameter.height( height/(yCount*zoomLevel_y) );
-                                        backgroundDrawArea_horizontal.children[a].parameter.width( viewport.totalSize.width );
-                                    }
-                
-                                //update signals
-                                    for(var a = 0; a < signalPane.children.length; a++){
-                                        signalPane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
-                                    }
-                
-                                //update playhead (if there is one)
-                                    if(playhead.present){
-                                        workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].parameter.height(viewport.totalSize.height);
-                                        workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].parameter.height(viewport.totalSize.height);
-                                        workarea.getElementsWithName('playhead')[0].parameter.x( playhead.position*(viewport.totalSize.width/xCount) );
-                                }
-                            }else if( x != undefined && x != zoomLevel_x ){
-                                //make sure things are between maxZoom and 1
-                                    x = x<maxZoom?maxZoom:x; x = x>1?1:x;
-                
-                                //update state
-                                    zoomLevel_x = x;
-                                    viewport.totalSize.width = width/zoomLevel_x;
-                
-                                //update interactionPlane
-                                    interactionPlane.parameter.width( viewport.totalSize.width );
-                
-                                //update background strips
-                                    for(var a = 0; a < xCount; a++){
-                                        backgroundDrawArea_vertical.children[a].parameter.x( a*(width/(xCount*zoomLevel_x)) );
-                                        backgroundDrawArea_vertical.children[a].parameter.width( width/(xCount*zoomLevel_x) );
-                                    }
-                                    for(var a = 0; a < yCount; a++){
-                                        backgroundDrawArea_horizontal.children[a].parameter.width( viewport.totalSize.width );
-                                    }
-                
-                                //update signals
-                                    for(var a = 0; a < signalPane.children.length; a++){
-                                        signalPane.children[a].unit(width/(xCount*zoomLevel_x), undefined);
-                                    }
-                
-                                //update playhead (if there is one)
-                                    if(playhead.present){
-                                        workarea.getElementsWithName('playhead')[0].parameter.x( playhead.position*(viewport.totalSize.width/xCount) );
-                                    }
-                            }else if( y != undefined && y != zoomLevel_y ){
-                                //make sure things are between maxZoom and 1
-                                    y = y<maxZoom?maxZoom:y; y = y>1?1:y;
-                
-                                //update state
-                                    zoomLevel_y = y;
-                                    viewport.totalSize.height = height/zoomLevel_y;
-                
-                                //update interactionPlane
-                                    interactionPlane.parameter.height( viewport.totalSize.width );
-                                
-                                //update background strips
-                                    for(var a = 0; a < xCount; a++){
-                                        backgroundDrawArea_vertical.children[a].parameter.height( viewport.totalSize.height );
-                                    }
-                                    for(var a = 0; a < yCount; a++){
-                                        backgroundDrawArea_horizontal.children[a].parameter.y( a*(height/(yCount*zoomLevel_y)) );
-                                        backgroundDrawArea_horizontal.children[a].parameter.height( height/(yCount*zoomLevel_y) );
-                                    }
-                
-                                //update signals
-                                    for(var a = 0; a < signalPane.children.length; a++){
-                                        signalPane.children[a].unit(undefined, height/(yCount*zoomLevel_y));
-                                    }
-                
-                                //update playhead (if there is one)
-                                    if(playhead.present){
-                                        workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].parameter.height(viewport.totalSize.height);
-                                        workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].parameter.height(viewport.totalSize.height);
-                                    }
-                            }
-                        }
-                        function setViewArea(d,update=true){
-                            //clean off input
-                                if(d == undefined || (d.topLeft == undefined && d.bottomRight == undefined)){return viewport.viewArea;}
-                                if(d.topLeft == undefined){ d.topLeft.x = viewport.viewArea.topLeft.x; d.topLeft.y = viewport.viewArea.topLeft.y; }
-                                if(d.bottomRight == undefined){ d.bottomRight.x = viewport.viewArea.topLeft.x; d.bottomRight.y = viewport.viewArea.topLeft.y; }
-                
-                            //first adjust the zoom, if the distance between the areas changed
-                                var x = (viewport.viewArea.bottomRight.x-viewport.viewArea.topLeft.x) != (d.bottomRight.x-d.topLeft.x);
-                                var y = (d.bottomRight.y-d.topLeft.y)!=(viewport.viewArea.bottomRight.y-viewport.viewArea.topLeft.y);
-                                
-                                if(x && y){ adjustZoom( (d.bottomRight.x-d.topLeft.x),(d.bottomRight.y-d.topLeft.y) ); }
-                                else if(x){ adjustZoom( (d.bottomRight.x-d.topLeft.x),undefined ); }
-                                else if(y){ adjustZoom( undefined,(d.bottomRight.y-d.topLeft.y) ); }
-                
-                            //update pan
-                                var newX = 0; var newY = 0;
-                                if( (1-(d.bottomRight.x-d.topLeft.x)) != 0 ){ newX = d.topLeft.x + d.topLeft.x*((d.bottomRight.x-d.topLeft.x)/(1-(d.bottomRight.x-d.topLeft.x))); }
-                                if( (1-(d.bottomRight.y-d.topLeft.y)) != 0 ){ newY = d.topLeft.y + d.topLeft.y*((d.bottomRight.y-d.topLeft.y)/(1-(d.bottomRight.y-d.topLeft.y))); }
-                                setviewport.viewposition(newX,newY,update);
-                
-                            //update state
-                                viewport.viewArea = Object.assign(d,{});
-                        }
-                        function makePlayhead(){
-                            var newPlayhead = canvas.part.builder('group','playhead');
-                            workarea.append(newPlayhead);
-                
-                            newPlayhead.main = canvas.part.builder('rectangle','main',{
-                                width:playhead.width,
-                                height:viewport.totalSize.height,
-                                style:{ fill:playheadStyle },
-                            });
-                            newPlayhead.append(newPlayhead.main);
-                
-                            newPlayhead.invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{
-                                x:-playhead.width*playhead.invisibleHandleMux/2 + playhead.width/2, 
-                                width: playhead.width*playhead.invisibleHandleMux,
-                                height:viewport.totalSize.height,
-                                style:{ fill:'rgba(255,0,0,0.5)' },
-                            })
-                            newPlayhead.append(newPlayhead.invisibleHandle);
-                
-                            newPlayhead.invisibleHandle.onmousedown = function(){
-                                playhead.held = true;
-                                canvas.system.mouse.mouseInteractionHandler(
-                                    function(event){ object.playheadPosition( coordinates2lineposition(currentMousePosition()).position ); },
-                                    function(){playhead.held = false;}
-                                );
-                            };
-                
-                            newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
-                            newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
-                
-                            playhead.present = true;
-                        }
-                        function makeSignal(line, position, length, strength=signals.defaultStrength){
-                            //register signal and get new id. From the registry, get the approved signal values
-                                var newID = signals.signalRegistry.add({ line:line, position:position, length:length, strength:strength });
-                                var approvedData = signals.signalRegistry.getSignal(newID);
-                
-                            //create graphical signal with approved values and append it to the pane
-                                var newSignalBlock = canvas.part.element.control.sequencer.signalBlock(
-                                    newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), 
-                                    approvedData.line, approvedData.position, approvedData.length, approvedData.strength, 
-                                    false, signalStyle_body, signalStyle_bodyGlow, signalStyle_handle, signalStyle_handleWidth
-                                );
-                                signalPane.append(newSignalBlock);
-                
-                            //add signal controls to graphical signal block
-                                newSignalBlock.select = function(remainSelected=false){
-                                    if(signals.selectedSignals.indexOf(this) != -1){ if(!remainSelected){this.deselect();} return; }
-                                    this.selected(true);
-                                    signals.selectedSignals.push(this);
-                                    this.glow(true);
-                                };
-                                newSignalBlock.deselect = function(){
-                                    signals.selectedSignals.splice(signals.selectedSignals.indexOf(this),1);
-                                    this.selected(false);
-                                    this.glow(false);
-                                };
-                                newSignalBlock.delete = function(){
-                                    this.deselect();
-                                    signals.signalRegistry.remove(parseInt(this.name));
-                                    this.parent.remove(this);
-                                };
-                
-                            //add interactions to graphical signal block
-                                newSignalBlock.ondblclick = function(x,y,event){
-                                    if(!event.ctrlKey){return;}
-                                    for(var a = 0; a < signals.selectedSignals.length; a++){
-                                        signals.selectedSignals[a].strength(signals.defaultStrength);
-                                        signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
-                                    }
-                                };
-                                newSignalBlock.body.onmousedown = function(x,y,event){
-                                    //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
-                                        if(canvas.system.keyboard.pressedKeys.hasOwnProperty('Space') && canvas.system.keyboard.pressedKeys){
-                                            interactionPlane.onmousedown(x,y,event); return;
-                                        }
-                
-                                    //if the shift key is not pressed and this note is not already selected; deselect everything
-                                        if(!event.shiftKey && !newSignalBlock.selected()){
-                                            while(signals.selectedSignals.length > 0){
-                                                signals.selectedSignals[0].deselect();
-                                            }
-                                        }
-                
-                                    //select this block
-                                        newSignalBlock.select(true);
-                
-                                    //gather data for all the blocks that we're about to affect
-                                        var activeBlocks = [];
-                                        for(var a = 0; a < signals.selectedSignals.length; a++){
-                                            activeBlocks.push({
-                                                name: parseInt(signals.selectedSignals[a].name),
-                                                block: signals.selectedSignals[a],
-                                                starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
-                                            });
-                                        }
-                
-                                    //if control key is pressed; this is a strength-change operation
-                                        if(event.ctrlKey){
-                                            var mux = 4;
-                                            var initialStrengths = activeBlocks.map(a => a.block.strength());
-                                            var initial = event.offsetY;
-                                            canvas.system.mouse.mouseInteractionHandler(
-                                                function(event){
-                                                    var diff = (initial - event.offsetY)/(canvas.core.viewport.scale()*height*mux);
-                                                    for(var a = 0; a < activeBlocks.length; a++){
-                                                        activeBlocks[a].block.strength(initialStrengths[a] + diff);
-                                                        signals.signalRegistry.update(activeBlocks[a].name, { strength: initialStrengths[a] + diff });
-                                                    }
-                                                }
-                                            );
-                                            return;
-                                        }
-                
-                                    //if the alt key is pressed, clone the block
-                                    //(but don't select it, this is the 'alt-click-and-drag to clone' trick)
-                                    //this function isn't run until the first sign of movement
-                                        var cloned = false;
-                                        function cloneFunc(){
-                                            if(cloned){return;} cloned = true;
-                                            if(event.altKey){
-                                                for(var a = 0; a < signals.selectedSignals.length; a++){
-                                                    var temp = signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name));
-                                                    makeSignal(temp.line, temp.position, temp.length, temp.strength);
-                                                }
-                                            }
-                                        }
-                
-                                    //block movement
-                                        var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
-                                        canvas.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                //clone that block
-                                                    cloneFunc();
-                
-                                                var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
-                                                var diff = {
-                                                    line: livePosition.line - initialPosition.line,
-                                                    position: livePosition.position - initialPosition.position,
-                                                };
-                        
-                                                for(var a = 0; a < activeBlocks.length; a++){
-                                                    signals.signalRegistry.update(activeBlocks[a].name, {
-                                                        line:activeBlocks[a].starting.line+diff.line,
-                                                        position:activeBlocks[a].starting.position+diff.position,
-                                                    });
-                        
-                                                    var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
-                        
-                                                    activeBlocks[a].block.line( temp.line );
-                                                    activeBlocks[a].block.position( temp.position );
-                                                }
-                                            },
-                                        );
-                                };          
-                                newSignalBlock.leftHandle.onmousedown = function(x,y,event){
-                                    //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
-                                        if(!event.shiftKey && !newSignalBlock.selected()){
-                                            while(signals.selectedSignals.length > 0){
-                                                signals.selectedSignals[0].deselect();
-                                            }
-                                        }
-                                
-                                    //select this block
-                                        newSignalBlock.select(true);
-                
-                                    //gather data for all the blocks that we're about to affect
-                                        var activeBlocks = [];
-                                        for(var a = 0; a < signals.selectedSignals.length; a++){
-                                            activeBlocks.push({
-                                                name: parseInt(signals.selectedSignals[a].name),
-                                                block: signals.selectedSignals[a],
-                                                starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
-                                            });
-                                        }
-                                    
-                                    //perform block length adjustment 
-                                        var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
-                                        canvas.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
-                                                var diff = {position: initialPosition.position-livePosition.position};
-                        
-                                                for(var a = 0; a < activeBlocks.length; a++){
-                                                    if( activeBlocks[a].starting.position-diff.position < 0 ){ continue; } //this stops a block from getting longer, when it is unable to move any further to the left
-                                                    
-                                                    signals.signalRegistry.update(activeBlocks[a].name, {
-                                                        length: activeBlocks[a].starting.length+diff.position,
-                                                        position: activeBlocks[a].starting.position-diff.position,
-                                                    });
-                                                    var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
-                                                    activeBlocks[a].block.position( temp.position );
-                                                    activeBlocks[a].block.length( temp.length );
-                                                }
-                                            }
-                                        );
-                                };
-                                newSignalBlock.leftHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('w-resize');};
-                                newSignalBlock.leftHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
-                                newSignalBlock.rightHandle.onmousedown = function(x,y,event){
-                                    //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
-                                        if(!event.shiftKey && !newSignalBlock.selected()){
-                                            while(signals.selectedSignals.length > 0){
-                                                signals.selectedSignals[0].deselect();
-                                            }
-                                        }
-                                    
-                                    //select this block
-                                        newSignalBlock.select(true);
-                
-                                    //gather data for all the blocks that we're about to affect
-                                        var activeBlocks = [];
-                                        for(var a = 0; a < signals.selectedSignals.length; a++){
-                                            activeBlocks.push({
-                                                name: parseInt(signals.selectedSignals[a].name),
-                                                block: signals.selectedSignals[a],
-                                                starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
-                                            });
-                                        }
-                
-                                    //perform block length adjustment 
-                                        var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
-                                        canvas.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
-                                                var diff = {position: livePosition.position - initialPosition.position};
-                        
-                                                for(var a = 0; a < activeBlocks.length; a++){
-                                                    signals.signalRegistry.update(activeBlocks[a].name, {length: activeBlocks[a].starting.length+diff.position});
-                                                    var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
-                                                    activeBlocks[a].block.position( temp.position );
-                                                    activeBlocks[a].block.length( temp.length );
-                                                }
-                                            }
-                                        );
-                                };
-                                newSignalBlock.rightHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('e-resize');};
-                                newSignalBlock.rightHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
-                
-                            return {id:newID, signalBlock:newSignalBlock};
-                        }
-                
-                    //controls
-                        object.viewport = setViewposition;
-                        object.viewarea = setViewArea;
-                
-                        //background
-                            object.glowHorizontal = function(state,start,end){
-                                if(end == undefined){end = start+1;}
-                
-                                for(var a = start; a <= end; a++){
-                                    var tmp = state ? horizontalStripStyle_glow : horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
-                                    backgroundDrawArea_horizontal.children[a].style.fill = tmp.fill;
-                                    backgroundDrawArea_horizontal.children[a].style.stroke = tmp.stroke;
-                                    backgroundDrawArea_horizontal.children[a].style.lineWidth = tmp.lineWidth;
-                                }
-                            };
-                            object.glowVertical = function(state,start,end){
-                                if(end == undefined){end = start+1;}
-                
-                                for(var a = start; a <= end; a++){
-                                    var tmp = state ? verticalStripStyle_glow : verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
-                                    backgroundDrawArea_vertical.children[a].style.fill = tmp.fill;
-                                    backgroundDrawArea_vertical.children[a].style.stroke = tmp.stroke;
-                                    backgroundDrawArea_vertical.children[a].style.lineWidth = tmp.lineWidth;
-                                }
-                            };
-                        
-                        //looping
-                            object.loopActive = function(bool){
-                                if(bool == undefined){return loop.active;}
-                                loop.active = bool;
-                
-                                object.glowVertical(false,0,xCount);
-                                if( loop.active ){
-                                    object.glowVertical(true, 
-                                        loop.period.start < 0 ? 0 : loop.period.start, 
-                                        loop.period.end > xCount ? xCount : loop.period.end,
-                                    );
-                                }
-                            };
-                            object.loopPeriod = function(start,end){
-                                if(start == undefined || end == undefined){return loop.period;}
-                                if(start > end || start < 0 || end < 0){return;}
-                
-                                loop.period = {start:start, end:end};
-                
-                                if( loop.active ){
-                                    object.glowVertical(false,0,xCount);
-                                    object.glowVertical(true,
-                                        start < 0 ? 0 : start, 
-                                        end > xCount ? xCount : end,
-                                    );
-                                }
-                            };
-                
-                        //signals
-                            object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
-                
-                    //interaction
-                        interactionPlane.onmousedown = function(x,y,event){
-                            if(event.shiftKey){ //click-n-drag group select
-                            }else if(event.altKey){ //create signal
-                            }else if(canvas.system.keyboard.pressedKeys.Space){//panning
-                                canvas.core.viewport.cursor('grabbing');
-                
-                                var initialPosition = currentMousePosition(event);
-                                var old_viewport = {x:viewport.viewposition.x, y:viewport.viewposition.y};
-                                canvas.system.mouse.mouseInteractionHandler(
-                                    function(event){
-                                        var livePosition = currentMousePosition(event);
-                                        var diffPosition = {x:initialPosition.x-livePosition.x, y:initialPosition.y-livePosition.y};
-                                        setViewposition(
-                                            old_viewport.x - (diffPosition.x*zoomLevel_x)/(zoomLevel_x-1),
-                                            old_viewport.y - (diffPosition.y*zoomLevel_y)/(zoomLevel_y-1),
-                                        );
-                                    },
-                                    function(event){
-                                        canvas.core.viewport.cursor('grab');
-                                    },
-                                );
-                            }else{//elsewhere click
-                                //deselect everything
-                                    while(signals.selectedSignals.length > 0){
-                                        signals.selectedSignals[0].deselect();
-                                    }
-                            }
-                        };
-                        interactionPlane.onkeydown = function(x,y,event){ if(canvas.system.keyboard.pressedKeys.Space){ canvas.core.viewport.cursor('grab'); } };
-                        interactionPlane.onkeyup = function(x,y,event){   if(!canvas.system.keyboard.pressedKeys.Space){ canvas.core.viewport.cursor('default'); } };
-                    //callbacks
-                        object.onpan = onpan;
-                        object.onchangeviewarea = onchangeviewarea;
-                        object.event = event;
-                
-                    //setup
-                        drawBackground();
-                
-                    return object;
-                };
-                
-                
-                
-                
-                
-                
-                
-                
-                this.sequencer.signalBlock = function(
-                    name, unit_x, unit_y,
-                    line, position, length, strength=1, glow=false, 
-                    bodyStyle=[
-                        {fill:'rgba(138,138,138,0.6)',stroke:'rgba(175,175,175,0.8)', lineWidth:0.5},
-                        {fill:'rgba(130,199,208,0.6)',stroke:'rgba(130,199,208,0.8)', lineWidth:0.5},
-                        {fill:'rgba(129,209,173,0.6)',stroke:'rgba(129,209,173,0.8)', lineWidth:0.5},
-                        {fill:'rgba(234,238,110,0.6)',stroke:'rgba(234,238,110,0.8)', lineWidth:0.5},
-                        {fill:'rgba(249,178,103,0.6)',stroke:'rgba(249,178,103,0.8)', lineWidth:0.5},
-                        {fill:'rgba(255, 69, 69,0.6)',stroke:'rgba(255, 69, 69,0.8)', lineWidth:0.5},
-                    ],
-                    bodyGlowStyle=[
-                        {fill:'rgba(138,138,138,0.8)',stroke:'rgba(175,175,175,1)',lineWidth:0.5},
-                        {fill:'rgba(130,199,208,0.8)',stroke:'rgba(130,199,208,1)',lineWidth:0.5},
-                        {fill:'rgba(129,209,173,0.8)',stroke:'rgba(129,209,173,1)',lineWidth:0.5},
-                        {fill:'rgba(234,238,110,0.8)',stroke:'rgba(234,238,110,1)',lineWidth:0.5},
-                        {fill:'rgba(249,178,103,0.8)',stroke:'rgba(249,178,103,1)',lineWidth:0.5},
-                        {fill:'rgba(255, 69, 69,0.8)',stroke:'rgba(255, 69, 69,1)',lineWidth:0.5},
-                    ],
-                    handleStyle='rgba(255,0,255,0)',
-                    handleWidth=5,
-                ){
-                    var selected = false;
-                    var minLength = handleWidth/4;
-                    var currentStyles = {
-                        body:getBlendedColour(bodyStyle,strength),
-                        glow:getBlendedColour(bodyGlowStyle,strength),
-                    };
-                    
-                    //elements
-                        var object = canvas.part.builder('group',String(name),{x:position*unit_x, y:line*unit_y});
-                        object.body = canvas.part.builder('rectangle','body',{width:length*unit_x, height:unit_y, style:{fill:currentStyles.body.fill, stroke:currentStyles.body.stroke, lineWidth:currentStyles.body.lineWidth}});
-                        object.leftHandle = canvas.part.builder('rectangle','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y, style:{fill:handleStyle}});
-                        object.rightHandle = canvas.part.builder('rectangle','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:{fill:handleStyle}});
-                        object.append(object.body);
-                        object.append(object.leftHandle);
-                        object.append(object.rightHandle);
-                
-                    //internal functions
-                        function updateHeight(){
-                            object.body.parameter.height(unit_y);
-                            object.leftHandle.parameter.height(unit_y);
-                            object.rightHandle.parameter.height(unit_y);
-                        }
-                        function updateLength(){
-                            object.body.parameter.width(length*unit_x);
-                            object.rightHandle.parameter.x(length*unit_x-handleWidth/2);
-                        }
-                        function updateLineAndPosition(){ updateLine(); updatePosition(); }
-                        function updateLengthAndHeight(){ updateLength(); updateHeight(); }
-                        function updateLine(){ object.parameter.y(line*unit_y); }
-                        function updatePosition(){ object.parameter.x(position*unit_x); }
-                        function getBlendedColour(swatch,ratio){
-                            var outputStyle = Object.assign({},swatch[0]);
-                
-                            //if there's a fill attribute; blend it and add it to the output 
-                                if( swatch[0].hasOwnProperty('fill') ){
-                                    outputStyle.fill = canvas.library.misc.multiBlendColours(swatch.map(a => a.fill),ratio);
-                                }
-                
-                            //if there's a stroke attribute; blend it and add it to the output
-                                if( swatch[0].hasOwnProperty('stroke') ){
-                                    outputStyle.stroke = canvas.library.misc.multiBlendColours(swatch.map(a => a.stroke),ratio);
-                                }
-                
-                            return outputStyle;
-                        }
-                
-                    //controls
-                        object.unit = function(x,y){
-                            if(x == undefined && y == undefined){return {x:unit_x,y:unit_y};}
-                            //(awkward bid for speed)
-                            else if( x == undefined ){
-                                unit_y = y;
-                                updateHeight();
-                                updateLine();
-                            }else if( y == undefined ){
-                                unit_x = x;
-                                updateLength();
-                                updatePosition();
-                            }else{
-                                unit_x = x;
-                                unit_y = y;
-                                updateLengthAndHeight();
-                                updateLineAndPosition();
-                            }
-                        };
-                        object.line = function(a){
-                            if(a == undefined){return line;}
-                            line = a;
-                            updateLine();
-                        };
-                        object.position = function(a){
-                            if(a == undefined){return position;}
-                            position = a;
-                            updatePosition();
-                        };
-                        object.length = function(a){
-                            if(a == undefined){return length;}
-                            length = a < (minLength/unit_x) ? (minLength/unit_x) : a;
-                            updateLength();
-                        };
-                        object.strength = function(a){
-                            if(a == undefined){return strength;}
-                            a = a > 1 ? 1 : a; a = a < 0 ? 0 : a;
-                            strength = a;
-                            currentStyles = {
-                                body:getBlendedColour(bodyStyle,strength),
-                                glow:getBlendedColour(bodyGlowStyle,strength),
-                            };
-                            object.glow(glow);
-                        };
-                        object.glow = function(a){
-                            if(a == undefined){return glow;}
-                            glow = a;
-                            if(glow){ 
-                                object.body.style.fill = currentStyles.glow.fill;
-                                object.body.style.stroke = currentStyles.glow.stroke;
-                                object.body.style.lineWidth = currentStyles.glow.lineWidth;
-                            }else{    
-                                object.body.style.fill = currentStyles.body.fill;
-                                object.body.style.stroke = currentStyles.body.stroke;
-                                object.body.style.lineWidth = currentStyles.body.lineWidth;
-                            }            
-                        };
-                        object.selected = function(a){
-                            if(a == undefined){return selected;}
-                            selected = a;
-                        };
-                
-                        object.cs = function(){return currentStyles;};
-                
-                    return object;
-                };
-                this.slide = function(
-                    name='slide', 
-                    x, y, width=10, height=95, angle=0,
-                    handleHeight=0.1, value=0, resetValue=-1,
-                    handleStyle = 'rgba(200,200,200,1)',
-                    backingStyle = 'rgba(150,150,150,1)',
-                    slotStyle = 'rgba(50,50,50,1)',
-                    invisibleHandleStyle = 'rgba(255,0,0,0)',
-                    onchange=function(){},
-                    onrelease=function(){},
-                ){
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //backing and slot group
-                            var backingAndSlot = canvas.part.builder('group','backingAndSlotGroup');
-                            object.append(backingAndSlot);
-                            //backing
-                                var backing = canvas.part.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
-                                backingAndSlot.append(backing);
-                            //slot
-                                var slot = canvas.part.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
-                                backingAndSlot.append(slot);
-                            //backing and slot cover
-                                var backingAndSlotCover = canvas.part.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                backingAndSlot.append(backingAndSlotCover);
-                        //handle
-                            var handle = canvas.part.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
-                            object.append(handle);
-                        //invisible handle
-                            var invisibleHandleHeight = height*handleHeight + height*0.01;
-                            var invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
-                            object.append(invisibleHandle);
-                
-                
-                
-                
-                    //graphical adjust
-                        function set(a,update=true){
-                            a = (a>1 ? 1 : a);
-                            a = (a<0 ? 0 : a);
-                
-                            if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                            value = a;
-                            handle.y = a*height*(1-handleHeight);
-                            invisibleHandle.y = a*height*(1-handleHeight);
-                
-                            handle.computeExtremities();
-                            invisibleHandle.computeExtremities();
-                        }
-                        object.__calculationAngle = angle;
-                        function currentMousePosition(event){
-                            return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
-                        }
-                
-                
-                
-                
-                    //methods
-                        var grappled = false;
-                
-                        object.set = function(value,update){
-                            if(grappled){return;}
-                            set(value,update);
-                        };
-                        object.get = function(){return value;};
-                
-                
-                
-                
-                    //interaction
-                        object.ondblclick = function(){
-                            if(resetValue<0){return;}
-                            if(grappled){return;}
-                
-                            set(resetValue);
-                            if(object.onrelease != undefined){object.onrelease(value);}
-                        };
-                        object.onwheel = function(){
-                            if(grappled){return;}
-                
-                            var move = event.deltaY/100;
-                            var globalScale = canvas.core.viewport.scale();
-                            set( value + move/(10*globalScale) );
-                            if(object.onrelease != undefined){object.onrelease(value);}
-                        };
-                        backingAndSlot.onclick = function(x,y,event){
-                            if(grappled){return;}
-                
-                            //calculate the distance the click is from the top of the slider (accounting for angle)
-                                var offset = backingAndSlot.getOffset();
-                                var delta = {
-                                    x: x - (backingAndSlot.x     + offset.x),
-                                    y: y - (backingAndSlot.y     + offset.y),
-                                    a: 0 - (backingAndSlot.angle + offset.a),
-                                };
-                                var d = canvas.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
-                
-                            //use the distance to calculate the correct value to set the slide to
-                            //taking into account the slide handle's size also
-                                var value = d + 0.5*handleHeight*((2*d)-1);
-                
-                            set(value);
-                            if(object.onrelease != undefined){object.onrelease(value);}
-                        };
-                        invisibleHandle.onmousedown = function(x,y,event){
-                            grappled = true;
-                
-                            var initialValue = value;
-                            var initialY = currentMousePosition(event);
-                            var mux = height - height*handleHeight;
-                
-                            canvas.system.mouse.mouseInteractionHandler(
-                                function(event){
-                                    var numerator = initialY-currentMousePosition(event);
-                                    var divider = canvas.core.viewport.scale();
-                                    set( initialValue - numerator/(divider*mux) );
-                                },
-                                function(event){
-                                    var numerator = initialY-currentMousePosition(event);
-                                    var divider = canvas.core.viewport.scale();
-                                    object.onrelease(initialValue - numerator/(divider*mux));
-                                    grappled = false;
-                                }
-                            );
-                        };
-                
-                
-                
-                
-                    //callbacks
-                        object.onchange = onchange; 
-                        object.onrelease = onrelease;
-                
-                    return object;
-                };
-                this.slidePanel = function(
-                    name='slidePanel', 
-                    x, y, width=80, height=95, angle=0,
-                    handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
-                    handleStyle = 'rgba(200,200,200,1)',
-                    backingStyle = 'rgba(150,150,150,1)',
-                    slotStyle = 'rgba(50,50,50,1)'
-                ){
-                    //elements 
-                        //main
-                            var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
-                        //slides
-                            for(var a = 0; a < count; a++){
-                                var temp = canvas.part.builder(
-                                    'slide', 'slide_'+a, {
-                                        x:a*(width/count), y:0,
-                                        width:width/count, height:height,
-                                        value:startValue, resetValue:resetValue,
-                                        style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
-                                        function(value){ object.onchange(this.id,value); },
-                                        function(value){ object.onrelease(this.id,value); },
-                                    }
-                                );
-                                // temp.dotFrame = true;
-                                temp.__calculationAngle = angle;
-                                object.append(temp);
-                            }
-                
-                    return object;
-                };
             };
             
             this.dynamic = new function(){
+                this.connectionNode_voltage = function(
+                    name='connectionNode_voltage',
+                    x, y, angle=0, width=20, height=20,
+                    dimStyle='rgb(222, 255, 220)',
+                    glowStyle='rgb(240, 252, 239)',
+                    cable_dimStyle='rgb(84, 247, 111)',
+                    cable_glowStyle='rgb(159, 252, 174)',
+                    onchange=function(value){},
+                    onconnect=function(instigator){},
+                    ondisconnect=function(instigator){},
+                ){
+                    //elements
+                        var object = canvas.part.builder('connectionNode',name,{
+                            x:x, y:y, angle:angle, width:width, height:height, type:'voltage',
+                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                        });
+                
+                    //circuitry
+                        var localValue = 0;
+                
+                        object._getLocalValue = function(){ return localValue; };
+                        object._update = function(a){
+                            if(a>0){ object.activate(); }
+                            else{ object.deactivate(); }
+                            onchange(a);
+                        }
+                
+                        object.set = function(a){
+                            localValue = a;
+                
+                            var val = object.read();
+                            object._update(val);
+                            if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
+                        };
+                        object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                
+                        object.onconnect = function(instigator){
+                            if(onconnect){onconnect(instigator);}
+                            object._update(object.read());
+                        };
+                        object.ondisconnect = function(instigator){
+                            if(ondisconnect){ondisconnect(instigator);}
+                            object._update(localValue);
+                        };
+                
+                    return object;
+                };
                 this.cable = function(
                     name='path', 
                     x1=0, y1=0, x2=0, y2=0,
@@ -7724,6 +7916,86 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             y2 = (new_y2!=undefined ? new_y2 : y2);
                             path.parameter.points([{x:x1,y:y1},{x:x2,y:y2}]);
                         };
+                
+                    return object;
+                };
+                this.connectionNode_audio = function(
+                    name='connectionNode_audio',
+                    x, y, angle=0, width=20, height=20, isAudioOutput=false, audioContext,
+                    dimStyle='rgba(255, 244, 220, 1)',
+                    glowStyle='rgba(255, 244, 244, 1)',
+                    cable_dimStyle='rgb(247, 146, 84)',
+                    cable_glowStyle='rgb(242, 168, 123)',
+                    onconnect=function(){},
+                    ondisconnect=function(){},
+                ){
+                    //elements
+                        var object = canvas.part.builder('connectionNode',name,{
+                            x:x, y:y, angle:angle, width:width, height:height, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
+                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                        });
+                        object._direction = isAudioOutput ? 'out' : 'in';
+                
+                    //circuitry
+                        object.audioNode = audioContext.createAnalyser();
+                
+                        //audio connections
+                            object.out = function(){return audioNode;};
+                            object.in = function(){return audioNode;};
+                
+                        object.onconnect = function(instigator){
+                            if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
+                            if(onconnect){onconnect(instigator);}
+                        };
+                        object.ondisconnect = function(instigator){
+                            if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
+                            if(ondisconnect){ondisconnect(instigator);}
+                        };
+                    
+                    return object;
+                };
+                this.connectionNode_data = function(
+                    name='connectionNode_data',
+                    x, y, angle=0, width=20, height=20,
+                    dimStyle='rgba(220, 244, 255,1)',
+                    glowStyle='rgba(244, 244, 255, 1)',
+                    cable_dimStyle='rgb(84, 146, 247)',
+                    cable_glowStyle='rgb(123, 168, 242)',
+                    onreceivedata=function(address, data){console.log(name,address,data);},
+                    ongivedata=function(address){console.log(name,address);},
+                    onconnect=function(){},
+                    ondisconnect=function(){},
+                ){
+                    //elements
+                        var object = canvas.part.builder('connectionNode',name,{
+                            x:x, y:y, angle:angle, width:width, height:height, type:'data',
+                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                            onconnect, ondisconnect
+                        });
+                
+                    //circuitry
+                        function flash(obj){
+                            obj.activate();
+                            setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
+                            if(obj.getForeignNode()!=undefined){
+                                obj.getForeignNode().activate();
+                                setTimeout(function(){ if(obj==undefined){return;} obj.getForeignNode().deactivate(); },100);
+                            }
+                        }
+                
+                        object.send = function(address,data){
+                            flash(object);
+                
+                            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
+                        };
+                        object.request = function(address){
+                            flash(object);
+                
+                            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
+                        };
+                
+                        object.onreceivedata = onreceivedata;
+                        object.ongivedata = ongivedata;
                 
                     return object;
                 };
@@ -7854,86 +8126,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     return object;
                 };
-                this.connectionNode_audio = function(
-                    name='connectionNode_audio',
-                    x, y, angle=0, width=20, height=20, isAudioOutput=false, audioContext,
-                    dimStyle='rgba(255, 244, 220, 1)',
-                    glowStyle='rgba(255, 244, 244, 1)',
-                    cable_dimStyle='rgb(247, 146, 84)',
-                    cable_glowStyle='rgb(242, 168, 123)',
-                    onconnect=function(){},
-                    ondisconnect=function(){},
-                ){
-                    //elements
-                        var object = canvas.part.builder('connectionNode',name,{
-                            x:x, y:y, angle:angle, width:width, height:height, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
-                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                        });
-                        object._direction = isAudioOutput ? 'out' : 'in';
-                
-                    //circuitry
-                        object.audioNode = audioContext.createAnalyser();
-                
-                        //audio connections
-                            object.out = function(){return audioNode;};
-                            object.in = function(){return audioNode;};
-                
-                        object.onconnect = function(instigator){
-                            if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
-                            if(onconnect){onconnect(instigator);}
-                        };
-                        object.ondisconnect = function(instigator){
-                            if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
-                            if(ondisconnect){ondisconnect(instigator);}
-                        };
-                    
-                    return object;
-                };
-                this.connectionNode_data = function(
-                    name='connectionNode_data',
-                    x, y, angle=0, width=20, height=20,
-                    dimStyle='rgba(220, 244, 255,1)',
-                    glowStyle='rgba(244, 244, 255, 1)',
-                    cable_dimStyle='rgb(84, 146, 247)',
-                    cable_glowStyle='rgb(123, 168, 242)',
-                    onreceivedata=function(address, data){console.log(name,address,data);},
-                    ongivedata=function(address){console.log(name,address);},
-                    onconnect=function(){},
-                    ondisconnect=function(){},
-                ){
-                    //elements
-                        var object = canvas.part.builder('connectionNode',name,{
-                            x:x, y:y, angle:angle, width:width, height:height, type:'data',
-                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                            onconnect, ondisconnect
-                        });
-                
-                    //circuitry
-                        function flash(obj){
-                            obj.activate();
-                            setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
-                            if(obj.getForeignNode()!=undefined){
-                                obj.getForeignNode().activate();
-                                setTimeout(function(){ if(obj==undefined){return;} obj.getForeignNode().deactivate(); },100);
-                            }
-                        }
-                
-                        object.send = function(address,data){
-                            flash(object);
-                
-                            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
-                        };
-                        object.request = function(address){
-                            flash(object);
-                
-                            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
-                        };
-                
-                        object.onreceivedata = onreceivedata;
-                        object.ongivedata = ongivedata;
-                
-                    return object;
-                };
                 this.connectionNode_signal = function(
                     name='connectionNode_signal',
                     x, y, angle=0, width=20, height=20,
@@ -7977,53 +8169,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         object.ondisconnect = function(instigator){
                             if(ondisconnect){ondisconnect(instigator);}
                             object._update();
-                        };
-                
-                    return object;
-                };
-                this.connectionNode_voltage = function(
-                    name='connectionNode_voltage',
-                    x, y, angle=0, width=20, height=20,
-                    dimStyle='rgb(222, 255, 220)',
-                    glowStyle='rgb(240, 252, 239)',
-                    cable_dimStyle='rgb(84, 247, 111)',
-                    cable_glowStyle='rgb(159, 252, 174)',
-                    onchange=function(value){},
-                    onconnect=function(instigator){},
-                    ondisconnect=function(instigator){},
-                ){
-                    //elements
-                        var object = canvas.part.builder('connectionNode',name,{
-                            x:x, y:y, angle:angle, width:width, height:height, type:'voltage',
-                            style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                        });
-                
-                    //circuitry
-                        var localValue = 0;
-                
-                        object._getLocalValue = function(){ return localValue; };
-                        object._update = function(a){
-                            if(a>0){ object.activate(); }
-                            else{ object.deactivate(); }
-                            onchange(a);
-                        }
-                
-                        object.set = function(a){
-                            localValue = a;
-                
-                            var val = object.read();
-                            object._update(val);
-                            if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
-                        };
-                        object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
-                
-                        object.onconnect = function(instigator){
-                            if(onconnect){onconnect(instigator);}
-                            object._update(object.read());
-                        };
-                        object.ondisconnect = function(instigator){
-                            if(ondisconnect){ondisconnect(instigator);}
-                            object._update(localValue);
                         };
                 
                     return object;
@@ -8451,6 +8596,17 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ) );
             dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ) );
             dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:75 } ) );
+        
+        
+        
+        
+        
+        
+        
+        
+        //view positioning
+            canvas.core.viewport.scale(3.5);
+            canvas.core.viewport.position(-130,-335);
 
 
     }

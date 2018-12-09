@@ -276,11 +276,11 @@ this.callback = new function(){
 
         //attachment to canvas
             var lastPoint = {x:0,y:0};
-            function getRelivantShape(x,y,callback){
+            function getRelevantShape(x,y,callback){
                 //find the frontmost shape under this point
                     var shape = core.arrangement.getElementUnderPoint(x,y);
 
-                //if the shape found doesn't have an appropiate callback, get the list of all shapes that 
+                //if the shape found doesn't have an appropriate callback, get the list of all shapes that 
                 //this point touches, and find the one that does (in order of front to back)
                 //if none is found, just return the frontmost shape
                     if(shape != undefined && shape[callback] == undefined){
@@ -304,7 +304,7 @@ this.callback = new function(){
 
                         //get the shape under this point that has this callback (if no shape
                         //meeting that criteria is found, just return the frontmost shape)
-                            var shape = getRelivantShape(p.x,p.y,callback);
+                            var shape = getRelevantShape(p.x,p.y,callback);
                     
                         //activate core's callback, providing the converted point, original event, and shape
                             core.callback[callback](p.x,p.y,event,shape);
@@ -315,7 +315,7 @@ this.callback = new function(){
                 canvas.onmouseover = function(event){
                     var callback = 'onmouseover';
 
-                    //if appropiate, remove the window scrollbars
+                    //if appropriate, remove the window scrollbars
                         if(core.viewport.stopMouseScroll()){ document.body.style.overflow = 'hidden'; }
 
                     //if core doesn't have this callback set up, just bail
@@ -326,7 +326,7 @@ this.callback = new function(){
 
                     //get the shape under this point that has this callback (if no shape
                     //meeting that criteria is found, just return the frontmost shape)
-                        var shape = getRelivantShape(p.x,p.y,callback);
+                        var shape = getRelevantShape(p.x,p.y,callback);
                 
                     //activate core's callback, providing the converted point, original event, and shape
                         core.callback[callback](p.x,p.y,event,shape);
@@ -334,7 +334,7 @@ this.callback = new function(){
                 canvas.onmouseout = function(event){
                     var callback = 'onmouseout';
 
-                    //if appropiate, replace the window scrollbars
+                    //if appropriate, replace the window scrollbars
                         if(core.viewport.stopMouseScroll()){ document.body.style.overflow = ''; }
 
                     //if core doesn't have this callback set up, just bail
@@ -345,7 +345,7 @@ this.callback = new function(){
 
                     //get the shape under this point that has this callback (if no shape
                     //meeting that criteria is found, just return the frontmost shape)
-                        var shape = getRelivantShape(p.x,p.y,callback);
+                        var shape = getRelevantShape(p.x,p.y,callback);
                 
                     //activate core's callback, providing the converted point, original event, and shape
                         core.callback[callback](p.x,p.y,event,shape);
@@ -366,11 +366,11 @@ this.callback = new function(){
                     //"onmouseenter" and "onmousemove" However; use the 'lastPoint' for "onmouseleave"
                     //(as usual - for each callback - if no shape meeting that criteria is found,
                     //just return the frontmost shape)
-                        var shape_mouseleave = getRelivantShape(lastPoint.x,lastPoint.y,'onmouseleave');
-                        var shape_mouseenter = getRelivantShape(p.x,p.y,'onmouseenter');
-                        var shape_mousemove = getRelivantShape(p.x,p.y,callback);
+                        var shape_mouseleave = getRelevantShape(lastPoint.x,lastPoint.y,'onmouseleave');
+                        var shape_mouseenter = getRelevantShape(p.x,p.y,'onmouseenter');
+                        var shape_mousemove = getRelevantShape(p.x,p.y,callback);
                     
-                    //activate core's callbacks, providing the converted point, original event, and appropiate shape
+                    //activate core's callbacks, providing the converted point, original event, and appropriate shape
                     //(only activate the "onmouseenter" and "onmouseleave" callbacks, if the shapes found for them
                     //are not the same)
                         if( shape_mouseleave != shape_mouseenter ){
@@ -394,7 +394,7 @@ this.callback = new function(){
 
                     //get the shape under this point that has this callback (if no shape
                     //meeting that criteria is found, just return the frontmost shape)
-                        var shape = getRelivantShape(p.x,p.y,callback);
+                        var shape = getRelevantShape(p.x,p.y,callback);
                 
                     //activate core's callback, providing the converted point, original event, and shape
                         core.callback[callback](p.x,p.y,event,shape);
@@ -410,7 +410,7 @@ this.callback = new function(){
 
                     //get the shape under this point that has this callback (if no shape
                     //meeting that criteria is found, just return the frontmost shape)
-                        var shape = getRelivantShape(p.x,p.y,callback);
+                        var shape = getRelevantShape(p.x,p.y,callback);
                 
                     //activate core's callback, providing the converted point, original event, and shape
                         core.callback[callback](p.x,p.y,event,shape);

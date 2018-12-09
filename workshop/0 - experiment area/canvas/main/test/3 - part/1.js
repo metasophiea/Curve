@@ -109,3 +109,14 @@
     dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ) );
     dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ) );
     dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:75 } ) );
+
+
+
+
+
+
+
+
+//view positioning
+    canvas.core.viewport.scale(3.5);
+    canvas.core.viewport.position(-130,-335);

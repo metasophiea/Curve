@@ -1,7 +1,19 @@
- 
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-12-09
+  - canvas experiment
+    - added second interaction plan to sequencer
+    - added delete interaction to sequencer
+    - added group selection to sequencer
+    
+    problems:
+    - sequencer interaction is a bit borked (mainly concerning cursors)
+
+
 2018-12-08
   - added CNAME to docs, so now curve.metasophiea.com is a thing n_n
+  - canvas experiment
+    - fixed buggy control problem on mac
+    - more cursor types for sequencer events
 
 
 2018-12-07
