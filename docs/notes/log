@@ -1,4 +1,26 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-12-10
+  - canvas experiment
+    - added signal draw interaction to sequencer
+    - added playhead and it's functionality to sequencer
+    - added some more signal controls to sequencer
+    - expanded system's keyboard functionality so that it now captures
+      left/right commands as singular buttons (so, RightAlt and LeftAlt, both 
+      activate an 'Alt' key, that can be found in the 'pressedKeys' object)
+      This new code also opens the door for key translation (ie. converting 
+      input depending on the OS being used)
+    - further jiggering of the cursor changes in the sequencer (I think I've
+      gotten things right now)
+
+  notes
+  - all thats left in the sequencer is getting those cursor graphics right
+
+  future ideas
+  - a more complex callback passthrough system? Kinda like the functionList way,
+    where a callback say decide that the signal can be passed through to shapes
+    below it
+
+
 2018-12-09
   - canvas experiment
     - added second interaction plan to sequencer

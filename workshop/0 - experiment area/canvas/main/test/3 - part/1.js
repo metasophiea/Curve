@@ -88,6 +88,7 @@
         seq.addSignal( 8,8,  10,0.8 );
         seq.addSignal( 9,9,  10,0.9 );
         seq.addSignal( 10,10,10,1.0 );
+        seq.event = function(data){console.log(data);};
 
 
 //dynamic

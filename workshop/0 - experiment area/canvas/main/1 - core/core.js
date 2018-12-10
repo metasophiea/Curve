@@ -353,15 +353,15 @@ this.callback = new function(){
                 canvas.onmousemove = function(event){
                     var callback = 'onmousemove';
 
-                    //if core doesn't have this callback set up, just bail
-                        if( !core.callback[callback] ){return;}
-
                     //convert the point
                         var p = adapter.windowPoint2workspacePoint(event.x,event.y);
 
                     //update the stored mouse position (used in keydown callbacks)
                         core.viewport.mousePosition(p.x,p.y);
-                    
+
+                    //if core doesn't have this callback set up, just bail
+                        if( !core.callback[callback] ){return;}
+
                     //get the shapes under this point that have the callbacks "onmouseleave",
                     //"onmouseenter" and "onmousemove" However; use the 'lastPoint' for "onmouseleave"
                     //(as usual - for each callback - if no shape meeting that criteria is found,

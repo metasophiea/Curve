@@ -45,7 +45,6 @@ this.sequencer = function(
     onchangeviewarea=function(data){},
     event=function(events){},
 ){
-
     //settings
         const viewport = {
             totalSize:{
@@ -82,10 +81,6 @@ this.sequencer = function(
             automoveViewposition:false,
         };
 
-
-
-
-    
     //elements 
         //main
             var object = canvas.part.builder('group',name,{x:x, y:y, angle:angle});
@@ -114,7 +109,7 @@ this.sequencer = function(
             //signal block area
                 var signalPane = canvas.part.builder('group','signalPane');
                 workarea.append(signalPane);
-            //interaction pane back
+            //interaction pane front
                 var interactionPlane_front = canvas.part.builder('rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, style:{fill:'rgba(0,0,0,0)'}});
                 workarea.append(interactionPlane_front);
                 interactionPlane_front.onwheel = function(x,y,event){};
@@ -329,38 +324,6 @@ this.sequencer = function(
             //update state
                 viewport.viewArea = Object.assign(d,{});
         }
-        // function makePlayhead(){
-        //     var newPlayhead = canvas.part.builder('group','playhead');
-        //     workarea.append(newPlayhead);
-
-        //     newPlayhead.main = canvas.part.builder('rectangle','main',{
-        //         width:playhead.width,
-        //         height:viewport.totalSize.height,
-        //         style:{ fill:playheadStyle },
-        //     });
-        //     newPlayhead.append(newPlayhead.main);
-
-        //     newPlayhead.invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{
-        //         x:-playhead.width*playhead.invisibleHandleMux/2 + playhead.width/2, 
-        //         width: playhead.width*playhead.invisibleHandleMux,
-        //         height:viewport.totalSize.height,
-        //         style:{ fill:'rgba(255,0,0,0.5)' },
-        //     })
-        //     newPlayhead.append(newPlayhead.invisibleHandle);
-
-        //     newPlayhead.invisibleHandle.onmousedown = function(){
-        //         playhead.held = true;
-        //         canvas.system.mouse.mouseInteractionHandler(
-        //             function(event){ object.playheadPosition( coordinates2lineposition(currentMousePosition()).position ); },
-        //             function(){playhead.held = false;}
-        //         );
-        //     };
-
-        //     newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
-        //     newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
-
-        //     playhead.present = true;
-        // }
         function makeSignal(line, position, length, strength=signals.defaultStrength){
             //register signal and get new id. From the registry, get the approved signal values
                 var newID = signals.signalRegistry.add({ line:line, position:position, length:length, strength:strength });
@@ -394,7 +357,7 @@ this.sequencer = function(
 
             //add interactions to graphical signal block
                 newSignalBlock.ondblclick = function(x,y,event){
-                    if(!event.ctrlKey){return;}
+                    if(!canvas.system.keyboard.pressedKeys.control){return;}
                     for(var a = 0; a < signals.selectedSignals.length; a++){
                         signals.selectedSignals[a].strength(signals.defaultStrength);
                         signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
@@ -402,12 +365,12 @@ this.sequencer = function(
                 };
                 newSignalBlock.body.onmousedown = function(x,y,event){
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
-                        if(canvas.system.keyboard.pressedKeys.hasOwnProperty('Space') && canvas.system.keyboard.pressedKeys){
+                        if(canvas.system.keyboard.pressedKeys.Space){
                             interactionPlane_back.onmousedown(x,y,event); return;
                         }
 
                     //if the shift key is not pressed and this note is not already selected; deselect everything
-                        if(!event.shiftKey && !newSignalBlock.selected()){
+                        if(!canvas.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
                             while(signals.selectedSignals.length > 0){
                                 signals.selectedSignals[0].deselect();
                             }
@@ -427,7 +390,7 @@ this.sequencer = function(
                         }
 
                     //if control key is pressed; this is a strength-change operation
-                        if(event.ctrlKey){
+                        if(canvas.system.keyboard.pressedKeys.control){
                             var mux = 4;
                             var initialStrengths = activeBlocks.map(a => a.block.strength());
                             var initial = event.offsetY;
@@ -452,7 +415,7 @@ this.sequencer = function(
                         var cloned = false;
                         function cloneFunc(){
                             if(cloned){return;} cloned = true;
-                            if(event.altKey){
+                            if(canvas.system.keyboard.pressedKeys.alt){
                                 for(var a = 0; a < signals.selectedSignals.length; a++){
                                     var temp = signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name));
                                     makeSignal(temp.line, temp.position, temp.length, temp.strength);
@@ -464,7 +427,7 @@ this.sequencer = function(
                         var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
                         canvas.system.mouse.mouseInteractionHandler(
                             function(event){
-                                //clone that block
+                                //clone that block (maybe)
                                     cloneFunc();
 
                                 var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
@@ -489,19 +452,25 @@ this.sequencer = function(
                 };
                 newSignalBlock.body.onmousemove = function(x,y,event){
                     var pressedKeys = canvas.system.keyboard.pressedKeys;
-                    canvas.core.viewport.cursor( (pressedKeys.AltLeft || pressedKeys.AltRight) ? 'copy' : 'default' );
+                    canvas.core.viewport.cursor( pressedKeys.alt ? 'copy' : 'default' );
                 };
                 newSignalBlock.body.onkeydown = function(x,y,event){
                     var pressedKeys = canvas.system.keyboard.pressedKeys;
-                    if(pressedKeys.AltLeft || pressedKeys.AltRight){ canvas.core.viewport.cursor('copy'); }
+                    if(pressedKeys.alt){ canvas.core.viewport.cursor('copy'); }
                 };
                 newSignalBlock.body.onkeyup = function(x,y,event){
                     var pressedKeys = canvas.system.keyboard.pressedKeys;
-                    if(!(pressedKeys.AltLeft || pressedKeys.AltRight)){ canvas.core.viewport.cursor('default'); }
+                    if(!(pressedKeys.alt)){ canvas.core.viewport.cursor('default'); }
                 };
                 newSignalBlock.leftHandle.onmousedown = function(x,y,event){
+                    //cloning situation
+                        if(canvas.system.keyboard.pressedKeys.alt){
+                            newSignalBlock.body.onmousedown(x,y,event);
+                            return;
+                        }
+
                     //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
-                        if(!event.shiftKey && !newSignalBlock.selected()){
+                        if(!canvas.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
                             while(signals.selectedSignals.length > 0){
                                 signals.selectedSignals[0].deselect();
                             }
@@ -541,11 +510,17 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.leftHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+                newSignalBlock.leftHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor( canvas.system.keyboard.pressedKeys.alt ? 'copy' : 'col-resize' );};
                 newSignalBlock.leftHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
-                newSignalBlock.rightHandle.onmousedown = function(x,y,event){
+                newSignalBlock.rightHandle.onmousedown = function(x,y,event,ignoreCloning=false){
+                    //cloning situation
+                        if(!ignoreCloning && canvas.system.keyboard.pressedKeys.alt){
+                            newSignalBlock.body.onmousedown(x,y,event);
+                            return;
+                        }
+
                     //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
-                        if(!event.shiftKey && !newSignalBlock.selected()){
+                        if(!canvas.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
                             while(signals.selectedSignals.length > 0){
                                 signals.selectedSignals[0].deselect();
                             }
@@ -580,14 +555,54 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.rightHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+                newSignalBlock.rightHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor( canvas.system.keyboard.pressedKeys.alt ? 'copy' : 'col-resize' );};
                 newSignalBlock.rightHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
 
             return {id:newID, signalBlock:newSignalBlock};
         }
+        function deleteSelectedSignals(){
+            while(signals.selectedSignals.length > 0){
+                signals.selectedSignals[0].delete();
+            }
+        }
+        function makePlayhead(){
+            var newPlayhead = canvas.part.builder('group','playhead');
+            workarea.append(newPlayhead);
+
+            newPlayhead.main = canvas.part.builder('rectangle','main',{
+                x: -playhead.width/2,
+                width:playhead.width,
+                height:viewport.totalSize.height,
+                style:{ fill:playheadStyle },
+            });
+            newPlayhead.append(newPlayhead.main);
+
+            newPlayhead.invisibleHandle = canvas.part.builder('rectangle','invisibleHandle',{
+                x:-playhead.width*playhead.invisibleHandleMux/2 + playhead.width/2, 
+                width: playhead.width*playhead.invisibleHandleMux,
+                height:viewport.totalSize.height,
+                style:{ fill:'rgba(255,0,0,0)' },
+            })
+            newPlayhead.append(newPlayhead.invisibleHandle);
+
+            newPlayhead.invisibleHandle.onmousedown = function(){
+                playhead.held = true;
+                canvas.system.mouse.mouseInteractionHandler(
+                    function(event){ object.playheadPosition(coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event))).position); },
+                    function(){playhead.held = false;}
+                );
+            };
+
+            newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+            newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
+
+            playhead.present = true;
+
+            return newPlayhead;
+        }
 
     //controls
-        object.viewport = setViewposition;
+        object.viewposition = setViewposition;
         object.viewarea = setViewArea;
 
         //background
@@ -641,17 +656,203 @@ this.sequencer = function(
             };
 
         //signals
+            object.export = function(){return signals.signalRegistry.export();};
+            object.import = function(data){signals.signalRegistry.import(data);};
+            object.getAllSignals = function(){return signals.signalRegistry.getAllSignals(); };
             object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
+            object.addNotes = function(data){ for(var a = 0; a < data.length; a++){this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength);} };
+            object.eventsBetween = function(start,end){ return signals.signalRegistry.eventsBetween(start,end);  };
+            
+        //playhead
+            object.automove = function(a){
+                if(a == undefined){return playhead.automoveViewposition;}
+                playhead.automoveViewposition = a;
+            };
+            object.playheadPosition = function(val,stopActive=true){
+                if(val == undefined){return playhead.position;}
+    
+                playhead.position = val;
+    
+                //send stop events for all active notes
+                    if(stopActive){
+                        var events = [];
+                        for(var a = 0; a < signals.activeSignals.length; a++){
+                            var tmp = noteRegistry.getNote(signals.activeSignals[a]); if(tmp == null){continue;}
+                            events.unshift( {noteID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
+                        }
+                        signals.activeSignals = [];
+                        if(object.event && events.length > 0){object.event(events);}
+                    }
+    
+                //reposition graphical playhead
+                    var playheadObject = workarea.getElementsWithName('playhead')[0];
+                    if(playhead.position < 0 || playhead.position > xCount){
+                        //outside vilible bounds, so remove
+                            if( playheadObject != undefined ){ playheadObject.parent.remove(playheadObject); }
+                    }else{ 
+                        //within vilible bounds, so either create or adjust
+                            if( playheadObject == undefined ){ playheadObject = makePlayhead(); }
+                            playheadObject.parameter.x( playhead.position*(viewport.totalSize.width/xCount) );
+                        //if the new position is beyond the view in the viewport, adjust the viewport (putting the playhead on the leftmost side)
+                        //(assuming automoveViewposition is set)
+                            if(playhead.automoveViewposition){
+                                var remainderSpace = xCount-(xCount*zoomLevel_x);
+                                if( playhead.position < Math.floor(viewport.viewposition.x*remainderSpace) || 
+                                    playhead.position > Math.floor(viewport.viewposition.x*remainderSpace) + (xCount*zoomLevel_x)  
+                                ){ object.viewposition( (playhead.position > remainderSpace ? remainderSpace : playhead.position)/remainderSpace ); }
+                            }
+                    }
+            };
+            object.progress = function(){
+                //if the playhead is being held, just bail completly
+                    if(playhead.held){return;}
+                    
+                //gather together all the current events
+                    var events = object.eventsBetween(playhead.position, playhead.position+signals.step);
+
+                //upon loop; any notes that are still active are to be ended
+                //(so create end events for them, and push those into the current events list)
+                    if(loop.active && playhead.position == loop.period.start){
+                        for(var a = 0; a < signals.activeSignals.length; a++){
+                            var tmp = signals.signalRegistry.getSignal(signals.activeSignals[a]); if(tmp == null){continue;}
+                            events.unshift( {noteID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
+                        }
+                        signals.activeSignals = [];
+                    }
+
+                //add newly started notes to - and remove newly finished notes from - 'signals.activeSignals'
+                    for(var a = 0; a < events.length; a++){
+                        var index = signals.activeSignals.indexOf(events[a].noteID);
+                        if(index != -1 && events[a].strength == 0){
+                            signals.activeSignals.splice(index);
+                        }else{
+                            if( events[a].strength > 0 ){
+                                signals.activeSignals.push(events[a].noteID);
+                            }
+                        }
+                    }
+
+                //progress position
+                    if( loop.active && (playhead.position+signals.step == loop.period.end) ){
+                        playhead.position = loop.period.start;
+                    }else{
+                        playhead.position = playhead.position+signals.step;
+                    }
+
+                //update graphical playhead
+                    object.playheadPosition(playhead.position,false);
+
+                //perform event callback
+                    if(object.event && events.length > 0){object.event(events);}
+            };
 
     //interaction
-        var tmp = {};
-        var panningCode = {
-            start:function(x,y,event){
-                tmp.onmousemove = interactionPlane_front.onmousemove;
-                interactionPlane_front.onmousemove = function(){};
-                tmp.onmouseleave = interactionPlane_front.onmouseleave;
-                interactionPlane_front.onmouseleave = function(){};
+        interactionPlane_back.onmousedown = function(x,y,event){
+            if(canvas.system.keyboard.pressedKeys.shift){//group select 
+                var initialPositionData = currentMousePosition(event);
+                var livePositionData =    currentMousePosition(event);
+    
+                var selectionArea = canvas.part.builder('rectangle','selectionArea',{
+                    x:initialPositionData.x*width, y:initialPositionData.y*height,
+                    width:0, height:0,
+                    style:{fill:selectionAreaStyle}
+                });
+                object.append(selectionArea);
+    
+                canvas.system.mouse.mouseInteractionHandler(
+                    function(event){
+                        //get live position, and correct it so it's definitely within in the relevant area
+                            livePositionData = currentMousePosition(event);
+                            livePositionData.x = livePositionData.x < 0 ? 0 : livePositionData.x;
+                            livePositionData.y = livePositionData.y < 0 ? 0 : livePositionData.y;
+                            livePositionData.x = livePositionData.x > 1 ? 1 : livePositionData.x;
+                            livePositionData.y = livePositionData.y > 1 ? 1 : livePositionData.y;
+                            
+                        //gather difference between this point and the initial
+                            var diff = {
+                                x:livePositionData.x - initialPositionData.x, 
+                                y:livePositionData.y - initialPositionData.y
+                            };
+    
+                        //account for an inverse rectangle
+                            var transform = {
+                                x: initialPositionData.x, y: initialPositionData.y, 
+                                width: 1, height: 1,
+                            };
+                            
+                            if(diff.x < 0){ transform.width = -1;  transform.x += diff.x; }
+                            if(diff.y < 0){ transform.height = -1; transform.y += diff.y; }
+    
+                        //update rectangle 
+                            selectionArea.parameter.x(transform.x*width);
+                            selectionArea.parameter.y(transform.y*height);
+                            selectionArea.parameter.width(  transform.width  * diff.x*width  );
+                            selectionArea.parameter.height( transform.height * diff.y*height );
+                    },
+                    function(event){
+                        //remove selection box
+                            selectionArea.parent.remove(selectionArea);
+    
+                        //gather the corner points
+                            var finishingPositionData = {
+                                a: visible2coordinates(initialPositionData),
+                                b: visible2coordinates(livePositionData),
+                            };
+                            finishingPositionData.a.x *= viewport.totalSize.width; finishingPositionData.b.y *= viewport.totalSize.height;
+                            finishingPositionData.b.x *= viewport.totalSize.width; finishingPositionData.a.y *= viewport.totalSize.height;
+    
+                            var selectionBox = { topLeft:{ x:0, y:0 }, bottomRight:{ x:0, y:0 } };
+                            if( finishingPositionData.a.x < finishingPositionData.b.x ){
+                                selectionBox.topLeft.x =     finishingPositionData.a.x;
+                                selectionBox.bottomRight.x = finishingPositionData.b.x;
+                            }else{
+                                selectionBox.topLeft.x =     finishingPositionData.b.x;
+                                selectionBox.bottomRight.x = finishingPositionData.a.x;
+                            }
+                            if( finishingPositionData.a.y < finishingPositionData.b.y ){
+                                selectionBox.topLeft.y =     finishingPositionData.a.y;
+                                selectionBox.bottomRight.y = finishingPositionData.b.y;
+                            }else{
+                                selectionBox.topLeft.y =     finishingPositionData.b.y;
+                                selectionBox.bottomRight.y = finishingPositionData.a.y;
+                            }
+    
+                        //deselect everything
+                            while(signals.selectedSignals.length > 0){
+                                signals.selectedSignals[0].deselect();
+                            }
+    
+                        //select the notes that overlap with the selection area
+                            for(var a = 0; a < signalPane.children.length; a++){
+                                var temp = signals.signalRegistry.getSignal(parseInt(signalPane.children[a].name));
+                                var block = { 
+                                        topLeft:{
+                                            x:temp.position * (viewport.totalSize.width/xCount), 
+                                            y:temp.line *     (viewport.totalSize.height/yCount)},
+                                        bottomRight:{
+                                            x:(temp.position+temp.length) * (viewport.totalSize.width/xCount), 
+                                            y:(temp.line+1)*                (viewport.totalSize.height/yCount)
+                                        },
+                                };
+    
+                                if( canvas.library.math.detectOverlap.boundingBoxes( block, selectionBox ) ){signalPane.children[a].select(true);}
+                            }
+                    },
+                );
+            }else if(canvas.system.keyboard.pressedKeys.alt){//draw signal
+                //deselect everything
+                    while(signals.selectedSignals.length > 0){
+                        signals.selectedSignals[0].deselect();
+                    }
+                    
+                //get the current location and make a new note there (with length 0)
+                    var position = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                    var temp = makeSignal(position.line,position.position,0);
 
+                //select this new block, and direct the mouse-down to the right handle (for user lengthening)
+                    temp.signalBlock.select();
+                    temp.signalBlock.rightHandle.onmousedown(undefined,undefined,event,true);
+            }else if(canvas.system.keyboard.pressedKeys.Space){//pan
                 canvas.core.viewport.cursor('grabbing');
 
                 var initialPosition = currentMousePosition(event);
@@ -667,141 +868,44 @@ this.sequencer = function(
                         );
                     },
                     function(event){
-                        canvas.core.viewport.cursor('grab');
+                        if( 
+                            canvas.library.math.detectOverlap.pointWithinBoundingBox( 
+                                viewportPosition2internalPosition(currentMousePosition(event)), 
+                                viewport.viewArea 
+                            ) && canvas.system.keyboard.pressedKeys.Space
+                        ){
+                            canvas.core.viewport.cursor('grab');
+                        }else{
+                            canvas.core.viewport.cursor('default');
+                        }
                     },
                 );
-            },
-            stop:function(x,y,event){
-                interactionPlane_front.onmousemove = tmp.onmousemove;
-                interactionPlane_front.onmouseleave = tmp.onmouseleave;
-            },
-        };
-        var click_n_drag = function(x,y,event){
-            var initialPositionData = currentMousePosition(event);
-            var livePositionData =    currentMousePosition(event);
-
-            var selectionArea = canvas.part.builder('rectangle','selectionArea',{
-                x:initialPositionData.x*width, y:initialPositionData.y*height,
-                width:0, height:0,
-                style:{fill:selectionAreaStyle}
-            });
-            object.append(selectionArea);
-
-            canvas.system.mouse.mouseInteractionHandler(
-                function(event){
-                    //get live position, and correct it so it's definitely within in the relevant area
-                        livePositionData = currentMousePosition(event);
-                        livePositionData.x < 0 ? 0 : livePositionData.x;
-                        livePositionData.y < 0 ? 0 : livePositionData.y;
-                        livePositionData.x > 1 ? 1 : livePositionData.x;
-                        livePositionData.y > 1 ? 1 : livePositionData.y;
-                        
-                    //gather difference between this point and the initial
-                        var diff = {
-                            x:livePositionData.x - initialPositionData.x, 
-                            y:livePositionData.y - initialPositionData.y
-                        };
-
-                    //account for an inverse rectangle
-                        var transform = {
-                            x: initialPositionData.x, y: initialPositionData.y, 
-                            width: 1, height: 1,
-                        };
-                        
-                        if(diff.x < 0){ transform.width = -1;  transform.x += diff.x; }
-                        if(diff.y < 0){ transform.height = -1; transform.y += diff.y; }
-
-                    //update rectangle 
-                        selectionArea.parameter.x(transform.x*width);
-                        selectionArea.parameter.y(transform.y*height);
-                        selectionArea.parameter.width(  transform.width  * diff.x*width  );
-                        selectionArea.parameter.height( transform.height * diff.y*height );
-                },
-                function(event){
-                    //remove selection box
-                        selectionArea.parent.remove(selectionArea);
-
-                    //gather the corner points
-                        var finishingPositionData = {
-                            a: visible2coordinates(initialPositionData),
-                            b: visible2coordinates(livePositionData),
-                        };
-                        finishingPositionData.a.x *= viewport.totalSize.width; finishingPositionData.b.y *= viewport.totalSize.height;
-                        finishingPositionData.b.x *= viewport.totalSize.width; finishingPositionData.a.y *= viewport.totalSize.height;
-
-                        var selectionBox = { topLeft:{ x:0, y:0 }, bottomRight:{ x:0, y:0 } };
-                        if( finishingPositionData.a.x < finishingPositionData.b.x ){
-                            selectionBox.topLeft.x =     finishingPositionData.a.x;
-                            selectionBox.bottomRight.x = finishingPositionData.b.x;
-                        }else{
-                            selectionBox.topLeft.x =     finishingPositionData.b.x;
-                            selectionBox.bottomRight.x = finishingPositionData.a.x;
-                        }
-                        if( finishingPositionData.a.y < finishingPositionData.b.y ){
-                            selectionBox.topLeft.y =     finishingPositionData.a.y;
-                            selectionBox.bottomRight.y = finishingPositionData.b.y;
-                        }else{
-                            selectionBox.topLeft.y =     finishingPositionData.b.y;
-                            selectionBox.bottomRight.y = finishingPositionData.a.y;
-                        }
-
-                    //deselect everything
-                        while(signals.selectedSignals.length > 0){
-                            signals.selectedSignals[0].deselect();
-                        }
-
-                    //select the notes that overlap with the selection area
-                        for(var a = 0; a < signalPane.children.length; a++){
-                            var temp = signals.signalRegistry.getSignal(parseInt(signalPane.children[a].name));
-                            var block = { 
-                                    topLeft:{
-                                        x:temp.position * (viewport.totalSize.width/xCount), 
-                                        y:temp.line *     (viewport.totalSize.height/yCount)},
-                                    bottomRight:{
-                                        x:(temp.position+temp.length) * (viewport.totalSize.width/xCount), 
-                                        y:(temp.line+1)*                (viewport.totalSize.height/yCount)
-                                    },
-                            };
-
-                            if( canvas.library.math.detectOverlap.boundingBoxes( block, selectionBox ) ){signalPane.children[a].select(true);}
-                        }
-                },
-            );
-        };
-        var createSignal = function(x,y,event){};
-
-        interactionPlane_front.onkeydown = function(x,y,event){
-            var pressedKeys = canvas.system.keyboard.pressedKeys;
-            if(pressedKeys.Delete || pressedKeys.Backspace){
-                //delete all selected notes
-                while(signals.selectedSignals.length > 0){
-                    signals.selectedSignals[0].delete();
-                }
-            }else if(pressedKeys.Space){
-                canvas.core.viewport.cursor('grab');
-                tmp.onmousedown = interactionPlane_front.onmousedown;
-                interactionPlane_front.onmousedown = panningCode.start;
-            }
-        };
-        interactionPlane_front.onkeyup = function(x,y,event){
-            if(!canvas.system.keyboard.pressedKeys.Space){
-                canvas.core.viewport.cursor('default');
-                panningCode.stop();
-                interactionPlane_front.onmousedown = tmp.onmousedown;
-            }
-        };
-
-        interactionPlane_back.onmousedown = function(x,y,event){
-            if(event.shiftKey){ click_n_drag(x,y,event); }
-            else if(event.altKey){ createSignal(x,y,event); }
-            else{//elsewhere click
+            }else{//elsewhere click
                 //deselect everything
                     while(signals.selectedSignals.length > 0){
                         signals.selectedSignals[0].deselect();
                     }
             }
         };
-        interactionPlane_front.onmouseleave = function(x,y,event){ canvas.core.viewport.cursor('default'); };
+        interactionPlane_back.onmousemove = function(x,y,event){
+            var pressedKeys = canvas.system.keyboard.pressedKeys;
+            if( pressedKeys.alt ){ canvas.core.viewport.cursor('crosshair'); }
+            else if( pressedKeys.Space ){ canvas.core.viewport.cursor('grab'); }
+            else{ canvas.core.viewport.cursor('default'); }
+        };
+        interactionPlane_front.onkeydown = function(x,y,event){
+            var pressedKeys = canvas.system.keyboard.pressedKeys;
+            if( pressedKeys.Backspace || pressedKeys.Delete ){ deleteSelectedSignals(); }
+            if( pressedKeys.Space ){ canvas.core.viewport.cursor('grab'); }
+            if( pressedKeys.alt ){
+                if( signalPane.getElementUnderPoint(x,y) != undefined ){
+                    canvas.core.viewport.cursor('copy');
+                }else{
+                    canvas.core.viewport.cursor('crosshair');
+                }
+            }
+        };
+
     //callbacks
         object.onpan = onpan;
         object.onchangeviewarea = onchangeviewarea;
