@@ -5,8 +5,8 @@ this.connectionNode_data = function(
     glowStyle='rgba(244, 244, 255, 1)',
     cable_dimStyle='rgb(84, 146, 247)',
     cable_glowStyle='rgb(123, 168, 242)',
-    onreceivedata=function(address, data){console.log(name,address,data);},
-    ongivedata=function(address){console.log(name,address);},
+    onreceivedata=function(address, data){},
+    ongivedata=function(address){},
     onconnect=function(){},
     ondisconnect=function(){},
 ){

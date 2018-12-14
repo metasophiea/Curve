@@ -8,7 +8,7 @@ this.functionListRunner = function(list){
 
                 //determine if all the requirements of this function are met
                     for(var b = 0; b < list[a].specialKeys.length; b++){
-                        shouldRun = shouldRun && event[list[a].specialKeys[b]];
+                        shouldRun = shouldRun && canvas.system.keyboard.pressedKeys[list[a].specialKeys[b]];
                         if(!shouldRun){break;} //(one is already not a match, so save time and just bail here)
                     }
 

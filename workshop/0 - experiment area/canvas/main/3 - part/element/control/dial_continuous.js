@@ -41,7 +41,7 @@ this.dial_continuous = function(
             a = (a>1 ? 1 : a);
             a = (a<0 ? 0 : a);
 
-            if(update && object.change != undefined){object.onchange(a);}
+            if(update && object.onchange != undefined){object.onchange(a);}
 
             value = a;
             needleGroup.parameter.angle(startAngle + maxAngle*value);

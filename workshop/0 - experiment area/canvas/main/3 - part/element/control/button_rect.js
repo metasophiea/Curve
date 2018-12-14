@@ -1,7 +1,7 @@
 this.button_rect = function(
     name='button_rect',
     x, y, width=30, height=20, angle=0,
-    text_centre='button', text_left='', text_right='',
+    text_centre='', text_left='', text_right='',
     textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
     
     active=true, hoverable=true, selectable=false, pressable=true,

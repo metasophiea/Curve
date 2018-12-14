@@ -13,7 +13,7 @@ object.builder = function(creatorMethod,design){
                     design.base.points = [{x:design.x,y:design.y}, {x:design.width,y:design.y}, {x:design.width,y:design.height}, {x:design.x,y:design.height}];
                     system.utility.object.generateSelectionArea(design.base.points, obj);
                     
-                //backing
+                //backingbase
                     design.base = part.builder('rect',null,{x:design.base.x, y:design.base.y, width:design.base.width, height:design.base.height, angle:design.base.angle, style:design.base.style});
             break;
             case 'circle': 

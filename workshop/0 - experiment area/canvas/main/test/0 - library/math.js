@@ -46,7 +46,7 @@ console.log('%cTesting - system.library.math', 'font-size:15px; font-weight:bold
         var x = 2.5;
         var y = 2.5;
         tester(canvas.library.math.cartesian2polar(x,y),{dis: 3.5355339059327378, ang: 0.7853981633974483});
-
+    
     console.log('%c-- pointsOfCircle', 'font-weight: bold;');
         tester(canvas.library.math.pointsOfCircle(0,0,10,4),[{x:0, y:10}, {x:10, y:0}, {x:0, y:-10}, {x:-10, y:0}]);
 

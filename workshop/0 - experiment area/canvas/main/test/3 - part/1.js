@@ -70,11 +70,11 @@
     var no = canvas.part.builder( 'needleOverlay', 'test_needleOverlay1', {x:0,y:200} );
         controlGroup.append( no );
         no.select(0.25);
-        no.area(0.5,0.75)
+        no.area(0.5,0.75);
     var gww = canvas.part.builder( 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:0,y:265} );
         controlGroup.append( gww );
         gww.select(0.2);
-        gww.area(0.5,0.7)
+        gww.area(0.5,0.7);
     var seq = canvas.part.builder( 'sequencer', 'test_sequencer1', {x:125,y:220} );
         controlGroup.append( seq );
         seq.addSignal( 0,0,  10,0.0 );
@@ -120,4 +120,4 @@
 
 //view positioning
     canvas.core.viewport.scale(3.5);
-    canvas.core.viewport.position(-130,-335);
+    canvas.core.viewport.position(-7.5,-315);

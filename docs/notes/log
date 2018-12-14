@@ -1,4 +1,37 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-12-13
+  - canvas experiment
+    - created pulse generator object
+
+
+2018-12-12
+  - canvas experiment
+    - wrote up the object builder
+    - added 'declare object grapple' code, which has been renamed slightly to
+      "canvas.object.builder.objectGrapple.declare"
+    - shifting object movment, copying and selection code out into control
+    - created test object (test/4 - object/2.js)
+    - updated needleOverlay to have mouse interaction (which I guess I left out)
+      shift-click for area, regular-click for select
+    - created the object collections and the alpha colletion (with just the
+      testObject right now)
+    - copied all the circuitry parts in
+    - created audio_duplicator object
+    - created basicMixer object
+
+  future ideas
+  - might have to make the conection nodes a little darker
+
+
+2018-12-11
+  - canvas experiment
+    - more polishing with the sequencer cursor
+    - bug where if you held down both alt and space; an infinate loop would
+      occur. Fixed it by not allowing interactionPlane_back.onmousedown to run
+      if that was the case.
+    - began work on object builder
+
+
 2018-12-10
   - canvas experiment
     - added signal draw interaction to sequencer
@@ -11,9 +44,6 @@
       input depending on the OS being used)
     - further jiggering of the cursor changes in the sequencer (I think I've
       gotten things right now)
-
-  notes
-  - all thats left in the sequencer is getting those cursor graphics right
 
   future ideas
   - a more complex callback passthrough system? Kinda like the functionList way,

@@ -19,8 +19,8 @@ this.connectionNode_audio = function(
         object.audioNode = audioContext.createAnalyser();
 
         //audio connections
-            object.out = function(){return audioNode;};
-            object.in = function(){return audioNode;};
+            object.out = function(){return object.audioNode;};
+            object.in = function(){return object.audioNode;};
 
         object.onconnect = function(instigator){
             if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }

@@ -189,7 +189,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             
                             //determine if all the requirements of this function are met
                                 for(var b = 0; b < list[a].specialKeys.length; b++){
-                                    shouldRun = shouldRun && event[list[a].specialKeys[b]];
+                                    shouldRun = shouldRun && canvas.system.keyboard.pressedKeys[list[a].specialKeys[b]];
                                     if(!shouldRun){break;} //(one is already not a match, so save time and just bail here)
                                 }
             
@@ -636,6 +636,16 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
                     var p = ratio*(rgbaList.length-1);
                     return canvas.library.misc.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+            };
+            this.padString = function(string,length,padding=' '){
+                if(padding.length<1){return string;}
+                string = ''+string;
+            
+                while(string.length < length){
+                    string = padding + string;
+                }
+            
+                return string;
             };
         };
         canvas.core = new function(){
@@ -3145,6 +3155,461 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         
         canvas.part.circuit = new function(){
             this.audio = new function(){
+                this.recorder = function(context){
+                
+                    //state
+                        var state = {
+                            recordedChunks: [],
+                            recordingStartTime: -1,
+                            recordingLength: 0,
+                        };
+                
+                    //flow
+                        //flow chain
+                            var flow = {
+                                leftIn:{}, rightIn:{},
+                                recordingNode:{},
+                                leftOut:{}, rightOut:{},
+                            };
+                
+                        //leftIn
+                            flow.leftIn.node = context.createAnalyser();
+                        //rightIn
+                            flow.rightIn.node = context.createAnalyser();
+                
+                        //recordingNode
+                            flow.recordingNode.audioDest = new MediaStreamAudioDestinationNode(context);
+                            flow.recordingNode.node = new MediaRecorder(flow.recordingNode.audioDest.stream, {mimeType : 'audio/webm'});
+                
+                            flow.recordingNode.node.onstart = function(){};
+                            flow.recordingNode.node.ondataavailable = function(e){
+                                state.recordedChunks.push(e.data);
+                            };
+                            flow.recordingNode.node.onpause = function(){};
+                            flow.recordingNode.node.onresume = function(){};
+                            flow.recordingNode.node.onerror = function(error){console.log(error);};
+                            flow.recordingNode.node.onstop = function(){};
+                
+                            flow.leftIn.node.connect(flow.recordingNode.audioDest);
+                            flow.rightIn.node.connect(flow.recordingNode.audioDest);
+                
+                        //leftOut
+                            flow.leftOut.node = context.createAnalyser();
+                            flow.leftIn.node.connect(flow.leftOut.node);
+                        //rightIn
+                            flow.rightOut.node = context.createAnalyser();
+                            flow.rightIn.node.connect(flow.rightOut.node);
+                
+                
+                    //internal functions
+                        function getRecordingLength(){
+                            switch(flow.recordingNode.node.state){
+                                case 'inactive': case 'paused':
+                                    return state.recordingLength;
+                                break;
+                                case 'recording':
+                                    return context.currentTime - state.recordingStartTime;
+                                break;
+                            }            
+                        }
+                
+                    //controls
+                        this.clear =  function(){
+                            this.stop();
+                            state.recordedChunks = [];
+                            state.recordingStartTime = -1;
+                            state.recordingLength = 0;
+                        };
+                        this.start =  function(){
+                            this.clear();
+                            flow.recordingNode.node.start();
+                            state.recordingStartTime = context.currentTime;
+                        };
+                        this.pause =  function(){
+                            if(this.state() == 'inactive'){return;}
+                            state.recordingLength = getRecordingLength();
+                            flow.recordingNode.node.pause();
+                        };
+                        this.resume = function(){
+                            flow.recordingNode.node.resume();
+                            state.recordingStartTime = context.currentTime - state.recordingLength;
+                        };
+                        this.stop =   function(){
+                            if(this.state() == 'inactive'){return;}
+                            state.recordingLength = getRecordingLength();
+                            flow.recordingNode.node.stop();
+                        };
+                        this.export = function(){
+                            return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' });
+                        };
+                        this.save = function(filename='output'){
+                            var a = document.createElement('a');
+                            a.href = URL.createObjectURL(this.export());
+                            a.download = filename+'.ogg';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                        };
+                
+                        this.state = function(){return flow.recordingNode.node.state;};
+                        this.recordingTime = function(){
+                            return getRecordingLength();
+                        };
+                        this.getTrack = function(){return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' }); };
+                
+                    //io
+                        this.in_left  =  function(){return flow.leftIn.node;};
+                        this.in_right =  function(){return flow.rightIn.node;};
+                        this.out_left  = function(){return flow.leftOut.node;};
+                        this.out_right = function(){return flow.rightOut.node;};
+                };
+
+                this.audioIn = function(
+                    context, setupConnect=true
+                ){
+                    //flow chain
+                        var flow = {
+                            audioDevice: null,
+                            outAggregator: {}
+                        };
+                
+                    //outAggregator
+                        flow.outAggregator.gain = 1;
+                        flow.outAggregator.node = context.createGain();
+                        system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
+                
+                
+                    //output node
+                        this.out = function(){return flow.outAggregator.node;}
+                
+                    //methods
+                        this.listDevices = function(callback){
+                            navigator.mediaDevices.enumerateDevices().then(
+                                function(devices){
+                                    callback(devices.filter((d) => d.kind === 'audioinput'));
+                                }
+                            );
+                        };
+                        this.selectDevice = function(deviceId){
+                            var promise = navigator.mediaDevices.getUserMedia({audio: { deviceId: deviceId}});
+                            promise.then(
+                                function(source){
+                                    audioDevice = source;
+                                    system.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
+                                },
+                                function(error){
+                                    console.warn('could not find audio input device: "' + deviceId + '"');
+                                    console.warn('\terror:',error);
+                                }
+                            );
+                        };
+                        this.gain = function(a){
+                            if(a==null){return flow.outAggregator.gain;}
+                            flow.outAggregator.gain = a;
+                            system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
+                        };
+                
+                    //setup
+                        if(setupConnect){this.selectDevice('default');}
+                };
+                this.looper = function(context){
+                    //state
+                        var state = {
+                            itself:this,
+                            fileLoaded:false,
+                            rate:1,
+                            loop:{active:true, start:0, end:1,timeout:null},
+                        };
+                
+                    //flow
+                        //chain
+                        var flow = {
+                            track:{},
+                            bufferSource:null,
+                            channelSplitter:{},
+                            leftOut:{}, rightOut:{}
+                        };
+                
+                        //channelSplitter
+                            flow.channelSplitter = context.createChannelSplitter(2);
+                
+                        //leftOut
+                            flow.leftOut.gain = 1;
+                            flow.leftOut.node = context.createGain();
+                            flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                            flow.channelSplitter.connect(flow.leftOut.node, 0);
+                        //rightOut
+                            flow.rightOut.gain = 1;
+                            flow.rightOut.node = context.createGain();
+                            flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                            flow.channelSplitter.connect(flow.rightOut.node, 1);
+                
+                        //output node
+                            this.out_left  = function(){return flow.leftOut.node;}
+                            this.out_right = function(){return flow.rightOut.node;}
+                
+                            
+                    //controls
+                        this.load = function(type,callback,url=''){
+                            state.fileLoaded = false;
+                            system.utility.audio.loadAudioFile(
+                                function(data){
+                                    state.itself.stop();
+                                    flow.track = data;
+                                    state.fileLoaded = true;
+                                    state.needlePosition = 0.0;
+                                    callback(data);
+                                },
+                            type,url);
+                        };
+                        this.start = function(){
+                            //check if we should play at all (the file must be loaded)
+                                if(!state.fileLoaded){return;}
+                            //stop any previous buffers, load buffer, enter settings and start from zero
+                                if(flow.bufferSource){
+                                    flow.bufferSource.onended = function(){};
+                                    flow.bufferSource.stop(0);
+                                }
+                                flow.bufferSource = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                                flow.bufferSource.playbackRate.value = state.rate;
+                                flow.bufferSource.loop = state.loop.active;
+                                flow.bufferSource.loopStart = state.loop.start*this.duration();
+                                flow.bufferSource.loopEnd = state.loop.end*this.duration();
+                                flow.bufferSource.start(0,0);
+                                flow.bufferSource.onended = function(){flow.bufferSource = null;};
+                        };
+                        this.stop = function(){
+                            if(!state.fileLoaded || !flow.bufferSource){return;}
+                            flow.bufferSource.stop(0);
+                            flow.bufferSource = undefined;
+                        };
+                        this.rate = function(){
+                            state.rate = value;
+                        };
+                
+                    //info
+                        this.duration = function(){
+                            if(!state.fileLoaded){return -1;}
+                            return flow.track.duration;
+                        };
+                        this.title = function(){
+                            if(!state.fileLoaded){return '';}
+                            return flow.track.name;
+                        };
+                        this.waveformSegment = function(data={start:0,end:1}){
+                            if(data==undefined){return [];}
+                            if(!state.fileLoaded){return [];}
+                            return system.utility.audio.waveformSegment(flow.track.buffer,data);
+                        };
+                        this.loop = function(bool=false){
+                            if(data==undefined){return data;}
+                            state.loop.active = bool;
+                        };
+                        this.loopBounds = function(data={start:0,end:1}){
+                            if(data==undefined){return data;}
+                
+                            state.loop.start = data.start!=undefined ? data.start : state.loop.start;
+                            state.loop.end   = data.end!=undefined ? data.end : state.loop.end;
+                        };
+                };
+
+                this.oneShot_single = function(context){
+                    //state
+                        var state = {
+                            itself:this,
+                            fileLoaded:false,
+                            rate:1,
+                        };
+                
+                    //flow
+                        //chain
+                        var flow = {
+                            track:{},
+                            bufferSource:null,
+                            channelSplitter:{},
+                            leftOut:{}, rightOut:{}
+                        };
+                
+                        //channelSplitter
+                            flow.channelSplitter = context.createChannelSplitter(2);
+                
+                        //leftOut
+                            flow.leftOut.gain = 1;
+                            flow.leftOut.node = context.createGain();
+                            flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                            flow.channelSplitter.connect(flow.leftOut.node, 0);
+                        //rightOut
+                            flow.rightOut.gain = 1;
+                            flow.rightOut.node = context.createGain();
+                            flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                            flow.channelSplitter.connect(flow.rightOut.node, 1);
+                
+                        //output node
+                            this.out_left  = function(){return flow.leftOut.node;}
+                            this.out_right = function(){return flow.rightOut.node;}
+                
+                            
+                    //controls
+                        this.load = function(type,callback,url=''){
+                            state.fileLoaded = false;
+                            system.utility.audio.loadAudioFile(
+                                function(data){
+                                    state.itself.stop();
+                                    flow.track = data;
+                                    state.fileLoaded = true;
+                                    state.needlePosition = 0.0;
+                                    callback(data);
+                                },
+                            type,url);
+                        };
+                        this.fire = function(){
+                            //check if we should play at all (the file must be loaded)
+                                if(!state.fileLoaded){return;}
+                            //stop any previous buffers, load buffer, enter settings and start from zero
+                                if(flow.bufferSource){
+                                    flow.bufferSource.onended = function(){};
+                                    flow.bufferSource.stop(0);
+                                }
+                                flow.bufferSource = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                                flow.bufferSource.playbackRate.value = state.rate;
+                                flow.bufferSource.start(0,0);
+                                flow.bufferSource.onended = function(){flow.bufferSource = null;};
+                        };
+                        this.stop = function(){
+                            if(!state.fileLoaded){return;}
+                            flow.bufferSource.stop(0);
+                            flow.bufferSource = undefined;
+                        };
+                        this.rate = function(){
+                            state.rate = value;
+                        };
+                
+                    //info
+                        this.duration = function(){
+                            if(!state.fileLoaded){return -1;}
+                            return flow.track.duration;
+                        };
+                        this.title = function(){
+                            if(!state.fileLoaded){return '';}
+                            return flow.track.name;
+                        };
+                        this.waveformSegment = function(data={start:0,end:1}){
+                            if(data==undefined){return [];}
+                            if(!state.fileLoaded){return [];}
+                            return system.utility.audio.waveformSegment(flow.track.buffer,data);
+                        };
+                };
+
+                this.oneShot_multi = function(context){
+                    //state
+                        var state = {
+                            itself:this,
+                            fileLoaded:false,
+                            rate:1,
+                        };
+                
+                    //flow
+                        //chain
+                        var flow = {
+                            track:{},
+                            bufferSource:null,
+                            bufferSourceArray:[],
+                            channelSplitter:{},
+                            leftOut:{}, rightOut:{}
+                        };
+                
+                        //channelSplitter
+                            flow.channelSplitter = context.createChannelSplitter(2);
+                
+                        //leftOut
+                            flow.leftOut.gain = 1;
+                            flow.leftOut.node = context.createGain();
+                            flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                            flow.channelSplitter.connect(flow.leftOut.node, 0);
+                        //rightOut
+                            flow.rightOut.gain = 1;
+                            flow.rightOut.node = context.createGain();
+                            flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                            flow.channelSplitter.connect(flow.rightOut.node, 1);
+                
+                        //output node
+                            this.audioOut = function(channel){
+                                switch(channel){
+                                    case 'r': return flow.rightOut.node; break;
+                                    case 'l': return flow.leftOut.node; break;
+                                    default: console.error('"part.circuit.audio.oneShot_multi2.audioOut" unknown channel "'+channel+'"'); break;
+                                }
+                            };
+                            this.out_left  = function(){return this.audioOut('l');}
+                            this.out_right = function(){return this.audioOut('r');}
+                
+                
+                
+                
+                
+                
+                
+                
+                    //loading/unloading
+                        this.loadRaw = function(data){
+                            if(Object.keys(data).length === 0){return;}
+                            flow.track = data;
+                            state.fileLoaded = true;
+                            state.needlePosition = 0.0;
+                        };
+                        this.load = function(type,callback,url){
+                            state.fileLoaded = false;
+                            system.utility.audio.loadAudioFile(
+                                function(data){
+                                    state.itself.loadRaw(data);
+                                    if(callback != undefined){ callback(data); }
+                                },
+                            type,url);
+                        };
+                        this.unloadRaw = function(){
+                            return flow.track;
+                        };
+                
+                    //control
+                        //play
+                            this.fire = function(start=0,duration){
+                                //check if we should play at all (the file must be loaded)
+                                    if(!state.fileLoaded){return;}
+                                //load buffer, add onend code, enter rate setting, start and add to the array
+                                    var temp = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
+                                        flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
+                                    });
+                                    temp.playbackRate.value = state.rate;
+                                    temp.start(0,start*state.rate,duration*state.rate);
+                                    flow.bufferSourceArray.push(temp);
+                            };
+                            this.panic = function(){
+                                while(flow.bufferSourceArray.length > 0){
+                                    flow.bufferSourceArray.shift().stop(0);
+                                }
+                            };
+                        //options
+                            this.rate = function(value){
+                                if(value == undefined){return state.rate;}
+                                if(value == 0){value = 1/1000000;}
+                                state.rate = value;
+                            };
+                
+                    //info
+                        this.duration = function(){
+                            if(!state.fileLoaded){return -1;}
+                            return flow.track.duration / state.rate;
+                        };
+                        this.title = function(){
+                            if(!state.fileLoaded){return '';}
+                            return flow.track.name;
+                        };
+                        this.waveformSegment = function(data={start:0,end:1}){
+                            if(data==undefined){return [];}
+                            if(!state.fileLoaded){return [];}
+                            return system.utility.audio.waveformSegment(flow.track.buffer,data);
+                        };
+                };
                 this.audio2percentage = function(){
                     return new function(){
                         var analyser = {
@@ -3190,6 +3655,826 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         //callbacks
                             this.newValue = function(a){};
                     };
+                };
+                this.reverbUnit = function(
+                    context,
+                ){
+                    //flow chain
+                        var flow = {
+                            inAggregator: {},
+                            reverbGain: {}, bypassGain: {},
+                            reverbNode: {},
+                            outAggregator: {},
+                        };
+                
+                    //inAggregator
+                        flow.inAggregator.gain = 1;
+                        flow.inAggregator.node = context.createGain();
+                        system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                
+                    //reverbGain / bypassGain
+                        flow.reverbGain.gain = 0.5;
+                        flow.bypassGain.gain = 0.5;
+                        flow.reverbGain.node = context.createGain();
+                        flow.bypassGain.node = context.createGain();
+                        system.utility.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                        system.utility.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                
+                    //reverbNode
+                        flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
+                        flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
+                        flow.reverbNode.node = context.createConvolver();
+                
+                        function setReverbType(repoURL,type,callback){
+                            var ajaxRequest = new XMLHttpRequest();
+                            ajaxRequest.open('GET', repoURL+type, true);
+                            ajaxRequest.responseType = 'arraybuffer';
+                            ajaxRequest.onload = function(){
+                                //undo connections
+                                    flow.reverbNode.node.disconnect();
+                                //create new convolver
+                                    flow.reverbNode.node = context.createConvolver();
+                                //redo connections
+                                    flow.reverbGain.node.connect(flow.reverbNode.node);
+                                    flow.reverbNode.node.connect(flow.outAggregator.node);
+                                //load in new buffer
+                                    context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
+                                //run any callbacks
+                                    if(callback){callback();}  
+                            };
+                            ajaxRequest.send();
+                        }
+                        function getReverbTypeList(repoURL,callback=null){
+                            var ajaxRequest = new XMLHttpRequest();
+                            ajaxRequest.open('GET', repoURL+'available2.list', true);
+                            ajaxRequest.onload = function() {
+                                var list = ajaxRequest.response.split('\n'); var temp = '';
+                                
+                                list[list.length-1] = list[list.length-1].split(''); 
+                                list[list.length-1].pop();
+                                list[list.length-1] = list[list.length-1].join('');		
+                
+                                list.splice(-1,1);
+                                
+                                if(callback == null){console.log(list);}
+                                else{callback(list);}
+                            }
+                            ajaxRequest.send();
+                        }	
+                
+                    //outAggregator
+                        flow.outAggregator.gain = 1;
+                        flow.outAggregator.node = context.createGain();    
+                        system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                
+                    //do connections
+                        flow.inAggregator.node.connect(flow.reverbGain.node);
+                        flow.inAggregator.node.connect(flow.bypassGain.node);
+                        flow.reverbGain.node.connect(flow.reverbNode.node);
+                        flow.bypassGain.node.connect(flow.outAggregator.node);
+                        flow.reverbNode.node.connect(flow.outAggregator.node);
+                
+                    //input/output node
+                        this.in = function(){return flow.inAggregator.node;}
+                        this.out = function(){return flow.outAggregator.node;}
+                    
+                    //controls
+                        this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
+                        this.type = function(name,callback){
+                            if(name==null){return flow.reverbNode.selectedReverbType;}
+                            flow.reverbNode.selectedReverbType = name;
+                            setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
+                        };
+                        this.outGain = function(a){
+                            if(a==null){return flow.outAggregator.gain;}
+                            flow.outAggregator.gain=a;
+                            system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                        };
+                        this.wetdry = function(a){
+                            if(a==null){return flow.reverbGain.gain;}
+                            flow.reverbGain.gain=a;
+                            flow.bypassGain.gain=1-a;
+                            system.utility.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                            system.utility.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                        };
+                
+                    //setup
+                        setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
+                };
+
+                this.multibandFilter = function(
+                    context, bandcount, frames=false
+                ){
+                    //saved values
+                        var saved = {
+                            settings:[], //{Q, gain, frequency, fresh(bool)}
+                            responses:[], //{magResponse, phaseResponse, frequencyArray}
+                        };
+                
+                    //flow chain
+                        var flow = {
+                            inAggregator: {},
+                            filterNodes: [],
+                            gainNodes: [],
+                            outAggregator: {},
+                        };
+                
+                        //inAggregator
+                            flow.inAggregator.gain = 1;
+                            flow.inAggregator.node = context.createGain();
+                            system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                
+                        //filterNodes
+                            function makeGenericFilter(type){
+                                var temp = { frequency:110, Q:0.1, node:context.createBiquadFilter() };
+                                temp.node.type = type;
+                                system.utility.audio.changeAudioParam(context, temp.node.frequency,110,0.01,'instant',true);
+                                system.utility.audio.changeAudioParam(context, temp.node.Q,0.1,0.01,'instant',true);
+                                return temp;
+                            }
+                
+                            if(frames){
+                                if(bandcount < 2){bandcount = 2;}
+                                //lowpass
+                                    flow.filterNodes.push(makeGenericFilter('lowpass'));
+                                //bands
+                                    for(var a = 1; a < bandcount-1; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
+                                //highpass
+                                    flow.filterNodes.push(makeGenericFilter('highpass'));
+                            }else{
+                                //bands
+                                    for(var a = 0; a < bandcount; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
+                            }
+                
+                        //gainNodes
+                            for(var a = 0; a < bandcount; a++){
+                                var temp = { gain:1, node:context.createGain() };
+                                system.utility.audio.changeAudioParam(context, temp.node.gain, temp.gain, 0.01, 'instant', true);
+                                flow.gainNodes.push(temp);
+                                saved.settings[a] = { Q:0.1, gain:1, frequency:110, fresh:true };
+                            }
+                
+                        //outAggregator
+                            flow.outAggregator.gain = 1;
+                            flow.outAggregator.node = context.createGain();
+                            system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                
+                
+                    //do connections
+                        for(var a = 0; a < bandcount; a++){
+                            flow.inAggregator.node.connect(flow.filterNodes[a].node);
+                            flow.filterNodes[a].node.connect(flow.gainNodes[a].node);
+                            flow.gainNodes[a].node.connect(flow.outAggregator.node);
+                        }
+                
+                
+                    //input/output node
+                        this.in = function(){return flow.inAggregator.node;}
+                        this.out = function(){return flow.outAggregator.node;}
+                
+                
+                    //controls
+                        this.masterGain = function(value){
+                            if(value == undefined){return flow.outAggregator.gain;}
+                            flow.outAggregator.gain = value;
+                            system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                        };
+                        this.gain = function(band,value){
+                            if(value == undefined){return flow.gainNodes[band].gain;}
+                            flow.gainNodes[band].gain = value;
+                            system.utility.audio.changeAudioParam(context, flow.gainNodes[band].node.gain, flow.gainNodes[band].gain, 0.01, 'instant', true);
+                
+                            saved.settings[band].gain = value;
+                            saved.settings[band].fresh = true;
+                        };
+                        this.frequency = function(band,value){
+                            if(value == undefined){return flow.filterNodes[band].frequency;}
+                            flow.filterNodes[band].frequency = value;
+                            system.utility.audio.changeAudioParam(context, flow.filterNodes[band].node.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
+                
+                            saved.settings[band].frequency = value;
+                            saved.settings[band].fresh = true;
+                        };
+                        this.Q = function(band,value){
+                            if(value == undefined){return flow.filterNodes[band].Q;}
+                            flow.filterNodes[band].Q = value;
+                            system.utility.audio.changeAudioParam(context, flow.filterNodes[band].node.Q,flow.filterNodes[band].Q,0.01,'instant',true);
+                
+                            saved.settings[band].Q = value;
+                            saved.settings[band].fresh = true;
+                        };
+                    
+                        this.measureFrequencyResponse = function(band, frequencyArray){
+                            //if band is undefined, gather the response for all bands
+                                if(band == undefined){ return Array(bandcount).fill(0).map((a,i) => this.measureFrequencyResponse(i,frequencyArray)); }
+                
+                            //if band hasn't had it's setttings changed since last time, just return the last values (multiplied by the master gain)
+                                if(!saved.settings[band].fresh){
+                                    return [ saved.responses[band].magResponse.map(a => a*flow.outAggregator.gain), saved.responses[band].requencyArray ];
+                                }
+                
+                            //do full calculation of band, save and return
+                                var Float32_frequencyArray = new Float32Array(frequencyArray);
+                                var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                flow.filterNodes[band].node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+                
+                                saved.responses[band] = {
+                                    magResponse:magResponseOutput.map(a => a*flow.gainNodes[band].gain), 
+                                    phaseResponse:phaseResponseOutput, 
+                                    frequencyArray:frequencyArray,
+                                };
+                                saved.settings[band].fresh = false;
+                                return [magResponseOutput.map(a => a*flow.gainNodes[band].gain*flow.outAggregator.gain),frequencyArray];
+                        };
+                };
+                this.distortionUnit = function(
+                    context,
+                ){
+                    //flow chain
+                    var flow = {
+                        inAggregator: {},
+                        distortionNode: {},
+                        outAggregator: {},
+                    };
+                
+                    //inAggregator
+                        flow.inAggregator.gain = 0;
+                        flow.inAggregator.node = context.createGain();
+                        system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                
+                    //distortionNode
+                        flow.distortionNode.distortionAmount = 0;
+                        flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
+                        flow.distortionNode.resolution = 100;
+                        function makeDistortionNode(){
+                            flow.inAggregator.node.disconnect();
+                            if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
+                            
+                            flow.distortionNode.node = context.createWaveShaper();
+                                flow.distortionNode.curve = new Float32Array(system.utility.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
+                                flow.distortionNode.node.curve = flow.distortionNode.curve;
+                                flow.distortionNode.node.oversample = flow.distortionNode.oversample;
+                                
+                            flow.inAggregator.node.connect(flow.distortionNode.node);
+                            flow.distortionNode.node.connect(flow.outAggregator.node);
+                        }
+                
+                    //outAggregator
+                        flow.outAggregator.gain = 0;
+                        flow.outAggregator.node = context.createGain();    
+                        system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                
+                
+                    //input/output node
+                        this.in = function(){return flow.inAggregator.node;}
+                        this.out = function(){return flow.outAggregator.node;}
+                
+                    //controls
+                        this.inGain = function(a){
+                            if(a==null){return flow.inAggregator.gain;}
+                            flow.inAggregator.gain=a;
+                            system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
+                        };
+                        this.outGain = function(a){
+                            if(a==null){return flow.outAggregator.gain;}
+                            flow.outAggregator.gain=a;
+                            system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                        };
+                        this.distortionAmount = function(a){
+                            if(a==null){return flow.distortionNode.distortionAmount;}
+                            flow.distortionNode.distortionAmount=a;
+                            makeDistortionNode();
+                        };
+                        this.oversample = function(a){
+                            if(a==null){return flow.distortionNode.oversample;}
+                            flow.distortionNode.oversample=a;
+                            makeDistortionNode();
+                        };
+                        this.resolution = function(a){
+                            if(a==null){return flow.distortionNode.resolution;}
+                            flow.distortionNode.resolution = a>=2?a:2;
+                            makeDistortionNode();
+                        };
+                
+                    //setup
+                        makeDistortionNode();
+                };
+                this.player = function(context){
+                    //state
+                        var state = {
+                            itself:this,
+                            fileLoaded:false,
+                            playing:false,
+                            playhead:{ position:0, lastSightingTime:0 },
+                            loop:{ active:false, start:0, end:1, timeout:null},
+                            rate:1,
+                        };
+                
+                    //flow
+                        //flow chain
+                        var flow = {
+                            track:{},
+                            bufferSource:null,
+                            channelSplitter:{},
+                            leftOut:{}, rightOut:{}
+                        };
+                
+                        //channelSplitter
+                            flow.channelSplitter = context.createChannelSplitter(2);
+                
+                        //leftOut
+                            flow.leftOut.gain = 1;
+                            flow.leftOut.node = context.createGain();
+                            flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                            flow.channelSplitter.connect(flow.leftOut.node, 0);
+                        //rightOut
+                            flow.rightOut.gain = 1;
+                            flow.rightOut.node = context.createGain();
+                            flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                            flow.channelSplitter.connect(flow.rightOut.node, 1);
+                
+                        //output node
+                            this.out_left  = function(){return flow.leftOut.node;}
+                            this.out_right = function(){return flow.rightOut.node;}
+                
+                
+                    //internal functions
+                        function playheadCompute(){
+                            //this code is used to update the playhead position aswel as to calculate when the loop end will occur, 
+                            //and thus when the playhead should jump to the start of the loop. The actual looping of the audio is 
+                            //done by the system, so this process is done solely to update the playhead position data.
+                            //  Using the playhead's current postiion and paly rate; the length of time before the playhead is 
+                            //scheduled to reach the end bound of the loop is calculated and given to a timeout. When this timeout 
+                            //occurs; the playhead will jump to the start bound and the process is run again to calculate the new 
+                            //length of time before the playhead reaches the end bound.
+                            //  The playhead cannot move beyond the end bound, thus any negative time calculated will be set to
+                            //zero, and the playhead will instantly jump back to the start bound (this is to mirror the operation of
+                            //the underlying audio system)
+                
+                            clearInterval(state.loop.timeout);
+                            
+                            //update playhead position data
+                            state.playhead.position = state.itself.currentTime();
+                            state.playhead.lastSightingTime = context.currentTime;
+                
+                            //obviously, if the loop isn't active or the file isn't playing, don't do any of the work
+                            if(!state.loop.active || !state.playing){return;}
+                
+                            //calculate time until the timeout should be called
+                            var timeUntil = state.loop.end - state.itself.currentTime();
+                            if(timeUntil < 0){timeUntil = 0;}
+                
+                            //the callback (which performs the jump to the start of the loop, and recomputes)
+                            state.loop.timeout = setTimeout(function(){
+                                state.itself.jumpTo(state.loop.start,false);
+                                playheadCompute();
+                            }, (timeUntil*1000)/state.rate);
+                        }
+                        function jumpToTime(value){
+                            //check if we should jump at all
+                            //(file must be loaded)
+                                if(!state.fileLoaded){return;}
+                            //if playback is stopped; only adjust the playhead position
+                                if( !state.playing ){
+                                    state.playhead.position = value;
+                                    state.playhead.lastSightingTime = context.currentTime;
+                                    return;
+                                }
+                
+                            //if loop is enabled, and the desired value is beyond the loop's end boundry,
+                            //set the value to the start value
+                                if(state.loop.active && value > state.loop.end){value = state.loop.start;}
+                
+                            //stop playback, with a callback that will change the playhead position
+                            //and then restart playback
+                                state.itself.stop(function(){
+                                    state.playhead.position = value;
+                                    state.playhead.lastSightingTime = context.currentTime;
+                                    state.itself.start();
+                                });
+                        }
+                
+                    //controls
+                        this.load = function(type,callback,url=''){
+                            state.fileLoaded = false;
+                            system.utility.audio.loadAudioFile(
+                                function(data){
+                                    state.itself.stop();
+                                    flow.track = data;
+                                    state.fileLoaded = true;
+                                    state.playhead.position = 0;
+                                    callback(data);
+                                },
+                            type,url);
+                        };
+                        this.start = function(){
+                            //check if we should play at all
+                            //(player must be stopped and file must be loaded)
+                                if(state.playing || !state.fileLoaded){return;}
+                            //load buffer, enter settings and start from playhead position
+                                flow.bufferSource = system.utility.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(a){state.itself.stop();});
+                                flow.bufferSource.loop = state.loop.active;
+                                flow.bufferSource.loopStart = state.loop.start;
+                                flow.bufferSource.loopEnd = state.loop.end;
+                                flow.bufferSource.playbackRate.value = state.rate;
+                                flow.bufferSource.start(0,state.playhead.position);
+                            //log the starting time, play state
+                                state.playhead.lastSightingTime = context.currentTime;
+                                state.playing = true;
+                                playheadCompute();
+                        };
+                        this.stop = function(callback){
+                            //check if we should stop at all (player must be playing)
+                                if( !state.playing ){return;}
+                            //replace the onended callback (if we get one)
+                            //(this callback will be replaced when 'play' is run again)
+                                if(callback){flow.bufferSource.onended = function(){callback();};}
+                            //actually stop the buffer and destroy it
+                                flow.bufferSource.stop(0);
+                                flow.bufferSource = undefined;
+                            //log playhead position, play state and run playheadCompute
+                                playheadCompute();
+                                state.playing = false;
+                        };
+                        this.jumpTo = function(value=0,percent=true){
+                            if(percent){
+                                value = (value>1 ? 1 : value);
+                                value = (value<0 ? 0 : value);
+                                jumpToTime(this.duration()*value);
+                            }else{jumpToTime(value);}
+                            playheadCompute();
+                        };
+                        this.loop = function(data={active:false,start:0,end:1},percent=true){
+                            if(data == undefined){return state.loop;}
+                
+                            if(data.active != undefined){
+                                state.loop.active = data.active;
+                                if(flow.bufferSource){flow.bufferSource.loop = data.active;}
+                            }
+                
+                            if( data.start!=undefined || data.end!=undefined){
+                                var mux = percent ? this.duration() : 1;
+                                state.loop.start = data.start!=undefined ? data.start*mux : state.loop.start;
+                                state.loop.end   = data.end!=undefined ?   data.end*mux :   state.loop.end;
+                                if(flow.bufferSource){
+                                    flow.bufferSource.loopStart = state.loop.start;
+                                    flow.bufferSource.loopEnd = state.loop.end;
+                                }
+                            }
+                
+                            playheadCompute();
+                        };
+                        this.rate = function(value=1){
+                            state.rate = value;
+                            if(flow.bufferSource){flow.bufferSource.playbackRate.value = value;}
+                            playheadCompute();
+                        };
+                
+                    //info
+                        this.isLoaded = function(){return state.fileLoaded;};
+                        this.duration = function(){return !state.fileLoaded ? -1 : flow.track.duration;};
+                        this.title = function(){return !state.fileLoaded ? '' : flow.track.name;};
+                        this.currentTime = function(){
+                            //check if file is loaded
+                                if(!state.fileLoaded){return -1;}
+                            //if playback is stopped, return the playhead position, 
+                                if(!state.playing){return state.playhead.position;}
+                            //otherwise, calculate the current position
+                                return state.playhead.position + state.rate*(context.currentTime - state.playhead.lastSightingTime);
+                        };
+                        this.progress = function(){return this.currentTime()/this.duration()};
+                        this.waveformSegment = function(data={start:0,end:1}){
+                            if(data==undefined || !state.fileLoaded){return [];}
+                            return system.utility.audio.waveformSegment(flow.track.buffer, data);
+                        };
+                };
+
+                this.channelMultiplier = function(
+                    context, outputCount=2
+                ){
+                    //flow
+                        //flow chain
+                            var flow = {
+                                in: {},
+                                outs:[],
+                                out_0: {}, out_1: {},
+                            };
+                        
+                        //in
+                            flow.in.gain = 1;
+                            flow.in.node = context.createGain();    
+                            canvas.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                
+                        //outs
+                            for(var a = 0; a < outputCount; a++){
+                                var temp = { gain:0.5, node:context.createGain() };
+                                canvas.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
+                                flow.outs.push(temp);
+                                flow.in.node.connect(temp.node);
+                            }
+                
+                    //input/output node
+                        this.in = function(){return flow.in.node;}
+                        this.out = function(a){return flow.outs[a].node;}
+                
+                    //controls
+                        this.inGain = function(a){
+                            if(a == undefined){return flow.in.gain;}
+                            flow.in.gain = a;
+                            canvas.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                        };
+                        this.outGain = function(a,value){
+                            if(value == undefined){ return flow.outs[a].gain; }
+                            flow.outs[a].gain = value;
+                            canvas.library.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
+                        };
+                };
+                    
+                this.filterUnit = function(
+                    context
+                ){
+                    //flow chain
+                        var flow = {
+                            inAggregator: {},
+                            filterNode: {},
+                            outAggregator: {},
+                        };
+                
+                    //inAggregator
+                        flow.inAggregator.gain = 1;
+                        flow.inAggregator.node = context.createGain();
+                        system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                
+                    //filterNode
+                        flow.filterNode.node = context.createBiquadFilter();
+                	    flow.filterNode.node.type = "lowpass";
+                        system.utility.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
+                        system.utility.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
+                        system.utility.audio.changeAudioParam(context, flow.filterNode.node.Q,0.1,0.01,'instant',true);
+                
+                    //outAggregator
+                        flow.outAggregator.gain = 1;
+                        flow.outAggregator.node = context.createGain();
+                        system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                
+                
+                    //do connections
+                        flow.inAggregator.node.connect(flow.filterNode.node);
+                        flow.filterNode.node.connect(flow.outAggregator.node);
+                
+                    //input/output node
+                        this.in = function(){return flow.inAggregator.node;}
+                        this.out = function(){return flow.outAggregator.node;}
+                
+                    //methods
+                        this.type = function(type){flow.filterNode.node.type = type;};
+                        this.frequency = function(value){system.utility.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
+                        this.gain = function(value){system.utility.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
+                        this.Q = function(value){system.utility.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
+                        this.measureFrequencyResponse = function(start,end,step){
+                            var frequencyArray = [];
+                            for(var a = start; a < end; a += step){frequencyArray.push(a);}
+                        
+                            return this.measureFrequencyResponse_values(frequencyArray);
+                        };
+                        this.measureFrequencyResponse_values = function(frequencyArray){
+                            var Float32_frequencyArray = new Float32Array(frequencyArray);
+                            var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                            var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                        
+                            flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+                            return [magResponseOutput,frequencyArray];
+                        };
+                };
+
+                this.synthesizer2 = function(
+                    context,
+                    waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
+                    gain=1, gainWobbleDepth=0, gainWobblePeriod=0, gainWobbleMin=0.01, gainWobbleMax=1,
+                    attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+                    octave=0,
+                    detune=0, detuneWobbleDepth=0, detuneWobblePeriod=0, detuneWobbleMin=0.01, detuneWobbleMax=1
+                ){
+                    //flow chain
+                        var flow = {
+                            OSCmaker:{},
+                            liveOscillators: {},
+                            wobbler_detune: {},
+                            aggregator: {},
+                            wobbler_gain: {},
+                            mainOut: {}
+                        };
+                
+                
+                        flow.OSCmaker.waveType = waveType;
+                        flow.OSCmaker.periodicWave = periodicWave;
+                        flow.OSCmaker.attack = attack;
+                        flow.OSCmaker.release = release;
+                        flow.OSCmaker.octave  = octave;
+                        flow.OSCmaker.detune  = detune;
+                        flow.OSCmaker.func = function(
+                            context, connection, midinumber,
+                            type, periodicWave, 
+                            gain, attack, release,
+                            detune, octave
+                        ){
+                            return new function(){
+                                this.generator = context.createOscillator();
+                                    if(type == 'custom'){ 
+                                        this.generator.setPeriodicWave(
+                                            context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                                        ); 
+                                    }else{ this.generator.type = type; }
+                                    this.generator.frequency.setTargetAtTime(system.audio.num2freq(midinumber+12*octave), context.currentTime, 0);
+                                    this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                                    this.generator.start(0);
+                
+                                this.gain = context.createGain();
+                                    this.generator.connect(this.gain);
+                                    this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                                    system.utility.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
+                                    this.gain.connect(connection);
+                
+                                this.detune = function(target,time,curve){
+                                    system.utility.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
+                                };
+                                this.changeVelocity = function(a){
+                                    system.utility.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
+                                };
+                                this.stop = function(){
+                                    system.utility.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve, false);
+                                    setTimeout(function(that){
+                                        that.gain.disconnect(); 
+                                        that.generator.stop(); 
+                                        that.generator.disconnect(); 
+                                        that.gain=null; 
+                                        that.generator=null; 
+                                        that=null;
+                                    }, release.time*1000, this);
+                                };
+                            };
+                        };
+                
+                
+                        flow.wobbler_detune.depth = detuneWobbleDepth;
+                        flow.wobbler_detune.period = detuneWobblePeriod;
+                        flow.wobbler_detune.phase = true;
+                        flow.wobbler_detune.wave = 's';
+                        flow.wobbler_detune.interval = null;
+                        flow.wobbler_detune.start = function(){
+                            if(flow.wobbler_detune.period < detuneWobbleMin || flow.wobbler_detune.period >= detuneWobbleMax){ return; }
+                            flow.wobbler_detune.interval = setInterval(function(){
+                                var OSCs = Object.keys(flow.liveOscillators);
+                                if(flow.wobbler_detune.phase){
+                                    for(var b = 0; b < OSCs.length; b++){ 
+                                        flow.liveOscillators[OSCs[b]].detune(flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                                    }
+                                }else{
+                                    for(var b = 0; b < OSCs.length; b++){ 
+                                        flow.liveOscillators[OSCs[b]].detune(-flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                                    }
+                                }
+                                flow.wobbler_detune.phase = !flow.wobbler_detune.phase;
+                            }, 1000*flow.wobbler_detune.period);
+                        };
+                        flow.wobbler_detune.stop = function(){clearInterval(flow.wobbler_detune.interval);};
+                
+                
+                        flow.aggregator.node = context.createGain();    
+                        flow.aggregator.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                
+                
+                        flow.wobbler_gain.depth = gainWobbleDepth;
+                        flow.wobbler_gain.period = gainWobblePeriod;
+                        flow.wobbler_gain.phase = true;
+                        flow.wobbler_gain.wave = 's';
+                        flow.wobbler_gain.interval = null;
+                        flow.wobbler_gain.start = function(){
+                            if(flow.wobbler_gain.period < gainWobbleMin || flow.wobbler_gain.period >= gainWobbleMax){
+                                system.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.01, flow.wobbler_gain.wave );
+                                return;
+                            }
+                            flow.wobbler_gain.interval = setInterval(function(){
+                                if(flow.wobbler_gain.phase){ system.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                                else{                        system.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1-flow.wobbler_gain.depth,  0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                                flow.wobbler_gain.phase = !flow.wobbler_gain.phase;
+                            }, 1000*flow.wobbler_gain.period);
+                        };
+                        flow.wobbler_gain.stop = function(){clearInterval(flow.wobbler_gain.interval);};
+                        flow.wobbler_gain.node = context.createGain();
+                        flow.wobbler_gain.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                        flow.aggregator.node.connect(flow.wobbler_gain.node);
+                
+                        
+                        flow.mainOut.gain = gain;
+                        flow.mainOut.node = context.createGain();
+                        flow.mainOut.node.gain.setTargetAtTime(gain, context.currentTime, 0);
+                        flow.wobbler_gain.node.connect(flow.mainOut.node);
+                
+                    //output node
+                        this.out = function(){return flow.mainOut.node;}
+                
+                    //controls
+                        this.perform = function(note){
+                            if( !flow.liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
+                            else if( !flow.liveOscillators[note.num] ){ 
+                                //create new tone
+                                flow.liveOscillators[note.num] = flow.OSCmaker.func(
+                                    context, 
+                                    flow.aggregator.node, 
+                                    note.num, 
+                                    flow.OSCmaker.waveType, 
+                                    flow.OSCmaker.periodicWave, 
+                                    note.velocity, 
+                                    flow.OSCmaker.attack, 
+                                    flow.OSCmaker.release, 
+                                    flow.OSCmaker.detune, 
+                                    flow.OSCmaker.octave
+                                );
+                            }
+                            else if( note.velocity == 0 ){ 
+                                //stop and destroy tone
+                                flow.liveOscillators[note.num].stop();
+                                delete flow.liveOscillators[note.num];
+                            }
+                            else{
+                                //adjust tone
+                                flow.liveOscillators[note.num].changeVelocity(note.velocity);
+                            }
+                        };
+                        this.panic = function(){
+                            var OSCs = Object.keys(flow.liveOscillators);
+                            for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+                        };
+                        this.waveType = function(a){if(a==null){return flow.OSCmaker.waveType;}flow.OSCmaker.waveType=a;};
+                        this.periodicWave = function(a){if(a==null){return flow.OSCmaker.periodicWave;}flow.OSCmaker.periodicWave=a;};
+                        this.gain = function(target,time,curve){ return system.utility.audio.changeAudioParam(context,flow.mainOut.node.gain,target,time,curve); };
+                        this.attack = function(time,curve){
+                            if(time==null&&curve==null){return flow.OSCmaker.attack;}
+                            flow.OSCmaker.attack.time = time ? time : flow.OSCmaker.attack.time;
+                            flow.OSCmaker.attack.curve = curve ? curve : flow.OSCmaker.attack.curve;
+                        };
+                        this.release = function(time,curve){
+                            if(time==null&&curve==null){return flow.OSCmaker.release;}
+                            flow.OSCmaker.release.time = time ? time : flow.OSCmaker.release.time;
+                            flow.OSCmaker.release.curve = curve ? curve : flow.OSCmaker.release.curve;
+                        };
+                        this.octave = function(a){if(a==null){return flow.OSCmaker.octave;}flow.OSCmaker.octave=a;};
+                        this.detune = function(target,time,curve){
+                            if(target==null){return flow.OSCmaker.detune;}
+                
+                            //change stored value for any new oscillators that are made
+                                var start = flow.OSCmaker.detune;
+                                var mux = target-start;
+                                var stepsPerSecond = Math.round(Math.abs(mux));
+                                var totalSteps = stepsPerSecond*time;
+                
+                                var steps = [1];
+                                switch(curve){
+                                    case 'linear': steps = system.utility.math.curveGenerator.linear(totalSteps); break;
+                                    case 'exponential': steps = system.utility.math.curveGenerator.exponential(totalSteps); break;
+                                    case 's': steps = system.utility.math.curveGenerator.s(totalSteps,8); break;
+                                    case 'instant': default: break;
+                                }
+                                
+                                if(steps.length != 0){
+                                    var interval = setInterval(function(){
+                                        flow.OSCmaker.detune = start+(steps.shift()*mux);
+                                        if(steps.length == 0){clearInterval(interval);}
+                                    },1000/stepsPerSecond);
+                                }
+                
+                            //instruct liveOscillators to adjust their values
+                                var OSCs = Object.keys(flow.liveOscillators);
+                                for(var b = 0; b < OSCs.length; b++){ 
+                                    flow.liveOscillators[OSCs[b]].detune(target,time,curve);
+                                }
+                        };
+                        this.gainWobbleDepth = function(value){
+                            if(value==null){return flow.wobbler_gain.depth; }
+                            flow.wobbler_gain.depth = value;
+                            flow.wobbler_gain.stop();
+                            flow.wobbler_gain.start();
+                        };
+                        this.gainWobblePeriod = function(value){
+                            if(value==null){return flow.wobbler_gain.period; }
+                            flow.wobbler_gain.period = value;
+                            flow.wobbler_gain.stop();
+                            flow.wobbler_gain.start();
+                        };
+                        this.detuneWobbleDepth = function(value){
+                            if(value==null){return flow.wobbler_detune.depth; }
+                            flow.wobbler_detune.depth = value;
+                            flow.wobbler_detune.stop();
+                            flow.wobbler_detune.start();
+                        };
+                        this.detuneWobblePeriod = function(value){
+                            if(value==null){return flow.wobbler_detune.period; }
+                            flow.wobbler_detune.period = value;
+                            flow.wobbler_detune.stop();
+                            flow.wobbler_detune.start();
+                        };
                 };
             };
 
@@ -5194,7 +6479,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 var controlObjectsGroup_front = canvas.part.builder('group','front');
                                 controlObjectsGroup.append(controlObjectsGroup_front);
                 
-                
                             var invisibleHandleWidth = width*needleWidth + width*0.005;
                             var controlObjects = {};
                             //lead
@@ -5248,6 +6532,17 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         var selectionNeedleB_grappled = false;
                         function currentMousePosition_x(event){
                             return event.x*Math.cos(object.__calculationAngle) - event.y*Math.sin(object.__calculationAngle);
+                        }
+                        function getRelitiveX(event){
+                            var workspacePoint = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                            var point = {
+                                x: workspacePoint.x - backing.extremities.points[0].x, 
+                                y: workspacePoint.y - backing.extremities.points[0].y,
+                            };
+                            return {
+                                x: (point.x*Math.cos(object.__calculationAngle) - point.y*Math.sin(object.__calculationAngle)) / width,
+                                y: (point.y*Math.cos(object.__calculationAngle) - point.x*Math.sin(object.__calculationAngle)) / height,
+                            };
                         }
                         function needleJumpTo(needle,location){
                             var group = needle == 'lead' ? controlObjectsGroup_front : controlObjectsGroup_back;
@@ -5335,7 +6630,16 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     //interaction
                         //generic onmousedown code for interaction
-                            backing.onmousedown = function(x,y,event){};
+                            backing.onmousedown = function(x,y,event){
+                                if( canvas.system.keyboard.pressedKeys.shift ){
+                                    var firstPosition = getRelitiveX(event).x;
+                                    canvas.system.mouse.mouseInteractionHandler(
+                                        function(event){ object.area(firstPosition,getRelitiveX(event).x); },    
+                                    );
+                                }else{
+                                    object.select(getRelitiveX(event).x);
+                                }
+                            };
                             controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
                             controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
                             controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
@@ -5483,7 +6787,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                 
                         //doubleclick to destroy selection area
-                            controlObjects.selection_A.ondblclick = function(x,y,event,shape){ area(-1,-1); };
+                            controlObjects.selection_A.ondblclick = function(x,y,event,shape){ area(-1,-1); canvas.core.viewport.cursor('default'); };
                             controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
                             controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
                     
@@ -5512,7 +6816,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.button_rect = function(
                     name='button_rect',
                     x, y, width=30, height=20, angle=0,
-                    text_centre='button', text_left='', text_right='',
+                    text_centre='', text_left='', text_right='',
                     textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
                     
                     active=true, hoverable=true, selectable=false, pressable=true,
@@ -6025,7 +7329,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             a = (a>1 ? 1 : a);
                             a = (a<0 ? 0 : a);
                 
-                            if(update && object.change != undefined){object.onchange(a);}
+                            if(update && object.onchange != undefined){object.onchange(a);}
                 
                             value = a;
                             needleGroup.parameter.angle(startAngle + maxAngle*value);
@@ -6581,7 +7885,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                                 newSignalBlock.body.onmousemove = function(x,y,event){
                                     var pressedKeys = canvas.system.keyboard.pressedKeys;
-                                    canvas.core.viewport.cursor( pressedKeys.alt ? 'copy' : 'default' );
+                
+                                    var cursor = 'default';
+                                    if( pressedKeys.alt ){ cursor = 'copy'; }
+                                    else if( pressedKeys.Space ){ cursor = 'grab'; }
+                
+                                    canvas.core.viewport.cursor( cursor );
                                 };
                                 newSignalBlock.body.onkeydown = function(x,y,event){
                                     var pressedKeys = canvas.system.keyboard.pressedKeys;
@@ -6592,6 +7901,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     if(!(pressedKeys.alt)){ canvas.core.viewport.cursor('default'); }
                                 };
                                 newSignalBlock.leftHandle.onmousedown = function(x,y,event){
+                                    //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                                        if(canvas.system.keyboard.pressedKeys.Space){
+                                            interactionPlane_back.onmousedown(x,y,event); return;
+                                        }
+                                        
                                     //cloning situation
                                         if(canvas.system.keyboard.pressedKeys.alt){
                                             newSignalBlock.body.onmousedown(x,y,event);
@@ -6639,9 +7953,22 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             }
                                         );
                                 };
-                                newSignalBlock.leftHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor( canvas.system.keyboard.pressedKeys.alt ? 'copy' : 'col-resize' );};
+                                newSignalBlock.leftHandle.onmousemove = function(x,y,event){
+                                    var pressedKeys = canvas.system.keyboard.pressedKeys;
+                
+                                    var cursor = 'col-resize';
+                                    if( pressedKeys.alt ){ cursor = 'copy'; }
+                                    else if( pressedKeys.Space ){ cursor = 'grab'; }
+                
+                                    canvas.core.viewport.cursor( cursor );
+                                };
                                 newSignalBlock.leftHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
                                 newSignalBlock.rightHandle.onmousedown = function(x,y,event,ignoreCloning=false){
+                                    //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                                        if(canvas.system.keyboard.pressedKeys.Space){
+                                            interactionPlane_back.onmousedown(x,y,event); return;
+                                        }
+                
                                     //cloning situation
                                         if(!ignoreCloning && canvas.system.keyboard.pressedKeys.alt){
                                             newSignalBlock.body.onmousedown(x,y,event);
@@ -6684,7 +8011,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             }
                                         );
                                 };
-                                newSignalBlock.rightHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor( canvas.system.keyboard.pressedKeys.alt ? 'copy' : 'col-resize' );};
+                                newSignalBlock.rightHandle.onmousemove = function(x,y,event){
+                                    var pressedKeys = canvas.system.keyboard.pressedKeys;
+                
+                                    var cursor = 'col-resize';
+                                    if( pressedKeys.alt ){ cursor = 'copy'; }
+                                    else if( pressedKeys.Space ){ cursor = 'grab'; }
+                
+                                    canvas.core.viewport.cursor( cursor );
+                                };
                                 newSignalBlock.rightHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
                 
                             return {id:newID, signalBlock:newSignalBlock};
@@ -6723,6 +8058,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                 
                             newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+                            newPlayhead.invisibleHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
                             newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
                 
                             playhead.present = true;
@@ -6790,7 +8126,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             object.getAllSignals = function(){return signals.signalRegistry.getAllSignals(); };
                             object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
                             object.addNotes = function(data){ for(var a = 0; a < data.length; a++){this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength);} };
-                            object.eventsBetween = function(start,end){ return signals.signalRegistry.eventsBetween(start,end);  };
+                            object.eventsBetween = function(start,end){ return signals.signalRegistry.eventsBetween(start,end); };
                             
                         //playhead
                             object.automove = function(a){
@@ -6877,7 +8213,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     //interaction
                         interactionPlane_back.onmousedown = function(x,y,event){
-                            if(canvas.system.keyboard.pressedKeys.shift){//group select 
+                            var pressedKeys = canvas.system.keyboard.pressedKeys;
+                
+                            if( pressedKeys.alt && pressedKeys.Space ){return;}
+                
+                            if(pressedKeys.shift){//group select 
                                 var initialPositionData = currentMousePosition(event);
                                 var livePositionData =    currentMousePosition(event);
                     
@@ -6968,7 +8308,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             }
                                     },
                                 );
-                            }else if(canvas.system.keyboard.pressedKeys.alt){//draw signal
+                            }else if(pressedKeys.alt){//draw signal
                                 //deselect everything
                                     while(signals.selectedSignals.length > 0){
                                         signals.selectedSignals[0].deselect();
@@ -6981,7 +8321,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 //select this new block, and direct the mouse-down to the right handle (for user lengthening)
                                     temp.signalBlock.select();
                                     temp.signalBlock.rightHandle.onmousedown(undefined,undefined,event,true);
-                            }else if(canvas.system.keyboard.pressedKeys.Space){//pan
+                            }else if(pressedKeys.Space){//pan
                                 canvas.core.viewport.cursor('grabbing');
                 
                                 var initialPosition = currentMousePosition(event);
@@ -7033,6 +8373,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     canvas.core.viewport.cursor('crosshair');
                                 }
                             }
+                        };
+                        interactionPlane_front.onkeyup = function(x,y,event){
+                            canvas.core.viewport.cursor('default');
                         };
                 
                     //callbacks
@@ -8057,8 +9400,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         object.audioNode = audioContext.createAnalyser();
                 
                         //audio connections
-                            object.out = function(){return audioNode;};
-                            object.in = function(){return audioNode;};
+                            object.out = function(){return object.audioNode;};
+                            object.in = function(){return object.audioNode;};
                 
                         object.onconnect = function(instigator){
                             if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
@@ -8078,8 +9421,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     glowStyle='rgba(244, 244, 255, 1)',
                     cable_dimStyle='rgb(84, 146, 247)',
                     cable_glowStyle='rgb(123, 168, 242)',
-                    onreceivedata=function(address, data){console.log(name,address,data);},
-                    ongivedata=function(address){console.log(name,address);},
+                    onreceivedata=function(address, data){},
+                    ongivedata=function(address){},
                     onconnect=function(){},
                     ondisconnect=function(){},
                 ){
@@ -8315,7 +9658,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     case 'polygon': return this.element.basic.polygon(
                         name, data.points, data.ignored,
                         data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, 
-                        data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffse
+                        data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffset
                     );
                     case 'text': return this.element.basic.text(
                         name, data.x, data.y, data.text, data.angle, data.anchor, data.size, data.ignored,
@@ -8331,7 +9674,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     case 'path': return this.element.basic.path(
                         name, data.points, data.ignored,
                         data.style.stroke, data.style.lineWidth, data.style.lineCap,  data.style.lineJoin, 
-                        data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffse
+                        data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffset
                     );
             
                 //display
@@ -8551,6 +9894,575 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }
 
+        canvas.object = new function(){};
+        
+        /*
+            a design
+            {
+                name: 'name of object (unique to collection)',
+                collection: 'name of the collection to which this object belongs',
+                x: 0, y: 0,
+                space: [{x:0,y:0}, ...], //a collection of points, used to determine the object's selection/collision area
+                spaceOutline: true/false, //a helper graphic, which when set to true, will draw an outline of the space
+                elements:[ //a list of all the parts
+                    {
+                        type:'part type name',
+                        name:'a unique name',
+                        grapple: true/false, //declare that this shape part should be used as an object grapple
+                        data:{}, //data relivant to this part type
+                    }
+                ] 
+            }
+        */
+        canvas.object.builder = function(creatorMethod,design){
+            if(!creatorMethod){console.error("canvas.object.builder:: creatorMethod missing");return;}
+        
+            //main group
+                var object = canvas.part.builder('group',design.name,{x:design.x, y:design.y});
+                object.collection = design.collection;
+                object.creatorMethod = design.creatorMethod;
+        
+            //generate parts and append to main group
+                object.elements = {};
+                for(var a = 0; a < design.elements.length; a++){
+                    //check for name collision
+                        if( object.getChildByName(design.elements[a].name) != undefined ){
+                            console.warn('error: part with the name "'+design.elements[a].name+'" already exists. Part:',design.elements[a],'will not be added');
+                            continue;
+                        }    
+        
+                    //produce and append part
+                        var newPart = canvas.part.builder( design.elements[a].type, design.elements[a].name, design.elements[a].data );
+                        object.append(newPart);
+        
+                    //add part to element tree
+                        if( object.elements[design.elements[a].type] == undefined ){ object.elements[design.elements[a].type] = {}; }
+                        object.elements[design.elements[a].type][design.elements[a].name] = newPart;
+        
+                    //add grapple code (if appropiate)
+                        if( design.elements[a].grapple ){
+                            canvas.object.builder.objectGrapple.declare( newPart, object );
+                        }
+                }
+        
+            //gather together io ports
+                object.io = {};
+                [
+                    {key:'_', name:'connectionNode'},
+                    {key:'signal', name:'connectionNode_signal'},
+                    {key:'voltage', name:'connectionNode_voltage'},
+                    {key:'data', name:'connectionNode_data'},
+                    {key:'audio', name:'connectionNode_audio'},
+                ].forEach(function(type){
+                    if(!object.elements[type.name]){return;}
+                    var keys = Object.keys(object.elements[type.name]);
+                    for(var a = 0; a < keys.length; a++){
+                        var part = object.elements[type.name][keys[a]];
+                        if( object.io[type.key] == undefined ){ object.io[type.key] = {}; }
+                        object.io[type.key][part.name] = part;
+                    }
+                });
+        
+            //generate object's personal space
+                object.space = { 
+                    points:Object.assign([],design.space),
+                    box:canvas.library.math.boundingBoxFromPoints(design.space),
+                };
+                if( design.spaceOutline ){
+                    //create name for the outline that won't interfer with other names 
+                        var frameName = 'spaceOutline';
+                        while( object.getChildByName(frameName) != undefined ){ frameName = frameName + Math.floor(Math.random()*10); } //add random digits until it's unique
+                    //create and add outline
+                        object.append(canvas.part.builder( 'polygon', frameName, {points:design.space, style:{ fill:'rgba(0,0,0,0)', stroke:'rgba(0,0,0,1)' } } ));
+                }
+        
+            return object;
+        };
+        
+        
+        
+        
+        
+        
+        
+        
+        canvas.object.builder.objectGrapple = {
+            tmpObject:undefined,
+            functionList:{ onmousedown:[], onmouseup:[], },
+            declare:function(grapple, object){
+                grapple.object = object;
+                object.grapple = grapple;
+        
+                function grappleFunctionRunner(list){
+                    return function(x,y,event){
+                        //ensure that it's the action button on the mouse
+                            if(event.button != 0){return;}
+        
+                        //save object
+                            canvas.object.builder.objectGrapple.tmpObject = this.object;
+                        
+                        //run through function list, and activate functions where necessary
+                            canvas.library.structure.functionListRunner(list)({event:event,x:x,y:y});
+                    };
+                }
+        
+                grapple.onmousedown = grappleFunctionRunner( canvas.object.builder.objectGrapple.functionList.onmousedown );
+                grapple.onmouseup = grappleFunctionRunner( canvas.object.builder.objectGrapple.functionList.onmouseup );
+            },
+        };
+        
+        canvas.object.collection = new function(){
+            this.alpha = new function(){
+                this.audio_duplicator = function(x,y){
+                    var style = {
+                        background:{fill:'rgba(200,200,200,1)'},
+                        markings: {fill:'rgba(150,150,150,1)'},
+                    };
+                    var design = {
+                        name: 'audio_duplicator',
+                        collection: 'alpha',
+                        x:x, y:y,
+                        space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                        // spaceOutline: true,
+                        elements:[
+                            {type:'connectionNode_audio', name:'input', data:{ type:0, x:45, y:5, width:20, height:20 }},
+                            {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:20, height:20, isAudioOutput:true }},
+                            {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:20, height:20, isAudioOutput:true }},
+                
+                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], style:style.background }},
+                
+                            {type:'polygon', name:'upperArrow', data:{ points:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], style:style.markings }},
+                            {type:'polygon', name:'lowerArrow', data:{ points:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], style:style.markings }},
+                            {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, style:style.markings }},
+                            {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, style:style.markings }},
+                            {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, style:style.markings }},
+                
+                        ],
+                    };
+                
+                    //main object
+                        var object = canvas.object.builder(this.audio_duplicator,design);
+                
+                    //circuitry
+                        object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+                        object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+                         
+                    return object;
+                };
+                
+                this.audio_duplicator.metadata = {
+                    name:'Audio Duplicator',
+                    helpURL:'https://metasophiea.com/curve/help/objects/alpha/audioDuplicator/'
+                };
+                this.testObject = function(x,y){
+                    var design = {
+                        name: 'testObject',
+                        collection: 'alpha',
+                        x:x, y:y,
+                        space: [
+                            {x:-5,y:-5}, 
+                            {x:65,y:-5}, 
+                            {x:65,y:5}, 
+                            {x:290,y:5}, 
+                            {x:290,y:40}, 
+                            {x:615,y:40}, 
+                            {x:615,y:130}, 
+                            {x:715,y:130}, 
+                            {x:715,y:220}, 
+                            {x:255,y:220}, 
+                            {x:255,y:335}, 
+                            {x:440,y:335}, 
+                            {x:440,y:445}, 
+                            {x:-5,y:455}
+                        ],
+                        // spaceOutline: true,
+                        elements:[
+                            //basic
+                                {type:'rectangle', name:'testRectangle', data:{ x:5, y:5, width:30, height:30, style:{fill:'rgba(255,0,0,1)'} }},
+                                {type:'circle', name:'testCircle', data:{ x:20, y:55, r:15 }},
+                                {type:'image', name:'testImage', data:{ x:40, y:40, width:30, height:30, url:'https://t2.genius.com/unsafe/300x300/https%3A%2F%2Fimages.genius.com%2F72ee0b753f056baa410c17a6ad9fea70.588x588x1.jpg' } }, 
+                                {type:'polygon', name:'testPolygon', data:{ points:[{x:55,y:5}, {x:70,y:35}, {x:40,y:35}], style:{ fill:'rgba(0,255,0,1)' } } }, 
+                                {type:'text', name:'testText', data:{ x:7.5, y:95, text:'Hello', style:{font:'20pt Arial', fill:'rgba(150,150,255,1)' } } }, 
+                                {type:'path', name:'testPath', data:{ points:[{x:0,y:0},{x:0,y:90},{x:2.5,y:90},{x:2.5,y:72.5},{x:75,y:72.5}] }}, 
+                            //display
+                                {type:'glowbox_rect', name:'test_glowbox_rect', data:{x:90,y:0}},
+                                {type:'sevenSegmentDisplay', name:'test_sevenSegmentDisplay', data:{x:125,y:0}},
+                                {type:'sixteenSegmentDisplay', name:'test_sixteenSegmentDisplay', data:{x:150,y:0}},
+                                {type:'readout_sixteenSegmentDisplay', name:'test_readout_sixteenSegmentDisplay', data:{x:175,y:0}},
+                                {type:'level', name:'test_level1', data:{x:90, y:35}},
+                                {type:'meter_level', name:'test_meterLevel1', data:{x:115, y:35}},
+                                {type:'audio_meter_level', name:'test_audioMeterLevel1', data:{x:140, y:35}},
+                                {type:'rastorDisplay', name:'test_rastorDisplay1', data:{x:165, y:35}},
+                                {type:'grapher', name:'test_grapher1', data:{x:230, y:35}},
+                                {type:'grapher_periodicWave', name:'test_grapher_periodicWave1', data:{x:355, y:35}},
+                                {type:'grapher_audioScope', name:'test_grapher_audioScope1', data:{x:480, y:35}},
+                            //control
+                                {type:'slide', name:'test_slide1', data:{x:0,y:110}},
+                                {type:'slidePanel', name:'test_slidePanel1', data:{x:15,y:110}},
+                                {type:'slide', name:'test_slide2', data:{x:0,y:220,angle:-Math.PI/2}},
+                                {type:'slidePanel', name:'test_slidePanel2', data:{x:0,y:305,angle:-Math.PI/2}},
+                                {type:'rangeslide', name:'test_rangeslide1', data:{x:100,y:110}},
+                                {type:'rangeslide', name:'test_rangeslide2', data:{x:100,y:220,angle:-Math.PI/2}},
+                                {type:'dial_continuous', name:'test_dial_continuous1', data:{x:130,y:125}},
+                                {type:'dial_discrete', name:'test_dial_discrete1', data:{x:170,y:125}},
+                                {type:'button_rect', name:'test_button_rect1', data:{x:115,y:145}},
+                                {type:'list', name:'test_list1', data:{x:185,y:225,list:[
+                                    'space',
+                                    { text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
+                                    { text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
+                                    { text_left:'item3',  text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
+                                    { text_left:'item4',  text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
+                                    { text_left:'item5',  text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
+                                    'break',
+                                    { text_left:'item6',  text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
+                                    { text_left:'item7',  text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
+                                    { text_left:'item8',  text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
+                                    { text_left:'item9',  text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
+                                    { text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
+                                    'break',
+                                    { text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
+                                    { text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
+                                    { text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
+                                    { text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
+                                    { text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
+                                    'space',
+                                ]}},
+                                {type:'checkbox_rect', name:'test_checkbox_rect1', data:{x:150,y:145}},
+                                {type:'rastorgrid', name:'test_rastorgrid1', data:{x:100,y:225}},
+                                {type:'needleOverlay', name:'test_needleOverlay1', data:{x:0,y:310}},
+                                {type:'grapher_waveWorkspace', name:'test_grapher_waveWorkspace1', data:{x:0,y:375}},
+                                {type:'sequencer', name:'test_sequencer1', data:{x:125,y:330}},
+                            //dynamic nodes
+                                {type:'connectionNode', name:'test_connectionNode1', data:{ x:255, y:135 }},
+                                {type:'connectionNode', name:'test_connectionNode2', data:{ x:230, y:185 }},
+                                {type:'connectionNode', name:'test_connectionNode3', data:{ x:280, y:185 }},
+                                {type:'connectionNode_signal', name:'test_connectionNode_signal1', data:{ x:355, y:135 }},
+                                {type:'connectionNode_signal', name:'test_connectionNode_signal2', data:{ x:330, y:185 }},
+                                {type:'connectionNode_signal', name:'test_connectionNode_signal3', data:{ x:380, y:185 }},
+                                {type:'connectionNode_voltage', name:'test_connectionNode_voltage1', data:{ x:455, y:135 }},
+                                {type:'connectionNode_voltage', name:'test_connectionNode_voltage2', data:{ x:430, y:185 }},
+                                {type:'connectionNode_voltage', name:'test_connectionNode_voltage3', data:{ x:480, y:185 }},
+                                {type:'connectionNode_data', name:'test_connectionNode_data1', data:{ x:555, y:135 }},
+                                {type:'connectionNode_data', name:'test_connectionNode_data2', data:{ x:530, y:185 }},
+                                {type:'connectionNode_data', name:'test_connectionNode_data3', data:{ x:580, y:185 }},
+                                {type:'connectionNode_audio', name:'test_connectionNode_audio1', data:{ x:655, y:135, isAudioOutput:true}},
+                                {type:'connectionNode_audio', name:'test_connectionNode_audio2', data:{ x:630, y:185 }},
+                                {type:'connectionNode_audio', name:'test_connectionNode_audio3', data:{ x:680, y:185 }},
+                        ],
+                    };
+                
+                    //main object
+                        var object = canvas.object.builder(this.testObject,design);
+                
+                    //playing with the parts
+                        object.elements.readout_sixteenSegmentDisplay.test_readout_sixteenSegmentDisplay.text('hello');
+                        object.elements.readout_sixteenSegmentDisplay.test_readout_sixteenSegmentDisplay.print();
+                
+                        object.elements.grapher.test_grapher1.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
+                        object.elements.grapher.test_grapher1.draw([0,0.25,1],undefined,1);
+                        
+                        object.elements.grapher_periodicWave.test_grapher_periodicWave1.updateBackground();
+                        object.elements.grapher_periodicWave.test_grapher_periodicWave1.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
+                        object.elements.grapher_periodicWave.test_grapher_periodicWave1.draw();
+                
+                        object.elements.needleOverlay.test_needleOverlay1.select(0.25);
+                        object.elements.needleOverlay.test_needleOverlay1.area(0.5,0.75);
+                
+                        object.elements.grapher_waveWorkspace.test_grapher_waveWorkspace1.select(0.25);
+                        object.elements.grapher_waveWorkspace.test_grapher_waveWorkspace1.area(0.5,0.75);
+                        
+                        object.elements.sequencer.test_sequencer1.addSignal( 0,0,  10,0.0 );
+                        object.elements.sequencer.test_sequencer1.addSignal( 1,1,  10,0.1 );
+                        object.elements.sequencer.test_sequencer1.addSignal( 2,2,  10,0.2 );
+                        object.elements.sequencer.test_sequencer1.addSignal( 3,3,  10,0.3 );
+                        object.elements.sequencer.test_sequencer1.addSignal( 4,4,  10,0.4 );
+                        object.elements.sequencer.test_sequencer1.addSignal( 5,5,  10,0.5 );
+                        object.elements.sequencer.test_sequencer1.addSignal( 6,6,  10,0.6 );
+                        object.elements.sequencer.test_sequencer1.addSignal( 7,7,  10,0.7 );
+                        object.elements.sequencer.test_sequencer1.addSignal( 8,8,  10,0.8 );
+                        object.elements.sequencer.test_sequencer1.addSignal( 9,9,  10,0.9 );
+                        object.elements.sequencer.test_sequencer1.addSignal( 10,10,10,1.0 );
+                    
+                    return object;
+                };
+                
+                
+                
+                
+                
+                
+                
+                
+                this.testObject.metadata = {
+                    name:'Test Object',
+                    helpURL:'https://metasophiea.com/curve/help/objects/alpha/testObject/'
+                };
+                this.pulseGenerator = function(x,y,debug=false){
+                    var maxTempo = 240;
+                
+                    var style = {
+                        background:{fill:'rgba(200,200,200,1)'},
+                        text:{fill:'rgba(0,0,0,1)', size:4, font:'Courier New'},
+                
+                        dial:{
+                            handle: 'rgba(220,220,220,1)',
+                            slot: 'rgba(50,50,50,1)',
+                            needle: 'rgba(250,150,150,1)',
+                        }
+                    };
+                    var design = {
+                        name: 'pulseGenerator',
+                        collection: 'alpha',
+                        x: x, y: y,
+                        space:[
+                            {x:0,y:10},{x:10,y:0},
+                            {x:100,y:0},{x:115,y:10},
+                            {x:115,y:30},{x:100,y:40},
+                            {x:10,y:40},{x:0,y:30}
+                        ], 
+                        // spaceOutline: true,
+                        elements:[
+                            {type:'connectionNode_data', name:'out', data:{
+                                x: -5, y: 11.25, width: 5, height: 17.5,
+                            }},
+                            {type:'connectionNode_data', name:'sync', data:{
+                                x: 115, y: 11.25, width: 5, height: 17.5,
+                                receive:function(){ object.elements.button_rect.sync.press();},
+                            }},
+                
+                            {type:'polygon', name:'backing', data:{ points:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], style:style.background }},
+                
+                            {type:'button_rect', name:'syncButton', data:{
+                                x:102.5, y: 11.25, width:10, height: 17.5,
+                                selectable:false, 
+                                style:{ 
+                                    background__up__fill:'rgba(175,175,175,1)', 
+                                    background__hover__fill:'rgba(220,220,220,1)', 
+                                    background__hover_press__fill:'rgba(150,150,150,1)'
+                                }, 
+                                onpress:function(){updateTempo(tempo)},
+                            }},
+                            {type:'dial_continuous',name:'tempo',data:{
+                                x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                            }},
+                            {type:'readout_sixteenSegmentDisplay',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+                        ]
+                    };
+                
+                    //main object
+                        var object = canvas.object.builder(this.pulseGenerator,design);
+                
+                    //internal circuitry
+                        object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                
+                    //import/export
+                        object.exportData = function(){
+                            return object.elements.dial_continuous.tempo.get();
+                        };
+                        object.importData = function(data){
+                            object.elements.dial_continuous.tempo.set(data);
+                        };
+                
+                    //internal functions
+                        var interval = null;
+                        var tempo = 120;
+                        function updateTempo(newTempo){
+                            //update readout
+                                object.elements.readout_sixteenSegmentDisplay.readout.text(
+                                    canvas.library.misc.padString(newTempo,3,' ')+'bpm'
+                                );
+                                object.elements.readout_sixteenSegmentDisplay.readout.print();
+                
+                            //update interval
+                                if(interval){ clearInterval(interval); }
+                                if(newTempo > 0){
+                                    interval = setInterval(function(){
+                                        object.io.data.out.send('pulse');
+                                    },1000*(60/newTempo));
+                                }
+                
+                            object.io.data.out.send('pulse');
+                            tempo = newTempo;
+                        }
+                
+                    //interface
+                        object.i = {
+                            setTempo:function(value){
+                                object.elements.dial_continuous.tempo.set(value);
+                            },
+                        };
+                
+                    //setup
+                        object.elements.dial_continuous.tempo.set(0.5);
+                
+                    return object;
+                };
+                
+                this.pulseGenerator.metadata = {
+                    name:'Pulse Generator',
+                    helpurl:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator/'
+                };
+                this.data_duplicator = function(x,y){
+                    var style = {
+                        background:{fill:'rgba(200,200,200,1)'},
+                        markings:{fill:'rgba(150,150,150,1)'},
+                    };
+                    var design = {
+                        name:'data_duplicator',
+                        collection: 'alpha',
+                        x:x, y:y,
+                        space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                        // spaceOutline: true,
+                        elements:[
+                            {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
+                            {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
+                            {type:'connectionNode_data', name:'input', data:{ 
+                                x:45, y:5, width:20, height:20,
+                                onreceive:function(address,data){
+                                    object.io.data.output_1.send(address,data);
+                                    object.io.data.output_2.send(address,data);
+                                }
+                            }},
+                
+                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], style:style.background }},
+                
+                            {type:'polygon', name:'upperArrow', data:{ points:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], style:style.markings }},
+                            {type:'polygon', name:'lowerArrow', data:{ points:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], style:style.markings }},
+                            {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, style:style.markings }},
+                            {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, style:style.markings }},
+                            {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, style:style.markings }},
+                        ]
+                    };
+                
+                    //main object
+                        var object = canvas.object.builder(this.data_duplicator,design);
+                    
+                    return object;
+                
+                };
+                
+                this.data_duplicator.metadata = {
+                    name:'Data Duplicator',
+                    helpurl:'https://metasophiea.com/curve/help/objects/alpha/dataDuplicator/'
+                };
+                
+                //Operation Note:
+                //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
+                //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
+                //  then the 2nd port
+                this.basicMixer = function(x,y){
+                    var connectionCount = 8;
+                    var style = {
+                        background:{fill:'rgba(200,200,200,1)'},
+                        markings: {fill:'rgba(150,150,150,1)'},
+                        h1: {fill:'rgba(0,0,0,1)', font:'Courier New'},
+                        h2: {fill:'rgb(150,150,150)', font:'Courier New'},
+                
+                        dial:{
+                            handle: 'rgba(220,220,220,1)',
+                            slot: 'rgba(50,50,50,1)',
+                            needle: 'rgba(250,150,150,1)',
+                        }
+                    };
+                    var design = {
+                        name:'basicMixer',
+                        collection: 'alpha',
+                        x:x, y:y,
+                        space:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
+                        // spaceOutline: true,
+                        elements:[
+                            {type:'connectionNode_audio', name:'output_0', data:{ x:-10, y:5, width:20, height:20, isAudioOutput:true }},
+                            {type:'connectionNode_audio', name:'output_1', data:{ x:-10, y:30, width:20, height:20, isAudioOutput:true }},
+                
+                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}], style:style.background }},
+                
+                            {type:'text', name:'gain', data:{ x:77.5, y:8, text:'gain', size:0.75, style:style.h2 } }, 
+                            {type:'text', name:'pan', data:{  x:54,   y:8, text:'pan', size:0.75, style:style.h2 } }, 
+                            
+                            {type:'rectangle', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, style:style.markings }},
+                            {type:'rectangle', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, style:style.markings }},
+                            {type:'rectangle', name:'down', data:{ x:10, y:6, width:2, height:35, style:style.markings }},
+                            {type:'rectangle', name:'inTo0', data:{ x:2, y:14, width:10, height:2, style:style.markings }},
+                            {type:'rectangle', name:'inTo1', data:{ x:2, y:39, width:10, height:2, style:style.markings }},
+                        ],
+                    };
+                
+                    //dynamic design
+                    for(var a = 0; a < connectionCount; a++){
+                        design.elements.unshift(
+                            {type:'connectionNode_audio', name:'input_'+a, data:{ 
+                                x:90, y:10+(a*25), width:20, height:20 
+                            }},
+                        );
+                
+                        design.elements.push(
+                            {type:'rectangle', name:'line_'+a, data:{
+                                x:23, y:19.1+a*25, width:75, height:2, 
+                                style:style.markings,
+                            }}
+                        );
+                
+                        design.elements.push(
+                            {type:'dial_continuous',name:'gain_'+a,data:{
+                                x:85, y:20+a*25, r:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                            }}
+                        );
+                        design.elements.push(
+                            {type:'dial_continuous',name:'pan_'+a,data:{
+                                x:60, y:20+a*25, r:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                            }}
+                        );
+                    }
+                
+                    //main object
+                        var object = canvas.object.builder(this.basicMixer,design);
+                
+                    
+                
+                    //internal circuitry
+                        for(var a = 0; a < connectionCount; a++){
+                            object['splitter_'+a] = new canvas.part.circuit.audio.channelMultiplier(canvas.library.audio.context,2);
+                            object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
+                            object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_0'].in() );
+                            object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_1'].in() );
+                
+                            object.elements.dial_continuous['gain_'+a].onchange = function(a){
+                                return function(value){
+                                    object['splitter_'+a].inGain(value);
+                                }
+                            }(a);
+                            object.elements.dial_continuous['gain_'+a].onchange = function(a){
+                                return function(value){
+                                    object['splitter_'+a].outGain(0,value);
+                                    object['splitter_'+a].outGain(1,1-value);
+                                }
+                            }(a);
+                        }
+                
+                    //interface
+                        object.i = {
+                            gain:function(track,value){object.elements.dial_continuous['gain_'+track].set(value);},
+                            pan:function(track,value){object.elements.dial_continuous['pan_'+track].set(value);},
+                        };
+                
+                    //setup
+                        for(var a = 0; a < connectionCount; a++){
+                            object.i.gain(a,0.5);
+                            object.i.pan(a,0.5);
+                        }
+                    
+                    return object;
+                };
+                
+                this.basicMixer.metadata = {
+                    name:'Basic Audio Mixer',
+                    helpurl:'https://metasophiea.com/curve/help/objects/alpha/basicAudioMixer/'
+                };
+            };
+        };
 
         function tester(item1,item2){
             function getType(obj){
@@ -8602,129 +10514,10 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
 
         
         // -- Only one test per time -- //
-        //basic
-            var basicGroup = canvas.part.builder( 'group', 'basic', { x:10, y:10, angle:0 } );
-            canvas.system.pane.mm.append( basicGroup );
-            basicGroup.append( canvas.part.builder( 'rectangle', 'testRectangle', { x:5, y:5, width:30, height:30, style:{ fill:'rgba(255,0,0,1)' } } ) );
-            basicGroup.append( canvas.part.builder( 'circle', 'testCircle', { x:20, y:55, r:15 } ) );
-            basicGroup.append( canvas.part.builder( 'image', 'testImage', { x:40, y:40, width:30, height:30, url:'https://t2.genius.com/unsafe/300x300/https%3A%2F%2Fimages.genius.com%2F72ee0b753f056baa410c17a6ad9fea70.588x588x1.jpg' } ) );
-            basicGroup.append( canvas.part.builder( 'polygon', 'testPolygon', { points:[{x:55,y:5}, {x:70,y:35}, {x:40,y:35}], style:{ fill:'rgba(0,255,0,1)' } } ) );
-            basicGroup.append( canvas.part.builder( 'text', 'testText', { x:7.5, y:95, text:'Hello', style:{font:'20pt Arial', fill:'rgba(150,150,255,1)' } } ) );
-            basicGroup.append( canvas.part.builder( 'path', 'testPath', { points:[{x:0,y:0},{x:0,y:90},{x:2.5,y:90},{x:2.5,y:72.5},{x:75,y:72.5}] }) );
-        
-        //display
-            var displayGroup = canvas.part.builder( 'group', 'display', { x:100, y:10, angle:0 } );
-            canvas.system.pane.mm.append( displayGroup );
-            displayGroup.append( canvas.part.builder( 'glowbox_rect', 'test_glowbox_rect', {x:0,y:0} ) );
-            displayGroup.append( canvas.part.builder( 'sevenSegmentDisplay', 'test_sevenSegmentDisplay', {x:35,y:0} ) );
-            displayGroup.append( canvas.part.builder( 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay', {x:60,y:0} ) );
-            displayGroup.append( canvas.part.builder( 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay', {x:85,y:0} ) );
-            displayGroup.append( canvas.part.builder( 'level', 'test_level1', {x:0, y:35} ) );
-            displayGroup.append( canvas.part.builder( 'meter_level', 'test_meterLevel1', {x:25, y:35} ) );
-            displayGroup.append( canvas.part.builder( 'audio_meter_level', 'test_audioMeterLevel1', {x:50, y:35} ) );
-            displayGroup.append( canvas.part.builder( 'rastorDisplay', 'test_rastorDisplay1', {x:75, y:35} ) );
-            var grapher = canvas.part.builder( 'grapher', 'test_grapher1', {x:140, y:35} );
-                displayGroup.append( grapher );
-                grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
-                grapher.draw([0,0.25,1],undefined,1);
-            var grapher = canvas.part.builder( 'grapher_periodicWave', 'test_grapher_periodicWave1', {x:265, y:35} );
-                displayGroup.append( grapher );
-                grapher.updateBackground();
-                grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
-                grapher.draw();
-            var grapher = canvas.part.builder( 'grapher_audioScope', 'test_grapher_audioScope1', {x:390, y:35} );
-                displayGroup.append( grapher );
-        
-        
-        //control
-            var controlGroup = canvas.part.builder( 'group', 'control', { x:10, y:120, angle:0 } );
-            canvas.system.pane.mm.append( controlGroup );
-            controlGroup.append( canvas.part.builder( 'slide', 'test_slide1', {x:0,y:0} ) );
-            controlGroup.append( canvas.part.builder( 'slidePanel', 'test_slidePanel1', {x:15,y:0} ) );
-            controlGroup.append( canvas.part.builder( 'slide', 'test_slide2', {x:0,y:110,angle:-Math.PI/2} ) );
-            controlGroup.append( canvas.part.builder( 'slidePanel', 'test_slidePanel2', {x:0,y:195,angle:-Math.PI/2} ) );
-            controlGroup.append( canvas.part.builder( 'rangeslide', 'test_rangeslide1', {x:100,y:0} ) );
-            controlGroup.append( canvas.part.builder( 'rangeslide', 'test_rangeslide2', {x:100,y:110,angle:-Math.PI/2} ) );
-            controlGroup.append( canvas.part.builder( 'dial_continuous', 'test_dial_continuous1', {x:130,y:15} ) );
-            controlGroup.append( canvas.part.builder( 'dial_discrete', 'test_dial_discrete1', {x:170,y:15} ) );
-            controlGroup.append( canvas.part.builder( 'button_rect', 'test_button_rect1', {x:115,y:35} ) );
-            controlGroup.append( canvas.part.builder( 'list', 'test_list1', {x:185,y:115,list:[
-                'space',
-                { text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
-                { text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
-                { text_left:'item3',  text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
-                { text_left:'item4',  text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
-                { text_left:'item5',  text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
-                'break',
-                { text_left:'item6',  text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
-                { text_left:'item7',  text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
-                { text_left:'item8',  text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
-                { text_left:'item9',  text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
-                { text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
-                'break',
-                { text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
-                { text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
-                { text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
-                { text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
-                { text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
-                'space',
-            ]} ) );
-            controlGroup.append( canvas.part.builder( 'checkbox_rect', 'test_checkbox_rect1', {x:150,y:35} ) );
-            controlGroup.append( canvas.part.builder( 'rastorgrid', 'test_rastorgrid1', {x:100,y:115} ) );
-            var no = canvas.part.builder( 'needleOverlay', 'test_needleOverlay1', {x:0,y:200} );
-                controlGroup.append( no );
-                no.select(0.25);
-                no.area(0.5,0.75)
-            var gww = canvas.part.builder( 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:0,y:265} );
-                controlGroup.append( gww );
-                gww.select(0.2);
-                gww.area(0.5,0.7)
-            var seq = canvas.part.builder( 'sequencer', 'test_sequencer1', {x:125,y:220} );
-                controlGroup.append( seq );
-                seq.addSignal( 0,0,  10,0.0 );
-                seq.addSignal( 1,1,  10,0.1 );
-                seq.addSignal( 2,2,  10,0.2 );
-                seq.addSignal( 3,3,  10,0.3 );
-                seq.addSignal( 4,4,  10,0.4 );
-                seq.addSignal( 5,5,  10,0.5 );
-                seq.addSignal( 6,6,  10,0.6 );
-                seq.addSignal( 7,7,  10,0.7 );
-                seq.addSignal( 8,8,  10,0.8 );
-                seq.addSignal( 9,9,  10,0.9 );
-                seq.addSignal( 10,10,10,1.0 );
-                seq.event = function(data){console.log(data);};
-        
-        
-        //dynamic
-            var dynamicGroup = canvas.part.builder( 'group', 'dynamic', { x:240, y:120, angle:0 } );
-            canvas.system.pane.mm.append( dynamicGroup );
-            dynamicGroup.append( canvas.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode', 'test_connectionNode1', { x:25, y:25 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode', 'test_connectionNode2', { x:0,  y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode', 'test_connectionNode3', { x:50, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:125, y:25 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:100, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:150, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage1', { x:225, y:25 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage2', { x:200, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage3', { x:250, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:325, y:25 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:300, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:350, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ) );
-            dynamicGroup.append( canvas.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:75 } ) );
-        
-        
-        
-        
-        
-        
-        
-        
-        //view positioning
-            canvas.core.viewport.scale(3.5);
-            canvas.core.viewport.position(-130,-335);
+        canvas.system.pane.mm.append( canvas.object.collection.alpha.audio_duplicator(20,10) );
+        canvas.system.pane.mm.append( canvas.object.collection.alpha.basicMixer(100,10) );
+        canvas.system.pane.mm.append( canvas.object.collection.alpha.data_duplicator(230,10) );
+        canvas.system.pane.mm.append( canvas.object.collection.alpha.pulseGenerator(330,10) );
 
 
     }

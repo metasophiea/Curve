@@ -25,7 +25,6 @@ this.needleOverlay = function(
                 var controlObjectsGroup_front = canvas.part.builder('group','front');
                 controlObjectsGroup.append(controlObjectsGroup_front);
 
-
             var invisibleHandleWidth = width*needleWidth + width*0.005;
             var controlObjects = {};
             //lead
@@ -79,6 +78,17 @@ this.needleOverlay = function(
         var selectionNeedleB_grappled = false;
         function currentMousePosition_x(event){
             return event.x*Math.cos(object.__calculationAngle) - event.y*Math.sin(object.__calculationAngle);
+        }
+        function getRelitiveX(event){
+            var workspacePoint = canvas.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+            var point = {
+                x: workspacePoint.x - backing.extremities.points[0].x, 
+                y: workspacePoint.y - backing.extremities.points[0].y,
+            };
+            return {
+                x: (point.x*Math.cos(object.__calculationAngle) - point.y*Math.sin(object.__calculationAngle)) / width,
+                y: (point.y*Math.cos(object.__calculationAngle) - point.x*Math.sin(object.__calculationAngle)) / height,
+            };
         }
         function needleJumpTo(needle,location){
             var group = needle == 'lead' ? controlObjectsGroup_front : controlObjectsGroup_back;
@@ -166,7 +176,16 @@ this.needleOverlay = function(
 
     //interaction
         //generic onmousedown code for interaction
-            backing.onmousedown = function(x,y,event){};
+            backing.onmousedown = function(x,y,event){
+                if( canvas.system.keyboard.pressedKeys.shift ){
+                    var firstPosition = getRelitiveX(event).x;
+                    canvas.system.mouse.mouseInteractionHandler(
+                        function(event){ object.area(firstPosition,getRelitiveX(event).x); },    
+                    );
+                }else{
+                    object.select(getRelitiveX(event).x);
+                }
+            };
             controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
             controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
             controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
@@ -314,7 +333,7 @@ this.needleOverlay = function(
             };
 
         //doubleclick to destroy selection area
-            controlObjects.selection_A.ondblclick = function(x,y,event,shape){ area(-1,-1); };
+            controlObjects.selection_A.ondblclick = function(x,y,event,shape){ area(-1,-1); canvas.core.viewport.cursor('default'); };
             controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
             controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
     

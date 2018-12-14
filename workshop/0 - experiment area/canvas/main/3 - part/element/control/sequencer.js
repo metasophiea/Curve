@@ -452,7 +452,12 @@ this.sequencer = function(
                 };
                 newSignalBlock.body.onmousemove = function(x,y,event){
                     var pressedKeys = canvas.system.keyboard.pressedKeys;
-                    canvas.core.viewport.cursor( pressedKeys.alt ? 'copy' : 'default' );
+
+                    var cursor = 'default';
+                    if( pressedKeys.alt ){ cursor = 'copy'; }
+                    else if( pressedKeys.Space ){ cursor = 'grab'; }
+
+                    canvas.core.viewport.cursor( cursor );
                 };
                 newSignalBlock.body.onkeydown = function(x,y,event){
                     var pressedKeys = canvas.system.keyboard.pressedKeys;
@@ -463,6 +468,11 @@ this.sequencer = function(
                     if(!(pressedKeys.alt)){ canvas.core.viewport.cursor('default'); }
                 };
                 newSignalBlock.leftHandle.onmousedown = function(x,y,event){
+                    //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                        if(canvas.system.keyboard.pressedKeys.Space){
+                            interactionPlane_back.onmousedown(x,y,event); return;
+                        }
+                        
                     //cloning situation
                         if(canvas.system.keyboard.pressedKeys.alt){
                             newSignalBlock.body.onmousedown(x,y,event);
@@ -510,9 +520,22 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.leftHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor( canvas.system.keyboard.pressedKeys.alt ? 'copy' : 'col-resize' );};
+                newSignalBlock.leftHandle.onmousemove = function(x,y,event){
+                    var pressedKeys = canvas.system.keyboard.pressedKeys;
+
+                    var cursor = 'col-resize';
+                    if( pressedKeys.alt ){ cursor = 'copy'; }
+                    else if( pressedKeys.Space ){ cursor = 'grab'; }
+
+                    canvas.core.viewport.cursor( cursor );
+                };
                 newSignalBlock.leftHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
                 newSignalBlock.rightHandle.onmousedown = function(x,y,event,ignoreCloning=false){
+                    //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                        if(canvas.system.keyboard.pressedKeys.Space){
+                            interactionPlane_back.onmousedown(x,y,event); return;
+                        }
+
                     //cloning situation
                         if(!ignoreCloning && canvas.system.keyboard.pressedKeys.alt){
                             newSignalBlock.body.onmousedown(x,y,event);
@@ -555,7 +578,15 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.rightHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor( canvas.system.keyboard.pressedKeys.alt ? 'copy' : 'col-resize' );};
+                newSignalBlock.rightHandle.onmousemove = function(x,y,event){
+                    var pressedKeys = canvas.system.keyboard.pressedKeys;
+
+                    var cursor = 'col-resize';
+                    if( pressedKeys.alt ){ cursor = 'copy'; }
+                    else if( pressedKeys.Space ){ cursor = 'grab'; }
+
+                    canvas.core.viewport.cursor( cursor );
+                };
                 newSignalBlock.rightHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
 
             return {id:newID, signalBlock:newSignalBlock};
@@ -594,6 +625,7 @@ this.sequencer = function(
             };
 
             newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
+            newPlayhead.invisibleHandle.onmousemove = function(x,y,event){canvas.core.viewport.cursor('col-resize');};
             newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){canvas.core.viewport.cursor('default');};
 
             playhead.present = true;
@@ -661,7 +693,7 @@ this.sequencer = function(
             object.getAllSignals = function(){return signals.signalRegistry.getAllSignals(); };
             object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
             object.addNotes = function(data){ for(var a = 0; a < data.length; a++){this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength);} };
-            object.eventsBetween = function(start,end){ return signals.signalRegistry.eventsBetween(start,end);  };
+            object.eventsBetween = function(start,end){ return signals.signalRegistry.eventsBetween(start,end); };
             
         //playhead
             object.automove = function(a){
@@ -748,7 +780,11 @@ this.sequencer = function(
 
     //interaction
         interactionPlane_back.onmousedown = function(x,y,event){
-            if(canvas.system.keyboard.pressedKeys.shift){//group select 
+            var pressedKeys = canvas.system.keyboard.pressedKeys;
+
+            if( pressedKeys.alt && pressedKeys.Space ){return;}
+
+            if(pressedKeys.shift){//group select 
                 var initialPositionData = currentMousePosition(event);
                 var livePositionData =    currentMousePosition(event);
     
@@ -839,7 +875,7 @@ this.sequencer = function(
                             }
                     },
                 );
-            }else if(canvas.system.keyboard.pressedKeys.alt){//draw signal
+            }else if(pressedKeys.alt){//draw signal
                 //deselect everything
                     while(signals.selectedSignals.length > 0){
                         signals.selectedSignals[0].deselect();
@@ -852,7 +888,7 @@ this.sequencer = function(
                 //select this new block, and direct the mouse-down to the right handle (for user lengthening)
                     temp.signalBlock.select();
                     temp.signalBlock.rightHandle.onmousedown(undefined,undefined,event,true);
-            }else if(canvas.system.keyboard.pressedKeys.Space){//pan
+            }else if(pressedKeys.Space){//pan
                 canvas.core.viewport.cursor('grabbing');
 
                 var initialPosition = currentMousePosition(event);
@@ -904,6 +940,9 @@ this.sequencer = function(
                     canvas.core.viewport.cursor('crosshair');
                 }
             }
+        };
+        interactionPlane_front.onkeyup = function(x,y,event){
+            canvas.core.viewport.cursor('default');
         };
 
     //callbacks
