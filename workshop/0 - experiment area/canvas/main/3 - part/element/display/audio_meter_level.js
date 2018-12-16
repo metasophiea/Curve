@@ -26,7 +26,7 @@ this.audio_meter_level = function(
 
     //circuitry
         var converter = canvas.part.circuit.audio.audio2percentage()
-        converter.newValue = function(val){object.set( val );};
+        converter.newValue = function(val){meter.set( val );};
 
     //audio connections
         object.audioIn = function(){ return converter.audioIn(); }

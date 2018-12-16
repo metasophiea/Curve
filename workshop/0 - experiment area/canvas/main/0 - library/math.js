@@ -100,6 +100,7 @@ this.pointsOfText = function(text, x, y, angle, size, font, alignment, baseline)
 
     //determine text height
         var height = -font.split('pt')[0].split(' ').pop();
+        if(isNaN(height)){ height = -7.5; }
         height = height/size;
 
     //generate points
@@ -144,6 +145,107 @@ this.lineCorrecter = function(points, maxheight, maxwidth){
     else if( points.y2 > maxheight ){ points.x2 = (maxheight - points.y2 + slope*points.x2)/slope; points.y2 = maxheight; }
 
     return points;
+};
+this.normalizeStretchArray = function(array){
+    //discover the largest number
+        var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
+
+    //devide everything by this largest number, making everything a ratio of this value 
+        var dux = Math.abs(array[biggestIndex]);
+        array = array.map(x => x / dux);
+
+    //stretch the other side of the array to meet 0 or 1
+        if(array[0] == 0 && array[array.length-1] == 1){return array;}
+        var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
+        array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
+
+    return array;
+};
+this.curveGenerator = new function(){
+    this.linear = function(stepCount=2, start=0, end=1){
+        stepCount = Math.abs(stepCount)-1; var outputArray = [0];
+        for(var a = 1; a < stepCount; a++){ 
+            outputArray.push(a/stepCount);
+        }
+        outputArray.push(1); 
+
+        var mux = end-start;
+        for(var a = 0 ; a < outputArray.length; a++){
+            outputArray[a] = outputArray[a]*mux + start;
+        }
+
+        return outputArray;
+    };
+    this.sin = function(stepCount=2, start=0, end=1){
+        stepCount = Math.abs(stepCount) -1;
+        var outputArray = [0];
+        for(var a = 1; a < stepCount; a++){ 
+            outputArray.push(
+                Math.sin( Math.PI/2*(a/stepCount) )
+            );
+        }
+        outputArray.push(1); 
+
+        var mux = end-start;
+        for(var a = 0 ; a < outputArray.length; a++){
+            outputArray[a] = outputArray[a]*mux + start;
+        }
+
+        return outputArray;		
+    };
+    this.cos = function(stepCount=2, start=0, end=1){
+        stepCount = Math.abs(stepCount) -1;
+        var outputArray = [0];
+        for(var a = 1; a < stepCount; a++){ 
+            outputArray.push(
+                1 - Math.cos( Math.PI/2*(a/stepCount) )
+            );
+        }
+        outputArray.push(1); 
+
+        var mux = end-start;
+        for(var a = 0 ; a < outputArray.length; a++){
+            outputArray[a] = outputArray[a]*mux + start;
+        }
+
+        return outputArray;	
+    };
+    this.s = function(stepCount=2, start=0, end=1, sharpness=8){
+        if(sharpness == 0){sharpness = 1/1000000;}
+
+        var curve = [];
+        for(var a = 0; a < stepCount; a++){
+            curve.push(
+                1/( 1 + Math.exp(-sharpness*((a/stepCount)-0.5)) )
+            );
+        }
+
+        var outputArray = canvas.library.math.normalizeStretchArray(curve);
+
+        var mux = end-start;
+        for(var a = 0 ; a < outputArray.length; a++){
+            outputArray[a] = outputArray[a]*mux + start;
+        }
+
+        return outputArray;
+    };
+    this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
+        var stepCount = stepCount-1;
+        var outputArray = [];
+        
+        for(var a = 0; a <= stepCount; a++){
+            outputArray.push( (Math.exp(sharpness*(a/stepCount))-1)/(Math.E-1) ); // Math.E == Math.exp(1)
+        }
+
+        outputArray = system.utility.math.normalizeStretchArray(outputArray);
+
+        var mux = end-start;
+        for(var a = 0 ; a < outputArray.length; a++){
+            outputArray[a] = outputArray[a]*mux + start;
+        }
+
+        return outputArray;
+    };
 };
 this.detectOverlap = new function(){
     this.boundingBoxes = function(a, b){

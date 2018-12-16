@@ -1,4 +1,4 @@
-this.synthesizer2 = function(
+this.synthesizer = function(
     context,
     waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
     gain=1, gainWobbleDepth=0, gainWobblePeriod=0, gainWobbleMin=0.01, gainWobbleMax=1,
@@ -36,24 +36,24 @@ this.synthesizer2 = function(
                             context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
                         ); 
                     }else{ this.generator.type = type; }
-                    this.generator.frequency.setTargetAtTime(system.audio.num2freq(midinumber+12*octave), context.currentTime, 0);
+                    this.generator.frequency.setTargetAtTime(canvas.library.audio.num2freq(midinumber+12*octave), context.currentTime, 0);
                     this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
                     this.generator.start(0);
 
                 this.gain = context.createGain();
                     this.generator.connect(this.gain);
                     this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                    system.utility.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
+                    canvas.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
                     this.gain.connect(connection);
 
                 this.detune = function(target,time,curve){
-                    system.utility.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
+                    canvas.library.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
                 };
                 this.changeVelocity = function(a){
-                    system.utility.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
+                    canvas.library.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
                 };
                 this.stop = function(){
-                    system.utility.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve, false);
+                    canvas.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve, false);
                     setTimeout(function(that){
                         that.gain.disconnect(); 
                         that.generator.stop(); 
@@ -102,12 +102,12 @@ this.synthesizer2 = function(
         flow.wobbler_gain.interval = null;
         flow.wobbler_gain.start = function(){
             if(flow.wobbler_gain.period < gainWobbleMin || flow.wobbler_gain.period >= gainWobbleMax){
-                system.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.01, flow.wobbler_gain.wave );
+                canvas.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.01, flow.wobbler_gain.wave );
                 return;
             }
             flow.wobbler_gain.interval = setInterval(function(){
-                if(flow.wobbler_gain.phase){ system.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
-                else{                        system.utility.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1-flow.wobbler_gain.depth,  0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                if(flow.wobbler_gain.phase){ canvas.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                else{                        canvas.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1-flow.wobbler_gain.depth,  0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
                 flow.wobbler_gain.phase = !flow.wobbler_gain.phase;
             }, 1000*flow.wobbler_gain.period);
         };
@@ -159,7 +159,7 @@ this.synthesizer2 = function(
         };
         this.waveType = function(a){if(a==null){return flow.OSCmaker.waveType;}flow.OSCmaker.waveType=a;};
         this.periodicWave = function(a){if(a==null){return flow.OSCmaker.periodicWave;}flow.OSCmaker.periodicWave=a;};
-        this.gain = function(target,time,curve){ return system.utility.audio.changeAudioParam(context,flow.mainOut.node.gain,target,time,curve); };
+        this.gain = function(target,time,curve){ return canvas.library.audio.changeAudioParam(context,flow.mainOut.node.gain,target,time,curve); };
         this.attack = function(time,curve){
             if(time==null&&curve==null){return flow.OSCmaker.attack;}
             flow.OSCmaker.attack.time = time ? time : flow.OSCmaker.attack.time;

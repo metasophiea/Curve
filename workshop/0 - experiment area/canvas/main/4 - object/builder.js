@@ -70,13 +70,23 @@ canvas.object.builder = function(creatorMethod,design){
             points:Object.assign([],design.space),
             box:canvas.library.math.boundingBoxFromPoints(design.space),
         };
-        if( design.spaceOutline ){
-            //create name for the outline that won't interfer with other names 
-                var frameName = 'spaceOutline';
-                while( object.getChildByName(frameName) != undefined ){ frameName = frameName + Math.floor(Math.random()*10); } //add random digits until it's unique
-            //create and add outline
-                object.append(canvas.part.builder( 'polygon', frameName, {points:design.space, style:{ fill:'rgba(0,0,0,0)', stroke:'rgba(0,0,0,1)' } } ));
-        }
+
+        //create invisible shape
+            //create name for the space shape that won't interfer with other names 
+                var spaceName = 'spaceShape';
+                while( object.getChildByName(spaceName) != undefined ){ spaceName = spaceName + Math.floor(Math.random()*10); } //add random digits until it's unique
+            //create invisible backing shape (with callbacks)
+                var invisibleShape = canvas.part.builder( 'polygon', spaceName, {points:design.space, style:{ fill:'rgba(0,0,0,0)' } } );
+                object.prepend(invisibleShape);
+                invisibleShape.onkeydown = function(x,y,event){ if(object.onkeydown != undefined){ object.onkeydown(x,y,event); } };
+                invisibleShape.onkeyup = function(x,y,event){ if(object.onkeyup != undefined){ object.onkeyup(x,y,event); } };
+
+        //if requested, add an outline shape
+            if( design.spaceOutline ){
+                object.append(
+                    canvas.part.builder( 'polygon', spaceName+'outline', {points:design.space, style:{ fill:'rgba(0,0,0,0)', stroke:'rgba(0,0,0,1)' } } )
+                );
+            }
 
     return object;
 };

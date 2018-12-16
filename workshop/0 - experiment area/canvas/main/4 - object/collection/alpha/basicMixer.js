@@ -3,8 +3,8 @@ this.basicMixer = function(x,y){
     var style = {
         background:{fill:'rgba(200,200,200,1)'},
         markings: {fill:'rgba(150,150,150,1)'},
-        h1: {fill:'rgba(0,0,0,1)', font:'Courier New'},
-        h2: {fill:'rgb(150,150,150)', font:'Courier New'},
+        h1: {fill:'rgba(0,0,0,1)', font:'8pt Courier New'},
+        h2: {fill:'rgb(150,150,150)', font:'5pt Courier New'},
 
         dial:{
             handle: 'rgba(220,220,220,1)',
@@ -24,8 +24,8 @@ this.basicMixer = function(x,y){
 
             {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}], style:style.background }},
 
-            {type:'text', name:'gain', data:{ x:77.5, y:8, text:'gain', size:0.75, style:style.h2 } }, 
-            {type:'text', name:'pan', data:{  x:54,   y:8, text:'pan', size:0.75, style:style.h2 } }, 
+            {type:'text', name:'gain', data:{ x:77.5, y:8, text:'gain', style:style.h2 } }, 
+            {type:'text', name:'pan', data:{  x:54,   y:8, text:'pan', style:style.h2 } }, 
             
             {type:'rectangle', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, style:style.markings }},
             {type:'rectangle', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, style:style.markings }},
@@ -106,5 +106,5 @@ this.basicMixer = function(x,y){
 
 this.basicMixer.metadata = {
     name:'Basic Audio Mixer',
-    helpurl:'https://metasophiea.com/curve/help/objects/alpha/basicAudioMixer/'
+    helpURL:'https://metasophiea.com/curve/help/objects/alpha/basicAudioMixer/'
 };

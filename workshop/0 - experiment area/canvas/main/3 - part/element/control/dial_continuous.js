@@ -109,7 +109,7 @@ this.dial_continuous = function(
         object.onrelease = onrelease;
 
     //setup
-        set(0);
+        set(value);
 
     return object;
 };

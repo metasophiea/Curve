@@ -10,7 +10,7 @@ this.audioIn = function(
     //outAggregator
         flow.outAggregator.gain = 1;
         flow.outAggregator.node = context.createGain();
-        system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
+        canvas.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
 
 
     //output node
@@ -29,7 +29,7 @@ this.audioIn = function(
             promise.then(
                 function(source){
                     audioDevice = source;
-                    system.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
+                    canvas.library.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
                 },
                 function(error){
                     console.warn('could not find audio input device: "' + deviceId + '"');
@@ -40,7 +40,7 @@ this.audioIn = function(
         this.gain = function(a){
             if(a==null){return flow.outAggregator.gain;}
             flow.outAggregator.gain = a;
-            system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
+            canvas.library.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
         };
 
     //setup

@@ -11,7 +11,7 @@ this.distortionUnit = function(
     //inAggregator
         flow.inAggregator.gain = 0;
         flow.inAggregator.node = context.createGain();
-        system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+        canvas.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
 
     //distortionNode
         flow.distortionNode.distortionAmount = 0;
@@ -22,7 +22,7 @@ this.distortionUnit = function(
             if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
             
             flow.distortionNode.node = context.createWaveShaper();
-                flow.distortionNode.curve = new Float32Array(system.utility.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
+                flow.distortionNode.curve = new Float32Array(canvas.library.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
                 flow.distortionNode.node.curve = flow.distortionNode.curve;
                 flow.distortionNode.node.oversample = flow.distortionNode.oversample;
                 
@@ -33,7 +33,7 @@ this.distortionUnit = function(
     //outAggregator
         flow.outAggregator.gain = 0;
         flow.outAggregator.node = context.createGain();    
-        system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+        canvas.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
 
 
     //input/output node
@@ -44,12 +44,12 @@ this.distortionUnit = function(
         this.inGain = function(a){
             if(a==null){return flow.inAggregator.gain;}
             flow.inAggregator.gain=a;
-            system.utility.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
+            canvas.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
         };
         this.outGain = function(a){
             if(a==null){return flow.outAggregator.gain;}
             flow.outAggregator.gain=a;
-            system.utility.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+            canvas.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
         };
         this.distortionAmount = function(a){
             if(a==null){return flow.distortionNode.distortionAmount;}

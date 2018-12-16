@@ -39,7 +39,7 @@ this.data_duplicator = function(x,y){
 
 this.data_duplicator.metadata = {
     name:'Data Duplicator',
-    helpurl:'https://metasophiea.com/curve/help/objects/alpha/dataDuplicator/'
+    helpURL:'https://metasophiea.com/curve/help/objects/alpha/dataDuplicator/'
 };
 
 //Operation Note:

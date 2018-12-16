@@ -18,10 +18,10 @@ this.dial_discrete = function(
         //dial
             var dial = canvas.part.builder('dial_continuous',name,{
                 x:0, y:0, r:r, angle:0,
-                startAngle:startAngle, smaxAngle:maxAngle,
-                style:{ handleStyle:handleStyle, slotStyle:slotStyle, needleStyle:needleStyle }
+                startAngle:startAngle, maxAngle:maxAngle,
+                style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
             });
-            //clean out built-in interation
+            //clean out built-in interaction
             dial.getChildByName('handle').ondblclick = undefined;
             dial.getChildByName('handle').onwheel = undefined;
             dial.getChildByName('handle').onmousedown = undefined;
@@ -109,7 +109,7 @@ this.dial_discrete = function(
         object.onrelease = onrelease;
 
     //setup
-        set(0);
+        set(value);
 
     return object;
 };

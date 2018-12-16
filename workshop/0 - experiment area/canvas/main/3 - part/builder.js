@@ -35,7 +35,7 @@ canvas.part.builder = function(type,name,data){
             );
             case 'path': return this.element.basic.path(
                 name, data.points, data.ignored,
-                data.style.stroke, data.style.lineWidth, data.style.lineCap,  data.style.lineJoin, 
+                data.style.stroke, data.style.lineWidth, data.style.lineCap, data.style.lineJoin, 
                 data.style.miterLimit, data.style.shadowColour, data.style.shadowBlur, data.style.shadowOffset
             );
     

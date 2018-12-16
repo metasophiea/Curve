@@ -1,4 +1,29 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-12-16
+  - canvas experiment
+    - twas less of a bug, more that I hadn't finished uncommenting everything
+    - created distortionUnit
+
+
+2018-12-15
+  - canvas experiment
+    - fixed text scaling problem (note: don't use the 'size' parameter again!
+      only use the font string to define size)
+    - created basicSynthesizer object
+    - created audioScope object
+    - created audioSink object
+    - created audioIn object (audio working)
+    - created musicalKeybaord
+
+  bugs
+  - musicalKeybaord's velocity dial doesn't effect anything apparently
+
+
+2018-12-14
+  - canvas experiment
+    - created universalreadout object
+
+
 2018-12-13
   - canvas experiment
     - created pulse generator object
