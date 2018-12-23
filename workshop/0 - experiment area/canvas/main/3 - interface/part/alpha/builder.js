@@ -93,7 +93,7 @@ this.builder = function(type,name,data){
                 data.style.backing,
             );
             case 'grapher_static': return this.display.grapher_static(
-                name, data.x, data.y, data.width, data.height, data.angle,
+                name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
                 data.style.foregrounds, data.style.foregroundText,
                 data.style.background_stroke, data.style.background_lineWidth,
                 data.style.backgroundText_fill, data.style.backgroundText_font,

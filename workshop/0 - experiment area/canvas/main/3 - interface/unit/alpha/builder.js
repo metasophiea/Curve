@@ -11,7 +11,7 @@
                 type:'part type name',
                 name:'a unique name',
                 grapple: true/false, //declare that this shape part should be used as an object grapple
-                data:{}, //data relivant to this part type
+                data:{}, //data relevant to this part type
             }
         ] 
     }
@@ -21,6 +21,7 @@ this.builder = function(creatorMethod,design){
 
     //main group
         var object = interface.part.alpha.builder('group',design.name,{x:design.x, y:design.y});
+        object.unitType = design.name;
         object.collection = design.collection;
         object.creatorMethod = design.creatorMethod;
 
@@ -41,7 +42,7 @@ this.builder = function(creatorMethod,design){
                 if( object.elements[design.elements[a].type] == undefined ){ object.elements[design.elements[a].type] = {}; }
                 object.elements[design.elements[a].type][design.elements[a].name] = newPart;
 
-            //add grapple code (if appropiate)
+            //add grapple code (if appropriate)
                 if( design.elements[a].grapple ){
                     this.builder.objectGrapple.declare( newPart, object );
                 }
@@ -67,9 +68,10 @@ this.builder = function(creatorMethod,design){
 
     //generate object's personal space
         object.space = { 
-            points:Object.assign([],design.space),
-            box:workspace.library.math.boundingBoxFromPoints(design.space),
+            points: Object.assign([],design.space).map(function(a){return {x:design.x+a.x,y:design.y+a.y}; }),
         };
+        object.space.box = workspace.library.math.boundingBoxFromPoints(object.space.points);
+
 
         //create invisible shape
             //create name for the space shape that won't interfer with other names 

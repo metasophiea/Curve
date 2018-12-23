@@ -92,7 +92,7 @@ this.dial_continuous = function(
                     var value = initialValue;
                     var numerator = event.y - initialY;
                     var divider = workspace.core.viewport.scale();
-                    set( value - numerator/(divider*turningSpeed), true );
+                    set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                 },
                 function(event){
                     grappled = false;

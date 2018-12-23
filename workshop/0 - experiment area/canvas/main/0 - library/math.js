@@ -321,4 +321,44 @@ this.detectOverlap = new function(){
         }
         return inside;
     };
+    this.lineSegments = function(segment1, segment2){
+        var denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
+        if(denominator == 0){return null;}
+
+        var u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+        var u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;;
+        return {
+            'x':      (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
+            'y':      (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
+            'inSeg1': (u1 >= 0 && u1 <= 1),
+            'inSeg2': (u2 >= 0 && u2 <= 1)
+        };
+    };
+    this.overlappingPolygons = function(points_a,points_b){
+        //a point from A is in B
+            for(var a = 0; a < points_a.length; a++){
+                if(this.pointWithinPoly(points_a[a],points_b)){ return true; }
+            }
+
+        //a point from B is in A
+            for(var a = 0; a < points_b.length; a++){
+                if(this.pointWithinPoly(points_b[a],points_a)){ return true; }
+            }
+
+        //side intersection
+            var a_indexing = Array.apply(null, {length: points_a.length}).map(Number.call, Number).concat([0]);
+            var b_indexing = Array.apply(null, {length: points_b.length}).map(Number.call, Number).concat([0]);
+
+            for(var a = 0; a < a_indexing.length-1; a++){
+                for(var b = 0; b < b_indexing.length-1; b++){
+                    var tmp = this.lineSegments( 
+                        [ points_a[a_indexing[a]], points_a[a_indexing[a+1]] ],
+                        [ points_b[b_indexing[b]], points_b[b_indexing[b+1]] ]
+                    );
+                    if( tmp != null && tmp.inSeg1 && tmp.inSeg2 ){return true;}
+                }
+            }
+
+        return false;
+    };
 };

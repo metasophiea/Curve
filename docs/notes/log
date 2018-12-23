@@ -5,6 +5,9 @@
     - created oneShot_single
     - created oneShot_multi
     - created oneShot_multi_multiTrack
+    - discovered that window.devicePixelRatio is a thing, and now things are 
+      looking a little prettier
+    - began work on "4 - Control"
 
 2018-12-20
   - canvas experiment

@@ -6,7 +6,7 @@ var adapter = new function(){
     };
     this.windowPoint2workspacePoint = function(x,y){
         var position = core.viewport.position();
-        var scale = core.viewport.scale();
+        var scale = core.viewport.scale() / window.devicePixelRatio;
         var angle = core.viewport.angle();
 
         x = (x/scale) - position.x;
@@ -81,7 +81,7 @@ this.viewport = new function(){
     };
     var state = {
         position:{x:0,y:0},
-        scale:1,
+        scale:window.devicePixelRatio,
         angle:0,
         points:{ tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
         boundingBox:{ topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} },
@@ -110,7 +110,8 @@ this.viewport = new function(){
                     }else if( attribute.indexOf('%') == (attribute.length-1) ){
                         var parentSize = workspace.parentElement['offset'+Direction]
                         var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
-                        workspace[direction] = parentSize * percent;
+                        workspace[direction] = parentSize * percent * window.devicePixelRatio;
+                        workspace.style[direction] = parentSize * percent + "px";
                     }else{
                         workspace[direction] = attribute;
                     }

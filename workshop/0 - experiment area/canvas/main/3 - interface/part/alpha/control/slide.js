@@ -115,12 +115,12 @@ this.slide = function(
                 function(event){
                     var numerator = initialY-currentMousePosition(event);
                     var divider = workspace.core.viewport.scale();
-                    set( initialValue - numerator/(divider*mux) );
+                    set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
                 },
                 function(event){
                     var numerator = initialY-currentMousePosition(event);
                     var divider = workspace.core.viewport.scale();
-                    object.onrelease(initialValue - numerator/(divider*mux));
+                    object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
                     grappled = false;
                 }
             );

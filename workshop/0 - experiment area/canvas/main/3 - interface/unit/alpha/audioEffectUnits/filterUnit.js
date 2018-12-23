@@ -33,7 +33,7 @@ this.filterUnit = function(x,y){
             {type:'connectionNode_audio', name:'audioIn', data:{ x: 94.8, y: 16, width: 10, height: 20, angle:-0.14 }},
             {type:'connectionNode_audio', name:'audioOut', data:{ x: -2.3, y: 16, width: 10, height: 20, angle:0.144, isAudioOutput:true }},
         
-            {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, 
+            {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:5,
                 style:{
                     foregrounds: style.graph.foregroundlines, 
                     background_stroke: style.graph.backgroundlines.stroke, 

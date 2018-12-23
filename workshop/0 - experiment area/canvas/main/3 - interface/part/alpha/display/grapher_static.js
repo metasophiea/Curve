@@ -1,6 +1,6 @@
 this.grapher_static = function(
     name='grapher_static',
-    x, y, width=120, height=60, angle=0,
+    x, y, width=120, height=60, angle=0, resolution=5,
 
     foregroundStyles=[
         {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
@@ -29,7 +29,7 @@ this.grapher_static = function(
         //main
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         //canvas
-            var canvas = interfacePart.builder('canvas','backing',{ width:width, height:height, resolution:5 });
+            var canvas = interfacePart.builder('canvas','backing',{ width:width, height:height, resolution:resolution });
             object.append(canvas);
 
     //graphics
@@ -146,7 +146,7 @@ this.grapher_static = function(
                                     );
                                 }
                             }
-                        }else{console.error('grapher_static::'+name,':layers are of differnt length:',layer.y,layer.x);}
+                        }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
 
                         canvas._.stroke();
                 }

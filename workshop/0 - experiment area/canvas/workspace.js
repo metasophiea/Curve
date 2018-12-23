@@ -327,6 +327,46 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     }
                     return inside;
                 };
+                this.lineSegments = function(segment1, segment2){
+                    var denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
+                    if(denominator == 0){return null;}
+            
+                    var u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+                    var u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;;
+                    return {
+                        'x':      (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
+                        'y':      (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
+                        'inSeg1': (u1 >= 0 && u1 <= 1),
+                        'inSeg2': (u2 >= 0 && u2 <= 1)
+                    };
+                };
+                this.overlappingPolygons = function(points_a,points_b){
+                    //a point from A is in B
+                        for(var a = 0; a < points_a.length; a++){
+                            if(this.pointWithinPoly(points_a[a],points_b)){ return true; }
+                        }
+            
+                    //a point from B is in A
+                        for(var a = 0; a < points_b.length; a++){
+                            if(this.pointWithinPoly(points_b[a],points_a)){ return true; }
+                        }
+            
+                    //side intersection
+                        var a_indexing = Array.apply(null, {length: points_a.length}).map(Number.call, Number).concat([0]);
+                        var b_indexing = Array.apply(null, {length: points_b.length}).map(Number.call, Number).concat([0]);
+            
+                        for(var a = 0; a < a_indexing.length-1; a++){
+                            for(var b = 0; b < b_indexing.length-1; b++){
+                                var tmp = this.lineSegments( 
+                                    [ points_a[a_indexing[a]], points_a[a_indexing[a+1]] ],
+                                    [ points_b[b_indexing[b]], points_b[b_indexing[b+1]] ]
+                                );
+                                if( tmp != null && tmp.inSeg1 && tmp.inSeg2 ){return true;}
+                            }
+                        }
+            
+                    return false;
+                };
             };
 
         };
@@ -809,7 +849,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     this.windowPoint2workspacePoint = function(x,y){
                         var position = core.viewport.position();
-                        var scale = core.viewport.scale();
+                        var scale = core.viewport.scale() / window.devicePixelRatio;
                         var angle = core.viewport.angle();
                 
                         x = (x/scale) - position.x;
@@ -2764,7 +2804,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     var state = {
                         position:{x:0,y:0},
-                        scale:1,
+                        scale:window.devicePixelRatio,
                         angle:0,
                         points:{ tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
                         boundingBox:{ topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} },
@@ -2793,7 +2833,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }else if( attribute.indexOf('%') == (attribute.length-1) ){
                                         var parentSize = workspace.parentElement['offset'+Direction]
                                         var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
-                                        workspace[direction] = parentSize * percent;
+                                        workspace[direction] = parentSize * percent * window.devicePixelRatio;
+                                        workspace.style[direction] = parentSize * percent + "px";
                                     }else{
                                         workspace[direction] = attribute;
                                     }
@@ -3333,68 +3374,13 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     workspace.library.structure.functionListRunner(workspace.system.mouse.functionList.ondblclick)({event:event,x:x,y:y});
                 };
             
-            //creating the function lists (and adding a few basic functions)
-                this.functionList.onmousedown = [
-                    {
-                        'specialKeys':[],
-                        'function':function(data){
-            
-                            //save the viewport position and click position
-                                workspace.system.mouse.tmp.oldPosition = workspace.core.viewport.position();
-                                workspace.system.mouse.tmp.clickPosition = {x:data.event.x, y:data.event.y};
-            
-                            //perform viewport movement
-                                workspace.system.mouse.mouseInteractionHandler(
-                                    function(event){
-                                        //update the viewport position
-                                            workspace.core.viewport.position(
-                                                workspace.system.mouse.tmp.oldPosition.x - ((workspace.system.mouse.tmp.clickPosition.x-event.x) / workspace.core.viewport.scale()),
-                                                workspace.system.mouse.tmp.oldPosition.y - ((workspace.system.mouse.tmp.clickPosition.y-event.y) / workspace.core.viewport.scale()),
-                                            );
-                                    },
-                                    function(event){},
-                                );
-            
-                            //request that the function list stop here
-                                return true;
-                        }
-                    }
-                ];
+            //creating the function lists
+                this.functionList.onmousedown = [];
                 this.functionList.onmousemove = [];
                 this.functionList.onmouseup = [];
                 this.functionList.onmouseleave = [];
                 this.functionList.onmouseenter = [];
-                this.functionList.onwheel = [
-                {
-                    'specialKeys':[],
-                    'function':function(data){
-                        var scaleLimits = {'max':20, 'min':0.1};
-            
-                        //perform scale and associated pan
-                            //discover point under mouse
-                                var originalPoint = {x:data.x, y:data.y};
-                            //perform actual scaling
-                                var scale = workspace.core.viewport.scale();
-                                scale -= scale*(data.event.deltaY/100);
-                                if( scale > scaleLimits.max ){scale = scaleLimits.max;}
-                                if( scale < scaleLimits.min ){scale = scaleLimits.min;}
-                                workspace.core.viewport.scale(scale);
-                            //discover new point under mouse
-                                var newPoint = workspace.core.viewport.windowPoint2workspacePoint(data.event.x,data.event.y);
-                            //pan so we're back at the old point (accounting for angle)
-                                var pan = workspace.library.math.cartesianAngleAdjust(
-                                    (newPoint.x - originalPoint.x),
-                                    (newPoint.y - originalPoint.y),
-                                    workspace.core.viewport.angle()
-                                );
-                                var temp = workspace.core.viewport.position();
-                                workspace.core.viewport.position(temp.x+pan.x,temp.y+pan.y)
-            
-                        //request that the function list stop here
-                            return true;
-                    }
-                }
-            ];
+                this.functionList.onwheel = [];
                 this.functionList.onclick = [];
                 this.functionList.ondblclick = [];
 
@@ -6303,7 +6289,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         };
                         this.grapher_static = function(
                             name='grapher_static',
-                            x, y, width=120, height=60, angle=0,
+                            x, y, width=120, height=60, angle=0, resolution=5,
                         
                             foregroundStyles=[
                                 {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
@@ -6332,7 +6318,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 //main
                                     var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                 //canvas
-                                    var canvas = interfacePart.builder('canvas','backing',{ width:width, height:height, resolution:5 });
+                                    var canvas = interfacePart.builder('canvas','backing',{ width:width, height:height, resolution:resolution });
                                     object.append(canvas);
                         
                             //graphics
@@ -6449,7 +6435,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                             );
                                                         }
                                                     }
-                                                }else{console.error('grapher_static::'+name,':layers are of differnt length:',layer.y,layer.x);}
+                                                }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
                         
                                                 canvas._.stroke();
                                         }
@@ -9110,12 +9096,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         function(event){
                                             var numerator = initialY-currentMousePosition(event);
                                             var divider = workspace.core.viewport.scale();
-                                            set( initialValue - numerator/(divider*mux) );
+                                            set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
                                         },
                                         function(event){
                                             var numerator = initialY-currentMousePosition(event);
                                             var divider = workspace.core.viewport.scale();
-                                            object.onrelease(initialValue - numerator/(divider*mux));
+                                            object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
                                             grappled = false;
                                         }
                                     );
@@ -9226,7 +9212,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             var value = initialValue;
                                             var numerator = event.y - initialY;
                                             var divider = workspace.core.viewport.scale();
-                                            set( value - numerator/(divider*turningSpeed), true );
+                                            set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                                         },
                                         function(event){
                                             grappled = false;
@@ -11593,7 +11579,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     data.style.backing,
                                 );
                                 case 'grapher_static': return this.display.grapher_static(
-                                    name, data.x, data.y, data.width, data.height, data.angle,
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
                                     data.style.foregrounds, data.style.foregroundText,
                                     data.style.background_stroke, data.style.background_lineWidth,
                                     data.style.backgroundText_fill, data.style.backgroundText_font,
@@ -11834,7 +11820,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     {type:'connectionNode_audio', name:'audioIn', data:{ x: 94.8, y: 16, width: 10, height: 20, angle:-0.14 }},
                                     {type:'connectionNode_audio', name:'audioOut', data:{ x: -2.3, y: 16, width: 10, height: 20, angle:0.144, isAudioOutput:true }},
                                 
-                                    {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, 
+                                    {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:5,
                                         style:{
                                             foregrounds: style.graph.foregroundlines, 
                                             background_stroke: style.graph.backgroundlines.stroke, 
@@ -12110,7 +12096,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         ){
                             var vars = {
                                 allowUpdate:false,
-                                freqRange:{ low: 0.1, high: 20000, },
+                                freqRange:{ low: 0.1, high: 20000 },
                                 graphDetail: 2, //factor of the number of points a graphed line is drawn with
                                 channelCount: 8,
                                 masterGain:1,
@@ -12201,7 +12187,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     {type:'connectionNode_audio', name:'audioOut_0', data:{x:-35, y:15, width:10, height:20, isAudioOutput:true}},
                                     {type:'connectionNode_audio', name:'audioOut_1', data:{x:-35, y:40, width:10, height:20, isAudioOutput:true}},
                                     {type:'dial_continuous',name:'masterGain',data:{ x:-10, y:37.5, r:10, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, style:style.dial }},
-                                    {type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph }},
+                                    {type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph, resolution:5 }},
                                 ]
                             };
                             //dynamic design
@@ -15394,7 +15380,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     type:'part type name',
                                     name:'a unique name',
                                     grapple: true/false, //declare that this shape part should be used as an object grapple
-                                    data:{}, //data relivant to this part type
+                                    data:{}, //data relevant to this part type
                                 }
                             ] 
                         }
@@ -15404,6 +15390,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     
                         //main group
                             var object = interface.part.alpha.builder('group',design.name,{x:design.x, y:design.y});
+                            object.unitType = design.name;
                             object.collection = design.collection;
                             object.creatorMethod = design.creatorMethod;
                     
@@ -15424,7 +15411,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     if( object.elements[design.elements[a].type] == undefined ){ object.elements[design.elements[a].type] = {}; }
                                     object.elements[design.elements[a].type][design.elements[a].name] = newPart;
                     
-                                //add grapple code (if appropiate)
+                                //add grapple code (if appropriate)
                                     if( design.elements[a].grapple ){
                                         this.builder.objectGrapple.declare( newPart, object );
                                     }
@@ -15450,9 +15437,10 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     
                         //generate object's personal space
                             object.space = { 
-                                points:Object.assign([],design.space),
-                                box:workspace.library.math.boundingBoxFromPoints(design.space),
+                                points: Object.assign([],design.space).map(function(a){return {x:design.x+a.x,y:design.y+a.y}; }),
                             };
+                            object.space.box = workspace.library.math.boundingBoxFromPoints(object.space.points);
+                    
                     
                             //create invisible shape
                                 //create name for the space shape that won't interfer with other names 
@@ -15507,6 +15495,130 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 };
             };
         };
+        workspace.system.mouse.functionList.onmousedown.push(
+            {
+                'specialKeys':[],
+                'function':function(data){
+        
+                    //save the viewport position and click position
+                        workspace.system.mouse.tmp.oldPosition = workspace.core.viewport.position();
+                        workspace.system.mouse.tmp.clickPosition = {x:data.event.x, y:data.event.y};
+        
+                    //perform viewport movement
+                        workspace.system.mouse.mouseInteractionHandler(
+                            function(event){
+                                //update the viewport position
+                                    workspace.core.viewport.position(
+                                        workspace.system.mouse.tmp.oldPosition.x - ((workspace.system.mouse.tmp.clickPosition.x-event.x) / workspace.core.viewport.scale()) * window.devicePixelRatio,
+                                        workspace.system.mouse.tmp.oldPosition.y - ((workspace.system.mouse.tmp.clickPosition.y-event.y) / workspace.core.viewport.scale()) * window.devicePixelRatio,
+                                    );
+                            },
+                            function(event){},
+                        );
+        
+                    //request that the function list stop here
+                        return true;
+                }
+            }
+        );
+        
+        workspace.system.mouse.functionList.onwheel.push(
+            {
+                'specialKeys':[],
+                'function':function(data){
+                    var scaleLimits = {'max':20, 'min':0.1};
+        
+                    //perform scale and associated pan
+                        //discover point under mouse
+                            var originalPoint = {x:data.x, y:data.y};
+                        //perform actual scaling
+                            var scale = workspace.core.viewport.scale();
+                            scale -= scale*(data.event.deltaY/100);
+                            if( scale > scaleLimits.max ){scale = scaleLimits.max;}
+                            if( scale < scaleLimits.min ){scale = scaleLimits.min;}
+                            workspace.core.viewport.scale(scale);
+                        //discover new point under mouse
+                            var newPoint = workspace.core.viewport.windowPoint2workspacePoint(data.event.x,data.event.y);
+                        //pan so we're back at the old point (accounting for angle)
+                            var pan = workspace.library.math.cartesianAngleAdjust(
+                                (newPoint.x - originalPoint.x),
+                                (newPoint.y - originalPoint.y),
+                                workspace.core.viewport.angle()
+                            );
+                            var temp = workspace.core.viewport.position();
+                            workspace.core.viewport.position(temp.x+pan.x,temp.y+pan.y)
+        
+                    //request that the function list stop here
+                        return true;
+                }
+            }
+        );
+        
+        workspace.control = new function(){
+            var control = this;
+        
+            this.gui = new function(){};
+            this.viewport = new function(){
+                this.scale = function(a){ return workspace.core.viewport.scale(a); };
+                this.position = function(x,y){ return workspace.core.viewport.position(x,y); };
+            };
+            this.scene = new function(){
+                var pane = workspace.system.pane.mm;
+        
+                this.new = function(){};
+                this.load = function(){};
+                this.save = function(){};
+                this.addUnit = function(unitType,x,y){
+                    //generate new name for unit
+                        var name = 0;
+                        for( var a = 0; a < pane.children.length; a++){
+                            if( parseInt(pane.children[a].name) == name ){ name++; }
+                        }
+        
+                    //produce unit, assign its name and add it to the main pane
+                        var tmp = workspace.interface.unit.alpha.misc[unitType](x,y);
+                        tmp.name = ''+name;
+                        pane.append( tmp );
+                };
+                this.removeUnit = function(unit){ pane.remove(unit); };
+        
+                this.getUnitByName = function(name){ return pane.getChildByName(name); };
+                this.getUnitsByType = function(type){ return pane.children.filter( a => a.unitType == type ); };
+                this.getUnitUnderPoint = function(x,y){
+                    for( var a = 0; a < pane.children.length; a++){
+                        if( workspace.library.math.detectOverlap.boundingBoxes({bottomRight:{x:x,y:y},topLeft:{x:x,y:y}}, pane.children[a].space.box) ){
+                            if( workspace.library.math.detectOverlap.pointWithinPoly({x:x,y:y}, pane.children[a].space.points) ){
+                                return pane.children[a];
+                            }
+                        }
+                    }
+                };
+                this.getUnitsWithinPoly = function(points){
+                    // workspace.system.pane.mf.append( workspace.interface.part.alpha.builder( 'polygon', 'selectionPolygon', { points:points, style:{ fill:'rgba(255,0,0,0.1)' } } ) );
+                    var box = workspace.library.math.boundingBoxFromPoints(points);
+                    return pane.children.filter(function(a){ return workspace.library.math.detectOverlap.boundingBoxes(box, a.space.box) && workspace.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
+                };
+            };
+            this.selection = new function(){
+                var selectedObjects = [];
+                var lastSelectedObjects = null;
+                var clipboard = [];
+        
+                this.selectUnit = function(){};
+                this.deselectUnit = function(){};
+                this.selectEverything = function(){};
+                this.deselectEverything = function(){};
+        
+                this.cut = function(){
+                    this.copy();
+                    this.delete();
+                };
+                this.copy = function(){};
+                this.paste = function(){};
+                this.duplicate = function(){};
+                this.delete = function(){};
+            };
+        };
 
         function tester(item1,item2){
             function getType(obj){
@@ -15558,46 +15670,13 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
 
         
         // -- Only one test per time -- //
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.audio_duplicator(20,10) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.basicMixer(100,10) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.data_duplicator(230,10) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.pulseGenerator(330,10) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.pulseGenerator_hyper(470,10) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.universalreadout(300,50) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.synthesizers.basicSynthesizer(350,70) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.humanOutputDevices.audioScope(10,225) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.humanOutputDevices.audioSink(10,70) );
-        // workspace.system.pane.mm.append( workspace.interface.unit.alpha.humanInputDevices.audioIn(20,340) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.humanInputDevices.musicalKeyboard(350,175) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioEffectUnits.distortionUnit(225,85) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioEffectUnits.filterUnit(225,185) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioEffectUnits.reverbUnit(225,290) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioEffectUnits.multibandFilter(380,250) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.sequencers.launchpad(610,10) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.sequencers.basicSequencer(750,10) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.sequencers.basicSequencer_midiOut(750,250) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.player(20,395) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.recorder(20,480) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.looper(20,525) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.oneShot_single(20,585) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.oneShot_multi(20,645) );
-        workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.oneShot_multi_multiTrack(20,705) );
+        workspace.control.scene.addUnit('audio_duplicator',10,10);
+        workspace.control.scene.addUnit('audio_duplicator',100,10);
+        workspace.control.scene.addUnit('audio_duplicator',200,10);
+        workspace.control.scene.addUnit('audio_duplicator',300,10);
+        workspace.control.scene.removeUnit( workspace.control.scene.getUnitByName(1) );
         
-        
-        // // //view positioning
-        // workspace.core.viewport.scale(3.5);
-        // workspace.core.viewport.position(-4,-690)
-        
-        
-        
-        
-        // workspace.core.stats.active(true);
-        // console.log(workspace.core.stats.getReport());
-        // setInterval(function(){
-        //     console.log(workspace.core.stats.getReport());
-        // },1000);
-        
-
+        console.log( workspace.control.scene.getUnitsWithinPoly([{x:0,y:0}, {x:120,y:0}, {x:120,y:100}, {x:0,y:100}]) );
 
 
     }

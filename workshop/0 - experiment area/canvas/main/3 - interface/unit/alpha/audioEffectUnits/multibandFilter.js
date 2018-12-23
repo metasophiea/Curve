@@ -3,7 +3,7 @@ this.multibandFilter = function(
 ){
     var vars = {
         allowUpdate:false,
-        freqRange:{ low: 0.1, high: 20000, },
+        freqRange:{ low: 0.1, high: 20000 },
         graphDetail: 2, //factor of the number of points a graphed line is drawn with
         channelCount: 8,
         masterGain:1,
@@ -94,7 +94,7 @@ this.multibandFilter = function(
             {type:'connectionNode_audio', name:'audioOut_0', data:{x:-35, y:15, width:10, height:20, isAudioOutput:true}},
             {type:'connectionNode_audio', name:'audioOut_1', data:{x:-35, y:40, width:10, height:20, isAudioOutput:true}},
             {type:'dial_continuous',name:'masterGain',data:{ x:-10, y:37.5, r:10, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, style:style.dial }},
-            {type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph }},
+            {type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph, resolution:5 }},
         ]
     };
     //dynamic design
