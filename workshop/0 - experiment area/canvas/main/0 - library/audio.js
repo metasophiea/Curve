@@ -26,7 +26,7 @@
                 break;
                 case 's':
                     var mux = target - audioParam.value;
-                    var array = canvas.library.math.curveGenerator.s(10);
+                    var array = workspace.library.math.curveGenerator.s(10);
                     for(var a = 0; a < array.length; a++){
                         array[a] = audioParam.value + array[a]*mux;
                     }
@@ -49,7 +49,7 @@
                 request.open('GET', url, true);
                 request.responseType = 'arraybuffer';
                 request.onload = function(){
-                    canvas.library.audio.context.decodeAudioData(this.response, function(data){
+                    workspace.library.audio.context.decodeAudioData(this.response, function(data){
                         callback({
                             buffer:data,
                             name:(url.split('/')).pop(),
@@ -67,7 +67,7 @@
                     var fileReader = new FileReader();
                     fileReader.readAsArrayBuffer(file);
                     fileReader.onload = function(data){
-                        canvas.library.audio.context.decodeAudioData(data.target.result, function(buffer){
+                        workspace.library.audio.context.decodeAudioData(data.target.result, function(buffer){
                             callback({
                                 buffer:buffer,
                                 name:file.name,
@@ -81,13 +81,12 @@
             break;
         }
     };
-    this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}){
+    this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
         var waveform = audioBuffer.getChannelData(0);
         // var channelCount = audioBuffer.numberOfChannels;
     
         bounds.start = bounds.start ? bounds.start : 0;
         bounds.end = bounds.end ? bounds.end : 1;
-        var resolution = 10000;
         var start = audioBuffer.length*bounds.start;
         var end = audioBuffer.length*bounds.end;
         var step = (end - start)/resolution;
@@ -95,7 +94,7 @@
         var outputArray = [];
         for(var a = start; a < end; a+=Math.round(step)){
             outputArray.push( 
-                canvas.library.math.largestValueFound(
+                workspace.library.math.largestValueFound(
                     waveform.slice(a, a+Math.round(step))
                 )
             );
@@ -125,7 +124,7 @@
     this.destination.masterGain = function(value){
         if(value == undefined){return this.destination._gain;}
         this._gain = value;
-        canvas.library.audio.utility.changeAudioParam(canvas.library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
+        workspace.library.audio.utility.changeAudioParam(workspace.library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
     };
 
 

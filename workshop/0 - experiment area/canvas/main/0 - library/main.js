@@ -1,13 +1,13 @@
-canvas.library = new function(){};
-canvas.library.math = new function(){
+workspace.library = new function(){};
+workspace.library.math = new function(){
     {{include:math.js}}
 };
-canvas.library.structure = new function(){
+workspace.library.structure = new function(){
     {{include:structure.js}}
 };
-canvas.library.audio = new function(){
+workspace.library.audio = new function(){
     {{include:audio.js}}
 };
-canvas.library.misc = new function(){
+workspace.library.misc = new function(){
     {{include:misc.js}}
 };

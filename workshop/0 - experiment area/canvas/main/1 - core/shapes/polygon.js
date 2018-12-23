@@ -63,14 +63,14 @@ this.polygon = function(){
 
         //calculate points
             this.extremities.points = this.points.map(function(point){
-                point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                point = workspace.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
                 point.x += offset.x;
                 point.y += offset.y;
                 return point;
             });
 
         //calculate boundingBox
-            this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+            this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
 
         //update the points and bounding box of the parent
             if(this.parent != undefined){
@@ -80,11 +80,11 @@ this.polygon = function(){
 
     function isPointWithinBoundingBox(x,y,shape){
         if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-        return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+        return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
     }
     function isPointWithinHitBox(x,y,shape){
         if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-        return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+        return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
     }
     this.isPointWithin = function(x,y){
         if( isPointWithinBoundingBox(x,y,this) ){
@@ -98,7 +98,7 @@ this.polygon = function(){
             if(shape.static){return true;}
             
         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-            return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+            return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
     this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
@@ -107,7 +107,7 @@ this.polygon = function(){
         //collect and consolidate shape values into a neat package
             var shapeValue = {
                 points: this.points.map( function(a){
-                    a = canvas.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
+                    a = workspace.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
                     return { x:a.x+offset.x, y:a.y+offset.y };
                 } ),
                 lineWidth: this.style.lineWidth,

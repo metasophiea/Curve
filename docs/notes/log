@@ -1,4 +1,147 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-12-23
+  - canvas experiment
+    - created looper (unborked)
+    - created oneShot_single
+    - created oneShot_multi
+    - created oneShot_multi_multiTrack
+
+2018-12-20
+  - canvas experiment
+    - turns out, you don't need to have the image element to draw a canvas onto
+      another canvas; so now the canvas shape just direct draws it's internal
+      canvas. This has made updaing the shape sooooo much smoother
+
+    - I've decided to make sub-canvas versions of some of the more heavy parts
+      in a bid for speed. This actually seems like a great idea, as it will
+      reduce the render load on the main renderer (though it does sorta throw 
+      away alot of the work done on core (derendering, shapes, etc..))
+        I mean.. you don't really need to de-render the elements with a canvas,
+      its just an image..it's really up to the part itself if it want's to
+      optimise the drawing of itself.
+        Core has all this functionality for shapes, hierarchys, derendering,
+      viewports and interation and all sorts. The canvas shape is just a
+      direct-draw method. Which for things like the grapher or other display 
+      parts, is perfect, because they're all about how they look, and nothing 
+      about how the user interacts with them...maybe I'm feeling something that 
+      isn't there
+
+    - created sevenSegmentDisplay_static
+    - created sixteenSegmentDisplay_static
+    - created readout_sixteenSegmentDisplay_static
+    - updated multibandFilter to use readout_sixteenSegmentDisplay_static
+    - marked improvement on performance now. Hovering arond 33fps now. This
+      could be the answer to all our fps problems
+      
+    - updated pulseGenerator and pulseGenerator_hyper to use
+      readout_sixteenSegmentDisplay_static
+    - another performance boost; up at ~37fps now. Touching 40fps
+
+    - removing the sequencers boosts things to around 43fps, that might be the
+      next part to make static
+
+    - shape count: 2292 (~1500 less shapes)
+
+    - created recorder
+    - began work on looper (seriously borked)
+
+  notes
+    the problem we have is that the main render loop has a lot of shapes to draw
+    every cycle, which ofcourse is heavy on the machine. We've solved this with
+    the grapher by saying "hay, these shapes don't change all that much; how 
+    about I'll handle their particular renderings and you can just render this
+    still image on your cycle"
+      Which brings the question: maybe all parts could be sub-canvases? Or all
+    units? Either way, we can certianly start with the readout part. That seems
+    to have the most parts right now.
+
+
+2018-12-19
+  - canvas experiment
+    - created grapher_static part (and renamed 'grapher' to grapher_active)
+      which uses the new canvas shape to draw graphs. The update is a little
+      glitchy-looking; but it works fine and speeds things up wonderfully.
+    - slowed down readout_sixteenSegmentDisplay's text scrolling a little bit
+    - created player
+
+    I've just noticed that with all these unit's added to the one scene; the
+    app is only running at 25fps (50+ is with nothing) This bugs me, as one of
+    the main reasons for doing this canvas thing was to make things faster than
+    SVG. Research is ongoing
+    - shape count: 3781
+
+    .. I think it might just be a overall speed thing :/
+
+    ideas
+    - maybe replace those readout displays with a sub-canvas version? There
+      seemed to be a bit of a slow down when they entered the viewport. I need
+      to improve their refresh however, it's a bit flashy right now.
+
+
+2018-12-18
+  - canvas experiment
+    - redid layout
+      0 - library
+      1 - core
+      2 - system
+      3 - interface
+      4 - control
+    - also, renamed 'object' to 'unit', and 'canvas' to 'workspace'
+    - pulled circuits out of 'parts' and into its own folder in '3 - interface'
+    - did what I could to try and contain references to 'workspace' from within
+      part and unit files.
+    - compartmented circuits, parts and units into 'alpha' colletions
+    - created pulseGenerator_hyper
+    - created player (audio playback is pretty bad, and reduces the framerate
+      to ~16)
+
+    it appears that having a large waveform in the player slows rendering down
+    temendously, so work is needed there to have still images. Even so, 
+    removing that factor doesn't improve playback at all
+    (possibly a position update feedback problem)
+
+    - It was a position update feedback problem. Waveform image thing should
+      still be done though.
+    - added canvas shape to core, which is like an image you can use like a
+      canvas. With resolution control, and direct access to the standard
+      canvas methods.
+
+  ideas
+  - grapher needs a 'static' mode; where the graph is drawn to an image, and 
+    that image is displayed instead. Only when the graph's "draw" command is 
+    run, should the image be updated. This was sortof how it was done on the 
+    old system. One would also have to select an image size, to account for 
+    zooming around.
+  - image shape needs image caching, so that a smaller copy of the image is
+    generated when an image is loaded, and this copy is used when the shape
+    is being drawn very small. A number of versions could be made in this vain.
+    
+
+
+2018-12-17
+  - canvas experiment
+    - created filterUnit
+    - created reverbUnit
+    - created multibandFilter
+    - created launchpad
+    - fixed problem with rangeSlide, where the onmousedown callback wasn't being
+      attached to the invisible handle, but the handle group
+    - created basicSequencer
+    - created basicSequencer_midiOut (probably a little shakey)
+
+  ideas
+  - the cable will need to be able to access the 'space' value of objects, thus
+    needs to know that objects are a thing, thus breaking the wall between
+    section 3 and 4. My idea is to combine the two.
+  - I'm probably going to pull the 'circuits' out of 'parts' too. One could make
+    a strong argument for putting them in the library section
+
+  note
+  - the compiled file is almost the same size and the old one now. ~12,000 lines
+    compared to ~13,000 lines. I imagine that once this transition process is
+    complete, it'll be more that the old one.
+
+
 2018-12-16
   - canvas experiment
     - twas less of a bug, more that I hadn't finished uncommenting everything

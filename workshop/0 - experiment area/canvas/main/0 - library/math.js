@@ -1,5 +1,28 @@
 this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
 this.distanceBetweenTwoPoints = function(a, b){ return Math.pow(Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2),0.5) };
+this.seconds2time = function(seconds){
+    var result = {h:0, m:0, s:0};
+    
+    result.h = Math.floor(seconds/3600);
+    seconds = seconds - result.h*3600;
+
+    result.m = Math.floor(seconds/60);
+    seconds = seconds - result.m*60;
+
+    result.s = seconds;
+
+    return result;
+};
+this.largestValueFound = function(array){
+    return array.reduce(function(max,current){
+        return Math.abs(max) > Math.abs(current) ? max : current;
+    });
+};
+this.smallestValueFound = function(array){
+    return array.reduce(function(min,current){
+        return Math.abs(min) < Math.abs(current) ? min : current;
+    });
+};
 this.cartesian2polar = function(x,y){
     var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
 
@@ -161,6 +184,33 @@ this.normalizeStretchArray = function(array){
 
     return array;
 };
+this.curvePoint = new function(){
+    this.linear = function(x=0.5, start=0, end=1){
+        return x *(end-start)+start;
+    };
+    this.sin = function(x=0.5, start=0, end=1){
+        return Math.sin(Math.PI/2*x) *(end-start)+start;
+    };
+    this.cos = function(x=0.5, start=0, end=1){
+        return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
+    };
+    this.s = function(x=0.5, start=0, end=1, sharpness=8){
+        var temp = workspace.library.math.normalizeStretchArray([
+            1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
+            1/( 1 + Math.exp(-sharpness*(x-0.5)) ),
+            1/( 1 + Math.exp(-sharpness*(1-0.5)) ),
+        ]);
+        return temp[1] *(end-start)+start;
+    };
+    this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
+        var temp = workspace.library.math.normalizeStretchArray([
+            (Math.exp(sharpness*0)-1)/(Math.E-1),
+            (Math.exp(sharpness*x)-1)/(Math.E-1),
+            (Math.exp(sharpness*1)-1)/(Math.E-1),
+        ]);
+        return temp[1] *(end-start)+start;
+    };
+};
 this.curveGenerator = new function(){
     this.linear = function(stepCount=2, start=0, end=1){
         stepCount = Math.abs(stepCount)-1; var outputArray = [0];
@@ -220,7 +270,7 @@ this.curveGenerator = new function(){
             );
         }
 
-        var outputArray = canvas.library.math.normalizeStretchArray(curve);
+        var outputArray = workspace.library.math.normalizeStretchArray(curve);
 
         var mux = end-start;
         for(var a = 0 ; a < outputArray.length; a++){

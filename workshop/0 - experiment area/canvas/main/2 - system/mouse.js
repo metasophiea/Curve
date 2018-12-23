@@ -18,56 +18,56 @@
     }
     this.mouseInteractionHandler = function(moveCode, stopCode){
         //save the old listener functions of the canvas
-            canvas.system.mouse.tmp.onmousemove_old = canvas.onmousemove;
-            canvas.system.mouse.tmp.onmouseleave_old = canvas.onmouseleave;
-            canvas.system.mouse.tmp.onmouseup_old = canvas.onmouseup;
+            workspace.system.mouse.tmp.onmousemove_old = workspace.onmousemove;
+            workspace.system.mouse.tmp.onmouseleave_old = workspace.onmouseleave;
+            workspace.system.mouse.tmp.onmouseup_old = workspace.onmouseup;
 
         //replace listener code
             //movement code
-                canvas.onmousemove = function(event){ if(moveCode!=undefined){moveCode(event);} };
+                workspace.onmousemove = function(event){ if(moveCode!=undefined){moveCode(event);} };
             //stopping code
-                canvas.onmouseup = function(event){
+                workspace.onmouseup = function(event){
                     if(stopCode != undefined){ stopCode(event); }
-                    canvas.onmousemove = canvas.system.mouse.tmp.onmousemove_old;
-                    canvas.onmouseleave = canvas.system.mouse.tmp.onmouseleave_old;
-                    canvas.onmouseup = canvas.system.mouse.tmp.onmouseup_old;
+                    workspace.onmousemove = workspace.system.mouse.tmp.onmousemove_old;
+                    workspace.onmouseleave = workspace.system.mouse.tmp.onmouseleave_old;
+                    workspace.onmouseup = workspace.system.mouse.tmp.onmouseup_old;
                 };
-                canvas.onmouseleave = canvas.onmouseup;
+                workspace.onmouseleave = workspace.onmouseup;
     };
-    this.forceMouseUp = function(){ canvas.onmouseup(); };
+    this.forceMouseUp = function(){ workspace.onmouseup(); };
     
 //connect callbacks to mouse function lists
-    canvas.core.callback.onmousedown = function(x,y,event,shape){
+    workspace.core.callback.onmousedown = function(x,y,event,shape){
         if(activateShapeFunctions('onmousedown',x,y,event,shape)){return;}
-        canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousedown)({event:event,x:x,y:y});
+        workspace.library.structure.functionListRunner(workspace.system.mouse.functionList.onmousedown)({event:event,x:x,y:y});
     };
-    canvas.core.callback.onmousemove = function(x,y,event,shape){
+    workspace.core.callback.onmousemove = function(x,y,event,shape){
         if(activateShapeFunctions('onmousemove',x,y,event,shape)){return;}
-        canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmousemove)({event:event,x:x,y:y});
+        workspace.library.structure.functionListRunner(workspace.system.mouse.functionList.onmousemove)({event:event,x:x,y:y});
     };
-    canvas.core.callback.onmouseup = function(x,y,event,shape){ 
+    workspace.core.callback.onmouseup = function(x,y,event,shape){ 
         if(activateShapeFunctions('onmouseup',x,y,event,shape)){return;}
-        canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseup)({event:event,x:x,y:y});
+        workspace.library.structure.functionListRunner(workspace.system.mouse.functionList.onmouseup)({event:event,x:x,y:y});
     };
-    canvas.core.callback.onmouseleave = function(x,y,event,shape){
+    workspace.core.callback.onmouseleave = function(x,y,event,shape){
         if(activateShapeFunctions('onmouseleave',x,y,event,shape)){return;}
-        canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseleave)({event:event,x:x,y:y});
+        workspace.library.structure.functionListRunner(workspace.system.mouse.functionList.onmouseleave)({event:event,x:x,y:y});
     };
-    canvas.core.callback.onmouseenter = function(x,y,event,shape){
+    workspace.core.callback.onmouseenter = function(x,y,event,shape){
         if(activateShapeFunctions('onmouseenter',x,y,event,shape)){return;}
-        canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onmouseenter)({event:event,x:x,y:y});
+        workspace.library.structure.functionListRunner(workspace.system.mouse.functionList.onmouseenter)({event:event,x:x,y:y});
     };
-    canvas.core.callback.onwheel = function(x,y,event,shape){
+    workspace.core.callback.onwheel = function(x,y,event,shape){
         if(activateShapeFunctions('onwheel',x,y,event,shape)){return;}
-        canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onwheel)({event:event,x:x,y:y});
+        workspace.library.structure.functionListRunner(workspace.system.mouse.functionList.onwheel)({event:event,x:x,y:y});
     };
-    canvas.core.callback.onclick = function(x,y,event,shape){
+    workspace.core.callback.onclick = function(x,y,event,shape){
         if(activateShapeFunctions('onclick',x,y,event,shape)){return;}
-        canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.onclick)({event:event,x:x,y:y});
+        workspace.library.structure.functionListRunner(workspace.system.mouse.functionList.onclick)({event:event,x:x,y:y});
     };
-    canvas.core.callback.ondblclick = function(x,y,event,shape){
+    workspace.core.callback.ondblclick = function(x,y,event,shape){
         if(activateShapeFunctions('ondblclick',x,y,event,shape)){return;}
-        canvas.library.structure.functionListRunner(canvas.system.mouse.functionList.ondblclick)({event:event,x:x,y:y});
+        workspace.library.structure.functionListRunner(workspace.system.mouse.functionList.ondblclick)({event:event,x:x,y:y});
     };
 
 //creating the function lists (and adding a few basic functions)
@@ -77,16 +77,16 @@
             'function':function(data){
 
                 //save the viewport position and click position
-                    canvas.system.mouse.tmp.oldPosition = canvas.core.viewport.position();
-                    canvas.system.mouse.tmp.clickPosition = {x:data.event.x, y:data.event.y};
+                    workspace.system.mouse.tmp.oldPosition = workspace.core.viewport.position();
+                    workspace.system.mouse.tmp.clickPosition = {x:data.event.x, y:data.event.y};
 
                 //perform viewport movement
-                    canvas.system.mouse.mouseInteractionHandler(
+                    workspace.system.mouse.mouseInteractionHandler(
                         function(event){
                             //update the viewport position
-                                canvas.core.viewport.position(
-                                    canvas.system.mouse.tmp.oldPosition.x - ((canvas.system.mouse.tmp.clickPosition.x-event.x) / canvas.core.viewport.scale()),
-                                    canvas.system.mouse.tmp.oldPosition.y - ((canvas.system.mouse.tmp.clickPosition.y-event.y) / canvas.core.viewport.scale()),
+                                workspace.core.viewport.position(
+                                    workspace.system.mouse.tmp.oldPosition.x - ((workspace.system.mouse.tmp.clickPosition.x-event.x) / workspace.core.viewport.scale()),
+                                    workspace.system.mouse.tmp.oldPosition.y - ((workspace.system.mouse.tmp.clickPosition.y-event.y) / workspace.core.viewport.scale()),
                                 );
                         },
                         function(event){},
@@ -111,21 +111,21 @@
                 //discover point under mouse
                     var originalPoint = {x:data.x, y:data.y};
                 //perform actual scaling
-                    var scale = canvas.core.viewport.scale();
+                    var scale = workspace.core.viewport.scale();
                     scale -= scale*(data.event.deltaY/100);
                     if( scale > scaleLimits.max ){scale = scaleLimits.max;}
                     if( scale < scaleLimits.min ){scale = scaleLimits.min;}
-                    canvas.core.viewport.scale(scale);
+                    workspace.core.viewport.scale(scale);
                 //discover new point under mouse
-                    var newPoint = canvas.core.viewport.windowPoint2workspacePoint(data.event.x,data.event.y);
+                    var newPoint = workspace.core.viewport.windowPoint2workspacePoint(data.event.x,data.event.y);
                 //pan so we're back at the old point (accounting for angle)
-                    var pan = canvas.library.math.cartesianAngleAdjust(
+                    var pan = workspace.library.math.cartesianAngleAdjust(
                         (newPoint.x - originalPoint.x),
                         (newPoint.y - originalPoint.y),
-                        canvas.core.viewport.angle()
+                        workspace.core.viewport.angle()
                     );
-                    var temp = canvas.core.viewport.position();
-                    canvas.core.viewport.position(temp.x+pan.x,temp.y+pan.y)
+                    var temp = workspace.core.viewport.position();
+                    workspace.core.viewport.position(temp.x+pan.x,temp.y+pan.y)
 
             //request that the function list stop here
                 return true;

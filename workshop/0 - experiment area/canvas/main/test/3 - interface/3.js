@@ -1,0 +1,1 @@
+workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.testObject(10,10) );

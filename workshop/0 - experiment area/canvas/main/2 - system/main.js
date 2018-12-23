@@ -1,12 +1,12 @@
-canvas.system = new function(){};
-canvas.system.mouse = new function(){
+workspace.system = new function(){};
+workspace.system.mouse = new function(){
     {{include:mouse.js}}
 };
-canvas.system.keyboard = new function(){
+workspace.system.keyboard = new function(){
     {{include:keyboard.js}}
 };
 
 {{include:paneSetup.js}}
 
-canvas.core.viewport.stopMouseScroll(true);
-canvas.core.render.active(true);
+workspace.core.viewport.stopMouseScroll(true);
+workspace.core.render.active(true);

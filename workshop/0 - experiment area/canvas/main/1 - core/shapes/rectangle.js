@@ -70,16 +70,16 @@ this.rectangle = function(){
             };
 
         //calculate points
-            this.extremities.points = canvas.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
+            this.extremities.points = workspace.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
             this.extremities.points = this.extremities.points.map(function(point){
-                point = canvas.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                point = workspace.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
                 point.x += offset.x;
                 point.y += offset.y;
                 return point;
             });
 
         //calculate boundingBox
-            this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+            this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
 
         //update the points and bounding box of the parent
             if(this.parent != undefined){
@@ -89,11 +89,11 @@ this.rectangle = function(){
 
     function isPointWithinBoundingBox(x,y,shape){
         if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-        return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+        return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
     }
     function isPointWithinHitBox(x,y,shape){
         if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-        return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+        return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
     }
     this.isPointWithin = function(x,y){
         if( isPointWithinBoundingBox(x,y,this) ){
@@ -107,14 +107,14 @@ this.rectangle = function(){
             if(shape.static){return true;}
             
         //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-            return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+            return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
     this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
 
         //adjust offset for parent's angle
-            var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+            var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
             offset.x += point.x - this.x;
             offset.y += point.y - this.y;
         
@@ -144,7 +144,7 @@ this.rectangle = function(){
             }
 
         //post adaptation calculations
-            shapeValue.location = canvas.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
+            shapeValue.location = workspace.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
             
         //clipping
             if(isClipper){

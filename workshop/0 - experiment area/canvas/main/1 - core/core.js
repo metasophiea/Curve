@@ -12,14 +12,14 @@ var adapter = new function(){
         x = (x/scale) - position.x;
         y = (y/scale) - position.y;
 
-        return canvas.library.math.cartesianAngleAdjust(x,y,-angle);
+        return workspace.library.math.cartesianAngleAdjust(x,y,-angle);
     };
     this.workspacePoint2windowPoint = function(x,y){
         var position = core.viewport.position();
         var scale = core.viewport.scale();
         var angle = core.viewport.angle();
 
-        var point = canvas.library.math.cartesianAngleAdjust(x,y,angle);
+        var point = workspace.library.math.cartesianAngleAdjust(x,y,angle);
 
         return {
             x: (point.x+position.x) * scale,
@@ -46,7 +46,7 @@ function gatherParentOffset(element){
                 a: offsetList[0]!=undefined ? offsetList[0].a : 0,
             };
             for(var a = 1; a < offsetList.length; a++){
-                var point = canvas.library.math.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,offsetList[a-1].a);
+                var point = workspace.library.math.cartesianAngleAdjust(offsetList[a].x,offsetList[a].y,offsetList[a-1].a);
                 offset.a += offsetList[a].a;
                 offset.x += point.x;
                 offset.y += point.y;
@@ -98,7 +98,7 @@ this.viewport = new function(){
         function dimensionAdjust(direction){
             var Direction = direction.charAt(0).toUpperCase() + direction.slice(1)
 
-            var attribute = canvas.getAttribute('workspace'+Direction);
+            var attribute = workspace.getAttribute('workspace'+Direction);
             if( pageData[direction] != attribute || pageData['window'+Direction] != window['inner'+Direction] ){
                 //save values for future reference
                     pageData[direction] = attribute;
@@ -106,13 +106,13 @@ this.viewport = new function(){
 
                 //adjust canvas dimension based on the size requirement set out in the workspace attribute
                     if(attribute == undefined){
-                        canvas[direction] = pageData.defaultSize[direction];
+                        workspace[direction] = pageData.defaultSize[direction];
                     }else if( attribute.indexOf('%') == (attribute.length-1) ){
-                        var parentSize = canvas.parentElement['offset'+Direction]
+                        var parentSize = workspace.parentElement['offset'+Direction]
                         var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
-                        canvas[direction] = parentSize * percent;
+                        workspace[direction] = parentSize * percent;
                     }else{
-                        canvas[direction] = attribute;
+                        workspace[direction] = attribute;
                     }
 
                 changesMade = true;
@@ -127,12 +127,12 @@ this.viewport = new function(){
     function calculateViewportExtremities(){
         //for each corner of the viewport; find out where they lie on the workspace
             state.points.tl = adapter.windowPoint2workspacePoint(0,0);
-            state.points.tr = adapter.windowPoint2workspacePoint(canvas.width,0);
-            state.points.bl = adapter.windowPoint2workspacePoint(0,canvas.height);
-            state.points.br = adapter.windowPoint2workspacePoint(canvas.width,canvas.height);
+            state.points.tr = adapter.windowPoint2workspacePoint(workspace.width,0);
+            state.points.bl = adapter.windowPoint2workspacePoint(0,workspace.height);
+            state.points.br = adapter.windowPoint2workspacePoint(workspace.width,workspace.height);
         
         //calculate a bounding box for the viewport from these points
-            state.boundingBox = canvas.library.math.boundingBoxFromPoints([state.points.tl, state.points.tr, state.points.br, state.points.bl]);
+            state.boundingBox = workspace.library.math.boundingBoxFromPoints([state.points.tl, state.points.tr, state.points.br, state.points.bl]);
     }
 
     this.position = function(x,y){
@@ -156,7 +156,7 @@ this.viewport = new function(){
     this.refresh = function(){
         adjustCanvasSize();
         calculateViewportExtremities();
-        canvas.setAttribute('tabIndex',1); //enables keyboard input
+        workspace.setAttribute('tabIndex',1); //enables keyboard input
     };
     this.getBoundingBox = function(){return state.boundingBox;};
     this.mousePosition = function(x,y){
@@ -178,12 +178,12 @@ this.viewport = new function(){
     };
 };
 this.render = new function(){
-    var context = canvas.getContext('2d', { alpha: true });
+    var context = workspace.getContext('2d', { alpha: false });
     var animationRequestId = undefined;
 
     function clearFrame(){
         context.fillStyle = 'rgb(255,255,255)';
-        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillRect(0, 0, workspace.width, workspace.height);
     }
     function renderFrame(noClear=false){
         //clear the canvas
@@ -241,13 +241,63 @@ this.stats = new function(){
             this.frameTimeArray.push( 1000/(timestamp-lastTimestamp) );
             if( this.frameTimeArray.length >= average){ this.frameTimeArray.shift(); }
 
-            this.rate = canvas.library.math.averageArray( this.frameTimeArray );
+            this.rate = workspace.library.math.averageArray( this.frameTimeArray );
 
             lastTimestamp = timestamp;
         },
         counter:0,
         frameTimeArray:[],
         rate:0,
+    };
+    var shapeCount = {
+        recursiveCount:function(item){
+            if(item == undefined){
+                this.counts = {
+                    total:0, 
+                    canvas:0,    circle:0,
+                    group:0,     image:0,
+                    path:0,      polygon:0,
+                    rectangle:0, text:0,
+                };
+                item = workspace.core.arrangement.get();
+            }
+
+            this.counts.total++;
+            switch(item.type){
+                case 'canvas':    this.counts.canvas++;    break;
+                case 'circle':    this.counts.circle++;    break;
+                case 'group':     this.counts.group++;     break;
+                case 'image':     this.counts.image++;     break;
+                case 'path':      this.counts.path++;      break;
+                case 'polygon':   this.counts.polygon++;   break;
+                case 'rectangle': this.counts.rectangle++; break;
+                case 'text':      this.counts.text++;      break;
+            }
+
+            if(item.children != undefined){
+                for(var a = 0; a < item.children.length; a++){
+                    this.recursiveCount( item.children[a] );
+                }
+            }
+        },
+        recursivePrint:function(item,spacing=''){
+            if(item == undefined){item = workspace.core.arrangement.get()}
+
+            console.log( spacing + item.name );
+
+            if(item.children != undefined){
+                for(var a = 0; a < item.children.length; a++){
+                    this.recursivePrint( item.children[a], spacing+'- ' );
+                }
+            }
+        },
+        counts:{
+            total:0, 
+            canvas:0,    circle:0,
+            group:0,     image:0,
+            path:0,      polygon:0,
+            rectangle:0, text:0,
+        }
     };
 
     this.collect = function(timestamp){
@@ -258,8 +308,10 @@ this.stats = new function(){
     };
     this.active = function(bool){if(bool==undefined){return active;} active=bool;};
     this.getReport = function(){
+        shapeCount.recursiveCount();
         return {
             framesPerSecond: framesPerSecond.rate,
+            shapeCount: shapeCount.counts,
         };
     };
 };
@@ -294,7 +346,7 @@ this.callback = new function(){
             }
 
             //default
-                canvas[callbacks[a]] = function(callback){
+                workspace[callbacks[a]] = function(callback){
                     return function(event){
                         //if core doesn't have this callback set up, just bail
                             if( !core.callback[callback] ){return;}
@@ -312,7 +364,7 @@ this.callback = new function(){
                 }(callbacks[a]);
 
             //special cases
-                canvas.onmouseover = function(event){
+                workspace.onmouseover = function(event){
                     var callback = 'onmouseover';
 
                     //if appropriate, remove the window scrollbars
@@ -331,7 +383,7 @@ this.callback = new function(){
                     //activate core's callback, providing the converted point, original event, and shape
                         core.callback[callback](p.x,p.y,event,shape);
                 };
-                canvas.onmouseout = function(event){
+                workspace.onmouseout = function(event){
                     var callback = 'onmouseout';
 
                     //if appropriate, replace the window scrollbars
@@ -350,7 +402,7 @@ this.callback = new function(){
                     //activate core's callback, providing the converted point, original event, and shape
                         core.callback[callback](p.x,p.y,event,shape);
                 };
-                canvas.onmousemove = function(event){
+                workspace.onmousemove = function(event){
                     var callback = 'onmousemove';
 
                     //convert the point
@@ -383,7 +435,7 @@ this.callback = new function(){
                         lastPoint = {x:p.x,y:p.y};
                 };
 
-                canvas.onkeydown = function(event){
+                workspace.onkeydown = function(event){
                     var callback = 'onkeydown';
 
                     //if core doesn't have this callback set up, just bail
@@ -399,7 +451,7 @@ this.callback = new function(){
                     //activate core's callback, providing the converted point, original event, and shape
                         core.callback[callback](p.x,p.y,event,shape);
                 };
-                canvas.onkeyup = function(event){
+                workspace.onkeyup = function(event){
                     var callback = 'onkeyup';
 
                     //if core doesn't have this callback set up, just bail

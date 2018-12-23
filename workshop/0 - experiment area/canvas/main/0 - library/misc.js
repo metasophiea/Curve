@@ -24,7 +24,7 @@ this.multiBlendColours = function(rgbaList,ratio){
         if(ratio == 1){return rgbaList[rgbaList.length-1];}
     //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
         var p = ratio*(rgbaList.length-1);
-        return canvas.library.misc.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+        return workspace.library.misc.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
 };
 this.padString = function(string,length,padding=' '){
     if(padding.length<1){return string;}

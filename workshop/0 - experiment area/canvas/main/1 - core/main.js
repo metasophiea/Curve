@@ -1,3 +1,3 @@
-canvas.core = new function(){
+workspace.core = new function(){
     {{include:surface.js}}
 };

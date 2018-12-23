@@ -160,7 +160,7 @@ this.group = function(){
             if(deepCompute){
                 //calculate offset to be sent down to this group's children
                     var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
-                    var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                    var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
                         combinedOffset.x += point.x;
                         combinedOffset.y += point.y;
 
@@ -187,7 +187,7 @@ this.group = function(){
                             temp.push(this.children[a].extremities.boundingBox.topLeft);
                             temp.push(this.children[a].extremities.boundingBox.bottomRight);
                         }
-                        temp = canvas.library.math.boundingBoxFromPoints( temp );
+                        temp = workspace.library.math.boundingBoxFromPoints( temp );
                         this.extremities.points = [
                             { x: temp.topLeft.x,     y: temp.topLeft.y,     },
                             { x: temp.bottomRight.x, y: temp.topLeft.y,     },
@@ -198,7 +198,7 @@ this.group = function(){
                 }else{
                     //the points for this group are the same as the stencil shape's
                         var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
-                        var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                        var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
                             combinedOffset.x += point.x;
                             combinedOffset.y += point.y;
                         this.clippingStencil.computeExtremities(combinedOffset);
@@ -206,7 +206,7 @@ this.group = function(){
                 }
 
         //calculate boundingBox
-            this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+            this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
 
         //update the points and bounding box of the parent
             if(this.parent != undefined && rootCalculationElement){
@@ -216,11 +216,11 @@ this.group = function(){
 
     function isPointWithinBoundingBox(x,y,shape){
         if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-        return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+        return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
     }
     function isPointWithinHitBox(x,y,shape){
         if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-        return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+        return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
     }
     this.isPointWithin = function(x,y){
         if(this.clipActive){ return this.clippingStencil.isPointWithin(x,y); }
@@ -269,14 +269,14 @@ this.group = function(){
             for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
 
         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-            return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+            return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
     this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
             if(!shouldRender(this)){return;}
 
         //adjust offset for parent's angle
-            var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+            var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
             var packagedOffset = {
                 a: offset.a + this.angle,
                 x: offset.x + point.x,
@@ -488,7 +488,7 @@ this.group = function(){
 //             if(deepCompute){
 //                 //calculate offset to be sent down to this group's children
 //                     var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
-//                     var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+//                     var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
 //                         combinedOffset.x += point.x;
 //                         combinedOffset.y += point.y;
 
@@ -513,7 +513,7 @@ this.group = function(){
 //                 temp.push(this.children[a].extremities.boundingBox.topLeft);
 //                 temp.push(this.children[a].extremities.boundingBox.bottomRight);
 //             }
-//             temp = canvas.library.math.boundingBoxFromPoints( temp );
+//             temp = workspace.library.math.boundingBoxFromPoints( temp );
 //             this.extremities.points = [
 //                 { x: temp.topLeft.x,     y: temp.topLeft.y,     },
 //                 { x: temp.bottomRight.x, y: temp.topLeft.y,     },
@@ -522,7 +522,7 @@ this.group = function(){
 //             ];            
 
 //         //calculate boundingBox
-//             this.extremities.boundingBox = canvas.library.math.boundingBoxFromPoints( this.extremities.points );
+//             this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
 
 //         //update the points and bounding box of the parent
 //             if(this.parent != undefined && rootCalculationElement){
@@ -531,11 +531,11 @@ this.group = function(){
 //     };
 //     function isPointWithinBoundingBox(x,y,shape){
 //         if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-//         return canvas.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+//         return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
 //     }
 //     function isPointWithinHitBox(x,y,shape){
 //         if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-//         return canvas.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+//         return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
 //     }
 //     this.isPointWithin = function(x,y){
 //         if( isPointWithinBoundingBox(x,y,this) ){
@@ -582,14 +582,14 @@ this.group = function(){
 //             for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
 
 //         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-//             return canvas.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+//             return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
 //     };
 //     this.render = function(context,offset={x:0,y:0,a:0},static=false){
 //         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
 //             if(!shouldRender(this)){return;}
 
 //         //adjust offset for parent's angle
-//             var point = canvas.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+//             var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
 //             offset.x += point.x - this.x;
 //             offset.y += point.y - this.y;
 
