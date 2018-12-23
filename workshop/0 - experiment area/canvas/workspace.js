@@ -12343,8 +12343,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         printText:true,
                                     });
                         
-                                // setup default settings, allow graphical updates to occur and update graph
+                                //setup default settings, allow graphical updates to occur and update graph
                                     object.i.reset();
+                                    setTimeout(function(){object.i.reset();},1); 
                                     vars.allowUpdate = true;
                                     updateGraph();
                             
