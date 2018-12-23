@@ -91,6 +91,7 @@ this.viewport = new function(){
         y:undefined, 
         stopScrollActive:false,
     };
+    var allowKeyboardInput = true;
 
     function adjustCanvasSize(){
         var changesMade = false;
@@ -106,14 +107,16 @@ this.viewport = new function(){
 
                 //adjust canvas dimension based on the size requirement set out in the workspace attribute
                     if(attribute == undefined){
-                        workspace[direction] = pageData.defaultSize[direction];
+                        workspace[direction] = pageData.defaultSize[direction] * window.devicePixelRatio;
+                        workspace.style[direction] = pageData.defaultSize[direction] + "px";
                     }else if( attribute.indexOf('%') == (attribute.length-1) ){
                         var parentSize = workspace.parentElement['offset'+Direction]
                         var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
                         workspace[direction] = parentSize * percent * window.devicePixelRatio;
                         workspace.style[direction] = parentSize * percent + "px";
                     }else{
-                        workspace[direction] = attribute;
+                        workspace[direction] = attribute * window.devicePixelRatio;
+                        workspace.style[direction] = attribute;
                     }
 
                 changesMade = true;
@@ -157,7 +160,7 @@ this.viewport = new function(){
     this.refresh = function(){
         adjustCanvasSize();
         calculateViewportExtremities();
-        workspace.setAttribute('tabIndex',1); //enables keyboard input
+        this.allowKeyboardInput(allowKeyboardInput);
     };
     this.getBoundingBox = function(){return state.boundingBox;};
     this.mousePosition = function(x,y){
@@ -171,6 +174,12 @@ this.viewport = new function(){
 
         //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
         if(!bool){ document.body.style.overflow = ''; }
+    };
+    this.allowKeyboardInput = function(bool){
+        if(bool == undefined){return allowKeyboardInput;}
+        allowKeyboardInput = bool;
+
+        if(allowKeyboardInput){workspace.setAttribute('tabIndex',1);}else{workspace.removeAttribute('tabIndex');}
     };
     this.cursor = function(type){
         //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor

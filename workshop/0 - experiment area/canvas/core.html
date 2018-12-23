@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>curve</title>
+        <meta charset="utf-8"></meta>
+        <style>
+            html, body{
+                margin:0px;
+                width:100%; height:100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas workspace workspaceWidth='100%' workspaceHeight='150%'></canvas>
+    </body>
+
+</html>
+
+<script type='text/javascript' src='core.js'></script>
+<script>
+    workspace.core.viewport.allowKeyboardInput(false);
+
+    var text = workspace.core.arrangement.createElement('text');
+        text.name = 'mainHeading';
+        text.x = window.innerWidth/2;
+        text.style.align = 'center';
+        text.style.baseline = 'top';
+        text.text = 'coreGraphics';
+        text.size = 3;
+        workspace.core.arrangement.append(text);
+
+    workspace.core.render.frame();
+
+
+    window.onresize = function(event){
+        workspace.core.viewport.refresh();
+        text.parameter.x(window.innerWidth/2);
+        workspace.core.render.frame();
+    };
+</script>
