@@ -1,7 +1,47 @@
 workspace.system.mouse.functionList.onmousedown.push(
     {
+        'specialKeys':['shift'],
+        'function':function(data){
+            //creat selection graphic and add it to the foregroud
+                workspace.system.mouse.tmp.selectionRectangle = workspace.interface.part.alpha.builder( 
+                    'rectangle', 'selectionRectangle', 
+                    { x:data.x, y:data.y, width:0, height:0, style:{ fill:'rgba(224, 184, 252, 0.25)' } } 
+                );
+                workspace.system.pane.mf.append( workspace.system.mouse.tmp.selectionRectangle );
+
+            //follow mouse, adjusting selection rectangle as it moves. On mouse up, remove the rectangle and select all
+            //units that touch the area
+                workspace.system.mouse.tmp.start = {x:data.x, y:data.y};
+                workspace.system.mouse.mouseInteractionHandler(
+                    function(event){
+                        var start = workspace.system.mouse.tmp.start;
+                        var end = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+
+                        workspace.system.mouse.tmp.selectionRectangle.parameter.width( end.x - start.x );
+                        workspace.system.mouse.tmp.selectionRectangle.parameter.height( end.y - start.y );
+                    },
+                    function(event){
+                        workspace.system.pane.mf.remove( workspace.system.mouse.tmp.selectionRectangle );
+
+                        var start = workspace.system.mouse.tmp.start;
+                        var end = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+
+                        workspace.control.selection.selectUnits(
+                            workspace.control.scene.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
+                        );
+                    },
+                );
+
+            return true;
+        }
+    }
+);
+
+workspace.system.mouse.functionList.onmousedown.push(
+    {
         'specialKeys':[],
         'function':function(data){
+            workspace.control.selection.deselectEverything();
 
             //save the viewport position and click position
                 workspace.system.mouse.tmp.oldPosition = workspace.core.viewport.position();

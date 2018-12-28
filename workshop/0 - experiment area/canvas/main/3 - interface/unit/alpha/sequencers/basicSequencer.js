@@ -41,6 +41,7 @@ this.basicSequencer = function(x,y,debug=false){
 
     var design = {
         name: 'basicSequencer',
+        category:'sequencers',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],

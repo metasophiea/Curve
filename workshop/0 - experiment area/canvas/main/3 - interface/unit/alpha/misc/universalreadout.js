@@ -5,6 +5,7 @@ this.universalreadout = function(x,y,debug=false){
     };
     var design = {
         name: 'universalreadout',
+        category:'misc',
         collection: 'alpha',
         x:x, y:y,
         space:[

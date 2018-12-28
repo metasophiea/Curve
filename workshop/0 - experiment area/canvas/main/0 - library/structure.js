@@ -14,9 +14,9 @@ this.functionListRunner = function(list){
 
                 //if all requirements were met, run the function
 	            if(shouldRun){  
-       	                //if the function returns 'false', continue with the list; otherwise stop here
+                    //if the function returns 'false', continue with the list; otherwise stop here
         	            if( list[a].function(event,data) ){ break; }
-                	}
+                }
             }
     }
 };

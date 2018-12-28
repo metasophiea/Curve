@@ -21,6 +21,7 @@ this.oneShot_single = function(x,y,debug=false){
     };
     var design = {
         name: 'oneShot_single',
+        category: 'audioFile',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],

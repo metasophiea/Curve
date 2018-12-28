@@ -1,4 +1,35 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2018-12-28
+  - canvas experiment
+    - fixed up unit copy/paste code (looking good now)
+    - added in plumbing code for unit position rectification
+      ( workspace.control.scene.rectifyUnitPosition(unit) )
+    - added viewport size adjustment code to control, so now when the window is
+      resized, the canvas will be too.
+    - created rudimentary menubar (with automatic width adjustment)
+
+
+2018-12-27
+  - canvas experiment
+    - added copy/paste code (needs a rewrite)
+
+
+2018-12-26
+  - canvas experiment
+    - added click-and-drag group selection
+    - added generic selection glow to all units (based on their space)
+    - added update code to the unit builder so that it's personal space will be
+      updated on moving it around
+    - added 'delete all selected' function to selection control
+    - added 'disconnectEverything' function to unit
+
+
+2018-12-25
+  - canvas experiment
+    - began work on unit grapple and selection
+    - unit movement working
+
+
 2018-12-23
   - canvas experiment
     - created looper (unborked)
@@ -8,6 +39,7 @@
     - discovered that window.devicePixelRatio is a thing, and now things are 
       looking a little prettier
     - began work on "4 - Control"
+
 
 2018-12-20
   - canvas experiment
@@ -119,7 +151,6 @@
     generated when an image is loaded, and this copy is used when the shape
     is being drawn very small. A number of versions could be made in this vain.
     
-
 
 2018-12-17
   - canvas experiment

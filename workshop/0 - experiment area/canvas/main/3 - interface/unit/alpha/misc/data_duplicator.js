@@ -5,6 +5,7 @@ this.data_duplicator = function(x,y){
     };
     var design = {
         name:'data_duplicator',
+        category:'misc',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],

@@ -10,6 +10,7 @@ this.audioSink = function(x,y){
     };
     var design = {
         name:'audioSink',
+        category:'humanOutputDevices',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}],

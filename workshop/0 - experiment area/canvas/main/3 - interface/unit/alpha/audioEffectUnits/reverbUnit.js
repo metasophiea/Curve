@@ -21,6 +21,7 @@ this.reverbUnit = function(x,y){
     };
     var design = {
         name: 'reverbUnit',
+        category: 'audioEffectUnits',
         collection: 'alpha',
         x: x, y: y,
         space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],

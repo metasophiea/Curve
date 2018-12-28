@@ -71,6 +71,7 @@ this.multibandFilter = function(
     var height = 255;
     var design = {
         name: 'multibandFilter',
+        category: 'audioEffectUnits',
         collection: 'alpha',
         x: x, y: y,
         space:[

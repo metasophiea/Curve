@@ -387,9 +387,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             
                             //if all requirements were met, run the function
             	            if(shouldRun){  
-                   	                //if the function returns 'false', continue with the list; otherwise stop here
+                                //if the function returns 'false', continue with the list; otherwise stop here
                     	            if( list[a].function(event,data) ){ break; }
-                            	}
+                            }
                         }
                 }
             };
@@ -2918,6 +2918,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.angle = function(a){return core.viewport.angle(a);};
                 this.windowPoint2workspacePoint = function(x,y){ return core.viewport.windowPoint2workspacePoint(x,y); };
                 this.refresh = function(){ core.viewport.refresh(); };
+                this.mousePosition = function(){ return core.viewport.mousePosition();  };
                 this.stopMouseScroll = function(bool){ return core.viewport.stopMouseScroll(bool); };
                 this.allowKeyboardInput = function(bool){ return core.viewport.allowKeyboardInput(bool); };
                 this.cursor = function(type){return core.viewport.cursor(type);};

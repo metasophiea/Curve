@@ -14,6 +14,7 @@ this.basicMixer = function(x,y){
     };
     var design = {
         name:'basicMixer',
+        category: 'misc',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],

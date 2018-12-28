@@ -19,6 +19,7 @@ this.audioScope = function(x,y){
     };
     var design = {
         name:'audioScope',
+        category:'humanOutputDevices',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],

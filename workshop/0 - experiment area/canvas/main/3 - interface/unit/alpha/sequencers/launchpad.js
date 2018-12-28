@@ -24,6 +24,7 @@ this.launchpad = function(x,y,debug=false){
     };
     var design = {
         name: 'launchpad',
+        category:'sequencers',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}],

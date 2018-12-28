@@ -23,6 +23,7 @@ this.audioIn = function(x,y,setupConnect=true){
     };
     var design = {
         name:'audioIn',
+        category:'humanInputDevices',
         collection: 'alpha',
         x:x, y:y,
         space:[

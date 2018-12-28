@@ -13,6 +13,7 @@ this.pulseGenerator_hyper = function(x,y,debug=false){
     };
     var design = {
         name: 'pulseGenerator_hyper',
+        category:'misc',
         collection: 'alpha',
         x: x, y: y,
         space:[

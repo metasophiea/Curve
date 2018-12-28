@@ -387,9 +387,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             
                             //if all requirements were met, run the function
             	            if(shouldRun){  
-                   	                //if the function returns 'false', continue with the list; otherwise stop here
+                                //if the function returns 'false', continue with the list; otherwise stop here
                     	            if( list[a].function(event,data) ){ break; }
-                            	}
+                            }
                         }
                 }
             };
@@ -2918,6 +2918,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.angle = function(a){return core.viewport.angle(a);};
                 this.windowPoint2workspacePoint = function(x,y){ return core.viewport.windowPoint2workspacePoint(x,y); };
                 this.refresh = function(){ core.viewport.refresh(); };
+                this.mousePosition = function(){ return core.viewport.mousePosition();  };
                 this.stopMouseScroll = function(bool){ return core.viewport.stopMouseScroll(bool); };
                 this.allowKeyboardInput = function(bool){ return core.viewport.allowKeyboardInput(bool); };
                 this.cursor = function(type){return core.viewport.cursor(type);};
@@ -10926,6 +10927,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     path.parameter.points([{x:x1,y:y1},{x:x2,y:y2}]);
                                 };
                         
+                            //identifier
+                                object._isCable = true;
+                        
                             return object;
                         };
                         this.connectionNode_audio = function(
@@ -11511,6 +11515,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'filterUnit',
+                                category: 'audioEffectUnits',
                                 collection: 'alpha',
                                 x: x, y: y,
                                 space:[ {x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70} ],
@@ -11673,6 +11678,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'reverbUnit',
+                                category: 'audioEffectUnits',
                                 collection: 'alpha',
                                 x: x, y: y,
                                 space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],
@@ -11865,6 +11871,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             var height = 255;
                             var design = {
                                 name: 'multibandFilter',
+                                category: 'audioEffectUnits',
                                 collection: 'alpha',
                                 x: x, y: y,
                                 space:[
@@ -12057,6 +12064,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'distortionUnit',
+                                category: 'audioEffectUnits',
                                 collection: 'alpha',
                                 x: x, y: y,
                                 space:[
@@ -12210,6 +12218,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'recorder',
+                                category: 'audioFile',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}],
@@ -12361,6 +12370,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'looper',
+                                category: 'audioFile',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
@@ -12497,6 +12507,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'oneShot_single',
+                                category: 'audioFile',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
@@ -12624,6 +12635,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'oneShot_multi',
+                                category: 'audioFile',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
@@ -12802,6 +12814,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'oneShot_multi_multiTrack',
+                                category: 'audioFile',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}],
@@ -13074,6 +13087,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'player',
+                                category: 'audioFile',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}],
@@ -13213,6 +13227,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name:'audioIn',
+                                category:'humanInputDevices',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[
@@ -13334,6 +13349,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'musicalKeyboard',
+                                category:'humanInputDevices',
                                 collection: 'alpha',
                                 x: x, y: y,
                                 space:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}],
@@ -13460,6 +13476,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name:'audioScope',
+                                category:'humanOutputDevices',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
@@ -13520,6 +13537,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name:'audioSink',
+                                category:'humanOutputDevices',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}],
@@ -13616,6 +13634,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                             var design = {
                                 name: 'basicSequencer',
+                                category:'sequencers',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
@@ -13750,6 +13769,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'launchpad',
+                                category:'sequencers',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}],
@@ -14009,6 +14029,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                             var design = {
                                 name: 'basicSequencer_midiOut',
+                                category:'sequencers',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
@@ -14142,6 +14163,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name:'basicSynthesizer',
+                                category:'synthesizers',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
@@ -14451,16 +14473,17 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'audio_duplicator',
+                                category:'misc',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
                                 // spaceOutline: true,
                                 elements:[
-                                    {type:'connectionNode_audio', name:'input', data:{ type:0, x:45, y:5, width:20, height:20 }},
-                                    {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:20, height:20, isAudioOutput:true }},
-                                    {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:20, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_audio', name:'input', data:{ type:0, x:55, y:5, width:10, height:20 }},
+                                    {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
                         
-                                    {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], style:style.background }},
+                                    {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], style:style.background} },
                         
                                     {type:'polygon', name:'upperArrow', data:{ points:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], style:style.markings }},
                                     {type:'polygon', name:'lowerArrow', data:{ points:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], style:style.markings }},
@@ -14472,7 +14495,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                         
                             //main object
-                                var object = interfaceUnit.builder(this.audio_duplicator,design);
+                                var object = interfaceUnit.builder(workspace.interface.unit.alpha.misc.audio_duplicator,design);
                         
                             //circuitry
                                 object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
@@ -14492,6 +14515,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'universalreadout',
+                                category:'misc',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[
@@ -14556,6 +14580,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.testObject = function(x,y){
                             var design = {
                                 name: 'testObject',
+                                category:'misc',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space: [
@@ -14711,6 +14736,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'pulseGenerator_hyper',
+                                category:'misc',
                                 collection: 'alpha',
                                 x: x, y: y,
                                 space:[
@@ -14817,6 +14843,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name: 'pulseGenerator',
+                                category:'misc',
                                 collection: 'alpha',
                                 x: x, y: y,
                                 space:[
@@ -14915,6 +14942,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name:'data_duplicator',
+                                category:'misc',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
@@ -14972,6 +15000,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             var design = {
                                 name:'basicMixer',
+                                category: 'misc',
                                 collection: 'alpha',
                                 x:x, y:y,
                                 space:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
@@ -15071,16 +15100,16 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     /*
                         a design
                         {
-                            name: 'name of object (unique to collection)',
-                            collection: 'name of the collection to which this object belongs',
+                            name: 'name of unit (unique to collection)',
+                            collection: 'name of the collection to which this unit belongs',
                             x: 0, y: 0,
-                            space: [{x:0,y:0}, ...], //a collection of points, used to determine the object's selection/collision area
+                            space: [{x:0,y:0}, ...], //a collection of points, used to determine the unit's selection/collision area
                             spaceOutline: true/false, //a helper graphic, which when set to true, will draw an outline of the space
                             elements:[ //a list of all the parts
                                 {
                                     type:'part type name',
                                     name:'a unique name',
-                                    grapple: true/false, //declare that this shape part should be used as an object grapple
+                                    grapple: true/false, //declare that this shape part should be used as an unit grapple
                                     data:{}, //data relevant to this part type
                                 }
                             ] 
@@ -15090,36 +15119,32 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         if(!creatorMethod){console.error("workspace unit builder:: creatorMethod missing");return;}
                     
                         //main group
-                            var object = interface.part.alpha.builder('group',design.name,{x:design.x, y:design.y});
-                            object.unitType = design.name;
-                            object.collection = design.collection;
-                            object.creatorMethod = design.creatorMethod;
+                            var unit = interface.part.alpha.builder('group',design.name,{x:design.x, y:design.y});
+                            unit.model = design.name;
+                            unit.category = design.category;
+                            unit.collection = design.collection;
+                            unit.creatorMethod = creatorMethod;
                     
                         //generate parts and append to main group
-                            object.elements = {};
+                            unit.elements = {};
                             for(var a = 0; a < design.elements.length; a++){
                                 //check for name collision
-                                    if( object.getChildByName(design.elements[a].name) != undefined ){
+                                    if( unit.getChildByName(design.elements[a].name) != undefined ){
                                         console.warn('error: part with the name "'+design.elements[a].name+'" already exists. Part:',design.elements[a],'will not be added');
                                         continue;
                                     }    
                     
                                 //produce and append part
                                     var newPart = interface.part.alpha.builder( design.elements[a].type, design.elements[a].name, design.elements[a].data );
-                                    object.append(newPart);
+                                    unit.append(newPart);
                     
                                 //add part to element tree
-                                    if( object.elements[design.elements[a].type] == undefined ){ object.elements[design.elements[a].type] = {}; }
-                                    object.elements[design.elements[a].type][design.elements[a].name] = newPart;
-                    
-                                //add grapple code (if appropriate)
-                                    if( design.elements[a].grapple ){
-                                        this.builder.objectGrapple.declare( newPart, object );
-                                    }
+                                    if( unit.elements[design.elements[a].type] == undefined ){ unit.elements[design.elements[a].type] = {}; }
+                                    unit.elements[design.elements[a].type][design.elements[a].name] = newPart;
                             }
                     
                         //gather together io ports
-                            object.io = {};
+                            unit.io = {};
                             [
                                 {key:'_', name:'connectionNode'},
                                 {key:'signal', name:'connectionNode_signal'},
@@ -15127,70 +15152,65 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 {key:'data', name:'connectionNode_data'},
                                 {key:'audio', name:'connectionNode_audio'},
                             ].forEach(function(type){
-                                if(!object.elements[type.name]){return;}
-                                var keys = Object.keys(object.elements[type.name]);
+                                if(!unit.elements[type.name]){return;}
+                                var keys = Object.keys(unit.elements[type.name]);
                                 for(var a = 0; a < keys.length; a++){
-                                    var part = object.elements[type.name][keys[a]];
-                                    if( object.io[type.key] == undefined ){ object.io[type.key] = {}; }
-                                    object.io[type.key][part.name] = part;
+                                    var part = unit.elements[type.name][keys[a]];
+                                    if( unit.io[type.key] == undefined ){ unit.io[type.key] = {}; }
+                                    unit.io[type.key][part.name] = part;
                                 }
                             });
                     
-                        //generate object's personal space
-                            object.space = { 
-                                points: Object.assign([],design.space).map(function(a){return {x:design.x+a.x,y:design.y+a.y}; }),
+                            unit.disconnectEverything = function(){
+                                var connectionTypes = Object.keys(unit.io);
+                                for(var a = 0; a < connectionTypes.length; a++){
+                                    var connections = Object.keys(unit.io[connectionTypes[a]]);
+                                    for(var b = 0; b < connections.length; b++){
+                                        unit.io[connectionTypes[a]][connections[b]].disconnect();
+                                    }
+                                }
                             };
-                            object.space.box = workspace.library.math.boundingBoxFromPoints(object.space.points);
                     
+                        //generate unit's personal space
+                            function generatePersonalSpace(){
+                                unit.space = { 
+                                    points: Object.assign([],design.space).map(function(a){return {x:design.x+a.x,y:design.y+a.y}; }),
+                                };
+                                unit.space.box = workspace.library.math.boundingBoxFromPoints(unit.space.points);
+                            }
+                            generatePersonalSpace();
                     
                             //create invisible shape
                                 //create name for the space shape that won't interfer with other names 
                                     var spaceName = 'spaceShape';
-                                    while( object.getChildByName(spaceName) != undefined ){ spaceName = spaceName + Math.floor(Math.random()*10); } //add random digits until it's unique
+                                    while( unit.getChildByName(spaceName) != undefined ){ spaceName = spaceName + Math.floor(Math.random()*10); } //add random digits until it's unique
                                 //create invisible backing shape (with callbacks)
                                     var invisibleShape = interface.part.alpha.builder( 'polygon', spaceName, {points:design.space, style:{ fill:'rgba(0,0,0,0)' } } );
-                                    object.prepend(invisibleShape);
-                                    invisibleShape.onkeydown = function(x,y,event){ if(object.onkeydown != undefined){ object.onkeydown(x,y,event); } };
-                                    invisibleShape.onkeyup = function(x,y,event){ if(object.onkeyup != undefined){ object.onkeyup(x,y,event); } };
+                                    unit.prepend(invisibleShape);
+                                    invisibleShape.onkeydown = function(x,y,event){ if(unit.onkeydown != undefined){ unit.onkeydown(x,y,event); } };
+                                    invisibleShape.onkeyup = function(x,y,event){ if(unit.onkeyup != undefined){ unit.onkeyup(x,y,event); } };
                     
                             //if requested, add an outline shape
                                 if( design.spaceOutline ){
-                                    object.append( interface.part.alpha.builder( 'polygon', spaceName+'Outline', {points:design.space, style:{ fill:'rgba(0,0,0,0)', stroke:'rgba(0,0,0,1)' } } ) );
+                                    unit.append( interface.part.alpha.builder( 'polygon', spaceName+'Outline', {points:design.space, style:{ fill:'rgba(0,0,0,0)', stroke:'rgba(0,0,0,1)' } } ) );
                                 }
                     
-                        return object;
-                    };
+                        //update unit x and y adjustment methods
+                            unit._parameter = {};
+                            unit._parameter.x = unit.parameter.x;
+                            unit._parameter.y = unit.parameter.y;
+                            unit.parameter.x = function(newX){
+                                if( unit._parameter.x(newX) != undefined ){ return unit.x; }
+                                design.x = newX;
+                                generatePersonalSpace();
+                            };
+                            unit.parameter.y = function(newY){
+                                if( unit._parameter.y(newY) != undefined ){ return unit.y; }
+                                design.y = newY;
+                                generatePersonalSpace();
+                            };
                     
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    this.builder.objectGrapple = {
-                        tmpObject:undefined,
-                        functionList:{ onmousedown:[], onmouseup:[], },
-                        declare:function(grapple, object){
-                            grapple.object = object;
-                            object.grapple = grapple;
-                    
-                            function grappleFunctionRunner(list){
-                                return function(x,y,event){
-                                    //ensure that it's the action button on the mouse
-                                        if(event.button != 0){return;}
-                    
-                                    //save object
-                                        this.builder.objectGrapple.tmpObject = this.object;
-                                    
-                                    //run through function list, and activate functions where necessary
-                                        workspace.library.structure.functionListRunner(list)({event:event,x:x,y:y});
-                                };
-                            }
-                    
-                            grapple.onmousedown = grappleFunctionRunner( this.functionList.onmousedown );
-                            grapple.onmouseup = grappleFunctionRunner( this.functionList.onmouseup );
-                        },
+                        return unit;
                     };
 
                 };
@@ -15198,8 +15218,48 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         };
         workspace.system.mouse.functionList.onmousedown.push(
             {
+                'specialKeys':['shift'],
+                'function':function(data){
+                    //creat selection graphic and add it to the foregroud
+                        workspace.system.mouse.tmp.selectionRectangle = workspace.interface.part.alpha.builder( 
+                            'rectangle', 'selectionRectangle', 
+                            { x:data.x, y:data.y, width:0, height:0, style:{ fill:'rgba(224, 184, 252, 0.25)' } } 
+                        );
+                        workspace.system.pane.mf.append( workspace.system.mouse.tmp.selectionRectangle );
+        
+                    //follow mouse, adjusting selection rectangle as it moves. On mouse up, remove the rectangle and select all
+                    //units that touch the area
+                        workspace.system.mouse.tmp.start = {x:data.x, y:data.y};
+                        workspace.system.mouse.mouseInteractionHandler(
+                            function(event){
+                                var start = workspace.system.mouse.tmp.start;
+                                var end = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+        
+                                workspace.system.mouse.tmp.selectionRectangle.parameter.width( end.x - start.x );
+                                workspace.system.mouse.tmp.selectionRectangle.parameter.height( end.y - start.y );
+                            },
+                            function(event){
+                                workspace.system.pane.mf.remove( workspace.system.mouse.tmp.selectionRectangle );
+        
+                                var start = workspace.system.mouse.tmp.start;
+                                var end = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+        
+                                workspace.control.selection.selectUnits(
+                                    workspace.control.scene.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
+                                );
+                            },
+                        );
+        
+                    return true;
+                }
+            }
+        );
+        
+        workspace.system.mouse.functionList.onmousedown.push(
+            {
                 'specialKeys':[],
                 'function':function(data){
+                    workspace.control.selection.deselectEverything();
         
                     //save the viewport position and click position
                         workspace.system.mouse.tmp.oldPosition = workspace.core.viewport.position();
@@ -15258,28 +15318,74 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         workspace.control = new function(){
             var control = this;
         
-            this.gui = new function(){};
+            this.gui = new function(){
+                var pane = workspace.system.pane.f;
+                var menubar = undefined;
+        
+                this.refresh = function(){
+                    if(menubar != undefined){menubar.refresh();}
+                };
+        
+                this.showMenubar = function(){
+                    if(menubar != undefined){return;}
+                    menubar = control.gui.elements.menubar(0,0);
+                    pane.append( menubar );
+                };
+                this.hideMenubar = function(){
+                    if(menubar == undefined){return;}
+                    pane.remove( menubar );
+                    menubar = undefined;
+                };
+        
+                this.elements = new function(){
+                    this.menubar = function(x,y){
+                        var bar = workspace.interface.part.alpha.builder( 'rectangle', 'rectangle', {x:0, y:0, width:40, height:40} );
+                    
+                        bar.refresh = function(){
+                            this.parameter.width( workspace.control.viewport.width() );
+                        };
+                    
+                        bar.refresh();
+                    
+                        return bar;
+                    };
+                };
+            };
             this.viewport = new function(){
+                this.width = function(){ return workspace.width; };
+                this.height = function(){ return workspace.height; };
+        
                 this.scale = function(a){ return workspace.core.viewport.scale(a); };
                 this.position = function(x,y){ return workspace.core.viewport.position(x,y); };
+                this.refresh = function(){ 
+                    workspace.core.viewport.refresh();
+                    control.gui.refresh();
+                };
             };
             this.scene = new function(){
                 var pane = workspace.system.pane.mm;
+                var IDcounter = 0;
         
                 this.new = function(){};
                 this.load = function(){};
                 this.save = function(){};
-                this.addUnit = function(unitType,x,y){
+                this.generateUnitName = function(){ return IDcounter++; };
+                this.addUnit = function(x,y,model,category,collection='alpha'){
                     //generate new name for unit
-                        var name = 0;
-                        for( var a = 0; a < pane.children.length; a++){
-                            if( parseInt(pane.children[a].name) == name ){ name++; }
-                        }
+                        var name = this.generateUnitName();
         
-                    //produce unit, assign its name and add it to the main pane
-                        var tmp = workspace.interface.unit.alpha.misc[unitType](x,y);
+                    //produce unit, assign its name and add grapple code
+                        var tmp = category == undefined ? workspace.interface.unit[collection][model](x,y) : workspace.interface.unit[collection][category][model](x,y);
                         tmp.name = ''+name;
+                        tmp = workspace.control.grapple.declare(tmp);
+        
+                    //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
+                        this.rectifyUnitPosition(tmp);
+        
+                    //add it to the main pane
                         pane.append( tmp );
+        
+                    return tmp;
                 };
                 this.removeUnit = function(unit){ pane.remove(unit); };
         
@@ -15295,31 +15401,359 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     }
                 };
                 this.getUnitsWithinPoly = function(points){
-                    // workspace.system.pane.mf.append( workspace.interface.part.alpha.builder( 'polygon', 'selectionPolygon', { points:points, style:{ fill:'rgba(255,0,0,0.1)' } } ) );
                     var box = workspace.library.math.boundingBoxFromPoints(points);
-                    return pane.children.filter(function(a){ return workspace.library.math.detectOverlap.boundingBoxes(box, a.space.box) && workspace.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
+                    return pane.children.filter(function(a){ return !a._isCable && workspace.library.math.detectOverlap.boundingBoxes(box, a.space.box) && workspace.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
+                };
+        
+                this.rectifyUnitPosition = function(unit){
+                    return false;
                 };
             };
             this.selection = new function(){
-                var selectedObjects = [];
-                var lastSelectedObjects = null;
-                var clipboard = [];
-        
-                this.selectUnit = function(){};
-                this.deselectUnit = function(){};
-                this.selectEverything = function(){};
-                this.deselectEverything = function(){};
-        
+                this.selectedUnits = [];
+                this.lastSelectedUnits = null;
+                this.clipboard = [];
+                    // pane                 -   the pane the object came from
+                    // position             -   the X and Y of the original object
+                    // details              -   data on the unit's type
+                    //      collection
+                    //      category
+                    //      model
+                    // data                 -   the exported data from the original object
+                    // connections          -   an array of where to connect what
+                    //      typeAndNameOfSourcePort
+                    //      indexOfDestinationUnit
+                    //      typeAndNameOfDestinationPort
+                
+                this.selectUnit = function(unit,shiftToFront=true){
+                    // console.log('selecting unit',unit);
+                
+                    //check if object is already selected
+                        if( this.selectedUnits.indexOf(unit) != -1 ){return;}
+                
+                    //shift object to front of view, (within it's particular pane)
+                        if(shiftToFront){
+                            var pane = workspace.system.pane.getMiddlegroundPane(unit);
+                            pane.remove(unit);
+                            pane.append(unit);
+                        }
+                
+                    //colourize space
+                        var tmp = workspace.interface.part.alpha.builder( 
+                            'polygon', 'selectionGlow-'+unit.getAddress(), 
+                            { 
+                                points:unit.space.points.map(function(a){ return {x:a.x-unit.x,y:a.y-unit.y};}), 
+                                style:{ fill:'rgba(244, 226, 66, 0.25)', stroke:'rgba(244, 226, 66, 1)' } 
+                            } 
+                        );
+                        unit.append(tmp);
+                
+                    //perform selection
+                        if(unit.onselect){object.onselect();}
+                        this.selectedUnits.push(unit);
+                        this.lastSelectedUnits = unit;
+                };
+                this.selectUnits = function(unitList){
+                    for(var a = 0; a < unitList.length; a++){
+                        this.selectUnit(unitList[a]);
+                    }
+                };
+                this.deselectUnit = function(unit){
+                    // console.log('deselecting unit',unit);
+                
+                    //decolourize space
+                        unit.remove( unit.getChildByName('selectionGlow-'+unit.getAddress()) );
+                    
+                    //remove unit from selectedUnits list, and activate it's "ondeselect" function
+                        this.selectedUnits.splice(this.selectedUnits.indexOf(unit),1);
+                        if(unit.ondeselect){unit.ondeselect();}
+                };
+                this.selectEverything = function(){
+                    // console.log('selecting everything');
+                    
+                    this.deselectEverything();
+                    for(var a = 0; a < workspace.system.pane.mm.children.length; a++){
+                        if( !workspace.system.pane.mm.children[a]._isCable ){
+                            this.selectUnit(workspace.system.pane.mm.children[a],false);
+                        }
+                    }
+                };
+                this.deselectEverything = function(){
+                    // console.log('deselecting everything');
+                
+                    while(this.selectedUnits.length > 0){
+                        this.deselectUnit( this.selectedUnits[0] );
+                    }
+                };
+                
                 this.cut = function(){
                     this.copy();
                     this.delete();
                 };
-                this.copy = function(){};
-                this.paste = function(){};
-                this.duplicate = function(){};
-                this.delete = function(){};
+                this.copy = function(){
+                    //firstly, empty the clipboard
+                        this.clipboard = [];
+                
+                    //for all selected units; collect their data and add it to the clipboard
+                        for( var a = 0; a < this.selectedUnits.length; a++){
+                            var newEntry = {};
+                
+                            //pane
+                                newEntry.pane = workspace.system.pane.getMiddlegroundPane(this.selectedUnits[a]).getAddress();
+                
+                            //position
+                                newEntry.position = {x:this.selectedUnits[a].parameter.x(), y:this.selectedUnits[a].parameter.y()};
+                
+                            //unitDetails
+                                newEntry.details = {
+                                    collection: this.selectedUnits[a].collection,
+                                    category: this.selectedUnits[a].category,
+                                    model: this.selectedUnits[a].model,
+                                };
+                
+                            //data
+                                newEntry.data = this.selectedUnits[a].exportData ? this.selectedUnits[a].exportData() : null;
+                
+                            //connections
+                                newEntry.connections = [];
+                                for(var connectionType in this.selectedUnits[a].io){
+                                    for(var connection in this.selectedUnits[a].io[connectionType]){
+                                        var foreignNode = this.selectedUnits[a].io[connectionType][connection].getForeignNode();
+                                        if(foreignNode == undefined){continue;}
+                                
+                                        var newConnectionEntry = {};
+                
+                                        //typeAndNameOfSourcePort
+                                            newConnectionEntry.typeAndNameOfSourcePort = { type:connectionType, name:connection };
+                
+                                        //indexOfDestinationUnit
+                                            newConnectionEntry.indexOfDestinationUnit = this.selectedUnits.indexOf(foreignNode.parent);
+                
+                                        //typeAndNameOfDestinationPort
+                                            for(var foreignConnection in foreignNode.parent.io[connectionType]){
+                                                var con = foreignNode.parent.io[connectionType][foreignConnection];
+                                                if( con.getForeignNode() == undefined ){ continue; }
+                                                if( con.getForeignNode().name == connection ){
+                                                    newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignConnection };
+                                                }
+                                            }
+                
+                                        newEntry.connections.push(newConnectionEntry);
+                                    }
+                                }
+                                
+                            this.clipboard.push(newEntry);
+                        }
+                };
+                this.paste = function(position){
+                    //if clipboard is empty, don't bother
+                        if(this.clipboard.length == 0){return;}
+                
+                    //deselect everything
+                        this.deselectEverything();
+                
+                    //position manipulation
+                    //if position is not set to 'duplicate'; calculate new positions for the objects
+                        if(position != 'duplicate'){                
+                            //collect all positions
+                                var points = [];
+                                this.clipboard.forEach( element => points.push(element.position) );
+                
+                            //get the bounding box of this selection, and then the top left point of that
+                                var topLeft = workspace.library.math.boundingBoxFromPoints(points).topLeft;
+                
+                            //if no position has been provided at all; calculate a new one from the mouse position
+                                if(position == undefined){
+                                    var tmp = workspace.core.viewport.mousePosition();
+                                    if(tmp.x == undefined || tmp.y == undefined){
+                                        position = workspace.core.viewport.windowPoint2workspacePoint(0, 0);
+                                    }else{
+                                        position = workspace.core.viewport.windowPoint2workspacePoint(tmp.x, tmp.y);
+                                    }
+                                }
+                
+                            //combine this topLeft point with the provided (or calculated) position, 
+                            //then add this to the mouses' position
+                                this.clipboard.forEach( function(element){
+                                    element.position.x += position.x - topLeft.x;
+                                    element.position.y += position.y - topLeft.y;
+                                } );
+                        }
+                
+                    //unit printing
+                        for(var a = 0; a < this.clipboard.length; a++){
+                            var item = this.clipboard[a];
+                
+                            //create the object with its new position adding it to the pane
+                                var unit = control.scene.addUnit(item.position.x, item.position.y, item.details.model, item.details.category, item.details.collection);
+                
+                            //import data and select unit
+                                if(unit.importData){unit.importData(item.data);}
+                                this.selectUnit(unit);
+                
+                            //go through its connections, and attempt to connect them to everything they should be connected to
+                            // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
+                                for(var b = 0; b < item.connections.length; b++){
+                                    var connection = item.connections[b];
+                
+                                    var destinationUnit = this.selectedUnits[connection.indexOfDestinationUnit];
+                                    if(destinationUnit == undefined){continue;}
+                
+                                    var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
+                                    var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
+                                    sourceNode.connectTo(destinationNode);
+                                }
+                        }
+                };
+                this.duplicate = function(){
+                    this.copy();
+                    this.paste('duplicate');
+                    this.clipboard = [];
+                };
+                this.delete = function(){
+                    while(this.selectedUnits.length > 0){
+                        var unit = this.selectedUnits[0];
+                        //delete object
+                            //run the unit's onDelete method
+                                if(unit.ondelete){unit.ondelete();}
+                            //run disconnect on every connection node of this unit
+                                unit.disconnectEverything();
+                            //remove the object from the pane it's in
+                                workspace.system.pane.getMiddlegroundPane(unit).remove(unit);
+                        //remove object from selected array
+                            this.selectedUnits.shift();
+                    }
+                    this.lastSelectedUnits = null;
+                };
             };
         };
+        
+        workspace.control.grapple = {
+            tmpdata:{},
+            tmpunit:undefined,
+            functionList:{ onmousedown:[], onmouseup:[], },
+            declare:function(unit){
+        
+                function grappleFunctionRunner(list){
+                    return function(x,y,event){
+                        //ensure that it's the action button on the mouse
+                            if(event.button != 0){return;}
+        
+                        //save unit
+                            workspace.control.grapple.tmpunit = this;
+                        
+                        //run through function list, and activate functions where necessary
+                            workspace.library.structure.functionListRunner(list)({event:event,x:x,y:y});
+                    };
+                }
+        
+                unit.onmousedown = grappleFunctionRunner( this.functionList.onmousedown );
+                unit.onmouseup = grappleFunctionRunner( this.functionList.onmouseup );
+                return unit;
+            },
+        };
+        
+        
+        workspace.control.grapple.functionList.onmousedown.push(
+            {
+                'specialKeys':[],
+                'function':function(data){
+                    var control = workspace.control;
+        
+                    // if mousedown occurs over an unit that isn't selected
+                    //  and if the shift key is not pressed
+                    //   deselect everything
+                    //  now, select the unit we're working on if not selected
+                        if( !control.selection.selectedUnits.includes(control.grapple.tmpunit) ){
+                            if(!data.event.shiftKey){ control.selection.deselectEverything(); }
+                            control.selection.selectUnit(control.grapple.tmpunit);
+                        }
+                },
+            }
+        );
+        workspace.control.grapple.functionList.onmousedown.push(
+            {
+                'specialKeys':[],
+                'function':function(data){
+                    var control = workspace.control;
+        
+                    //collect together information on the click position and the selected unit's positions and section area
+                        control.grapple.tmpdata.oldClickPosition = {x:data.x,y:data.y};
+                        control.grapple.tmpdata.oldUnitsPositions = [];
+                        control.grapple.tmpdata.oldUnitsSelectionArea = [];
+                        for(var a = 0; a < control.selection.selectedUnits.length; a++){
+                            control.grapple.tmpdata.oldUnitsPositions.push( {x:control.selection.selectedUnits[a].x,y:control.selection.selectedUnits[a].y} );
+                            control.grapple.tmpdata.oldUnitsSelectionArea.push( Object.assign({},control.selection.selectedUnits[a].selectionArea) );
+                        }
+        
+                    //perform the move for all selected units
+                        workspace.system.mouse.mouseInteractionHandler(
+                            function(event){
+                                for(var a = 0; a < control.selection.selectedUnits.length; a++){
+                                    var unit = control.selection.selectedUnits[a];
+        
+                                    //calculate new position
+                                        var oldClickPosition = control.grapple.tmpdata.oldClickPosition;
+                                        var newClickPosition = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                        var oldUnitPosition = control.grapple.tmpdata.oldUnitsPositions[a];
+                                        var newUnitPosition = {
+                                            x: oldUnitPosition.x + (newClickPosition.x - oldClickPosition.x),
+                                            y: oldUnitPosition.y + (newClickPosition.y - oldClickPosition.y),
+                                        };
+        
+                                    //move unit
+                                        unit.parameter.x(newUnitPosition.x);
+                                        unit.parameter.y(newUnitPosition.y);
+        
+                                    //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
+                                        workspace.control.scene.rectifyUnitPosition(unit);
+        
+                                    //perform all redraws and updates for unit
+                                        if( unit.onmove ){unit.onmove();}
+                                        if( unit.io ){
+                                            var connectionTypes = Object.keys( unit.io );
+                                            for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
+                                                var connectionNodes = unit.io[connectionTypes[connectionType]];
+                                                var nodeNames = Object.keys( connectionNodes );
+                                                for(var b = 0; b < nodeNames.length; b++){
+                                                    connectionNodes[nodeNames[b]].draw();
+                                                }
+                                            }
+                                        }
+                                        
+                                }
+                            },
+                            function(event){}
+                        );
+        
+                }
+            }
+        );
+        
+        workspace.control.grapple.functionList.onmouseup.push(
+            {
+                'specialKeys':[],
+                'function':function(data){
+                    var control = workspace.control;
+        
+                    //if mouse-up occurs over an unit that is selected
+                    // and if the shift key is pressed
+                    // and if the unit we're working on is not the most recently selected
+                    //  deselect the unit we're working on
+                    // now set the most recently selected reference to null
+                        if( control.selection.selectedUnits.includes(control.grapple.tmpunit) ){
+                            if( data.event.shiftKey && (control.selection.lastSelectedUnits != control.grapple.tmpunit) ){
+                                control.selection.deselectUnit(control.grapple.tmpunit);
+                            }
+                            control.selection.lastSelectedUnits = null;
+                        }
+        
+                    return true;
+                }
+            }
+        );
+        
+        window.onresize = workspace.control.viewport.refresh;
 
         function tester(item1,item2){
             function getType(obj){
@@ -15371,13 +15805,23 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
 
         
         // -- Only one test per time -- //
-        workspace.control.scene.addUnit('audio_duplicator',10,10);
-        workspace.control.scene.addUnit('audio_duplicator',100,10);
-        workspace.control.scene.addUnit('audio_duplicator',200,10);
-        workspace.control.scene.addUnit('audio_duplicator',300,10);
+        workspace.control.scene.addUnit(10,10,'audio_duplicator','misc');
+        workspace.control.scene.addUnit(100,10,'audio_duplicator','misc');
+        workspace.control.scene.addUnit(200,10,'audio_duplicator','misc');
+        workspace.control.scene.addUnit(300,10,'audio_duplicator','misc');
         workspace.control.scene.removeUnit( workspace.control.scene.getUnitByName(1) );
+        workspace.control.scene.addUnit(10,100,'basicSynthesizer','synthesizers');
         
-        console.log( workspace.control.scene.getUnitsWithinPoly([{x:0,y:0}, {x:120,y:0}, {x:120,y:100}, {x:0,y:100}]) );
+        
+        workspace.system.pane.mm.getChildByName('2').io.audio.output_1.connectTo( workspace.system.pane.mm.getChildByName('0').io.audio.input );
+        
+        // console.log( workspace.control.scene.getUnitsWithinPoly([{x:0,y:0}, {x:120,y:0}, {x:120,y:100}, {x:0,y:100}]) );
+        
+        // workspace.control.selection.selectEverything();
+        // workspace.control.selection.copy();
+        // workspace.control.selection.paste({x:500,y:0});
+        
+        workspace.control.gui.showMenubar();
 
 
     }

@@ -12,6 +12,7 @@ this.recorder = function(x,y,debug=false){
     };
     var design = {
         name: 'recorder',
+        category: 'audioFile',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}],

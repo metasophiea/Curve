@@ -28,5 +28,8 @@ this.cable = function(
             path.parameter.points([{x:x1,y:y1},{x:x2,y:y2}]);
         };
 
+    //identifier
+        object._isCable = true;
+
     return object;
 };

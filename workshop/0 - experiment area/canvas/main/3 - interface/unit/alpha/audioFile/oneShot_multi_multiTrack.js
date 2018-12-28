@@ -26,6 +26,7 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
     };
     var design = {
         name: 'oneShot_multi_multiTrack',
+        category: 'audioFile',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}],

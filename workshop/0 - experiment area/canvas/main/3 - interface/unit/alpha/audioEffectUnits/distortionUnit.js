@@ -12,6 +12,7 @@ this.distortionUnit = function(x,y){
     };
     var design = {
         name: 'distortionUnit',
+        category: 'audioEffectUnits',
         collection: 'alpha',
         x: x, y: y,
         space:[

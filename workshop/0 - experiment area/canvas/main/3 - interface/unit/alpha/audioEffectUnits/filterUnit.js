@@ -23,6 +23,7 @@ this.filterUnit = function(x,y){
     };
     var design = {
         name: 'filterUnit',
+        category: 'audioEffectUnits',
         collection: 'alpha',
         x: x, y: y,
         space:[ {x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70} ],

@@ -20,6 +20,7 @@ this.basicSynthesizer = function(x,y){
     };
     var design = {
         name:'basicSynthesizer',
+        category:'synthesizers',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 

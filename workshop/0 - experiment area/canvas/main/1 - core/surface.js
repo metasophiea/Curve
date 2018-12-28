@@ -21,6 +21,7 @@ this.viewport = new function(){
     this.angle = function(a){return core.viewport.angle(a);};
     this.windowPoint2workspacePoint = function(x,y){ return core.viewport.windowPoint2workspacePoint(x,y); };
     this.refresh = function(){ core.viewport.refresh(); };
+    this.mousePosition = function(){ return core.viewport.mousePosition();  };
     this.stopMouseScroll = function(bool){ return core.viewport.stopMouseScroll(bool); };
     this.allowKeyboardInput = function(bool){ return core.viewport.allowKeyboardInput(bool); };
     this.cursor = function(type){return core.viewport.cursor(type);};

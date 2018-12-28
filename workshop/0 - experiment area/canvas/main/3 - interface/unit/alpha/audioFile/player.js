@@ -23,6 +23,7 @@ this.player = function(x,y,debug=false){
     };
     var design = {
         name: 'player',
+        category: 'audioFile',
         collection: 'alpha',
         x:x, y:y,
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}],

@@ -28,6 +28,7 @@ this.musicalKeyboard = function(x,y,debug=false){
     };
     var design = {
         name: 'musicalKeyboard',
+        category:'humanInputDevices',
         collection: 'alpha',
         x: x, y: y,
         space:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}],

@@ -13,7 +13,7 @@
     </head>
 
     <body>
-        <canvas workspace workspaceWidth='100%' workspaceHeight='150%'></canvas>
+        <canvas id='workspace' workspace workspaceWidth='100%' workspaceHeight='150'></canvas>
     </body>
 
 </html>
@@ -22,21 +22,26 @@
 <script>
     workspace.core.viewport.allowKeyboardInput(false);
 
-    var text = workspace.core.arrangement.createElement('text');
-        text.name = 'mainHeading';
-        text.x = window.innerWidth/2;
-        text.style.align = 'center';
-        text.style.baseline = 'top';
-        text.text = 'coreGraphics';
-        text.size = 3;
-        workspace.core.arrangement.append(text);
+    for(var a = 0; a < 10; a++){
+        var text = workspace.core.arrangement.createElement('text');
+            text.name = 'mainHeading_'+a;
+            text.x = window.innerWidth/2;
+            text.y = 100*a;
+            text.style.align = 'center';
+            text.style.baseline = 'top';
+            text.text = 'coreGraphics';
+            text.size = 3;
+            workspace.core.arrangement.append(text);
+    }
 
-    workspace.core.render.frame();
+    function resize(){
+        document.getElementById('workspace').setAttribute('workspaceHeight',window.innerWidth * 1.5);
 
-
-    window.onresize = function(event){
         workspace.core.viewport.refresh();
         text.parameter.x(window.innerWidth/2);
         workspace.core.render.frame();
-    };
+    }
+    window.onresize = resize;
+    resize();
+
 </script>

@@ -1,6 +1,7 @@
 this.testObject = function(x,y){
     var design = {
         name: 'testObject',
+        category:'misc',
         collection: 'alpha',
         x:x, y:y,
         space: [
