@@ -111,8 +111,12 @@ this.text = function(){
             return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
     };
     this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
-        //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-            if(!shouldRender(this)){return;}
+        // //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+        //     if(!shouldRender(this)){return;}
+        // getting the bounding box of text is too faulty. For now, text is always  //
+        // rendered. Group's still de-render however, and are using the faulty text //
+        // bouding box values to calculate their extremities; so one should use     //
+        // backings of other shapes to maintain rendering consistancy.              //
 
         //adjust offset for parent's angle
             var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);

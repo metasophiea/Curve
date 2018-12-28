@@ -41,9 +41,9 @@ workspace.control = new function(){
         var pane = workspace.system.pane.mm;
         var IDcounter = 0;
 
-        this.new = function(){};
-        this.load = function(){};
-        this.save = function(){};
+        this.new = function(){console.log('new scene!');};
+        this.load = function(){console.log('load scene!');};
+        this.save = function(filename){console.log('save scene!',filename);};
         this.generateUnitName = function(){ return IDcounter++; };
         this.addUnit = function(x,y,model,category,collection='alpha'){
             //generate new name for unit

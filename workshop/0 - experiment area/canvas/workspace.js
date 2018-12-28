@@ -2367,8 +2367,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                         };
                         this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
-                            //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                                if(!shouldRender(this)){return;}
+                            // //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                            //     if(!shouldRender(this)){return;}
+                            // getting the bounding box of text is too faulty. For now, text is always  //
+                            // rendered. Group's still de-render however, and are using the faulty text //
+                            // bouding box values to calculate their extremities; so one should use     //
+                            // backings of other shapes to maintain rendering consistancy.              //
                     
                             //adjust offset for parent's angle
                                 var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
@@ -10186,116 +10190,112 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         //populate list
                                             var accumulativeHeight = 0;
                                             for(var a = 0; a < list.length; a++){
-                                                switch(list[a]){
-                                                    case 'space':
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:0, y:accumulativeHeight,
-                                                            width:width, height:height*spacingHeightMux,
-                                                            style:{fill:'rgba(255,0,0,0)'}
-                                                        });
+                                                if( list[a] == 'space' ){
+                                                    var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                        x:0, y:accumulativeHeight,
+                                                        width:width, height:height*spacingHeightMux,
+                                                        style:{fill:'rgba(255,0,0,0)'}
+                                                    });
                         
-                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    break;
-                                                    case 'break':
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*breakWidthMux, height:height*breakHeightMux,
-                                                            style:{fill:break_style}
-                                                        });
+                                                    accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                    itemCollection.append( temp );
+                                                }else if( list[a] == 'break'){
+                                                    var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                        x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                        width:width*breakWidthMux, height:height*breakHeightMux,
+                                                        style:{fill:break_style}
+                                                    });
                         
-                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    break;
-                                                    default:
-                                                        var temp = interfacePart.builder( 'button_rect', ''+a, {
-                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*itemWidthMux, height:height*itemHeightMux, 
-                                                            text_left: list[a].text_left,
-                                                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
-                                                            text_right: list[a].text_right,
+                                                    accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                    itemCollection.append( temp );
+                                                }else{
+                                                    var temp = interfacePart.builder( 'button_rect', ''+a, {
+                                                        x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                        width:width*itemWidthMux, height:height*itemHeightMux, 
+                                                        text_left: list[a].text_left,
+                                                        text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                                                        text_right: list[a].text_right,
                         
-                                                            textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
-                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                                                        textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
+                                                        active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
                         
-                                                            style:{
-                                                                text_font:text_font,
-                                                                text_textBaseline:text_textBaseline,
-                                                                text_fill:text_fill,
-                                                                text_stroke:text_stroke,
-                                                                text_lineWidth:text_lineWidth,
+                                                        style:{
+                                                            text_font:text_font,
+                                                            text_textBaseline:text_textBaseline,
+                                                            text_fill:text_fill,
+                                                            text_stroke:text_stroke,
+                                                            text_lineWidth:text_lineWidth,
                         
-                                                                item__off__fill:                            item__off__fill,
-                                                                item__off__stroke:                          item__off__stroke,
-                                                                item__off__lineWidth:                       item__off__lineWidth,
-                                                                item__up__fill:                             item__up__fill,
-                                                                item__up__stroke:                           item__up__stroke,
-                                                                item__up__lineWidth:                        item__up__lineWidth,
-                                                                item__press__fill:                          item__press__fill,
-                                                                item__press__stroke:                        item__press__stroke,
-                                                                item__press__lineWidth:                     item__press__lineWidth,
-                                                                item__select__fill:                         item__select__fill,
-                                                                item__select__stroke:                       item__select__stroke,
-                                                                item__select__lineWidth:                    item__select__lineWidth,
-                                                                item__select_press__fill:                   item__select_press__fill,
-                                                                item__select_press__stroke:                 item__select_press__stroke,
-                                                                item__select_press__lineWidth:              item__select_press__lineWidth,
-                                                                item__glow__fill:                           item__glow__fill,
-                                                                item__glow__stroke:                         item__glow__stroke,
-                                                                item__glow__lineWidth:                      item__glow__lineWidth,
-                                                                item__glow_press__fill:                     item__glow_press__fill,
-                                                                item__glow_press__stroke:                   item__glow_press__stroke,
-                                                                item__glow_press__lineWidth:                item__glow_press__lineWidth,
-                                                                item__glow_select__fill:                    item__glow_select__fill,
-                                                                item__glow_select__stroke:                  item__glow_select__stroke,
-                                                                item__glow_select__lineWidth:               item__glow_select__lineWidth,
-                                                                item__glow_select_press__fill:              item__glow_select_press__fill,
-                                                                item__glow_select_press__stroke:            item__glow_select_press__stroke,
-                                                                item__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
-                                                                item__hover__fill:                          item__hover__fill,
-                                                                item__hover__stroke:                        item__hover__stroke,
-                                                                item__hover__lineWidth:                     item__hover__lineWidth,
-                                                                item__hover_press__fill:                    item__hover_press__fill,
-                                                                item__hover_press__stroke:                  item__hover_press__stroke,
-                                                                item__hover_press__lineWidth:               item__hover_press__lineWidth,
-                                                                item__hover_select__fill:                   item__hover_select__fill,
-                                                                item__hover_select__stroke:                 item__hover_select__stroke,
-                                                                item__hover_select__lineWidth:              item__hover_select__lineWidth,
-                                                                item__hover_select_press__fill:             item__hover_select_press__fill,
-                                                                item__hover_select_press__stroke:           item__hover_select_press__stroke,
-                                                                item__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
-                                                                item__hover_glow__fill:                     item__hover_glow__fill,
-                                                                item__hover_glow__stroke:                   item__hover_glow__stroke,
-                                                                item__hover_glow__lineWidth:                item__hover_glow__lineWidth,
-                                                                item__hover_glow_press__fill:               item__hover_glow_press__fill,
-                                                                item__hover_glow_press__stroke:             item__hover_glow_press__stroke,
-                                                                item__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
-                                                                item__hover_glow_select__fill:              item__hover_glow_select__fill,
-                                                                item__hover_glow_select__stroke:            item__hover_glow_select__stroke,
-                                                                item__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
-                                                                item__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
-                                                                item__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
-                                                                item__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
-                                                            }
-                                                        });
+                                                            background__off__fill:                            item__off__fill,
+                                                            background__off__stroke:                          item__off__stroke,
+                                                            background__off__lineWidth:                       item__off__lineWidth,
+                                                            background__up__fill:                             item__up__fill,
+                                                            background__up__stroke:                           item__up__stroke,
+                                                            background__up__lineWidth:                        item__up__lineWidth,
+                                                            background__press__fill:                          item__press__fill,
+                                                            background__press__stroke:                        item__press__stroke,
+                                                            background__press__lineWidth:                     item__press__lineWidth,
+                                                            background__select__fill:                         item__select__fill,
+                                                            background__select__stroke:                       item__select__stroke,
+                                                            background__select__lineWidth:                    item__select__lineWidth,
+                                                            background__select_press__fill:                   item__select_press__fill,
+                                                            background__select_press__stroke:                 item__select_press__stroke,
+                                                            background__select_press__lineWidth:              item__select_press__lineWidth,
+                                                            background__glow__fill:                           item__glow__fill,
+                                                            background__glow__stroke:                         item__glow__stroke,
+                                                            background__glow__lineWidth:                      item__glow__lineWidth,
+                                                            background__glow_press__fill:                     item__glow_press__fill,
+                                                            background__glow_press__stroke:                   item__glow_press__stroke,
+                                                            background__glow_press__lineWidth:                item__glow_press__lineWidth,
+                                                            background__glow_select__fill:                    item__glow_select__fill,
+                                                            background__glow_select__stroke:                  item__glow_select__stroke,
+                                                            background__glow_select__lineWidth:               item__glow_select__lineWidth,
+                                                            background__glow_select_press__fill:              item__glow_select_press__fill,
+                                                            background__glow_select_press__stroke:            item__glow_select_press__stroke,
+                                                            background__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
+                                                            background__hover__fill:                          item__hover__fill,
+                                                            background__hover__stroke:                        item__hover__stroke,
+                                                            background__hover__lineWidth:                     item__hover__lineWidth,
+                                                            background__hover_press__fill:                    item__hover_press__fill,
+                                                            background__hover_press__stroke:                  item__hover_press__stroke,
+                                                            background__hover_press__lineWidth:               item__hover_press__lineWidth,
+                                                            background__hover_select__fill:                   item__hover_select__fill,
+                                                            background__hover_select__stroke:                 item__hover_select__stroke,
+                                                            background__hover_select__lineWidth:              item__hover_select__lineWidth,
+                                                            background__hover_select_press__fill:             item__hover_select_press__fill,
+                                                            background__hover_select_press__stroke:           item__hover_select_press__stroke,
+                                                            background__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
+                                                            background__hover_glow__fill:                     item__hover_glow__fill,
+                                                            background__hover_glow__stroke:                   item__hover_glow__stroke,
+                                                            background__hover_glow__lineWidth:                item__hover_glow__lineWidth,
+                                                            background__hover_glow_press__fill:               item__hover_glow_press__fill,
+                                                            background__hover_glow_press__stroke:             item__hover_glow_press__stroke,
+                                                            background__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
+                                                            background__hover_glow_select__fill:              item__hover_glow_select__fill,
+                                                            background__hover_glow_select__stroke:            item__hover_glow_select__stroke,
+                                                            background__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
+                                                            background__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
+                                                            background__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
+                                                            background__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
+                                                        }
+                                                    });
                         
-                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                        temp.onrelease = function(a){
-                                                            return function(){
-                                                                if( list[a].function ){ list[a].function(); }
-                                                                object.onrelease(a);
-                                                            }
-                                                        }(a);
-                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                                                    temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                    temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                    temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                    temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                    temp.onrelease = function(a){
+                                                        return function(){
+                                                            if( list[a].function ){ list[a].function(); }
+                                                            object.onrelease(a);
+                                                        }
+                                                    }(a);
+                                                    temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                    temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
                         
-                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                        itemArray.push( temp );
-                                                    break;
+                                                    accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                    itemCollection.append( temp );
+                                                    itemArray.push( temp );
                                                 }
                                             }
                         
@@ -14717,6 +14717,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                         
                         
+                        this.testObject.devUnit = true;
                         this.testObject.metadata = {
                             name:'Test Object',
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/testObject/'
@@ -15339,16 +15340,198 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         
                 this.elements = new function(){
                     this.menubar = function(x,y){
-                        var bar = workspace.interface.part.alpha.builder( 'rectangle', 'rectangle', {x:0, y:0, width:40, height:40} );
-                    
-                        bar.refresh = function(){
-                            this.parameter.width( workspace.control.viewport.width() );
+                        var vars = {
+                            width: workspace.control.viewport.width(),
+                            height: 40,
+                            selected: undefined,
+                            activedropdown: undefined,
+                        };
+                        var style = {
+                            bar: {fill:'rgba(240,240,240,1)'}, 
+                            button:{
+                                text_fill:'rgba(0,0,0,1)',
+                                text_font:'22.5pt Helvetica',
+                                background__up__fill:'rgba(240,240,240,1)', 
+                                background__press__fill:'rgba(240,240,240,1)',
+                                background__select_press__fill:'rgba(229,167,255,1)',
+                                background__press__stroke:'rgba(0,0,0,0)',
+                                background__select__fill:'rgba(229,167,255,1)', background__select__stroke:'rgba(0,0,0,0)',
+                                background__select_press__stroke:'rgba(0,0,0,0)',
+                            },
+                            list:{
+                                text_font: '22.5pt Helvetica',
+                                item__up__fill: 'rgba(240,240,240,1)', 
+                                item__hover__fill: 'rgba(229,167,255,1)', 
+                            },
                         };
                     
-                        bar.refresh();
+                        //elements
+                            //main
+                                var object = workspace.interface.part.alpha.builder( 'group', 'menubar', {});
+                                var bar = workspace.interface.part.alpha.builder( 'rectangle', 'rectangle', {x:0, y:0, width:vars.height, height:vars.height, style:style.bar} );
+                                    object.append(bar);
                     
-                        return bar;
+                            //items
+                                var accWidth = 0;
+                                for(var a = 0; a < this.menubar.dropdowns.length; a++){
+                                    var item = workspace.interface.part.alpha.builder( 'button_rect', 'dropdownButton_'+a, {
+                                        x:accWidth, y:0, 
+                                        width:this.menubar.dropdowns[a].width, height:vars.height, 
+                                        hoverable:false, selectable:true,
+                                        text_centre:this.menubar.dropdowns[a].text,
+                                        style:style.button,
+                                    } );
+                                    object.append(item);
+                    
+                                    item.onpress = function(a){ return function(){
+                                        // if this item has already been selected (and will be deselected after this callback)
+                                        // sent the menubar's 'vars.selected' value to undefined. Otherwise, set it to
+                                        // this item's number
+                    
+                                        vars.selected = object.getChildByName('dropdownButton_'+a).select() ? undefined : a;
+                                    }; }(a);
+                                    item.onenter = function(a){ return function(event){
+                                        //assuming an item has been selected, and it isn't the item that's currently being 
+                                        //entered; deselect that one and tell the menubar that this item is selected now.
+                                        //if no mouse button is pressed (no button rolling is happening) select it manually
+                                        if( vars.selected != undefined && vars.selected != a){
+                                            object.getChildByName('dropdownButton_'+vars.selected).select(false);
+                                            vars.selected = a;
+                                            if(event.buttons == 0){ object.getChildByName('dropdownButton_'+vars.selected).select(true); }
+                                        }
+                                    }; }(a);
+                                    item.onselect = function(a,x,that){ return function(){
+                                        //precalc
+                                            var height = 0;
+                                            for(var b = 0; b < that.menubar.dropdowns[a].itemList.length; b++){
+                                                switch(that.menubar.dropdowns[a].itemList[b]){
+                                                    case 'break': height += that.menubar.dropdowns[a].breakHeight; break;
+                                                    case 'space': height += that.menubar.dropdowns[a].spaceHeight; break;
+                                                    default: height += that.menubar.dropdowns[a].listItemHeight; break;
+                                                }
+                                            }
+                    
+                                        //produce dropdown
+                                            vars.activedropdown = workspace.interface.part.alpha.builder( 'list', 'dropdown', {
+                                                x:x, y:vars.height, style:style.list,
+                                                width:that.menubar.dropdowns[a].listWidth, height:height,
+                    
+                                                multiSelect:false, selectable:false,
+                    
+                                                itemWidthMux: 1,
+                                                itemHeightMux:  that.menubar.dropdowns[a].listItemHeight/height, 
+                                                breakHeightMux: that.menubar.dropdowns[a].breakHeight/height,
+                                                spaceHeightMux: that.menubar.dropdowns[a].spaceHeight/height,
+                                                itemSpacingMux:0, 
+                    
+                                                list:that.menubar.dropdowns[a].itemList,
+                                            });
+                    
+                                        //upon selection of an item in a dropdown; close the dropdown and have nothing selected
+                                            vars.activedropdown.onrelease = function(){
+                                                object.getChildByName('dropdownButton_'+a).select(false); 
+                                                vars.selected = undefined;
+                                            };
+                    
+                                        object.append(vars.activedropdown);
+                                    } }(a,accWidth,this);
+                                    item.ondeselect = function(){ 
+                                        object.remove(vars.activedropdown); 
+                                    };
+                    
+                                    this.menubar.dropdowns[a].x = accWidth;
+                                    accWidth += this.menubar.dropdowns[a].width;
+                                }
+                    
+                        //refresh callback
+                            object.refresh = function(){
+                                bar.parameter.width( workspace.control.viewport.width() );
+                            };
+                            object.refresh();
+                    
+                        return object;
                     };
+                    
+                    
+                    
+                    
+                    
+                    
+                    //a design object for the menubar options and their respective dropdown menu items
+                    this.menubar.dropdowns = [
+                        {
+                            text:'file',
+                            width:90,
+                            listWidth:300,
+                            listItemHeight:45,
+                            breakHeight: 1,
+                            spaceHeight: 2,
+                            itemList:[
+                                {text_left:'New Scene', function:function(){ if(confirm("This will clear the current scene! Are you sure?")){control.scene.new();} } },
+                                {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ control.scene.load(); } },
+                                {text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ control.scene.save('project.crv'); } },
+                            ]
+                        },
+                        {
+                            text:'edit',
+                            width:90,
+                            listWidth:300,
+                            listItemHeight:45,
+                            breakHeight: 1,
+                            spaceHeight: 2,
+                            itemList:[
+                                {text_left:'Cut',       text_right:'ctrl-x', function:function(){control.selection.cut();}       },
+                                {text_left:'Copy',      text_right:'ctrl-c', function:function(){control.selection.copy();}      },
+                                {text_left:'Paste',     text_right:'ctrl-v', function:function(){control.selection.paste();}     },
+                                {text_left:'Duplicate', text_right:'ctrl-b', function:function(){control.selection.duplicate();} },
+                                {text_left:'Delete',    text_right:'del',    function:function(){control.selection.delete();}    },
+                            ]
+                        },
+                        {
+                            text:'create',
+                            width:130,
+                            listWidth:500,
+                            listItemHeight:45,
+                            breakHeight: 1,
+                            spaceHeight: 2,
+                            itemList:(function(){
+                                var outputArray = [];
+                    
+                                for(category in workspace.interface.unit.alpha){
+                                    if(category == 'builder'){continue;}
+                    
+                                    for(model in workspace.interface.unit.alpha[category]){
+                                        if( workspace.interface.unit.alpha[category][model].devUnit ){continue;}
+                    
+                                        outputArray.push({
+                                            text_left: workspace.interface.unit.alpha[category][model].metadata.name,
+                                            function:function(model,category){return function(){
+                                                var p = workspace.core.viewport.windowPoint2workspacePoint(30,30);
+                                                workspace.control.scene.addUnit(p.x,p.y,model,category,'alpha');
+                                            }}(model,category),
+                                        });
+                                    }
+                    
+                                    outputArray.push('break');
+                                }
+                    
+                                outputArray.pop();
+                            
+                                return outputArray;
+                            })()
+                        },
+                        {
+                            text:'help',
+                            width:100,
+                            listWidth:300,
+                            listItemHeight:45,
+                            breakHeight: 1,
+                            spaceHeight: 2,
+                            itemList:[
+                            {text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); /*system.utility.misc.openURL(system.super.helpFolderLocation);*/ } },
+                            ]
+                        },
+                    ];
                 };
             };
             this.viewport = new function(){
@@ -15366,9 +15549,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 var pane = workspace.system.pane.mm;
                 var IDcounter = 0;
         
-                this.new = function(){};
-                this.load = function(){};
-                this.save = function(){};
+                this.new = function(){console.log('new scene!');};
+                this.load = function(){console.log('load scene!');};
+                this.save = function(filename){console.log('save scene!',filename);};
                 this.generateUnitName = function(){ return IDcounter++; };
                 this.addUnit = function(x,y,model,category,collection='alpha'){
                     //generate new name for unit

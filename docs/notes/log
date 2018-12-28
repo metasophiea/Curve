@@ -6,7 +6,9 @@
       ( workspace.control.scene.rectifyUnitPosition(unit) )
     - added viewport size adjustment code to control, so now when the window is
       resized, the canvas will be too.
-    - created rudimentary menubar (with automatic width adjustment)
+    - created menubar (with automatic width adjustment)(many functions still
+      missing actual functionality)
+    - disabled text shape derender (as its just not working)
 
 
 2018-12-27

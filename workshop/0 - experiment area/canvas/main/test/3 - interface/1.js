@@ -134,5 +134,5 @@
 
 
 //view positioning
-    workspace.core.viewport.scale(4);
-    workspace.core.viewport.position(-677,-270);
+    workspace.core.viewport.scale(10);
+    workspace.core.viewport.position(-530, -295);
