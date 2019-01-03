@@ -219,6 +219,10 @@ this.sequencer = function(
                     interactionPlane_back.parameter.width( viewport.totalSize.width );
                     interactionPlane_back.parameter.height( viewport.totalSize.width );
 
+                //update interactionPlane_front
+                    interactionPlane_front.parameter.width( viewport.totalSize.width );
+                    interactionPlane_front.parameter.height( viewport.totalSize.width );
+
                 //update background strips
                     for(var a = 0; a < xCount; a++){
                         backgroundDrawArea_vertical.children[a].parameter.x( a*(width/(xCount*zoomLevel_x)) );
@@ -252,6 +256,8 @@ this.sequencer = function(
 
                 //update interactionPlane_back
                     interactionPlane_back.parameter.width( viewport.totalSize.width );
+                //update interactionPlane_front
+                    interactionPlane_front.parameter.width( viewport.totalSize.width );
 
                 //update background strips
                     for(var a = 0; a < xCount; a++){
@@ -281,7 +287,9 @@ this.sequencer = function(
 
                 //update interactionPlane_back
                     interactionPlane_back.parameter.height( viewport.totalSize.width );
-                
+                //update interactionPlane_front
+                    interactionPlane_front.parameter.height( viewport.totalSize.width );
+
                 //update background strips
                     for(var a = 0; a < xCount; a++){
                         backgroundDrawArea_vertical.children[a].parameter.height( viewport.totalSize.height );
@@ -369,7 +377,7 @@ this.sequencer = function(
 
             //add interactions to graphical signal block
                 newSignalBlock.ondblclick = function(x,y,event){
-                    if(!workspace.system.keyboard.pressedKeys.control){return;}
+                    if(!workspace.system.keyboard.pressedKeys.control && !workspace.system.keyboard.pressedKeys.command){return;}
                     for(var a = 0; a < signals.selectedSignals.length; a++){
                         signals.selectedSignals[a].strength(signals.defaultStrength);
                         signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
@@ -381,7 +389,7 @@ this.sequencer = function(
                             interactionPlane_back.onmousedown(x,y,event); return;
                         }
 
-                    //if the shift key is not pressed and this note is not already selected; deselect everything
+                    //if the shift key is not pressed and this signal is not already selected; deselect everything
                         if(!workspace.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
                             while(signals.selectedSignals.length > 0){
                                 signals.selectedSignals[0].deselect();
@@ -401,15 +409,17 @@ this.sequencer = function(
                             });
                         }
 
-                    //if control key is pressed; this is a strength-change operation
-                        if(workspace.system.keyboard.pressedKeys.control){
+                    //if control/command key is pressed; this is a strength-change operation
+                        if(workspace.system.keyboard.pressedKeys.control || workspace.system.keyboard.pressedKeys.command){
                             var mux = 4;
                             var initialStrengths = activeBlocks.map(a => a.block.strength());
                             var initial = event.offsetY;
                             workspace.system.mouse.mouseInteractionHandler(
                                 function(event){
-                                    //check if ctrl is still pressed
-                                        if(!workspace.system.keyboard.pressedKeys.ControlLeft && !workspace.system.keyboard.pressedKeys.ControlRight){ workspace.system.mouse.forceMouseUp(); }
+                                    //check if ctrl/command is still pressed
+                                        if( !workspace.system.keyboard.pressedKeys.ControlLeft && !workspace.system.keyboard.pressedKeys.ControlRight && !workspace.system.keyboard.pressedKeys.command ){ 
+                                            workspace.system.mouse.forceMouseUp();
+                                        }
 
                                     var diff = (initial - event.offsetY)/(workspace.core.viewport.scale()*height*mux);
                                     for(var a = 0; a < activeBlocks.length; a++){
@@ -708,7 +718,12 @@ this.sequencer = function(
             object.import = function(data){signals.signalRegistry.import(data);};
             object.getAllSignals = function(){return signals.signalRegistry.getAllSignals(); };
             object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
-            object.addSignals = function(data){ for(var a = 0; a < data.length; a++){this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength);} };
+            object.addSignals = function(data){ 
+                for(var a = 0; a < data.length; a++){
+                    if( data[a] == undefined || data[a] == null ){continue;}
+                    this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength);
+                }
+            };
             object.eventsBetween = function(start,end){ return signals.signalRegistry.eventsBetween(start,end); };
             
         //playhead
@@ -721,12 +736,12 @@ this.sequencer = function(
     
                 playhead.position = val;
     
-                //send stop events for all active notes
+                //send stop events for all active signals
                     if(stopActive){
                         var events = [];
                         for(var a = 0; a < signals.activeSignals.length; a++){
-                            var tmp = noteRegistry.getNote(signals.activeSignals[a]); if(tmp == null){continue;}
-                            events.unshift( {noteID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
+                            var tmp = signals.signalRegistry.getSignal(signals.activeSignals[a]); if(tmp == null){continue;}
+                            events.unshift( {signalID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
                         }
                         signals.activeSignals = [];
                         if(object.event && events.length > 0){object.event(events);}
@@ -735,10 +750,10 @@ this.sequencer = function(
                 //reposition graphical playhead
                     var playheadObject = workarea.getElementsWithName('playhead')[0];
                     if(playhead.position < 0 || playhead.position > xCount){
-                        //outside vilible bounds, so remove
+                        //outside viable bounds, so remove
                             if( playheadObject != undefined ){ playheadObject.parent.remove(playheadObject); }
                     }else{ 
-                        //within vilible bounds, so either create or adjust
+                        //within viable bounds, so either create or adjust
                             if( playheadObject == undefined ){ playheadObject = makePlayhead(); }
                             playheadObject.parameter.x( playhead.position*(viewport.totalSize.width/xCount) );
                         //if the new position is beyond the view in the viewport, adjust the viewport (putting the playhead on the leftmost side)
@@ -752,30 +767,30 @@ this.sequencer = function(
                     }
             };
             object.progress = function(){
-                //if the playhead is being held, just bail completly
+                //if the playhead is being held, just bail completely
                     if(playhead.held){return;}
                     
                 //gather together all the current events
                     var events = object.eventsBetween(playhead.position, playhead.position+signals.step);
 
-                //upon loop; any notes that are still active are to be ended
+                //upon loop; any signals that are still active are to be ended
                 //(so create end events for them, and push those into the current events list)
                     if(loop.active && playhead.position == loop.period.start){
                         for(var a = 0; a < signals.activeSignals.length; a++){
                             var tmp = signals.signalRegistry.getSignal(signals.activeSignals[a]); if(tmp == null){continue;}
-                            events.unshift( {noteID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
+                            events.unshift( {signalID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
                         }
                         signals.activeSignals = [];
                     }
 
-                //add newly started notes to - and remove newly finished notes from - 'signals.activeSignals'
+                //add newly started signals to - and remove newly finished signals from - 'signals.activeSignals'
                     for(var a = 0; a < events.length; a++){
-                        var index = signals.activeSignals.indexOf(events[a].noteID);
+                        var index = signals.activeSignals.indexOf(events[a].signalID);
                         if(index != -1 && events[a].strength == 0){
                             signals.activeSignals.splice(index);
                         }else{
                             if( events[a].strength > 0 ){
-                                signals.activeSignals.push(events[a].noteID);
+                                signals.activeSignals.push(events[a].signalID);
                             }
                         }
                     }
@@ -874,7 +889,7 @@ this.sequencer = function(
                                 signals.selectedSignals[0].deselect();
                             }
     
-                        //select the notes that overlap with the selection area
+                        //select the signals that overlap with the selection area
                             for(var a = 0; a < signalPane.children.length; a++){
                                 var temp = signals.signalRegistry.getSignal(parseInt(signalPane.children[a].name));
                                 var block = { 
@@ -897,7 +912,7 @@ this.sequencer = function(
                         signals.selectedSignals[0].deselect();
                     }
                     
-                //get the current location and make a new note there (with length 0)
+                //get the current location and make a new signal there (with length 0)
                     var position = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
                     var temp = makeSignal(position.line,position.position,0);
 

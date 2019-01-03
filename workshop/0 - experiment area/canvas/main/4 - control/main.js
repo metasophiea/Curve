@@ -4,6 +4,10 @@
 workspace.control = new function(){
     var control = this;
 
+    this.switch = {
+        devMode: (new URL(window.location.href)).searchParams.get("dev") != null,
+    };
+
     this.gui = new function(){
         var pane = workspace.system.pane.f;
         var menubar = undefined;
@@ -23,7 +27,9 @@ workspace.control = new function(){
             menubar = undefined;
         };
         this.closeAllDropdowns = function(){
-            menubar.closeAllDropdowns();
+            if(menubar != undefined){
+                menubar.closeAllDropdowns();
+            }
         };
 
         this.elements = new function(){
@@ -54,4 +60,7 @@ workspace.control = new function(){
 
 {{include:grapple.js}}
 
-window.onresize = workspace.control.viewport.refresh;
+window.onresize = workspace.control.viewport.refresh; 
+if( !workspace.control.switch.devMode ){ window.onbeforeunload = function(){ return "Unsaved work will be lost"; }; }
+
+workspace.control.gui.showMenubar();

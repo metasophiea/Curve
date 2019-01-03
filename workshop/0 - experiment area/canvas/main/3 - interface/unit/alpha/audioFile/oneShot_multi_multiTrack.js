@@ -55,8 +55,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
                         x:26.25, y:5+a*(2+45), width:5, height:45, value:0.5, resetValue:0.5, style:style.slide,
                         onchange:function(instance){
                             return function(value){
-                                var filePlayer = object.oneShot_multi_array[instance];
-                                filePlayer.rate((1-object.elements.slide['rate_'+instance].get())*2);
+                                object.oneShot_multi_array[instance].rate((1-value)*2);
                             }
                         }(a)
                     }}
@@ -132,28 +131,28 @@ this.oneShot_multi_multiTrack = function(x,y,a){
                                 needles[needleNumber].previousPosition = undefined;
                                 needles[needleNumber].currentPosition = startTime/duration;
                                 needles[needleNumber].endPosition = startTime/duration + subduration/duration;
-                                var stepTime = Math.floor(duration); //funky math to adjust the interval time proportional to the length of the file
-                                var step = stepTime/(duration*1000);
+
+                                var desiredIntervalTime = 10;
+                                var step = desiredIntervalTime/(subduration*1000)
                                 needles[needleNumber].needleInterval = setInterval(function(){
                                     //remove previous mark
                                         if(needles[needleNumber].previousPosition != undefined){
                                             waveport.mark(needles[needleNumber].currentPosition);
                                         }
-
+    
                                     needles[needleNumber].previousPosition = needles[needleNumber].currentPosition;
                                     needles[needleNumber].currentPosition += step;
-
+    
                                     //add new mark
-                                        waveport.mark(needles[needleNumber].currentPosition);
-
+                                    waveport.mark(needles[needleNumber].currentPosition);
+    
                                     //check for ending
                                         if( needles[needleNumber].currentPosition > needles[needleNumber].endPosition ){
                                             waveport.mark(needles[needleNumber].currentPosition);
                                             clearInterval(needles[needleNumber].needleInterval);
                                         }
-
-                                },stepTime);
-
+    
+                                },desiredIntervalTime);
                             }
                         }(a)
                     }}
@@ -174,9 +173,9 @@ this.oneShot_multi_multiTrack = function(x,y,a){
                                 for(var a = 0; a < keys.length; a++){
                                     if(needles[a] == undefined){continue;}
                                     clearTimeout(needles[a].needleInterval);
-                                    waveport.mark(needles[a].currentPosition);
                                     delete needles[a];
                                 }
+                                waveport.removeAllMarks();
                             }
                         }(a)
                     }}
@@ -185,14 +184,14 @@ this.oneShot_multi_multiTrack = function(x,y,a){
             //fire connection
                 design.elements.push(
                     {type:'connectionNode_data', name:'trigger_'+a, data:{ x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
-                        receive:function(instance){
+                        onreceive:function(instance){
                             return function(address,data){
                                 if(address == 'pulse'){ 
                                     object.elements.button_rect['fire_'+instance].press();
                                     object.elements.button_rect['fire_'+instance].release();
                                 }
                                 else if(address == 'hit'){
-                                    if(data.velocity > 0.5){
+                                    if(data.velocity > 0.49){
                                         object.elements.button_rect['fire_'+instance].press();
                                         object.elements.button_rect['fire_'+instance].release();
                                     }

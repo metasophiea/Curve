@@ -69,8 +69,9 @@ this.oneShot_single = function(x,y,a){
                     //create new needle, and send it on its way
                         previousPosition = undefined;
                         currentPosition = 0;
-                        var stepTime = Math.floor(duration); //funky math to adjust the interval time proportional to the length of the file
-                        var step = stepTime/(duration*1000);
+
+                        var desiredIntervalTime = 10;
+                        var step = desiredIntervalTime/(duration*1000)
                         needleInterval = setInterval(function(){
                             //remove previous mark
                                 if(previousPosition != undefined){
@@ -90,8 +91,8 @@ this.oneShot_single = function(x,y,a){
                                     previousPosition = undefined;
                                     clearInterval(needleInterval);
                                 }
-
-                        },stepTime);
+                        },desiredIntervalTime);
+                        
                         needleExists = true;
                 },
             }},

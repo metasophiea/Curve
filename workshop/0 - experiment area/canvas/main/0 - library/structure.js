@@ -71,8 +71,8 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
     this.export = function(){
         return JSON.parse(JSON.stringify(
             {
-                signals:             signals,
-                selectedSignals:     selectedSignals,
+                signals:            signals,
+                selectedSignals:    selectedSignals,
                 events:             events,
                 events_byID:        events_byID,
                 events_byPosition:  events_byPosition,

@@ -121,10 +121,13 @@ this.basicSequencer = function(x,y,a){
             return {
                 loop:{
                     active: object.elements.checkbox_rect.loopActive.get(),
-                    range: object.elements.sequencer.main.loopPeriod(),
+                    range: object.elements.rangeslide.loopSelect.get(),
                 },
                 autofollow: object.elements.checkbox_rect.followPlayhead.get(),
                 notes: object.elements.sequencer.main.getAllSignals(),
+                viewarea:{
+                    horizontal: object.elements.rangeslide.viewselect.get(),
+                }
             };
         };
         object.importData = function(data){
@@ -132,6 +135,7 @@ this.basicSequencer = function(x,y,a){
             object.i.loopActive(data.loop.active);
             object.elements.rangeslide.loopSelect.set(data.loop.range);
             object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
+            object.elements.rangeslide.viewselect.set(data.viewarea.horizontal);
         };
 
     //interface

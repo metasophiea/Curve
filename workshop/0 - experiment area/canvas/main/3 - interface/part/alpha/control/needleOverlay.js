@@ -214,7 +214,7 @@ this.needleOverlay = function(
 
                 var initialValue = needleData.lead;
                 var initialX = currentMousePosition_x(event);
-                var mux = width - width*needleWidth;
+                var mux = (width - width*needleWidth) / 2;
 
                 workspace.system.mouse.mouseInteractionHandler(
                     function(event){
@@ -245,7 +245,7 @@ this.needleOverlay = function(
 
                 var initialValue = needleData.selection_A;
                 var initialX = currentMousePosition_x(event);
-                var mux = width - width*needleWidth;
+                var mux = (width - width*needleWidth) / 2;
 
                 workspace.system.mouse.mouseInteractionHandler(
                     function(event){
@@ -276,7 +276,7 @@ this.needleOverlay = function(
 
                 var initialValue = needleData.selection_B;
                 var initialX = currentMousePosition_x(event);
-                var mux = width - width*needleWidth;
+                var mux = (width - width*needleWidth) / 2;
 
                 workspace.system.mouse.mouseInteractionHandler(
                     function(event){
@@ -309,7 +309,7 @@ this.needleOverlay = function(
                 var areaSize = needleData.selection_B - needleData.selection_A;
                 var initialValues = {A:needleData.selection_A, B:needleData.selection_B};
                 var initialX = currentMousePosition_x(event);
-                var mux = width - width*needleWidth;
+                var mux = (width - width*needleWidth) / 2;
 
                 workspace.system.mouse.mouseInteractionHandler(
                     function(event){
@@ -360,6 +360,7 @@ this.needleOverlay = function(
     
     //control
         object.mark = function(position){ return mark(position); };
+        object.removeAllMarks = function(){ controlObjects.markGroup.clear(); };
         object.select = function(position,update=true){
             if(position == undefined){return select();}
 

@@ -87,7 +87,7 @@ this.oneShot_multi = function(context){
                 }
             };
         //options
-            this.rate = function(value){
+            this.rate = function(value){ 
                 if(value == undefined){return state.rate;}
                 if(value == 0){value = 1/1000000;}
                 state.rate = value;

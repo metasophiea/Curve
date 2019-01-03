@@ -1,12 +1,13 @@
 this.basicSequencer_midiOut = function(x,y,a){
     var vals = {
         sequencer:{
-            width:64, height:100,
+            width:64, height:undefined,
             midiRange:{ bottom:24, top:131 },
             pattern:[0,0,1,0,1,0,1,0,0,1,0,1],
         }
     };
-    //calculate pattern basied on midi range
+    vals.sequencer.height = vals.sequencer.midiRange.top - vals.sequencer.midiRange.bottom + 1;
+    //calculate pattern based on midi range
         var temp = vals.sequencer.pattern.length - ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(workspace.library.audio.num2name(vals.sequencer.midiRange.top).slice(1))
         vals.sequencer.pattern = vals.sequencer.pattern.slice(temp).concat(vals.sequencer.pattern.slice(0,temp));
 
@@ -59,6 +60,7 @@ this.basicSequencer_midiOut = function(x,y,a){
 
             //main sequencer
                 {type:'sequencer', name:'main', data:{ x:20, y:20, width:770, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                    horizontalStripStyle_pattern:vals.sequencer.pattern,
                     event:function(event){
                         for(var a = 0; a < event.length; a++){
                             object.elements.connectionNode_data.midiout.send('midinumber',{num:midiNumber_line_converter(event[a].line), velocity:event[a].strength});
@@ -122,11 +124,14 @@ this.basicSequencer_midiOut = function(x,y,a){
             return {
                 loop:{
                     active: object.elements.checkbox_rect.loopActive.get(),
-                    range: object.elements.sequencer.main.loopPeriod(),
+                    range: object.elements.rangeslide.loopSelect.get(),
                 },
                 autofollow: object.elements.checkbox_rect.followPlayhead.get(),
                 notes: object.elements.sequencer.main.getAllSignals(),
-                viewArea: object.elements.sequencer.main.viewarea(),
+                viewarea:{
+                    horizontal: object.elements.rangeslide.viewselect_y.get(),
+                    vertical: object.elements.rangeslide.viewselect_x.get(),
+                }
             };
         };
         object.importData = function(data){
@@ -134,6 +139,8 @@ this.basicSequencer_midiOut = function(x,y,a){
             object.i.loopActive(data.loop.active);
             object.elements.rangeslide.loopSelect.set(data.loop.range);
             object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
+            object.elements.rangeslide.viewselect_y.set(data.viewarea.horizontal);
+            object.elements.rangeslide.viewselect_x.set(data.viewarea.vertical);
         };
 
     //interface

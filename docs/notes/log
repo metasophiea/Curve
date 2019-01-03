@@ -3,6 +3,38 @@
   - demo location has been fixed
   - canvas experiment
     - fixed player unit's import of audio data
+    - fixed oneShot_x not displaying needle position correctly
+    - fixed adjustment of needleOverlay selected area
+    - fixed problem with double-clicking and clicking on slider on unit (it
+      would select the unit instead)(fixed by adding a useless "onmousedown"
+      listener to slide. Have done something similar for the rangeSlide. Kinda
+      kludgy)
+    - can now adjust signal strength on sequencer on mac (the blocks now watch
+      for 'command' in addition to control)
+    - midi sequencer now has a background pattern that looks like a keyboard
+    - fixed sequencer part (where the front interactionPlane wasn't being
+      resized during zoom)
+    - fixed double clicking slider on oneShot 8 track to reset
+    - fixed pressing stop on oneShot 8 track leaving lots of mark behind
+    - fixed midi sequencer not stopping signals on loop (things were still named
+      "note")
+    - fixed synthesizer not applying gui wave type setting on file load (the
+      dial_discrete part wasn't running onchange properly)
+    - fixed sequencers not remembering view areas (there was no import/export
+      for it)
+    - fixed "New Scene" not stopping audio (the function only cleared the
+      shapes, now it selects all the units and deletes them)
+    - fixed connectionNode_data flashing (classic timeout with things changing
+      issue)
+    - fixed problem with documentUnits and unit connections (the way they were 
+      being documented was wrong (and over-complicated))
+    - system now stops you from leaving the page with a little alert
+    - new demo mode (which currently just skips the leave-page alert)
+    - new demo scene made
+
+    bugs
+    - pasting a collection of units doesn't feel very relative
+
 
 2019-01-02
   - canvas experiment

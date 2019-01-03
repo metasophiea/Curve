@@ -23,7 +23,7 @@ this.connectionNode_data = function(
             setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
             if(obj.getForeignNode()!=undefined){
                 obj.getForeignNode().activate();
-                setTimeout(function(){ if(obj==undefined){return;} obj.getForeignNode().deactivate(); },100);
+                setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
             }
         }
 

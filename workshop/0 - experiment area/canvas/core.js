@@ -444,8 +444,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.export = function(){
                     return JSON.parse(JSON.stringify(
                         {
-                            signals:             signals,
-                            selectedSignals:     selectedSignals,
+                            signals:            signals,
+                            selectedSignals:    selectedSignals,
                             events:             events,
                             events_byID:        events_byID,
                             events_byPosition:  events_byPosition,
@@ -680,6 +680,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             duration:buffer.duration,
                                         });
                                     });
+                                    inputObject.remove();
                                 }
                             };
                             document.body.appendChild(inputObject);

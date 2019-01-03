@@ -56,6 +56,7 @@ this.grapher_waveWorkspace = function(
             object.draw = graph.draw;
         //needle overlay
             object.mark = overlay.mark;
+            object.removeAllMarks = overlay.removeAllMarks;
             object.select = overlay.select;
             object.area = overlay.area;
 

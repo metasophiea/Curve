@@ -32,7 +32,7 @@ this.oneShot_multi = function(x,y,a){
         elements:[
             {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], style:style.background }},
 
-            // //connection nodes
+            //connection nodes
             {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
             {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
             {type:'connectionNode_data', name:'trigger', data:{
@@ -91,8 +91,9 @@ this.oneShot_multi = function(x,y,a){
                             needles[needleNumber].previousPosition = undefined;
                             needles[needleNumber].currentPosition = startTime/duration;
                             needles[needleNumber].endPosition = startTime/duration + subduration/duration;
-                            var stepTime = Math.floor(duration); //funky math to adjust the interval time proportional to the length of the file
-                            var step = stepTime/(duration*1000);
+
+                            var desiredIntervalTime = 10;
+                            var step = desiredIntervalTime/(subduration*1000)
                             needles[needleNumber].needleInterval = setInterval(function(){
                                 //remove previous mark
                                     if(needles[needleNumber].previousPosition != undefined){
@@ -111,7 +112,7 @@ this.oneShot_multi = function(x,y,a){
                                         clearInterval(needles[needleNumber].needleInterval);
                                     }
 
-                            },stepTime);
+                            },desiredIntervalTime);
                     },
                 }},
                 {type:'button_rect', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
@@ -125,9 +126,9 @@ this.oneShot_multi = function(x,y,a){
                         for(var a = 0; a < keys.length; a++){
                             if(needles[a] == undefined){continue;}
                             clearTimeout(needles[a].needleInterval);
-                            waveport.mark(needles[a].currentPosition);
                             delete needles[a];
                         }
+                        waveport.removeAllMarks();
                     },
                 }},
 

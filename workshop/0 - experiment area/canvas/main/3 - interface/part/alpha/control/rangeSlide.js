@@ -143,6 +143,7 @@ this.rangeslide = function(
         }
 
         //background click
+            backingAndSlot.onmousedown = function(x,y,event){};//to stop unit selection
             backingAndSlot.onclick = function(x,y,event){
                 if(grappled){return;}
 

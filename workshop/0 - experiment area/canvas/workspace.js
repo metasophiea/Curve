@@ -444,8 +444,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.export = function(){
                     return JSON.parse(JSON.stringify(
                         {
-                            signals:             signals,
-                            selectedSignals:     selectedSignals,
+                            signals:            signals,
+                            selectedSignals:    selectedSignals,
                             events:             events,
                             events_byID:        events_byID,
                             events_byPosition:  events_byPosition,
@@ -680,6 +680,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             duration:buffer.duration,
                                         });
                                     });
+                                    inputObject.remove();
                                 }
                             };
                             document.body.appendChild(inputObject);
@@ -4185,7 +4186,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
                                 };
                             //options
-                                this.rate = function(value){
+                                this.rate = function(value){ 
                                     if(value == undefined){return state.rate;}
                                     if(value == 0){value = 1/1000000;}
                                     state.rate = value;
@@ -8716,7 +8717,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                                         var initialValue = needleData.lead;
                                         var initialX = currentMousePosition_x(event);
-                                        var mux = width - width*needleWidth;
+                                        var mux = (width - width*needleWidth) / 2;
                         
                                         workspace.system.mouse.mouseInteractionHandler(
                                             function(event){
@@ -8747,7 +8748,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                                         var initialValue = needleData.selection_A;
                                         var initialX = currentMousePosition_x(event);
-                                        var mux = width - width*needleWidth;
+                                        var mux = (width - width*needleWidth) / 2;
                         
                                         workspace.system.mouse.mouseInteractionHandler(
                                             function(event){
@@ -8778,7 +8779,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                                         var initialValue = needleData.selection_B;
                                         var initialX = currentMousePosition_x(event);
-                                        var mux = width - width*needleWidth;
+                                        var mux = (width - width*needleWidth) / 2;
                         
                                         workspace.system.mouse.mouseInteractionHandler(
                                             function(event){
@@ -8811,7 +8812,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         var areaSize = needleData.selection_B - needleData.selection_A;
                                         var initialValues = {A:needleData.selection_A, B:needleData.selection_B};
                                         var initialX = currentMousePosition_x(event);
-                                        var mux = width - width*needleWidth;
+                                        var mux = (width - width*needleWidth) / 2;
                         
                                         workspace.system.mouse.mouseInteractionHandler(
                                             function(event){
@@ -8862,6 +8863,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             
                             //control
                                 object.mark = function(position){ return mark(position); };
+                                object.removeAllMarks = function(){ controlObjects.markGroup.clear(); };
                                 object.select = function(position,update=true){
                                     if(position == undefined){return select();}
                         
@@ -9312,6 +9314,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     set( value + move/(10*globalScale) );
                                     if(object.onrelease != undefined){object.onrelease(value);}
                                 };
+                                backingAndSlot.onmousedown = function(x,y,event){};//to stop unit selection
                                 backingAndSlot.onclick = function(x,y,event){
                                     if(grappled){return;}
                         
@@ -9730,6 +9733,10 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             interactionPlane_back.parameter.width( viewport.totalSize.width );
                                             interactionPlane_back.parameter.height( viewport.totalSize.width );
                         
+                                        //update interactionPlane_front
+                                            interactionPlane_front.parameter.width( viewport.totalSize.width );
+                                            interactionPlane_front.parameter.height( viewport.totalSize.width );
+                        
                                         //update background strips
                                             for(var a = 0; a < xCount; a++){
                                                 backgroundDrawArea_vertical.children[a].parameter.x( a*(width/(xCount*zoomLevel_x)) );
@@ -9763,6 +9770,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                                         //update interactionPlane_back
                                             interactionPlane_back.parameter.width( viewport.totalSize.width );
+                                        //update interactionPlane_front
+                                            interactionPlane_front.parameter.width( viewport.totalSize.width );
                         
                                         //update background strips
                                             for(var a = 0; a < xCount; a++){
@@ -9792,7 +9801,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                                         //update interactionPlane_back
                                             interactionPlane_back.parameter.height( viewport.totalSize.width );
-                                        
+                                        //update interactionPlane_front
+                                            interactionPlane_front.parameter.height( viewport.totalSize.width );
+                        
                                         //update background strips
                                             for(var a = 0; a < xCount; a++){
                                                 backgroundDrawArea_vertical.children[a].parameter.height( viewport.totalSize.height );
@@ -9880,7 +9891,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                                     //add interactions to graphical signal block
                                         newSignalBlock.ondblclick = function(x,y,event){
-                                            if(!workspace.system.keyboard.pressedKeys.control){return;}
+                                            if(!workspace.system.keyboard.pressedKeys.control && !workspace.system.keyboard.pressedKeys.command){return;}
                                             for(var a = 0; a < signals.selectedSignals.length; a++){
                                                 signals.selectedSignals[a].strength(signals.defaultStrength);
                                                 signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
@@ -9892,7 +9903,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                     interactionPlane_back.onmousedown(x,y,event); return;
                                                 }
                         
-                                            //if the shift key is not pressed and this note is not already selected; deselect everything
+                                            //if the shift key is not pressed and this signal is not already selected; deselect everything
                                                 if(!workspace.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
                                                     while(signals.selectedSignals.length > 0){
                                                         signals.selectedSignals[0].deselect();
@@ -9912,15 +9923,17 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                     });
                                                 }
                         
-                                            //if control key is pressed; this is a strength-change operation
-                                                if(workspace.system.keyboard.pressedKeys.control){
+                                            //if control/command key is pressed; this is a strength-change operation
+                                                if(workspace.system.keyboard.pressedKeys.control || workspace.system.keyboard.pressedKeys.command){
                                                     var mux = 4;
                                                     var initialStrengths = activeBlocks.map(a => a.block.strength());
                                                     var initial = event.offsetY;
                                                     workspace.system.mouse.mouseInteractionHandler(
                                                         function(event){
-                                                            //check if ctrl is still pressed
-                                                                if(!workspace.system.keyboard.pressedKeys.ControlLeft && !workspace.system.keyboard.pressedKeys.ControlRight){ workspace.system.mouse.forceMouseUp(); }
+                                                            //check if ctrl/command is still pressed
+                                                                if( !workspace.system.keyboard.pressedKeys.ControlLeft && !workspace.system.keyboard.pressedKeys.ControlRight && !workspace.system.keyboard.pressedKeys.command ){ 
+                                                                    workspace.system.mouse.forceMouseUp();
+                                                                }
                         
                                                             var diff = (initial - event.offsetY)/(workspace.core.viewport.scale()*height*mux);
                                                             for(var a = 0; a < activeBlocks.length; a++){
@@ -10219,7 +10232,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     object.import = function(data){signals.signalRegistry.import(data);};
                                     object.getAllSignals = function(){return signals.signalRegistry.getAllSignals(); };
                                     object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
-                                    object.addSignals = function(data){ for(var a = 0; a < data.length; a++){this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength);} };
+                                    object.addSignals = function(data){ 
+                                        for(var a = 0; a < data.length; a++){
+                                            if( data[a] == undefined || data[a] == null ){continue;}
+                                            this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength);
+                                        }
+                                    };
                                     object.eventsBetween = function(start,end){ return signals.signalRegistry.eventsBetween(start,end); };
                                     
                                 //playhead
@@ -10232,12 +10250,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             
                                         playhead.position = val;
                             
-                                        //send stop events for all active notes
+                                        //send stop events for all active signals
                                             if(stopActive){
                                                 var events = [];
                                                 for(var a = 0; a < signals.activeSignals.length; a++){
-                                                    var tmp = noteRegistry.getNote(signals.activeSignals[a]); if(tmp == null){continue;}
-                                                    events.unshift( {noteID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
+                                                    var tmp = signals.signalRegistry.getSignal(signals.activeSignals[a]); if(tmp == null){continue;}
+                                                    events.unshift( {signalID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
                                                 }
                                                 signals.activeSignals = [];
                                                 if(object.event && events.length > 0){object.event(events);}
@@ -10246,10 +10264,10 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         //reposition graphical playhead
                                             var playheadObject = workarea.getElementsWithName('playhead')[0];
                                             if(playhead.position < 0 || playhead.position > xCount){
-                                                //outside vilible bounds, so remove
+                                                //outside viable bounds, so remove
                                                     if( playheadObject != undefined ){ playheadObject.parent.remove(playheadObject); }
                                             }else{ 
-                                                //within vilible bounds, so either create or adjust
+                                                //within viable bounds, so either create or adjust
                                                     if( playheadObject == undefined ){ playheadObject = makePlayhead(); }
                                                     playheadObject.parameter.x( playhead.position*(viewport.totalSize.width/xCount) );
                                                 //if the new position is beyond the view in the viewport, adjust the viewport (putting the playhead on the leftmost side)
@@ -10263,30 +10281,30 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             }
                                     };
                                     object.progress = function(){
-                                        //if the playhead is being held, just bail completly
+                                        //if the playhead is being held, just bail completely
                                             if(playhead.held){return;}
                                             
                                         //gather together all the current events
                                             var events = object.eventsBetween(playhead.position, playhead.position+signals.step);
                         
-                                        //upon loop; any notes that are still active are to be ended
+                                        //upon loop; any signals that are still active are to be ended
                                         //(so create end events for them, and push those into the current events list)
                                             if(loop.active && playhead.position == loop.period.start){
                                                 for(var a = 0; a < signals.activeSignals.length; a++){
                                                     var tmp = signals.signalRegistry.getSignal(signals.activeSignals[a]); if(tmp == null){continue;}
-                                                    events.unshift( {noteID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
+                                                    events.unshift( {signalID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
                                                 }
                                                 signals.activeSignals = [];
                                             }
                         
-                                        //add newly started notes to - and remove newly finished notes from - 'signals.activeSignals'
+                                        //add newly started signals to - and remove newly finished signals from - 'signals.activeSignals'
                                             for(var a = 0; a < events.length; a++){
-                                                var index = signals.activeSignals.indexOf(events[a].noteID);
+                                                var index = signals.activeSignals.indexOf(events[a].signalID);
                                                 if(index != -1 && events[a].strength == 0){
                                                     signals.activeSignals.splice(index);
                                                 }else{
                                                     if( events[a].strength > 0 ){
-                                                        signals.activeSignals.push(events[a].noteID);
+                                                        signals.activeSignals.push(events[a].signalID);
                                                     }
                                                 }
                                             }
@@ -10385,7 +10403,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                         signals.selectedSignals[0].deselect();
                                                     }
                             
-                                                //select the notes that overlap with the selection area
+                                                //select the signals that overlap with the selection area
                                                     for(var a = 0; a < signalPane.children.length; a++){
                                                         var temp = signals.signalRegistry.getSignal(parseInt(signalPane.children[a].name));
                                                         var block = { 
@@ -10408,7 +10426,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 signals.selectedSignals[0].deselect();
                                             }
                                             
-                                        //get the current location and make a new note there (with length 0)
+                                        //get the current location and make a new signal there (with length 0)
                                             var position = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
                                             var temp = makeSignal(position.line,position.position,0);
                         
@@ -11017,6 +11035,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     object.draw = graph.draw;
                                 //needle overlay
                                     object.mark = overlay.mark;
+                                    object.removeAllMarks = overlay.removeAllMarks;
                                     object.select = overlay.select;
                                     object.area = overlay.area;
                         
@@ -11071,11 +11090,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                         
                             //graphical adjust
-                                function set(a,update=true){
+                                function set(a,update=true){ 
                                     a = (a>(optionCount-1) ? (optionCount-1) : a);
                                     a = (a<0 ? 0 : a);
                         
-                                    if(update && object.change != undefined){object.onchange(a);}
+                                    if(update && object.onchange != undefined){object.onchange(a);}
                         
                                     a = Math.round(a);
                                     value = a;
@@ -11295,6 +11314,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                         
                                 //background click
+                                    backingAndSlot.onmousedown = function(x,y,event){};//to stop unit selection
                                     backingAndSlot.onclick = function(x,y,event){
                                         if(grappled){return;}
                         
@@ -11535,7 +11555,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
                                     if(obj.getForeignNode()!=undefined){
                                         obj.getForeignNode().activate();
-                                        setTimeout(function(){ if(obj==undefined){return;} obj.getForeignNode().deactivate(); },100);
+                                        setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
                                     }
                                 }
                         
@@ -13096,8 +13116,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             //create new needle, and send it on its way
                                                 previousPosition = undefined;
                                                 currentPosition = 0;
-                                                var stepTime = Math.floor(duration); //funky math to adjust the interval time proportional to the length of the file
-                                                var step = stepTime/(duration*1000);
+                        
+                                                var desiredIntervalTime = 10;
+                                                var step = desiredIntervalTime/(duration*1000)
                                                 needleInterval = setInterval(function(){
                                                     //remove previous mark
                                                         if(previousPosition != undefined){
@@ -13117,8 +13138,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                             previousPosition = undefined;
                                                             clearInterval(needleInterval);
                                                         }
-                        
-                                                },stepTime);
+                                                },desiredIntervalTime);
+                                                
                                                 needleExists = true;
                                         },
                                     }},
@@ -13184,7 +13205,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 elements:[
                                     {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], style:style.background }},
                         
-                                    // //connection nodes
+                                    //connection nodes
                                     {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
                                     {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
                                     {type:'connectionNode_data', name:'trigger', data:{
@@ -13243,8 +13264,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                     needles[needleNumber].previousPosition = undefined;
                                                     needles[needleNumber].currentPosition = startTime/duration;
                                                     needles[needleNumber].endPosition = startTime/duration + subduration/duration;
-                                                    var stepTime = Math.floor(duration); //funky math to adjust the interval time proportional to the length of the file
-                                                    var step = stepTime/(duration*1000);
+                        
+                                                    var desiredIntervalTime = 10;
+                                                    var step = desiredIntervalTime/(subduration*1000)
                                                     needles[needleNumber].needleInterval = setInterval(function(){
                                                         //remove previous mark
                                                             if(needles[needleNumber].previousPosition != undefined){
@@ -13263,7 +13285,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                                 clearInterval(needles[needleNumber].needleInterval);
                                                             }
                         
-                                                    },stepTime);
+                                                    },desiredIntervalTime);
                                             },
                                         }},
                                         {type:'button_rect', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
@@ -13277,9 +13299,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 for(var a = 0; a < keys.length; a++){
                                                     if(needles[a] == undefined){continue;}
                                                     clearTimeout(needles[a].needleInterval);
-                                                    waveport.mark(needles[a].currentPosition);
                                                     delete needles[a];
                                                 }
+                                                waveport.removeAllMarks();
                                             },
                                         }},
                         
@@ -13384,8 +13406,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 x:26.25, y:5+a*(2+45), width:5, height:45, value:0.5, resetValue:0.5, style:style.slide,
                                                 onchange:function(instance){
                                                     return function(value){
-                                                        var filePlayer = object.oneShot_multi_array[instance];
-                                                        filePlayer.rate((1-object.elements.slide['rate_'+instance].get())*2);
+                                                        object.oneShot_multi_array[instance].rate((1-value)*2);
                                                     }
                                                 }(a)
                                             }}
@@ -13461,28 +13482,28 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                         needles[needleNumber].previousPosition = undefined;
                                                         needles[needleNumber].currentPosition = startTime/duration;
                                                         needles[needleNumber].endPosition = startTime/duration + subduration/duration;
-                                                        var stepTime = Math.floor(duration); //funky math to adjust the interval time proportional to the length of the file
-                                                        var step = stepTime/(duration*1000);
+                        
+                                                        var desiredIntervalTime = 10;
+                                                        var step = desiredIntervalTime/(subduration*1000)
                                                         needles[needleNumber].needleInterval = setInterval(function(){
                                                             //remove previous mark
                                                                 if(needles[needleNumber].previousPosition != undefined){
                                                                     waveport.mark(needles[needleNumber].currentPosition);
                                                                 }
-                        
+                            
                                                             needles[needleNumber].previousPosition = needles[needleNumber].currentPosition;
                                                             needles[needleNumber].currentPosition += step;
-                        
+                            
                                                             //add new mark
-                                                                waveport.mark(needles[needleNumber].currentPosition);
-                        
+                                                            waveport.mark(needles[needleNumber].currentPosition);
+                            
                                                             //check for ending
                                                                 if( needles[needleNumber].currentPosition > needles[needleNumber].endPosition ){
                                                                     waveport.mark(needles[needleNumber].currentPosition);
                                                                     clearInterval(needles[needleNumber].needleInterval);
                                                                 }
-                        
-                                                        },stepTime);
-                        
+                            
+                                                        },desiredIntervalTime);
                                                     }
                                                 }(a)
                                             }}
@@ -13503,9 +13524,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                         for(var a = 0; a < keys.length; a++){
                                                             if(needles[a] == undefined){continue;}
                                                             clearTimeout(needles[a].needleInterval);
-                                                            waveport.mark(needles[a].currentPosition);
                                                             delete needles[a];
                                                         }
+                                                        waveport.removeAllMarks();
                                                     }
                                                 }(a)
                                             }}
@@ -13514,14 +13535,14 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     //fire connection
                                         design.elements.push(
                                             {type:'connectionNode_data', name:'trigger_'+a, data:{ x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
-                                                receive:function(instance){
+                                                onreceive:function(instance){
                                                     return function(address,data){
                                                         if(address == 'pulse'){ 
                                                             object.elements.button_rect['fire_'+instance].press();
                                                             object.elements.button_rect['fire_'+instance].release();
                                                         }
                                                         else if(address == 'hit'){
-                                                            if(data.velocity > 0.5){
+                                                            if(data.velocity > 0.49){
                                                                 object.elements.button_rect['fire_'+instance].press();
                                                                 object.elements.button_rect['fire_'+instance].release();
                                                             }
@@ -14270,10 +14291,13 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     return {
                                         loop:{
                                             active: object.elements.checkbox_rect.loopActive.get(),
-                                            range: object.elements.sequencer.main.loopPeriod(),
+                                            range: object.elements.rangeslide.loopSelect.get(),
                                         },
                                         autofollow: object.elements.checkbox_rect.followPlayhead.get(),
                                         notes: object.elements.sequencer.main.getAllSignals(),
+                                        viewarea:{
+                                            horizontal: object.elements.rangeslide.viewselect.get(),
+                                        }
                                     };
                                 };
                                 object.importData = function(data){
@@ -14281,6 +14305,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     object.i.loopActive(data.loop.active);
                                     object.elements.rangeslide.loopSelect.set(data.loop.range);
                                     object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
+                                    object.elements.rangeslide.viewselect.set(data.viewarea.horizontal);
                                 };
                         
                             //interface
@@ -14540,12 +14565,13 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.basicSequencer_midiOut = function(x,y,a){
                             var vals = {
                                 sequencer:{
-                                    width:64, height:100,
+                                    width:64, height:undefined,
                                     midiRange:{ bottom:24, top:131 },
                                     pattern:[0,0,1,0,1,0,1,0,0,1,0,1],
                                 }
                             };
-                            //calculate pattern basied on midi range
+                            vals.sequencer.height = vals.sequencer.midiRange.top - vals.sequencer.midiRange.bottom + 1;
+                            //calculate pattern based on midi range
                                 var temp = vals.sequencer.pattern.length - ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(workspace.library.audio.num2name(vals.sequencer.midiRange.top).slice(1))
                                 vals.sequencer.pattern = vals.sequencer.pattern.slice(temp).concat(vals.sequencer.pattern.slice(0,temp));
                         
@@ -14598,6 +14624,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                                     //main sequencer
                                         {type:'sequencer', name:'main', data:{ x:20, y:20, width:770, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                                            horizontalStripStyle_pattern:vals.sequencer.pattern,
                                             event:function(event){
                                                 for(var a = 0; a < event.length; a++){
                                                     object.elements.connectionNode_data.midiout.send('midinumber',{num:midiNumber_line_converter(event[a].line), velocity:event[a].strength});
@@ -14661,11 +14688,14 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     return {
                                         loop:{
                                             active: object.elements.checkbox_rect.loopActive.get(),
-                                            range: object.elements.sequencer.main.loopPeriod(),
+                                            range: object.elements.rangeslide.loopSelect.get(),
                                         },
                                         autofollow: object.elements.checkbox_rect.followPlayhead.get(),
                                         notes: object.elements.sequencer.main.getAllSignals(),
-                                        viewArea: object.elements.sequencer.main.viewarea(),
+                                        viewarea:{
+                                            horizontal: object.elements.rangeslide.viewselect_y.get(),
+                                            vertical: object.elements.rangeslide.viewselect_x.get(),
+                                        }
                                     };
                                 };
                                 object.importData = function(data){
@@ -14673,6 +14703,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     object.i.loopActive(data.loop.active);
                                     object.elements.rangeslide.loopSelect.set(data.loop.range);
                                     object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
+                                    object.elements.rangeslide.viewselect_y.set(data.viewarea.horizontal);
+                                    object.elements.rangeslide.viewselect_x.set(data.viewarea.vertical);
                                 };
                         
                             //interface
@@ -15121,7 +15153,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                                     //write in the new list
                                     for(var a = 0; a < lines.length; a++){
-                                        lineElements[a] = workspace.part.builder('text','universalreadout_'+a,{ x:40, y:a*5, size:style.text.size, text:lines[a], style:style.text })
+                                        lineElements[a] = workspace.interface.part.alpha.builder('text','universalreadout_'+a,{ x:40, y:a*5, size:style.text.size, text:lines[a], style:style.text })
                                         object.append( lineElements[a] );
                                     }
                                 }
@@ -15941,6 +15973,10 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         workspace.control = new function(){
             var control = this;
         
+            this.switch = {
+                devMode: (new URL(window.location.href)).searchParams.get("dev") != null,
+            };
+        
             this.gui = new function(){
                 var pane = workspace.system.pane.f;
                 var menubar = undefined;
@@ -15960,7 +15996,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     menubar = undefined;
                 };
                 this.closeAllDropdowns = function(){
-                    menubar.closeAllDropdowns();
+                    if(menubar != undefined){
+                        menubar.closeAllDropdowns();
+                    }
                 };
         
                 this.elements = new function(){
@@ -16189,7 +16227,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
                     }
                 
-                    pane.clear();
+                    control.selection.selectEverything();
+                    control.selection.delete();
+                
                     IDcounter = 0;
                     control.viewport.position(0,0);
                     control.viewport.scale(0);
@@ -16235,7 +16275,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     for(var connectionType in unit.io){
                                         for(var connection in unit.io[connectionType]){
                                             var foreignNode = unit.io[connectionType][connection].getForeignNode();
-                                            if(foreignNode == undefined){continue;}
+                                            if(foreignNode == undefined){continue;} //this node isn't connected to anything, so just bail
                                     
                                             var newConnectionEntry = {};
                 
@@ -16246,13 +16286,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 newConnectionEntry.indexOfDestinationUnit = units.indexOf(foreignNode.parent);
                 
                                             //typeAndNameOfDestinationPort
-                                                for(var foreignConnection in foreignNode.parent.io[connectionType]){
-                                                    var con = foreignNode.parent.io[connectionType][foreignConnection];
-                                                    if( con.getForeignNode() == undefined ){ continue; }
-                                                    if( con.getForeignNode().name == connection ){
-                                                        newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignConnection };
-                                                    }
-                                                }
+                                                newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignNode.name };
                 
                                             entry.connections.push(newConnectionEntry);
                                         }
@@ -16288,6 +16322,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                 var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
                                 var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
+                                
                                 sourceNode.connectTo(destinationNode);
                             }
                     }
@@ -16773,7 +16808,10 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         );
         
-        window.onresize = workspace.control.viewport.refresh;
+        window.onresize = workspace.control.viewport.refresh; 
+        if( !workspace.control.switch.devMode ){ window.onbeforeunload = function(){ return "Unsaved work will be lost"; }; }
+        
+        workspace.control.gui.showMenubar();
 
         function tester(item1,item2){
             function getType(obj){
@@ -16825,15 +16863,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
 
         
         // -- Only one test per time -- //
-        workspace.control.scene.addUnit(15,50,0,'audio_duplicator','misc');
-        workspace.control.scene.addUnit(100,50,0,'audio_duplicator','misc');
-        workspace.control.scene.addUnit(200,50,1.5,'audio_duplicator','misc');
-        workspace.control.scene.addUnit(300,50,0,'audio_duplicator','misc');
-        workspace.control.scene.removeUnit( workspace.control.scene.getUnitByName(1) );
-        workspace.control.scene.addUnit(10,150,0,'basicSynthesizer','synthesizers');
+        // workspace.control.scene.addUnit(15,50,0,'audio_duplicator','misc');
+        // workspace.control.scene.addUnit(100,50,0,'audio_duplicator','misc');
+        // workspace.control.scene.addUnit(200,50,1.5,'audio_duplicator','misc');
+        // workspace.control.scene.addUnit(300,50,0,'audio_duplicator','misc');
+        // workspace.control.scene.removeUnit( workspace.control.scene.getUnitByName(1) );
+        // workspace.control.scene.addUnit(10,150,0,'basicSynthesizer','synthesizers');
         
         
-        workspace.system.pane.mm.getChildByName('2').io.audio.output_1.connectTo( workspace.system.pane.mm.getChildByName('0').io.audio.input );
+        // workspace.system.pane.mm.getChildByName('2').io.audio.output_1.connectTo( workspace.system.pane.mm.getChildByName('0').io.audio.input );
         
         // console.log( workspace.control.scene.getUnitsWithinPoly([{x:0,y:0}, {x:120,y:0}, {x:120,y:100}, {x:0,y:100}]) );
         
@@ -16841,11 +16879,19 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         // workspace.control.selection.copy();
         // workspace.control.selection.paste({x:500,y:0});
         
-        workspace.control.gui.showMenubar();
-        
         // workspace.control.viewport.scale(11.6);
         // workspace.control.viewport.position(-50, 15);
         
+        // workspace.control.scene.save();
+        
+        
+        
+        
+        // var basicMixer = workspace.control.scene.addUnit(15,50,0,'basicMixer','misc');
+        // var basicSynthesizer_1 = workspace.control.scene.addUnit(175,50,0,'basicSynthesizer','synthesizers');
+        // var basicSynthesizer_2 = workspace.control.scene.addUnit(175,200,0,'basicSynthesizer','synthesizers');
+        // basicSynthesizer_1.io.audio.audioOut.connectTo( basicMixer.io.audio.input_0 );
+        // basicSynthesizer_2.io.audio.audioOut.connectTo( basicMixer.io.audio.input_1 );
         // workspace.control.scene.save();
 
 

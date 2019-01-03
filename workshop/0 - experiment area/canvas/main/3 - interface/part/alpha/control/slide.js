@@ -85,6 +85,7 @@ this.slide = function(
             set( value + move/(10*globalScale) );
             if(object.onrelease != undefined){object.onrelease(value);}
         };
+        backingAndSlot.onmousedown = function(x,y,event){};//to stop unit selection
         backingAndSlot.onclick = function(x,y,event){
             if(grappled){return;}
 

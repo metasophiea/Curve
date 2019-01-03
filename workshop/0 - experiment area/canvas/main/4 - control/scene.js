@@ -3,7 +3,9 @@ this.new = function(askForConfirmation=false){
         if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
     }
 
-    pane.clear();
+    control.selection.selectEverything();
+    control.selection.delete();
+
     IDcounter = 0;
     control.viewport.position(0,0);
     control.viewport.scale(0);
@@ -49,7 +51,7 @@ this.documentUnits = function(units){
                     for(var connectionType in unit.io){
                         for(var connection in unit.io[connectionType]){
                             var foreignNode = unit.io[connectionType][connection].getForeignNode();
-                            if(foreignNode == undefined){continue;}
+                            if(foreignNode == undefined){continue;} //this node isn't connected to anything, so just bail
                     
                             var newConnectionEntry = {};
 
@@ -60,13 +62,7 @@ this.documentUnits = function(units){
                                 newConnectionEntry.indexOfDestinationUnit = units.indexOf(foreignNode.parent);
 
                             //typeAndNameOfDestinationPort
-                                for(var foreignConnection in foreignNode.parent.io[connectionType]){
-                                    var con = foreignNode.parent.io[connectionType][foreignConnection];
-                                    if( con.getForeignNode() == undefined ){ continue; }
-                                    if( con.getForeignNode().name == connection ){
-                                        newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignConnection };
-                                    }
-                                }
+                                newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignNode.name };
 
                             entry.connections.push(newConnectionEntry);
                         }
@@ -102,6 +98,7 @@ this.printUnits = function(units){
 
                 var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
                 var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
+                
                 sourceNode.connectTo(destinationNode);
             }
     }

@@ -34,11 +34,11 @@ this.dial_discrete = function(
 
 
     //graphical adjust
-        function set(a,update=true){
+        function set(a,update=true){ 
             a = (a>(optionCount-1) ? (optionCount-1) : a);
             a = (a<0 ? 0 : a);
 
-            if(update && object.change != undefined){object.onchange(a);}
+            if(update && object.onchange != undefined){object.onchange(a);}
 
             a = Math.round(a);
             value = a;

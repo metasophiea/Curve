@@ -74,6 +74,7 @@
                                 duration:buffer.duration,
                             });
                         });
+                        inputObject.remove();
                     }
                 };
                 document.body.appendChild(inputObject);

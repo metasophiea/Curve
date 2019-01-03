@@ -55,7 +55,7 @@ this.universalreadout = function(x,y,a){
 
             //write in the new list
             for(var a = 0; a < lines.length; a++){
-                lineElements[a] = workspace.part.builder('text','universalreadout_'+a,{ x:40, y:a*5, size:style.text.size, text:lines[a], style:style.text })
+                lineElements[a] = workspace.interface.part.alpha.builder('text','universalreadout_'+a,{ x:40, y:a*5, size:style.text.size, text:lines[a], style:style.text })
                 object.append( lineElements[a] );
             }
         }
