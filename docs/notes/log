@@ -55,6 +55,7 @@
     bugs
     - it appears that closure is unable to deal with the word "static" as a
       variable, so, looks like I'm going to have to rename some things in core
+    - still need to do something for that autoplay policy thing
 
 
 2019-01-02
