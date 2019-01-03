@@ -1,4 +1,0 @@
-dir=$(dirname "$(cd "$(dirname "$0")" && pwd)")
-
-"$dir"/compilation/gravity "$dir"/main testMain.js docs/workspaceTest.js
-"$dir"/compilation/gravity "$dir"/main main.js docs/workspace.js

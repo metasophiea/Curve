@@ -43,7 +43,8 @@
         enableWindowScrollbarAutomaticRemoval
         enableUnitSelection
         enableSceneModification
-
+        
+    - canvas experiment has just become the main version!
 
     future ideas
     - the ability to stop interaction with cables and units, on a global and 

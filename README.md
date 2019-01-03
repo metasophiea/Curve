@@ -9,6 +9,7 @@ Neither of these things are anyway near finished yet, but have developed far eno
 
 I write elsewhere, so updates will probably come in sudden bundles. Check the [log](docs/notes/log) to see what's been happening
 
+~~
 ## Structure
 - 'main' is where the program itself is stored, seperated into four folders (which are also the four main globals) Theoretically; there is an order of dependency keeping things kinda clean, which goes "system -> part -> object -> control" however nothings perfect and things are still forming into that dream. You can probably guess by the names what each part does and how they fit together.
 - 'workshop' is where most experimentation, development and testing happens.
@@ -21,7 +22,7 @@ The command uses a little JavaScript compiler written in Python3 called Gravity,
 
 ## Compatibility
 Though I'd really like it to work everywhere, currently the only browser that seems to be able to handle this is Chrome. Safari covers alot of things, but has trouble with a few of the WebAudio elements, and Firefox seems to be having problems with the SVG... honestly I'm not totally sure, and to be fair Chrome struggles with some things, but it's the best we have currently. I'm working on replacing SVG entirely with a canvas rendering back end (which hopefully is being written well enough so that it could be replaced with a webGL backend) Check it out in the experiment area of the workshop.
+~~
 
 ## Demos
-- [Demo 1](https://metasophiea.com/curve?demo=1) 
-- [Demo 2](https://metasophiea.com/curve?demo=2)
+- [Demo 1](https://curve.metasophiea.com?demo=1) 
