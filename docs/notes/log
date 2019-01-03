@@ -43,6 +43,8 @@
         enableWindowScrollbarAutomaticRemoval
         enableUnitSelection
         enableSceneModification
+    - a few of the shapes didn't have code for adjusting to being staic, so I 
+      changed that
         
     - canvas experiment has just become the main version!
 
