@@ -6,13 +6,17 @@ this.functionListRunner = function(list){
             for(var a = 0; a < list.length; a++){
                 var shouldRun = true;
 
-                //determine if all the requirements of this function are met
-                    for(var b = 0; b < list[a].specialKeys.length; b++){
-                        shouldRun = shouldRun && workspace.system.keyboard.pressedKeys[list[a].specialKeys[b]];
-                        if(!shouldRun){break;} //(one is already not a match, so save time and just bail here)
+                //determine if the requirements of this function are met
+                    for(var b = 0; b < list[a].requiredKeys.length; b++){
+                        shouldRun = true;
+                        for(var c = 0; c < list[a].requiredKeys[b].length; c++){
+                            shouldRun = shouldRun && workspace.system.keyboard.pressedKeys[ list[a].requiredKeys[b][c] ];
+                            if(!shouldRun){break;} //(one is already not a match, so save time and just skip to the next one)
+                        }
+                        if(shouldRun){ break; } //one of the collections worked, so save time and skip the rest
                     }
 
-                //if all requirements were met, run the function
+                //if requirements were met, run the function
 	            if(shouldRun){  
                     //if the function returns 'false', continue with the list; otherwise stop here
         	            if( list[a].function(event,data) ){ break; }

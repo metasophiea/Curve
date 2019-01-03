@@ -1,4 +1,4 @@
-this.distortionUnit = function(x,y){
+this.distortionUnit = function(x,y,a){
     var style = {
         background: {fill:'rgba(200,200,200,1)'},
         h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
@@ -14,7 +14,7 @@ this.distortionUnit = function(x,y){
         name: 'distortionUnit',
         category: 'audioEffectUnits',
         collection: 'alpha',
-        x: x, y: y,
+        x:x, y:y, a:a,
         space:[
                 { x:0,           y:10     },
                 { x:10,          y:0      },

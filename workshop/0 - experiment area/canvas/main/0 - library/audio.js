@@ -124,7 +124,7 @@
     this.destination.masterGain = function(value){
         if(value == undefined){return this.destination._gain;}
         this._gain = value;
-        workspace.library.audio.utility.changeAudioParam(workspace.library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
+        workspace.library.audio.changeAudioParam(workspace.library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
     };
 
 

@@ -98,7 +98,7 @@ this.recorder = function(context){
         this.recordingTime = function(){
             return getRecordingLength();
         };
-        this.getTrack = function(){return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' }); };
+        this.getTrack = function(){return this.export(); };
 
     //io
         this.in_left  =  function(){return flow.leftIn.node;};

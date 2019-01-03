@@ -379,13 +379,17 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         for(var a = 0; a < list.length; a++){
                             var shouldRun = true;
             
-                            //determine if all the requirements of this function are met
-                                for(var b = 0; b < list[a].specialKeys.length; b++){
-                                    shouldRun = shouldRun && workspace.system.keyboard.pressedKeys[list[a].specialKeys[b]];
-                                    if(!shouldRun){break;} //(one is already not a match, so save time and just bail here)
+                            //determine if the requirements of this function are met
+                                for(var b = 0; b < list[a].requiredKeys.length; b++){
+                                    shouldRun = true;
+                                    for(var c = 0; c < list[a].requiredKeys[b].length; c++){
+                                        shouldRun = shouldRun && workspace.system.keyboard.pressedKeys[ list[a].requiredKeys[b][c] ];
+                                        if(!shouldRun){break;} //(one is already not a match, so save time and just skip to the next one)
+                                    }
+                                    if(shouldRun){ break; } //one of the collections worked, so save time and skip the rest
                                 }
             
-                            //if all requirements were met, run the function
+                            //if requirements were met, run the function
             	            if(shouldRun){  
                                 //if the function returns 'false', continue with the list; otherwise stop here
                     	            if( list[a].function(event,data) ){ break; }
@@ -726,7 +730,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.destination.masterGain = function(value){
                     if(value == undefined){return this.destination._gain;}
                     this._gain = value;
-                    workspace.library.audio.utility.changeAudioParam(workspace.library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
+                    workspace.library.audio.changeAudioParam(workspace.library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
                 };
             
             
@@ -838,6 +842,529 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             
                 return string;
             };
+            this.compressString = function(string){return workspace.library.thirdparty.lzString.compress(string);};
+            this.decompressString = function(string){return workspace.library.thirdparty.lzString.decompress(string);};
+            this.serialize = function(data,compress=true){
+                function getType(obj){
+                    return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+                }
+            
+                var data = JSON.stringify(data, function(key, value){
+            
+                    //preserve types that JSON.stringify can't handle as "unique types"
+                    switch(getType(value)){
+                        case 'function':
+                            return {__uniqueType:'function', __value:value.toString(), __name:value.name};
+                        case 'arraybuffer': 
+                            return {__uniqueType:'arraybuffer', __value:btoa(String.fromCharCode(new Uint8Array(value)))}
+                        case 'audiobuffer':
+                            var channelData = [];
+                            for(var a = 0; a < value.numberOfChannels; a++){
+                                channelData.push( Array.from(value.getChannelData(a)) );
+                            }
+            
+                            return {
+                                __uniqueType:'audiobuffer', 
+                                __channelData:channelData, 
+                                __sampleRate:value.sampleRate,
+                                __numberOfChannels:value.numberOfChannels,
+                                __length:value.length
+                            };
+                        break;
+                        default: return value;
+                    }
+            
+                });
+            
+                if(compress){ data = workspace.library.misc.compressString(data); }
+                return data;
+            };
+            this.unserialize = function(data,compressed=true){
+                if(data === undefined){return undefined;}
+            
+                if(compressed){ data = workspace.library.misc.decompressString(data); }
+            
+                return JSON.parse(data, function(key, value){
+            
+                    //recover unique types
+                    if(typeof value == 'object' && value != null && '__uniqueType' in value){
+                        switch(value.__uniqueType){
+                            case 'function':
+                                var functionHead = value.__value.substring(0,value.__value.indexOf('{'));
+                                functionHead = functionHead.substring(functionHead.indexOf('(')+1, functionHead.lastIndexOf(')'));
+                                var functionBody = value.__value.substring(value.__value.indexOf('{')+1, value.__value.lastIndexOf('}'));
+            
+                                value = Function(functionHead,functionBody);
+                            break;
+                            case 'arraybuffer':
+                                value = atob(value.__value);
+                                for(var a = 0; a < value.length; a++){ value[a] = value[a].charCodeAt(0); }
+                                value = new ArrayBuffer(value);
+                            break;
+                            case 'audiobuffer':
+                                var audioBuffer = workspace.library.audio.context.createBuffer(value.__numberOfChannels, value.__length, value.__sampleRate);
+            
+                                for(var a = 0; a < audioBuffer.numberOfChannels; a++){
+                                    workingBuffer = audioBuffer.getChannelData(a);
+                                    for(var i = 0; i < audioBuffer.length; i++){
+                                        workingBuffer[i] = value.__channelData[a][i];
+                                    }
+                                }
+            
+                                value = audioBuffer;
+                            break;
+                            default: value = value.__value;
+                        }
+                    }
+            
+                    return value;
+                });
+            };
+            this.openFile = function(callback,readAsType='readAsBinaryString'){
+                var i = document.createElement('input');
+                i.type = 'file';
+                i.onchange = function(){
+                    var f = new FileReader();
+                    switch(readAsType){
+                        case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
+                        case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
+                    }
+                    f.onloadend = function(){ 
+                        if(callback){callback(f.result);}
+                    }
+                };
+                i.click();
+            };
+            this.printFile = function(filename,data){
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([data]));
+                a.download = filename;
+                a.click();
+            };
+        };
+        workspace.library.thirdparty = new function(){
+            this.lzString = (function(){
+                // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
+                // This work is free. You can redistribute it and/or modify it
+                // under the terms of the WTFPL, Version 2
+                // For more information see LICENSE.txt or http://www.wtfpl.net/
+                //
+                // For more information, the home page:
+                // http://pieroxy.net/blog/pages/lz-string/testing.html
+                //
+                // LZ-based compression algorithm, version 1.4.4
+                //
+                // Modified by Metasophiea <metasophiea@gmail.com>
+                var f = String.fromCharCode;
+                var keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+                var baseReverseDic = {};
+                
+                function getBaseValue(alphabet, character) {
+                    if(!baseReverseDic[alphabet]){
+                        baseReverseDic[alphabet] = {};
+                        for(var i = 0 ; i < alphabet.length; i++){
+                            baseReverseDic[alphabet][alphabet.charAt(i)] = i;
+                        }
+                    }	
+                    return baseReverseDic[alphabet][character];
+                }
+                
+                var LZString = {
+                    //compress into a string that is URI encoded
+                    compress: function (input) {
+                        if(input == null){return "";}
+                        return LZString._compress(input, 6, function(a){return keyStrUriSafe.charAt(a);});
+                    },
+                    
+                    //decompress from an output of compress which was URI encoded
+                    decompress:function (input) {
+                        if(input == null){return "";}
+                        if(input == ""){return null;}
+                        input = input.replace(/ /g, "+");
+                        return LZString._decompress(input.length, 32, function(index){ return getBaseValue(keyStrUriSafe, input.charAt(index)); });
+                    },
+                    
+                    _compress: function(uncompressed, bitsPerChar, getCharFromInt){
+                        if (uncompressed == null) return "";
+                        var i, value,
+                            context_dictionary= {},
+                            context_dictionaryToCreate= {},
+                            context_c="",
+                            context_wc="",
+                            context_w="",
+                            context_enlargeIn= 2, // Compensate for the first entry which should not count
+                            context_dictSize= 3,
+                            context_numBits= 2,
+                            context_data=[],
+                            context_data_val=0,
+                            context_data_position=0,
+                            ii;
+                    
+                        for (ii = 0; ii < uncompressed.length; ii += 1) {
+                        context_c = uncompressed.charAt(ii);
+                        if (!Object.prototype.hasOwnProperty.call(context_dictionary,context_c)) {
+                            context_dictionary[context_c] = context_dictSize++;
+                            context_dictionaryToCreate[context_c] = true;
+                        }
+                    
+                        context_wc = context_w + context_c;
+                        if (Object.prototype.hasOwnProperty.call(context_dictionary,context_wc)) {
+                            context_w = context_wc;
+                        } else {
+                            if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+                            if (context_w.charCodeAt(0)<256) {
+                                for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1);
+                                if (context_data_position == bitsPerChar-1) {
+                                    context_data_position = 0;
+                                    context_data.push(getCharFromInt(context_data_val));
+                                    context_data_val = 0;
+                                } else {
+                                    context_data_position++;
+                                }
+                                }
+                                value = context_w.charCodeAt(0);
+                                for (i=0 ; i<8 ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                    context_data_position = 0;
+                                    context_data.push(getCharFromInt(context_data_val));
+                                    context_data_val = 0;
+                                } else {
+                                    context_data_position++;
+                                }
+                                value = value >> 1;
+                                }
+                            } else {
+                                value = 1;
+                                for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1) | value;
+                                if (context_data_position ==bitsPerChar-1) {
+                                    context_data_position = 0;
+                                    context_data.push(getCharFromInt(context_data_val));
+                                    context_data_val = 0;
+                                } else {
+                                    context_data_position++;
+                                }
+                                value = 0;
+                                }
+                                value = context_w.charCodeAt(0);
+                                for (i=0 ; i<16 ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                    context_data_position = 0;
+                                    context_data.push(getCharFromInt(context_data_val));
+                                    context_data_val = 0;
+                                } else {
+                                    context_data_position++;
+                                }
+                                value = value >> 1;
+                                }
+                            }
+                            context_enlargeIn--;
+                            if (context_enlargeIn == 0) {
+                                context_enlargeIn = Math.pow(2, context_numBits);
+                                context_numBits++;
+                            }
+                            delete context_dictionaryToCreate[context_w];
+                            } else {
+                            value = context_dictionary[context_w];
+                            for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                                } else {
+                                context_data_position++;
+                                }
+                                value = value >> 1;
+                            }
+                    
+                    
+                            }
+                            context_enlargeIn--;
+                            if (context_enlargeIn == 0) {
+                            context_enlargeIn = Math.pow(2, context_numBits);
+                            context_numBits++;
+                            }
+                            // Add wc to the dictionary.
+                            context_dictionary[context_wc] = context_dictSize++;
+                            context_w = String(context_c);
+                        }
+                        }
+                    
+                        // Output the code for w.
+                        if (context_w !== "") {
+                        if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+                            if (context_w.charCodeAt(0)<256) {
+                            for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1);
+                                if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                                } else {
+                                context_data_position++;
+                                }
+                            }
+                            value = context_w.charCodeAt(0);
+                            for (i=0 ; i<8 ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                                } else {
+                                context_data_position++;
+                                }
+                                value = value >> 1;
+                            }
+                            } else {
+                            value = 1;
+                            for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1) | value;
+                                if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                                } else {
+                                context_data_position++;
+                                }
+                                value = 0;
+                            }
+                            value = context_w.charCodeAt(0);
+                            for (i=0 ; i<16 ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                                } else {
+                                context_data_position++;
+                                }
+                                value = value >> 1;
+                            }
+                            }
+                            context_enlargeIn--;
+                            if (context_enlargeIn == 0) {
+                            context_enlargeIn = Math.pow(2, context_numBits);
+                            context_numBits++;
+                            }
+                            delete context_dictionaryToCreate[context_w];
+                        } else {
+                            value = context_dictionary[context_w];
+                            for (i=0 ; i<context_numBits ; i++) {
+                            context_data_val = (context_data_val << 1) | (value&1);
+                            if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                            } else {
+                                context_data_position++;
+                            }
+                            value = value >> 1;
+                            }
+                    
+                    
+                        }
+                        context_enlargeIn--;
+                        if (context_enlargeIn == 0) {
+                            context_enlargeIn = Math.pow(2, context_numBits);
+                            context_numBits++;
+                        }
+                        }
+                    
+                        // Mark the end of the stream
+                        value = 2;
+                        for (i=0 ; i<context_numBits ; i++) {
+                        context_data_val = (context_data_val << 1) | (value&1);
+                        if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                        } else {
+                            context_data_position++;
+                        }
+                        value = value >> 1;
+                        }
+                    
+                        // Flush the last char
+                        while (true) {
+                        context_data_val = (context_data_val << 1);
+                        if (context_data_position == bitsPerChar-1) {
+                            context_data.push(getCharFromInt(context_data_val));
+                            break;
+                        }
+                        else context_data_position++;
+                        }
+                        return context_data.join('');
+                    },
+                    
+                    _decompress: function(length, resetValue, getNextValue){
+                        var dictionary = [],
+                            next,
+                            enlargeIn = 4,
+                            dictSize = 4,
+                            numBits = 3,
+                            entry = "",
+                            result = [],
+                            i,
+                            w,
+                            bits, resb, maxpower, power,
+                            c,
+                            data = {val:getNextValue(0), position:resetValue, index:1};
+                    
+                        for (i = 0; i < 3; i += 1) {
+                        dictionary[i] = i;
+                        }
+                    
+                        bits = 0;
+                        maxpower = Math.pow(2,2);
+                        power=1;
+                        while (power!=maxpower) {
+                        resb = data.val & data.position;
+                        data.position >>= 1;
+                        if (data.position == 0) {
+                            data.position = resetValue;
+                            data.val = getNextValue(data.index++);
+                        }
+                        bits |= (resb>0 ? 1 : 0) * power;
+                        power <<= 1;
+                        }
+                    
+                        switch (next = bits) {
+                        case 0:
+                            bits = 0;
+                            maxpower = Math.pow(2,8);
+                            power=1;
+                            while (power!=maxpower) {
+                                resb = data.val & data.position;
+                                data.position >>= 1;
+                                if (data.position == 0) {
+                                data.position = resetValue;
+                                data.val = getNextValue(data.index++);
+                                }
+                                bits |= (resb>0 ? 1 : 0) * power;
+                                power <<= 1;
+                            }
+                            c = f(bits);
+                            break;
+                        case 1:
+                            bits = 0;
+                            maxpower = Math.pow(2,16);
+                            power=1;
+                            while (power!=maxpower) {
+                                resb = data.val & data.position;
+                                data.position >>= 1;
+                                if (data.position == 0) {
+                                data.position = resetValue;
+                                data.val = getNextValue(data.index++);
+                                }
+                                bits |= (resb>0 ? 1 : 0) * power;
+                                power <<= 1;
+                            }
+                            c = f(bits);
+                            break;
+                        case 2:
+                            return "";
+                        }
+                        dictionary[3] = c;
+                        w = c;
+                        result.push(c);
+                        while (true) {
+                        if (data.index > length) {
+                            return "";
+                        }
+                    
+                        bits = 0;
+                        maxpower = Math.pow(2,numBits);
+                        power=1;
+                        while (power!=maxpower) {
+                            resb = data.val & data.position;
+                            data.position >>= 1;
+                            if (data.position == 0) {
+                            data.position = resetValue;
+                            data.val = getNextValue(data.index++);
+                            }
+                            bits |= (resb>0 ? 1 : 0) * power;
+                            power <<= 1;
+                        }
+                    
+                        switch (c = bits) {
+                            case 0:
+                            bits = 0;
+                            maxpower = Math.pow(2,8);
+                            power=1;
+                            while (power!=maxpower) {
+                                resb = data.val & data.position;
+                                data.position >>= 1;
+                                if (data.position == 0) {
+                                data.position = resetValue;
+                                data.val = getNextValue(data.index++);
+                                }
+                                bits |= (resb>0 ? 1 : 0) * power;
+                                power <<= 1;
+                            }
+                    
+                            dictionary[dictSize++] = f(bits);
+                            c = dictSize-1;
+                            enlargeIn--;
+                            break;
+                            case 1:
+                            bits = 0;
+                            maxpower = Math.pow(2,16);
+                            power=1;
+                            while (power!=maxpower) {
+                                resb = data.val & data.position;
+                                data.position >>= 1;
+                                if (data.position == 0) {
+                                data.position = resetValue;
+                                data.val = getNextValue(data.index++);
+                                }
+                                bits |= (resb>0 ? 1 : 0) * power;
+                                power <<= 1;
+                            }
+                            dictionary[dictSize++] = f(bits);
+                            c = dictSize-1;
+                            enlargeIn--;
+                            break;
+                            case 2:
+                            return result.join('');
+                        }
+                    
+                        if (enlargeIn == 0) {
+                            enlargeIn = Math.pow(2, numBits);
+                            numBits++;
+                        }
+                    
+                        if (dictionary[c]) {
+                            entry = dictionary[c];
+                        } else {
+                            if (c === dictSize) {
+                            entry = w + w.charAt(0);
+                            } else {
+                            return null;
+                            }
+                        }
+                        result.push(entry);
+                    
+                        // Add w+entry[0] to the dictionary.
+                        dictionary[dictSize++] = w + entry.charAt(0);
+                        enlargeIn--;
+                    
+                        w = entry;
+                    
+                        if (enlargeIn == 0) {
+                            enlargeIn = Math.pow(2, numBits);
+                            numBits++;
+                        }
+                    
+                        }
+                    }
+                };
+                return LZString;
+            })();
         };
         workspace.core = new function(){
             var core = new function(){
@@ -2564,7 +3091,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     this.scale = function(s){
                         if(s == undefined){return state.scale;}
-                        state.scale = s;
+                        state.scale = s == 0 ? window.devicePixelRatio : s;
                         calculateViewportExtremities();
                     };
                     this.angle = function(a){

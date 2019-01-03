@@ -1,4 +1,4 @@
-this.oneShot_single = function(x,y,debug=false){
+this.oneShot_single = function(x,y,a){
     var style = {
         background: {fill:'rgba(200,200,200,1)'},
         markings: {fill:'rgba(150,150,150,1)'},
@@ -23,7 +23,7 @@ this.oneShot_single = function(x,y,debug=false){
         name: 'oneShot_single',
         category: 'audioFile',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
         // spaceOutline:true,
         elements:[

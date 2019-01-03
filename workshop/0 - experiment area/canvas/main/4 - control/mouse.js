@@ -1,7 +1,18 @@
+//close dropdowns on click
 workspace.system.mouse.functionList.onmousedown.push(
     {
-        'specialKeys':['shift'],
-        'function':function(data){
+        requiredKeys:[],
+        function:function(data){
+            //close any open menubar dropdowns
+                workspace.control.gui.closeAllDropdowns();
+        }
+    }
+);
+//group select (shift)
+workspace.system.mouse.functionList.onmousedown.push(
+    {
+        requiredKeys:[['shift']],
+        function:function(data){
             //creat selection graphic and add it to the foregroud
                 workspace.system.mouse.tmp.selectionRectangle = workspace.interface.part.alpha.builder( 
                     'rectangle', 'selectionRectangle', 
@@ -36,11 +47,11 @@ workspace.system.mouse.functionList.onmousedown.push(
         }
     }
 );
-
+//panning
 workspace.system.mouse.functionList.onmousedown.push(
     {
-        'specialKeys':[],
-        'function':function(data){
+        requiredKeys:[],
+        function:function(data){
             workspace.control.selection.deselectEverything();
 
             //save the viewport position and click position
@@ -65,10 +76,11 @@ workspace.system.mouse.functionList.onmousedown.push(
     }
 );
 
+//zoom
 workspace.system.mouse.functionList.onwheel.push(
     {
-        'specialKeys':[],
-        'function':function(data){
+        requiredKeys:[],
+        function:function(data){
             var scaleLimits = {'max':20, 'min':0.1};
 
             //perform scale and associated pan

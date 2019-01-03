@@ -379,13 +379,17 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         for(var a = 0; a < list.length; a++){
                             var shouldRun = true;
             
-                            //determine if all the requirements of this function are met
-                                for(var b = 0; b < list[a].specialKeys.length; b++){
-                                    shouldRun = shouldRun && workspace.system.keyboard.pressedKeys[list[a].specialKeys[b]];
-                                    if(!shouldRun){break;} //(one is already not a match, so save time and just bail here)
+                            //determine if the requirements of this function are met
+                                for(var b = 0; b < list[a].requiredKeys.length; b++){
+                                    shouldRun = true;
+                                    for(var c = 0; c < list[a].requiredKeys[b].length; c++){
+                                        shouldRun = shouldRun && workspace.system.keyboard.pressedKeys[ list[a].requiredKeys[b][c] ];
+                                        if(!shouldRun){break;} //(one is already not a match, so save time and just skip to the next one)
+                                    }
+                                    if(shouldRun){ break; } //one of the collections worked, so save time and skip the rest
                                 }
             
-                            //if all requirements were met, run the function
+                            //if requirements were met, run the function
             	            if(shouldRun){  
                                 //if the function returns 'false', continue with the list; otherwise stop here
                     	            if( list[a].function(event,data) ){ break; }
@@ -726,7 +730,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.destination.masterGain = function(value){
                     if(value == undefined){return this.destination._gain;}
                     this._gain = value;
-                    workspace.library.audio.utility.changeAudioParam(workspace.library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
+                    workspace.library.audio.changeAudioParam(workspace.library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
                 };
             
             
@@ -838,6 +842,529 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             
                 return string;
             };
+            this.compressString = function(string){return workspace.library.thirdparty.lzString.compress(string);};
+            this.decompressString = function(string){return workspace.library.thirdparty.lzString.decompress(string);};
+            this.serialize = function(data,compress=true){
+                function getType(obj){
+                    return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+                }
+            
+                var data = JSON.stringify(data, function(key, value){
+            
+                    //preserve types that JSON.stringify can't handle as "unique types"
+                    switch(getType(value)){
+                        case 'function':
+                            return {__uniqueType:'function', __value:value.toString(), __name:value.name};
+                        case 'arraybuffer': 
+                            return {__uniqueType:'arraybuffer', __value:btoa(String.fromCharCode(new Uint8Array(value)))}
+                        case 'audiobuffer':
+                            var channelData = [];
+                            for(var a = 0; a < value.numberOfChannels; a++){
+                                channelData.push( Array.from(value.getChannelData(a)) );
+                            }
+            
+                            return {
+                                __uniqueType:'audiobuffer', 
+                                __channelData:channelData, 
+                                __sampleRate:value.sampleRate,
+                                __numberOfChannels:value.numberOfChannels,
+                                __length:value.length
+                            };
+                        break;
+                        default: return value;
+                    }
+            
+                });
+            
+                if(compress){ data = workspace.library.misc.compressString(data); }
+                return data;
+            };
+            this.unserialize = function(data,compressed=true){
+                if(data === undefined){return undefined;}
+            
+                if(compressed){ data = workspace.library.misc.decompressString(data); }
+            
+                return JSON.parse(data, function(key, value){
+            
+                    //recover unique types
+                    if(typeof value == 'object' && value != null && '__uniqueType' in value){
+                        switch(value.__uniqueType){
+                            case 'function':
+                                var functionHead = value.__value.substring(0,value.__value.indexOf('{'));
+                                functionHead = functionHead.substring(functionHead.indexOf('(')+1, functionHead.lastIndexOf(')'));
+                                var functionBody = value.__value.substring(value.__value.indexOf('{')+1, value.__value.lastIndexOf('}'));
+            
+                                value = Function(functionHead,functionBody);
+                            break;
+                            case 'arraybuffer':
+                                value = atob(value.__value);
+                                for(var a = 0; a < value.length; a++){ value[a] = value[a].charCodeAt(0); }
+                                value = new ArrayBuffer(value);
+                            break;
+                            case 'audiobuffer':
+                                var audioBuffer = workspace.library.audio.context.createBuffer(value.__numberOfChannels, value.__length, value.__sampleRate);
+            
+                                for(var a = 0; a < audioBuffer.numberOfChannels; a++){
+                                    workingBuffer = audioBuffer.getChannelData(a);
+                                    for(var i = 0; i < audioBuffer.length; i++){
+                                        workingBuffer[i] = value.__channelData[a][i];
+                                    }
+                                }
+            
+                                value = audioBuffer;
+                            break;
+                            default: value = value.__value;
+                        }
+                    }
+            
+                    return value;
+                });
+            };
+            this.openFile = function(callback,readAsType='readAsBinaryString'){
+                var i = document.createElement('input');
+                i.type = 'file';
+                i.onchange = function(){
+                    var f = new FileReader();
+                    switch(readAsType){
+                        case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
+                        case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
+                    }
+                    f.onloadend = function(){ 
+                        if(callback){callback(f.result);}
+                    }
+                };
+                i.click();
+            };
+            this.printFile = function(filename,data){
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([data]));
+                a.download = filename;
+                a.click();
+            };
+        };
+        workspace.library.thirdparty = new function(){
+            this.lzString = (function(){
+                // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
+                // This work is free. You can redistribute it and/or modify it
+                // under the terms of the WTFPL, Version 2
+                // For more information see LICENSE.txt or http://www.wtfpl.net/
+                //
+                // For more information, the home page:
+                // http://pieroxy.net/blog/pages/lz-string/testing.html
+                //
+                // LZ-based compression algorithm, version 1.4.4
+                //
+                // Modified by Metasophiea <metasophiea@gmail.com>
+                var f = String.fromCharCode;
+                var keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+                var baseReverseDic = {};
+                
+                function getBaseValue(alphabet, character) {
+                    if(!baseReverseDic[alphabet]){
+                        baseReverseDic[alphabet] = {};
+                        for(var i = 0 ; i < alphabet.length; i++){
+                            baseReverseDic[alphabet][alphabet.charAt(i)] = i;
+                        }
+                    }	
+                    return baseReverseDic[alphabet][character];
+                }
+                
+                var LZString = {
+                    //compress into a string that is URI encoded
+                    compress: function (input) {
+                        if(input == null){return "";}
+                        return LZString._compress(input, 6, function(a){return keyStrUriSafe.charAt(a);});
+                    },
+                    
+                    //decompress from an output of compress which was URI encoded
+                    decompress:function (input) {
+                        if(input == null){return "";}
+                        if(input == ""){return null;}
+                        input = input.replace(/ /g, "+");
+                        return LZString._decompress(input.length, 32, function(index){ return getBaseValue(keyStrUriSafe, input.charAt(index)); });
+                    },
+                    
+                    _compress: function(uncompressed, bitsPerChar, getCharFromInt){
+                        if (uncompressed == null) return "";
+                        var i, value,
+                            context_dictionary= {},
+                            context_dictionaryToCreate= {},
+                            context_c="",
+                            context_wc="",
+                            context_w="",
+                            context_enlargeIn= 2, // Compensate for the first entry which should not count
+                            context_dictSize= 3,
+                            context_numBits= 2,
+                            context_data=[],
+                            context_data_val=0,
+                            context_data_position=0,
+                            ii;
+                    
+                        for (ii = 0; ii < uncompressed.length; ii += 1) {
+                        context_c = uncompressed.charAt(ii);
+                        if (!Object.prototype.hasOwnProperty.call(context_dictionary,context_c)) {
+                            context_dictionary[context_c] = context_dictSize++;
+                            context_dictionaryToCreate[context_c] = true;
+                        }
+                    
+                        context_wc = context_w + context_c;
+                        if (Object.prototype.hasOwnProperty.call(context_dictionary,context_wc)) {
+                            context_w = context_wc;
+                        } else {
+                            if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+                            if (context_w.charCodeAt(0)<256) {
+                                for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1);
+                                if (context_data_position == bitsPerChar-1) {
+                                    context_data_position = 0;
+                                    context_data.push(getCharFromInt(context_data_val));
+                                    context_data_val = 0;
+                                } else {
+                                    context_data_position++;
+                                }
+                                }
+                                value = context_w.charCodeAt(0);
+                                for (i=0 ; i<8 ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                    context_data_position = 0;
+                                    context_data.push(getCharFromInt(context_data_val));
+                                    context_data_val = 0;
+                                } else {
+                                    context_data_position++;
+                                }
+                                value = value >> 1;
+                                }
+                            } else {
+                                value = 1;
+                                for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1) | value;
+                                if (context_data_position ==bitsPerChar-1) {
+                                    context_data_position = 0;
+                                    context_data.push(getCharFromInt(context_data_val));
+                                    context_data_val = 0;
+                                } else {
+                                    context_data_position++;
+                                }
+                                value = 0;
+                                }
+                                value = context_w.charCodeAt(0);
+                                for (i=0 ; i<16 ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                    context_data_position = 0;
+                                    context_data.push(getCharFromInt(context_data_val));
+                                    context_data_val = 0;
+                                } else {
+                                    context_data_position++;
+                                }
+                                value = value >> 1;
+                                }
+                            }
+                            context_enlargeIn--;
+                            if (context_enlargeIn == 0) {
+                                context_enlargeIn = Math.pow(2, context_numBits);
+                                context_numBits++;
+                            }
+                            delete context_dictionaryToCreate[context_w];
+                            } else {
+                            value = context_dictionary[context_w];
+                            for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                                } else {
+                                context_data_position++;
+                                }
+                                value = value >> 1;
+                            }
+                    
+                    
+                            }
+                            context_enlargeIn--;
+                            if (context_enlargeIn == 0) {
+                            context_enlargeIn = Math.pow(2, context_numBits);
+                            context_numBits++;
+                            }
+                            // Add wc to the dictionary.
+                            context_dictionary[context_wc] = context_dictSize++;
+                            context_w = String(context_c);
+                        }
+                        }
+                    
+                        // Output the code for w.
+                        if (context_w !== "") {
+                        if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+                            if (context_w.charCodeAt(0)<256) {
+                            for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1);
+                                if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                                } else {
+                                context_data_position++;
+                                }
+                            }
+                            value = context_w.charCodeAt(0);
+                            for (i=0 ; i<8 ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                                } else {
+                                context_data_position++;
+                                }
+                                value = value >> 1;
+                            }
+                            } else {
+                            value = 1;
+                            for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1) | value;
+                                if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                                } else {
+                                context_data_position++;
+                                }
+                                value = 0;
+                            }
+                            value = context_w.charCodeAt(0);
+                            for (i=0 ; i<16 ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                                } else {
+                                context_data_position++;
+                                }
+                                value = value >> 1;
+                            }
+                            }
+                            context_enlargeIn--;
+                            if (context_enlargeIn == 0) {
+                            context_enlargeIn = Math.pow(2, context_numBits);
+                            context_numBits++;
+                            }
+                            delete context_dictionaryToCreate[context_w];
+                        } else {
+                            value = context_dictionary[context_w];
+                            for (i=0 ; i<context_numBits ; i++) {
+                            context_data_val = (context_data_val << 1) | (value&1);
+                            if (context_data_position == bitsPerChar-1) {
+                                context_data_position = 0;
+                                context_data.push(getCharFromInt(context_data_val));
+                                context_data_val = 0;
+                            } else {
+                                context_data_position++;
+                            }
+                            value = value >> 1;
+                            }
+                    
+                    
+                        }
+                        context_enlargeIn--;
+                        if (context_enlargeIn == 0) {
+                            context_enlargeIn = Math.pow(2, context_numBits);
+                            context_numBits++;
+                        }
+                        }
+                    
+                        // Mark the end of the stream
+                        value = 2;
+                        for (i=0 ; i<context_numBits ; i++) {
+                        context_data_val = (context_data_val << 1) | (value&1);
+                        if (context_data_position == bitsPerChar-1) {
+                            context_data_position = 0;
+                            context_data.push(getCharFromInt(context_data_val));
+                            context_data_val = 0;
+                        } else {
+                            context_data_position++;
+                        }
+                        value = value >> 1;
+                        }
+                    
+                        // Flush the last char
+                        while (true) {
+                        context_data_val = (context_data_val << 1);
+                        if (context_data_position == bitsPerChar-1) {
+                            context_data.push(getCharFromInt(context_data_val));
+                            break;
+                        }
+                        else context_data_position++;
+                        }
+                        return context_data.join('');
+                    },
+                    
+                    _decompress: function(length, resetValue, getNextValue){
+                        var dictionary = [],
+                            next,
+                            enlargeIn = 4,
+                            dictSize = 4,
+                            numBits = 3,
+                            entry = "",
+                            result = [],
+                            i,
+                            w,
+                            bits, resb, maxpower, power,
+                            c,
+                            data = {val:getNextValue(0), position:resetValue, index:1};
+                    
+                        for (i = 0; i < 3; i += 1) {
+                        dictionary[i] = i;
+                        }
+                    
+                        bits = 0;
+                        maxpower = Math.pow(2,2);
+                        power=1;
+                        while (power!=maxpower) {
+                        resb = data.val & data.position;
+                        data.position >>= 1;
+                        if (data.position == 0) {
+                            data.position = resetValue;
+                            data.val = getNextValue(data.index++);
+                        }
+                        bits |= (resb>0 ? 1 : 0) * power;
+                        power <<= 1;
+                        }
+                    
+                        switch (next = bits) {
+                        case 0:
+                            bits = 0;
+                            maxpower = Math.pow(2,8);
+                            power=1;
+                            while (power!=maxpower) {
+                                resb = data.val & data.position;
+                                data.position >>= 1;
+                                if (data.position == 0) {
+                                data.position = resetValue;
+                                data.val = getNextValue(data.index++);
+                                }
+                                bits |= (resb>0 ? 1 : 0) * power;
+                                power <<= 1;
+                            }
+                            c = f(bits);
+                            break;
+                        case 1:
+                            bits = 0;
+                            maxpower = Math.pow(2,16);
+                            power=1;
+                            while (power!=maxpower) {
+                                resb = data.val & data.position;
+                                data.position >>= 1;
+                                if (data.position == 0) {
+                                data.position = resetValue;
+                                data.val = getNextValue(data.index++);
+                                }
+                                bits |= (resb>0 ? 1 : 0) * power;
+                                power <<= 1;
+                            }
+                            c = f(bits);
+                            break;
+                        case 2:
+                            return "";
+                        }
+                        dictionary[3] = c;
+                        w = c;
+                        result.push(c);
+                        while (true) {
+                        if (data.index > length) {
+                            return "";
+                        }
+                    
+                        bits = 0;
+                        maxpower = Math.pow(2,numBits);
+                        power=1;
+                        while (power!=maxpower) {
+                            resb = data.val & data.position;
+                            data.position >>= 1;
+                            if (data.position == 0) {
+                            data.position = resetValue;
+                            data.val = getNextValue(data.index++);
+                            }
+                            bits |= (resb>0 ? 1 : 0) * power;
+                            power <<= 1;
+                        }
+                    
+                        switch (c = bits) {
+                            case 0:
+                            bits = 0;
+                            maxpower = Math.pow(2,8);
+                            power=1;
+                            while (power!=maxpower) {
+                                resb = data.val & data.position;
+                                data.position >>= 1;
+                                if (data.position == 0) {
+                                data.position = resetValue;
+                                data.val = getNextValue(data.index++);
+                                }
+                                bits |= (resb>0 ? 1 : 0) * power;
+                                power <<= 1;
+                            }
+                    
+                            dictionary[dictSize++] = f(bits);
+                            c = dictSize-1;
+                            enlargeIn--;
+                            break;
+                            case 1:
+                            bits = 0;
+                            maxpower = Math.pow(2,16);
+                            power=1;
+                            while (power!=maxpower) {
+                                resb = data.val & data.position;
+                                data.position >>= 1;
+                                if (data.position == 0) {
+                                data.position = resetValue;
+                                data.val = getNextValue(data.index++);
+                                }
+                                bits |= (resb>0 ? 1 : 0) * power;
+                                power <<= 1;
+                            }
+                            dictionary[dictSize++] = f(bits);
+                            c = dictSize-1;
+                            enlargeIn--;
+                            break;
+                            case 2:
+                            return result.join('');
+                        }
+                    
+                        if (enlargeIn == 0) {
+                            enlargeIn = Math.pow(2, numBits);
+                            numBits++;
+                        }
+                    
+                        if (dictionary[c]) {
+                            entry = dictionary[c];
+                        } else {
+                            if (c === dictSize) {
+                            entry = w + w.charAt(0);
+                            } else {
+                            return null;
+                            }
+                        }
+                        result.push(entry);
+                    
+                        // Add w+entry[0] to the dictionary.
+                        dictionary[dictSize++] = w + entry.charAt(0);
+                        enlargeIn--;
+                    
+                        w = entry;
+                    
+                        if (enlargeIn == 0) {
+                            enlargeIn = Math.pow(2, numBits);
+                            numBits++;
+                        }
+                    
+                        }
+                    }
+                };
+                return LZString;
+            })();
         };
         workspace.core = new function(){
             var core = new function(){
@@ -2564,7 +3091,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     this.scale = function(s){
                         if(s == undefined){return state.scale;}
-                        state.scale = s;
+                        state.scale = s == 0 ? window.devicePixelRatio : s;
                         calculateViewportExtremities();
                     };
                     this.angle = function(a){
@@ -3112,6 +3639,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     else if(event.code == 'AltLeft' || event.code == 'AltRight'){     pressedKeys.alt = press;     }
                     else if(event.code == 'MetaLeft' || event.code == 'MetaRight'){   pressedKeys.meta = press;    }
                     else if(event.code == 'ShiftLeft' || event.code == 'ShiftRight'){ pressedKeys.shift = press;   }
+            
+                    //adjustment for mac keyboards
+                        if( window.navigator.platform.indexOf('Mac') != -1 ){
+                            pressedKeys.option = pressedKeys.alt;
+                            pressedKeys.command = pressedKeys.meta;
+                        }
                 }
             
             
@@ -3123,7 +3656,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                 //perform action
                     if(activateShapeFunctions('onkeydown',x,y,event,shape)){return;}
-                    workspace.library.structure.functionListRunner(workspace.system.keyboard.functionList.onkeydown)(event,{x:x,y:y});
+                    workspace.library.structure.functionListRunner(workspace.system.keyboard.functionList.onkeydown)({event:event,x:x,y:y});
             };
             workspace.core.callback.onkeyup = function(x,y,event,shape){
                 //if key isn't pressed, don't release it
@@ -3133,7 +3666,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                 //perform action
                     if(activateShapeFunctions('onkeyup',x,y,event,shape)){return;}
-                    workspace.library.structure.functionListRunner(workspace.system.keyboard.functionList.onkeyup)(event,{x:x,y:y});
+                    workspace.library.structure.functionListRunner(workspace.system.keyboard.functionList.onkeyup)({event:event,x:x,y:y});
             };
             
             this.releaseAll = function(){
@@ -3141,8 +3674,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     this.releaseKey(this.pressedKeys[a]);
                 }
             };
-            this.releaseKey = function(keyCode){
-                workspace.onkeyup( new KeyboardEvent('keyup',{'key':keyCode}) );
+            this.releaseKey = function(code){
+                workspace.onkeyup( new KeyboardEvent('keyup',{code:code}) );
             }
             
             this.pressedKeys = {
@@ -3152,18 +3685,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
             
             this.functionList = {};
-            this.functionList.onkeydown = [
-                {
-                    'specialKeys':[],
-                    'function':function(event,data){}
-                }
-            ];
-            this.functionList.onkeyup = [
-                {
-                    'specialKeys':[],
-                    'function':function(event,data){}
-                }
-            ];
+            this.functionList.onkeydown = [];
+            this.functionList.onkeyup = [];
         };
         
         //add main panes to arrangement
@@ -3328,7 +3851,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             this.recordingTime = function(){
                                 return getRecordingLength();
                             };
-                            this.getTrack = function(){return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' }); };
+                            this.getTrack = function(){return this.export(); };
                     
                         //io
                             this.in_left  =  function(){return flow.leftIn.node;};
@@ -3610,7 +4133,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     switch(channel){
                                         case 'r': return flow.rightOut.node; break;
                                         case 'l': return flow.leftOut.node; break;
-                                        default: console.error('"part.circuit.alpha.oneShot_multi2.audioOut" unknown channel "'+channel+'"'); break;
+                                        default: console.error('"part.circuit.alpha.oneShot_multi.audioOut" unknown channel "'+channel+'"'); break;
                                     }
                                 };
                                 this.out_left  = function(){return this.audioOut('l');}
@@ -4074,10 +4597,10 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     
                         //internal functions
                             function playheadCompute(){
-                                //this code is used to update the playhead position aswel as to calculate when the loop end will occur, 
+                                //this code is used to update the playhead position as well as to calculate when the loop end will occur, 
                                 //and thus when the playhead should jump to the start of the loop. The actual looping of the audio is 
                                 //done by the system, so this process is done solely to update the playhead position data.
-                                //  Using the playhead's current postiion and paly rate; the length of time before the playhead is 
+                                //  Using the playhead's current position and play rate; the length of time before the playhead is 
                                 //scheduled to reach the end bound of the loop is calculated and given to a timeout. When this timeout 
                                 //occurs; the playhead will jump to the start bound and the process is run again to calculate the new 
                                 //length of time before the playhead reaches the end bound.
@@ -4127,8 +4650,19 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         state.itself.start();
                                     });
                             }
-                    
+                        
                         //controls
+                            this.unloadRaw = function(){
+                                return flow.track;
+                            };
+                            this.loadRaw = function(data,callback){
+                                if(Object.keys(data).length === 0){return;}
+                                state.itself.stop();
+                                flow.track = data;
+                                state.fileLoaded = true;
+                                state.playhead.position = 0;
+                                callback(data);
+                            };
                             this.load = function(type,callback,url=''){
                                 state.fileLoaded = false;
                                 workspace.library.audio.loadAudioFile(
@@ -8570,6 +9104,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     this.state.selected = bool; activateGraphicalState();
                                     if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
                                 };
+                                object.forceMouseLeave = function(){
+                                    object.state.hovering = false; 
+                                    object.release('forced'); 
+                                    activateGraphicalState(); 
+                                    if(object.onleave){object.onleave('forced');}
+                                };
                         
                         
                         
@@ -10315,6 +10855,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 cover.onwheel = function(x,y,event){
                                     var move = event.deltaY/100;
                                     object.position( object.position() + move/10 );
+                                    for(var a = 0; a < itemArray.length; a++){
+                                        itemArray[a].forceMouseLeave();
+                                    }
                                 };
                             
                             //controls
@@ -11110,9 +11653,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                                 object.getCablePoint = function(){
                                     var offset = this.getOffset();
-                                    var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.a); 
-                                    point.x += offset.x + width/2;
-                                    point.y += offset.y + height/2;
+                                    var point = workspace.library.math.cartesianAngleAdjust(x+width/2,y+height/2,offset.a);
+                                    point.x += offset.x;
+                                    point.y += offset.y;
                                     return point;
                                 };
                                 object.draw = function(){
@@ -11490,7 +12033,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     var interfaceUnit = this;
                     
                     this.audioEffectUnits = new function(){
-                        this.filterUnit = function(x,y){
+                        this.filterUnit = function(x,y,a){
                             var state = {
                                 freqRange:{ low: 0.1, high: 20000, },
                                 graphDetail: 3,
@@ -11517,7 +12060,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'filterUnit',
                                 category: 'audioEffectUnits',
                                 collection: 'alpha',
-                                x: x, y: y,
+                                x:x, y:y, a:a,
                                 space:[ {x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70} ],
                                 // spaceOutline:true,
                                 elements:[
@@ -11736,14 +12279,14 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //import/export
                                 object.importData = function(data){
                                     state.reverbTypeSelected = data.selectedType;
-                                    design.dial_continuous.wetdry.set(data.wetdry);
-                                    design.dial_continuous.outGain.set(data.outGain);
+                                    object.elements.dial_continuous.wetdry_dial.set(data.wetdry);
+                                    object.elements.dial_continuous.outGain_dial.set(data.outGain);
                                 };
                                 object.exportData = function(){
                                     return {
                                         selectedType: state.reverbTypeSelected,
-                                        wetdry: object.elements.dial_continuous.wetdry.get(),
-                                        outGain: object.elements.dial_continuous.outGain.get(),
+                                        wetdry: object.elements.dial_continuous.wetdry_dial.get(),
+                                        outGain: object.elements.dial_continuous.outGain_dial.get(),
                                     };
                                 };
                         
@@ -11781,8 +12324,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                             //interface
                                 object.i = {
-                                    gain:function(a){object.elements.dial_continuous.outGain.set(a);},
-                                    wetdry:function(a){object.elements.dial_continuous.wetdry.set(a);},
+                                    gain:function(a){object.elements.dial_continuous.outGain_dial.set(a);},
+                                    wetdry:function(a){object.elements.dial_continuous.wetdry_dial.set(a);},
                                 };
                         
                             //setup
@@ -11798,9 +12341,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/reverbUnit/'
                         };
 
-                        this.multibandFilter = function(
-                            x, y, angle,
-                        ){
+                        this.multibandFilter = function(x,y,a){
                             var vars = {
                                 allowUpdate:false,
                                 freqRange:{ low: 0.1, high: 20000 },
@@ -11873,7 +12414,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'multibandFilter',
                                 category: 'audioEffectUnits',
                                 collection: 'alpha',
-                                x: x, y: y,
+                                x:x, y:y, a:a,
                                 space:[
                                     { x:0,        y:10         }, { x:10,       y:0          },
                                     { x:width-10, y:0          }, { x:width,    y:10         },
@@ -12050,7 +12591,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'Multiband Filter',
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/multibandFilter/'
                         };
-                        this.distortionUnit = function(x,y){
+                        this.distortionUnit = function(x,y,a){
                             var style = {
                                 background: {fill:'rgba(200,200,200,1)'},
                                 h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
@@ -12066,7 +12607,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'distortionUnit',
                                 category: 'audioEffectUnits',
                                 collection: 'alpha',
-                                x: x, y: y,
+                                x:x, y:y, a:a,
                                 space:[
                                         { x:0,           y:10     },
                                         { x:10,          y:0      },
@@ -12204,7 +12745,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     
                     this.audioFile = new function(){
-                        this.recorder = function(x,y,debug=false){
+                        this.recorder = function(x,y,a){
                             var style = {
                                 background:{fill:'rgba(200,200,200,1)'},
                                 h1: {fill:'rgba(100,100,100,1)', font:'6pt Bookman'},
@@ -12220,7 +12761,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'recorder',
                                 category: 'audioFile',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}],
                                 // spaceOutline:true,
                                 elements:[
@@ -12347,7 +12888,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/recorder/'
                         };
 
-                        this.looper = function(x,y,debug=false){
+                        this.looper = function(x,y,a){
                             var style = {
                                 background: {fill:'rgba(200,200,200,1)'},
                                 markings: {fill:'rgba(150,150,150,1)'},
@@ -12372,7 +12913,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'looper',
                                 category: 'audioFile',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
                                 // spaceOutline:true,
                                 elements:[
@@ -12484,7 +13025,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'Looper',
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/looper/'
                         };
-                        this.oneShot_single = function(x,y,debug=false){
+                        this.oneShot_single = function(x,y,a){
                             var style = {
                                 background: {fill:'rgba(200,200,200,1)'},
                                 markings: {fill:'rgba(150,150,150,1)'},
@@ -12509,7 +13050,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'oneShot_single',
                                 category: 'audioFile',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
                                 // spaceOutline:true,
                                 elements:[
@@ -12609,7 +13150,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         };
                         
 
-                        this.oneShot_multi = function(x,y,debug=false){
+                        this.oneShot_multi = function(x,y,a){
                             var style = {
                                 background: {fill:'rgba(200,200,200,1)'},
                                 markings: {fill:'rgba(150,150,150,1)'},
@@ -12637,7 +13178,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'oneShot_multi',
                                 category: 'audioFile',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
                                 // spaceOutline:true,
                                 elements:[
@@ -12786,7 +13327,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/oneShot_multi/'
                         };
 
-                        this.oneShot_multi_multiTrack = function(x,y,debug=false){
+                        this.oneShot_multi_multiTrack = function(x,y,a){
                             var trackCount = 8;
                         
                             var style = {
@@ -12816,7 +13357,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'oneShot_multi_multiTrack',
                                 category: 'audioFile',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}],
                                 // spaceOutline:true,
                                 elements:[
@@ -13062,7 +13603,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'One Shot (Multi)(8 Track)',
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/oneShot_multi_multiTrack/'
                         };
-                        this.player = function(x,y,debug=false){
+                        this.player = function(x,y,a){
                             var style = {
                                 background:{fill:'rgba(200,200,200,1)'},
                                 h1: {fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
@@ -13089,7 +13630,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'player',
                                 category: 'audioFile',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}],
                                 // spaceOutline:true,
                                 elements:[
@@ -13167,6 +13708,18 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(object.player.progress(),false);
                                     }
                                     setInterval(refresh,1000/30);
+                            
+                            //import/export
+                                object.exportData = function(){
+                                    var data = {
+                                        track: object.player.unloadRaw(),
+                                    };
+                        
+                                    return data;
+                                };
+                                object.importData = function(data){
+                                    object.i.loadRaw(data.track);
+                                };
                         
                             //wiring
                                 object.elements.dial_continuous.rate_dial.onchange = function(data){ object.player.rate( 2*data ); };
@@ -13181,6 +13734,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                             //interface
                                 object.i = {
+                                    loadRaw:function(data){
+                                        object.player.loadRaw(data,loadProcess);
+                                    },
                                     loadByFile:function(){
                                         object.player.load('file',loadProcess);
                                     },
@@ -13202,7 +13758,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     
                     this.humanInputDevices = new function(){
-                        this.audioIn = function(x,y,setupConnect=true){
+                        this.audioIn = function(x,y,a,setupConnect=true){
                             var attributes = {
                                 deviceList:[],
                                 currentSelection: 0
@@ -13229,7 +13785,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name:'audioIn',
                                 category:'humanInputDevices',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[
                                     {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
                                     {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
@@ -13319,7 +13875,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'Audio Input',
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/audioInput/'
                         };
-                        this.musicalKeyboard = function(x,y,debug=false){
+                        this.musicalKeyboard = function(x,y,a){
                             var state = {
                                 velocity:0.5,
                             };
@@ -13351,7 +13907,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'musicalKeyboard',
                                 category:'humanInputDevices',
                                 collection: 'alpha',
-                                x: x, y: y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}],
                                 // spaceOutline:true,
                                 elements:[
@@ -13455,7 +14011,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     
                     this.humanOutputDevices = new function(){
-                        this.audioScope = function(x,y){
+                        this.audioScope = function(x,y,a){
                             var attributes = {
                                 framerateLimits: {min:1, max:30}
                             };
@@ -13478,7 +14034,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name:'audioScope',
                                 category:'humanOutputDevices',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
                                 // spaceOutline: true,
                                 elements:[
@@ -13525,7 +14081,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'Audio Scope',
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/audioScope/'
                         };
-                        this.audioSink = function(x,y){
+                        this.audioSink = function(x,y,a){
                             var style = {
                                 background:{fill:'rgba(200,200,200,1)'},
                                 level:{
@@ -13539,7 +14095,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name:'audioSink',
                                 category:'humanOutputDevices',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}],
                                 // spaceOutline: true,
                                 elements:[
@@ -13591,7 +14147,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     
                     this.sequencers = new function(){
-                        this.basicSequencer = function(x,y,debug=false){
+                        this.basicSequencer = function(x,y,a){
                             var vals = {
                                 sequencer:{
                                     width:64, height:10,
@@ -13636,7 +14192,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'basicSequencer',
                                 category:'sequencers',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
                                 // spaceOutline:true,
                                 elements:[
@@ -13743,7 +14299,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'Basic Sequencer (Multi Pulse Out)',
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/basicSequencer_pulseOut/'
                         };
-                        this.launchpad = function(x,y,debug=false){
+                        this.launchpad = function(x,y,a){
                             var values = {
                                 xCount:8, yCount:8,
                             };
@@ -13771,7 +14327,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'launchpad',
                                 category:'sequencers',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}],
                                 // spaceOutline:true,
                                 elements:[
@@ -13981,7 +14537,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 this.commands = function(){};
                                 this.pageChange = function(){};
                         };
-                        this.basicSequencer_midiOut = function(x,y,debug=false){
+                        this.basicSequencer_midiOut = function(x,y,a){
                             var vals = {
                                 sequencer:{
                                     width:64, height:100,
@@ -14031,7 +14587,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'basicSequencer_midiOut',
                                 category:'sequencers',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
                                 // spaceOutline:true,
                                 elements:[
@@ -14141,7 +14697,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     
                     this.synthesizers = new function(){
-                        this.basicSynthesizer = function(x,y){
+                        this.basicSynthesizer = function(x,y,a){
                             var attributes = {
                                 detuneLimits: {min:-100, max:100}
                             };
@@ -14165,7 +14721,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name:'basicSynthesizer',
                                 category:'synthesizers',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
                                 // spaceOutline: true,
                                 elements:[
@@ -14466,7 +15022,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     
                     this.misc = new function(){
-                        this.audio_duplicator = function(x,y){
+                        this.audio_duplicator = function(x,y,a){
                             var style = {
                                 background:{fill:'rgba(200,200,200,1)'},
                                 markings: {fill:'rgba(150,150,150,1)'},
@@ -14475,7 +15031,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'audio_duplicator',
                                 category:'misc',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
                                 // spaceOutline: true,
                                 elements:[
@@ -14508,7 +15064,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'Audio Duplicator',
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/audioDuplicator/'
                         };
-                        this.universalreadout = function(x,y,debug=false){
+                        this.universalreadout = function(x,y,a){
                             var style = {
                                 background:{fill:'rgba(200,200,200,1)'},
                                 text:{fill:'rgba(0,0,0,1)', size:0.75, font:'Courier New'},
@@ -14517,7 +15073,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'universalreadout',
                                 category:'misc',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[
                                     {x:-5,y:-5}, 
                                     {x:10,y:-10}, 
@@ -14577,12 +15133,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'Universal Readout',
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/universalReadout/'
                         };
-                        this.testObject = function(x,y){
+                        this.testObject = function(x,y,a){
                             var design = {
                                 name: 'testObject',
                                 category:'misc',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space: [
                                     {x:-5,y:-5}, 
                                     {x:65,y:-5}, 
@@ -14722,7 +15278,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'Test Object',
                             helpURL:'https://metasophiea.com/curve/help/units/alpha/testObject/'
                         };
-                        this.pulseGenerator_hyper = function(x,y,debug=false){
+                        this.pulseGenerator_hyper = function(x,y,a){
                             var maxTempo = 999;
                         
                             var style = {
@@ -14739,7 +15295,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'pulseGenerator_hyper',
                                 category:'misc',
                                 collection: 'alpha',
-                                x: x, y: y,
+                                x:x, y:y, a:a,
                                 space:[
                                     {x:0,y:10},{x:10,y:0},
                                     {x:100,y:0},{x:115,y:10},
@@ -14829,7 +15385,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'Pulse Generator (Hyper)',
                             helpURL:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator_hyper/'
                         };
-                        this.pulseGenerator = function(x,y,debug=false){
+                        this.pulseGenerator = function(x,y,a){
                             var maxTempo = 240;
                         
                             var style = {
@@ -14846,7 +15402,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name: 'pulseGenerator',
                                 category:'misc',
                                 collection: 'alpha',
-                                x: x, y: y,
+                                x:x, y:y, a:a,
                                 space:[
                                     {x:0,y:10},{x:10,y:0},
                                     {x:100,y:0},{x:115,y:10},
@@ -14936,7 +15492,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             name:'Pulse Generator',
                             helpURL:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator/'
                         };
-                        this.data_duplicator = function(x,y){
+                        this.data_duplicator = function(x,y,a){
                             var style = {
                                 background:{fill:'rgba(200,200,200,1)'},
                                 markings:{fill:'rgba(150,150,150,1)'},
@@ -14945,7 +15501,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name:'data_duplicator',
                                 category:'misc',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
                                 // spaceOutline: true,
                                 elements:[
@@ -14985,7 +15541,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
                         //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
                         //  then the 2nd port
-                        this.basicMixer = function(x,y){
+                        this.basicMixer = function(x,y,a){
                             var connectionCount = 8;
                             var style = {
                                 background:{fill:'rgba(200,200,200,1)'},
@@ -15003,7 +15559,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 name:'basicMixer',
                                 category: 'misc',
                                 collection: 'alpha',
-                                x:x, y:y,
+                                x:x, y:y, a:a,
                                 space:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
                                 // spaceOutline: true,
                                 elements:[
@@ -15120,7 +15676,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         if(!creatorMethod){console.error("workspace unit builder:: creatorMethod missing");return;}
                     
                         //main group
-                            var unit = interface.part.alpha.builder('group',design.name,{x:design.x, y:design.y});
+                            var unit = interface.part.alpha.builder('group',design.name,{x:design.x, y:design.y, angle:design.a});
                             unit.model = design.name;
                             unit.category = design.category;
                             unit.collection = design.collection;
@@ -15188,8 +15744,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 //create invisible backing shape (with callbacks)
                                     var invisibleShape = interface.part.alpha.builder( 'polygon', spaceName, {points:design.space, style:{ fill:'rgba(0,0,0,0)' } } );
                                     unit.prepend(invisibleShape);
-                                    invisibleShape.onkeydown = function(x,y,event){ if(unit.onkeydown != undefined){ unit.onkeydown(x,y,event); } };
-                                    invisibleShape.onkeyup = function(x,y,event){ if(unit.onkeyup != undefined){ unit.onkeyup(x,y,event); } };
                     
                             //if requested, add an outline shape
                                 if( design.spaceOutline ){
@@ -15200,6 +15754,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             unit._parameter = {};
                             unit._parameter.x = unit.parameter.x;
                             unit._parameter.y = unit.parameter.y;
+                            unit._parameter.angle = unit.parameter.angle;
                             unit.parameter.x = function(newX){
                                 if( unit._parameter.x(newX) != undefined ){ return unit.x; }
                                 design.x = newX;
@@ -15210,6 +15765,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 design.y = newY;
                                 generatePersonalSpace();
                             };
+                            unit.parameter.angle = function(newAngle){
+                                if( unit._parameter.angle(newAngle) != undefined ){ return unit.angle; }
+                                design.angle = newAngle;
+                                generatePersonalSpace();
+                            };
                     
                         return unit;
                     };
@@ -15217,10 +15777,21 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 };
             };
         };
+        //close dropdowns on click
         workspace.system.mouse.functionList.onmousedown.push(
             {
-                'specialKeys':['shift'],
-                'function':function(data){
+                requiredKeys:[],
+                function:function(data){
+                    //close any open menubar dropdowns
+                        workspace.control.gui.closeAllDropdowns();
+                }
+            }
+        );
+        //group select (shift)
+        workspace.system.mouse.functionList.onmousedown.push(
+            {
+                requiredKeys:[['shift']],
+                function:function(data){
                     //creat selection graphic and add it to the foregroud
                         workspace.system.mouse.tmp.selectionRectangle = workspace.interface.part.alpha.builder( 
                             'rectangle', 'selectionRectangle', 
@@ -15255,11 +15826,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 }
             }
         );
-        
+        //panning
         workspace.system.mouse.functionList.onmousedown.push(
             {
-                'specialKeys':[],
-                'function':function(data){
+                requiredKeys:[],
+                function:function(data){
                     workspace.control.selection.deselectEverything();
         
                     //save the viewport position and click position
@@ -15284,10 +15855,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         );
         
+        //zoom
         workspace.system.mouse.functionList.onwheel.push(
             {
-                'specialKeys':[],
-                'function':function(data){
+                requiredKeys:[],
+                function:function(data){
                     var scaleLimits = {'max':20, 'min':0.1};
         
                     //perform scale and associated pan
@@ -15315,6 +15887,56 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 }
             }
         );
+        workspace.system.keyboard.functionList.onkeydown.push(
+            {
+                requiredKeys:[['control','F2'],['command','F2']],
+                function:function(data){ workspace.control.scene.load(undefined,undefined,true); return true; }
+            }
+        );
+        workspace.system.keyboard.functionList.onkeydown.push(
+            {
+                requiredKeys:[['control','F3'],['command','F3']],
+                function:function(data){ workspace.control.scene.save(); return true; }
+            }
+        );
+        workspace.system.keyboard.functionList.onkeydown.push(
+            {
+                requiredKeys:[['control','KeyX'],['command','KeyX']],
+                function:function(data){ workspace.control.selection.cut(); return true; }
+            }
+        );
+        workspace.system.keyboard.functionList.onkeydown.push(
+            {
+                requiredKeys:[['control','KeyC'],['command','KeyC']],
+                function:function(data){
+                    workspace.system.keyboard.releaseKey('KeyC');
+                    workspace.control.selection.copy();
+                    return true;
+                }
+            }
+        );
+        workspace.system.keyboard.functionList.onkeydown.push(
+            {
+                requiredKeys:[['control','KeyV'],['command','KeyV']],
+                function:function(data){
+                    workspace.system.keyboard.releaseKey('KeyV');
+                    workspace.control.selection.paste();
+                    return true; 
+                }
+            }
+        );
+        workspace.system.keyboard.functionList.onkeydown.push(
+            {
+                requiredKeys:[['control','KeyB'],['command','KeyB']],
+                function:function(data){ workspace.control.selection.duplicate(); return true; }
+            }
+        );
+        workspace.system.keyboard.functionList.onkeydown.push(
+            {
+                requiredKeys:[['Delete'],['Backspace']],
+                function:function(data){ workspace.control.selection.delete(); return true; }
+            }
+        );
         
         workspace.control = new function(){
             var control = this;
@@ -15336,6 +15958,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     if(menubar == undefined){return;}
                     pane.remove( menubar );
                     menubar = undefined;
+                };
+                this.closeAllDropdowns = function(){
+                    menubar.closeAllDropdowns();
                 };
         
                 this.elements = new function(){
@@ -15410,6 +16035,9 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                     default: height += that.menubar.dropdowns[a].listItemHeight; break;
                                                 }
                                             }
+                                            if(height > workspace.control.viewport.height()){
+                                                height = workspace.control.viewport.height();
+                                            }
                     
                                         //produce dropdown
                                             vars.activedropdown = workspace.interface.part.alpha.builder( 'list', 'dropdown', {
@@ -15443,6 +16071,13 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     accWidth += this.menubar.dropdowns[a].width;
                                 }
                     
+                        //control
+                            object.closeAllDropdowns = function(){
+                                if(vars.activedropdown != undefined){
+                                    vars.activedropdown.onrelease();
+                                }
+                            };
+                    
                         //refresh callback
                             object.refresh = function(){
                                 bar.parameter.width( workspace.control.viewport.width() );
@@ -15467,8 +16102,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             breakHeight: 1,
                             spaceHeight: 2,
                             itemList:[
-                                {text_left:'New Scene', function:function(){ if(confirm("This will clear the current scene! Are you sure?")){control.scene.new();} } },
-                                {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ control.scene.load(); } },
+                                {text_left:'New Scene', function:function(){ control.scene.new(true); } },
+                                {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ control.scene.load(undefined,undefined,true); } },
                                 {text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ control.scene.save('project.crv'); } },
                             ]
                         },
@@ -15507,7 +16142,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             text_left: workspace.interface.unit.alpha[category][model].metadata.name,
                                             function:function(model,category){return function(){
                                                 var p = workspace.core.viewport.windowPoint2workspacePoint(30,30);
-                                                workspace.control.scene.addUnit(p.x,p.y,model,category,'alpha');
+                                                workspace.control.scene.addUnit(p.x,p.y,0,model,category,'alpha');
                                             }}(model,category),
                                         });
                                     }
@@ -15549,29 +16184,239 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 var pane = workspace.system.pane.mm;
                 var IDcounter = 0;
         
-                this.new = function(){console.log('new scene!');};
-                this.load = function(){console.log('load scene!');};
-                this.save = function(filename){console.log('save scene!',filename);};
+                this.new = function(askForConfirmation=false){
+                    if(askForConfirmation){
+                        if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
+                    }
+                
+                    pane.clear();
+                    IDcounter = 0;
+                    control.viewport.position(0,0);
+                    control.viewport.scale(0);
+                };
+                this.documentUnits = function(units){
+                    // position             -   the X, Y and angle of the original object
+                    // details              -   data on the unit's type
+                    //      collection
+                    //      category
+                    //      model
+                    // data                 -   the exported data from the original object
+                    // connections          -   an array of where to connect what
+                    //      typeAndNameOfSourcePort
+                    //      indexOfDestinationUnit
+                    //      typeAndNameOfDestinationPort
+                
+                    var outputData = [];
+                
+                    //cycle through this array, and create the scene data
+                        for(var a = 0; a < units.length; a++){
+                            var unit = units[a];
+                            var entry = {};
+                
+                            //get the units position
+                                entry.position = {
+                                    x: unit.parameter.x(),
+                                    y: unit.parameter.y(),
+                                    angle: unit.parameter.angle(),
+                                };
+                
+                            //unitDetails
+                                entry.details = {
+                                    collection: unit.collection,
+                                    category: unit.category,
+                                    model: unit.model,
+                                };
+                
+                            //export the unit's state
+                                entry.data = unit.exportData ? unit.exportData() : null;
+                
+                            //log all connections
+                                entry.connections = [];
+                                    for(var connectionType in unit.io){
+                                        for(var connection in unit.io[connectionType]){
+                                            var foreignNode = unit.io[connectionType][connection].getForeignNode();
+                                            if(foreignNode == undefined){continue;}
+                                    
+                                            var newConnectionEntry = {};
+                
+                                            //typeAndNameOfSourcePort
+                                                newConnectionEntry.typeAndNameOfSourcePort = { type:connectionType, name:connection };
+                
+                                            //indexOfDestinationUnit
+                                                newConnectionEntry.indexOfDestinationUnit = units.indexOf(foreignNode.parent);
+                
+                                            //typeAndNameOfDestinationPort
+                                                for(var foreignConnection in foreignNode.parent.io[connectionType]){
+                                                    var con = foreignNode.parent.io[connectionType][foreignConnection];
+                                                    if( con.getForeignNode() == undefined ){ continue; }
+                                                    if( con.getForeignNode().name == connection ){
+                                                        newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignConnection };
+                                                    }
+                                                }
+                
+                                            entry.connections.push(newConnectionEntry);
+                                        }
+                                    }
+                
+                            //add this entry to the save data list
+                                outputData.push(entry);
+                        }
+                
+                    return outputData;  
+                };
+                this.printUnits = function(units){
+                    var printedUnits = [];
+                
+                    for(var a = 0; a < units.length; a++){
+                        var item = units[a];
+                
+                        //create the object with its new position adding it to the pane
+                            var unit = control.scene.addUnit(item.position.x, item.position.y,  item.position.angle, item.details.model, item.details.category, item.details.collection);
+                            printedUnits.push(unit);
+                
+                        //import data and select unit
+                            if(unit.importData){unit.importData(item.data);}
+                            control.selection.selectUnit(unit);
+                
+                        //go through its connections, and attempt to connect them to everything they should be connected to
+                        // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
+                            for(var b = 0; b < item.connections.length; b++){
+                                var connection = item.connections[b];
+                
+                                var destinationUnit = control.selection.selectedUnits[connection.indexOfDestinationUnit];
+                                if(destinationUnit == undefined){continue;}
+                
+                                var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
+                                var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
+                                sourceNode.connectTo(destinationNode);
+                            }
+                    }
+                
+                    return printedUnits;
+                };
+                this.export = function(){
+                    //creating an array of all units to be saved (strip out all the cable units)
+                    //document all units in the main pane
+                    return this.documentUnits( Array.from(pane.children).filter(a => !a._isCable) );
+                };
+                this.import = function(data){ this.printUnits( data ); };
+                this.save = function(filename='project',compress=true){
+                    //gather some initial data
+                        var outputData = {
+                            filename: filename,
+                            viewportLocation: {
+                                xy: workspace.control.viewport.position(),
+                                scale: workspace.control.viewport.scale(),
+                            },
+                        };
+                
+                    //stopping audio
+                        workspace.library.audio.destination.masterGain(0);
+                
+                    //gather the scene data
+                        outputData.units = this.export();
+                
+                    //serialize data
+                        outputData = workspace.library.misc.serialize(outputData,compress);
+                
+                    //wrap serialized scene
+                        outputData = {
+                            compressed: compress,
+                            data: outputData
+                        };
+                
+                    //serialize again
+                        outputData = workspace.library.misc.serialize(outputData,false);
+                
+                    //print to file
+                        workspace.library.misc.printFile(filename,outputData);
+                
+                    //restarting audio
+                        workspace.library.audio.destination.masterGain(1);
+                };
+                this.load = function(url,callback,askForConfirmation=false){
+                    if(askForConfirmation){
+                        if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
+                    }
+                
+                    //procedure for loading in a .crv file
+                        function procedure(data,callback){
+                            //stopping audio
+                                workspace.library.audio.destination.masterGain(0);
+                
+                            //deserialize first layer
+                                try{
+                                    var data = workspace.library.misc.unserialize(data,false);
+                                }catch(e){
+                                    console.error( "Major error unserializing first layer of file" );
+                                    console.error(e);
+                                    return;
+                                }
+                
+                            //determine if this data is compressed or not
+                                var compressed = data.compressed;
+                
+                            //deserialize second layer (knowing now whether it's compressed or not)
+                                try{
+                                    var data = workspace.library.misc.unserialize(data.data,compressed);
+                                }catch(e){
+                                    console.error( "Major error unserializing second layer of file" );
+                                    console.error(e);
+                                    return;
+                                }
+                
+                            //clear scene
+                                control.scene.new();
+                
+                            //print to scene
+                                control.scene.import(data.units);
+                            
+                            //reposition viewport
+                                control.viewport.position( data.viewportLocation.xy.x, data.viewportLocation.xy.y );
+                                control.viewport.scale( data.viewportLocation.scale );
+                
+                            //restarting audio
+                                workspace.library.audio.destination.masterGain(1);
+                
+                            //deselect all units
+                                control.selection.deselectEverything();
+                
+                            //callback
+                                if(callback){callback(metadata);}
+                        }
+                
+                    //depending on whether a url has been provided or not, perform the appropiate load
+                        if(url == undefined){ //load from file
+                            workspace.library.misc.openFile(function(data){procedure(data,callback);});
+                        }else{  //load from url
+                            var request = new XMLHttpRequest();
+                            request.open('GET', url, true);
+                            request.responseType = 'text';
+                            request.onload = function(){ procedure(this.response,callback); };
+                            request.send();
+                        }
+                };
+                
                 this.generateUnitName = function(){ return IDcounter++; };
-                this.addUnit = function(x,y,model,category,collection='alpha'){
+                this.addUnit = function(x,y,a,model,category,collection='alpha'){
                     //generate new name for unit
                         var name = this.generateUnitName();
-        
+                
                     //produce unit, assign its name and add grapple code
-                        var tmp = category == undefined ? workspace.interface.unit[collection][model](x,y) : workspace.interface.unit[collection][category][model](x,y);
+                        var tmp = category == undefined ? workspace.interface.unit[collection][model](x,y,a) : workspace.interface.unit[collection][category][model](x,y,a);
                         tmp.name = ''+name;
                         tmp = workspace.control.grapple.declare(tmp);
-        
+                
                     //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
                         this.rectifyUnitPosition(tmp);
-        
+                
                     //add it to the main pane
                         pane.append( tmp );
-        
+                
                     return tmp;
                 };
                 this.removeUnit = function(unit){ pane.remove(unit); };
-        
+                
                 this.getUnitByName = function(name){ return pane.getChildByName(name); };
                 this.getUnitsByType = function(type){ return pane.children.filter( a => a.unitType == type ); };
                 this.getUnitUnderPoint = function(x,y){
@@ -15587,7 +16432,14 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     var box = workspace.library.math.boundingBoxFromPoints(points);
                     return pane.children.filter(function(a){ return !a._isCable && workspace.library.math.detectOverlap.boundingBoxes(box, a.space.box) && workspace.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
                 };
-        
+                
+                
+                
+                
+                
+                
+                
+                
                 this.rectifyUnitPosition = function(unit){
                     return false;
                 };
@@ -15596,17 +16448,6 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.selectedUnits = [];
                 this.lastSelectedUnits = null;
                 this.clipboard = [];
-                    // pane                 -   the pane the object came from
-                    // position             -   the X and Y of the original object
-                    // details              -   data on the unit's type
-                    //      collection
-                    //      category
-                    //      model
-                    // data                 -   the exported data from the original object
-                    // connections          -   an array of where to connect what
-                    //      typeAndNameOfSourcePort
-                    //      indexOfDestinationUnit
-                    //      typeAndNameOfDestinationPort
                 
                 this.selectUnit = function(unit,shiftToFront=true){
                     // console.log('selecting unit',unit);
@@ -15674,59 +16515,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     this.delete();
                 };
                 this.copy = function(){
-                    //firstly, empty the clipboard
-                        this.clipboard = [];
-                
-                    //for all selected units; collect their data and add it to the clipboard
-                        for( var a = 0; a < this.selectedUnits.length; a++){
-                            var newEntry = {};
-                
-                            //pane
-                                newEntry.pane = workspace.system.pane.getMiddlegroundPane(this.selectedUnits[a]).getAddress();
-                
-                            //position
-                                newEntry.position = {x:this.selectedUnits[a].parameter.x(), y:this.selectedUnits[a].parameter.y()};
-                
-                            //unitDetails
-                                newEntry.details = {
-                                    collection: this.selectedUnits[a].collection,
-                                    category: this.selectedUnits[a].category,
-                                    model: this.selectedUnits[a].model,
-                                };
-                
-                            //data
-                                newEntry.data = this.selectedUnits[a].exportData ? this.selectedUnits[a].exportData() : null;
-                
-                            //connections
-                                newEntry.connections = [];
-                                for(var connectionType in this.selectedUnits[a].io){
-                                    for(var connection in this.selectedUnits[a].io[connectionType]){
-                                        var foreignNode = this.selectedUnits[a].io[connectionType][connection].getForeignNode();
-                                        if(foreignNode == undefined){continue;}
-                                
-                                        var newConnectionEntry = {};
-                
-                                        //typeAndNameOfSourcePort
-                                            newConnectionEntry.typeAndNameOfSourcePort = { type:connectionType, name:connection };
-                
-                                        //indexOfDestinationUnit
-                                            newConnectionEntry.indexOfDestinationUnit = this.selectedUnits.indexOf(foreignNode.parent);
-                
-                                        //typeAndNameOfDestinationPort
-                                            for(var foreignConnection in foreignNode.parent.io[connectionType]){
-                                                var con = foreignNode.parent.io[connectionType][foreignConnection];
-                                                if( con.getForeignNode() == undefined ){ continue; }
-                                                if( con.getForeignNode().name == connection ){
-                                                    newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignConnection };
-                                                }
-                                            }
-                
-                                        newEntry.connections.push(newConnectionEntry);
-                                    }
-                                }
-                                
-                            this.clipboard.push(newEntry);
-                        }
+                    this.clipboard = workspace.control.scene.documentUnits(this.selectedUnits);
                 };
                 this.paste = function(position){
                     //if clipboard is empty, don't bother
@@ -15764,29 +16553,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         }
                 
                     //unit printing
-                        for(var a = 0; a < this.clipboard.length; a++){
-                            var item = this.clipboard[a];
+                        workspace.control.scene.printUnits( this.clipboard );
                 
-                            //create the object with its new position adding it to the pane
-                                var unit = control.scene.addUnit(item.position.x, item.position.y, item.details.model, item.details.category, item.details.collection);
-                
-                            //import data and select unit
-                                if(unit.importData){unit.importData(item.data);}
-                                this.selectUnit(unit);
-                
-                            //go through its connections, and attempt to connect them to everything they should be connected to
-                            // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
-                                for(var b = 0; b < item.connections.length; b++){
-                                    var connection = item.connections[b];
-                
-                                    var destinationUnit = this.selectedUnits[connection.indexOfDestinationUnit];
-                                    if(destinationUnit == undefined){continue;}
-                
-                                    var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
-                                    var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
-                                    sourceNode.connectTo(destinationNode);
-                                }
-                        }
                 };
                 this.duplicate = function(){
                     this.copy();
@@ -15837,10 +16605,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         };
         
         
+        //deselection of previous unit (if shift is not pressed)
         workspace.control.grapple.functionList.onmousedown.push(
             {
-                'specialKeys':[],
-                'function':function(data){
+                requiredKeys:[],
+                function:function(data){
                     var control = workspace.control;
         
                     // if mousedown occurs over an unit that isn't selected
@@ -15854,10 +16623,77 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 },
             }
         );
+        //unit rotation
         workspace.control.grapple.functionList.onmousedown.push(
             {
-                'specialKeys':[],
-                'function':function(data){
+                requiredKeys:[['shift','alt']],
+                function:function(data){
+                    var control = workspace.control;
+                    
+                    //collect together information on the click position and the selected unit's positions and section area
+                        control.grapple.tmpdata.oldClickPosition = {x:data.x,y:data.y};
+                        control.grapple.tmpdata.oldUnitsPositions = [];
+                        control.grapple.tmpdata.oldUnitsSelectionArea = [];
+                        for(var a = 0; a < control.selection.selectedUnits.length; a++){
+                            control.grapple.tmpdata.oldUnitsPositions.push( {x:control.selection.selectedUnits[a].x, y:control.selection.selectedUnits[a].y, angle:control.selection.selectedUnits[a].angle} );
+                            control.grapple.tmpdata.oldUnitsSelectionArea.push( Object.assign({},control.selection.selectedUnits[a].selectionArea) );
+                        }
+        
+                    //perform the rotation for all selected units
+                        workspace.system.mouse.mouseInteractionHandler(
+                            function(event){
+        
+                                for(var a = 0; a < control.selection.selectedUnits.length; a++){
+                                    var unit = control.selection.selectedUnits[a];
+        
+                                    //calculate new angle
+                                        var rotationalMux = 1;
+                                        var oldClickPosition = control.grapple.tmpdata.oldClickPosition;
+                                        var newClickPosition = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                        var oldUnitAngle = control.grapple.tmpdata.oldUnitsPositions[a].angle;
+                                        var newUnitAngle = oldUnitAngle + ((newClickPosition.y - oldClickPosition.y) / 100 ) * rotationalMux;
+        
+                                    //rotate unit
+                                        unit.parameter.angle(newUnitAngle);
+        
+                                    //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
+                                        workspace.control.scene.rectifyUnitPosition(unit);
+        
+                                    //perform all redraws and updates for unit
+                                        if( unit.onrotate ){unit.onrotate();}
+                                        if( unit.io ){
+                                            var connectionTypes = Object.keys( unit.io );
+                                            for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
+                                                var connectionNodes = unit.io[connectionTypes[connectionType]];
+                                                var nodeNames = Object.keys( connectionNodes );
+                                                for(var b = 0; b < nodeNames.length; b++){
+                                                    connectionNodes[nodeNames[b]].draw();
+                                                }
+                                            }
+                                        }
+                                }
+        
+                            },
+                            function(event){},
+                        );
+        
+        
+        
+                    return true;
+                }
+            }
+        );
+        workspace.control.grapple.functionList.onmousedown.push(
+            {
+                requiredKeys:[['alt']],
+                function:function(data){ workspace.control.selection.duplicate(); },
+            }
+        );
+        //unit movement
+        workspace.control.grapple.functionList.onmousedown.push(
+            {
+                requiredKeys:[],
+                function:function(data){
                     var control = workspace.control;
         
                     //collect together information on the click position and the selected unit's positions and section area
@@ -15913,10 +16749,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         );
         
+        //unselection of unit (with shift pressed)
         workspace.control.grapple.functionList.onmouseup.push(
             {
-                'specialKeys':[],
-                'function':function(data){
+                requiredKeys:[],
+                function:function(data){
                     var control = workspace.control;
         
                     //if mouse-up occurs over an unit that is selected
@@ -15988,12 +16825,12 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
 
         
         // -- Only one test per time -- //
-        workspace.control.scene.addUnit(10,10,'audio_duplicator','misc');
-        workspace.control.scene.addUnit(100,10,'audio_duplicator','misc');
-        workspace.control.scene.addUnit(200,10,'audio_duplicator','misc');
-        workspace.control.scene.addUnit(300,10,'audio_duplicator','misc');
+        workspace.control.scene.addUnit(15,50,0,'audio_duplicator','misc');
+        workspace.control.scene.addUnit(100,50,0,'audio_duplicator','misc');
+        workspace.control.scene.addUnit(200,50,1.5,'audio_duplicator','misc');
+        workspace.control.scene.addUnit(300,50,0,'audio_duplicator','misc');
         workspace.control.scene.removeUnit( workspace.control.scene.getUnitByName(1) );
-        workspace.control.scene.addUnit(10,100,'basicSynthesizer','synthesizers');
+        workspace.control.scene.addUnit(10,150,0,'basicSynthesizer','synthesizers');
         
         
         workspace.system.pane.mm.getChildByName('2').io.audio.output_1.connectTo( workspace.system.pane.mm.getChildByName('0').io.audio.input );
@@ -16005,6 +16842,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         // workspace.control.selection.paste({x:500,y:0});
         
         workspace.control.gui.showMenubar();
+        
+        // workspace.control.viewport.scale(11.6);
+        // workspace.control.viewport.position(-50, 15);
+        
+        // workspace.control.scene.save();
 
 
     }

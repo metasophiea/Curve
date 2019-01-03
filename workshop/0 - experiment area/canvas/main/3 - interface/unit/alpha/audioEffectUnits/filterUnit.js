@@ -1,4 +1,4 @@
-this.filterUnit = function(x,y){
+this.filterUnit = function(x,y,a){
     var state = {
         freqRange:{ low: 0.1, high: 20000, },
         graphDetail: 3,
@@ -25,7 +25,7 @@ this.filterUnit = function(x,y){
         name: 'filterUnit',
         category: 'audioEffectUnits',
         collection: 'alpha',
-        x: x, y: y,
+        x:x, y:y, a:a,
         space:[ {x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70} ],
         // spaceOutline:true,
         elements:[

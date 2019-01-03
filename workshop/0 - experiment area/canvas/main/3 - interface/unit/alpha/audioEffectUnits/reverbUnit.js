@@ -79,14 +79,14 @@ this.reverbUnit = function(x,y){
     //import/export
         object.importData = function(data){
             state.reverbTypeSelected = data.selectedType;
-            design.dial_continuous.wetdry.set(data.wetdry);
-            design.dial_continuous.outGain.set(data.outGain);
+            object.elements.dial_continuous.wetdry_dial.set(data.wetdry);
+            object.elements.dial_continuous.outGain_dial.set(data.outGain);
         };
         object.exportData = function(){
             return {
                 selectedType: state.reverbTypeSelected,
-                wetdry: object.elements.dial_continuous.wetdry.get(),
-                outGain: object.elements.dial_continuous.outGain.get(),
+                wetdry: object.elements.dial_continuous.wetdry_dial.get(),
+                outGain: object.elements.dial_continuous.outGain_dial.get(),
             };
         };
 
@@ -124,8 +124,8 @@ this.reverbUnit = function(x,y){
 
     //interface
         object.i = {
-            gain:function(a){object.elements.dial_continuous.outGain.set(a);},
-            wetdry:function(a){object.elements.dial_continuous.wetdry.set(a);},
+            gain:function(a){object.elements.dial_continuous.outGain_dial.set(a);},
+            wetdry:function(a){object.elements.dial_continuous.wetdry_dial.set(a);},
         };
 
     //setup

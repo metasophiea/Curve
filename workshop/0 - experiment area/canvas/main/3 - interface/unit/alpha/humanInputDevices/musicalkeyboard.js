@@ -1,4 +1,4 @@
-this.musicalKeyboard = function(x,y,debug=false){
+this.musicalKeyboard = function(x,y,a){
     var state = {
         velocity:0.5,
     };
@@ -30,7 +30,7 @@ this.musicalKeyboard = function(x,y,debug=false){
         name: 'musicalKeyboard',
         category:'humanInputDevices',
         collection: 'alpha',
-        x: x, y: y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}],
         // spaceOutline:true,
         elements:[

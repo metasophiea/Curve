@@ -1,4 +1,4 @@
-this.audioSink = function(x,y){
+this.audioSink = function(x,y,a){
     var style = {
         background:{fill:'rgba(200,200,200,1)'},
         level:{
@@ -12,7 +12,7 @@ this.audioSink = function(x,y){
         name:'audioSink',
         category:'humanOutputDevices',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}],
         // spaceOutline: true,
         elements:[

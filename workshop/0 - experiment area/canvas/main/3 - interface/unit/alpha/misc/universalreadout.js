@@ -1,4 +1,4 @@
-this.universalreadout = function(x,y,debug=false){
+this.universalreadout = function(x,y,a){
     var style = {
         background:{fill:'rgba(200,200,200,1)'},
         text:{fill:'rgba(0,0,0,1)', size:0.75, font:'Courier New'},
@@ -7,7 +7,7 @@ this.universalreadout = function(x,y,debug=false){
         name: 'universalreadout',
         category:'misc',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[
             {x:-5,y:-5}, 
             {x:10,y:-10}, 

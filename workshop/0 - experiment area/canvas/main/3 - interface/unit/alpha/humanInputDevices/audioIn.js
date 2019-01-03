@@ -1,4 +1,4 @@
-this.audioIn = function(x,y,setupConnect=true){
+this.audioIn = function(x,y,a,setupConnect=true){
     var attributes = {
         deviceList:[],
         currentSelection: 0
@@ -25,7 +25,7 @@ this.audioIn = function(x,y,setupConnect=true){
         name:'audioIn',
         category:'humanInputDevices',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[
             {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
             {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}

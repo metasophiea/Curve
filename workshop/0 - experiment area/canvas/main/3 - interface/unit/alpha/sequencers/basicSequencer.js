@@ -1,4 +1,4 @@
-this.basicSequencer = function(x,y,debug=false){
+this.basicSequencer = function(x,y,a){
     var vals = {
         sequencer:{
             width:64, height:10,
@@ -43,7 +43,7 @@ this.basicSequencer = function(x,y,debug=false){
         name: 'basicSequencer',
         category:'sequencers',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
         // spaceOutline:true,
         elements:[

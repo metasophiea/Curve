@@ -24,10 +24,11 @@ workspace.control.grapple = {
 };
 
 
+//deselection of previous unit (if shift is not pressed)
 workspace.control.grapple.functionList.onmousedown.push(
     {
-        'specialKeys':[],
-        'function':function(data){
+        requiredKeys:[],
+        function:function(data){
             var control = workspace.control;
 
             // if mousedown occurs over an unit that isn't selected
@@ -41,10 +42,77 @@ workspace.control.grapple.functionList.onmousedown.push(
         },
     }
 );
+//unit rotation
 workspace.control.grapple.functionList.onmousedown.push(
     {
-        'specialKeys':[],
-        'function':function(data){
+        requiredKeys:[['shift','alt']],
+        function:function(data){
+            var control = workspace.control;
+            
+            //collect together information on the click position and the selected unit's positions and section area
+                control.grapple.tmpdata.oldClickPosition = {x:data.x,y:data.y};
+                control.grapple.tmpdata.oldUnitsPositions = [];
+                control.grapple.tmpdata.oldUnitsSelectionArea = [];
+                for(var a = 0; a < control.selection.selectedUnits.length; a++){
+                    control.grapple.tmpdata.oldUnitsPositions.push( {x:control.selection.selectedUnits[a].x, y:control.selection.selectedUnits[a].y, angle:control.selection.selectedUnits[a].angle} );
+                    control.grapple.tmpdata.oldUnitsSelectionArea.push( Object.assign({},control.selection.selectedUnits[a].selectionArea) );
+                }
+
+            //perform the rotation for all selected units
+                workspace.system.mouse.mouseInteractionHandler(
+                    function(event){
+
+                        for(var a = 0; a < control.selection.selectedUnits.length; a++){
+                            var unit = control.selection.selectedUnits[a];
+
+                            //calculate new angle
+                                var rotationalMux = 1;
+                                var oldClickPosition = control.grapple.tmpdata.oldClickPosition;
+                                var newClickPosition = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                var oldUnitAngle = control.grapple.tmpdata.oldUnitsPositions[a].angle;
+                                var newUnitAngle = oldUnitAngle + ((newClickPosition.y - oldClickPosition.y) / 100 ) * rotationalMux;
+
+                            //rotate unit
+                                unit.parameter.angle(newUnitAngle);
+
+                            //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
+                                workspace.control.scene.rectifyUnitPosition(unit);
+
+                            //perform all redraws and updates for unit
+                                if( unit.onrotate ){unit.onrotate();}
+                                if( unit.io ){
+                                    var connectionTypes = Object.keys( unit.io );
+                                    for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
+                                        var connectionNodes = unit.io[connectionTypes[connectionType]];
+                                        var nodeNames = Object.keys( connectionNodes );
+                                        for(var b = 0; b < nodeNames.length; b++){
+                                            connectionNodes[nodeNames[b]].draw();
+                                        }
+                                    }
+                                }
+                        }
+
+                    },
+                    function(event){},
+                );
+
+
+
+            return true;
+        }
+    }
+);
+workspace.control.grapple.functionList.onmousedown.push(
+    {
+        requiredKeys:[['alt']],
+        function:function(data){ workspace.control.selection.duplicate(); },
+    }
+);
+//unit movement
+workspace.control.grapple.functionList.onmousedown.push(
+    {
+        requiredKeys:[],
+        function:function(data){
             var control = workspace.control;
 
             //collect together information on the click position and the selected unit's positions and section area
@@ -100,10 +168,11 @@ workspace.control.grapple.functionList.onmousedown.push(
     }
 );
 
+//unselection of unit (with shift pressed)
 workspace.control.grapple.functionList.onmouseup.push(
     {
-        'specialKeys':[],
-        'function':function(data){
+        requiredKeys:[],
+        function:function(data){
             var control = workspace.control;
 
             //if mouse-up occurs over an unit that is selected

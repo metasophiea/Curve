@@ -147,7 +147,7 @@ this.viewport = new function(){
     };
     this.scale = function(s){
         if(s == undefined){return state.scale;}
-        state.scale = s;
+        state.scale = s == 0 ? window.devicePixelRatio : s;
         calculateViewportExtremities();
     };
     this.angle = function(a){

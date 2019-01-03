@@ -1,4 +1,4 @@
-this.audioScope = function(x,y){
+this.audioScope = function(x,y,a){
     var attributes = {
         framerateLimits: {min:1, max:30}
     };
@@ -21,7 +21,7 @@ this.audioScope = function(x,y){
         name:'audioScope',
         category:'humanOutputDevices',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
         // spaceOutline: true,
         elements:[

@@ -219,6 +219,12 @@ this.button_rect = function(
             this.state.selected = bool; activateGraphicalState();
             if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
         };
+        object.forceMouseLeave = function(){
+            object.state.hovering = false; 
+            object.release('forced'); 
+            activateGraphicalState(); 
+            if(object.onleave){object.onleave('forced');}
+        };
 
 
 

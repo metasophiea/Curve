@@ -18,6 +18,12 @@
         else if(event.code == 'AltLeft' || event.code == 'AltRight'){     pressedKeys.alt = press;     }
         else if(event.code == 'MetaLeft' || event.code == 'MetaRight'){   pressedKeys.meta = press;    }
         else if(event.code == 'ShiftLeft' || event.code == 'ShiftRight'){ pressedKeys.shift = press;   }
+
+        //adjustment for mac keyboards
+            if( window.navigator.platform.indexOf('Mac') != -1 ){
+                pressedKeys.option = pressedKeys.alt;
+                pressedKeys.command = pressedKeys.meta;
+            }
     }
 
 
@@ -29,7 +35,7 @@ workspace.core.callback.onkeydown = function(x,y,event,shape){
     
     //perform action
         if(activateShapeFunctions('onkeydown',x,y,event,shape)){return;}
-        workspace.library.structure.functionListRunner(workspace.system.keyboard.functionList.onkeydown)(event,{x:x,y:y});
+        workspace.library.structure.functionListRunner(workspace.system.keyboard.functionList.onkeydown)({event:event,x:x,y:y});
 };
 workspace.core.callback.onkeyup = function(x,y,event,shape){
     //if key isn't pressed, don't release it
@@ -39,7 +45,7 @@ workspace.core.callback.onkeyup = function(x,y,event,shape){
     
     //perform action
         if(activateShapeFunctions('onkeyup',x,y,event,shape)){return;}
-        workspace.library.structure.functionListRunner(workspace.system.keyboard.functionList.onkeyup)(event,{x:x,y:y});
+        workspace.library.structure.functionListRunner(workspace.system.keyboard.functionList.onkeyup)({event:event,x:x,y:y});
 };
 
 this.releaseAll = function(){
@@ -47,8 +53,8 @@ this.releaseAll = function(){
         this.releaseKey(this.pressedKeys[a]);
     }
 };
-this.releaseKey = function(keyCode){
-    workspace.onkeyup( new KeyboardEvent('keyup',{'key':keyCode}) );
+this.releaseKey = function(code){
+    workspace.onkeyup( new KeyboardEvent('keyup',{code:code}) );
 }
 
 this.pressedKeys = {
@@ -58,15 +64,5 @@ this.pressedKeys = {
 };
 
 this.functionList = {};
-this.functionList.onkeydown = [
-    {
-        'specialKeys':[],
-        'function':function(event,data){}
-    }
-];
-this.functionList.onkeyup = [
-    {
-        'specialKeys':[],
-        'function':function(event,data){}
-    }
-];
+this.functionList.onkeydown = [];
+this.functionList.onkeyup = [];

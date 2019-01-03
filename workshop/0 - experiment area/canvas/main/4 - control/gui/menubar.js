@@ -69,6 +69,9 @@ this.menubar = function(x,y){
                                 default: height += that.menubar.dropdowns[a].listItemHeight; break;
                             }
                         }
+                        if(height > workspace.control.viewport.height()){
+                            height = workspace.control.viewport.height();
+                        }
 
                     //produce dropdown
                         vars.activedropdown = workspace.interface.part.alpha.builder( 'list', 'dropdown', {
@@ -102,6 +105,13 @@ this.menubar = function(x,y){
                 accWidth += this.menubar.dropdowns[a].width;
             }
 
+    //control
+        object.closeAllDropdowns = function(){
+            if(vars.activedropdown != undefined){
+                vars.activedropdown.onrelease();
+            }
+        };
+
     //refresh callback
         object.refresh = function(){
             bar.parameter.width( workspace.control.viewport.width() );
@@ -126,8 +136,8 @@ this.menubar.dropdowns = [
         breakHeight: 1,
         spaceHeight: 2,
         itemList:[
-            {text_left:'New Scene', function:function(){ if(confirm("This will clear the current scene! Are you sure?")){control.scene.new();} } },
-            {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ control.scene.load(); } },
+            {text_left:'New Scene', function:function(){ control.scene.new(true); } },
+            {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ control.scene.load(undefined,undefined,true); } },
             {text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ control.scene.save('project.crv'); } },
         ]
     },
@@ -166,7 +176,7 @@ this.menubar.dropdowns = [
                         text_left: workspace.interface.unit.alpha[category][model].metadata.name,
                         function:function(model,category){return function(){
                             var p = workspace.core.viewport.windowPoint2workspacePoint(30,30);
-                            workspace.control.scene.addUnit(p.x,p.y,model,category,'alpha');
+                            workspace.control.scene.addUnit(p.x,p.y,0,model,category,'alpha');
                         }}(model,category),
                     });
                 }

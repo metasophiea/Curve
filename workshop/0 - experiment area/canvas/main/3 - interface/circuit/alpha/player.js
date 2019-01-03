@@ -39,10 +39,10 @@ this.player = function(context){
 
     //internal functions
         function playheadCompute(){
-            //this code is used to update the playhead position aswel as to calculate when the loop end will occur, 
+            //this code is used to update the playhead position as well as to calculate when the loop end will occur, 
             //and thus when the playhead should jump to the start of the loop. The actual looping of the audio is 
             //done by the system, so this process is done solely to update the playhead position data.
-            //  Using the playhead's current postiion and paly rate; the length of time before the playhead is 
+            //  Using the playhead's current position and play rate; the length of time before the playhead is 
             //scheduled to reach the end bound of the loop is calculated and given to a timeout. When this timeout 
             //occurs; the playhead will jump to the start bound and the process is run again to calculate the new 
             //length of time before the playhead reaches the end bound.
@@ -92,8 +92,19 @@ this.player = function(context){
                     state.itself.start();
                 });
         }
-
+    
     //controls
+        this.unloadRaw = function(){
+            return flow.track;
+        };
+        this.loadRaw = function(data,callback){
+            if(Object.keys(data).length === 0){return;}
+            state.itself.stop();
+            flow.track = data;
+            state.fileLoaded = true;
+            state.playhead.position = 0;
+            callback(data);
+        };
         this.load = function(type,callback,url=''){
             state.fileLoaded = false;
             workspace.library.audio.loadAudioFile(

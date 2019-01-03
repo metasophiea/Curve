@@ -1,6 +1,4 @@
-this.multibandFilter = function(
-    x, y, angle,
-){
+this.multibandFilter = function(x,y,a){
     var vars = {
         allowUpdate:false,
         freqRange:{ low: 0.1, high: 20000 },
@@ -73,7 +71,7 @@ this.multibandFilter = function(
         name: 'multibandFilter',
         category: 'audioEffectUnits',
         collection: 'alpha',
-        x: x, y: y,
+        x:x, y:y, a:a,
         space:[
             { x:0,        y:10         }, { x:10,       y:0          },
             { x:width-10, y:0          }, { x:width,    y:10         },

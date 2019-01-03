@@ -11,3 +11,6 @@ workspace.library.audio = new function(){
 workspace.library.misc = new function(){
     {{include:misc.js}}
 };
+workspace.library.thirdparty = new function(){
+    {{include:thirdparty.js}}
+};

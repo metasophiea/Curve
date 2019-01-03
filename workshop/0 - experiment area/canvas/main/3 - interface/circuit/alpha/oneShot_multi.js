@@ -35,7 +35,7 @@ this.oneShot_multi = function(context){
                 switch(channel){
                     case 'r': return flow.rightOut.node; break;
                     case 'l': return flow.leftOut.node; break;
-                    default: console.error('"part.circuit.alpha.oneShot_multi2.audioOut" unknown channel "'+channel+'"'); break;
+                    default: console.error('"part.circuit.alpha.oneShot_multi.audioOut" unknown channel "'+channel+'"'); break;
                 }
             };
             this.out_left  = function(){return this.audioOut('l');}

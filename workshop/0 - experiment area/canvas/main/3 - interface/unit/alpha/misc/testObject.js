@@ -1,9 +1,9 @@
-this.testObject = function(x,y){
+this.testObject = function(x,y,a){
     var design = {
         name: 'testObject',
         category:'misc',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space: [
             {x:-5,y:-5}, 
             {x:65,y:-5}, 

@@ -1,4 +1,4 @@
-this.pulseGenerator = function(x,y,debug=false){
+this.pulseGenerator = function(x,y,a){
     var maxTempo = 240;
 
     var style = {
@@ -15,7 +15,7 @@ this.pulseGenerator = function(x,y,debug=false){
         name: 'pulseGenerator',
         category:'misc',
         collection: 'alpha',
-        x: x, y: y,
+        x:x, y:y, a:a,
         space:[
             {x:0,y:10},{x:10,y:0},
             {x:100,y:0},{x:115,y:10},

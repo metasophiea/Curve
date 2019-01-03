@@ -231,6 +231,9 @@ this.list = function(
         cover.onwheel = function(x,y,event){
             var move = event.deltaY/100;
             object.position( object.position() + move/10 );
+            for(var a = 0; a < itemArray.length; a++){
+                itemArray[a].forceMouseLeave();
+            }
         };
     
     //controls

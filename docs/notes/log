@@ -1,4 +1,44 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-01-03
+  - demo location has been fixed
+  - canvas experiment
+    - fixed player unit's import of audio data
+
+2019-01-02
+  - canvas experiment
+    - added code to the 'system' to account for mac keyboards. Now, when the 
+      "command" key is pressed (which the browser interprets as "meta") and if
+      the program is being run on a mac, a new pressedKey value of "command"
+      will be added. Same for "option"
+    - updated core.viewport.scale, so that if you set it to zero, it sets to the
+      default scale instead
+    - striped documenting/printing of units code out of copy/paste and into their
+      own functions under control.scene.
+    - added scene export and import methods
+    - added file load/save functionality
+    - updated all alpha units to accept angle creation arguments
+
+  issues:
+  - the 'player' unit, doesn't seem to be exporting/importing audio data
+    correctly. One should check the other file players too
+  - saving units with audio data is slow
+
+
+2019-01-01
+  - canvas experiment
+    - fixed problem in connection node rotation
+    - added rudimentary unit rotation (shift and alt)
+    - added 'forceMouseLeave' to button_rect, so now the list part doesn't have
+      that left-over hovering when you scroll around
+    - menubar dropdowns now close when there's a click in the main work area
+    - added alt-click-drag to duplicate selection
+    - upgraded functionListRunner to allow for the concept of 'or' so now, one
+      can select different collections of required keys (previously "special
+      keys") that are to be considered valid. A good example in deleting units,
+      which can be done with the delete key or the backspace key
+    - added keyboard hot keys for cut, copy, paste, duplicate and delete
+
+  
 2018-12-28
   - canvas experiment
     - fixed up unit copy/paste code (looking good now)

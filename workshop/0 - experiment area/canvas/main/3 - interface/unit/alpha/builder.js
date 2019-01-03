@@ -20,7 +20,7 @@ this.builder = function(creatorMethod,design){
     if(!creatorMethod){console.error("workspace unit builder:: creatorMethod missing");return;}
 
     //main group
-        var unit = interface.part.alpha.builder('group',design.name,{x:design.x, y:design.y});
+        var unit = interface.part.alpha.builder('group',design.name,{x:design.x, y:design.y, angle:design.a});
         unit.model = design.name;
         unit.category = design.category;
         unit.collection = design.collection;
@@ -88,8 +88,6 @@ this.builder = function(creatorMethod,design){
             //create invisible backing shape (with callbacks)
                 var invisibleShape = interface.part.alpha.builder( 'polygon', spaceName, {points:design.space, style:{ fill:'rgba(0,0,0,0)' } } );
                 unit.prepend(invisibleShape);
-                invisibleShape.onkeydown = function(x,y,event){ if(unit.onkeydown != undefined){ unit.onkeydown(x,y,event); } };
-                invisibleShape.onkeyup = function(x,y,event){ if(unit.onkeyup != undefined){ unit.onkeyup(x,y,event); } };
 
         //if requested, add an outline shape
             if( design.spaceOutline ){
@@ -100,6 +98,7 @@ this.builder = function(creatorMethod,design){
         unit._parameter = {};
         unit._parameter.x = unit.parameter.x;
         unit._parameter.y = unit.parameter.y;
+        unit._parameter.angle = unit.parameter.angle;
         unit.parameter.x = function(newX){
             if( unit._parameter.x(newX) != undefined ){ return unit.x; }
             design.x = newX;
@@ -108,6 +107,11 @@ this.builder = function(creatorMethod,design){
         unit.parameter.y = function(newY){
             if( unit._parameter.y(newY) != undefined ){ return unit.y; }
             design.y = newY;
+            generatePersonalSpace();
+        };
+        unit.parameter.angle = function(newAngle){
+            if( unit._parameter.angle(newAngle) != undefined ){ return unit.angle; }
+            design.angle = newAngle;
             generatePersonalSpace();
         };
 

@@ -1,4 +1,4 @@
-this.recorder = function(x,y,debug=false){
+this.recorder = function(x,y,a){
     var style = {
         background:{fill:'rgba(200,200,200,1)'},
         h1: {fill:'rgba(100,100,100,1)', font:'6pt Bookman'},
@@ -14,7 +14,7 @@ this.recorder = function(x,y,debug=false){
         name: 'recorder',
         category: 'audioFile',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}],
         // spaceOutline:true,
         elements:[

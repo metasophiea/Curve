@@ -1,4 +1,4 @@
-this.player = function(x,y,debug=false){
+this.player = function(x,y,a){
     var style = {
         background:{fill:'rgba(200,200,200,1)'},
         h1: {fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
@@ -25,7 +25,7 @@ this.player = function(x,y,debug=false){
         name: 'player',
         category: 'audioFile',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}],
         // spaceOutline:true,
         elements:[
@@ -103,6 +103,18 @@ this.player = function(x,y,debug=false){
                     object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(object.player.progress(),false);
             }
             setInterval(refresh,1000/30);
+    
+    //import/export
+        object.exportData = function(){
+            var data = {
+                track: object.player.unloadRaw(),
+            };
+
+            return data;
+        };
+        object.importData = function(data){
+            object.i.loadRaw(data.track);
+        };
 
     //wiring
         object.elements.dial_continuous.rate_dial.onchange = function(data){ object.player.rate( 2*data ); };
@@ -117,6 +129,9 @@ this.player = function(x,y,debug=false){
 
     //interface
         object.i = {
+            loadRaw:function(data){
+                object.player.loadRaw(data,loadProcess);
+            },
             loadByFile:function(){
                 object.player.load('file',loadProcess);
             },

@@ -1,4 +1,4 @@
-this.launchpad = function(x,y,debug=false){
+this.launchpad = function(x,y,a){
     var values = {
         xCount:8, yCount:8,
     };
@@ -26,7 +26,7 @@ this.launchpad = function(x,y,debug=false){
         name: 'launchpad',
         category:'sequencers',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}],
         // spaceOutline:true,
         elements:[

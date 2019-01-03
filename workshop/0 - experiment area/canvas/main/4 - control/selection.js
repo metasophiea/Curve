@@ -1,17 +1,6 @@
 this.selectedUnits = [];
 this.lastSelectedUnits = null;
 this.clipboard = [];
-    // pane                 -   the pane the object came from
-    // position             -   the X and Y of the original object
-    // details              -   data on the unit's type
-    //      collection
-    //      category
-    //      model
-    // data                 -   the exported data from the original object
-    // connections          -   an array of where to connect what
-    //      typeAndNameOfSourcePort
-    //      indexOfDestinationUnit
-    //      typeAndNameOfDestinationPort
 
 this.selectUnit = function(unit,shiftToFront=true){
     // console.log('selecting unit',unit);
@@ -79,59 +68,7 @@ this.cut = function(){
     this.delete();
 };
 this.copy = function(){
-    //firstly, empty the clipboard
-        this.clipboard = [];
-
-    //for all selected units; collect their data and add it to the clipboard
-        for( var a = 0; a < this.selectedUnits.length; a++){
-            var newEntry = {};
-
-            //pane
-                newEntry.pane = workspace.system.pane.getMiddlegroundPane(this.selectedUnits[a]).getAddress();
-
-            //position
-                newEntry.position = {x:this.selectedUnits[a].parameter.x(), y:this.selectedUnits[a].parameter.y()};
-
-            //unitDetails
-                newEntry.details = {
-                    collection: this.selectedUnits[a].collection,
-                    category: this.selectedUnits[a].category,
-                    model: this.selectedUnits[a].model,
-                };
-
-            //data
-                newEntry.data = this.selectedUnits[a].exportData ? this.selectedUnits[a].exportData() : null;
-
-            //connections
-                newEntry.connections = [];
-                for(var connectionType in this.selectedUnits[a].io){
-                    for(var connection in this.selectedUnits[a].io[connectionType]){
-                        var foreignNode = this.selectedUnits[a].io[connectionType][connection].getForeignNode();
-                        if(foreignNode == undefined){continue;}
-                
-                        var newConnectionEntry = {};
-
-                        //typeAndNameOfSourcePort
-                            newConnectionEntry.typeAndNameOfSourcePort = { type:connectionType, name:connection };
-
-                        //indexOfDestinationUnit
-                            newConnectionEntry.indexOfDestinationUnit = this.selectedUnits.indexOf(foreignNode.parent);
-
-                        //typeAndNameOfDestinationPort
-                            for(var foreignConnection in foreignNode.parent.io[connectionType]){
-                                var con = foreignNode.parent.io[connectionType][foreignConnection];
-                                if( con.getForeignNode() == undefined ){ continue; }
-                                if( con.getForeignNode().name == connection ){
-                                    newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignConnection };
-                                }
-                            }
-
-                        newEntry.connections.push(newConnectionEntry);
-                    }
-                }
-                
-            this.clipboard.push(newEntry);
-        }
+    this.clipboard = workspace.control.scene.documentUnits(this.selectedUnits);
 };
 this.paste = function(position){
     //if clipboard is empty, don't bother
@@ -169,29 +106,8 @@ this.paste = function(position){
         }
 
     //unit printing
-        for(var a = 0; a < this.clipboard.length; a++){
-            var item = this.clipboard[a];
+        workspace.control.scene.printUnits( this.clipboard );
 
-            //create the object with its new position adding it to the pane
-                var unit = control.scene.addUnit(item.position.x, item.position.y, item.details.model, item.details.category, item.details.collection);
-
-            //import data and select unit
-                if(unit.importData){unit.importData(item.data);}
-                this.selectUnit(unit);
-
-            //go through its connections, and attempt to connect them to everything they should be connected to
-            // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
-                for(var b = 0; b < item.connections.length; b++){
-                    var connection = item.connections[b];
-
-                    var destinationUnit = this.selectedUnits[connection.indexOfDestinationUnit];
-                    if(destinationUnit == undefined){continue;}
-
-                    var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
-                    var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
-                    sourceNode.connectTo(destinationNode);
-                }
-        }
 };
 this.duplicate = function(){
     this.copy();

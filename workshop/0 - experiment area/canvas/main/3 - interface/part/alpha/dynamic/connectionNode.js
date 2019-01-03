@@ -96,9 +96,9 @@ this.connectionNode = function(
         };
         object.getCablePoint = function(){
             var offset = this.getOffset();
-            var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.a); 
-            point.x += offset.x + width/2;
-            point.y += offset.y + height/2;
+            var point = workspace.library.math.cartesianAngleAdjust(x+width/2,y+height/2,offset.a);
+            point.x += offset.x;
+            point.y += offset.y;
             return point;
         };
         object.draw = function(){

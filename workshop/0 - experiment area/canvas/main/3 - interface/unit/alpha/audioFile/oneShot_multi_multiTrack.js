@@ -1,4 +1,4 @@
-this.oneShot_multi_multiTrack = function(x,y,debug=false){
+this.oneShot_multi_multiTrack = function(x,y,a){
     var trackCount = 8;
 
     var style = {
@@ -28,7 +28,7 @@ this.oneShot_multi_multiTrack = function(x,y,debug=false){
         name: 'oneShot_multi_multiTrack',
         category: 'audioFile',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}],
         // spaceOutline:true,
         elements:[

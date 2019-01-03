@@ -1,4 +1,4 @@
-this.basicSynthesizer = function(x,y){
+this.basicSynthesizer = function(x,y,a){
     var attributes = {
         detuneLimits: {min:-100, max:100}
     };
@@ -22,7 +22,7 @@ this.basicSynthesizer = function(x,y){
         name:'basicSynthesizer',
         category:'synthesizers',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
         // spaceOutline: true,
         elements:[

@@ -1,4 +1,4 @@
-this.basicMixer = function(x,y){
+this.basicMixer = function(x,y,a){
     var connectionCount = 8;
     var style = {
         background:{fill:'rgba(200,200,200,1)'},
@@ -16,7 +16,7 @@ this.basicMixer = function(x,y){
         name:'basicMixer',
         category: 'misc',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
         // spaceOutline: true,
         elements:[

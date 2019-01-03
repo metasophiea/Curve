@@ -1,4 +1,4 @@
-this.data_duplicator = function(x,y){
+this.data_duplicator = function(x,y,a){
     var style = {
         background:{fill:'rgba(200,200,200,1)'},
         markings:{fill:'rgba(150,150,150,1)'},
@@ -7,7 +7,7 @@ this.data_duplicator = function(x,y){
         name:'data_duplicator',
         category:'misc',
         collection: 'alpha',
-        x:x, y:y,
+        x:x, y:y, a:a,
         space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
         // spaceOutline: true,
         elements:[
