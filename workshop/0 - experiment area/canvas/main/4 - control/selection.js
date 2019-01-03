@@ -79,7 +79,7 @@ this.paste = function(position){
 
     //position manipulation
     //if position is not set to 'duplicate'; calculate new positions for the objects
-        if(position != 'duplicate'){                
+        if(position != 'duplicate'){
             //collect all positions
                 var points = [];
                 this.clipboard.forEach( element => points.push(element.position) );
@@ -89,11 +89,9 @@ this.paste = function(position){
 
             //if no position has been provided at all; calculate a new one from the mouse position
                 if(position == undefined){
-                    var tmp = workspace.core.viewport.mousePosition();
-                    if(tmp.x == undefined || tmp.y == undefined){
+                    position = workspace.core.viewport.mousePosition();
+                    if(position.x == undefined || position.y == undefined){
                         position = workspace.core.viewport.windowPoint2workspacePoint(0, 0);
-                    }else{
-                        position = workspace.core.viewport.windowPoint2workspacePoint(tmp.x, tmp.y);
                     }
                 }
 

@@ -31,9 +31,8 @@
     - system now stops you from leaving the page with a little alert
     - new demo mode (which currently just skips the leave-page alert)
     - new demo scene made
-
-    bugs
-    - pasting a collection of units doesn't feel very relative
+    - fixed problem with pasting units, and their positions being weird (classic
+      case of converting windowPoint to workspacePoint twice)
 
 
 2019-01-02
