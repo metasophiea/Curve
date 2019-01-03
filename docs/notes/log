@@ -44,6 +44,7 @@
         enableUnitSelection
         enableSceneModification
 
+
     future ideas
     - the ability to stop interaction with cables and units, on a global and 
       case-by-case bases
