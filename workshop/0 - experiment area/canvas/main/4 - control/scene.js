@@ -112,6 +112,11 @@ this.export = function(){
 };
 this.import = function(data){ this.printUnits( data ); };
 this.save = function(filename='project',compress=true){
+    //control switch
+        if(!workspace.control.switch.enableSceneSave){return;}
+    
+
+
     //gather some initial data
         var outputData = {
             filename: filename,
@@ -146,6 +151,11 @@ this.save = function(filename='project',compress=true){
         workspace.library.audio.destination.masterGain(1);
 };
 this.load = function(url,callback,askForConfirmation=false){
+    //control switch
+        if(!workspace.control.switch.enableSceneLoad){return;}
+
+
+
     if(askForConfirmation){
         if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
     }
@@ -210,6 +220,11 @@ this.load = function(url,callback,askForConfirmation=false){
 
 this.generateUnitName = function(){ return IDcounter++; };
 this.addUnit = function(x,y,a,model,category,collection='alpha'){
+    //control switch
+        if(!workspace.control.switch.enableSceneModification){return;}
+
+
+
     //generate new name for unit
         var name = this.generateUnitName();
 
@@ -226,7 +241,12 @@ this.addUnit = function(x,y,a,model,category,collection='alpha'){
 
     return tmp;
 };
-this.removeUnit = function(unit){ pane.remove(unit); };
+this.removeUnit = function(unit){
+    //control switch
+        if(!workspace.control.switch.enableSceneModification){return;}
+        
+        pane.remove(unit);
+};
 
 this.getUnitByName = function(name){ return pane.getChildByName(name); };
 this.getUnitsByType = function(type){ return pane.children.filter( a => a.unitType == type ); };

@@ -6,6 +6,19 @@ workspace.control = new function(){
 
     this.switch = {
         devMode: (new URL(window.location.href)).searchParams.get("dev") != null,
+
+        mouseWheelZoomEnabled: true,
+        mouseGripPanningEnabled: true,
+        mouseGroupSelect: true,
+        enableSceneSave: true,
+        enableSceneLoad: true,
+        enableMenubar: true,
+        enableWindowScrollbarAutomaticRemoval: true,
+        enableUnitSelection: true,
+        enableSceneModification: true,
+
+        // enablCableDisconnectionConnection: true,
+        // enableUnitInterface: true,
     };
 
     this.gui = new function(){
@@ -17,6 +30,12 @@ workspace.control = new function(){
         };
 
         this.showMenubar = function(){
+            //control switch
+                if(!workspace.control.switch.enableMenubar){
+                    this.hideMenubar();
+                    return;
+                }
+
             if(menubar != undefined){return;}
             menubar = control.gui.elements.menubar(0,0);
             pane.append( menubar );
@@ -46,6 +65,16 @@ workspace.control = new function(){
             workspace.core.viewport.refresh();
             control.gui.refresh();
         };
+        this.stopMouseScroll = function(bool){
+            //control switch
+                if(!workspace.control.switch.enableWindowScrollbarAutomaticRemoval){
+                    workspace.core.viewport.stopMouseScroll(false);
+                    return false;
+                }
+
+            return workspace.core.viewport.stopMouseScroll(bool);
+        }
+        this.activeRender = function(bool){ return workspace.core.render.active(bool); };
     };
     this.scene = new function(){
         var pane = workspace.system.pane.mm;
@@ -64,3 +93,5 @@ window.onresize = workspace.control.viewport.refresh;
 if( !workspace.control.switch.devMode ){ window.onbeforeunload = function(){ return "Unsaved work will be lost"; }; }
 
 workspace.control.gui.showMenubar();
+workspace.control.viewport.stopMouseScroll(true);
+workspace.control.viewport.activeRender(true);

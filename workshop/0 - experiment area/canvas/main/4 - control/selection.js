@@ -3,7 +3,8 @@ this.lastSelectedUnits = null;
 this.clipboard = [];
 
 this.selectUnit = function(unit,shiftToFront=true){
-    // console.log('selecting unit',unit);
+    //control switch
+        if(!workspace.control.switch.enableUnitSelection){return;}
 
     //check if object is already selected
         if( this.selectedUnits.indexOf(unit) != -1 ){return;}
@@ -64,13 +65,28 @@ this.deselectEverything = function(){
 };
 
 this.cut = function(){
+    //control switch
+        if(!workspace.control.switch.enableSceneModification){return;}
+
+
+        
     this.copy();
     this.delete();
 };
 this.copy = function(){
+    //control switch
+        if(!workspace.control.switch.enableSceneModification){return;}
+
+
+
     this.clipboard = workspace.control.scene.documentUnits(this.selectedUnits);
 };
 this.paste = function(position){
+    //control switch
+        if(!workspace.control.switch.enableSceneModification){return;}
+
+
+
     //if clipboard is empty, don't bother
         if(this.clipboard.length == 0){return;}
 
@@ -108,11 +124,21 @@ this.paste = function(position){
 
 };
 this.duplicate = function(){
+    //control switch
+        if(!workspace.control.switch.enableSceneModification){return;}
+
+
+
     this.copy();
     this.paste('duplicate');
     this.clipboard = [];
 };
 this.delete = function(){
+    //control switch
+        if(!workspace.control.switch.enableSceneModification){return;}
+
+
+
     while(this.selectedUnits.length > 0){
         var unit = this.selectedUnits[0];
         //delete object

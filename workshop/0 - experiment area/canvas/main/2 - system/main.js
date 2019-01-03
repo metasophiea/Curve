@@ -7,6 +7,3 @@ workspace.system.keyboard = new function(){
 };
 
 {{include:paneSetup.js}}
-
-workspace.core.viewport.stopMouseScroll(true);
-workspace.core.render.active(true);

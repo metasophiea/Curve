@@ -7,5 +7,7 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         {{include:2 - system/main.js}}
         {{include:3 - interface/main.js}}
         {{include:4 - control/main.js}}
+
+        {{include:test/main.js}}
     }
 }

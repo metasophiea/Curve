@@ -13,6 +13,11 @@ workspace.system.mouse.functionList.onmousedown.push(
     {
         requiredKeys:[['shift']],
         function:function(data){
+            //control switch
+                if(!workspace.control.switch.mouseGroupSelect){return;}
+
+
+
             //creat selection graphic and add it to the foregroud
                 workspace.system.mouse.tmp.selectionRectangle = workspace.interface.part.alpha.builder( 
                     'rectangle', 'selectionRectangle', 
@@ -52,6 +57,11 @@ workspace.system.mouse.functionList.onmousedown.push(
     {
         requiredKeys:[],
         function:function(data){
+            //control switch
+                if(!workspace.control.switch.mouseGripPanningEnabled){return;}
+
+
+
             workspace.control.selection.deselectEverything();
 
             //save the viewport position and click position
@@ -81,6 +91,11 @@ workspace.system.mouse.functionList.onwheel.push(
     {
         requiredKeys:[],
         function:function(data){
+            //control switch
+                if(!workspace.control.switch.mouseWheelZoomEnabled){return;}
+
+
+
             var scaleLimits = {'max':20, 'min':0.1};
 
             //perform scale and associated pan

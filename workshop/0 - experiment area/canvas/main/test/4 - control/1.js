@@ -21,10 +21,3 @@
 
 
 
-
-// var basicMixer = workspace.control.scene.addUnit(15,50,0,'basicMixer','misc');
-// var basicSynthesizer_1 = workspace.control.scene.addUnit(175,50,0,'basicSynthesizer','synthesizers');
-// var basicSynthesizer_2 = workspace.control.scene.addUnit(175,200,0,'basicSynthesizer','synthesizers');
-// basicSynthesizer_1.io.audio.audioOut.connectTo( basicMixer.io.audio.input_0 );
-// basicSynthesizer_2.io.audio.audioOut.connectTo( basicMixer.io.audio.input_1 );
-// workspace.control.scene.save();
