@@ -1517,11 +1517,13 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                             
                             //adapt values
-                                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
-                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                                if(!static){
+                                    shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
+                                    shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                    shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                    shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                    shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                                }
                     
                             //clipping
                                 if(isClipper){
@@ -1711,12 +1713,14 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                             
                             //adapt values
-                                shapeValue.location = adapter.workspacePoint2windowPoint(shapeValue.location.x,shapeValue.location.y);
-                                shapeValue.radius = adapter.length(shapeValue.radius);
-                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                                if(!static){
+                                    shapeValue.location = adapter.workspacePoint2windowPoint(shapeValue.location.x,shapeValue.location.y);
+                                    shapeValue.radius = adapter.length(shapeValue.radius);
+                                    shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                    shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                    shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                    shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                                }
                     
                             //clipping
                                 if(isClipper){
@@ -1906,9 +1910,11 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                             
                             //adapt values
-                                shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-                                shapeValue.width = adapter.length(shapeValue.width);
-                                shapeValue.height = adapter.length(shapeValue.height);
+                                if(!static){
+                                    shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
+                                    shapeValue.width = adapter.length(shapeValue.width);
+                                    shapeValue.height = adapter.length(shapeValue.height);
+                                }
                     
                             //post adaptation calculations
                                 shapeValue.location = workspace.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
@@ -2068,13 +2074,15 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                             
                             //adapt values
-                                shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-                                shapeValue.width = adapter.length(shapeValue.width);
-                                shapeValue.height = adapter.length(shapeValue.height);
-                                // shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                // shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                // shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                // shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                                if(!static){
+                                    shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
+                                    shapeValue.width = adapter.length(shapeValue.width);
+                                    shapeValue.height = adapter.length(shapeValue.height);
+                                    // shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                    // shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                    // shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                    // shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                                }
                     
                             //post adaptation calculations
                                 shapeValue.location = workspace.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
@@ -2237,11 +2245,13 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                             
                             //adapt values
-                                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
-                                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                                if(!static){
+                                    shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
+                                    shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                    shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                    shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                    shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+                                }
                     
                             //paint this shape as requested
                                 context.fillStyle = this.style.fill;

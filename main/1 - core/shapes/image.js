@@ -132,13 +132,15 @@ this.image = function(){
             };
         
         //adapt values
-            shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-            shapeValue.width = adapter.length(shapeValue.width);
-            shapeValue.height = adapter.length(shapeValue.height);
-            // shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-            // shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-            // shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-            // shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+            if(!static){
+                shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
+                shapeValue.width = adapter.length(shapeValue.width);
+                shapeValue.height = adapter.length(shapeValue.height);
+                // shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                // shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                // shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                // shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+            }
 
         //post adaptation calculations
             shapeValue.location = workspace.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);

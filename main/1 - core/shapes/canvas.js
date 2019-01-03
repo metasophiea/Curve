@@ -144,9 +144,11 @@ this.canvas = function(){
             };
         
         //adapt values
-            shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-            shapeValue.width = adapter.length(shapeValue.width);
-            shapeValue.height = adapter.length(shapeValue.height);
+            if(!static){
+                shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
+                shapeValue.width = adapter.length(shapeValue.width);
+                shapeValue.height = adapter.length(shapeValue.height);
+            }
 
         //post adaptation calculations
             shapeValue.location = workspace.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);

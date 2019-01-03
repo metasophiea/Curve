@@ -50,6 +50,10 @@
     - the ability to stop interaction with cables and units, on a global and 
       case-by-case bases
 
+    bugs
+    - it appears that closure is unable to deal with the word "static" as a
+      variable, so, looks like I'm going to have to rename some things in core
+
 
 2019-01-02
   - canvas experiment

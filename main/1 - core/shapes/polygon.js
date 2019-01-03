@@ -116,11 +116,13 @@ this.polygon = function(){
             };
         
         //adapt values
-            shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
-            shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-            shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-            shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-            shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+            if(!static){
+                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
+                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+            }
 
         //clipping
             if(isClipper){

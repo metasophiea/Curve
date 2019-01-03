@@ -138,12 +138,14 @@ this.circle = function(){
             };
         
         //adapt values
-            shapeValue.location = adapter.workspacePoint2windowPoint(shapeValue.location.x,shapeValue.location.y);
-            shapeValue.radius = adapter.length(shapeValue.radius);
-            shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-            shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-            shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-            shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+            if(!static){
+                shapeValue.location = adapter.workspacePoint2windowPoint(shapeValue.location.x,shapeValue.location.y);
+                shapeValue.radius = adapter.length(shapeValue.radius);
+                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
+            }
 
         //clipping
             if(isClipper){
