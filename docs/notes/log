@@ -65,8 +65,8 @@
       will be added. Same for "option"
     - updated core.viewport.scale, so that if you set it to zero, it sets to the
       default scale instead
-    - striped documenting/printing of units code out of copy/paste and into their
-      own functions under control.scene.
+    - striped documenting/printing of units code out of copy/paste and into  
+      their own functions under control.scene.
     - added scene export and import methods
     - added file load/save functionality
     - updated all alpha units to accept angle creation arguments
