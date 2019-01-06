@@ -1,4 +1,16 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-01-06
+  - moved trash into archive
+  - got closure compiler working again, by having heavyComp automatically edit
+    workspace.js to change the offending terms (namly "static" and "interface")
+    (just two sed commands and a temporary file) Still a warning about
+    "Suspicious" though, which I haven't been able to remove
+
+  Compilation Results
+  - workspace.js           1110 Kb  (100%)
+  - workspace.min.js        344 Kb  (31.04%)
+
+
 2019-01-03
   - demo location has been fixed
   - canvas experiment

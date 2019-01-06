@@ -9509,8 +9509,8 @@ for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 width:width/count, height:height,
                                                 value:startValue, resetValue:resetValue,
                                                 style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
-                                                function(value){ object.onchange(this.id,value); },
-                                                function(value){ object.onrelease(this.id,value); },
+                                                onchange:function(value){ object.onchange(this.id,value); },
+                                                onrelease:function(value){ object.onrelease(this.id,value); },
                                             }
                                         );
                                         // temp.dotFrame = true;

@@ -17,8 +17,8 @@ this.slidePanel = function(
                         width:width/count, height:height,
                         value:startValue, resetValue:resetValue,
                         style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
-                        function(value){ object.onchange(this.id,value); },
-                        function(value){ object.onrelease(this.id,value); },
+                        onchange:function(value){ object.onchange(this.id,value); },
+                        onrelease:function(value){ object.onrelease(this.id,value); },
                     }
                 );
                 // temp.dotFrame = true;
