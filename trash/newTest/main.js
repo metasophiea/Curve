@@ -1,1 +1,0 @@
-{{include:main2.js}}
