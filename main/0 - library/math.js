@@ -195,7 +195,7 @@ this.curvePoint = new function(){
         return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
     };
     this.s = function(x=0.5, start=0, end=1, sharpness=8){
-        var temp = workspace.library.math.normalizeStretchArray([
+        var temp = library.math.normalizeStretchArray([
             1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
             1/( 1 + Math.exp(-sharpness*(x-0.5)) ),
             1/( 1 + Math.exp(-sharpness*(1-0.5)) ),
@@ -203,7 +203,7 @@ this.curvePoint = new function(){
         return temp[1] *(end-start)+start;
     };
     this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
-        var temp = workspace.library.math.normalizeStretchArray([
+        var temp = library.math.normalizeStretchArray([
             (Math.exp(sharpness*0)-1)/(Math.E-1),
             (Math.exp(sharpness*x)-1)/(Math.E-1),
             (Math.exp(sharpness*1)-1)/(Math.E-1),
@@ -270,7 +270,7 @@ this.curveGenerator = new function(){
             );
         }
 
-        var outputArray = workspace.library.math.normalizeStretchArray(curve);
+        var outputArray = library.math.normalizeStretchArray(curve);
 
         var mux = end-start;
         for(var a = 0 ; a < outputArray.length; a++){

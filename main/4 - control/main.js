@@ -24,6 +24,7 @@ workspace.control = new function(){
     this.gui = new function(){
         var pane = workspace.system.pane.f;
         var menubar = undefined;
+        var scale = window.devicePixelRatio;
 
         this.refresh = function(){
             if(menubar != undefined){menubar.refresh();}
@@ -37,7 +38,7 @@ workspace.control = new function(){
                 }
 
             if(menubar != undefined){return;}
-            menubar = control.gui.elements.menubar(0,0);
+            menubar = control.gui.elements.menubar(0,0,scale);
             pane.append( menubar );
         };
         this.hideMenubar = function(){
@@ -90,8 +91,3 @@ workspace.control = new function(){
 {{include:grapple.js}}
 
 window.onresize = workspace.control.viewport.refresh; 
-if( !workspace.control.switch.devMode ){ window.onbeforeunload = function(){ return "Unsaved work will be lost"; }; }
-
-workspace.control.gui.showMenubar();
-workspace.control.viewport.stopMouseScroll(true);
-workspace.control.viewport.activeRender(true);

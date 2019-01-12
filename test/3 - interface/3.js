@@ -1,1 +1,2 @@
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.testObject(10,10) );
+workspace.system.pane.mm.append( workspace.interface.unit.test.testUnit(10,10) );
+workspace.core.render.active(true);

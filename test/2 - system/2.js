@@ -35,3 +35,5 @@ var rect = workspace.core.arrangement.createElement('rectangle');
     rect.style.fill = 'rgba(0,0,255,0.3)';
     // rect.dotFrame = true;
     workspace.system.pane.f.append(rect);
+
+workspace.core.render.active(true);

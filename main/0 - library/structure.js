@@ -1,4 +1,4 @@
-this.functionListRunner = function(list){
+this.functionListRunner = function(list,activeKeys){
     //function builder for working with the 'functionList' format
 
     return function(event,data){
@@ -10,7 +10,7 @@ this.functionListRunner = function(list){
                     for(var b = 0; b < list[a].requiredKeys.length; b++){
                         shouldRun = true;
                         for(var c = 0; c < list[a].requiredKeys[b].length; c++){
-                            shouldRun = shouldRun && workspace.system.keyboard.pressedKeys[ list[a].requiredKeys[b][c] ];
+                            shouldRun = shouldRun && activeKeys[ list[a].requiredKeys[b][c] ];
                             if(!shouldRun){break;} //(one is already not a match, so save time and just skip to the next one)
                         }
                         if(shouldRun){ break; } //one of the collections worked, so save time and skip the rest

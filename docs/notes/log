@@ -1,4 +1,81 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-01-11
+  - updated the readme a little
+  - put the test unit back into the interface layer, under a 'test' collection
+  - redid the way testing is done, because it was over complicated. Now there's
+    just one testing program file, and one html file to run it. No frils.
+    The test.js master file in main now only includes the test/main.js file. The
+    test files it includes are incharge in including what layers they need and
+    starting rendering on their own. It's all a bit cleaner.
+
+  future ideas
+  - give parts a method to turn off human interface editability
+  - give units a method to turn off human interface editability for individual
+    or all parts, as well as a method to stop their own movement or copying etc
+    by human interaction
+
+
+2019-01-10
+  - added new layer "5 - curve" which will contain much of what makes the "music
+    application" different from anything else one could make from the layers]
+    below. The main JS file is now called curve.js (and curve.min.js) and also
+    there is workspace.js (and workspace.min.js) which won't have any of the
+    code from this 5th layer
+  - moved the contents of control's menubar to "5 - curve"
+  - moveed all the units into "5 - curve". They're all kinda prticular to what
+    curve is about, so it makes some sense. The original unit folders are still
+    there, they're just empty now.
+  - edited comp.sh and heavyComp.sh alot to reduce their size and amount of
+    copy-pasted code
+  - redid layout a little. Now there's three .js files to choose from; core, 
+    workspace and curve. Each with their own .min.js, and their own .test.js
+    All these files are now in a /js folder too. All the corresponding html
+    files are still in the /docs folder
+      Tests have changed too, they're now named, one for each of the .js files,
+    with each of them setup to access different tests.
+      The index file is just a copy of curve.html.
+
+  bugs
+  - there seems to be an issue with window resizing, when scrollbars are
+    allowed. The function core.viewport.refresh/adjustCanvasSize/dimensionAdjust
+    appears to adjust the size for when the scrollbars are present, but upon the
+    next refresh only remove the horizontal bar's space, leaving an empty space
+    on the right side where the vertical scrollbar used to be. The function has
+    code to stop itself being run when there are no changes in window size.
+    Removing this check allows the system to correct itself. So, the challange
+    becomes how can one detect this issue and allow the function to run.
+
+
+2019-01-09
+  - fixed rendering issue with rectangles and images, and the anchor value (it 
+    was being calculated fine for extremities, but not for the actual render)
+
+  Compilation Results
+  - workspace.js                         1211 Kb  (100%)
+  - workspace.min.js                      340 Kb  (28.07%)
+
+
+2019-01-08
+  - fixed comp script to rename the workspace renaming from "core" (which was
+    interfering with other definitions of core within core) to "coreGraphics"
+  - fixed core.viewport/adjustCanvasSize/dimensionAdjust to add in 'px' when
+    dealing with values that aren't percentages
+  - added another demo to core.html (plus a little URL way of accessing them)
+
+
+2019-01-07
+  - menubar is not scaled correctly on non-hdp screens. Have added scale
+    argument to menubar builder (and to control.gui)
+  - updated heavyComp.sh to work better on different systems
+  - removed "workspace.system.keyboard.pressedKeys" from structure.js (it
+    violated the layered referencing thing. Now the function takes an array of
+    "activeKeys" to perform the same job)
+  - wrapped main code in encapsulation code, so 'workspace' isn't an accessible
+    global anymore
+  - added renaming stage for core.js to comp.sh, to rename 'workspace' to 'core'
+    ..it's kinda pointless as the variable isn't accessible anyway
+
+
 2019-01-06
   - moved trash into archive
   - got closure compiler working again, by having heavyComp automatically edit

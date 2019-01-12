@@ -26,7 +26,7 @@
                 break;
                 case 's':
                     var mux = target - audioParam.value;
-                    var array = workspace.library.math.curveGenerator.s(10);
+                    var array = library.math.curveGenerator.s(10);
                     for(var a = 0; a < array.length; a++){
                         array[a] = audioParam.value + array[a]*mux;
                     }
@@ -49,7 +49,7 @@
                 request.open('GET', url, true);
                 request.responseType = 'arraybuffer';
                 request.onload = function(){
-                    workspace.library.audio.context.decodeAudioData(this.response, function(data){
+                    library.audio.context.decodeAudioData(this.response, function(data){
                         callback({
                             buffer:data,
                             name:(url.split('/')).pop(),
@@ -67,7 +67,7 @@
                     var fileReader = new FileReader();
                     fileReader.readAsArrayBuffer(file);
                     fileReader.onload = function(data){
-                        workspace.library.audio.context.decodeAudioData(data.target.result, function(buffer){
+                        library.audio.context.decodeAudioData(data.target.result, function(buffer){
                             callback({
                                 buffer:buffer,
                                 name:file.name,
@@ -95,7 +95,7 @@
         var outputArray = [];
         for(var a = start; a < end; a+=Math.round(step)){
             outputArray.push( 
-                workspace.library.math.largestValueFound(
+                library.math.largestValueFound(
                     waveform.slice(a, a+Math.round(step))
                 )
             );
@@ -125,7 +125,7 @@
     this.destination.masterGain = function(value){
         if(value == undefined){return this.destination._gain;}
         this._gain = value;
-        workspace.library.audio.changeAudioParam(workspace.library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
+        library.audio.changeAudioParam(library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
     };
 
 

@@ -1,7 +1,7 @@
-this.menubar = function(x,y){
+this.menubar = function(x,y,scale){
     var vars = {
         width: workspace.control.viewport.width(),
-        height: 40,
+        height: 20*scale,
         selected: undefined,
         activedropdown: undefined,
     };
@@ -9,7 +9,7 @@ this.menubar = function(x,y){
         bar: {fill:'rgba(240,240,240,1)'}, 
         button:{
             text_fill:'rgba(0,0,0,1)',
-            text_font:'22.5pt Helvetica',
+            text_font:11.25*scale+'pt Helvetica',
             background__up__fill:'rgba(240,240,240,1)', 
             background__press__fill:'rgba(240,240,240,1)',
             background__select_press__fill:'rgba(229,167,255,1)',
@@ -18,7 +18,7 @@ this.menubar = function(x,y){
             background__select_press__stroke:'rgba(0,0,0,0)',
         },
         list:{
-            text_font: '22.5pt Helvetica',
+            text_font: 11.25*scale+'pt Helvetica',
             item__up__fill: 'rgba(240,240,240,1)', 
             item__hover__fill: 'rgba(229,167,255,1)', 
         },
@@ -34,7 +34,7 @@ this.menubar = function(x,y){
             var accWidth = 0;
             for(var a = 0; a < this.menubar.dropdowns.length; a++){
                 var item = workspace.interface.part.alpha.builder( 'button_rect', 'dropdownButton_'+a, {
-                    x:accWidth, y:0, 
+                    x:accWidth*scale, y:0, 
                     width:this.menubar.dropdowns[a].width, height:vars.height, 
                     hoverable:false, selectable:true,
                     text_centre:this.menubar.dropdowns[a].text,
@@ -64,26 +64,26 @@ this.menubar = function(x,y){
                         var height = 0;
                         for(var b = 0; b < that.menubar.dropdowns[a].itemList.length; b++){
                             switch(that.menubar.dropdowns[a].itemList[b]){
-                                case 'break': height += that.menubar.dropdowns[a].breakHeight; break;
-                                case 'space': height += that.menubar.dropdowns[a].spaceHeight; break;
-                                default: height += that.menubar.dropdowns[a].listItemHeight; break;
+                                case 'break': height += that.menubar.dropdowns[a].breakHeight*scale; break;
+                                case 'space': height += that.menubar.dropdowns[a].spaceHeight*scale; break;
+                                default: height += that.menubar.dropdowns[a].listItemHeight*scale; break;
                             }
                         }
-                        if(height > workspace.control.viewport.height()){
-                            height = workspace.control.viewport.height();
+                        if(height > workspace.control.viewport.height()*scale){
+                            height = workspace.control.viewport.height()*scale;
                         }
 
                     //produce dropdown
                         vars.activedropdown = workspace.interface.part.alpha.builder( 'list', 'dropdown', {
-                            x:x, y:vars.height, style:style.list,
-                            width:that.menubar.dropdowns[a].listWidth, height:height,
+                            x:x, y:vars.height*scale, style:style.list,
+                            width:that.menubar.dropdowns[a].listWidth*scale, height:height*scale,
 
                             multiSelect:false, selectable:false,
 
-                            itemWidthMux: 1,
-                            itemHeightMux:  that.menubar.dropdowns[a].listItemHeight/height, 
-                            breakHeightMux: that.menubar.dropdowns[a].breakHeight/height,
-                            spaceHeightMux: that.menubar.dropdowns[a].spaceHeight/height,
+                            itemWidthMux: 1*scale,
+                            itemHeightMux:  (that.menubar.dropdowns[a].listItemHeight/height)*scale, 
+                            breakHeightMux: (that.menubar.dropdowns[a].breakHeight/height)*scale,
+                            spaceHeightMux: (that.menubar.dropdowns[a].spaceHeight/height)*scale,
                             itemSpacingMux:0, 
 
                             list:that.menubar.dropdowns[a].itemList,
@@ -120,84 +120,3 @@ this.menubar = function(x,y){
 
     return object;
 };
-
-
-
-
-
-
-//a design object for the menubar options and their respective dropdown menu items
-this.menubar.dropdowns = [
-    {
-        text:'file',
-        width:90,
-        listWidth:300,
-        listItemHeight:45,
-        breakHeight: 1,
-        spaceHeight: 2,
-        itemList:[
-            {text_left:'New Scene', function:function(){ control.scene.new(true); } },
-            {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ control.scene.load(undefined,undefined,true); } },
-            {text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ control.scene.save('project.crv'); } },
-        ]
-    },
-    {
-        text:'edit',
-        width:90,
-        listWidth:300,
-        listItemHeight:45,
-        breakHeight: 1,
-        spaceHeight: 2,
-        itemList:[
-            {text_left:'Cut',       text_right:'ctrl-x', function:function(){control.selection.cut();}       },
-            {text_left:'Copy',      text_right:'ctrl-c', function:function(){control.selection.copy();}      },
-            {text_left:'Paste',     text_right:'ctrl-v', function:function(){control.selection.paste();}     },
-            {text_left:'Duplicate', text_right:'ctrl-b', function:function(){control.selection.duplicate();} },
-            {text_left:'Delete',    text_right:'del',    function:function(){control.selection.delete();}    },
-        ]
-    },
-    {
-        text:'create',
-        width:130,
-        listWidth:500,
-        listItemHeight:45,
-        breakHeight: 1,
-        spaceHeight: 2,
-        itemList:(function(){
-            var outputArray = [];
-
-            for(category in workspace.interface.unit.alpha){
-                if(category == 'builder'){continue;}
-
-                for(model in workspace.interface.unit.alpha[category]){
-                    if( workspace.interface.unit.alpha[category][model].devUnit ){continue;}
-
-                    outputArray.push({
-                        text_left: workspace.interface.unit.alpha[category][model].metadata.name,
-                        function:function(model,category){return function(){
-                            var p = workspace.core.viewport.windowPoint2workspacePoint(30,30);
-                            workspace.control.scene.addUnit(p.x,p.y,0,model,category,'alpha');
-                        }}(model,category),
-                    });
-                }
-
-                outputArray.push('break');
-            }
-
-            outputArray.pop();
-        
-            return outputArray;
-        })()
-    },
-    {
-        text:'help',
-        width:100,
-        listWidth:300,
-        listItemHeight:45,
-        breakHeight: 1,
-        spaceHeight: 2,
-        itemList:[
-        {text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); /*system.utility.misc.openURL(system.super.helpFolderLocation);*/ } },
-        ]
-    },
-];

@@ -116,15 +116,15 @@ this.viewport = new function(){
                         workspace.style[direction] = parentSize * percent + "px";
                     }else{
                         workspace[direction] = attribute * window.devicePixelRatio;
-                        workspace.style[direction] = attribute;
+                        workspace.style[direction] = attribute + 'px';
                     }
 
                 changesMade = true;
             }
         }
 
-        dimensionAdjust('width');
         dimensionAdjust('height');
+        dimensionAdjust('width');
 
         if(changesMade){ calculateViewportExtremities(); }
     }

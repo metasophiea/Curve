@@ -24,7 +24,7 @@ this.multiBlendColours = function(rgbaList,ratio){
         if(ratio == 1){return rgbaList[rgbaList.length-1];}
     //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
         var p = ratio*(rgbaList.length-1);
-        return workspace.library.misc.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+        return library.misc.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
 };
 this.padString = function(string,length,padding=' '){
     if(padding.length<1){return string;}
@@ -36,8 +36,8 @@ this.padString = function(string,length,padding=' '){
 
     return string;
 };
-this.compressString = function(string){return workspace.library.thirdparty.lzString.compress(string);};
-this.decompressString = function(string){return workspace.library.thirdparty.lzString.decompress(string);};
+this.compressString = function(string){return library.thirdparty.lzString.compress(string);};
+this.decompressString = function(string){return library.thirdparty.lzString.decompress(string);};
 this.serialize = function(data,compress=true){
     function getType(obj){
         return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -70,13 +70,13 @@ this.serialize = function(data,compress=true){
 
     });
 
-    if(compress){ data = workspace.library.misc.compressString(data); }
+    if(compress){ data = library.misc.compressString(data); }
     return data;
 };
 this.unserialize = function(data,compressed=true){
     if(data === undefined){return undefined;}
 
-    if(compressed){ data = workspace.library.misc.decompressString(data); }
+    if(compressed){ data = library.misc.decompressString(data); }
 
     return JSON.parse(data, function(key, value){
 
@@ -96,7 +96,7 @@ this.unserialize = function(data,compressed=true){
                     value = new ArrayBuffer(value);
                 break;
                 case 'audiobuffer':
-                    var audioBuffer = workspace.library.audio.context.createBuffer(value.__numberOfChannels, value.__length, value.__sampleRate);
+                    var audioBuffer = library.audio.context.createBuffer(value.__numberOfChannels, value.__length, value.__sampleRate);
 
                     for(var a = 0; a < audioBuffer.numberOfChannels; a++){
                         workingBuffer = audioBuffer.getChannelData(a);

@@ -1,4 +1,4 @@
-# [curve](http://metasophiea.com/curve)
+# [curve](https://curve.metasophiea.com/)
 
 ## A Project In Three Parts
 - **_Curve_** is a musical workstation designed to be like real-world music making machines. There's synthesizers and effect units and keyboards and all sorts of stuff you can plug together and play with. 
@@ -13,15 +13,15 @@ None of these things are anyway near finished yet, but have developed far enough
 I write elsewhere, so updates will probably come in sudden bundles. Check the [log](docs/notes/log) to see what's been happening
 
 ## Structure
-- __main__ is where the program itself is stored, seperated into five folders (which are also the five main globals) Theoretically; there is an order of dependency keeping things kinda clean, which goes "library -> core -> system -> interface -> control" however nothing is perfect and things are still forming into that dream. You can probably guess by the names what each part does and how they fit together.
+- __main__ is where the program itself is stored, seperated into six folders (the first five of which are also the five main globals) Theoretically; there is an order of dependency keeping things kinda clean, which goes "library -> core -> system -> interface -> control -> curve" however nothing is perfect and things are still forming into that dream. You can probably guess by the names what each part does and how they fit together.
 - __workshop__ is where most experimentation, development and testing of new sections happens
 - __test__ is where you can find test code for all the sections of the main system. Some of these codes are snazzy code testing code with pass/fail tests and stuff; other parts are more hand-wavy and require a person to determine whether something is working correctly or not.
-- __compliation__ contains all the tools necessary to put the program together into a single js file which is stored in 'docs'. (There's also closure in there for packing things into the "deployment" edition (workspace.min.js) but it's not working right now)
-- __docs__ consists of all the other stuff; the help files, notes, demo files, gifs, etc. Along with the html files for the website and the produced program files.
+- __compliation__ contains all the tools necessary to put the program together into a single js file which is stored in 'docs'. (There's also closure in there for packing things into the "deployment" edition (eg. workspace.min.js))
+- __docs__ consists of all the other stuff; the help files, notes, demo files, gifs, etc. Along with the html files for the website and the produced program files. There are program files for each of the three segments mentioned above (Curve, Workspace and Core) In this way, one could for example use the 'workspace.js' file and get all the functionality of the workspace code, but without any of the Curve units or menubar items.
 
 ## Compiling
-You can use the 'comp' function (./compliation/comp.sh) in the compliation folder to quickly build together the latest version of Curve and play around with whatever I was working on last by opening the 'docs/test.html' file in a browser.
-The command uses a little JavaScript compiler written in Python3 called Gravity, which goes through JS files looking for commands and execute them, ultimatly producing a single JS file. So far there's only one command - a straightforward include - but that's all I really need right now. The 'heavyComp' is used to produce "production" versions of the code. This version uses gravity to build together the program, then Clousure to pack it all up. (not working right now, as Clousure is having trouble with variables named 'static' in Core.. apparently this has been a bug since 2016, so, I'm working on a way around it. Probably renaming)
+You can use the 'comp' function (./compliation/comp.sh) in the compliation folder to quickly build together the latest version of Curve and play around with whatever I was working on last by opening the test html file in a browser.
+The command uses a little JavaScript compiler written in Python3 called Gravity, which goes through JS files looking for commands to execute, ultimatly producing a single JS file. So far there's only one command - a straightforward include - but that's all I really need right now. The 'heavyComp' is used to produce "production" versions of the code. This version uses gravity to build together the program, then Clousure to pack it all up.
 
 ## Compatibility
 Reciently (3/1/2019) I finished my overhaul of the graphical backend of the project, taking out the SVG aspect and replacing it with Core (a custom written Canvas backend). So far it's been pretty happy working on most browsers, but more testing is needed. Safari is still unable to handle WebAudio, so I recommend just sticking with Chrome (and maybe Firefox) for now.

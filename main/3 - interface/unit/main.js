@@ -1,3 +1,3 @@
-this.alpha = new function(){
-    {{include:alpha/main.js}}
+this.test = new function(){
+    {{include:test/main.js}}
 };

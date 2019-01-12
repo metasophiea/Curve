@@ -13,7 +13,7 @@ workspace.control.grapple = {
                     workspace.control.grapple.tmpunit = this;
                 
                 //run through function list, and activate functions where necessary
-                    workspace.library.structure.functionListRunner(list)({event:event,x:x,y:y});
+                    workspace.library.structure.functionListRunner(list,workspace.system.keyboard.pressedKeys)({event:event,x:x,y:y});
             };
         }
 

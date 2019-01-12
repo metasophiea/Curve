@@ -54,3 +54,6 @@ var text = workspace.core.arrangement.createElement('text');
     text.x = 200; text.y = 50;
     text.angle = 0.4;
     workspace.system.pane.mm.append(text);
+
+
+workspace.core.render.active(true);

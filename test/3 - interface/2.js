@@ -22,7 +22,9 @@ var design = {
         {type:'connectionNode_audio', name:'connectionNode_audio2', data:{ x:220, y:80, isAudioOutput:false }},
     ],
 };
-var newUnit = workspace.interface.unit.alpha.builder(function(){console.log('make new unit!');},design);
+var newUnit = workspace.interface.unit.test.builder(function(){console.log('make new unit!');},design);
 workspace.system.pane.mm.append( newUnit );
 
 console.log( newUnit.io );
+
+workspace.core.render.active(true);
