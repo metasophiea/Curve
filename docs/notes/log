@@ -5,10 +5,12 @@
     workspace.js to change the offending terms (namly "static" and "interface")
     (just two sed commands and a temporary file) Still a warning about
     "Suspicious" though, which I haven't been able to remove
+  - added compilation for core.js, and added back in it's html demo
 
   Compilation Results
-  - workspace.js           1110 Kb  (100%)
-  - workspace.min.js        344 Kb  (31.04%)
+  - workspace.js                         1110 Kb  (100%)
+  - workspace.min.js                      344 Kb  (31.04%)
+  - workspace.min.js (web compressed)    69.4 Kb  (6.24%)
 
 
 2019-01-03
