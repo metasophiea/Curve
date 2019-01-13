@@ -3,9 +3,10 @@
   - fixed menubar scaling
 
   Compilation Results
-    curve.js 1202kb
-    curve.min.js 349kb
-    reduced to 29.10% of original size
+  - workspace.js                         1202 Kb  (100%)
+  - workspace.min.js                      349 Kb  (29.10%)
+  - workspace.min.js (web compressed)     71.4Kb  (5.94%)
+
 
 2019-01-11
   - updated the readme a little
