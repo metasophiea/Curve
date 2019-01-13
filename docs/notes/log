@@ -1,4 +1,12 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-01-13
+  - fixed menubar scaling
+
+  Compilation Results
+    curve.js 1202kb
+    curve.min.js 349kb
+    reduced to 29.10% of original size
+
 2019-01-11
   - updated the readme a little
   - put the test unit back into the interface layer, under a 'test' collection

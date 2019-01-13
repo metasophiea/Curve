@@ -28,3 +28,4 @@ workspace.system.pane.mm.append( newUnit );
 console.log( newUnit.io );
 
 workspace.core.render.active(true);
+workspace.core.viewport.stopMouseScroll(true);

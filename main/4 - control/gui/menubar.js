@@ -35,7 +35,7 @@ this.menubar = function(x,y,scale){
             for(var a = 0; a < this.menubar.dropdowns.length; a++){
                 var item = workspace.interface.part.alpha.builder( 'button_rect', 'dropdownButton_'+a, {
                     x:accWidth*scale, y:0, 
-                    width:this.menubar.dropdowns[a].width, height:vars.height, 
+                    width:this.menubar.dropdowns[a].width*scale, height:vars.height, 
                     hoverable:false, selectable:true,
                     text_centre:this.menubar.dropdowns[a].text,
                     style:style.button,
@@ -75,16 +75,16 @@ this.menubar = function(x,y,scale){
 
                     //produce dropdown
                         vars.activedropdown = workspace.interface.part.alpha.builder( 'list', 'dropdown', {
-                            x:x, y:vars.height*scale, style:style.list,
-                            width:that.menubar.dropdowns[a].listWidth*scale, height:height*scale,
+                            x:x*scale, y:vars.height, style:style.list,
+                            width:that.menubar.dropdowns[a].listWidth*scale, height:height,
 
                             multiSelect:false, selectable:false,
 
-                            itemWidthMux: 1*scale,
+                            itemWidthMux: 1,
                             itemHeightMux:  (that.menubar.dropdowns[a].listItemHeight/height)*scale, 
                             breakHeightMux: (that.menubar.dropdowns[a].breakHeight/height)*scale,
                             spaceHeightMux: (that.menubar.dropdowns[a].spaceHeight/height)*scale,
-                            itemSpacingMux:0, 
+                            itemSpacingMux: 0, 
 
                             list:that.menubar.dropdowns[a].itemList,
                         });

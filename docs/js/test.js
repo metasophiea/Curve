@@ -1453,9 +1453,9 @@
                         };
                     };
                     var shapes = new function(){
-                        this.canvas = function(){
+                        this.polygon = function(){
                         
-                            this.type = 'canvas';
+                            this.type = 'polygon';
                         
                             this.name = '';
                             this.ignored = false;
@@ -1467,43 +1467,22 @@
                                 boundingBox:{},
                             };
                         
-                            this.x = 0;
-                            this.y = 0;
-                            this.angle = 0;
-                            this.anchor = {x:0,y:0};
-                            this.width = 10;
-                            this.height = 10;
+                            this.points = [];
                         
-                            var canvasObject = {
-                                isChanged:true, 
-                                element:document.createElement('canvas'),
-                                resolution:1,
+                            this.style = {
+                                fill:'rgba(100,255,255,1)',
+                                stroke:'rgba(0,0,0,0)',
+                                lineWidth:1,
+                                lineJoin:'round',
+                                miterLimit:2,
+                                shadowColour:'rgba(0,0,0,0)',
+                                shadowBlur:20,
+                                shadowOffset:{x:20, y:20},
                             };
-                            canvasObject.context = canvasObject.element.getContext('2d',{ alpha: false });
-                            canvasObject.element.setAttribute('width',this.width*canvasObject.resolution);
-                            canvasObject.element.setAttribute('height',this.height*canvasObject.resolution);
                         
-                        
+                            
                             this.parameter = {};
-                            this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
-                            this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
-                            this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
-                            this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
-                            this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities(); canvasObject.element.setAttribute('width',shape.width*canvasObject.resolution); } }(this);
-                            this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities(); canvasObject.element.setAttribute('height',shape.height*canvasObject.resolution); } }(this);
-                        
-                        
-                        
-                        
-                            this.resolution = function(a){
-                                if(a == undefined){return canvasObject.resolution;}
-                                canvasObject.resolution = a;
-                                canvasObject.element.setAttribute('width',this.width*canvasObject.resolution);
-                                canvasObject.element.setAttribute('height',this.height*canvasObject.resolution); 
-                                canvasObject.isChanged = true;
-                            };
-                            this._ = canvasObject.context;
-                            this.$ = function(a){return a*canvasObject.resolution;};
+                            this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
                         
                         
                         
@@ -1517,6 +1496,7 @@
                         
                                 return '/'+address;
                             };
+                            
                             this.computeExtremities = function(offset){
                                 //discover if this shape should be static
                                     var isStatic = this.static;
@@ -1537,8 +1517,7 @@
                                     };
                         
                                 //calculate points
-                                    this.extremities.points = workspace.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
-                                    this.extremities.points = this.extremities.points.map(function(point){
+                                    this.extremities.points = this.points.map(function(point){
                                         point = workspace.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
                                         point.x += offset.x;
                                         point.y += offset.y;
@@ -1553,6 +1532,7 @@
                                         this.parent.computeExtremities();
                                     }
                             };
+                        
                             function isPointWithinBoundingBox(x,y,shape){
                                 if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
                                 return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
@@ -1567,6 +1547,7 @@
                                 }
                                 return false;
                             };
+                        
                             function shouldRender(shape){ 
                                 //if this shape is static, always render
                                     if(shape.static){return true;}
@@ -1574,45 +1555,61 @@
                                 //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                     return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                             };
-                        
-                        
-                        
-                            
-                            this.render = function(context,offset={x:0,y:0,a:0},static=false){
+                            this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
                                 //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                     if(!shouldRender(this)){return;}
-                        
-                                //adjust offset for parent's angle
-                                    var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                    offset.x += point.x - this.x;
-                                    offset.y += point.y - this.y;
                                 
                                 //collect and consolidate shape values into a neat package
                                     var shapeValue = {
-                                        location:{
-                                            x:(this.x+offset.x),
-                                            y:(this.y+offset.y)
-                                        },
-                                        angle:(this.angle+offset.a),
-                                        width: this.width,
-                                        height: this.height,
+                                        points: this.points.map( function(a){
+                                            a = workspace.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
+                                            return { x:a.x+offset.x, y:a.y+offset.y };
+                                        } ),
+                                        lineWidth: this.style.lineWidth,
+                                        shadowBlur: this.style.shadowBlur,
+                                        shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
                                     };
                                 
                                 //adapt values
                                     if(!static){
-                                        shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-                                        shapeValue.width = adapter.length(shapeValue.width);
-                                        shapeValue.height = adapter.length(shapeValue.height);
+                                        shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
+                                        shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                        shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
+                                        shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
+                                        shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
                                     }
                         
-                                //post adaptation calculations
-                                    shapeValue.location = workspace.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
+                                //clipping
+                                    if(isClipper){
+                                        var region = new Path2D();
+                                        region.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                                        for(var a = 1; a < shapeValue.points.length; a++){
+                                            region.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                                        }
+                                        context.clip(region);
+                                        return;
+                                    }
                         
-                                //actual render
-                                    context.save();
-                                    context.rotate( shapeValue.angle );
-                                    context.drawImage( canvasObject.element, shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
-                                    context.restore();
+                                //paint this shape as requested
+                                    context.fillStyle = this.style.fill;
+                                    context.strokeStyle = this.style.stroke;
+                                    context.lineWidth = shapeValue.lineWidth;
+                                    context.lineJoin = this.style.lineJoin;
+                                    context.miterLimit = this.style.miterLimit;
+                                    context.shadowColor = this.style.shadowColour;
+                                    context.shadowBlur = shapeValue.shadowBlur;
+                                    context.shadowOffsetX = shapeValue.shadowOffset.x;
+                                    context.shadowOffsetY = shapeValue.shadowOffset.y;
+                        
+                                    context.beginPath(); 
+                                    context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                                    for(var a = 1; a < shapeValue.points.length; a++){
+                                        context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                                    }
+                                    context.closePath(); 
+                        
+                                    context.fill(); 
+                                    context.stroke();
                         
                                 //if dotFrame is set, draw in dots fot the points and bounding box extremities
                                     if(this.dotFrame){
@@ -1627,7 +1624,8 @@
                                             var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
                                             core.render.drawDot( temp.x, temp.y );
                                     }
-                            }
+                            };
+                        
                         };
                         this.circle = function(){
                         
@@ -1820,14 +1818,13 @@
                                     }
                             };
                         };
-                        this.group = function(){
+                        this.canvas = function(){
                         
-                            this.type = 'group';
+                            this.type = 'canvas';
                         
                             this.name = '';
                             this.ignored = false;
                             this.static = false;
-                            this.clipActive = false;
                             this.parent = undefined;
                             this.dotFrame = false;
                             this.extremities = {
@@ -1838,30 +1835,43 @@
                             this.x = 0;
                             this.y = 0;
                             this.angle = 0;
-                            this.children = [];
-                            this.clippingStencil;
+                            this.anchor = {x:0,y:0};
+                            this.width = 10;
+                            this.height = 10;
+                        
+                            var canvasObject = {
+                                isChanged:true, 
+                                element:document.createElement('canvas'),
+                                resolution:1,
+                            };
+                            canvasObject.context = canvasObject.element.getContext('2d',{ alpha: false });
+                            canvasObject.element.setAttribute('width',this.width*canvasObject.resolution);
+                            canvasObject.element.setAttribute('height',this.height*canvasObject.resolution);
                         
                         
                             this.parameter = {};
-                            this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities(undefined,true);} }(this);
-                            this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities(undefined,true);} }(this);
-                            this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities(undefined,true);} }(this);
+                            this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
+                            this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
+                            this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
+                            this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
+                            this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities(); canvasObject.element.setAttribute('width',shape.width*canvasObject.resolution); } }(this);
+                            this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities(); canvasObject.element.setAttribute('height',shape.height*canvasObject.resolution); } }(this);
                         
                         
                         
-                            function checkElementIsValid(group,element){
-                                if(element == undefined){return group.getAddress()+' >> no element provided';}
                         
-                                //check for name
-                                    if(element.name == undefined || element.name == ''){return group.getAddress()+' >> element has no name'}
-                            
-                                //check that the name is not already taken in this grouping
-                                    for(var a = 0; a < group.children.length; a++){
-                                        if( group.children[a].name == element.name ){ 
-                                            return 'element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+group.name+'"'); 
-                                        }
-                                    }
-                            }
+                            this.resolution = function(a){
+                                if(a == undefined){return canvasObject.resolution;}
+                                canvasObject.resolution = a;
+                                canvasObject.element.setAttribute('width',this.width*canvasObject.resolution);
+                                canvasObject.element.setAttribute('height',this.height*canvasObject.resolution); 
+                                canvasObject.isChanged = true;
+                            };
+                            this._ = canvasObject.context;
+                            this.$ = function(a){return a*canvasObject.resolution;};
+                        
+                        
+                        
                         
                             this.getAddress = function(){
                                 var address = '';
@@ -1872,100 +1882,7 @@
                         
                                 return '/'+address;
                             };
-                            this.clip = function(bool){
-                                if(bool == undefined){return this.clipActive;}
-                                this.clipActive = (this.clippingStencil == undefined) ? false : bool;
-                        
-                                //computation of extremities
-                                    this.computeExtremities();
-                            };
-                            this.stencil = function(shape){
-                                if(shape == undefined){return this.clippingStencil;}
-                                this.clippingStencil = shape;
-                        
-                                //computation of extremities
-                                    this.computeExtremities();
-                            };
-                            this.prepend = function(element){
-                                //check that the element is valid
-                                    var temp = checkElementIsValid(this,element);
-                                    if(temp != undefined){console.error('element invalid:',temp); return;}
-                        
-                                //actually add the element
-                                    this.children.unshift(element);
-                        
-                                //inform element of who it's parent is
-                                    element.parent = this;
-                        
-                                //computation of extremities
-                                    element.computeExtremities(undefined,true);
-                            };
-                            this.append = function(element){
-                                //check that the element is valid
-                                    var temp = checkElementIsValid(this, element);
-                                    if(temp != undefined){console.error('element invalid:',temp); return;}
-                        
-                                //actually add the element
-                                    this.children.push(element);
-                        
-                                //inform element of who it's parent is
-                                    element.parent = this;
-                        
-                                //computation of extremities
-                                    element.computeExtremities(undefined,true);
-                            };
-                            this.remove = function(element){
-                                //check that an element was provided
-                                    if(element == undefined){return;}
-                        
-                                //get index of element (if this element isn't in the group, just bail)
-                                    var index = this.children.indexOf(element);
-                                    if(index < 0){return;}
-                        
-                                //actual removal
-                                    this.children.splice(index, 1);
-                        
-                                //computation of extremities
-                                    this.computeExtremities();
-                            };
-                            this.clear = function(){
-                                //empty out children
-                                    this.children = [];
-                        
-                                //computation of extremities
-                                    this.computeExtremities();
-                            };
-                            this.contains = function(element){
-                                for(var a = 0; a < this.children.length; a++){
-                                    if(this.children[a] == element){return true;}
-                                }
-                        
-                                return false;
-                            };
-                            this.getChildByName = function(name){
-                                for(var a = 0; a < this.children.length; a++){
-                                    if( this.children[a].name == name ){ return this.children[a]; }
-                                }
-                            };
-                            this.getElementsWithName = function(name){
-                                var result = [];
-                                for(var a = 0; a < this.children.length; a++){
-                                    if( this.children[a].name == name ){
-                                        result.push(this.children[a]);
-                                    }
-                                    if( this.children[a].type == 'group' ){
-                                        var list = this.children[a].getElementsWithName(name);
-                                        for(var b = 0; b < list.length; b++){ result.push( list[b] ); } //because concat doesn't work
-                                    }
-                                }
-                                return result;
-                            };
-                        
-                            this.getOffset = function(){return gatherParentOffset(this);};
-                            this.computeExtremities = function(offset,deepCompute=false){
-                                //root calculation element
-                                    var rootCalculationElement = offset == undefined;
-                        
+                            this.computeExtremities = function(offset){
                                 //discover if this shape should be static
                                     var isStatic = this.static;
                                     var tmp = this;
@@ -1978,20 +1895,6 @@
                                 //in which case; gather the offset of all parents. Otherwise just use what was provided
                                     offset = offset == undefined ? gatherParentOffset(this) : offset;
                         
-                                //if 'deepCompute' is set, recalculate the extremities for all children
-                                    if(deepCompute){
-                                        //calculate offset to be sent down to this group's children
-                                            var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
-                                            var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                                combinedOffset.x += point.x;
-                                                combinedOffset.y += point.y;
-                        
-                                        //request deep calculation from all children
-                                            for(var a = 0; a < this.children.length; a++){
-                                                this.children[a].computeExtremities(combinedOffset,true);
-                                            }
-                                    }
-                        
                                 //reset variables
                                     this.extremities = {
                                         points:[],
@@ -1999,43 +1902,22 @@
                                     };
                         
                                 //calculate points
-                                    //assuming clipping is turned off
-                                        if(!this.clipActive){
-                                            //the points for a group, is just the four corners of the bounding box, calculated using
-                                            //the bounding boxes of all the children
-                                            //  -> this method needs to be trashed <-
-                                                var temp = [];
-                                                for(var a = 0; a < this.children.length; a++){
-                                                    temp.push(this.children[a].extremities.boundingBox.topLeft);
-                                                    temp.push(this.children[a].extremities.boundingBox.bottomRight);
-                                                }
-                                                temp = workspace.library.math.boundingBoxFromPoints( temp );
-                                                this.extremities.points = [
-                                                    { x: temp.topLeft.x,     y: temp.topLeft.y,     },
-                                                    { x: temp.bottomRight.x, y: temp.topLeft.y,     },
-                                                    { x: temp.bottomRight.x, y: temp.bottomRight.y, },
-                                                    { x: temp.topLeft.x,     y: temp.bottomRight.y, },
-                                                ];
-                                    //assuming clipping is turned on
-                                        }else{
-                                            //the points for this group are the same as the stencil shape's
-                                                var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
-                                                var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                                    combinedOffset.x += point.x;
-                                                    combinedOffset.y += point.y;
-                                                this.clippingStencil.computeExtremities(combinedOffset);
-                                                this.extremities.points = this.clippingStencil.extremities.points;
-                                        }
+                                    this.extremities.points = workspace.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
+                                    this.extremities.points = this.extremities.points.map(function(point){
+                                        point = workspace.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                        point.x += offset.x;
+                                        point.y += offset.y;
+                                        return point;
+                                    });
                         
                                 //calculate boundingBox
                                     this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
                         
                                 //update the points and bounding box of the parent
-                                    if(this.parent != undefined && rootCalculationElement){
+                                    if(this.parent != undefined){
                                         this.parent.computeExtremities();
                                     }
                             };
-                        
                             function isPointWithinBoundingBox(x,y,shape){
                                 if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
                                 return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
@@ -2045,81 +1927,57 @@
                                 return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
                             }
                             this.isPointWithin = function(x,y){
-                                if(this.clipActive){ return this.clippingStencil.isPointWithin(x,y); }
-                        
                                 if( isPointWithinBoundingBox(x,y,this) ){
                                     return isPointWithinHitBox(x,y,this);
                                 }
                                 return false;
                             };
-                            this.getElementUnderPoint = function(x,y,static=false,getList=false){
-                                //go through the children in reverse order, discovering if
-                                //  the object is not ignored and,
-                                //  the point is within their bounding box
-                                //if so; if it's a group, follow the 'getElementUnderPoint' function down
-                                //if it's not, return that shape
-                                //otherwise, carry onto the next shape
-                        
-                                var returnList = [];
-                        
-                                for(var a = this.children.length-1; a >= 0; a--){
-                                    //if child shape is static (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
-                                        var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
-                        
-                                        if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
-                                            if( this.children[a].type == 'group' ){
-                                                var temp = this.children[a].getElementUnderPoint(x,y,(this.children[a].static || static),getList);
-                                                if(temp != undefined){
-                                                    if(getList){ returnList = returnList.concat(temp); }
-                                                    else{ return temp; }
-                                                }
-                                            }else{
-                                                if(getList){ returnList.push(this.children[a]); }
-                                                else{ return this.children[a]; }
-                                            }
-                                        }
-                                }
-                        
-                                if(getList){return returnList;}
-                            };
-                        
-                            function shouldRender(shape){
+                            function shouldRender(shape){ 
                                 //if this shape is static, always render
                                     if(shape.static){return true;}
-                        
-                                //if any of this shape's children are static, render the group (and let the individuals decide to render themselves or not)
-                                    for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
-                        
+                                    
                                 //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                     return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                             };
-                            this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
+                        
+                        
+                        
+                            
+                            this.render = function(context,offset={x:0,y:0,a:0},static=false){
                                 //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                     if(!shouldRender(this)){return;}
                         
                                 //adjust offset for parent's angle
                                     var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                    var packagedOffset = {
-                                        a: offset.a + this.angle,
-                                        x: offset.x + point.x,
-                                        y: offset.y + point.y,
+                                    offset.x += point.x - this.x;
+                                    offset.y += point.y - this.y;
+                                
+                                //collect and consolidate shape values into a neat package
+                                    var shapeValue = {
+                                        location:{
+                                            x:(this.x+offset.x),
+                                            y:(this.y+offset.y)
+                                        },
+                                        angle:(this.angle+offset.a),
+                                        width: this.width,
+                                        height: this.height,
                                     };
-                        
-                        
-                                //draw clipping (if active)
-                                    if(this.clipActive || isClipper){
-                                        context.save();
-                                        this.clippingStencil.render( context, Object.assign({},packagedOffset), (static||this.clippingStencil.static), (isClipper||this.clipActive) );
+                                
+                                //adapt values
+                                    if(!static){
+                                        shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
+                                        shapeValue.width = adapter.length(shapeValue.width);
+                                        shapeValue.height = adapter.length(shapeValue.height);
                                     }
                         
-                                //cycle through all children, activating their render functions
-                                    for(var a = 0; a < this.children.length; a++){
-                                        var item = this.children[a];
-                                        item.render( context, Object.assign({},packagedOffset), (static||item.static) );
-                                    }
+                                //post adaptation calculations
+                                    shapeValue.location = workspace.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
                         
-                                //undo the clipping (only if there was clipping, ofcourse)
-                                    if(this.clipActive){ context.restore(); }
+                                //actual render
+                                    context.save();
+                                    context.rotate( shapeValue.angle );
+                                    context.drawImage( canvasObject.element, shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
+                                    context.restore();
                         
                                 //if dotFrame is set, draw in dots fot the points and bounding box extremities
                                     if(this.dotFrame){
@@ -2134,7 +1992,7 @@
                                             var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
                                             core.render.drawDot( temp.x, temp.y );
                                     }
-                            };
+                            }
                         };
                         this.image = function(){
                         
@@ -2670,180 +2528,6 @@
                                     }
                             };
                         };
-                        this.polygon = function(){
-                        
-                            this.type = 'polygon';
-                        
-                            this.name = '';
-                            this.ignored = false;
-                            this.static = false;
-                            this.parent = undefined;
-                            this.dotFrame = false;
-                            this.extremities = {
-                                points:[],
-                                boundingBox:{},
-                            };
-                        
-                            this.points = [];
-                        
-                            this.style = {
-                                fill:'rgba(100,255,255,1)',
-                                stroke:'rgba(0,0,0,0)',
-                                lineWidth:1,
-                                lineJoin:'round',
-                                miterLimit:2,
-                                shadowColour:'rgba(0,0,0,0)',
-                                shadowBlur:20,
-                                shadowOffset:{x:20, y:20},
-                            };
-                        
-                            
-                            this.parameter = {};
-                            this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
-                        
-                        
-                        
-                        
-                            this.getAddress = function(){
-                                var address = '';
-                                var tmp = this;
-                                do{
-                                    address = tmp.name + '/' + address;
-                                }while((tmp = tmp.parent) != undefined)
-                        
-                                return '/'+address;
-                            };
-                            
-                            this.computeExtremities = function(offset){
-                                //discover if this shape should be static
-                                    var isStatic = this.static;
-                                    var tmp = this;
-                                    while((tmp = tmp.parent) != undefined && !isStatic){
-                                        isStatic = isStatic || tmp.static;
-                                    }
-                                    this.static = isStatic;
-                        
-                                //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                                //in which case; gather the offset of all parents. Otherwise just use what was provided
-                                    offset = offset == undefined ? gatherParentOffset(this) : offset;
-                        
-                                //reset variables
-                                    this.extremities = {
-                                        points:[],
-                                        boundingBox:{},
-                                    };
-                        
-                                //calculate points
-                                    this.extremities.points = this.points.map(function(point){
-                                        point = workspace.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                                        point.x += offset.x;
-                                        point.y += offset.y;
-                                        return point;
-                                    });
-                        
-                                //calculate boundingBox
-                                    this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
-                        
-                                //update the points and bounding box of the parent
-                                    if(this.parent != undefined){
-                                        this.parent.computeExtremities();
-                                    }
-                            };
-                        
-                            function isPointWithinBoundingBox(x,y,shape){
-                                if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                                return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                            }
-                            function isPointWithinHitBox(x,y,shape){
-                                if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                                return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                            }
-                            this.isPointWithin = function(x,y){
-                                if( isPointWithinBoundingBox(x,y,this) ){
-                                    return isPointWithinHitBox(x,y,this);
-                                }
-                                return false;
-                            };
-                        
-                            function shouldRender(shape){ 
-                                //if this shape is static, always render
-                                    if(shape.static){return true;}
-                                    
-                                //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                                    return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                            };
-                            this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
-                                //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                                    if(!shouldRender(this)){return;}
-                                
-                                //collect and consolidate shape values into a neat package
-                                    var shapeValue = {
-                                        points: this.points.map( function(a){
-                                            a = workspace.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
-                                            return { x:a.x+offset.x, y:a.y+offset.y };
-                                        } ),
-                                        lineWidth: this.style.lineWidth,
-                                        shadowBlur: this.style.shadowBlur,
-                                        shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
-                                    };
-                                
-                                //adapt values
-                                    if(!static){
-                                        shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
-                                        shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                        shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                        shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                        shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
-                                    }
-                        
-                                //clipping
-                                    if(isClipper){
-                                        var region = new Path2D();
-                                        region.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-                                        for(var a = 1; a < shapeValue.points.length; a++){
-                                            region.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
-                                        }
-                                        context.clip(region);
-                                        return;
-                                    }
-                        
-                                //paint this shape as requested
-                                    context.fillStyle = this.style.fill;
-                                    context.strokeStyle = this.style.stroke;
-                                    context.lineWidth = shapeValue.lineWidth;
-                                    context.lineJoin = this.style.lineJoin;
-                                    context.miterLimit = this.style.miterLimit;
-                                    context.shadowColor = this.style.shadowColour;
-                                    context.shadowBlur = shapeValue.shadowBlur;
-                                    context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                    context.shadowOffsetY = shapeValue.shadowOffset.y;
-                        
-                                    context.beginPath(); 
-                                    context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-                                    for(var a = 1; a < shapeValue.points.length; a++){
-                                        context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
-                                    }
-                                    context.closePath(); 
-                        
-                                    context.fill(); 
-                                    context.stroke();
-                        
-                                //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                                    if(this.dotFrame){
-                                        //points
-                                            for(var a = 0; a < this.extremities.points.length; a++){
-                                                var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                                core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                            }
-                                        //boudning box
-                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                            core.render.drawDot( temp.x, temp.y );
-                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                            core.render.drawDot( temp.x, temp.y );
-                                    }
-                            };
-                        
-                        };
                         this.rectangle = function(){
                         
                             this.type = 'rectangle';
@@ -3233,6 +2917,322 @@
                         //             }
                         //     }
                         // };
+                        this.group = function(){
+                        
+                            this.type = 'group';
+                        
+                            this.name = '';
+                            this.ignored = false;
+                            this.static = false;
+                            this.clipActive = false;
+                            this.parent = undefined;
+                            this.dotFrame = false;
+                            this.extremities = {
+                                points:[],
+                                boundingBox:{},
+                            };
+                        
+                            this.x = 0;
+                            this.y = 0;
+                            this.angle = 0;
+                            this.children = [];
+                            this.clippingStencil;
+                        
+                        
+                            this.parameter = {};
+                            this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities(undefined,true);} }(this);
+                            this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities(undefined,true);} }(this);
+                            this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities(undefined,true);} }(this);
+                        
+                        
+                        
+                            function checkElementIsValid(group,element){
+                                if(element == undefined){return group.getAddress()+' >> no element provided';}
+                        
+                                //check for name
+                                    if(element.name == undefined || element.name == ''){return group.getAddress()+' >> element has no name'}
+                            
+                                //check that the name is not already taken in this grouping
+                                    for(var a = 0; a < group.children.length; a++){
+                                        if( group.children[a].name == element.name ){ 
+                                            return 'element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+group.name+'"'); 
+                                        }
+                                    }
+                            }
+                        
+                            this.getAddress = function(){
+                                var address = '';
+                                var tmp = this;
+                                do{
+                                    address = tmp.name + '/' + address;
+                                }while((tmp = tmp.parent) != undefined)
+                        
+                                return '/'+address;
+                            };
+                            this.clip = function(bool){
+                                if(bool == undefined){return this.clipActive;}
+                                this.clipActive = (this.clippingStencil == undefined) ? false : bool;
+                        
+                                //computation of extremities
+                                    this.computeExtremities();
+                            };
+                            this.stencil = function(shape){
+                                if(shape == undefined){return this.clippingStencil;}
+                                this.clippingStencil = shape;
+                        
+                                //computation of extremities
+                                    this.computeExtremities();
+                            };
+                            this.prepend = function(element){
+                                //check that the element is valid
+                                    var temp = checkElementIsValid(this,element);
+                                    if(temp != undefined){console.error('element invalid:',temp); return;}
+                        
+                                //actually add the element
+                                    this.children.unshift(element);
+                        
+                                //inform element of who it's parent is
+                                    element.parent = this;
+                        
+                                //computation of extremities
+                                    element.computeExtremities(undefined,true);
+                            };
+                            this.append = function(element){
+                                //check that the element is valid
+                                    var temp = checkElementIsValid(this, element);
+                                    if(temp != undefined){console.error('element invalid:',temp); return;}
+                        
+                                //actually add the element
+                                    this.children.push(element);
+                        
+                                //inform element of who it's parent is
+                                    element.parent = this;
+                        
+                                //computation of extremities
+                                    element.computeExtremities(undefined,true);
+                            };
+                            this.remove = function(element){
+                                //check that an element was provided
+                                    if(element == undefined){return;}
+                        
+                                //get index of element (if this element isn't in the group, just bail)
+                                    var index = this.children.indexOf(element);
+                                    if(index < 0){return;}
+                        
+                                //actual removal
+                                    this.children.splice(index, 1);
+                        
+                                //computation of extremities
+                                    this.computeExtremities();
+                            };
+                            this.clear = function(){
+                                //empty out children
+                                    this.children = [];
+                        
+                                //computation of extremities
+                                    this.computeExtremities();
+                            };
+                            this.contains = function(element){
+                                for(var a = 0; a < this.children.length; a++){
+                                    if(this.children[a] == element){return true;}
+                                }
+                        
+                                return false;
+                            };
+                            this.getChildByName = function(name){
+                                for(var a = 0; a < this.children.length; a++){
+                                    if( this.children[a].name == name ){ return this.children[a]; }
+                                }
+                            };
+                            this.getElementsWithName = function(name){
+                                var result = [];
+                                for(var a = 0; a < this.children.length; a++){
+                                    if( this.children[a].name == name ){
+                                        result.push(this.children[a]);
+                                    }
+                                    if( this.children[a].type == 'group' ){
+                                        var list = this.children[a].getElementsWithName(name);
+                                        for(var b = 0; b < list.length; b++){ result.push( list[b] ); } //because concat doesn't work
+                                    }
+                                }
+                                return result;
+                            };
+                        
+                            this.getOffset = function(){return gatherParentOffset(this);};
+                            this.computeExtremities = function(offset,deepCompute=false){
+                                //root calculation element
+                                    var rootCalculationElement = offset == undefined;
+                        
+                                //discover if this shape should be static
+                                    var isStatic = this.static;
+                                    var tmp = this;
+                                    while((tmp = tmp.parent) != undefined && !isStatic){
+                                        isStatic = isStatic || tmp.static;
+                                    }
+                                    this.static = isStatic;
+                        
+                                //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
+                                //in which case; gather the offset of all parents. Otherwise just use what was provided
+                                    offset = offset == undefined ? gatherParentOffset(this) : offset;
+                        
+                                //if 'deepCompute' is set, recalculate the extremities for all children
+                                    if(deepCompute){
+                                        //calculate offset to be sent down to this group's children
+                                            var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
+                                            var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                                combinedOffset.x += point.x;
+                                                combinedOffset.y += point.y;
+                        
+                                        //request deep calculation from all children
+                                            for(var a = 0; a < this.children.length; a++){
+                                                this.children[a].computeExtremities(combinedOffset,true);
+                                            }
+                                    }
+                        
+                                //reset variables
+                                    this.extremities = {
+                                        points:[],
+                                        boundingBox:{},
+                                    };
+                        
+                                //calculate points
+                                    //assuming clipping is turned off
+                                        if(!this.clipActive){
+                                            //the points for a group, is just the four corners of the bounding box, calculated using
+                                            //the bounding boxes of all the children
+                                            //  -> this method needs to be trashed <-
+                                                var temp = [];
+                                                for(var a = 0; a < this.children.length; a++){
+                                                    temp.push(this.children[a].extremities.boundingBox.topLeft);
+                                                    temp.push(this.children[a].extremities.boundingBox.bottomRight);
+                                                }
+                                                temp = workspace.library.math.boundingBoxFromPoints( temp );
+                                                this.extremities.points = [
+                                                    { x: temp.topLeft.x,     y: temp.topLeft.y,     },
+                                                    { x: temp.bottomRight.x, y: temp.topLeft.y,     },
+                                                    { x: temp.bottomRight.x, y: temp.bottomRight.y, },
+                                                    { x: temp.topLeft.x,     y: temp.bottomRight.y, },
+                                                ];
+                                    //assuming clipping is turned on
+                                        }else{
+                                            //the points for this group are the same as the stencil shape's
+                                                var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
+                                                var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                                    combinedOffset.x += point.x;
+                                                    combinedOffset.y += point.y;
+                                                this.clippingStencil.computeExtremities(combinedOffset);
+                                                this.extremities.points = this.clippingStencil.extremities.points;
+                                        }
+                        
+                                //calculate boundingBox
+                                    this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
+                        
+                                //update the points and bounding box of the parent
+                                    if(this.parent != undefined && rootCalculationElement){
+                                        this.parent.computeExtremities();
+                                    }
+                            };
+                        
+                            function isPointWithinBoundingBox(x,y,shape){
+                                if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
+                                return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+                            }
+                            function isPointWithinHitBox(x,y,shape){
+                                if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
+                                return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+                            }
+                            this.isPointWithin = function(x,y){
+                                if(this.clipActive){ return this.clippingStencil.isPointWithin(x,y); }
+                        
+                                if( isPointWithinBoundingBox(x,y,this) ){
+                                    return isPointWithinHitBox(x,y,this);
+                                }
+                                return false;
+                            };
+                            this.getElementUnderPoint = function(x,y,static=false,getList=false){
+                                //go through the children in reverse order, discovering if
+                                //  the object is not ignored and,
+                                //  the point is within their bounding box
+                                //if so; if it's a group, follow the 'getElementUnderPoint' function down
+                                //if it's not, return that shape
+                                //otherwise, carry onto the next shape
+                        
+                                var returnList = [];
+                        
+                                for(var a = this.children.length-1; a >= 0; a--){
+                                    //if child shape is static (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
+                                        var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
+                        
+                                        if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
+                                            if( this.children[a].type == 'group' ){
+                                                var temp = this.children[a].getElementUnderPoint(x,y,(this.children[a].static || static),getList);
+                                                if(temp != undefined){
+                                                    if(getList){ returnList = returnList.concat(temp); }
+                                                    else{ return temp; }
+                                                }
+                                            }else{
+                                                if(getList){ returnList.push(this.children[a]); }
+                                                else{ return this.children[a]; }
+                                            }
+                                        }
+                                }
+                        
+                                if(getList){return returnList;}
+                            };
+                        
+                            function shouldRender(shape){
+                                //if this shape is static, always render
+                                    if(shape.static){return true;}
+                        
+                                //if any of this shape's children are static, render the group (and let the individuals decide to render themselves or not)
+                                    for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
+                        
+                                //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                    return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                            };
+                            this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
+                                //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                                    if(!shouldRender(this)){return;}
+                        
+                                //adjust offset for parent's angle
+                                    var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                    var packagedOffset = {
+                                        a: offset.a + this.angle,
+                                        x: offset.x + point.x,
+                                        y: offset.y + point.y,
+                                    };
+                        
+                        
+                                //draw clipping (if active)
+                                    if(this.clipActive || isClipper){
+                                        context.save();
+                                        this.clippingStencil.render( context, Object.assign({},packagedOffset), (static||this.clippingStencil.static), (isClipper||this.clipActive) );
+                                    }
+                        
+                                //cycle through all children, activating their render functions
+                                    for(var a = 0; a < this.children.length; a++){
+                                        var item = this.children[a];
+                                        item.render( context, Object.assign({},packagedOffset), (static||item.static) );
+                                    }
+                        
+                                //undo the clipping (only if there was clipping, ofcourse)
+                                    if(this.clipActive){ context.restore(); }
+                        
+                                //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                    if(this.dotFrame){
+                                        //points
+                                            for(var a = 0; a < this.extremities.points.length; a++){
+                                                var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                                core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                            }
+                                        //boudning box
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                            core.render.drawDot( temp.x, temp.y );
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                            core.render.drawDot( temp.x, temp.y );
+                                    }
+                            };
+                        };
                         this.text = function(){
                         
                             this.type = 'text';
@@ -4201,52 +4201,115 @@
             
                 this.circuit = new function(){
                     this.alpha = new function(){
-                        this.audio2percentage = function(){
-                            return new function(){
-                                var analyser = {
-                                    timeDomainDataArray: null,
-                                    frequencyData: null,
-                                    refreshRate: 30,
-                                    refreshInterval: null,
-                                    returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                    resolution: 128
+                        this.recorder = function(context){
+                        
+                            //state
+                                var state = {
+                                    recordedChunks: [],
+                                    recordingStartTime: -1,
+                                    recordingLength: 0,
                                 };
-                                analyser.analyserNode = workspace.library.audio.context.createAnalyser();
-                                analyser.analyserNode.fftSize = analyser.resolution;
-                                analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
-                                analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
                         
-                                this.__render = function(){
-                                        analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
+                            //flow
+                                //flow chain
+                                    var flow = {
+                                        leftIn:{}, rightIn:{},
+                                        recordingNode:{},
+                                        leftOut:{}, rightOut:{},
+                                    };
                         
-                                        var numbers = [];
-                                        for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
-                                            numbers.push(
-                                                analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
-                                            );
-                                        }
+                                //leftIn
+                                    flow.leftIn.node = context.createAnalyser();
+                                //rightIn
+                                    flow.rightIn.node = context.createAnalyser();
                         
-                                        var val = 0;
-                                        numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
+                                //recordingNode
+                                    flow.recordingNode.audioDest = new MediaStreamAudioDestinationNode(context);
+                                    flow.recordingNode.node = new MediaRecorder(flow.recordingNode.audioDest.stream, {mimeType : 'audio/webm'});
                         
-                                        this.newValue(val);
+                                    flow.recordingNode.node.onstart = function(){};
+                                    flow.recordingNode.node.ondataavailable = function(e){
+                                        state.recordedChunks.push(e.data);
+                                    };
+                                    flow.recordingNode.node.onpause = function(){};
+                                    flow.recordingNode.node.onresume = function(){};
+                                    flow.recordingNode.node.onerror = function(error){console.log(error);};
+                                    flow.recordingNode.node.onstop = function(){};
+                        
+                                    flow.leftIn.node.connect(flow.recordingNode.audioDest);
+                                    flow.rightIn.node.connect(flow.recordingNode.audioDest);
+                        
+                                //leftOut
+                                    flow.leftOut.node = context.createAnalyser();
+                                    flow.leftIn.node.connect(flow.leftOut.node);
+                                //rightIn
+                                    flow.rightOut.node = context.createAnalyser();
+                                    flow.rightIn.node.connect(flow.rightOut.node);
+                        
+                        
+                            //internal functions
+                                function getRecordingLength(){
+                                    switch(flow.recordingNode.node.state){
+                                        case 'inactive': case 'paused':
+                                            return state.recordingLength;
+                                        break;
+                                        case 'recording':
+                                            return context.currentTime - state.recordingStartTime;
+                                        break;
+                                    }            
                                 }
                         
-                                //audio connections
-                                    this.audioIn = function(){return analyser.analyserNode;};
+                            //controls
+                                this.clear =  function(){
+                                    this.stop();
+                                    state.recordedChunks = [];
+                                    state.recordingStartTime = -1;
+                                    state.recordingLength = 0;
+                                };
+                                this.start =  function(){
+                                    this.clear();
+                                    flow.recordingNode.node.start();
+                                    state.recordingStartTime = context.currentTime;
+                                };
+                                this.pause =  function(){
+                                    if(this.state() == 'inactive'){return;}
+                                    state.recordingLength = getRecordingLength();
+                                    flow.recordingNode.node.pause();
+                                };
+                                this.resume = function(){
+                                    flow.recordingNode.node.resume();
+                                    state.recordingStartTime = context.currentTime - state.recordingLength;
+                                };
+                                this.stop =   function(){
+                                    if(this.state() == 'inactive'){return;}
+                                    state.recordingLength = getRecordingLength();
+                                    flow.recordingNode.node.stop();
+                                };
+                                this.export = function(){
+                                    return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' });
+                                };
+                                this.save = function(filename='output'){
+                                    var a = document.createElement('a');
+                                    a.href = URL.createObjectURL(this.export());
+                                    a.download = filename+'.ogg';
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                };
                         
-                                //methods
-                                    this.start = function(){
-                                        analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
-                                    };
-                                    this.stop = function(){
-                                        clearInterval(analyser.refreshInterval);
-                                    };
+                                this.state = function(){return flow.recordingNode.node.state;};
+                                this.recordingTime = function(){
+                                    return getRecordingLength();
+                                };
+                                this.getTrack = function(){return this.export(); };
                         
-                                //callbacks
-                                    this.newValue = function(a){};
-                            };
+                            //io
+                                this.in_left  =  function(){return flow.leftIn.node;};
+                                this.in_right =  function(){return flow.rightIn.node;};
+                                this.out_left  = function(){return flow.leftOut.node;};
+                                this.out_right = function(){return flow.rightOut.node;};
                         };
+
                         this.audioIn = function(
                             context, setupConnect=true
                         ){
@@ -4295,176 +4358,6 @@
                             //setup
                                 if(setupConnect){this.selectDevice('default');}
                         };
-                        this.channelMultiplier = function(
-                            context, outputCount=2
-                        ){
-                            //flow
-                                //flow chain
-                                    var flow = {
-                                        in: {},
-                                        outs:[],
-                                        out_0: {}, out_1: {},
-                                    };
-                                
-                                //in
-                                    flow.in.gain = 1;
-                                    flow.in.node = context.createGain();    
-                                    workspace.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
-                        
-                                //outs
-                                    for(var a = 0; a < outputCount; a++){
-                                        var temp = { gain:0.5, node:context.createGain() };
-                                        workspace.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
-                                        flow.outs.push(temp);
-                                        flow.in.node.connect(temp.node);
-                                    }
-                        
-                            //input/output node
-                                this.in = function(){return flow.in.node;}
-                                this.out = function(a){return flow.outs[a].node;}
-                        
-                            //controls
-                                this.inGain = function(a){
-                                    if(a == undefined){return flow.in.gain;}
-                                    flow.in.gain = a;
-                                    workspace.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
-                                };
-                                this.outGain = function(a,value){
-                                    if(value == undefined){ return flow.outs[a].gain; }
-                                    flow.outs[a].gain = value;
-                                    workspace.library.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
-                                };
-                        };
-                            
-                        this.distortionUnit = function(
-                            context,
-                        ){
-                            //flow chain
-                            var flow = {
-                                inAggregator: {},
-                                distortionNode: {},
-                                outAggregator: {},
-                            };
-                        
-                            //inAggregator
-                                flow.inAggregator.gain = 0;
-                                flow.inAggregator.node = context.createGain();
-                                workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
-                        
-                            //distortionNode
-                                flow.distortionNode.distortionAmount = 0;
-                                flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
-                                flow.distortionNode.resolution = 100;
-                                function makeDistortionNode(){
-                                    flow.inAggregator.node.disconnect();
-                                    if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
-                                    
-                                    flow.distortionNode.node = context.createWaveShaper();
-                                        flow.distortionNode.curve = new Float32Array(workspace.library.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
-                                        flow.distortionNode.node.curve = flow.distortionNode.curve;
-                                        flow.distortionNode.node.oversample = flow.distortionNode.oversample;
-                                        
-                                    flow.inAggregator.node.connect(flow.distortionNode.node);
-                                    flow.distortionNode.node.connect(flow.outAggregator.node);
-                                }
-                        
-                            //outAggregator
-                                flow.outAggregator.gain = 0;
-                                flow.outAggregator.node = context.createGain();    
-                                workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                        
-                        
-                            //input/output node
-                                this.in = function(){return flow.inAggregator.node;}
-                                this.out = function(){return flow.outAggregator.node;}
-                        
-                            //controls
-                                this.inGain = function(a){
-                                    if(a==null){return flow.inAggregator.gain;}
-                                    flow.inAggregator.gain=a;
-                                    workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
-                                };
-                                this.outGain = function(a){
-                                    if(a==null){return flow.outAggregator.gain;}
-                                    flow.outAggregator.gain=a;
-                                    workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
-                                };
-                                this.distortionAmount = function(a){
-                                    if(a==null){return flow.distortionNode.distortionAmount;}
-                                    flow.distortionNode.distortionAmount=a;
-                                    makeDistortionNode();
-                                };
-                                this.oversample = function(a){
-                                    if(a==null){return flow.distortionNode.oversample;}
-                                    flow.distortionNode.oversample=a;
-                                    makeDistortionNode();
-                                };
-                                this.resolution = function(a){
-                                    if(a==null){return flow.distortionNode.resolution;}
-                                    flow.distortionNode.resolution = a>=2?a:2;
-                                    makeDistortionNode();
-                                };
-                        
-                            //setup
-                                makeDistortionNode();
-                        };
-                        this.filterUnit = function(
-                            context
-                        ){
-                            //flow chain
-                                var flow = {
-                                    inAggregator: {},
-                                    filterNode: {},
-                                    outAggregator: {},
-                                };
-                        
-                            //inAggregator
-                                flow.inAggregator.gain = 1;
-                                flow.inAggregator.node = context.createGain();
-                                workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
-                        
-                            //filterNode
-                                flow.filterNode.node = context.createBiquadFilter();
-                        	    flow.filterNode.node.type = "lowpass";
-                                workspace.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
-                                workspace.library.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
-                                workspace.library.audio.changeAudioParam(context, flow.filterNode.node.Q,0.1,0.01,'instant',true);
-                        
-                            //outAggregator
-                                flow.outAggregator.gain = 1;
-                                flow.outAggregator.node = context.createGain();
-                                workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                        
-                        
-                            //do connections
-                                flow.inAggregator.node.connect(flow.filterNode.node);
-                                flow.filterNode.node.connect(flow.outAggregator.node);
-                        
-                            //input/output node
-                                this.in = function(){return flow.inAggregator.node;}
-                                this.out = function(){return flow.outAggregator.node;}
-                        
-                            //methods
-                                this.type = function(type){flow.filterNode.node.type = type;};
-                                this.frequency = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
-                                this.gain = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
-                                this.Q = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
-                                this.measureFrequencyResponse = function(start,end,step){
-                                    var frequencyArray = [];
-                                    for(var a = start; a < end; a += step){frequencyArray.push(a);}
-                                
-                                    return this.measureFrequencyResponse_values(frequencyArray);
-                                };
-                                this.measureFrequencyResponse_values = function(frequencyArray){
-                                    var Float32_frequencyArray = new Float32Array(frequencyArray);
-                                    var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                                    var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                                
-                                    flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
-                                    return [magResponseOutput,frequencyArray];
-                                };
-                        };
-
                         this.looper = function(context){
                             //state
                                 var state = {
@@ -4564,6 +4457,355 @@
                                     state.loop.start = data.start!=undefined ? data.start : state.loop.start;
                                     state.loop.end   = data.end!=undefined ? data.end : state.loop.end;
                                 };
+                        };
+
+                        this.oneShot_single = function(context){
+                            //state
+                                var state = {
+                                    itself:this,
+                                    fileLoaded:false,
+                                    rate:1,
+                                };
+                        
+                            //flow
+                                //chain
+                                var flow = {
+                                    track:{},
+                                    bufferSource:null,
+                                    channelSplitter:{},
+                                    leftOut:{}, rightOut:{}
+                                };
+                        
+                                //channelSplitter
+                                    flow.channelSplitter = context.createChannelSplitter(2);
+                        
+                                //leftOut
+                                    flow.leftOut.gain = 1;
+                                    flow.leftOut.node = context.createGain();
+                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
+                                //rightOut
+                                    flow.rightOut.gain = 1;
+                                    flow.rightOut.node = context.createGain();
+                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
+                        
+                                //output node
+                                    this.out_left  = function(){return flow.leftOut.node;}
+                                    this.out_right = function(){return flow.rightOut.node;}
+                        
+                                    
+                            //controls
+                                this.load = function(type,callback,url=''){
+                                    state.fileLoaded = false;
+                                    workspace.library.audio.loadAudioFile(
+                                        function(data){
+                                            state.itself.stop();
+                                            flow.track = data;
+                                            state.fileLoaded = true;
+                                            state.needlePosition = 0.0;
+                                            callback(data);
+                                        },
+                                    type,url);
+                                };
+                                this.fire = function(){
+                                    //check if we should play at all (the file must be loaded)
+                                        if(!state.fileLoaded){return;}
+                                    //stop any previous buffers, load buffer, enter settings and start from zero
+                                        if(flow.bufferSource){
+                                            flow.bufferSource.onended = function(){};
+                                            flow.bufferSource.stop(0);
+                                        }
+                                        flow.bufferSource = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                                        flow.bufferSource.playbackRate.value = state.rate;
+                                        flow.bufferSource.start(0,0);
+                                        flow.bufferSource.onended = function(){flow.bufferSource = null;};
+                                };
+                                this.stop = function(){
+                                    if(!state.fileLoaded){return;}
+                                    flow.bufferSource.stop(0);
+                                    flow.bufferSource = undefined;
+                                };
+                                this.rate = function(){
+                                    state.rate = value;
+                                };
+                        
+                            //info
+                                this.duration = function(){
+                                    if(!state.fileLoaded){return -1;}
+                                    return flow.track.duration;
+                                };
+                                this.title = function(){
+                                    if(!state.fileLoaded){return '';}
+                                    return flow.track.name;
+                                };
+                                this.waveformSegment = function(data={start:0,end:1}){
+                                    if(data==undefined){return [];}
+                                    if(!state.fileLoaded){return [];}
+                                    return workspace.library.audio.waveformSegment(flow.track.buffer,data);
+                                };
+                        };
+
+                        this.oneShot_multi = function(context){
+                            //state
+                                var state = {
+                                    itself:this,
+                                    fileLoaded:false,
+                                    rate:1,
+                                };
+                        
+                            //flow
+                                //chain
+                                var flow = {
+                                    track:{},
+                                    bufferSource:null,
+                                    bufferSourceArray:[],
+                                    channelSplitter:{},
+                                    leftOut:{}, rightOut:{}
+                                };
+                        
+                                //channelSplitter
+                                    flow.channelSplitter = context.createChannelSplitter(2);
+                        
+                                //leftOut
+                                    flow.leftOut.gain = 1;
+                                    flow.leftOut.node = context.createGain();
+                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
+                                //rightOut
+                                    flow.rightOut.gain = 1;
+                                    flow.rightOut.node = context.createGain();
+                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
+                        
+                                //output node
+                                    this.audioOut = function(channel){
+                                        switch(channel){
+                                            case 'r': return flow.rightOut.node; break;
+                                            case 'l': return flow.leftOut.node; break;
+                                            default: console.error('"part.circuit.alpha.oneShot_multi.audioOut" unknown channel "'+channel+'"'); break;
+                                        }
+                                    };
+                                    this.out_left  = function(){return this.audioOut('l');}
+                                    this.out_right = function(){return this.audioOut('r');}
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                            //loading/unloading
+                                this.loadRaw = function(data){
+                                    if(Object.keys(data).length === 0){return;}
+                                    flow.track = data;
+                                    state.fileLoaded = true;
+                                    state.needlePosition = 0.0;
+                                };
+                                this.load = function(type,callback,url){
+                                    state.fileLoaded = false;
+                                    workspace.library.audio.loadAudioFile(
+                                        function(data){
+                                            state.itself.loadRaw(data);
+                                            if(callback != undefined){ callback(data); }
+                                        },
+                                    type,url);
+                                };
+                                this.unloadRaw = function(){
+                                    return flow.track;
+                                };
+                        
+                            //control
+                                //play
+                                    this.fire = function(start=0,duration){
+                                        //check if we should play at all (the file must be loaded)
+                                            if(!state.fileLoaded){return;}
+                                        //load buffer, add onend code, enter rate setting, start and add to the array
+                                            var temp = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
+                                                flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
+                                            });
+                                            temp.playbackRate.value = state.rate;
+                                            temp.start(0,start*state.rate,duration*state.rate);
+                                            flow.bufferSourceArray.push(temp);
+                                    };
+                                    this.panic = function(){
+                                        while(flow.bufferSourceArray.length > 0){
+                                            flow.bufferSourceArray.shift().stop(0);
+                                        }
+                                    };
+                                //options
+                                    this.rate = function(value){ 
+                                        if(value == undefined){return state.rate;}
+                                        if(value == 0){value = 1/1000000;}
+                                        state.rate = value;
+                                    };
+                        
+                            //info
+                                this.duration = function(){
+                                    if(!state.fileLoaded){return -1;}
+                                    return flow.track.duration / state.rate;
+                                };
+                                this.title = function(){
+                                    if(!state.fileLoaded){return '';}
+                                    return flow.track.name;
+                                };
+                                this.waveformSegment = function(data={start:0,end:1}){
+                                    if(data==undefined){return [];}
+                                    if(!state.fileLoaded){return [];}
+                                    return workspace.library.audio.waveformSegment(flow.track.buffer,data);
+                                };
+                        };
+                        this.audio2percentage = function(){
+                            return new function(){
+                                var analyser = {
+                                    timeDomainDataArray: null,
+                                    frequencyData: null,
+                                    refreshRate: 30,
+                                    refreshInterval: null,
+                                    returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                    resolution: 128
+                                };
+                                analyser.analyserNode = workspace.library.audio.context.createAnalyser();
+                                analyser.analyserNode.fftSize = analyser.resolution;
+                                analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
+                                analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
+                        
+                                this.__render = function(){
+                                        analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
+                        
+                                        var numbers = [];
+                                        for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
+                                            numbers.push(
+                                                analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
+                                            );
+                                        }
+                        
+                                        var val = 0;
+                                        numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
+                        
+                                        this.newValue(val);
+                                }
+                        
+                                //audio connections
+                                    this.audioIn = function(){return analyser.analyserNode;};
+                        
+                                //methods
+                                    this.start = function(){
+                                        analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
+                                    };
+                                    this.stop = function(){
+                                        clearInterval(analyser.refreshInterval);
+                                    };
+                        
+                                //callbacks
+                                    this.newValue = function(a){};
+                            };
+                        };
+                        this.reverbUnit = function(
+                            context,
+                        ){
+                            //flow chain
+                                var flow = {
+                                    inAggregator: {},
+                                    reverbGain: {}, bypassGain: {},
+                                    reverbNode: {},
+                                    outAggregator: {},
+                                };
+                        
+                            //inAggregator
+                                flow.inAggregator.gain = 1;
+                                flow.inAggregator.node = context.createGain();
+                                workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                        
+                            //reverbGain / bypassGain
+                                flow.reverbGain.gain = 0.5;
+                                flow.bypassGain.gain = 0.5;
+                                flow.reverbGain.node = context.createGain();
+                                flow.bypassGain.node = context.createGain();
+                                workspace.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                                workspace.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                        
+                            //reverbNode
+                                flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
+                                flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
+                                flow.reverbNode.node = context.createConvolver();
+                        
+                                function setReverbType(repoURL,type,callback){
+                                    var ajaxRequest = new XMLHttpRequest();
+                                    ajaxRequest.open('GET', repoURL+type, true);
+                                    ajaxRequest.responseType = 'arraybuffer';
+                                    ajaxRequest.onload = function(){
+                                        //undo connections
+                                            flow.reverbNode.node.disconnect();
+                                        //create new convolver
+                                            flow.reverbNode.node = context.createConvolver();
+                                        //redo connections
+                                            flow.reverbGain.node.connect(flow.reverbNode.node);
+                                            flow.reverbNode.node.connect(flow.outAggregator.node);
+                                        //load in new buffer
+                                            context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
+                                        //run any callbacks
+                                            if(callback){callback();}  
+                                    };
+                                    ajaxRequest.send();
+                                }
+                                function getReverbTypeList(repoURL,callback=null){
+                                    var ajaxRequest = new XMLHttpRequest();
+                                    ajaxRequest.open('GET', repoURL+'available2.list', true);
+                                    ajaxRequest.onload = function() {
+                                        var list = ajaxRequest.response.split('\n'); var temp = '';
+                                        
+                                        list[list.length-1] = list[list.length-1].split(''); 
+                                        list[list.length-1].pop();
+                                        list[list.length-1] = list[list.length-1].join('');		
+                        
+                                        list.splice(-1,1);
+                                        
+                                        if(callback == null){console.log(list);}
+                                        else{callback(list);}
+                                    }
+                                    ajaxRequest.send();
+                                }	
+                        
+                            //outAggregator
+                                flow.outAggregator.gain = 1;
+                                flow.outAggregator.node = context.createGain();    
+                                workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                        
+                            //do connections
+                                flow.inAggregator.node.connect(flow.reverbGain.node);
+                                flow.inAggregator.node.connect(flow.bypassGain.node);
+                                flow.reverbGain.node.connect(flow.reverbNode.node);
+                                flow.bypassGain.node.connect(flow.outAggregator.node);
+                                flow.reverbNode.node.connect(flow.outAggregator.node);
+                        
+                            //input/output node
+                                this.in = function(){return flow.inAggregator.node;}
+                                this.out = function(){return flow.outAggregator.node;}
+                            
+                            //controls
+                                this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
+                                this.type = function(name,callback){
+                                    if(name==null){return flow.reverbNode.selectedReverbType;}
+                                    flow.reverbNode.selectedReverbType = name;
+                                    setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
+                                };
+                                this.outGain = function(a){
+                                    if(a==null){return flow.outAggregator.gain;}
+                                    flow.outAggregator.gain=a;
+                                    workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                                };
+                                this.wetdry = function(a){
+                                    if(a==null){return flow.reverbGain.gain;}
+                                    flow.reverbGain.gain=a;
+                                    flow.bypassGain.gain=1-a;
+                                    workspace.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                                    workspace.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                                };
+                        
+                            //setup
+                                setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
                         };
 
                         this.multibandFilter = function(
@@ -4692,203 +4934,78 @@
                                         return [magResponseOutput.map(a => a*flow.gainNodes[band].gain*flow.outAggregator.gain),frequencyArray];
                                 };
                         };
-                        this.oneShot_multi = function(context){
-                            //state
-                                var state = {
-                                    itself:this,
-                                    fileLoaded:false,
-                                    rate:1,
-                                };
+                        this.distortionUnit = function(
+                            context,
+                        ){
+                            //flow chain
+                            var flow = {
+                                inAggregator: {},
+                                distortionNode: {},
+                                outAggregator: {},
+                            };
                         
-                            //flow
-                                //chain
-                                var flow = {
-                                    track:{},
-                                    bufferSource:null,
-                                    bufferSourceArray:[],
-                                    channelSplitter:{},
-                                    leftOut:{}, rightOut:{}
-                                };
+                            //inAggregator
+                                flow.inAggregator.gain = 0;
+                                flow.inAggregator.node = context.createGain();
+                                workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
                         
-                                //channelSplitter
-                                    flow.channelSplitter = context.createChannelSplitter(2);
-                        
-                                //leftOut
-                                    flow.leftOut.gain = 1;
-                                    flow.leftOut.node = context.createGain();
-                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
-                                //rightOut
-                                    flow.rightOut.gain = 1;
-                                    flow.rightOut.node = context.createGain();
-                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
-                        
-                                //output node
-                                    this.audioOut = function(channel){
-                                        switch(channel){
-                                            case 'r': return flow.rightOut.node; break;
-                                            case 'l': return flow.leftOut.node; break;
-                                            default: console.error('"part.circuit.alpha.oneShot_multi.audioOut" unknown channel "'+channel+'"'); break;
-                                        }
-                                    };
-                                    this.out_left  = function(){return this.audioOut('l');}
-                                    this.out_right = function(){return this.audioOut('r');}
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                            //loading/unloading
-                                this.loadRaw = function(data){
-                                    if(Object.keys(data).length === 0){return;}
-                                    flow.track = data;
-                                    state.fileLoaded = true;
-                                    state.needlePosition = 0.0;
-                                };
-                                this.load = function(type,callback,url){
-                                    state.fileLoaded = false;
-                                    workspace.library.audio.loadAudioFile(
-                                        function(data){
-                                            state.itself.loadRaw(data);
-                                            if(callback != undefined){ callback(data); }
-                                        },
-                                    type,url);
-                                };
-                                this.unloadRaw = function(){
-                                    return flow.track;
-                                };
-                        
-                            //control
-                                //play
-                                    this.fire = function(start=0,duration){
-                                        //check if we should play at all (the file must be loaded)
-                                            if(!state.fileLoaded){return;}
-                                        //load buffer, add onend code, enter rate setting, start and add to the array
-                                            var temp = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
-                                                flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
-                                            });
-                                            temp.playbackRate.value = state.rate;
-                                            temp.start(0,start*state.rate,duration*state.rate);
-                                            flow.bufferSourceArray.push(temp);
-                                    };
-                                    this.panic = function(){
-                                        while(flow.bufferSourceArray.length > 0){
-                                            flow.bufferSourceArray.shift().stop(0);
-                                        }
-                                    };
-                                //options
-                                    this.rate = function(value){ 
-                                        if(value == undefined){return state.rate;}
-                                        if(value == 0){value = 1/1000000;}
-                                        state.rate = value;
-                                    };
-                        
-                            //info
-                                this.duration = function(){
-                                    if(!state.fileLoaded){return -1;}
-                                    return flow.track.duration / state.rate;
-                                };
-                                this.title = function(){
-                                    if(!state.fileLoaded){return '';}
-                                    return flow.track.name;
-                                };
-                                this.waveformSegment = function(data={start:0,end:1}){
-                                    if(data==undefined){return [];}
-                                    if(!state.fileLoaded){return [];}
-                                    return workspace.library.audio.waveformSegment(flow.track.buffer,data);
-                                };
-                        };
-                        this.oneShot_single = function(context){
-                            //state
-                                var state = {
-                                    itself:this,
-                                    fileLoaded:false,
-                                    rate:1,
-                                };
-                        
-                            //flow
-                                //chain
-                                var flow = {
-                                    track:{},
-                                    bufferSource:null,
-                                    channelSplitter:{},
-                                    leftOut:{}, rightOut:{}
-                                };
-                        
-                                //channelSplitter
-                                    flow.channelSplitter = context.createChannelSplitter(2);
-                        
-                                //leftOut
-                                    flow.leftOut.gain = 1;
-                                    flow.leftOut.node = context.createGain();
-                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
-                                //rightOut
-                                    flow.rightOut.gain = 1;
-                                    flow.rightOut.node = context.createGain();
-                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
-                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
-                        
-                                //output node
-                                    this.out_left  = function(){return flow.leftOut.node;}
-                                    this.out_right = function(){return flow.rightOut.node;}
-                        
+                            //distortionNode
+                                flow.distortionNode.distortionAmount = 0;
+                                flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
+                                flow.distortionNode.resolution = 100;
+                                function makeDistortionNode(){
+                                    flow.inAggregator.node.disconnect();
+                                    if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
                                     
+                                    flow.distortionNode.node = context.createWaveShaper();
+                                        flow.distortionNode.curve = new Float32Array(workspace.library.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
+                                        flow.distortionNode.node.curve = flow.distortionNode.curve;
+                                        flow.distortionNode.node.oversample = flow.distortionNode.oversample;
+                                        
+                                    flow.inAggregator.node.connect(flow.distortionNode.node);
+                                    flow.distortionNode.node.connect(flow.outAggregator.node);
+                                }
+                        
+                            //outAggregator
+                                flow.outAggregator.gain = 0;
+                                flow.outAggregator.node = context.createGain();    
+                                workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                        
+                        
+                            //input/output node
+                                this.in = function(){return flow.inAggregator.node;}
+                                this.out = function(){return flow.outAggregator.node;}
+                        
                             //controls
-                                this.load = function(type,callback,url=''){
-                                    state.fileLoaded = false;
-                                    workspace.library.audio.loadAudioFile(
-                                        function(data){
-                                            state.itself.stop();
-                                            flow.track = data;
-                                            state.fileLoaded = true;
-                                            state.needlePosition = 0.0;
-                                            callback(data);
-                                        },
-                                    type,url);
+                                this.inGain = function(a){
+                                    if(a==null){return flow.inAggregator.gain;}
+                                    flow.inAggregator.gain=a;
+                                    workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
                                 };
-                                this.fire = function(){
-                                    //check if we should play at all (the file must be loaded)
-                                        if(!state.fileLoaded){return;}
-                                    //stop any previous buffers, load buffer, enter settings and start from zero
-                                        if(flow.bufferSource){
-                                            flow.bufferSource.onended = function(){};
-                                            flow.bufferSource.stop(0);
-                                        }
-                                        flow.bufferSource = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
-                                        flow.bufferSource.playbackRate.value = state.rate;
-                                        flow.bufferSource.start(0,0);
-                                        flow.bufferSource.onended = function(){flow.bufferSource = null;};
+                                this.outGain = function(a){
+                                    if(a==null){return flow.outAggregator.gain;}
+                                    flow.outAggregator.gain=a;
+                                    workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
                                 };
-                                this.stop = function(){
-                                    if(!state.fileLoaded){return;}
-                                    flow.bufferSource.stop(0);
-                                    flow.bufferSource = undefined;
+                                this.distortionAmount = function(a){
+                                    if(a==null){return flow.distortionNode.distortionAmount;}
+                                    flow.distortionNode.distortionAmount=a;
+                                    makeDistortionNode();
                                 };
-                                this.rate = function(){
-                                    state.rate = value;
+                                this.oversample = function(a){
+                                    if(a==null){return flow.distortionNode.oversample;}
+                                    flow.distortionNode.oversample=a;
+                                    makeDistortionNode();
+                                };
+                                this.resolution = function(a){
+                                    if(a==null){return flow.distortionNode.resolution;}
+                                    flow.distortionNode.resolution = a>=2?a:2;
+                                    makeDistortionNode();
                                 };
                         
-                            //info
-                                this.duration = function(){
-                                    if(!state.fileLoaded){return -1;}
-                                    return flow.track.duration;
-                                };
-                                this.title = function(){
-                                    if(!state.fileLoaded){return '';}
-                                    return flow.track.name;
-                                };
-                                this.waveformSegment = function(data={start:0,end:1}){
-                                    if(data==undefined){return [];}
-                                    if(!state.fileLoaded){return [];}
-                                    return workspace.library.audio.waveformSegment(flow.track.buffer,data);
-                                };
+                            //setup
+                                makeDistortionNode();
                         };
-
                         this.player = function(context){
                             //state
                                 var state = {
@@ -5090,123 +5207,54 @@
                                 };
                         };
 
-                        this.recorder = function(context){
-                        
-                            //state
-                                var state = {
-                                    recordedChunks: [],
-                                    recordingStartTime: -1,
-                                    recordingLength: 0,
-                                };
-                        
+                        this.channelMultiplier = function(
+                            context, outputCount=2
+                        ){
                             //flow
                                 //flow chain
                                     var flow = {
-                                        leftIn:{}, rightIn:{},
-                                        recordingNode:{},
-                                        leftOut:{}, rightOut:{},
+                                        in: {},
+                                        outs:[],
+                                        out_0: {}, out_1: {},
                                     };
+                                
+                                //in
+                                    flow.in.gain = 1;
+                                    flow.in.node = context.createGain();    
+                                    workspace.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
                         
-                                //leftIn
-                                    flow.leftIn.node = context.createAnalyser();
-                                //rightIn
-                                    flow.rightIn.node = context.createAnalyser();
+                                //outs
+                                    for(var a = 0; a < outputCount; a++){
+                                        var temp = { gain:0.5, node:context.createGain() };
+                                        workspace.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
+                                        flow.outs.push(temp);
+                                        flow.in.node.connect(temp.node);
+                                    }
                         
-                                //recordingNode
-                                    flow.recordingNode.audioDest = new MediaStreamAudioDestinationNode(context);
-                                    flow.recordingNode.node = new MediaRecorder(flow.recordingNode.audioDest.stream, {mimeType : 'audio/webm'});
-                        
-                                    flow.recordingNode.node.onstart = function(){};
-                                    flow.recordingNode.node.ondataavailable = function(e){
-                                        state.recordedChunks.push(e.data);
-                                    };
-                                    flow.recordingNode.node.onpause = function(){};
-                                    flow.recordingNode.node.onresume = function(){};
-                                    flow.recordingNode.node.onerror = function(error){console.log(error);};
-                                    flow.recordingNode.node.onstop = function(){};
-                        
-                                    flow.leftIn.node.connect(flow.recordingNode.audioDest);
-                                    flow.rightIn.node.connect(flow.recordingNode.audioDest);
-                        
-                                //leftOut
-                                    flow.leftOut.node = context.createAnalyser();
-                                    flow.leftIn.node.connect(flow.leftOut.node);
-                                //rightIn
-                                    flow.rightOut.node = context.createAnalyser();
-                                    flow.rightIn.node.connect(flow.rightOut.node);
-                        
-                        
-                            //internal functions
-                                function getRecordingLength(){
-                                    switch(flow.recordingNode.node.state){
-                                        case 'inactive': case 'paused':
-                                            return state.recordingLength;
-                                        break;
-                                        case 'recording':
-                                            return context.currentTime - state.recordingStartTime;
-                                        break;
-                                    }            
-                                }
+                            //input/output node
+                                this.in = function(){return flow.in.node;}
+                                this.out = function(a){return flow.outs[a].node;}
                         
                             //controls
-                                this.clear =  function(){
-                                    this.stop();
-                                    state.recordedChunks = [];
-                                    state.recordingStartTime = -1;
-                                    state.recordingLength = 0;
+                                this.inGain = function(a){
+                                    if(a == undefined){return flow.in.gain;}
+                                    flow.in.gain = a;
+                                    workspace.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
                                 };
-                                this.start =  function(){
-                                    this.clear();
-                                    flow.recordingNode.node.start();
-                                    state.recordingStartTime = context.currentTime;
+                                this.outGain = function(a,value){
+                                    if(value == undefined){ return flow.outs[a].gain; }
+                                    flow.outs[a].gain = value;
+                                    workspace.library.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
                                 };
-                                this.pause =  function(){
-                                    if(this.state() == 'inactive'){return;}
-                                    state.recordingLength = getRecordingLength();
-                                    flow.recordingNode.node.pause();
-                                };
-                                this.resume = function(){
-                                    flow.recordingNode.node.resume();
-                                    state.recordingStartTime = context.currentTime - state.recordingLength;
-                                };
-                                this.stop =   function(){
-                                    if(this.state() == 'inactive'){return;}
-                                    state.recordingLength = getRecordingLength();
-                                    flow.recordingNode.node.stop();
-                                };
-                                this.export = function(){
-                                    return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' });
-                                };
-                                this.save = function(filename='output'){
-                                    var a = document.createElement('a');
-                                    a.href = URL.createObjectURL(this.export());
-                                    a.download = filename+'.ogg';
-                                    document.body.appendChild(a);
-                                    a.click();
-                                    document.body.removeChild(a);
-                                };
-                        
-                                this.state = function(){return flow.recordingNode.node.state;};
-                                this.recordingTime = function(){
-                                    return getRecordingLength();
-                                };
-                                this.getTrack = function(){return this.export(); };
-                        
-                            //io
-                                this.in_left  =  function(){return flow.leftIn.node;};
-                                this.in_right =  function(){return flow.rightIn.node;};
-                                this.out_left  = function(){return flow.leftOut.node;};
-                                this.out_right = function(){return flow.rightOut.node;};
                         };
-
-                        this.reverbUnit = function(
-                            context,
+                            
+                        this.filterUnit = function(
+                            context
                         ){
                             //flow chain
                                 var flow = {
                                     inAggregator: {},
-                                    reverbGain: {}, bypassGain: {},
-                                    reverbNode: {},
+                                    filterNode: {},
                                     outAggregator: {},
                                 };
                         
@@ -5215,94 +5263,46 @@
                                 flow.inAggregator.node = context.createGain();
                                 workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
                         
-                            //reverbGain / bypassGain
-                                flow.reverbGain.gain = 0.5;
-                                flow.bypassGain.gain = 0.5;
-                                flow.reverbGain.node = context.createGain();
-                                flow.bypassGain.node = context.createGain();
-                                workspace.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
-                                workspace.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
-                        
-                            //reverbNode
-                                flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
-                                flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
-                                flow.reverbNode.node = context.createConvolver();
-                        
-                                function setReverbType(repoURL,type,callback){
-                                    var ajaxRequest = new XMLHttpRequest();
-                                    ajaxRequest.open('GET', repoURL+type, true);
-                                    ajaxRequest.responseType = 'arraybuffer';
-                                    ajaxRequest.onload = function(){
-                                        //undo connections
-                                            flow.reverbNode.node.disconnect();
-                                        //create new convolver
-                                            flow.reverbNode.node = context.createConvolver();
-                                        //redo connections
-                                            flow.reverbGain.node.connect(flow.reverbNode.node);
-                                            flow.reverbNode.node.connect(flow.outAggregator.node);
-                                        //load in new buffer
-                                            context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
-                                        //run any callbacks
-                                            if(callback){callback();}  
-                                    };
-                                    ajaxRequest.send();
-                                }
-                                function getReverbTypeList(repoURL,callback=null){
-                                    var ajaxRequest = new XMLHttpRequest();
-                                    ajaxRequest.open('GET', repoURL+'available2.list', true);
-                                    ajaxRequest.onload = function() {
-                                        var list = ajaxRequest.response.split('\n'); var temp = '';
-                                        
-                                        list[list.length-1] = list[list.length-1].split(''); 
-                                        list[list.length-1].pop();
-                                        list[list.length-1] = list[list.length-1].join('');		
-                        
-                                        list.splice(-1,1);
-                                        
-                                        if(callback == null){console.log(list);}
-                                        else{callback(list);}
-                                    }
-                                    ajaxRequest.send();
-                                }	
+                            //filterNode
+                                flow.filterNode.node = context.createBiquadFilter();
+                        	    flow.filterNode.node.type = "lowpass";
+                                workspace.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
+                                workspace.library.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
+                                workspace.library.audio.changeAudioParam(context, flow.filterNode.node.Q,0.1,0.01,'instant',true);
                         
                             //outAggregator
                                 flow.outAggregator.gain = 1;
-                                flow.outAggregator.node = context.createGain();    
+                                flow.outAggregator.node = context.createGain();
                                 workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
                         
+                        
                             //do connections
-                                flow.inAggregator.node.connect(flow.reverbGain.node);
-                                flow.inAggregator.node.connect(flow.bypassGain.node);
-                                flow.reverbGain.node.connect(flow.reverbNode.node);
-                                flow.bypassGain.node.connect(flow.outAggregator.node);
-                                flow.reverbNode.node.connect(flow.outAggregator.node);
+                                flow.inAggregator.node.connect(flow.filterNode.node);
+                                flow.filterNode.node.connect(flow.outAggregator.node);
                         
                             //input/output node
                                 this.in = function(){return flow.inAggregator.node;}
                                 this.out = function(){return flow.outAggregator.node;}
-                            
-                            //controls
-                                this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
-                                this.type = function(name,callback){
-                                    if(name==null){return flow.reverbNode.selectedReverbType;}
-                                    flow.reverbNode.selectedReverbType = name;
-                                    setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
-                                };
-                                this.outGain = function(a){
-                                    if(a==null){return flow.outAggregator.gain;}
-                                    flow.outAggregator.gain=a;
-                                    workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
-                                };
-                                this.wetdry = function(a){
-                                    if(a==null){return flow.reverbGain.gain;}
-                                    flow.reverbGain.gain=a;
-                                    flow.bypassGain.gain=1-a;
-                                    workspace.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
-                                    workspace.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
-                                };
                         
-                            //setup
-                                setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
+                            //methods
+                                this.type = function(type){flow.filterNode.node.type = type;};
+                                this.frequency = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
+                                this.gain = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
+                                this.Q = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
+                                this.measureFrequencyResponse = function(start,end,step){
+                                    var frequencyArray = [];
+                                    for(var a = start; a < end; a += step){frequencyArray.push(a);}
+                                
+                                    return this.measureFrequencyResponse_values(frequencyArray);
+                                };
+                                this.measureFrequencyResponse_values = function(frequencyArray){
+                                    var Float32_frequencyArray = new Float32Array(frequencyArray);
+                                    var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                    var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                
+                                    flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+                                    return [magResponseOutput,frequencyArray];
+                                };
                         };
 
                         this.synthesizer = function(
@@ -5540,96 +5540,6 @@
                         var interfacePart = this;
                         
                         this.basic = new function(){
-                            this.canvas = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1){
-                                var temp = workspace.core.arrangement.createElement('canvas');
-                                temp.name = name;
-                                temp.x = x; temp.y = y;
-                                temp.parameter.width(width);
-                                temp.parameter.height(height);
-                                temp.resolution(resolution);
-                                temp.angle = angle;
-                                temp.anchor = anchor;
-                                temp.ignored = ignored;
-                                return temp;
-                            };
-                            this.circle = function(
-                                name=null, 
-                                x=0, 
-                                y=0, 
-                                r=2,
-                                ignored=false,
-                                fillStyle='rgba(255,100,255,1)', 
-                                strokeStyle='rgba(0,0,0,0)', 
-                                lineWidth=1,
-                                lineJoin='round',
-                                miterLimit=2,
-                                shadowColour='rgba(0,0,0,0)',
-                                shadowBlur=20,
-                                shadowOffset={x:20, y:20},
-                            ){
-                                var temp = workspace.core.arrangement.createElement('circle');
-                                temp.name = name;
-                                temp.x = x; temp.y = y;
-                                temp.r = r;
-                                temp.ignored = ignored;
-                                temp.style.fill = fillStyle;
-                                temp.style.stroke = strokeStyle;
-                                temp.style.lineWidth = lineWidth;
-                                temp.style.lineJoin = lineJoin;
-                                temp.style.miterLimit = miterLimit;
-                                temp.style.shadowColour = shadowColour;
-                                temp.style.shadowBlur = shadowBlur;
-                                temp.style.shadowOffset = shadowOffset;
-                                return temp;
-                            };
-                            this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
-                                var temp = workspace.core.arrangement.createElement('group');
-                                temp.name = name;
-                                temp.x = x; 
-                                temp.y = y;
-                                temp.angle = angle;
-                                temp.ignored = ignored;
-                                return temp;
-                            };
-                            this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
-                                var temp = workspace.core.arrangement.createElement('image');
-                                temp.name = name;
-                                temp.x = x; temp.y = y;
-                                temp.width = width; temp.height = height;
-                                temp.angle = angle;
-                                temp.anchor = anchor;
-                                temp.ignored = ignored;
-                                temp.url = url;
-                                return temp;
-                            };
-                            this.path = function(
-                                name=null, 
-                                points=[],
-                                ignored=false,
-                                strokeStyle='rgba(0,0,0,1)', 
-                                lineWidth=1,
-                                lineCap='butt',
-                                lineJoin='miter',
-                                miterLimit=2,
-                                shadowColour='rgba(0,0,0,0)',
-                                shadowBlur=20,
-                                shadowOffset={x:20, y:20},
-                            ){
-                                var temp = workspace.core.arrangement.createElement('path');
-                                temp.name = name;
-                                temp.points = points;
-                                temp.ignored = ignored;
-                                temp.style.stroke = strokeStyle;
-                                temp.style.lineWidth = lineWidth;
-                                temp.style.lineCap = lineCap;
-                                temp.style.lineJoin = lineJoin;
-                                temp.style.miterLimit = miterLimit;
-                                temp.style.shadowColour = shadowColour;
-                                temp.style.shadowBlur = shadowBlur;
-                                temp.style.shadowOffset = shadowOffset;
-                                
-                                return temp;
-                            };
                             this.polygon = function(
                                 name=null, 
                                 points=[], 
@@ -5685,6 +5595,87 @@
                             
                                 return temp;
                             };
+                            this.circle = function(
+                                name=null, 
+                                x=0, 
+                                y=0, 
+                                r=2,
+                                ignored=false,
+                                fillStyle='rgba(255,100,255,1)', 
+                                strokeStyle='rgba(0,0,0,0)', 
+                                lineWidth=1,
+                                lineJoin='round',
+                                miterLimit=2,
+                                shadowColour='rgba(0,0,0,0)',
+                                shadowBlur=20,
+                                shadowOffset={x:20, y:20},
+                            ){
+                                var temp = workspace.core.arrangement.createElement('circle');
+                                temp.name = name;
+                                temp.x = x; temp.y = y;
+                                temp.r = r;
+                                temp.ignored = ignored;
+                                temp.style.fill = fillStyle;
+                                temp.style.stroke = strokeStyle;
+                                temp.style.lineWidth = lineWidth;
+                                temp.style.lineJoin = lineJoin;
+                                temp.style.miterLimit = miterLimit;
+                                temp.style.shadowColour = shadowColour;
+                                temp.style.shadowBlur = shadowBlur;
+                                temp.style.shadowOffset = shadowOffset;
+                                return temp;
+                            };
+                            this.canvas = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1){
+                                var temp = workspace.core.arrangement.createElement('canvas');
+                                temp.name = name;
+                                temp.x = x; temp.y = y;
+                                temp.parameter.width(width);
+                                temp.parameter.height(height);
+                                temp.resolution(resolution);
+                                temp.angle = angle;
+                                temp.anchor = anchor;
+                                temp.ignored = ignored;
+                                return temp;
+                            };
+                            this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
+                                var temp = workspace.core.arrangement.createElement('image');
+                                temp.name = name;
+                                temp.x = x; temp.y = y;
+                                temp.width = width; temp.height = height;
+                                temp.angle = angle;
+                                temp.anchor = anchor;
+                                temp.ignored = ignored;
+                                temp.url = url;
+                                return temp;
+                            };
+                            this.path = function(
+                                name=null, 
+                                points=[],
+                                ignored=false,
+                                strokeStyle='rgba(0,0,0,1)', 
+                                lineWidth=1,
+                                lineCap='butt',
+                                lineJoin='miter',
+                                miterLimit=2,
+                                shadowColour='rgba(0,0,0,0)',
+                                shadowBlur=20,
+                                shadowOffset={x:20, y:20},
+                            ){
+                                var temp = workspace.core.arrangement.createElement('path');
+                                temp.name = name;
+                                temp.points = points;
+                                temp.ignored = ignored;
+                                temp.style.stroke = strokeStyle;
+                                temp.style.lineWidth = lineWidth;
+                                temp.style.lineCap = lineCap;
+                                temp.style.lineJoin = lineJoin;
+                                temp.style.miterLimit = miterLimit;
+                                temp.style.shadowColour = shadowColour;
+                                temp.style.shadowBlur = shadowBlur;
+                                temp.style.shadowOffset = shadowOffset;
+                                
+                                return temp;
+                            };
                             this.rectangle = function(
                                 name=null, 
                                 x=0, 
@@ -5718,6 +5709,15 @@
                                 temp.style.shadowColour = shadowColour;
                                 temp.style.shadowBlur = shadowBlur;
                                 temp.style.shadowOffset = shadowOffset;
+                                return temp;
+                            };
+                            this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
+                                var temp = workspace.core.arrangement.createElement('group');
+                                temp.name = name;
+                                temp.x = x; 
+                                temp.y = y;
+                                temp.angle = angle;
+                                temp.ignored = ignored;
                                 return temp;
                             };
                             this.text = function(
@@ -5766,255 +5766,81 @@
                         };
                         
                         this.display = new function(){
-                            this.audio_meter_level = function(
-                                name='audio_meter_level',
-                                x, y, angle=0,
-                                width=20, height=60,
-                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                            
-                                backingStyle='rgb(10,10,10)',
-                                levelStyles=['rgba(250,250,250,1)','rgb(100,100,100)'],
-                                markingStyle_fill='rgba(220,220,220,1)',
-                                markingStyle_font='1pt Courier New',
+                            this.rastorDisplay = function(
+                                name='rastorDisplay',
+                                x, y, angle=0, width=60, height=60,
+                                xCount=8, yCount=8, xGappage=0.1, yGappage=0.1,
+                                backing='rgba(50,50,50)', defaultPixelValue='rgba(0,0,0)',
                             ){
-                                //elements
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //meter
-                                        var meter = interfacePart.builder('meter_level','meter',{
-                                            width:width, height:height, markings:markings,
-                                            style:{
-                                                backing:backingStyle,
-                                                levels:levelStyles,
-                                                markingStyle_fill:markingStyle_fill,
-                                                markingStyle_font:markingStyle_font,
-                                            },
-                                        });
-                                        object.append(meter);
-                            
-                                //circuitry
-                                    var converter = interface.circuit.alpha.audio2percentage()
-                                    converter.newValue = function(val){meter.set( val );};
-                            
-                                //audio connections
-                                    object.audioIn = function(){ return converter.audioIn(); }
-                            
-                                //methods
-                                    object.start = function(){ converter.start(); };
-                                    object.stop = function(){ converter.stop(); };
-                            
-                                return object;
-                            };
-                            this.glowbox_rect = function(
-                                name='glowbox_rect',
-                                x, y, width=30, height=30, angle=0,
-                                glowStyle = 'rgba(244,234,141,1)',
-                                dimStyle = 'rgba(80,80,80,1)'
-                            ){
-                                //elements 
-                                    var object = interfacePart.builder('group',name,{x:x, y:y});
-                                    var rect = interfacePart.builder('rectangle','light',{ width:width, height:height, angle:angle, style:{fill:dimStyle} });
-                                        object.append(rect);
-                            
-                                //methods
-                                    object.on = function(){
-                                        rect.style.fill = glowStyle;
-                                    };
-                                    object.off = function(){
-                                        rect.style.fill = dimStyle;
-                                    };
-                            
-                                return object;
-                            };
-                            this.grapher = function(
-                                name='grapher',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyles=[
-                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
-                                ],
-                                foregroundTextStyles=[
-                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
-                                ],
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_font='1.5pt Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var foregroundElementsGroup = [];
-                            
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     //backing
-                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backing} });
                                         object.append(rect);
-                                    //background group
-                                        var backgroundGroup = interfacePart.builder( 'group', 'background' );
-                                        object.append(backgroundGroup);
-                                    //foreground group
-                                        var foregroundGroup = interfacePart.builder( 'group', 'foreground' );
-                                        object.append(foregroundGroup);
-                                    //stencil
-                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
-                                        object.stencil(stencil);
-                                        object.clip(true);
+                                    //pixels
+                                        var pixelGroup = interfacePart.builder('group','pixels');
+                                        object.append(pixelGroup);
                             
-                                //graphics
-                                    function drawBackground(){
-                                        backgroundGroup.clear();
+                                        var pixels = [];
+                                        var pixelValues = [];
+                                        var pixWidth = width/xCount;
+                                        var pixHeight = height/yCount;
                             
-                                        //horizontal lines
-                                            //calculate the x value for all parts of this section
-                                                var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
-                            
-                                            //add all horizontal markings
-                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
-                                    
-                                                    //calculate the y value for this section
-                                                        var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineWidth,style:{fill:backgroundStyle_stroke}} );
-                                                            backgroundGroup.append(path);
-                                                        //text
-                                                            if( horizontalMarkings.printText ){
-                                                                var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
-                                                                    x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y,
-                                                                    text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                                                                    style:{
-                                                                        fill:backgroundTextStyle_fill,
-                                                                        font:backgroundTextStyle_font
-                                                                    }
-                                                                } );
-                                                                backgroundGroup.append(text);
-                                                            }
-                                                }
-                            
-                                        //vertical lines
-                                            //calculate the y value for all parts of this section
-                                                var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
-                            
-                                            //add all vertical markings
-                                                for(var a = 0; a < verticalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
-                            
-                                                    //calculate the x value for this section
-                                                        var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineWidth,height:height,style:{fill:backgroundStyle_stroke}} );
-                                                            backgroundGroup.append(path);
+                                        for(var x = 0; x < xCount; x++){
+                                            var temp_pixels = [];
+                                            var temp_pixelValues = [];
+                                            for(var y = 0; y < yCount; y++){
+                                                var rect = interfacePart.builder('rectangle',x+'_'+y,{ 
+                                                    x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
+                                                    width:pixWidth-xGappage,    height:pixHeight-yGappage,
+                                                    style:{fill:defaultPixelValue},
+                                                });
                                                     
-                                                        //text
-                                                            if( verticalMarkings.printText ){
-                                                                var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
-                                                                    x:x+verticalMarkings.textPositionOffset.x, y:y+verticalMarkings.textPositionOffset.y,
-                                                                    text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                                                                    style:{
-                                                                        fill:backgroundTextStyle_fill,
-                                                                        font:backgroundTextStyle_font
-                                                                    }
-                                                                } );
-                                                                backgroundGroup.append(text);
-                                                        }
-                                                }
-                                    }
-                                    function drawForeground(y,x,layer=0){
-                                        foregroundGroup.clear();
-                            
-                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
-                                        //otherwise, just update the layer's data sets
-                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
-                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
-                            
-                                        //input check
-                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
-                                                console.warn('grapher error',name,'attempting to add line with no y component');
-                                                console.warn('x:',foregroundElementsGroup[layer].x);
-                                                console.warn('y:',foregroundElementsGroup[layer].y);
-                                                return;
+                                                temp_pixels.push(rect);
+                                                temp_pixelValues.push([0,0,0]);
+                                                pixelGroup.append(rect);
                                             }
+                                            pixels.push(temp_pixels);
+                                            pixelValues.push(temp_pixelValues);
+                                        }
                             
-                                        //draw layers
-                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
-                                                if(foregroundElementsGroup[L] == undefined){continue;}
-                            
-                                                var layer = foregroundElementsGroup[L];
-                                                var points = [];
-                            
-                                                //generate path points
-                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
-                                                        for(var a = 0; a < layer.y.length; a++){ 
-                                                            points.push( {
-                                                                x: a*(width/(layer.y.length-1)), 
-                                                                y: height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
-                                                            } );
-                                                        }
-                                                    }else if( layer.y.length == layer.x.length ){ //straight print
-                                                        for(var a = 0; a < layer.y.length; a++){ 
-                                                            points.push( {
-                                                                x:          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true), 
-                                                                y: height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
-                                                            } );
-                                                        }
-                                                    }else{console.error('grapher::'+name,':layers are of differnt length:',layer.y,layer.x);}
-                            
-                                                //create path shape and add it to the group
-                                                    foregroundGroup.append(
-                                                        interfacePart.builder( 'path', 'layer_'+L, { 
-                                                            points:points, 
-                                                            style:{
-                                                                stroke: foregroundStyles[L].stroke,
-                                                                lineWidth: foregroundStyles[L].lineWidth,
-                                                                lineJoin: foregroundStyles[L].lineJoin,
-                                                                lineCap: foregroundStyles[L].lineJoin,
-                                                            }
-                                                        })
-                                                    );
+                                //graphical update
+                                    function render(){
+                                        for(var x = 0; x < xCount; x++){
+                                            for(var y = 0; y < yCount; y++){
+                                                pixels[x][y].style.fill = 'rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')';
                                             }
+                                        }
                                     }
                             
-                                //controls
-                                    object.viewbox = function(a){
-                                        if(a==null){return viewbox;}
-                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
-                                        if( a.top != undefined ){viewbox.top = a.top;}
-                                        if( a.left != undefined ){viewbox.left = a.left;}
-                                        if( a.right != undefined ){viewbox.right = a.right;}
+                                //control
+                                    object.get = function(x,y){ return pixelValues[x][y]; };
+                                    object.set = function(x,y,state){ pixelValues[x][y] = state; render(); };
+                                    object.import = function(data){
+                                        for(var x = 0; x < xCount; x++){
+                                            for(var y = 0; y < yCount; y++){
+                                                this.set(x,y,data[x][y]);
+                                            }
+                                        }
+                                        render();
                                     };
-                                    object.horizontalMarkings = function(a){
-                                        if(a==null){return horizontalMarkings;}
-                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
+                                    object.export = function(){ return pixelValues; }
+                                    object.setAll = function(value){
+                                        for(var x = 0; x < xCount; x++){
+                                            for(var y = 0; y < yCount; y++){
+                                                this.set(x,y,value);
+                                            }
+                                        }
+                                    }
+                                    object.test = function(){
+                                        this.setAll([1,1,1]);
+                                        this.set(1,1,[1,0.5,0.5]);
+                                        this.set(2,2,[0.5,1,0.5]);
+                                        this.set(3,3,[0.5,0.5,1]);
+                                        this.set(4,4,[1,0.5,1]);
+                                        render();
                                     };
-                                    object.verticalMarkings = function(a){
-                                        if(a==null){return verticalMarkings;}
-                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
-                                    };
-                                    object.drawBackground = function(){ drawBackground(); };
-                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
-                                    object.draw = function(y,x,layer=0){ drawBackground(); drawForeground(y,x,layer); };
                             
                                 return object;
                             };
@@ -6111,797 +5937,6 @@
                             
                                 //setup
                                     setBackground();
-                            
-                                return object;
-                            };
-                            this.grapher_audioScope_static = function(
-                                name='grapher_audioScope_static',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_size=0.1,
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                //attributes
-                                    var attributes = {
-                                        analyser:{
-                                            analyserNode: workspace.library.audio.context.createAnalyser(),
-                                            timeDomainDataArray: null,
-                                            frequencyData: null,
-                                            refreshRate: 10,
-                                            scopeRefreshInterval: null,
-                                            returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                        },
-                                        graph:{
-                                            resolution: 256
-                                        }
-                                    };
-                                    attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
-                                    attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                                    attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //grapher
-                                        var grapher = interfacePart.builder('grapher_static',name,{
-                                            x:0, y:0, width:width, height:height,
-                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_stroke:backgroundStyle_stroke, 
-                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
-                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                            backgroundTextStyle_size:backgroundTextStyle_size,
-                                            backgroundTextStyle_font:backgroundTextStyle_font,
-                                            backingStyle:backingStyle,
-                                        });
-                                        object.append(grapher);
-                            
-                                //utility functions
-                                    function render(){
-                                        var numbers = [];
-                                        attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
-                                        for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
-                                            numbers.push(
-                                                attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
-                                            );
-                                        }
-                                        grapher.draw(numbers);
-                                    }
-                                    function setBackground(){
-                                        grapher.viewbox( {'l':-1.1,'h':1.1} );
-                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
-                                        grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
-                                        grapher.drawBackground();
-                                    };
-                            
-                                //controls
-                                    object.start = function(){
-                                        if(attributes.analyser.scopeRefreshInterval == null){
-                                            attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
-                                        }
-                                    };
-                                    object.stop = function(){
-                                        clearInterval(attributes.analyser.scopeRefreshInterval);
-                                        attributes.analyser.scopeRefreshInterval = null;
-                                    };
-                                    object.getNode = function(){return attributes.analyser.analyserNode;};
-                                    object.resolution = function(res=null){
-                                        if(res==null){return attributes.graph.resolution;}
-                                        attributes.graph.resolution = res;
-                                        this.stop();
-                                        this.start();
-                                    };
-                                    object.refreshRate = function(a){
-                                        if(a==null){return attributes.analyser.refreshRate;}
-                                        attributes.analyser.refreshRate = a;
-                                        this.stop();
-                                        this.start();
-                                    };
-                            
-                                //setup
-                                    setBackground();
-                            
-                                return object;
-                            };
-                            this.grapher_periodicWave = function(
-                                name='grapher_periodicWave',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_size=0.1,
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                var wave = {'sin':[],'cos':[]};
-                                var resolution = 100;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //grapher
-                                        var grapher = interfacePart.builder('grapher',name,{
-                                            x:0, y:0, width:width, height:height,
-                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_stroke:backgroundStyle_stroke, 
-                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
-                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                            backgroundTextStyle_size:backgroundTextStyle_size,
-                                            backgroundTextStyle_font:backgroundTextStyle_font,
-                                            backingStyle:backingStyle,
-                                        });
-                                        object.append(grapher);
-                            
-                                //controls
-                                    object.wave = function(a=null,type=null){
-                                        if(a==null){
-                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
-                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
-                                            for(var a = 0; a < wave['sin'].length; a++){
-                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
-                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
-                                            }
-                                            return wave;
-                                        }
-                            
-                                        if(type==null){
-                                            wave = a;
-                                        }
-                                        switch(type){
-                                            case 'sin': wave.sin = a; break;
-                                            case 'cos': wave.cos = a; break;
-                                            default: break;
-                                        }
-                                    };
-                                    object.waveElement = function(type, mux, a){
-                                        if(a==null){return wave[type][mux];}
-                                        wave[type][mux] = a;
-                                    };
-                                    object.resolution = function(a=null){
-                                        if(a==null){return resolution;}
-                                        resolution = a;
-                                    };
-                                    object.updateBackground = function(){
-                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
-                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
-                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
-                                        grapher.drawBackground();
-                                    };
-                                    object.draw = function(){
-                                        var data = [];
-                                        var temp = 0;
-                                        for(var a = 0; a <= resolution; a++){
-                                            temp = 0;
-                                            for(var b = 0; b < wave['sin'].length; b++){
-                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
-                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
-                                            }
-                                            for(var b = 0; b < wave['cos'].length; b++){
-                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
-                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
-                                            }
-                                            data.push(temp);
-                                        }
-                                
-                                        grapher.draw( data );
-                                    };
-                                    object.reset = function(){
-                                        this.wave({'sin':[],'cos':[]});
-                                        this.resolution(100);
-                                        this.updateBackground();
-                                    };
-                                    
-                                return object;
-                            };
-                            this.grapher_periodicWave_static = function(
-                                name='grapher_periodicWave_static',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_size=0.1,
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                var wave = {'sin':[],'cos':[]};
-                                var resolution = 100;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //grapher
-                                        var grapher = interfacePart.builder('grapher_static',name,{
-                                            x:0, y:0, width:width, height:height,
-                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_stroke:backgroundStyle_stroke, 
-                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
-                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                            backgroundTextStyle_size:backgroundTextStyle_size,
-                                            backgroundTextStyle_font:backgroundTextStyle_font,
-                                            backingStyle:backingStyle,
-                                        });
-                                        object.append(grapher);
-                            
-                                //controls
-                                    object.wave = function(a=null,type=null){
-                                        if(a==null){
-                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
-                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
-                                            for(var a = 0; a < wave['sin'].length; a++){
-                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
-                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
-                                            }
-                                            return wave;
-                                        }
-                            
-                                        if(type==null){
-                                            wave = a;
-                                        }
-                                        switch(type){
-                                            case 'sin': wave.sin = a; break;
-                                            case 'cos': wave.cos = a; break;
-                                            default: break;
-                                        }
-                                    };
-                                    object.waveElement = function(type, mux, a){
-                                        if(a==null){return wave[type][mux];}
-                                        wave[type][mux] = a;
-                                    };
-                                    object.resolution = function(a=null){
-                                        if(a==null){return resolution;}
-                                        resolution = a;
-                                    };
-                                    object.updateBackground = function(){
-                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
-                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
-                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
-                                        grapher.drawBackground();
-                                    };
-                                    object.draw = function(){
-                                        var data = [];
-                                        var temp = 0;
-                                        for(var a = 0; a <= resolution; a++){
-                                            temp = 0;
-                                            for(var b = 0; b < wave['sin'].length; b++){
-                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
-                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
-                                            }
-                                            for(var b = 0; b < wave['cos'].length; b++){
-                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
-                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
-                                            }
-                                            data.push(temp);
-                                        }
-                                
-                                        grapher.draw( data );
-                                    };
-                                    object.reset = function(){
-                                        this.wave({'sin':[],'cos':[]});
-                                        this.resolution(100);
-                                        this.updateBackground();
-                                    };
-                                    
-                                return object;
-                            };
-                            this.grapher_static = function(
-                                name='grapher_static',
-                                x, y, width=120, height=60, angle=0, resolution=5,
-                            
-                                foregroundStyles=[
-                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
-                                ],
-                                foregroundTextStyles=[
-                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
-                                ],
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_font='7.5pt Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var foregroundElementsGroup = [];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //canvas
-                                        var canvas = interfacePart.builder('canvas','backing',{ width:width, height:height, resolution:resolution });
-                                        object.append(canvas);
-                            
-                                //graphics
-                                    function clear(){
-                                        canvas._.fillStyle = backingStyle;
-                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
-                                    };
-                                    function drawBackground(){
-                                        //horizontal lines
-                                            //calculate the x value for all parts of this section
-                                                var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
-                            
-                                            //add all horizontal markings
-                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
-                                    
-                                                    //calculate the y value for this section
-                                                        var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            canvas._.fillStyle = backgroundStyle_stroke;
-                                                            canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_lineWidth));
-                            
-                                                        //text
-                                                            if( horizontalMarkings.printText ){
-                                                                canvas._.fillStyle = backgroundTextStyle_fill;
-                                                                canvas._.font = backgroundTextStyle_font;
-                                                                canvas._.fillText(
-                                                                    (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                                                                    canvas.$(x+horizontalMarkings.textPositionOffset.x),
-                                                                    canvas.$(y+horizontalMarkings.textPositionOffset.y),
-                                                                );
-                                                            }
-                                                }
-                            
-                                        //vertical lines
-                                            //calculate the y value for all parts of this section
-                                                var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
-                            
-                                            //add all vertical markings
-                                                for(var a = 0; a < verticalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
-                            
-                                                    //calculate the x value for this section
-                                                        var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            canvas._.fillStyle = backgroundStyle_stroke;
-                                                            canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_lineWidth),canvas.$(height));
-                                                    
-                                                        //text
-                                                            if( verticalMarkings.printText ){
-                                                                canvas._.fillStyle = backgroundTextStyle_fill;
-                                                                canvas._.font = backgroundTextStyle_font;
-                                                                canvas._.fillText(
-                                                                    (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                                                                    canvas.$(x+verticalMarkings.textPositionOffset.x),
-                                                                    canvas.$(y+verticalMarkings.textPositionOffset.y),
-                                                                );
-                                                            }
-                                                }
-                            
-                                    }
-                                    function drawForeground(y,x,layer=0){
-                            
-                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
-                                        //otherwise, just update the layer's data sets
-                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
-                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
-                            
-                                        //input check
-                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
-                                                console.warn('grapher_static error',name,'attempting to add line with no y component');
-                                                console.warn('x:',foregroundElementsGroup[layer].x);
-                                                console.warn('y:',foregroundElementsGroup[layer].y);
-                                                return;
-                                            }
-                            
-                                        //draw layers
-                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
-                                                if(foregroundElementsGroup[L] == undefined){continue;}
-                            
-                                                var layer = foregroundElementsGroup[L];
-                            
-                                                //draw path
-                                                    canvas._.strokeStyle = foregroundStyles[L].stroke;
-                                                    canvas._.lineWidth = canvas.$(foregroundStyles[L].lineWidth);
-                                                    canvas._.lineJoin = foregroundStyles[L].lineJoin;
-                                                    canvas._.lineCap = foregroundStyles[L].lineJoin;
-                                                    canvas._.beginPath();
-                            
-                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
-                                                        canvas._.moveTo( 0, canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) ) );
-                                                        for(var a = 1; a < layer.y.length; a++){ 
-                                                            canvas._.lineTo(
-                                                                canvas.$(a*(width/(layer.y.length-1))),
-                                                                canvas.$(height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true)),
-                                                            );
-                                                        }
-                                                    }else if( layer.y.length == layer.x.length ){ //straight print
-                                                        for(var a = 0; a < layer.y.length; a++){ 
-                                                            canvas._.moveTo( 
-                                                                canvas.$(          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
-                                                                canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
-                                                            );
-                                                            for(var a = 1; a < layer.y.length; a++){ 
-                                                                canvas._.lineTo(
-                                                                    canvas.$(          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
-                                                                    canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
-                                                                );
-                                                            }
-                                                        }
-                                                    }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
-                            
-                                                    canvas._.stroke();
-                                            }
-                                    }
-                            
-                                //controls
-                                    object.resolution = function(a){return canvas.resolution(a);};
-                                    object.viewbox = function(a){
-                                        if(a==null){return viewbox;}
-                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
-                                        if( a.top != undefined ){viewbox.top = a.top;}
-                                        if( a.left != undefined ){viewbox.left = a.left;}
-                                        if( a.right != undefined ){viewbox.right = a.right;}
-                                    };
-                                    object.horizontalMarkings = function(a){
-                                        if(a==null){return horizontalMarkings;}
-                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
-                                    };
-                                    object.verticalMarkings = function(a){
-                                        if(a==null){return verticalMarkings;}
-                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
-                                    };
-                                    object.drawBackground = function(){ clear(); drawBackground(); };
-                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
-                                    object.draw = function(y,x,layer=0){ clear(); drawBackground(); drawForeground(y,x,layer); };
-                            
-                                return object;
-                            };
-                            this.level = function(
-                                name='level',
-                                x, y, angle=0,
-                                width=20, height=60,
-                                backingStyle='rgb(10,10,10)',
-                                levelStyles=['rgb(250,250,250)','rgb(200,200,200)']
-                            ){
-                                var values = [];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
-                                            object.append(rect);
-                                    //levels
-                                        var levels = interfacePart.builder('group','levels');
-                                            object.append(levels);
-                            
-                                        var level = [];
-                                        for(var a = 0; a < levelStyles.length; a++){
-                                            values.push(0);
-                                            level.push( interfacePart.builder('rectangle','movingRect_'+a,{
-                                                y:height,
-                                                width:width, height:0,
-                                                style:{fill:levelStyles[a]},
-                                            }) );
-                                            levels.prepend(level[a]);
-                                        }
-                            
-                            
-                                    
-                            
-                                    //methods
-                                        object.layer = function(value,layer=0){
-                                            if(layer == undefined){return values;}
-                                            if(value==null){return values[layer];}
-                            
-                                            value = (value>1 ? 1 : value);
-                                            value = (value<0 ? 0 : value);
-                            
-                                            values[layer] = value;
-                            
-                                            level[layer].parameter.height( height*value );
-                                            level[layer].parameter.y( height - height*value );
-                                        };
-                            
-                                return object;
-                            };
-                            this.meter_level = function(
-                                name='meter_level',
-                                x, y, angle=0,
-                                width=20, height=60,
-                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                            
-                                backingStyle='rgb(10,10,10)',
-                                levelStyles=['rgba(250,250,250,1)','fill:rgb(100,100,100)'],
-                                markingStyle_fill='rgba(220,220,220,1)',
-                                markingStyle_font='1pt Courier New',
-                            ){
-                            
-                                //elements
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //level
-                                        var level = interfacePart.builder('level','level',{
-                                            width:width, height:height,
-                                            style:{
-                                                backing:backingStyle,
-                                                levels:levelStyles,
-                                            },
-                                        });
-                                        object.append(level);
-                            
-                                    //markings
-                                        var marks = interfacePart.builder('group','markings');
-                                            object.append(marks);
-                            
-                                        function makeMark(y){
-                                            var markThickness = 0.2;
-                                            var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                                            return interfacePart.builder('polygon', 'mark_'+y, {points:path, style:{fill:markingStyle_fill}});
-                                        }
-                                        function insertText(y,text){
-                                            return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
-                                        }
-                            
-                                        for(var a = 0; a < markings.length; a++){
-                                            marks.append( makeMark(height*(1-markings[a])) );
-                                            marks.append( insertText(height*(1-markings[a]),markings[a]) );
-                                        }
-                            
-                            
-                            
-                            
-                                //update intervals
-                                    var framesPerSecond = 15;
-                                    var coolDownSpeed = ( 3/4 )/10;
-                            
-                                    var coolDownSub = coolDownSpeed/framesPerSecond;
-                            
-                                    var coolDown = 0;
-                                    var mostRecentSetting = 0;
-                                    setInterval(function(){        
-                                        level.layer(mostRecentSetting,0);
-                            
-                                        if(coolDown>0){coolDown-=coolDownSub;}
-                                        level.layer(coolDown,1);
-                            
-                                        if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
-                                    },1000/framesPerSecond);
-                            
-                            
-                            
-                            
-                                //method
-                                    object.set = function(a){
-                                        mostRecentSetting = a;
-                                    };
-                            
-                                return object;
-                            };
-                            this.rastorDisplay = function(
-                                name='rastorDisplay',
-                                x, y, angle=0, width=60, height=60,
-                                xCount=8, yCount=8, xGappage=0.1, yGappage=0.1,
-                                backing='rgba(50,50,50)', defaultPixelValue='rgba(0,0,0)',
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backing} });
-                                        object.append(rect);
-                                    //pixels
-                                        var pixelGroup = interfacePart.builder('group','pixels');
-                                        object.append(pixelGroup);
-                            
-                                        var pixels = [];
-                                        var pixelValues = [];
-                                        var pixWidth = width/xCount;
-                                        var pixHeight = height/yCount;
-                            
-                                        for(var x = 0; x < xCount; x++){
-                                            var temp_pixels = [];
-                                            var temp_pixelValues = [];
-                                            for(var y = 0; y < yCount; y++){
-                                                var rect = interfacePart.builder('rectangle',x+'_'+y,{ 
-                                                    x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
-                                                    width:pixWidth-xGappage,    height:pixHeight-yGappage,
-                                                    style:{fill:defaultPixelValue},
-                                                });
-                                                    
-                                                temp_pixels.push(rect);
-                                                temp_pixelValues.push([0,0,0]);
-                                                pixelGroup.append(rect);
-                                            }
-                                            pixels.push(temp_pixels);
-                                            pixelValues.push(temp_pixelValues);
-                                        }
-                            
-                                //graphical update
-                                    function render(){
-                                        for(var x = 0; x < xCount; x++){
-                                            for(var y = 0; y < yCount; y++){
-                                                pixels[x][y].style.fill = 'rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')';
-                                            }
-                                        }
-                                    }
-                            
-                                //control
-                                    object.get = function(x,y){ return pixelValues[x][y]; };
-                                    object.set = function(x,y,state){ pixelValues[x][y] = state; render(); };
-                                    object.import = function(data){
-                                        for(var x = 0; x < xCount; x++){
-                                            for(var y = 0; y < yCount; y++){
-                                                this.set(x,y,data[x][y]);
-                                            }
-                                        }
-                                        render();
-                                    };
-                                    object.export = function(){ return pixelValues; }
-                                    object.setAll = function(value){
-                                        for(var x = 0; x < xCount; x++){
-                                            for(var y = 0; y < yCount; y++){
-                                                this.set(x,y,value);
-                                            }
-                                        }
-                                    }
-                                    object.test = function(){
-                                        this.setAll([1,1,1]);
-                                        this.set(1,1,[1,0.5,0.5]);
-                                        this.set(2,2,[0.5,1,0.5]);
-                                        this.set(3,3,[0.5,0.5,1]);
-                                        this.set(4,4,[1,0.5,1]);
-                                        render();
-                                    };
-                            
-                                return object;
-                            };
-                            this.readout_sixteenSegmentDisplay = function(
-                                name='readout_sixteenSegmentDisplay',
-                                x, y, width=100, height=30, count=5, angle=0,
-                                backgroundStyle='rgb(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)'
-                            ){
-                                //values
-                                    var text = '';
-                                    var displayInterval = null;
-                                    var displayIntervalTime = 150;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                            
-                                    //display units
-                                        var units = [];
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder('sixteenSegmentDisplay', ''+a, {
-                                                x:(width/count)*a, width:width/count, height:height, 
-                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                            });
-                                            object.append( temp );
-                                            units.push(temp);
-                                        }
-                            
-                                //methods
-                                    object.text = function(a){
-                                        if(a==null){return text;}
-                                        text = a;
-                                    };
-                            
-                                    object.print = function(style){
-                                        clearInterval(displayInterval);
-                                        switch(style){
-                                            case 'smart':
-                                                if(text.length > units.length){this.print('r2lSweep');}
-                                                else{this.print('regular')}
-                                            break;
-                                            case 'r2lSweep':
-                                                var displayStage = 0;
-                            
-                                                displayInterval = setInterval(function(){
-                                                    for(var a = units.length-1; a >= 0; a--){
-                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                                    }
-                            
-                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                                },displayIntervalTime);
-                                            break;
-                                            case 'regular': default:
-                                                for(var a = 0; a < units.length; a++){
-                                                    units[a].enterCharacter(text[a]);
-                                                }
-                                            break;
-                                        }
-                                    };
-                            
-                                return object;
-                            };
-                            this.readout_sixteenSegmentDisplay_static = function(
-                                name='readout_sixteenSegmentDisplay_static',
-                                x, y, width=100, height=30, count=5, angle=0, resolution=5, 
-                                backgroundStyle='rgb(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)'
-                            ){
-                                //values
-                                    var text = '';
-                                    var displayInterval = null;
-                                    var displayIntervalTime = 150;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                            
-                                    //display units
-                                        var units = [];
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder('sixteenSegmentDisplay_static', ''+a, {
-                                                x:(width/count)*a, width:width/count, height:height, resolution:resolution,
-                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                            });
-                                            object.append( temp );
-                                            units.push(temp);
-                                        }
-                            
-                                //methods
-                                    object.text = function(a){
-                                        if(a==null){return text;}
-                                        text = a;
-                                    };
-                            
-                                    object.print = function(style){
-                                        clearInterval(displayInterval);
-                                        switch(style){
-                                            case 'smart':
-                                                if(text.length > units.length){this.print('r2lSweep');}
-                                                else{this.print('regular')}
-                                            break;
-                                            case 'r2lSweep':
-                                                var displayStage = 0;
-                            
-                                                displayInterval = setInterval(function(){
-                                                    for(var a = units.length-1; a >= 0; a--){
-                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                                    }
-                            
-                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                                },displayIntervalTime);
-                                            break;
-                                            case 'regular': default:
-                                                for(var a = 0; a < units.length; a++){
-                                                    units[a].enterCharacter(text[a]);
-                                                }
-                                            break;
-                                        }
-                                    };
                             
                                 return object;
                             };
@@ -7075,189 +6110,6 @@
                                             this.set(a, stamp[a]==1);
                                         }
                                     };
-                            
-                                return object;
-                            };
-                            this.sevenSegmentDisplay_static = function(
-                                name='sevenSegmentDisplay_static',
-                                x, y, width=20, height=30, angle=0, resolution=5, 
-                                backgroundStyle='rgb(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)'
-                            ){
-                                var margin = width/8;
-                                var division = width/8;
-                                var shapes = {
-                                    segments:{
-                                        points: {
-                                            top:{
-                                                left:[
-                                                    {x:division*1.0+margin,         y:division*1.0+margin},
-                                                    {x:division*0.5+margin,         y:division*0.5+margin},
-                                                    {x:division*1.0+margin,         y:division*0.0+margin},
-                                                    {x:division*0.0+margin,         y:division*1.0+margin},
-                                                ],
-                                                right:[
-                                                    {x:width-division*1.0-margin,   y:division*0.0+margin},
-                                                    {x:width-division*0.5-margin,   y:division*0.5+margin},
-                                                    {x:width-division*1.0-margin,   y:division*1.0+margin},
-                                                    {x:width-division*0.0-margin,   y:division*1.0+margin}
-                                                ]
-                                            },
-                                            middle: {
-                                                left:[
-                                                    {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
-                                                    {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
-                                                    {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
-                                                ],
-                                                right:[
-                                                    {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
-                                                    {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
-                                                    {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
-                                                ]
-                                            },
-                                            bottom: {
-                                                left:[
-                                                    {x:division*1.0+margin,         y:height-division*1.0-margin},
-                                                    {x:division*0.5+margin,         y:height-division*0.5-margin},
-                                                    {x:division*1.0+margin,         y:height-division*0.0-margin},
-                                                    {x:division*0.0+margin,         y:height-division*1.0-margin},
-                                                ],
-                                                right:[
-                                                    {x:width-division*1.0-margin,   y:height-division*0.0-margin},
-                                                    {x:width-division*0.5-margin,   y:height-division*0.5-margin},
-                                                    {x:width-division*1.0-margin,   y:height-division*1.0-margin},
-                                                    {x:width-division*0.0-margin,   y:height-division*1.0-margin}
-                                                ]
-                                            }
-                                        }
-                                    }
-                                };
-                                var points = [
-                                    [
-                                        shapes.segments.points.top.left[0],
-                                        shapes.segments.points.top.right[2],
-                                        shapes.segments.points.top.right[1],
-                                        shapes.segments.points.top.right[0],
-                                        shapes.segments.points.top.left[2],
-                                        shapes.segments.points.top.left[1],
-                                    ],
-                                    [
-                                        shapes.segments.points.top.left[1],
-                                        shapes.segments.points.top.left[3],
-                                        shapes.segments.points.middle.left[3],
-                                        shapes.segments.points.middle.left[1],
-                                        shapes.segments.points.middle.left[0],
-                                        shapes.segments.points.top.left[0],  
-                                    ],
-                                    [
-                                        shapes.segments.points.top.right[1],  
-                                        shapes.segments.points.top.right[3],  
-                                        shapes.segments.points.middle.right[3],
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[2],
-                                        shapes.segments.points.top.right[2],  
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.left[0], 
-                                        shapes.segments.points.middle.right[2],
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[0],
-                                        shapes.segments.points.middle.left[2], 
-                                        shapes.segments.points.middle.left[1], 
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.left[1],
-                                        shapes.segments.points.middle.left[4],
-                                        shapes.segments.points.bottom.left[3],
-                                        shapes.segments.points.bottom.left[1],
-                                        shapes.segments.points.bottom.left[0],
-                                        shapes.segments.points.middle.left[2],
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[4],
-                                        shapes.segments.points.bottom.right[3],
-                                        shapes.segments.points.bottom.right[1],
-                                        shapes.segments.points.bottom.right[2],
-                                        shapes.segments.points.middle.right[0],
-                                    ],
-                                    [
-                                        shapes.segments.points.bottom.left[0],
-                                        shapes.segments.points.bottom.right[2],
-                                        shapes.segments.points.bottom.right[1],
-                                        shapes.segments.points.bottom.right[0],
-                                        shapes.segments.points.bottom.left[2],
-                                        shapes.segments.points.bottom.left[1],
-                                    ]
-                                ];
-                                var stamp = [0,0,0,0,0,0,0];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //canvas
-                                        var canvas = interfacePart.builder('canvas','subcanvas',{ width:width, height:height, resolution:resolution });
-                                        object.append(canvas);
-                            
-                                //graphics
-                                    function clear(){
-                                        canvas._.fillStyle = backgroundStyle;
-                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
-                                    };
-                                    function drawChar(){
-                                        //draw in segments 
-                                            for(var a = 0; a < points.length; a++){
-                                                canvas._.beginPath(); 
-                                                canvas._.moveTo(canvas.$(points[a][0].x),canvas.$(points[a][0].y));
-                                                for(var b = 1; b < points[a].length; b++){
-                                                    canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
-                                                }
-                                                canvas._.closePath(); 
-                                                canvas._.fillStyle = stamp[a] == 0 ? dimStyle : glowStyle;
-                                                canvas._.fill(); 
-                                            }
-                                    }
-                            
-                                //methods
-                                    object.set = function(segment,state){
-                                        stamp[segment].state = state;
-                                        drawChar();
-                                    };
-                                    object.get = function(segment){ return stamp[segment].state; };
-                                    object.clear = function(){
-                                        for(var a = 0; a < stamp.length; a++){
-                                            this.set(a,false);
-                                        }
-                                    };
-                            
-                                    object.enterCharacter = function(char){
-                                        //genreate stamp
-                                            switch(char){
-                                                case 0: case '0': stamp = [1,1,1,0,1,1,1]; break;
-                                                case 1: case '1': stamp = [0,0,1,0,0,1,0]; break;
-                                                case 2: case '2': stamp = [1,0,1,1,1,0,1]; break;
-                                                case 3: case '3': stamp = [1,0,1,1,0,1,1]; break;
-                                                case 4: case '4': stamp = [0,1,1,1,0,1,0]; break;
-                                                case 5: case '5': stamp = [1,1,0,1,0,1,1]; break;
-                                                case 6: case '6': stamp = [1,1,0,1,1,1,1]; break;
-                                                case 7: case '7': stamp = [1,0,1,0,0,1,0]; break;
-                                                case 8: case '8': stamp = [1,1,1,1,1,1,1]; break;
-                                                case 9: case '9': stamp = [1,1,1,1,0,1,1]; break;
-                                                default: stamp = [0,0,0,0,0,0,0]; break;
-                                            }
-                            
-                                        clear();
-                                        drawChar();
-                                    };
-                            
-                                //setup
-                                    clear();
-                                    drawChar();
                             
                                 return object;
                             };
@@ -8064,6 +6916,887 @@
                             
                             
                                 return object;      
+                            };
+                            this.glowbox_rect = function(
+                                name='glowbox_rect',
+                                x, y, width=30, height=30, angle=0,
+                                glowStyle = 'rgba(244,234,141,1)',
+                                dimStyle = 'rgba(80,80,80,1)'
+                            ){
+                                //elements 
+                                    var object = interfacePart.builder('group',name,{x:x, y:y});
+                                    var rect = interfacePart.builder('rectangle','light',{ width:width, height:height, angle:angle, style:{fill:dimStyle} });
+                                        object.append(rect);
+                            
+                                //methods
+                                    object.on = function(){
+                                        rect.style.fill = glowStyle;
+                                    };
+                                    object.off = function(){
+                                        rect.style.fill = dimStyle;
+                                    };
+                            
+                                return object;
+                            };
+                            this.audio_meter_level = function(
+                                name='audio_meter_level',
+                                x, y, angle=0,
+                                width=20, height=60,
+                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                            
+                                backingStyle='rgb(10,10,10)',
+                                levelStyles=['rgba(250,250,250,1)','rgb(100,100,100)'],
+                                markingStyle_fill='rgba(220,220,220,1)',
+                                markingStyle_font='1pt Courier New',
+                            ){
+                                //elements
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //meter
+                                        var meter = interfacePart.builder('meter_level','meter',{
+                                            width:width, height:height, markings:markings,
+                                            style:{
+                                                backing:backingStyle,
+                                                levels:levelStyles,
+                                                markingStyle_fill:markingStyle_fill,
+                                                markingStyle_font:markingStyle_font,
+                                            },
+                                        });
+                                        object.append(meter);
+                            
+                                //circuitry
+                                    var converter = interface.circuit.alpha.audio2percentage()
+                                    converter.newValue = function(val){meter.set( val );};
+                            
+                                //audio connections
+                                    object.audioIn = function(){ return converter.audioIn(); }
+                            
+                                //methods
+                                    object.start = function(){ converter.start(); };
+                                    object.stop = function(){ converter.stop(); };
+                            
+                                return object;
+                            };
+                            this.grapher_static = function(
+                                name='grapher_static',
+                                x, y, width=120, height=60, angle=0, resolution=5,
+                            
+                                foregroundStyles=[
+                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                    {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
+                                ],
+                                foregroundTextStyles=[
+                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
+                                ],
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_font='7.5pt Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
+                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var foregroundElementsGroup = [];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //canvas
+                                        var canvas = interfacePart.builder('canvas','backing',{ width:width, height:height, resolution:resolution });
+                                        object.append(canvas);
+                            
+                                //graphics
+                                    function clear(){
+                                        canvas._.fillStyle = backingStyle;
+                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+                                    };
+                                    function drawBackground(){
+                                        //horizontal lines
+                                            //calculate the x value for all parts of this section
+                                                var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
+                            
+                                            //add all horizontal markings
+                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
+                                    
+                                                    //calculate the y value for this section
+                                                        var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
+                            
+                                                    //add line and text to group
+                                                        //lines
+                                                            canvas._.fillStyle = backgroundStyle_stroke;
+                                                            canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_lineWidth));
+                            
+                                                        //text
+                                                            if( horizontalMarkings.printText ){
+                                                                canvas._.fillStyle = backgroundTextStyle_fill;
+                                                                canvas._.font = backgroundTextStyle_font;
+                                                                canvas._.fillText(
+                                                                    (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                                                                    canvas.$(x+horizontalMarkings.textPositionOffset.x),
+                                                                    canvas.$(y+horizontalMarkings.textPositionOffset.y),
+                                                                );
+                                                            }
+                                                }
+                            
+                                        //vertical lines
+                                            //calculate the y value for all parts of this section
+                                                var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
+                            
+                                            //add all vertical markings
+                                                for(var a = 0; a < verticalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
+                            
+                                                    //calculate the x value for this section
+                                                        var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                            
+                                                    //add line and text to group
+                                                        //lines
+                                                            canvas._.fillStyle = backgroundStyle_stroke;
+                                                            canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_lineWidth),canvas.$(height));
+                                                    
+                                                        //text
+                                                            if( verticalMarkings.printText ){
+                                                                canvas._.fillStyle = backgroundTextStyle_fill;
+                                                                canvas._.font = backgroundTextStyle_font;
+                                                                canvas._.fillText(
+                                                                    (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                                                                    canvas.$(x+verticalMarkings.textPositionOffset.x),
+                                                                    canvas.$(y+verticalMarkings.textPositionOffset.y),
+                                                                );
+                                                            }
+                                                }
+                            
+                                    }
+                                    function drawForeground(y,x,layer=0){
+                            
+                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
+                                        //otherwise, just update the layer's data sets
+                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
+                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
+                            
+                                        //input check
+                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
+                                                console.warn('grapher_static error',name,'attempting to add line with no y component');
+                                                console.warn('x:',foregroundElementsGroup[layer].x);
+                                                console.warn('y:',foregroundElementsGroup[layer].y);
+                                                return;
+                                            }
+                            
+                                        //draw layers
+                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
+                                                if(foregroundElementsGroup[L] == undefined){continue;}
+                            
+                                                var layer = foregroundElementsGroup[L];
+                            
+                                                //draw path
+                                                    canvas._.strokeStyle = foregroundStyles[L].stroke;
+                                                    canvas._.lineWidth = canvas.$(foregroundStyles[L].lineWidth);
+                                                    canvas._.lineJoin = foregroundStyles[L].lineJoin;
+                                                    canvas._.lineCap = foregroundStyles[L].lineJoin;
+                                                    canvas._.beginPath();
+                            
+                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
+                                                        canvas._.moveTo( 0, canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) ) );
+                                                        for(var a = 1; a < layer.y.length; a++){ 
+                                                            canvas._.lineTo(
+                                                                canvas.$(a*(width/(layer.y.length-1))),
+                                                                canvas.$(height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true)),
+                                                            );
+                                                        }
+                                                    }else if( layer.y.length == layer.x.length ){ //straight print
+                                                        for(var a = 0; a < layer.y.length; a++){ 
+                                                            canvas._.moveTo( 
+                                                                canvas.$(          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
+                                                                canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
+                                                            );
+                                                            for(var a = 1; a < layer.y.length; a++){ 
+                                                                canvas._.lineTo(
+                                                                    canvas.$(          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
+                                                                    canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
+                                                                );
+                                                            }
+                                                        }
+                                                    }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
+                            
+                                                    canvas._.stroke();
+                                            }
+                                    }
+                            
+                                //controls
+                                    object.resolution = function(a){return canvas.resolution(a);};
+                                    object.viewbox = function(a){
+                                        if(a==null){return viewbox;}
+                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
+                                        if( a.top != undefined ){viewbox.top = a.top;}
+                                        if( a.left != undefined ){viewbox.left = a.left;}
+                                        if( a.right != undefined ){viewbox.right = a.right;}
+                                    };
+                                    object.horizontalMarkings = function(a){
+                                        if(a==null){return horizontalMarkings;}
+                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
+                                    };
+                                    object.verticalMarkings = function(a){
+                                        if(a==null){return verticalMarkings;}
+                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
+                                    };
+                                    object.drawBackground = function(){ clear(); drawBackground(); };
+                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
+                                    object.draw = function(y,x,layer=0){ clear(); drawBackground(); drawForeground(y,x,layer); };
+                            
+                                return object;
+                            };
+                            this.grapher_periodicWave_static = function(
+                                name='grapher_periodicWave_static',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_size=0.1,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                var wave = {'sin':[],'cos':[]};
+                                var resolution = 100;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //grapher
+                                        var grapher = interfacePart.builder('grapher_static',name,{
+                                            x:0, y:0, width:width, height:height,
+                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                            backgroundStyle_stroke:backgroundStyle_stroke, 
+                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                            backgroundTextStyle_size:backgroundTextStyle_size,
+                                            backgroundTextStyle_font:backgroundTextStyle_font,
+                                            backingStyle:backingStyle,
+                                        });
+                                        object.append(grapher);
+                            
+                                //controls
+                                    object.wave = function(a=null,type=null){
+                                        if(a==null){
+                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
+                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
+                                            for(var a = 0; a < wave['sin'].length; a++){
+                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
+                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
+                                            }
+                                            return wave;
+                                        }
+                            
+                                        if(type==null){
+                                            wave = a;
+                                        }
+                                        switch(type){
+                                            case 'sin': wave.sin = a; break;
+                                            case 'cos': wave.cos = a; break;
+                                            default: break;
+                                        }
+                                    };
+                                    object.waveElement = function(type, mux, a){
+                                        if(a==null){return wave[type][mux];}
+                                        wave[type][mux] = a;
+                                    };
+                                    object.resolution = function(a=null){
+                                        if(a==null){return resolution;}
+                                        resolution = a;
+                                    };
+                                    object.updateBackground = function(){
+                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
+                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
+                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
+                                        grapher.drawBackground();
+                                    };
+                                    object.draw = function(){
+                                        var data = [];
+                                        var temp = 0;
+                                        for(var a = 0; a <= resolution; a++){
+                                            temp = 0;
+                                            for(var b = 0; b < wave['sin'].length; b++){
+                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
+                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
+                                            }
+                                            for(var b = 0; b < wave['cos'].length; b++){
+                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
+                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
+                                            }
+                                            data.push(temp);
+                                        }
+                                
+                                        grapher.draw( data );
+                                    };
+                                    object.reset = function(){
+                                        this.wave({'sin':[],'cos':[]});
+                                        this.resolution(100);
+                                        this.updateBackground();
+                                    };
+                                    
+                                return object;
+                            };
+                            this.grapher = function(
+                                name='grapher',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyles=[
+                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                    {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
+                                ],
+                                foregroundTextStyles=[
+                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
+                                ],
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_font='1.5pt Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
+                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var foregroundElementsGroup = [];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+                                        object.append(rect);
+                                    //background group
+                                        var backgroundGroup = interfacePart.builder( 'group', 'background' );
+                                        object.append(backgroundGroup);
+                                    //foreground group
+                                        var foregroundGroup = interfacePart.builder( 'group', 'foreground' );
+                                        object.append(foregroundGroup);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
+                                        object.stencil(stencil);
+                                        object.clip(true);
+                            
+                                //graphics
+                                    function drawBackground(){
+                                        backgroundGroup.clear();
+                            
+                                        //horizontal lines
+                                            //calculate the x value for all parts of this section
+                                                var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
+                            
+                                            //add all horizontal markings
+                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
+                                    
+                                                    //calculate the y value for this section
+                                                        var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
+                            
+                                                    //add line and text to group
+                                                        //lines
+                                                            var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineWidth,style:{fill:backgroundStyle_stroke}} );
+                                                            backgroundGroup.append(path);
+                                                        //text
+                                                            if( horizontalMarkings.printText ){
+                                                                var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
+                                                                    x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y,
+                                                                    text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                                                                    style:{
+                                                                        fill:backgroundTextStyle_fill,
+                                                                        font:backgroundTextStyle_font
+                                                                    }
+                                                                } );
+                                                                backgroundGroup.append(text);
+                                                            }
+                                                }
+                            
+                                        //vertical lines
+                                            //calculate the y value for all parts of this section
+                                                var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
+                            
+                                            //add all vertical markings
+                                                for(var a = 0; a < verticalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
+                            
+                                                    //calculate the x value for this section
+                                                        var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                            
+                                                    //add line and text to group
+                                                        //lines
+                                                            var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineWidth,height:height,style:{fill:backgroundStyle_stroke}} );
+                                                            backgroundGroup.append(path);
+                                                    
+                                                        //text
+                                                            if( verticalMarkings.printText ){
+                                                                var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
+                                                                    x:x+verticalMarkings.textPositionOffset.x, y:y+verticalMarkings.textPositionOffset.y,
+                                                                    text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                                                                    style:{
+                                                                        fill:backgroundTextStyle_fill,
+                                                                        font:backgroundTextStyle_font
+                                                                    }
+                                                                } );
+                                                                backgroundGroup.append(text);
+                                                        }
+                                                }
+                                    }
+                                    function drawForeground(y,x,layer=0){
+                                        foregroundGroup.clear();
+                            
+                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
+                                        //otherwise, just update the layer's data sets
+                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
+                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
+                            
+                                        //input check
+                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
+                                                console.warn('grapher error',name,'attempting to add line with no y component');
+                                                console.warn('x:',foregroundElementsGroup[layer].x);
+                                                console.warn('y:',foregroundElementsGroup[layer].y);
+                                                return;
+                                            }
+                            
+                                        //draw layers
+                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
+                                                if(foregroundElementsGroup[L] == undefined){continue;}
+                            
+                                                var layer = foregroundElementsGroup[L];
+                                                var points = [];
+                            
+                                                //generate path points
+                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
+                                                        for(var a = 0; a < layer.y.length; a++){ 
+                                                            points.push( {
+                                                                x: a*(width/(layer.y.length-1)), 
+                                                                y: height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
+                                                            } );
+                                                        }
+                                                    }else if( layer.y.length == layer.x.length ){ //straight print
+                                                        for(var a = 0; a < layer.y.length; a++){ 
+                                                            points.push( {
+                                                                x:          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true), 
+                                                                y: height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
+                                                            } );
+                                                        }
+                                                    }else{console.error('grapher::'+name,':layers are of differnt length:',layer.y,layer.x);}
+                            
+                                                //create path shape and add it to the group
+                                                    foregroundGroup.append(
+                                                        interfacePart.builder( 'path', 'layer_'+L, { 
+                                                            points:points, 
+                                                            style:{
+                                                                stroke: foregroundStyles[L].stroke,
+                                                                lineWidth: foregroundStyles[L].lineWidth,
+                                                                lineJoin: foregroundStyles[L].lineJoin,
+                                                                lineCap: foregroundStyles[L].lineJoin,
+                                                            }
+                                                        })
+                                                    );
+                                            }
+                                    }
+                            
+                                //controls
+                                    object.viewbox = function(a){
+                                        if(a==null){return viewbox;}
+                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
+                                        if( a.top != undefined ){viewbox.top = a.top;}
+                                        if( a.left != undefined ){viewbox.left = a.left;}
+                                        if( a.right != undefined ){viewbox.right = a.right;}
+                                    };
+                                    object.horizontalMarkings = function(a){
+                                        if(a==null){return horizontalMarkings;}
+                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
+                                    };
+                                    object.verticalMarkings = function(a){
+                                        if(a==null){return verticalMarkings;}
+                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
+                                    };
+                                    object.drawBackground = function(){ drawBackground(); };
+                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
+                                    object.draw = function(y,x,layer=0){ drawBackground(); drawForeground(y,x,layer); };
+                            
+                                return object;
+                            };
+                            this.meter_level = function(
+                                name='meter_level',
+                                x, y, angle=0,
+                                width=20, height=60,
+                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                            
+                                backingStyle='rgb(10,10,10)',
+                                levelStyles=['rgba(250,250,250,1)','fill:rgb(100,100,100)'],
+                                markingStyle_fill='rgba(220,220,220,1)',
+                                markingStyle_font='1pt Courier New',
+                            ){
+                            
+                                //elements
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //level
+                                        var level = interfacePart.builder('level','level',{
+                                            width:width, height:height,
+                                            style:{
+                                                backing:backingStyle,
+                                                levels:levelStyles,
+                                            },
+                                        });
+                                        object.append(level);
+                            
+                                    //markings
+                                        var marks = interfacePart.builder('group','markings');
+                                            object.append(marks);
+                            
+                                        function makeMark(y){
+                                            var markThickness = 0.2;
+                                            var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
+                                            return interfacePart.builder('polygon', 'mark_'+y, {points:path, style:{fill:markingStyle_fill}});
+                                        }
+                                        function insertText(y,text){
+                                            return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
+                                        }
+                            
+                                        for(var a = 0; a < markings.length; a++){
+                                            marks.append( makeMark(height*(1-markings[a])) );
+                                            marks.append( insertText(height*(1-markings[a]),markings[a]) );
+                                        }
+                            
+                            
+                            
+                            
+                                //update intervals
+                                    var framesPerSecond = 15;
+                                    var coolDownSpeed = ( 3/4 )/10;
+                            
+                                    var coolDownSub = coolDownSpeed/framesPerSecond;
+                            
+                                    var coolDown = 0;
+                                    var mostRecentSetting = 0;
+                                    setInterval(function(){        
+                                        level.layer(mostRecentSetting,0);
+                            
+                                        if(coolDown>0){coolDown-=coolDownSub;}
+                                        level.layer(coolDown,1);
+                            
+                                        if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                                    },1000/framesPerSecond);
+                            
+                            
+                            
+                            
+                                //method
+                                    object.set = function(a){
+                                        mostRecentSetting = a;
+                                    };
+                            
+                                return object;
+                            };
+                            this.sevenSegmentDisplay_static = function(
+                                name='sevenSegmentDisplay_static',
+                                x, y, width=20, height=30, angle=0, resolution=5, 
+                                backgroundStyle='rgb(0,0,0)',
+                                glowStyle='rgb(200,200,200)',
+                                dimStyle='rgb(20,20,20)'
+                            ){
+                                var margin = width/8;
+                                var division = width/8;
+                                var shapes = {
+                                    segments:{
+                                        points: {
+                                            top:{
+                                                left:[
+                                                    {x:division*1.0+margin,         y:division*1.0+margin},
+                                                    {x:division*0.5+margin,         y:division*0.5+margin},
+                                                    {x:division*1.0+margin,         y:division*0.0+margin},
+                                                    {x:division*0.0+margin,         y:division*1.0+margin},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:division*0.0+margin},
+                                                    {x:width-division*0.5-margin,   y:division*0.5+margin},
+                                                    {x:width-division*1.0-margin,   y:division*1.0+margin},
+                                                    {x:width-division*0.0-margin,   y:division*1.0+margin}
+                                                ]
+                                            },
+                                            middle: {
+                                                left:[
+                                                    {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
+                                                    {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                                    {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
+                                                    {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
+                                                    {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
+                                                ]
+                                            },
+                                            bottom: {
+                                                left:[
+                                                    {x:division*1.0+margin,         y:height-division*1.0-margin},
+                                                    {x:division*0.5+margin,         y:height-division*0.5-margin},
+                                                    {x:division*1.0+margin,         y:height-division*0.0-margin},
+                                                    {x:division*0.0+margin,         y:height-division*1.0-margin},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:height-division*0.0-margin},
+                                                    {x:width-division*0.5-margin,   y:height-division*0.5-margin},
+                                                    {x:width-division*1.0-margin,   y:height-division*1.0-margin},
+                                                    {x:width-division*0.0-margin,   y:height-division*1.0-margin}
+                                                ]
+                                            }
+                                        }
+                                    }
+                                };
+                                var points = [
+                                    [
+                                        shapes.segments.points.top.left[0],
+                                        shapes.segments.points.top.right[2],
+                                        shapes.segments.points.top.right[1],
+                                        shapes.segments.points.top.right[0],
+                                        shapes.segments.points.top.left[2],
+                                        shapes.segments.points.top.left[1],
+                                    ],
+                                    [
+                                        shapes.segments.points.top.left[1],
+                                        shapes.segments.points.top.left[3],
+                                        shapes.segments.points.middle.left[3],
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.left[0],
+                                        shapes.segments.points.top.left[0],  
+                                    ],
+                                    [
+                                        shapes.segments.points.top.right[1],  
+                                        shapes.segments.points.top.right[3],  
+                                        shapes.segments.points.middle.right[3],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.top.right[2],  
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.left[0], 
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[0],
+                                        shapes.segments.points.middle.left[2], 
+                                        shapes.segments.points.middle.left[1], 
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.left[4],
+                                        shapes.segments.points.bottom.left[3],
+                                        shapes.segments.points.bottom.left[1],
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.middle.left[2],
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[4],
+                                        shapes.segments.points.bottom.right[3],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.middle.right[0],
+                                    ],
+                                    [
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[0],
+                                        shapes.segments.points.bottom.left[2],
+                                        shapes.segments.points.bottom.left[1],
+                                    ]
+                                ];
+                                var stamp = [0,0,0,0,0,0,0];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //canvas
+                                        var canvas = interfacePart.builder('canvas','subcanvas',{ width:width, height:height, resolution:resolution });
+                                        object.append(canvas);
+                            
+                                //graphics
+                                    function clear(){
+                                        canvas._.fillStyle = backgroundStyle;
+                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+                                    };
+                                    function drawChar(){
+                                        //draw in segments 
+                                            for(var a = 0; a < points.length; a++){
+                                                canvas._.beginPath(); 
+                                                canvas._.moveTo(canvas.$(points[a][0].x),canvas.$(points[a][0].y));
+                                                for(var b = 1; b < points[a].length; b++){
+                                                    canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
+                                                }
+                                                canvas._.closePath(); 
+                                                canvas._.fillStyle = stamp[a] == 0 ? dimStyle : glowStyle;
+                                                canvas._.fill(); 
+                                            }
+                                    }
+                            
+                                //methods
+                                    object.set = function(segment,state){
+                                        stamp[segment].state = state;
+                                        drawChar();
+                                    };
+                                    object.get = function(segment){ return stamp[segment].state; };
+                                    object.clear = function(){
+                                        for(var a = 0; a < stamp.length; a++){
+                                            this.set(a,false);
+                                        }
+                                    };
+                            
+                                    object.enterCharacter = function(char){
+                                        //genreate stamp
+                                            switch(char){
+                                                case 0: case '0': stamp = [1,1,1,0,1,1,1]; break;
+                                                case 1: case '1': stamp = [0,0,1,0,0,1,0]; break;
+                                                case 2: case '2': stamp = [1,0,1,1,1,0,1]; break;
+                                                case 3: case '3': stamp = [1,0,1,1,0,1,1]; break;
+                                                case 4: case '4': stamp = [0,1,1,1,0,1,0]; break;
+                                                case 5: case '5': stamp = [1,1,0,1,0,1,1]; break;
+                                                case 6: case '6': stamp = [1,1,0,1,1,1,1]; break;
+                                                case 7: case '7': stamp = [1,0,1,0,0,1,0]; break;
+                                                case 8: case '8': stamp = [1,1,1,1,1,1,1]; break;
+                                                case 9: case '9': stamp = [1,1,1,1,0,1,1]; break;
+                                                default: stamp = [0,0,0,0,0,0,0]; break;
+                                            }
+                            
+                                        clear();
+                                        drawChar();
+                                    };
+                            
+                                //setup
+                                    clear();
+                                    drawChar();
+                            
+                                return object;
+                            };
+                            this.grapher_periodicWave = function(
+                                name='grapher_periodicWave',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_size=0.1,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                var wave = {'sin':[],'cos':[]};
+                                var resolution = 100;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //grapher
+                                        var grapher = interfacePart.builder('grapher',name,{
+                                            x:0, y:0, width:width, height:height,
+                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                            backgroundStyle_stroke:backgroundStyle_stroke, 
+                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                            backgroundTextStyle_size:backgroundTextStyle_size,
+                                            backgroundTextStyle_font:backgroundTextStyle_font,
+                                            backingStyle:backingStyle,
+                                        });
+                                        object.append(grapher);
+                            
+                                //controls
+                                    object.wave = function(a=null,type=null){
+                                        if(a==null){
+                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
+                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
+                                            for(var a = 0; a < wave['sin'].length; a++){
+                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
+                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
+                                            }
+                                            return wave;
+                                        }
+                            
+                                        if(type==null){
+                                            wave = a;
+                                        }
+                                        switch(type){
+                                            case 'sin': wave.sin = a; break;
+                                            case 'cos': wave.cos = a; break;
+                                            default: break;
+                                        }
+                                    };
+                                    object.waveElement = function(type, mux, a){
+                                        if(a==null){return wave[type][mux];}
+                                        wave[type][mux] = a;
+                                    };
+                                    object.resolution = function(a=null){
+                                        if(a==null){return resolution;}
+                                        resolution = a;
+                                    };
+                                    object.updateBackground = function(){
+                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
+                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
+                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
+                                        grapher.drawBackground();
+                                    };
+                                    object.draw = function(){
+                                        var data = [];
+                                        var temp = 0;
+                                        for(var a = 0; a <= resolution; a++){
+                                            temp = 0;
+                                            for(var b = 0; b < wave['sin'].length; b++){
+                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
+                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
+                                            }
+                                            for(var b = 0; b < wave['cos'].length; b++){
+                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
+                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
+                                            }
+                                            data.push(temp);
+                                        }
+                                
+                                        grapher.draw( data );
+                                    };
+                                    object.reset = function(){
+                                        this.wave({'sin':[],'cos':[]});
+                                        this.resolution(100);
+                                        this.updateBackground();
+                                    };
+                                    
+                                return object;
                             };
                             this.sixteenSegmentDisplay_static = function(
                                 name='sixteenSegmentDisplay_static',
@@ -8876,993 +8609,345 @@
                             
                                 return object;      
                             };
-                        };
-                        
-                        this.control = new function(){
-                            this.button_rect = function(
-                                name='button_rect',
-                                x, y, width=30, height=20, angle=0,
-                                text_centre='', text_left='', text_right='',
-                                textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
-                                
-                                active=true, hoverable=true, selectable=false, pressable=true,
-                            
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_fill = 'rgba(0,0,0,1)',
-                                text_stroke = 'rgba(0,0,0,0)',
-                                text_lineWidth = 1,
-                            
-                                backing__off__fill=                          'rgba(180,180,180,1)',
-                                backing__off__stroke=                        'rgba(0,0,0,0)',
-                                backing__off__lineWidth=                     0,
-                                backing__up__fill=                           'rgba(200,200,200,1)',
-                                backing__up__stroke=                         'rgba(0,0,0,0)',
-                                backing__up__lineWidth=                      0,
-                                backing__press__fill=                        'rgba(230,230,230,1)',
-                                backing__press__stroke=                      'rgba(0,0,0,0)',
-                                backing__press__lineWidth=                   0,
-                                backing__select__fill=                       'rgba(200,200,200,1)',
-                                backing__select__stroke=                     'rgba(120,120,120,1)',
-                                backing__select__lineWidth=                  0.75,
-                                backing__select_press__fill=                 'rgba(230,230,230,1)',
-                                backing__select_press__stroke=               'rgba(120,120,120,1)',
-                                backing__select_press__lineWidth=            0.75,
-                                backing__glow__fill=                         'rgba(220,220,220,1)',
-                                backing__glow__stroke=                       'rgba(0,0,0,0)',
-                                backing__glow__lineWidth=                    0,
-                                backing__glow_press__fill=                   'rgba(250,250,250,1)',
-                                backing__glow_press__stroke=                 'rgba(0,0,0,0)',
-                                backing__glow_press__lineWidth=              0,
-                                backing__glow_select__fill=                  'rgba(220,220,220,1)',
-                                backing__glow_select__stroke=                'rgba(120,120,120,1)',
-                                backing__glow_select__lineWidth=             0.75,
-                                backing__glow_select_press__fill=            'rgba(250,250,250,1)',
-                                backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
-                                backing__glow_select_press__lineWidth=       0.75,
-                                backing__hover__fill=                        'rgba(220,220,220,1)',
-                                backing__hover__stroke=                      'rgba(0,0,0,0)',
-                                backing__hover__lineWidth=                   0,
-                                backing__hover_press__fill=                  'rgba(240,240,240,1)',
-                                backing__hover_press__stroke=                'rgba(0,0,0,0)',
-                                backing__hover_press__lineWidth=             0,
-                                backing__hover_select__fill=                 'rgba(220,220,220,1)',
-                                backing__hover_select__stroke=               'rgba(120,120,120,1)',
-                                backing__hover_select__lineWidth=            0.75,
-                                backing__hover_select_press__fill=           'rgba(240,240,240,1)',
-                                backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
-                                backing__hover_select_press__lineWidth=      0.75,
-                                backing__hover_glow__fill=                   'rgba(240,240,240,1)',
-                                backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
-                                backing__hover_glow__lineWidth=              0,
-                                backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
-                                backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-                                backing__hover_glow_press__lineWidth=        0,
-                                backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
-                                backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-                                backing__hover_glow_select__lineWidth=       0.75,
-                                backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-                                backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-                                backing__hover_glow_select_press__lineWidth= 0.75,
-                            
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
+                            this.readout_sixteenSegmentDisplay_static = function(
+                                name='readout_sixteenSegmentDisplay_static',
+                                x, y, width=100, height=30, count=5, angle=0, resolution=5, 
+                                backgroundStyle='rgb(0,0,0)',
+                                glowStyle='rgb(200,200,200)',
+                                dimStyle='rgb(20,20,20)'
                             ){
+                                //values
+                                    var text = '';
+                                    var displayInterval = null;
+                                    var displayIntervalTime = 150;
+                            
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //backing
-                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
-                                            fill:backing__off__fill,
-                                            stroke:backing__off__stroke,
-                                            lineWidth:backing__off__lineWidth,
-                                        }});
-                                        object.append(backing);
                             
-                                    //text
-                                        var text_centre = interfacePart.builder('text','centre', {
-                                            x:width/2, 
-                                            y:height*textVerticalOffsetMux, 
-                                            text:text_centre, 
-                                            style:{
-                                                font:text_font,
-                                                testBaseline:text_textBaseline,
-                                                fill:text_fill,
-                                                stroke:text_stroke,
-                                                lineWidth:text_lineWidth,
-                                                textAlign:'center',
-                                                textBaseline:'middle',
-                                            }
-                                        });
-                                        object.append(text_centre);
-                                        var text_left = interfacePart.builder('text','left',     {
-                                            x:width*textHorizontalOffsetMux, 
-                                            y:height*textVerticalOffsetMux, 
-                                            text:text_left, 
-                                            style:{
-                                                font:text_font,
-                                                testBaseline:text_textBaseline,
-                                                fill:text_fill,
-                                                stroke:text_stroke,
-                                                lineWidth:text_lineWidth,
-                                                textAlign:'left',
-                                                textBaseline:'middle',
-                                            }
-                                        });
-                                        object.append(text_left);
-                                        var text_right = interfacePart.builder('text','right',   {
-                                            x:width-(width*textHorizontalOffsetMux), 
-                                            y:height*textVerticalOffsetMux, 
-                                            text:text_right, 
-                                            style:{
-                                                font:text_font,
-                                                testBaseline:text_textBaseline,
-                                                fill:text_fill,
-                                                stroke:text_stroke,
-                                                lineWidth:text_lineWidth,
-                                                textAlign:'right',
-                                                textBaseline:'middle',
-                                            }
-                                        });
-                                        object.append(text_right);
-                            
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        object.append(cover);
-                            
-                            
-                            
-                            
-                                //state
-                                    object.state = {
-                                        hovering:false,
-                                        glowing:false,
-                                        selected:false,
-                                        pressed:false,
-                                    };
-                            
-                                    function activateGraphicalState(){
-                                        if(!active){ 
-                                            backing.style.fill = backing__off__fill;
-                                            backing.style.stroke = backing__off__stroke;
-                                            backing.style.lineWidth = backing__off__lineWidth;
-                                            return;
+                                    //display units
+                                        var units = [];
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder('sixteenSegmentDisplay_static', ''+a, {
+                                                x:(width/count)*a, width:width/count, height:height, resolution:resolution,
+                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                            });
+                                            object.append( temp );
+                                            units.push(temp);
                                         }
                             
-                                        var styles = [
-                                            { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
-                                            { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
-                                            { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
-                                            { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
-                                            { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
-                                            { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
-                                            { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
-                                            { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
-                                            { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
-                                            { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
-                                            { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
-                                            { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
-                                            { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
-                                            { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
-                                            { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
-                                            { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
-                                        ];
-                            
-                                        if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
-                                        if(!selectable && object.state.selected ){ object.state.selected = false; }
-                            
-                                        var i = object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + (pressable && object.state.pressed)*1;
-                                        backing.style.fill =       styles[i].fill;
-                                        backing.style.stroke =     styles[i].stroke;
-                                        backing.style.lineWidth =  styles[i].lineWidth;
+                                //methods
+                                    object.text = function(a){
+                                        if(a==null){return text;}
+                                        text = a;
                                     };
-                                    activateGraphicalState();
                             
+                                    object.print = function(style){
+                                        clearInterval(displayInterval);
+                                        switch(style){
+                                            case 'smart':
+                                                if(text.length > units.length){this.print('r2lSweep');}
+                                                else{this.print('regular')}
+                                            break;
+                                            case 'r2lSweep':
+                                                var displayStage = 0;
                             
+                                                displayInterval = setInterval(function(){
+                                                    for(var a = units.length-1; a >= 0; a--){
+                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                                    }
                             
-                            
-                                //control
-                                    object.press = function(event){
-                                        if(!active){return;}
-                            
-                                        if( pressable ){
-                                            if(this.state.pressed){return;}
-                                            this.state.pressed = true;
-                                            if(this.onpress){this.onpress(this, event);}
+                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                                },displayIntervalTime);
+                                            break;
+                                            case 'regular': default:
+                                                for(var a = 0; a < units.length; a++){
+                                                    units[a].enterCharacter(text[a]);
+                                                }
+                                            break;
                                         }
-                                        
-                                        this.select( !this.select(), event );
-                            
-                                        activateGraphicalState();
                                     };
-                                    object.release = function(event){
-                                        if(!active || !pressable){return;}
-                            
-                                        if(!this.state.pressed){return;}
-                                        this.state.pressed = false;
-                                        activateGraphicalState();
-                                        if(this.onrelease){this.onrelease(this, event);}
-                                    };
-                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; activateGraphicalState(); };
-                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  activateGraphicalState(); };
-                                    object.select = function(bool,event,callback=true){ 
-                                        if(!active){return;}
-                            
-                                        if(bool == undefined){return this.state.selected;}
-                                        if(!selectable){return;}
-                                        if(this.state.selected == bool){return;}
-                                        this.state.selected = bool; activateGraphicalState();
-                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
-                                    };
-                                    object.forceMouseLeave = function(){
-                                        object.state.hovering = false; 
-                                        object.release('forced'); 
-                                        activateGraphicalState(); 
-                                        if(object.onleave){object.onleave('forced');}
-                                    };
-                            
-                            
-                            
-                            
-                                //interactivity
-                                    cover.onmouseenter = function(x,y,event){
-                                        object.state.hovering = true;  
-                                        activateGraphicalState();
-                                        if(object.onenter){object.onenter(event);}
-                                        if(event.buttons == 1){cover.onmousedown(event);} 
-                                    };
-                                    cover.onmouseleave = function(x,y,event){ 
-                                        object.state.hovering = false; 
-                                        object.release(event); 
-                                        activateGraphicalState(); 
-                                        if(object.onleave){object.onleave(event);}
-                                    };
-                                    cover.onmouseup = function(x,y,event){   object.release(event); };
-                                    cover.onmousedown = function(x,y,event){ object.press(event); };
-                                    cover.ondblclick = function(x,y,event){ if(!active){return;} if(object.ondblpress){object.ondblpress(event);} };
-                                    
-                            
-                            
-                            
-                                //callbacks
-                                    object.onenter = onenter;
-                                    object.onleave = onleave;
-                                    object.onpress = onpress;
-                                    object.ondblpress = ondblpress;
-                                    object.onrelease = onrelease;
-                                    object.onselect = onselect;
-                                    object.ondeselect = ondeselect;
                             
                                 return object;
                             };
-                            this.checkbox_rect = function(
-                                name='checkbox_rect',
-                                x, y, width=20, height=20, angle=0,
-                                checkStyle = 'rgba(150,150,150,1)',
+                            this.readout_sixteenSegmentDisplay = function(
+                                name='readout_sixteenSegmentDisplay',
+                                x, y, width=100, height=30, count=5, angle=0,
+                                backgroundStyle='rgb(0,0,0)',
+                                glowStyle='rgb(200,200,200)',
+                                dimStyle='rgb(20,20,20)'
+                            ){
+                                //values
+                                    var text = '';
+                                    var displayInterval = null;
+                                    var displayIntervalTime = 150;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                            
+                                    //display units
+                                        var units = [];
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder('sixteenSegmentDisplay', ''+a, {
+                                                x:(width/count)*a, width:width/count, height:height, 
+                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                            });
+                                            object.append( temp );
+                                            units.push(temp);
+                                        }
+                            
+                                //methods
+                                    object.text = function(a){
+                                        if(a==null){return text;}
+                                        text = a;
+                                    };
+                            
+                                    object.print = function(style){
+                                        clearInterval(displayInterval);
+                                        switch(style){
+                                            case 'smart':
+                                                if(text.length > units.length){this.print('r2lSweep');}
+                                                else{this.print('regular')}
+                                            break;
+                                            case 'r2lSweep':
+                                                var displayStage = 0;
+                            
+                                                displayInterval = setInterval(function(){
+                                                    for(var a = units.length-1; a >= 0; a--){
+                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                                    }
+                            
+                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                                },displayIntervalTime);
+                                            break;
+                                            case 'regular': default:
+                                                for(var a = 0; a < units.length; a++){
+                                                    units[a].enterCharacter(text[a]);
+                                                }
+                                            break;
+                                        }
+                                    };
+                            
+                                return object;
+                            };
+                            this.grapher_audioScope_static = function(
+                                name='grapher_audioScope_static',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_size=0.1,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                //attributes
+                                    var attributes = {
+                                        analyser:{
+                                            analyserNode: workspace.library.audio.context.createAnalyser(),
+                                            timeDomainDataArray: null,
+                                            frequencyData: null,
+                                            refreshRate: 10,
+                                            scopeRefreshInterval: null,
+                                            returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                        },
+                                        graph:{
+                                            resolution: 256
+                                        }
+                                    };
+                                    attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
+                                    attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                                    attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //grapher
+                                        var grapher = interfacePart.builder('grapher_static',name,{
+                                            x:0, y:0, width:width, height:height,
+                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                            backgroundStyle_stroke:backgroundStyle_stroke, 
+                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                            backgroundTextStyle_size:backgroundTextStyle_size,
+                                            backgroundTextStyle_font:backgroundTextStyle_font,
+                                            backingStyle:backingStyle,
+                                        });
+                                        object.append(grapher);
+                            
+                                //utility functions
+                                    function render(){
+                                        var numbers = [];
+                                        attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
+                                        for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
+                                            numbers.push(
+                                                attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
+                                            );
+                                        }
+                                        grapher.draw(numbers);
+                                    }
+                                    function setBackground(){
+                                        grapher.viewbox( {'l':-1.1,'h':1.1} );
+                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+                                        grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
+                                        grapher.drawBackground();
+                                    };
+                            
+                                //controls
+                                    object.start = function(){
+                                        if(attributes.analyser.scopeRefreshInterval == null){
+                                            attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
+                                        }
+                                    };
+                                    object.stop = function(){
+                                        clearInterval(attributes.analyser.scopeRefreshInterval);
+                                        attributes.analyser.scopeRefreshInterval = null;
+                                    };
+                                    object.getNode = function(){return attributes.analyser.analyserNode;};
+                                    object.resolution = function(res=null){
+                                        if(res==null){return attributes.graph.resolution;}
+                                        attributes.graph.resolution = res;
+                                        this.stop();
+                                        this.start();
+                                    };
+                                    object.refreshRate = function(a){
+                                        if(a==null){return attributes.analyser.refreshRate;}
+                                        attributes.analyser.refreshRate = a;
+                                        this.stop();
+                                        this.start();
+                                    };
+                            
+                                //setup
+                                    setBackground();
+                            
+                                return object;
+                            };
+                            this.level = function(
+                                name='level',
+                                x, y, angle=0,
+                                width=20, height=60,
+                                backingStyle='rgb(10,10,10)',
+                                levelStyles=['rgb(250,250,250)','rgb(200,200,200)']
+                            ){
+                                var values = [];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+                                            object.append(rect);
+                                    //levels
+                                        var levels = interfacePart.builder('group','levels');
+                                            object.append(levels);
+                            
+                                        var level = [];
+                                        for(var a = 0; a < levelStyles.length; a++){
+                                            values.push(0);
+                                            level.push( interfacePart.builder('rectangle','movingRect_'+a,{
+                                                y:height,
+                                                width:width, height:0,
+                                                style:{fill:levelStyles[a]},
+                                            }) );
+                                            levels.prepend(level[a]);
+                                        }
+                            
+                            
+                                    
+                            
+                                    //methods
+                                        object.layer = function(value,layer=0){
+                                            if(layer == undefined){return values;}
+                                            if(value==null){return values[layer];}
+                            
+                                            value = (value>1 ? 1 : value);
+                                            value = (value<0 ? 0 : value);
+                            
+                                            values[layer] = value;
+                            
+                                            level[layer].parameter.height( height*value );
+                                            level[layer].parameter.y( height - height*value );
+                                        };
+                            
+                                return object;
+                            };
+                        };
+                        
+                        this.control = new function(){
+                            this.rastorgrid = function(
+                                name='rastorgrid', 
+                                x, y, width=80, height=80, angle=0,
+                                xcount=5, ycount=5,
                                 backingStyle = 'rgba(200,200,200,1)',
-                                checkGlowStyle = 'rgba(220,220,220,1)',
+                                checkStyle = 'rgba(150,150,150,1)',
                                 backingGlowStyle = 'rgba(220,220,220,1)',
+                                checkGlowStyle = 'rgba(220,220,220,1)',
                                 onchange = function(){},
                             ){
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     
-                                    //backing
-                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
-                                        object.append(backing);
-                                    //check
-                                        var checkrect = interfacePart.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:{fill:'rgba(0,0,0,0)'}});
-                                        object.append(checkrect);
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        object.append(cover);
-                            
-                            
-                            
-                            
-                            
-                                //state
-                                    var state = {
-                                        checked:false,
-                                        glowing:false,
-                                    }
-                            
-                                    function updateGraphics(){
-                                        if(state.glowing){
-                                            backing.style.fill = backingGlowStyle;
-                                            checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
-                                        }else{
-                                            backing.style.fill = backingStyle;
-                                            checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
+                                    //checkboxes
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                var temp = interfacePart.builder('checkbox_rect',y+'_'+x,{
+                                                    x:x*(width/xcount),  y:y*(height/ycount), 
+                                                    width:width/xcount,  height:height/ycount, 
+                                                    style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
+                                                    onchange:function(){ if(object.onchange){object.onchange(object.get());} },
+                                                });
+                                                object.append(temp);
+                                            }
                                         }
-                                    }
                             
                             
                             
                             
                                 //methods
-                                    object.get = function(){ return state.checked; };
+                                    object.box = function(x,y){ return object.getChildByName(y+'_'+x); };
+                                    object.get = function(){
+                                        var outputArray = [];
+                                
+                                        for(var y = 0; y < ycount; y++){
+                                            var temp = [];
+                                            for(var x = 0; x < xcount; x++){
+                                                temp.push(this.box(x,y).get());
+                                            }
+                                            outputArray.push(temp);
+                                        }
+                                
+                                        return outputArray;
+                                    };
                                     object.set = function(value, update=true){
-                                        state.checked = value;
-                                        
-                                        updateGraphics();
-                                
-                                        if(update&&this.onchange){ this.onchange(value); }
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                object.box(x,y).set(value[y][x],false);
+                                            }
+                                        }
                                     };
-                                    object.light = function(state){
-                                        if(state == undefined){ return state.glowing; }
-                            
-                                        state.glowing = state;
-                            
-                                        updateGraphics();
+                                    object.clear = function(){
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                object.box(x,y).set(false,false);
+                                            }
+                                        }
+                                    };
+                                    object.light = function(x,y,state){
+                                        object.box(x,y).light(state);
                                     };
                             
                             
                             
                             
-                                //interactivity
-                                    cover.onclick = function(event){
-                                        object.set(!object.get());
-                                    };
-                                    cover.onmousedown = function(){};
-                            
-                            
-                            
-                            
-                                //callbacks
+                                //callback
                                     object.onchange = onchange;
                             
-                                return object;
-                            };
-                            this.dial_continuous = function(
-                                name='dial_continuous',
-                                x, y, r=15, angle=0,
-                                value=0, resetValue=-1,
-                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            
-                                handleStyle = 'rgba(200,200,200,1)',
-                                slotStyle = 'rgba(50,50,50,1)',
-                                needleStyle = 'rgba(250,100,100,1)',
-                            
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //slot
-                                        var slot = interfacePart.builder('circle','slot',{r:r*1.1, style:{fill:slotStyle}});
-                                        object.append(slot);
-                            
-                                    //handle
-                                        var handle = interfacePart.builder('circle','handle',{r:r, style:{fill:handleStyle}});
-                                            object.append(handle);
-                            
-                                    //needle group
-                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
-                                        object.append(needleGroup);
-                            
-                                        //needle
-                                            var needleWidth = r/5;
-                                            var needleLength = r;
-                                            var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{fill:needleStyle}});
-                                                needleGroup.append(needle);
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){
-                                        a = (a>1 ? 1 : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                                        value = a;
-                                        needleGroup.parameter.angle(startAngle + maxAngle*value);
-                                    }
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                            
-                            
-                            
-                            
-                                //interaction
-                                    var turningSpeed = r*4;
-                                    
-                                    handle.ondblclick = function(){
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                                        
-                                        set(resetValue); 
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    handle.onwheel = function(x,y,event){
-                                        if(grappled){return;}
-                                        
-                                        var move = event.deltaY/100;
-                                        var globalScale = workspace.core.viewport.scale();
-                                        set( value - move/(10*globalScale) );
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    handle.onmousedown = function(x,y,event){
-                                        var initialValue = value;
-                                        var initialY = event.y;
-                            
-                                        grappled = true;
-                                        workspace.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var value = initialValue;
-                                                var numerator = event.y - initialY;
-                                                var divider = workspace.core.viewport.scale();
-                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                                if(object.onrelease != undefined){object.onrelease(value);}
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                //setup
-                                    set(value);
-                            
-                                return object;
-                            };
-                            this.dial_discrete = function(
-                                name='dial_discrete',
-                                x, y, r=15, angle=0,
-                                value=0, resetValue=0, optionCount=5,
-                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            
-                                handleStyle = 'rgba(200,200,200,1)',
-                                slotStyle = 'rgba(50,50,50,1)',
-                                needleStyle = 'rgba(250,100,100,1)',
-                            
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //dial
-                                        var dial = interfacePart.builder('dial_continuous',name,{
-                                            x:0, y:0, r:r, angle:0,
-                                            startAngle:startAngle, maxAngle:maxAngle,
-                                            style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
-                                        });
-                                        //clean out built-in interaction
-                                        dial.getChildByName('handle').ondblclick = undefined;
-                                        dial.getChildByName('handle').onwheel = undefined;
-                                        dial.getChildByName('handle').onmousedown = undefined;
-                            
-                                        object.append(dial);
-                                    
-                            
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){ 
-                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                                        a = Math.round(a);
-                                        value = a;
-                                        dial.set( value/(optionCount-1) );
-                                    };
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                            
-                            
-                            
-                            
-                                //interaction
-                                    var acc = 0;
-                            
-                                    dial.getChildByName('handle').ondblclick = function(){
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                                        
-                                        set(resetValue);
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    dial.getChildByName('handle').onwheel = function(x,y,event){
-                                        if(grappled){return;}
-                            
-                                        var move = event.deltaY/100;
-                            
-                                        acc += move;
-                                        if( Math.abs(acc) >= 1 ){
-                                            set( value -1*Math.sign(acc) );
-                                            acc = 0;
-                                            if(object.onrelease != undefined){object.onrelease(value);}
-                                        }
-                                    };
-                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
-                                        var initialValue = value;
-                                        var initialY = event.y;
-                            
-                                        grappled = true;
-                                        workspace.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var diff = Math.round( (event.y - initialY)/25 );
-                                                set( initialValue - diff );
-                                                if(object.onchange != undefined){object.onchange(value);}
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                                if(object.onrelease != undefined){object.onrelease(value);}
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                //setup
-                                    set(value);
-                            
-                                return object;
-                            };
-                            this.grapher_waveWorkspace = function(
-                                name='grapher_waveWorkspace',
-                                x, y, width=120, height=60, angle=0, selectNeedle=true, selectionArea=true,
-                            
-                                foregroundStyles=[
-                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.25, lineJoin:'round'},
-                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.25, lineJoin:'round'},
-                                ],
-                                foregroundTextStyles=[
-                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-                                ],
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_font='10pt Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            
-                                onchange=function(needle,value){}, 
-                                onrelease=function(needle,value){}, 
-                                selectionAreaToggle=function(bool){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //main graph
-                                        var graph = interfacePart.builder('grapher_static', 'graph', {
-                                            width:width, height:height,
-                                            style:{
-                                                foregrounds:foregroundStyles,   
-                                                foregroundText:foregroundTextStyles,
-                                                background_stroke:backgroundStyle_stroke,
-                                                background_lineWidth:backgroundStyle_lineWidth,
-                                                backgroundText_fill:backgroundTextStyle_fill,
-                                                backgroundText_font:backgroundTextStyle_font,
-                                                backing:backingStyle,
-                                            }
-                                        });
-                                        graph.resolution(10);
-                                        object.append(graph);
-                                    //needle overlay
-                                        var overlay = interfacePart.builder('needleOverlay', 'overlay', {
-                                            width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
-                                            needleStyles:foregroundStyles.map(a => a.stroke),
-                                        });
-                                        object.append(overlay);
-                            
-                                //controls
-                                    //grapher
-                                        object.horizontalMarkings = graph.horizontalMarkings;
-                                        object.verticalMarkings = graph.verticalMarkings;
-                                        object.drawBackground = graph.drawBackground;
-                                        object.drawForeground = graph.drawForeground;
-                                        object.draw = graph.draw;
-                                    //needle overlay
-                                        object.mark = overlay.mark;
-                                        object.removeAllMarks = overlay.removeAllMarks;
-                                        object.select = overlay.select;
-                                        object.area = overlay.area;
-                            
-                                //callbacks
-                                    object.onchange = onchange;
-                                    object.onrelease = onrelease;
-                                    object.selectionAreaToggle = selectionAreaToggle;
-                                    overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
-                                    overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
-                                    overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
-                            
-                                //setup
-                                    graph.viewbox({left:0});
-                                    graph.drawBackground();
-                                    overlay.select(0);
-                            
-                                return object;
-                            };
-                            this.list = function(
-                                name='list', 
-                                x, y, width=50, height=100, angle=0,
-                                list=[],
-                            
-                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
-                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
-                            
-                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
-                                breakHeightMux=0.0025, breakWidthMux=0.9, 
-                                spacingHeightMux=0.005,
-                                backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
-                            
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_fill = 'rgba(0,0,0,1)',
-                                text_stroke = 'rgba(0,0,0,0)',
-                                text_lineWidth = 1,
-                            
-                                item__off__fill=                          'rgba(180,180,180,1)',
-                                item__off__stroke=                        'rgba(0,0,0,0)',
-                                item__off__lineWidth=                     0,
-                                item__up__fill=                           'rgba(200,200,200,1)',
-                                item__up__stroke=                         'rgba(0,0,0,0)',
-                                item__up__lineWidth=                      0,
-                                item__press__fill=                        'rgba(230,230,230,1)',
-                                item__press__stroke=                      'rgba(0,0,0,0)',
-                                item__press__lineWidth=                   0,
-                                item__select__fill=                       'rgba(200,200,200,1)',
-                                item__select__stroke=                     'rgba(120,120,120,1)',
-                                item__select__lineWidth=                  2,
-                                item__select_press__fill=                 'rgba(230,230,230,1)',
-                                item__select_press__stroke=               'rgba(120,120,120,1)',
-                                item__select_press__lineWidth=            2,
-                                item__glow__fill=                         'rgba(220,220,220,1)',
-                                item__glow__stroke=                       'rgba(0,0,0,0)',
-                                item__glow__lineWidth=                    0,
-                                item__glow_press__fill=                   'rgba(250,250,250,1)',
-                                item__glow_press__stroke=                 'rgba(0,0,0,0)',
-                                item__glow_press__lineWidth=              0,
-                                item__glow_select__fill=                  'rgba(220,220,220,1)',
-                                item__glow_select__stroke=                'rgba(120,120,120,1)',
-                                item__glow_select__lineWidth=             2,
-                                item__glow_select_press__fill=            'rgba(250,250,250,1)',
-                                item__glow_select_press__stroke=          'rgba(120,120,120,1)',
-                                item__glow_select_press__lineWidth=       2,
-                                item__hover__fill=                        'rgba(220,220,220,1)',
-                                item__hover__stroke=                      'rgba(0,0,0,0)',
-                                item__hover__lineWidth=                   0,
-                                item__hover_press__fill=                  'rgba(240,240,240,1)',
-                                item__hover_press__stroke=                'rgba(0,0,0,0)',
-                                item__hover_press__lineWidth=             0,
-                                item__hover_select__fill=                 'rgba(220,220,220,1)',
-                                item__hover_select__stroke=               'rgba(120,120,120,1)',
-                                item__hover_select__lineWidth=            2,
-                                item__hover_select_press__fill=           'rgba(240,240,240,1)',
-                                item__hover_select_press__stroke=         'rgba(120,120,120,1)',
-                                item__hover_select_press__lineWidth=      2,
-                                item__hover_glow__fill=                   'rgba(240,240,240,1)',
-                                item__hover_glow__stroke=                 'rgba(0,0,0,0)',
-                                item__hover_glow__lineWidth=              0,
-                                item__hover_glow_press__fill=             'rgba(250,250,250,1)',
-                                item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-                                item__hover_glow_press__lineWidth=        0,
-                                item__hover_glow_select__fill=            'rgba(240,240,240,1)',
-                                item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-                                item__hover_glow_select__lineWidth=       2,
-                                item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-                                item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-                                item__hover_glow_select_press__lineWidth= 2,
-                            
-                                onenter=function(){},
-                                onleave=function(){},
-                                onpress=function(){},
-                                ondblpress=function(){},
-                                onrelease=function(){},
-                                onselection=function(){},
-                                onpositionchange=function(){},
-                            ){
-                                //state
-                                    var itemArray = [];
-                                    var selectedItems = [];
-                                    var lastNonShiftClicked = 0;
-                                    var position = 0;
-                                    var calculatedListHeight;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
-                                            fill:backing_style,
-                                        }});
-                                        object.append(backing);
-                                    //item collection
-                                        var itemCollection = interfacePart.builder('group','itemCollection');
-                                        object.append(itemCollection);
-                                        function refreshList(){
-                                            //clean out all values
-                                                itemArray = [];
-                                                itemCollection.clear();
-                                                selectedItems = [];
-                                                position = 0;
-                                                lastNonShiftClicked = 0;
-                            
-                                            //populate list
-                                                var accumulativeHeight = 0;
-                                                for(var a = 0; a < list.length; a++){
-                                                    if( list[a] == 'space' ){
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:0, y:accumulativeHeight,
-                                                            width:width, height:height*spacingHeightMux,
-                                                            style:{fill:'rgba(255,0,0,0)'}
-                                                        });
-                            
-                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else if( list[a] == 'break'){
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*breakWidthMux, height:height*breakHeightMux,
-                                                            style:{fill:break_style}
-                                                        });
-                            
-                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else{
-                                                        var temp = interfacePart.builder( 'button_rect', ''+a, {
-                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*itemWidthMux, height:height*itemHeightMux, 
-                                                            text_left: list[a].text_left,
-                                                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
-                                                            text_right: list[a].text_right,
-                            
-                                                            textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
-                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                                            style:{
-                                                                text_font:text_font,
-                                                                text_textBaseline:text_textBaseline,
-                                                                text_fill:text_fill,
-                                                                text_stroke:text_stroke,
-                                                                text_lineWidth:text_lineWidth,
-                            
-                                                                background__off__fill:                            item__off__fill,
-                                                                background__off__stroke:                          item__off__stroke,
-                                                                background__off__lineWidth:                       item__off__lineWidth,
-                                                                background__up__fill:                             item__up__fill,
-                                                                background__up__stroke:                           item__up__stroke,
-                                                                background__up__lineWidth:                        item__up__lineWidth,
-                                                                background__press__fill:                          item__press__fill,
-                                                                background__press__stroke:                        item__press__stroke,
-                                                                background__press__lineWidth:                     item__press__lineWidth,
-                                                                background__select__fill:                         item__select__fill,
-                                                                background__select__stroke:                       item__select__stroke,
-                                                                background__select__lineWidth:                    item__select__lineWidth,
-                                                                background__select_press__fill:                   item__select_press__fill,
-                                                                background__select_press__stroke:                 item__select_press__stroke,
-                                                                background__select_press__lineWidth:              item__select_press__lineWidth,
-                                                                background__glow__fill:                           item__glow__fill,
-                                                                background__glow__stroke:                         item__glow__stroke,
-                                                                background__glow__lineWidth:                      item__glow__lineWidth,
-                                                                background__glow_press__fill:                     item__glow_press__fill,
-                                                                background__glow_press__stroke:                   item__glow_press__stroke,
-                                                                background__glow_press__lineWidth:                item__glow_press__lineWidth,
-                                                                background__glow_select__fill:                    item__glow_select__fill,
-                                                                background__glow_select__stroke:                  item__glow_select__stroke,
-                                                                background__glow_select__lineWidth:               item__glow_select__lineWidth,
-                                                                background__glow_select_press__fill:              item__glow_select_press__fill,
-                                                                background__glow_select_press__stroke:            item__glow_select_press__stroke,
-                                                                background__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
-                                                                background__hover__fill:                          item__hover__fill,
-                                                                background__hover__stroke:                        item__hover__stroke,
-                                                                background__hover__lineWidth:                     item__hover__lineWidth,
-                                                                background__hover_press__fill:                    item__hover_press__fill,
-                                                                background__hover_press__stroke:                  item__hover_press__stroke,
-                                                                background__hover_press__lineWidth:               item__hover_press__lineWidth,
-                                                                background__hover_select__fill:                   item__hover_select__fill,
-                                                                background__hover_select__stroke:                 item__hover_select__stroke,
-                                                                background__hover_select__lineWidth:              item__hover_select__lineWidth,
-                                                                background__hover_select_press__fill:             item__hover_select_press__fill,
-                                                                background__hover_select_press__stroke:           item__hover_select_press__stroke,
-                                                                background__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
-                                                                background__hover_glow__fill:                     item__hover_glow__fill,
-                                                                background__hover_glow__stroke:                   item__hover_glow__stroke,
-                                                                background__hover_glow__lineWidth:                item__hover_glow__lineWidth,
-                                                                background__hover_glow_press__fill:               item__hover_glow_press__fill,
-                                                                background__hover_glow_press__stroke:             item__hover_glow_press__stroke,
-                                                                background__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
-                                                                background__hover_glow_select__fill:              item__hover_glow_select__fill,
-                                                                background__hover_glow_select__stroke:            item__hover_glow_select__stroke,
-                                                                background__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
-                                                                background__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
-                                                                background__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
-                                                                background__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
-                                                            }
-                                                        });
-                            
-                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                        temp.onrelease = function(a){
-                                                            return function(){
-                                                                if( list[a].function ){ list[a].function(); }
-                                                                object.onrelease(a);
-                                                            }
-                                                        }(a);
-                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-                            
-                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                        itemArray.push( temp );
-                                                    }
-                                                }
-                            
-                                            return accumulativeHeight - height*itemSpacingMux;
-                                        }
-                                        calculatedListHeight = refreshList();
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                                        object.append(cover);
-                                    //stencil
-                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                                        object.stencil(stencil);
-                                        object.clip(true);
-                            
-                            
-                                //interaction
-                                    cover.onwheel = function(x,y,event){
-                                        var move = event.deltaY/100;
-                                        object.position( object.position() + move/10 );
-                                        for(var a = 0; a < itemArray.length; a++){
-                                            itemArray[a].forceMouseLeave();
-                                        }
-                                    };
-                                
-                                //controls
-                                    object.position = function(a,update=true){
-                                        if(a == undefined){return position;}
-                                        a = a < 0 ? 0 : a;
-                                        a = a > 1 ? 1 : a;
-                                        position = a;
-                            
-                                        if( calculatedListHeight < height ){return;}
-                                        var movementSpace = calculatedListHeight - height;
-                                        itemCollection.parameter.y( -a*movementSpace );
-                                        
-                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
-                                    };
-                                    object.select = function(a,state,event,update=true){
-                                        if(!selectable){return;}
-                            
-                                        //where multi selection is not allowed
-                                            if(!multiSelect){
-                                                //where we want to select an item, which is not already selected
-                                                    if(state && !selectedItems.includes(a) ){
-                                                        //deselect all other items
-                                                            while( selectedItems.length > 0 ){
-                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
-                                                                selectedItems.shift();
-                                                            }
-                            
-                                                        //select current item
-                                                            selectedItems.push(a);
-                            
-                                                //where we want to deselect an item that is selected
-                                                    }else if(!state && selectedItems.includes(a)){
-                                                        selectedItems = [];
-                                                    }
-                            
-                                            //do not update the item itself, in the case that it was the item that sent this command
-                                            //(which would cause a little loop)
-                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
-                            
-                                        //where multi selection is allowed
-                                            }else{
-                                                //wherer range-selection is to be done
-                                                    if( event != undefined && event.shiftKey ){
-                                                        //gather top and bottom item
-                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
-                                                            var min = Math.min(lastNonShiftClicked, a);
-                                                            var max = Math.max(lastNonShiftClicked, a);
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( itemArray[b].name == ''+min ){min = b;}
-                                                                if( itemArray[b].name == ''+max ){max = b;}
-                                                            }
-                            
-                                                        //deselect all outside the range
-                                                            selectedItems = [];
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( b > max || b < min ){
-                                                                    if( itemArray[b].select() ){
-                                                                        itemArray[b].select(false,undefined,false);
-                                                                    }
-                                                                }
-                                                            }
-                            
-                                                        //select those within the range (that aren't already selected)
-                                                            for(var b = min; b <= max; b++){
-                                                                if( !itemArray[b].select() ){
-                                                                    itemArray[b].select(true,undefined,false);
-                                                                    selectedItems.push(b);
-                                                                }
-                                                            }
-                                                //where range-selection is not to be done
-                                                    }else{
-                                                        if(update){ itemArray[a].select(state); }
-                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
-                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                                        lastNonShiftClicked = a;
-                                                    }
-                                            }
-                            
-                                        object.onselection(selectedItems);
-                                    };
-                                    object.add = function(item){
-                                        list.push(item);
-                                        calculatedListHeight = refreshList();
-                                    };
-                                    object.remove = function(a){
-                                        list.splice(a,1);
-                                        calculatedListHeight = refreshList();
-                                    };
-                            
-                                //callbacks
-                                    object.onenter = onenter;
-                                    object.onleave = onleave;
-                                    object.onpress = onpress;
-                                    object.ondblpress = ondblpress;
-                                    object.onrelease = onrelease;
-                                    object.onselection = onselection;
-                                    object.onpositionchange = onpositionchange;
-                                    
                                 return object;
                             };
                             this.needleOverlay = function(
@@ -10249,27 +9334,364 @@
                                     
                                 return object;
                             };
-                            this.rangeslide = function(
-                                name='rangeslide', 
+                            this.button_rect = function(
+                                name='button_rect',
+                                x, y, width=30, height=20, angle=0,
+                                text_centre='', text_left='', text_right='',
+                                textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_fill = 'rgba(0,0,0,1)',
+                                text_stroke = 'rgba(0,0,0,0)',
+                                text_lineWidth = 1,
+                            
+                                backing__off__fill=                          'rgba(180,180,180,1)',
+                                backing__off__stroke=                        'rgba(0,0,0,0)',
+                                backing__off__lineWidth=                     0,
+                                backing__up__fill=                           'rgba(200,200,200,1)',
+                                backing__up__stroke=                         'rgba(0,0,0,0)',
+                                backing__up__lineWidth=                      0,
+                                backing__press__fill=                        'rgba(230,230,230,1)',
+                                backing__press__stroke=                      'rgba(0,0,0,0)',
+                                backing__press__lineWidth=                   0,
+                                backing__select__fill=                       'rgba(200,200,200,1)',
+                                backing__select__stroke=                     'rgba(120,120,120,1)',
+                                backing__select__lineWidth=                  0.75,
+                                backing__select_press__fill=                 'rgba(230,230,230,1)',
+                                backing__select_press__stroke=               'rgba(120,120,120,1)',
+                                backing__select_press__lineWidth=            0.75,
+                                backing__glow__fill=                         'rgba(220,220,220,1)',
+                                backing__glow__stroke=                       'rgba(0,0,0,0)',
+                                backing__glow__lineWidth=                    0,
+                                backing__glow_press__fill=                   'rgba(250,250,250,1)',
+                                backing__glow_press__stroke=                 'rgba(0,0,0,0)',
+                                backing__glow_press__lineWidth=              0,
+                                backing__glow_select__fill=                  'rgba(220,220,220,1)',
+                                backing__glow_select__stroke=                'rgba(120,120,120,1)',
+                                backing__glow_select__lineWidth=             0.75,
+                                backing__glow_select_press__fill=            'rgba(250,250,250,1)',
+                                backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                                backing__glow_select_press__lineWidth=       0.75,
+                                backing__hover__fill=                        'rgba(220,220,220,1)',
+                                backing__hover__stroke=                      'rgba(0,0,0,0)',
+                                backing__hover__lineWidth=                   0,
+                                backing__hover_press__fill=                  'rgba(240,240,240,1)',
+                                backing__hover_press__stroke=                'rgba(0,0,0,0)',
+                                backing__hover_press__lineWidth=             0,
+                                backing__hover_select__fill=                 'rgba(220,220,220,1)',
+                                backing__hover_select__stroke=               'rgba(120,120,120,1)',
+                                backing__hover_select__lineWidth=            0.75,
+                                backing__hover_select_press__fill=           'rgba(240,240,240,1)',
+                                backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                                backing__hover_select_press__lineWidth=      0.75,
+                                backing__hover_glow__fill=                   'rgba(240,240,240,1)',
+                                backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                                backing__hover_glow__lineWidth=              0,
+                                backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                                backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                                backing__hover_glow_press__lineWidth=        0,
+                                backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                                backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                                backing__hover_glow_select__lineWidth=       0.75,
+                                backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                                backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                                backing__hover_glow_select_press__lineWidth= 0.75,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
+                                            fill:backing__off__fill,
+                                            stroke:backing__off__stroke,
+                                            lineWidth:backing__off__lineWidth,
+                                        }});
+                                        object.append(backing);
+                            
+                                    //text
+                                        var text_centre = interfacePart.builder('text','centre', {
+                                            x:width/2, 
+                                            y:height*textVerticalOffsetMux, 
+                                            text:text_centre, 
+                                            style:{
+                                                font:text_font,
+                                                testBaseline:text_textBaseline,
+                                                fill:text_fill,
+                                                stroke:text_stroke,
+                                                lineWidth:text_lineWidth,
+                                                textAlign:'center',
+                                                textBaseline:'middle',
+                                            }
+                                        });
+                                        object.append(text_centre);
+                                        var text_left = interfacePart.builder('text','left',     {
+                                            x:width*textHorizontalOffsetMux, 
+                                            y:height*textVerticalOffsetMux, 
+                                            text:text_left, 
+                                            style:{
+                                                font:text_font,
+                                                testBaseline:text_textBaseline,
+                                                fill:text_fill,
+                                                stroke:text_stroke,
+                                                lineWidth:text_lineWidth,
+                                                textAlign:'left',
+                                                textBaseline:'middle',
+                                            }
+                                        });
+                                        object.append(text_left);
+                                        var text_right = interfacePart.builder('text','right',   {
+                                            x:width-(width*textHorizontalOffsetMux), 
+                                            y:height*textVerticalOffsetMux, 
+                                            text:text_right, 
+                                            style:{
+                                                font:text_font,
+                                                testBaseline:text_textBaseline,
+                                                fill:text_fill,
+                                                stroke:text_stroke,
+                                                lineWidth:text_lineWidth,
+                                                textAlign:'right',
+                                                textBaseline:'middle',
+                                            }
+                                        });
+                                        object.append(text_right);
+                            
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(cover);
+                            
+                            
+                            
+                            
+                                //state
+                                    object.state = {
+                                        hovering:false,
+                                        glowing:false,
+                                        selected:false,
+                                        pressed:false,
+                                    };
+                            
+                                    function activateGraphicalState(){
+                                        if(!active){ 
+                                            backing.style.fill = backing__off__fill;
+                                            backing.style.stroke = backing__off__stroke;
+                                            backing.style.lineWidth = backing__off__lineWidth;
+                                            return;
+                                        }
+                            
+                                        var styles = [
+                                            { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
+                                            { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
+                                            { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
+                                            { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
+                                            { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
+                                            { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
+                                            { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
+                                            { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
+                                            { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
+                                            { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
+                                            { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
+                                            { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
+                                            { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
+                                            { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
+                                            { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
+                                            { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
+                                        ];
+                            
+                                        if(!hoverable && object.state.hovering ){ object.state.hovering = false; }
+                                        if(!selectable && object.state.selected ){ object.state.selected = false; }
+                            
+                                        var i = object.state.hovering*8 + object.state.glowing*4 + object.state.selected*2 + (pressable && object.state.pressed)*1;
+                                        backing.style.fill =       styles[i].fill;
+                                        backing.style.stroke =     styles[i].stroke;
+                                        backing.style.lineWidth =  styles[i].lineWidth;
+                                    };
+                                    activateGraphicalState();
+                            
+                            
+                            
+                            
+                                //control
+                                    object.press = function(event){
+                                        if(!active){return;}
+                            
+                                        if( pressable ){
+                                            if(this.state.pressed){return;}
+                                            this.state.pressed = true;
+                                            if(this.onpress){this.onpress(this, event);}
+                                        }
+                                        
+                                        this.select( !this.select(), event );
+                            
+                                        activateGraphicalState();
+                                    };
+                                    object.release = function(event){
+                                        if(!active || !pressable){return;}
+                            
+                                        if(!this.state.pressed){return;}
+                                        this.state.pressed = false;
+                                        activateGraphicalState();
+                                        if(this.onrelease){this.onrelease(this, event);}
+                                    };
+                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; activateGraphicalState(); };
+                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  activateGraphicalState(); };
+                                    object.select = function(bool,event,callback=true){ 
+                                        if(!active){return;}
+                            
+                                        if(bool == undefined){return this.state.selected;}
+                                        if(!selectable){return;}
+                                        if(this.state.selected == bool){return;}
+                                        this.state.selected = bool; activateGraphicalState();
+                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
+                                    };
+                                    object.forceMouseLeave = function(){
+                                        object.state.hovering = false; 
+                                        object.release('forced'); 
+                                        activateGraphicalState(); 
+                                        if(object.onleave){object.onleave('forced');}
+                                    };
+                            
+                            
+                            
+                            
+                                //interactivity
+                                    cover.onmouseenter = function(x,y,event){
+                                        object.state.hovering = true;  
+                                        activateGraphicalState();
+                                        if(object.onenter){object.onenter(event);}
+                                        if(event.buttons == 1){cover.onmousedown(event);} 
+                                    };
+                                    cover.onmouseleave = function(x,y,event){ 
+                                        object.state.hovering = false; 
+                                        object.release(event); 
+                                        activateGraphicalState(); 
+                                        if(object.onleave){object.onleave(event);}
+                                    };
+                                    cover.onmouseup = function(x,y,event){   object.release(event); };
+                                    cover.onmousedown = function(x,y,event){ object.press(event); };
+                                    cover.ondblclick = function(x,y,event){ if(!active){return;} if(object.ondblpress){object.ondblpress(event);} };
+                                    
+                            
+                            
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselect = onselect;
+                                    object.ondeselect = ondeselect;
+                            
+                                return object;
+                            };
+                            this.checkbox_rect = function(
+                                name='checkbox_rect',
+                                x, y, width=20, height=20, angle=0,
+                                checkStyle = 'rgba(150,150,150,1)',
+                                backingStyle = 'rgba(200,200,200,1)',
+                                checkGlowStyle = 'rgba(220,220,220,1)',
+                                backingGlowStyle = 'rgba(220,220,220,1)',
+                                onchange = function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                                        object.append(backing);
+                                    //check
+                                        var checkrect = interfacePart.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(checkrect);
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(cover);
+                            
+                            
+                            
+                            
+                            
+                                //state
+                                    var state = {
+                                        checked:false,
+                                        glowing:false,
+                                    }
+                            
+                                    function updateGraphics(){
+                                        if(state.glowing){
+                                            backing.style.fill = backingGlowStyle;
+                                            checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
+                                        }else{
+                                            backing.style.fill = backingStyle;
+                                            checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
+                                        }
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    object.get = function(){ return state.checked; };
+                                    object.set = function(value, update=true){
+                                        state.checked = value;
+                                        
+                                        updateGraphics();
+                                
+                                        if(update&&this.onchange){ this.onchange(value); }
+                                    };
+                                    object.light = function(state){
+                                        if(state == undefined){ return state.glowing; }
+                            
+                                        state.glowing = state;
+                            
+                                        updateGraphics();
+                                    };
+                            
+                            
+                            
+                            
+                                //interactivity
+                                    cover.onclick = function(event){
+                                        object.set(!object.get());
+                                    };
+                                    cover.onmousedown = function(){};
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                            
+                                return object;
+                            };
+                            this.slide = function(
+                                name='slide', 
                                 x, y, width=10, height=95, angle=0,
-                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
+                                handleHeight=0.1, value=0, resetValue=-1,
                                 handleStyle = 'rgba(200,200,200,1)',
                                 backingStyle = 'rgba(150,150,150,1)',
                                 slotStyle = 'rgba(50,50,50,1)',
                                 invisibleHandleStyle = 'rgba(255,0,0,0)',
-                                spanStyle='rgba(200,0,200,0.5)',
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                var grappled = false;
-                                var handleNames = ['start','end'];
-                            
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     //backing and slot group
                                         var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
-                                        // backingAndSlot.dotFrame = true;
                                         object.append(backingAndSlot);
                                         //backing
                                             var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
@@ -10280,108 +9702,71 @@
                                         //backing and slot cover
                                             var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
                                             backingAndSlot.append(backingAndSlotCover);
-                            
-                                    //span
-                                        var span = interfacePart.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, style:{fill:spanStyle} });
-                                        object.append(span);
-                            
-                                    //handles
-                                        var handles = {}
-                                        for(var a = 0; a < handleNames.length; a++){
-                                            //grouping
-                                                handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
-                                                object.append(handles[handleNames[a]]);
-                                            //handle
-                                                var handle = interfacePart.builder('rectangle','handle',{width:width,height:height*handleHeight, style:{fill:handleStyle}});
-                                                handles[handleNames[a]].append(handle);
-                                            //invisible handle
-                                                var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
-                                                handles[handleNames[a]].append(invisibleHandle);
-                                        }
+                                    //handle
+                                        var handle = interfacePart.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
+                                        object.append(handle);
+                                    //invisible handle
+                                        var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                                        object.append(invisibleHandle);
                             
                             
                             
                             
                                 //graphical adjust
-                                    function set(a,handle,update=true){
+                                    function set(a,update=true){
                                         a = (a>1 ? 1 : a);
                                         a = (a<0 ? 0 : a);
                             
-                                        //make sure the handle order is maintained
-                                        //if necessary, one handle should push the other, though not past the ends
-                                            switch(handle){
-                                                default: console.error('unknown handle to adjust'); break;
-                                                case 'start':
-                                                    //don't allow start slide to encrouch on end slider's space
-                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                                        
+                                        value = a;
+                                        handle.y = a*height*(1-handleHeight);
+                                        invisibleHandle.y = a*height*(1-handleHeight);
                             
-                                                    //if start slide bumps up against end slide; move end slide accordingly
-                                                        var start_rightEdge = a + (1-a)*handleHeight;
-                                                        var end_leftEdge = values.end - (values.end)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.end = start_rightEdge/(1-handleHeight);
-                                                        }
-                                                break;
-                                                case 'end':
-                                                    //don't allow end slide to encrouch on start slider's space
-                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
-                            
-                                                    //if end slide bumps up against start slide; move start slide accordingly
-                                                        var start_rightEdge= values.start + (1-values.start)*handleHeight;
-                                                        var end_leftEdge = a - (a)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
-                                                        }
-                                                break;
-                                            }
-                            
-                                        //fill in data
-                                            values[handle] = a;
-                            
-                                        //adjust y positions
-                                            handles.start.parameter.y( values.start*height*(1-handleHeight) );
-                                            handles.end.parameter.y( values.end*height*(1-handleHeight) );
-                            
-                                        //adjust span height (with a little bit of padding so the span is under the handles a little)
-                                            span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
-                                            span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
-                            
-                                        if(update && object.onchange){object.onchange(values);}
+                                        handle.computeExtremities();
+                                        invisibleHandle.computeExtremities();
                                     }
-                                    function pan(a){
-                                        var diff = values.end - values.start;
-                            
-                                        var newPositions = [ a, a+diff ];
-                                        if(newPositions[0] <= 0){
-                                            newPositions[1] = newPositions[1] - newPositions[0];
-                                            newPositions[0] = 0;
-                                        }
-                                        else if(newPositions[1] >= 1){
-                                            newPositions[0] = newPositions[0] - (newPositions[1]-1);
-                                            newPositions[1] = 1;
-                                        }
-                            
-                                        set( newPositions[0],'start' );
-                                        set( newPositions[1],'end' );
+                                    object.__calculationAngle = angle;
+                                    function currentMousePosition(event){
+                                        return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
                                     }
                             
                             
                             
                             
                                 //methods
-                                    object.get = function(){return values;};
-                                    object.set = function(values,update){
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
                                         if(grappled){return;}
-                                        if(values.start != undefined){set(values.start,'start',update);}
-                                        if(values.end != undefined){set(values.end,'end',update);}
+                                        set(value,update);
                                     };
+                                    object.get = function(){return value;};
                             
                             
                             
-                                    
+                            
                                 //interaction
-                                    function getPositionWithinFromMouse(x,y){
+                                    object.ondblclick = function(){
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                            
+                                        set(resetValue);
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    object.onwheel = function(){
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                                        var globalScale = workspace.core.viewport.scale();
+                                        set( value + move/(10*globalScale) );
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    backingAndSlot.onmousedown = function(x,y,event){};//to stop unit selection
+                                    backingAndSlot.onclick = function(x,y,event){
+                                        if(grappled){return;}
+                            
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
                                             var offset = backingAndSlot.getOffset();
                                             var delta = {
@@ -10389,175 +9774,190 @@
                                                 y: y - (backingAndSlot.y     + offset.y),
                                                 a: 0 - (backingAndSlot.angle + offset.a),
                                             };
+                                            var d = workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
                             
-                                        return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
-                                    }
+                                        //use the distance to calculate the correct value to set the slide to
+                                        //taking into account the slide handle's size also
+                                            var value = d + 0.5*handleHeight*((2*d)-1);
                             
-                                    //background click
-                                        backingAndSlot.onmousedown = function(x,y,event){};//to stop unit selection
-                                        backingAndSlot.onclick = function(x,y,event){
-                                            if(grappled){return;}
+                                        set(value);
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    invisibleHandle.onmousedown = function(x,y,event){
+                                        grappled = true;
                             
-                                            //calculate the distance the click is from the top of the slider (accounting for angle)
-                                                var d = getPositionWithinFromMouse(x,y);
+                                        var initialValue = value;
+                                        var initialY = currentMousePosition(event);
+                                        var mux = height - height*handleHeight;
                             
-                                            //use the distance to calculate the correct value to set the slide to
-                                            //taking into account the slide handle's size also
-                                                var value = d + 0.5*handleHeight*((2*d)-1);
-                            
-                                            //whichever handle is closer; move that handle to the mouse's position
-                                                Math.abs(values.start-value) < Math.abs(values.end-value) ? set(value,'start') : set(value,'end');
-                                        };
-                            
-                                    //double-click reset
-                                        object.ondblclick = function(){
-                                            if(resetValues.start<0 || resetValues.end<0){return;}
-                                            if(grappled){return;}
-                            
-                                            set(resetValues.start,'start');
-                                            set(resetValues.end,'end');
-                                            object.onrelease(values);
-                                        };
-                            
-                                    //span panning - expand/shrink
-                                        object.onwheel = function(){
-                                            if(grappled){return;}
-                            
-                                            var move = event.deltaY/100;
-                                            var globalScale = workspace.core.viewport.scale();
-                                            var val = move/(10*globalScale);
-                            
-                                            set(values.start-val,'start');
-                                            set(values.end+val,'end');
-                                        };
-                            
-                                    // span panning - drag
-                                        span.onmousedown = function(x,y,event){
-                                            grappled = true;
-                            
-                                            var initialValue = values.start;
-                                            var initialPosition = getPositionWithinFromMouse(x,y);
-                            
-                                            workspace.system.mouse.mouseInteractionHandler(
-                                                function(event){
-                                                    var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                                    var livePosition = getPositionWithinFromMouse(point.x,point.y);
-                                                    pan( initialValue+(livePosition-initialPosition) )
-                                                    object.onchange(values);
-                                                },
-                                                function(event){
-                                                    object.onrelease(values);
-                                                    grappled = false;
-                                                }
-                                            );
-                                        };
-                            
-                                    //handle movement
-                                        for(var a = 0; a < handleNames.length; a++){
-                                            handles[handleNames[a]].children[1].onmousedown = (function(a){
-                                                return function(x,y,event){
-                                                    grappled = true;
-                                        
-                                                    var initialValue = values[handleNames[a]];
-                                                    var initialPosition = getPositionWithinFromMouse(x,y);
-                                                    
-                                                    workspace.system.mouse.mouseInteractionHandler(
-                                                        function(event){
-                                                            var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                                            var livePosition = getPositionWithinFromMouse(point.x,point.y);
-                                                            set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
-                                                            object.onchange(values);
-                                                        },
-                                                        function(event){
-                                                            object.onrelease(values);
-                                                            grappled = false;
-                                                        }
-                                                    );
-                                                }
-                                            })(a);
-                                        }
-                              
+                                        workspace.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = workspace.core.viewport.scale();
+                                                set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                            },
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = workspace.core.viewport.scale();
+                                                object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                                grappled = false;
+                                            }
+                                        );
+                                    };
                             
                             
-                            
-                                //callbacks
-                                    object.onchange = onchange;
-                                    object.onrelease = onrelease;  
                             
                                 //setup
-                                    set(0,'start');
-                                    set(1,'end');
+                                    set(value);
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
                             
                                 return object;
                             };
-                            this.rastorgrid = function(
-                                name='rastorgrid', 
-                                x, y, width=80, height=80, angle=0,
-                                xcount=5, ycount=5,
-                                backingStyle = 'rgba(200,200,200,1)',
-                                checkStyle = 'rgba(150,150,150,1)',
-                                backingGlowStyle = 'rgba(220,220,220,1)',
-                                checkGlowStyle = 'rgba(220,220,220,1)',
-                                onchange = function(){},
+                            this.dial_continuous = function(
+                                name='dial_continuous',
+                                x, y, r=15, angle=0,
+                                value=0, resetValue=-1,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleStyle = 'rgba(200,200,200,1)',
+                                slotStyle = 'rgba(50,50,50,1)',
+                                needleStyle = 'rgba(250,100,100,1)',
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
                             ){
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     
-                                    //checkboxes
-                                        for(var y = 0; y < ycount; y++){
-                                            for(var x = 0; x < xcount; x++){
-                                                var temp = interfacePart.builder('checkbox_rect',y+'_'+x,{
-                                                    x:x*(width/xcount),  y:y*(height/ycount), 
-                                                    width:width/xcount,  height:height/ycount, 
-                                                    style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
-                                                    onchange:function(){ if(object.onchange){object.onchange(object.get());} },
-                                                });
-                                                object.append(temp);
-                                            }
-                                        }
+                                    //slot
+                                        var slot = interfacePart.builder('circle','slot',{r:r*1.1, style:{fill:slotStyle}});
+                                        object.append(slot);
+                            
+                                    //handle
+                                        var handle = interfacePart.builder('circle','handle',{r:r, style:{fill:handleStyle}});
+                                            object.append(handle);
+                            
+                                    //needle group
+                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
+                                        object.append(needleGroup);
+                            
+                                        //needle
+                                            var needleWidth = r/5;
+                                            var needleLength = r;
+                                            var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{fill:needleStyle}});
+                                                needleGroup.append(needle);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        value = a;
+                                        needleGroup.parameter.angle(startAngle + maxAngle*value);
+                                    }
                             
                             
                             
                             
                                 //methods
-                                    object.box = function(x,y){ return object.getChildByName(y+'_'+x); };
-                                    object.get = function(){
-                                        var outputArray = [];
-                                
-                                        for(var y = 0; y < ycount; y++){
-                                            var temp = [];
-                                            for(var x = 0; x < xcount; x++){
-                                                temp.push(this.box(x,y).get());
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var turningSpeed = r*4;
+                                    
+                                    handle.ondblclick = function(){
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue); 
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onwheel = function(x,y,event){
+                                        if(grappled){return;}
+                                        
+                                        var move = event.deltaY/100;
+                                        var globalScale = workspace.core.viewport.scale();
+                                        set( value - move/(10*globalScale) );
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onmousedown = function(x,y,event){
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        workspace.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var value = initialValue;
+                                                var numerator = event.y - initialY;
+                                                var divider = workspace.core.viewport.scale();
+                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
                                             }
-                                            outputArray.push(temp);
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.slidePanel = function(
+                                name='slidePanel', 
+                                x, y, width=80, height=95, angle=0,
+                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                                handleStyle = 'rgba(200,200,200,1)',
+                                backingStyle = 'rgba(150,150,150,1)',
+                                slotStyle = 'rgba(50,50,50,1)'
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //slides
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder(
+                                                'slide', 'slide_'+a, {
+                                                    x:a*(width/count), y:0,
+                                                    width:width/count, height:height,
+                                                    value:startValue, resetValue:resetValue,
+                                                    style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
+                                                    onchange:function(value){ object.onchange(this.id,value); },
+                                                    onrelease:function(value){ object.onrelease(this.id,value); },
+                                                }
+                                            );
+                                            // temp.dotFrame = true;
+                                            temp.__calculationAngle = angle;
+                                            object.append(temp);
                                         }
-                                
-                                        return outputArray;
-                                    };
-                                    object.set = function(value, update=true){
-                                        for(var y = 0; y < ycount; y++){
-                                            for(var x = 0; x < xcount; x++){
-                                                object.box(x,y).set(value[y][x],false);
-                                            }
-                                        }
-                                    };
-                                    object.clear = function(){
-                                        for(var y = 0; y < ycount; y++){
-                                            for(var x = 0; x < xcount; x++){
-                                                object.box(x,y).set(false,false);
-                                            }
-                                        }
-                                    };
-                                    object.light = function(x,y,state){
-                                        object.box(x,y).light(state);
-                                    };
-                            
-                            
-                            
-                            
-                                //callback
-                                    object.onchange = onchange;
                             
                                 return object;
                             };
@@ -11689,61 +11089,466 @@
                             
                                 return object;
                             };
-                            this.slide = function(
-                                name='slide', 
-                                x, y, width=10, height=95, angle=0,
-                                handleHeight=0.1, value=0, resetValue=-1,
+                            this.list = function(
+                                name='list', 
+                                x, y, width=50, height=100, angle=0,
+                                list=[],
+                            
+                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                                breakHeightMux=0.0025, breakWidthMux=0.9, 
+                                spacingHeightMux=0.005,
+                                backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_fill = 'rgba(0,0,0,1)',
+                                text_stroke = 'rgba(0,0,0,0)',
+                                text_lineWidth = 1,
+                            
+                                item__off__fill=                          'rgba(180,180,180,1)',
+                                item__off__stroke=                        'rgba(0,0,0,0)',
+                                item__off__lineWidth=                     0,
+                                item__up__fill=                           'rgba(200,200,200,1)',
+                                item__up__stroke=                         'rgba(0,0,0,0)',
+                                item__up__lineWidth=                      0,
+                                item__press__fill=                        'rgba(230,230,230,1)',
+                                item__press__stroke=                      'rgba(0,0,0,0)',
+                                item__press__lineWidth=                   0,
+                                item__select__fill=                       'rgba(200,200,200,1)',
+                                item__select__stroke=                     'rgba(120,120,120,1)',
+                                item__select__lineWidth=                  2,
+                                item__select_press__fill=                 'rgba(230,230,230,1)',
+                                item__select_press__stroke=               'rgba(120,120,120,1)',
+                                item__select_press__lineWidth=            2,
+                                item__glow__fill=                         'rgba(220,220,220,1)',
+                                item__glow__stroke=                       'rgba(0,0,0,0)',
+                                item__glow__lineWidth=                    0,
+                                item__glow_press__fill=                   'rgba(250,250,250,1)',
+                                item__glow_press__stroke=                 'rgba(0,0,0,0)',
+                                item__glow_press__lineWidth=              0,
+                                item__glow_select__fill=                  'rgba(220,220,220,1)',
+                                item__glow_select__stroke=                'rgba(120,120,120,1)',
+                                item__glow_select__lineWidth=             2,
+                                item__glow_select_press__fill=            'rgba(250,250,250,1)',
+                                item__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                                item__glow_select_press__lineWidth=       2,
+                                item__hover__fill=                        'rgba(220,220,220,1)',
+                                item__hover__stroke=                      'rgba(0,0,0,0)',
+                                item__hover__lineWidth=                   0,
+                                item__hover_press__fill=                  'rgba(240,240,240,1)',
+                                item__hover_press__stroke=                'rgba(0,0,0,0)',
+                                item__hover_press__lineWidth=             0,
+                                item__hover_select__fill=                 'rgba(220,220,220,1)',
+                                item__hover_select__stroke=               'rgba(120,120,120,1)',
+                                item__hover_select__lineWidth=            2,
+                                item__hover_select_press__fill=           'rgba(240,240,240,1)',
+                                item__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                                item__hover_select_press__lineWidth=      2,
+                                item__hover_glow__fill=                   'rgba(240,240,240,1)',
+                                item__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                                item__hover_glow__lineWidth=              0,
+                                item__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                                item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                                item__hover_glow_press__lineWidth=        0,
+                                item__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                                item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                                item__hover_glow_select__lineWidth=       2,
+                                item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                                item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                                item__hover_glow_select_press__lineWidth= 2,
+                            
+                                onenter=function(){},
+                                onleave=function(){},
+                                onpress=function(){},
+                                ondblpress=function(){},
+                                onrelease=function(){},
+                                onselection=function(){},
+                                onpositionchange=function(){},
+                            ){
+                                //state
+                                    var itemArray = [];
+                                    var selectedItems = [];
+                                    var lastNonShiftClicked = 0;
+                                    var position = 0;
+                                    var calculatedListHeight;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
+                                            fill:backing_style,
+                                        }});
+                                        object.append(backing);
+                                    //item collection
+                                        var itemCollection = interfacePart.builder('group','itemCollection');
+                                        object.append(itemCollection);
+                                        function refreshList(){
+                                            //clean out all values
+                                                itemArray = [];
+                                                itemCollection.clear();
+                                                selectedItems = [];
+                                                position = 0;
+                                                lastNonShiftClicked = 0;
+                            
+                                            //populate list
+                                                var accumulativeHeight = 0;
+                                                for(var a = 0; a < list.length; a++){
+                                                    if( list[a] == 'space' ){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:0, y:accumulativeHeight,
+                                                            width:width, height:height*spacingHeightMux,
+                                                            style:{fill:'rgba(255,0,0,0)'}
+                                                        });
+                            
+                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else if( list[a] == 'break'){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*breakWidthMux, height:height*breakHeightMux,
+                                                            style:{fill:break_style}
+                                                        });
+                            
+                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else{
+                                                        var temp = interfacePart.builder( 'button_rect', ''+a, {
+                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*itemWidthMux, height:height*itemHeightMux, 
+                                                            text_left: list[a].text_left,
+                                                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                                                            text_right: list[a].text_right,
+                            
+                                                            textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                                            style:{
+                                                                text_font:text_font,
+                                                                text_textBaseline:text_textBaseline,
+                                                                text_fill:text_fill,
+                                                                text_stroke:text_stroke,
+                                                                text_lineWidth:text_lineWidth,
+                            
+                                                                background__off__fill:                            item__off__fill,
+                                                                background__off__stroke:                          item__off__stroke,
+                                                                background__off__lineWidth:                       item__off__lineWidth,
+                                                                background__up__fill:                             item__up__fill,
+                                                                background__up__stroke:                           item__up__stroke,
+                                                                background__up__lineWidth:                        item__up__lineWidth,
+                                                                background__press__fill:                          item__press__fill,
+                                                                background__press__stroke:                        item__press__stroke,
+                                                                background__press__lineWidth:                     item__press__lineWidth,
+                                                                background__select__fill:                         item__select__fill,
+                                                                background__select__stroke:                       item__select__stroke,
+                                                                background__select__lineWidth:                    item__select__lineWidth,
+                                                                background__select_press__fill:                   item__select_press__fill,
+                                                                background__select_press__stroke:                 item__select_press__stroke,
+                                                                background__select_press__lineWidth:              item__select_press__lineWidth,
+                                                                background__glow__fill:                           item__glow__fill,
+                                                                background__glow__stroke:                         item__glow__stroke,
+                                                                background__glow__lineWidth:                      item__glow__lineWidth,
+                                                                background__glow_press__fill:                     item__glow_press__fill,
+                                                                background__glow_press__stroke:                   item__glow_press__stroke,
+                                                                background__glow_press__lineWidth:                item__glow_press__lineWidth,
+                                                                background__glow_select__fill:                    item__glow_select__fill,
+                                                                background__glow_select__stroke:                  item__glow_select__stroke,
+                                                                background__glow_select__lineWidth:               item__glow_select__lineWidth,
+                                                                background__glow_select_press__fill:              item__glow_select_press__fill,
+                                                                background__glow_select_press__stroke:            item__glow_select_press__stroke,
+                                                                background__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
+                                                                background__hover__fill:                          item__hover__fill,
+                                                                background__hover__stroke:                        item__hover__stroke,
+                                                                background__hover__lineWidth:                     item__hover__lineWidth,
+                                                                background__hover_press__fill:                    item__hover_press__fill,
+                                                                background__hover_press__stroke:                  item__hover_press__stroke,
+                                                                background__hover_press__lineWidth:               item__hover_press__lineWidth,
+                                                                background__hover_select__fill:                   item__hover_select__fill,
+                                                                background__hover_select__stroke:                 item__hover_select__stroke,
+                                                                background__hover_select__lineWidth:              item__hover_select__lineWidth,
+                                                                background__hover_select_press__fill:             item__hover_select_press__fill,
+                                                                background__hover_select_press__stroke:           item__hover_select_press__stroke,
+                                                                background__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
+                                                                background__hover_glow__fill:                     item__hover_glow__fill,
+                                                                background__hover_glow__stroke:                   item__hover_glow__stroke,
+                                                                background__hover_glow__lineWidth:                item__hover_glow__lineWidth,
+                                                                background__hover_glow_press__fill:               item__hover_glow_press__fill,
+                                                                background__hover_glow_press__stroke:             item__hover_glow_press__stroke,
+                                                                background__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
+                                                                background__hover_glow_select__fill:              item__hover_glow_select__fill,
+                                                                background__hover_glow_select__stroke:            item__hover_glow_select__stroke,
+                                                                background__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
+                                                                background__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
+                                                                background__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
+                                                                background__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
+                                                            }
+                                                        });
+                            
+                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease(a);
+                                                            }
+                                                        }(a);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                            
+                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                        itemArray.push( temp );
+                                                    }
+                                                }
+                            
+                                            return accumulativeHeight - height*itemSpacingMux;
+                                        }
+                                        calculatedListHeight = refreshList();
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                                        object.append(cover);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                                        object.stencil(stencil);
+                                        object.clip(true);
+                            
+                            
+                                //interaction
+                                    cover.onwheel = function(x,y,event){
+                                        var move = event.deltaY/100;
+                                        object.position( object.position() + move/10 );
+                                        for(var a = 0; a < itemArray.length; a++){
+                                            itemArray[a].forceMouseLeave();
+                                        }
+                                    };
+                                
+                                //controls
+                                    object.position = function(a,update=true){
+                                        if(a == undefined){return position;}
+                                        a = a < 0 ? 0 : a;
+                                        a = a > 1 ? 1 : a;
+                                        position = a;
+                            
+                                        if( calculatedListHeight < height ){return;}
+                                        var movementSpace = calculatedListHeight - height;
+                                        itemCollection.parameter.y( -a*movementSpace );
+                                        
+                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
+                                    };
+                                    object.select = function(a,state,event,update=true){
+                                        if(!selectable){return;}
+                            
+                                        //where multi selection is not allowed
+                                            if(!multiSelect){
+                                                //where we want to select an item, which is not already selected
+                                                    if(state && !selectedItems.includes(a) ){
+                                                        //deselect all other items
+                                                            while( selectedItems.length > 0 ){
+                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                selectedItems.shift();
+                                                            }
+                            
+                                                        //select current item
+                                                            selectedItems.push(a);
+                            
+                                                //where we want to deselect an item that is selected
+                                                    }else if(!state && selectedItems.includes(a)){
+                                                        selectedItems = [];
+                                                    }
+                            
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
+                            
+                                        //where multi selection is allowed
+                                            }else{
+                                                //wherer range-selection is to be done
+                                                    if( event != undefined && event.shiftKey ){
+                                                        //gather top and bottom item
+                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                            var min = Math.min(lastNonShiftClicked, a);
+                                                            var max = Math.max(lastNonShiftClicked, a);
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( itemArray[b].name == ''+min ){min = b;}
+                                                                if( itemArray[b].name == ''+max ){max = b;}
+                                                            }
+                            
+                                                        //deselect all outside the range
+                                                            selectedItems = [];
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( b > max || b < min ){
+                                                                    if( itemArray[b].select() ){
+                                                                        itemArray[b].select(false,undefined,false);
+                                                                    }
+                                                                }
+                                                            }
+                            
+                                                        //select those within the range (that aren't already selected)
+                                                            for(var b = min; b <= max; b++){
+                                                                if( !itemArray[b].select() ){
+                                                                    itemArray[b].select(true,undefined,false);
+                                                                    selectedItems.push(b);
+                                                                }
+                                                            }
+                                                //where range-selection is not to be done
+                                                    }else{
+                                                        if(update){ itemArray[a].select(state); }
+                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                                        lastNonShiftClicked = a;
+                                                    }
+                                            }
+                            
+                                        object.onselection(selectedItems);
+                                    };
+                                    object.add = function(item){
+                                        list.push(item);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.remove = function(a){
+                                        list.splice(a,1);
+                                        calculatedListHeight = refreshList();
+                                    };
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselection = onselection;
+                                    object.onpositionchange = onpositionchange;
+                                    
+                                return object;
+                            };
+                            this.grapher_waveWorkspace = function(
+                                name='grapher_waveWorkspace',
+                                x, y, width=120, height=60, angle=0, selectNeedle=true, selectionArea=true,
+                            
+                                foregroundStyles=[
+                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.25, lineJoin:'round'},
+                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.25, lineJoin:'round'},
+                                ],
+                                foregroundTextStyles=[
+                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+                                ],
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_font='10pt Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            
+                                onchange=function(needle,value){}, 
+                                onrelease=function(needle,value){}, 
+                                selectionAreaToggle=function(bool){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //main graph
+                                        var graph = interfacePart.builder('grapher_static', 'graph', {
+                                            width:width, height:height,
+                                            style:{
+                                                foregrounds:foregroundStyles,   
+                                                foregroundText:foregroundTextStyles,
+                                                background_stroke:backgroundStyle_stroke,
+                                                background_lineWidth:backgroundStyle_lineWidth,
+                                                backgroundText_fill:backgroundTextStyle_fill,
+                                                backgroundText_font:backgroundTextStyle_font,
+                                                backing:backingStyle,
+                                            }
+                                        });
+                                        graph.resolution(10);
+                                        object.append(graph);
+                                    //needle overlay
+                                        var overlay = interfacePart.builder('needleOverlay', 'overlay', {
+                                            width:width, height:height, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                                            needleStyles:foregroundStyles.map(a => a.stroke),
+                                        });
+                                        object.append(overlay);
+                            
+                                //controls
+                                    //grapher
+                                        object.horizontalMarkings = graph.horizontalMarkings;
+                                        object.verticalMarkings = graph.verticalMarkings;
+                                        object.drawBackground = graph.drawBackground;
+                                        object.drawForeground = graph.drawForeground;
+                                        object.draw = graph.draw;
+                                    //needle overlay
+                                        object.mark = overlay.mark;
+                                        object.removeAllMarks = overlay.removeAllMarks;
+                                        object.select = overlay.select;
+                                        object.area = overlay.area;
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                                    object.onrelease = onrelease;
+                                    object.selectionAreaToggle = selectionAreaToggle;
+                                    overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
+                                    overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
+                                    overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
+                            
+                                //setup
+                                    graph.viewbox({left:0});
+                                    graph.drawBackground();
+                                    overlay.select(0);
+                            
+                                return object;
+                            };
+                            this.dial_discrete = function(
+                                name='dial_discrete',
+                                x, y, r=15, angle=0,
+                                value=0, resetValue=0, optionCount=5,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
                                 handleStyle = 'rgba(200,200,200,1)',
-                                backingStyle = 'rgba(150,150,150,1)',
                                 slotStyle = 'rgba(50,50,50,1)',
-                                invisibleHandleStyle = 'rgba(255,0,0,0)',
+                                needleStyle = 'rgba(250,100,100,1)',
+                            
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing and slot group
-                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
-                                        object.append(backingAndSlot);
-                                        //backing
-                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
-                                            backingAndSlot.append(backing);
-                                        //slot
-                                            var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
-                                            backingAndSlot.append(slot);
-                                        //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                            backingAndSlot.append(backingAndSlotCover);
-                                    //handle
-                                        var handle = interfacePart.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
-                                        object.append(handle);
-                                    //invisible handle
-                                        var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
-                                        object.append(invisibleHandle);
+                                    
+                                    //dial
+                                        var dial = interfacePart.builder('dial_continuous',name,{
+                                            x:0, y:0, r:r, angle:0,
+                                            startAngle:startAngle, maxAngle:maxAngle,
+                                            style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
+                                        });
+                                        //clean out built-in interaction
+                                        dial.getChildByName('handle').ondblclick = undefined;
+                                        dial.getChildByName('handle').onwheel = undefined;
+                                        dial.getChildByName('handle').onmousedown = undefined;
+                            
+                                        object.append(dial);
+                                    
+                            
                             
                             
                             
                             
                                 //graphical adjust
-                                    function set(a,update=true){
-                                        a = (a>1 ? 1 : a);
+                                    function set(a,update=true){ 
+                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
                                         a = (a<0 ? 0 : a);
                             
                                         if(update && object.onchange != undefined){object.onchange(a);}
-                                        
-                                        value = a;
-                                        handle.y = a*height*(1-handleHeight);
-                                        invisibleHandle.y = a*height*(1-handleHeight);
                             
-                                        handle.computeExtremities();
-                                        invisibleHandle.computeExtremities();
-                                    }
-                                    object.__calculationAngle = angle;
-                                    function currentMousePosition(event){
-                                        return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
-                                    }
+                                        a = Math.round(a);
+                                        value = a;
+                                        dial.set( value/(optionCount-1) );
+                                    };
                             
                             
                             
@@ -11761,25 +11566,191 @@
                             
                             
                                 //interaction
-                                    object.ondblclick = function(){
+                                    var acc = 0;
+                            
+                                    dial.getChildByName('handle').ondblclick = function(){
                                         if(resetValue<0){return;}
                                         if(grappled){return;}
-                            
+                                        
                                         set(resetValue);
+                            
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    object.onwheel = function(){
+                                    dial.getChildByName('handle').onwheel = function(x,y,event){
                                         if(grappled){return;}
                             
                                         var move = event.deltaY/100;
-                                        var globalScale = workspace.core.viewport.scale();
-                                        set( value + move/(10*globalScale) );
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    backingAndSlot.onmousedown = function(x,y,event){};//to stop unit selection
-                                    backingAndSlot.onclick = function(x,y,event){
-                                        if(grappled){return;}
                             
+                                        acc += move;
+                                        if( Math.abs(acc) >= 1 ){
+                                            set( value -1*Math.sign(acc) );
+                                            acc = 0;
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        }
+                                    };
+                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        workspace.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var diff = Math.round( (event.y - initialY)/25 );
+                                                set( initialValue - diff );
+                                                if(object.onchange != undefined){object.onchange(value);}
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.rangeslide = function(
+                                name='rangeslide', 
+                                x, y, width=10, height=95, angle=0,
+                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
+                                handleStyle = 'rgba(200,200,200,1)',
+                                backingStyle = 'rgba(150,150,150,1)',
+                                slotStyle = 'rgba(50,50,50,1)',
+                                invisibleHandleStyle = 'rgba(255,0,0,0)',
+                                spanStyle='rgba(200,0,200,0.5)',
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                var grappled = false;
+                                var handleNames = ['start','end'];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing and slot group
+                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
+                                        // backingAndSlot.dotFrame = true;
+                                        object.append(backingAndSlot);
+                                        //backing
+                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                                            backingAndSlot.append(backing);
+                                        //slot
+                                            var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
+                                            backingAndSlot.append(slot);
+                                        //backing and slot cover
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                            backingAndSlot.append(backingAndSlotCover);
+                            
+                                    //span
+                                        var span = interfacePart.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, style:{fill:spanStyle} });
+                                        object.append(span);
+                            
+                                    //handles
+                                        var handles = {}
+                                        for(var a = 0; a < handleNames.length; a++){
+                                            //grouping
+                                                handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
+                                                object.append(handles[handleNames[a]]);
+                                            //handle
+                                                var handle = interfacePart.builder('rectangle','handle',{width:width,height:height*handleHeight, style:{fill:handleStyle}});
+                                                handles[handleNames[a]].append(handle);
+                                            //invisible handle
+                                                var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                                                handles[handleNames[a]].append(invisibleHandle);
+                                        }
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,handle,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        //make sure the handle order is maintained
+                                        //if necessary, one handle should push the other, though not past the ends
+                                            switch(handle){
+                                                default: console.error('unknown handle to adjust'); break;
+                                                case 'start':
+                                                    //don't allow start slide to encrouch on end slider's space
+                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                            
+                                                    //if start slide bumps up against end slide; move end slide accordingly
+                                                        var start_rightEdge = a + (1-a)*handleHeight;
+                                                        var end_leftEdge = values.end - (values.end)*handleHeight;
+                                                        if( start_rightEdge >= end_leftEdge ){
+                                                            values.end = start_rightEdge/(1-handleHeight);
+                                                        }
+                                                break;
+                                                case 'end':
+                                                    //don't allow end slide to encrouch on start slider's space
+                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                            
+                                                    //if end slide bumps up against start slide; move start slide accordingly
+                                                        var start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                                        var end_leftEdge = a - (a)*handleHeight;
+                                                        if( start_rightEdge >= end_leftEdge ){
+                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
+                                                        }
+                                                break;
+                                            }
+                            
+                                        //fill in data
+                                            values[handle] = a;
+                            
+                                        //adjust y positions
+                                            handles.start.parameter.y( values.start*height*(1-handleHeight) );
+                                            handles.end.parameter.y( values.end*height*(1-handleHeight) );
+                            
+                                        //adjust span height (with a little bit of padding so the span is under the handles a little)
+                                            span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
+                                            span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
+                            
+                                        if(update && object.onchange){object.onchange(values);}
+                                    }
+                                    function pan(a){
+                                        var diff = values.end - values.start;
+                            
+                                        var newPositions = [ a, a+diff ];
+                                        if(newPositions[0] <= 0){
+                                            newPositions[1] = newPositions[1] - newPositions[0];
+                                            newPositions[0] = 0;
+                                        }
+                                        else if(newPositions[1] >= 1){
+                                            newPositions[0] = newPositions[0] - (newPositions[1]-1);
+                                            newPositions[1] = 1;
+                                        }
+                            
+                                        set( newPositions[0],'start' );
+                                        set( newPositions[1],'end' );
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    object.get = function(){return values;};
+                                    object.set = function(values,update){
+                                        if(grappled){return;}
+                                        if(values.start != undefined){set(values.start,'start',update);}
+                                        if(values.end != undefined){set(values.end,'end',update);}
+                                    };
+                            
+                            
+                            
+                                    
+                                //interaction
+                                    function getPositionWithinFromMouse(x,y){
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
                                             var offset = backingAndSlot.getOffset();
                                             var delta = {
@@ -11787,81 +11758,157 @@
                                                 y: y - (backingAndSlot.y     + offset.y),
                                                 a: 0 - (backingAndSlot.angle + offset.a),
                                             };
-                                            var d = workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
                             
-                                        //use the distance to calculate the correct value to set the slide to
-                                        //taking into account the slide handle's size also
-                                            var value = d + 0.5*handleHeight*((2*d)-1);
+                                        return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                                    }
                             
-                                        set(value);
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    invisibleHandle.onmousedown = function(x,y,event){
-                                        grappled = true;
+                                    //background click
+                                        backingAndSlot.onmousedown = function(x,y,event){};//to stop unit selection
+                                        backingAndSlot.onclick = function(x,y,event){
+                                            if(grappled){return;}
                             
-                                        var initialValue = value;
-                                        var initialY = currentMousePosition(event);
-                                        var mux = height - height*handleHeight;
+                                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                                var d = getPositionWithinFromMouse(x,y);
                             
-                                        workspace.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var numerator = initialY-currentMousePosition(event);
-                                                var divider = workspace.core.viewport.scale();
-                                                set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
-                                            },
-                                            function(event){
-                                                var numerator = initialY-currentMousePosition(event);
-                                                var divider = workspace.core.viewport.scale();
-                                                object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
-                                                grappled = false;
-                                            }
-                                        );
-                                    };
+                                            //use the distance to calculate the correct value to set the slide to
+                                            //taking into account the slide handle's size also
+                                                var value = d + 0.5*handleHeight*((2*d)-1);
                             
+                                            //whichever handle is closer; move that handle to the mouse's position
+                                                Math.abs(values.start-value) < Math.abs(values.end-value) ? set(value,'start') : set(value,'end');
+                                        };
                             
+                                    //double-click reset
+                                        object.ondblclick = function(){
+                                            if(resetValues.start<0 || resetValues.end<0){return;}
+                                            if(grappled){return;}
                             
-                                //setup
-                                    set(value);
+                                            set(resetValues.start,'start');
+                                            set(resetValues.end,'end');
+                                            object.onrelease(values);
+                                        };
                             
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
+                                    //span panning - expand/shrink
+                                        object.onwheel = function(){
+                                            if(grappled){return;}
                             
-                                return object;
-                            };
-                            this.slidePanel = function(
-                                name='slidePanel', 
-                                x, y, width=80, height=95, angle=0,
-                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
-                                handleStyle = 'rgba(200,200,200,1)',
-                                backingStyle = 'rgba(150,150,150,1)',
-                                slotStyle = 'rgba(50,50,50,1)'
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //slides
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder(
-                                                'slide', 'slide_'+a, {
-                                                    x:a*(width/count), y:0,
-                                                    width:width/count, height:height,
-                                                    value:startValue, resetValue:resetValue,
-                                                    style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
-                                                    onchange:function(value){ object.onchange(this.id,value); },
-                                                    onrelease:function(value){ object.onrelease(this.id,value); },
+                                            var move = event.deltaY/100;
+                                            var globalScale = workspace.core.viewport.scale();
+                                            var val = move/(10*globalScale);
+                            
+                                            set(values.start-val,'start');
+                                            set(values.end+val,'end');
+                                        };
+                            
+                                    // span panning - drag
+                                        span.onmousedown = function(x,y,event){
+                                            grappled = true;
+                            
+                                            var initialValue = values.start;
+                                            var initialPosition = getPositionWithinFromMouse(x,y);
+                            
+                                            workspace.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                                    var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                    pan( initialValue+(livePosition-initialPosition) )
+                                                    object.onchange(values);
+                                                },
+                                                function(event){
+                                                    object.onrelease(values);
+                                                    grappled = false;
                                                 }
                                             );
-                                            // temp.dotFrame = true;
-                                            temp.__calculationAngle = angle;
-                                            object.append(temp);
+                                        };
+                            
+                                    //handle movement
+                                        for(var a = 0; a < handleNames.length; a++){
+                                            handles[handleNames[a]].children[1].onmousedown = (function(a){
+                                                return function(x,y,event){
+                                                    grappled = true;
+                                        
+                                                    var initialValue = values[handleNames[a]];
+                                                    var initialPosition = getPositionWithinFromMouse(x,y);
+                                                    
+                                                    workspace.system.mouse.mouseInteractionHandler(
+                                                        function(event){
+                                                            var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                                            var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                            set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
+                                                            object.onchange(values);
+                                                        },
+                                                        function(event){
+                                                            object.onrelease(values);
+                                                            grappled = false;
+                                                        }
+                                                    );
+                                                }
+                                            })(a);
                                         }
+                              
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                                    object.onrelease = onrelease;  
+                            
+                                //setup
+                                    set(0,'start');
+                                    set(1,'end');
                             
                                 return object;
                             };
                         };
                         
                         this.dynamic = new function(){
+                            this.connectionNode_voltage = function(
+                                name='connectionNode_voltage',
+                                x, y, angle=0, width=20, height=20,
+                                dimStyle='rgb(222, 255, 220)',
+                                glowStyle='rgb(240, 252, 239)',
+                                cable_dimStyle='rgb(84, 247, 111)',
+                                cable_glowStyle='rgb(159, 252, 174)',
+                                onchange=function(value){},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, type:'voltage',
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                    });
+                            
+                                //circuitry
+                                    var localValue = 0;
+                            
+                                    object._getLocalValue = function(){ return localValue; };
+                                    object._update = function(a){
+                                        if(a>0){ object.activate(); }
+                                        else{ object.deactivate(); }
+                                        onchange(a);
+                                    }
+                            
+                                    object.set = function(a){
+                                        localValue = a;
+                            
+                                        var val = object.read();
+                                        object._update(val);
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
+                                    };
+                                    object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                            
+                                    object.onconnect = function(instigator){
+                                        if(onconnect){onconnect(instigator);}
+                                        object._update(object.read());
+                                    };
+                                    object.ondisconnect = function(instigator){
+                                        if(ondisconnect){ondisconnect(instigator);}
+                                        object._update(localValue);
+                                    };
+                            
+                                return object;
+                            };
                             this.cable = function(
                                 name='path', 
                                 x1=0, y1=0, x2=0, y2=0,
@@ -11894,6 +11941,86 @@
                             
                                 //identifier
                                     object._isCable = true;
+                            
+                                return object;
+                            };
+                            this.connectionNode_audio = function(
+                                name='connectionNode_audio',
+                                x, y, angle=0, width=20, height=20, isAudioOutput=false, audioContext,
+                                dimStyle='rgba(255, 244, 220, 1)',
+                                glowStyle='rgba(255, 244, 244, 1)',
+                                cable_dimStyle='rgb(247, 146, 84)',
+                                cable_glowStyle='rgb(242, 168, 123)',
+                                onconnect=function(){},
+                                ondisconnect=function(){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                    });
+                                    object._direction = isAudioOutput ? 'out' : 'in';
+                            
+                                //circuitry
+                                    object.audioNode = audioContext.createAnalyser();
+                            
+                                    //audio connections
+                                        object.out = function(){return object.audioNode;};
+                                        object.in = function(){return object.audioNode;};
+                            
+                                    object.onconnect = function(instigator){
+                                        if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
+                                        if(onconnect){onconnect(instigator);}
+                                    };
+                                    object.ondisconnect = function(instigator){
+                                        if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
+                                        if(ondisconnect){ondisconnect(instigator);}
+                                    };
+                                
+                                return object;
+                            };
+                            this.connectionNode_data = function(
+                                name='connectionNode_data',
+                                x, y, angle=0, width=20, height=20,
+                                dimStyle='rgba(220, 244, 255,1)',
+                                glowStyle='rgba(244, 244, 255, 1)',
+                                cable_dimStyle='rgb(84, 146, 247)',
+                                cable_glowStyle='rgb(123, 168, 242)',
+                                onreceivedata=function(address, data){},
+                                ongivedata=function(address){},
+                                onconnect=function(){},
+                                ondisconnect=function(){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, type:'data',
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                        onconnect, ondisconnect
+                                    });
+                            
+                                //circuitry
+                                    function flash(obj){
+                                        obj.activate();
+                                        setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
+                                        if(obj.getForeignNode()!=undefined){
+                                            obj.getForeignNode().activate();
+                                            setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
+                                        }
+                                    }
+                            
+                                    object.send = function(address,data){
+                                        flash(object);
+                            
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
+                                    };
+                                    object.request = function(address){
+                                        flash(object);
+                            
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
+                                    };
+                            
+                                    object.onreceivedata = onreceivedata;
+                                    object.ongivedata = ongivedata;
                             
                                 return object;
                             };
@@ -12025,86 +12152,6 @@
                             
                                 return object;
                             };
-                            this.connectionNode_audio = function(
-                                name='connectionNode_audio',
-                                x, y, angle=0, width=20, height=20, isAudioOutput=false, audioContext,
-                                dimStyle='rgba(255, 244, 220, 1)',
-                                glowStyle='rgba(255, 244, 244, 1)',
-                                cable_dimStyle='rgb(247, 146, 84)',
-                                cable_glowStyle='rgb(242, 168, 123)',
-                                onconnect=function(){},
-                                ondisconnect=function(){},
-                            ){
-                                //elements
-                                    var object = interfacePart.builder('connectionNode',name,{
-                                        x:x, y:y, angle:angle, width:width, height:height, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
-                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                                    });
-                                    object._direction = isAudioOutput ? 'out' : 'in';
-                            
-                                //circuitry
-                                    object.audioNode = audioContext.createAnalyser();
-                            
-                                    //audio connections
-                                        object.out = function(){return object.audioNode;};
-                                        object.in = function(){return object.audioNode;};
-                            
-                                    object.onconnect = function(instigator){
-                                        if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
-                                        if(onconnect){onconnect(instigator);}
-                                    };
-                                    object.ondisconnect = function(instigator){
-                                        if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
-                                        if(ondisconnect){ondisconnect(instigator);}
-                                    };
-                                
-                                return object;
-                            };
-                            this.connectionNode_data = function(
-                                name='connectionNode_data',
-                                x, y, angle=0, width=20, height=20,
-                                dimStyle='rgba(220, 244, 255,1)',
-                                glowStyle='rgba(244, 244, 255, 1)',
-                                cable_dimStyle='rgb(84, 146, 247)',
-                                cable_glowStyle='rgb(123, 168, 242)',
-                                onreceivedata=function(address, data){},
-                                ongivedata=function(address){},
-                                onconnect=function(){},
-                                ondisconnect=function(){},
-                            ){
-                                //elements
-                                    var object = interfacePart.builder('connectionNode',name,{
-                                        x:x, y:y, angle:angle, width:width, height:height, type:'data',
-                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                                        onconnect, ondisconnect
-                                    });
-                            
-                                //circuitry
-                                    function flash(obj){
-                                        obj.activate();
-                                        setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
-                                        if(obj.getForeignNode()!=undefined){
-                                            obj.getForeignNode().activate();
-                                            setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
-                                        }
-                                    }
-                            
-                                    object.send = function(address,data){
-                                        flash(object);
-                            
-                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
-                                    };
-                                    object.request = function(address){
-                                        flash(object);
-                            
-                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
-                                    };
-                            
-                                    object.onreceivedata = onreceivedata;
-                                    object.ongivedata = ongivedata;
-                            
-                                return object;
-                            };
                             this.connectionNode_signal = function(
                                 name='connectionNode_signal',
                                 x, y, angle=0, width=20, height=20,
@@ -12148,53 +12195,6 @@
                                     object.ondisconnect = function(instigator){
                                         if(ondisconnect){ondisconnect(instigator);}
                                         object._update();
-                                    };
-                            
-                                return object;
-                            };
-                            this.connectionNode_voltage = function(
-                                name='connectionNode_voltage',
-                                x, y, angle=0, width=20, height=20,
-                                dimStyle='rgb(222, 255, 220)',
-                                glowStyle='rgb(240, 252, 239)',
-                                cable_dimStyle='rgb(84, 247, 111)',
-                                cable_glowStyle='rgb(159, 252, 174)',
-                                onchange=function(value){},
-                                onconnect=function(instigator){},
-                                ondisconnect=function(instigator){},
-                            ){
-                                //elements
-                                    var object = interfacePart.builder('connectionNode',name,{
-                                        x:x, y:y, angle:angle, width:width, height:height, type:'voltage',
-                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                                    });
-                            
-                                //circuitry
-                                    var localValue = 0;
-                            
-                                    object._getLocalValue = function(){ return localValue; };
-                                    object._update = function(a){
-                                        if(a>0){ object.activate(); }
-                                        else{ object.deactivate(); }
-                                        onchange(a);
-                                    }
-                            
-                                    object.set = function(a){
-                                        localValue = a;
-                            
-                                        var val = object.read();
-                                        object._update(val);
-                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
-                                    };
-                                    object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
-                            
-                                    object.onconnect = function(instigator){
-                                        if(onconnect){onconnect(instigator);}
-                                        object._update(object.read());
-                                    };
-                                    object.ondisconnect = function(instigator){
-                                        if(ondisconnect){ondisconnect(instigator);}
-                                        object._update(localValue);
                                     };
                             
                                 return object;
@@ -13034,7 +13034,7 @@
                                     for(var a = 0; a < this.menubar.dropdowns.length; a++){
                                         var item = workspace.interface.part.alpha.builder( 'button_rect', 'dropdownButton_'+a, {
                                             x:accWidth*scale, y:0, 
-                                            width:this.menubar.dropdowns[a].width, height:vars.height, 
+                                            width:this.menubar.dropdowns[a].width*scale, height:vars.height, 
                                             hoverable:false, selectable:true,
                                             text_centre:this.menubar.dropdowns[a].text,
                                             style:style.button,
@@ -13074,16 +13074,16 @@
                         
                                             //produce dropdown
                                                 vars.activedropdown = workspace.interface.part.alpha.builder( 'list', 'dropdown', {
-                                                    x:x, y:vars.height*scale, style:style.list,
-                                                    width:that.menubar.dropdowns[a].listWidth*scale, height:height*scale,
+                                                    x:x*scale, y:vars.height, style:style.list,
+                                                    width:that.menubar.dropdowns[a].listWidth*scale, height:height,
                         
                                                     multiSelect:false, selectable:false,
                         
-                                                    itemWidthMux: 1*scale,
+                                                    itemWidthMux: 1,
                                                     itemHeightMux:  (that.menubar.dropdowns[a].listItemHeight/height)*scale, 
                                                     breakHeightMux: (that.menubar.dropdowns[a].breakHeight/height)*scale,
                                                     spaceHeightMux: (that.menubar.dropdowns[a].spaceHeight/height)*scale,
-                                                    itemSpacingMux:0, 
+                                                    itemSpacingMux: 0, 
                         
                                                     list:that.menubar.dropdowns[a].itemList,
                                                 });
@@ -13781,157 +13781,6 @@
                 var alphaUnit = this;
                 
                 this.audioEffectUnits = new function(){
-                    this.distortionUnit = function(x,y,a){
-                        var style = {
-                            background: {fill:'rgba(200,200,200,1)'},
-                            h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
-                            h2:{fill:'rgba(0,0,0,1)', font:'3pt Courier New'},
-                    
-                            dial:{
-                                handle:{fill:'rgba(220,220,220,1)'},
-                                slot:{fill:'rgba(50,50,50,1)'},
-                                needle:{fill:'rgba(250,150,150,1)'},
-                            }
-                        };
-                        var design = {
-                            name: 'distortionUnit',
-                            category: 'audioEffectUnits',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                    { x:0,           y:10     },
-                                    { x:10,          y:0      },
-                                    { x:102.5/3,     y:0      },
-                                    { x:102.5*0.45,  y:10     },
-                                    { x:102.5*0.55,  y:10     },
-                                    { x:2*(102.5/3), y:0      },
-                                    { x:102.5-10,    y:0      },
-                                    { x:102.5,       y:10     },
-                                    { x:102.5,       y:95-10  },
-                                    { x:102.5-10,    y:95     },
-                                    { x:2*(102.5/3), y:95     },
-                                    { x:102.5*0.55,  y:95-10  },
-                                    { x:102.5*0.45,  y:95-10  },
-                                    { x:102.5/3,     y:95     },
-                                    { x:10,          y:95     },
-                                    { x:0,           y:95-10  }
-                                ],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ points:[
-                                    { x:0,           y:10     },
-                                    { x:10,          y:0      },
-                                    { x:102.5/3,     y:0      },
-                                    { x:102.5*0.45,  y:10     },
-                                    { x:102.5*0.55,  y:10     },
-                                    { x:2*(102.5/3), y:0      },
-                                    { x:102.5-10,    y:0      },
-                                    { x:102.5,       y:10     },
-                                    { x:102.5,       y:95-10  },
-                                    { x:102.5-10,    y:95     },
-                                    { x:2*(102.5/3), y:95     },
-                                    { x:102.5*0.55,  y:95-10  },
-                                    { x:102.5*0.45,  y:95-10  },
-                                    { x:102.5/3,     y:95     },
-                                    { x:10,          y:95     },
-                                    { x:0,           y:95-10  }
-                                ], style:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'audioIn', data: { x: 102.5, y: 61.5, width: 10, height: 20 }},
-                                {type:'connectionNode_audio', name:'audioOut', data:{ x: -10, y: 61.5, width: 10, height: 20, isAudioOutput:true }},
-                            
-                                {type:'text', name:'outGain_title', data:{x:17.5, y:91,   text:'out', style:style.h1}},
-                                {type:'text', name:'outGain_0',     data:{x:9.5,  y:85.5, text:'0',   style:style.h2}},
-                                {type:'text', name:'outGain_1/2',   data:{x:19,   y:57,   text:'1/2', style:style.h2}},
-                                {type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   style:style.h2}},
-                                {type:'dial_continuous',name:'outGain_dial',data:{
-                                    x: 22.5, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
-                                }},
-                    
-                                {type:'text', name:'distortionAmount_title', data:{x:16.5,   y:41.5, text:'dist', style:style.h1}},
-                                {type:'text', name:'distortionAmount_0',     data:{x:9.5,  y:36,   text:'0',    style:style.h2}},
-                                {type:'text', name:'distortionAmount_50',    data:{x:20,   y:7.5,  text:'50',   style:style.h2}},
-                                {type:'text', name:'distortionAmount_100',   data:{x:33,   y:36,   text:'100',  style:style.h2}},
-                                {type:'dial_continuous',name:'distortionAmount_dial',data:{
-                                    x: 22.5, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
-                                }},
-                    
-                                {type:'text', name:'resolution_title', data:{x:47, y:66, text:'res',  style:style.h1}},
-                                {type:'text', name:'resolution_2',     data:{x:39, y:60, text:'2',    style:style.h2}},
-                                {type:'text', name:'resolution_50',    data:{x:49, y:32, text:'500',  style:style.h2}},
-                                {type:'text', name:'resolution_100',   data:{x:63, y:60, text:'1000', style:style.h2}},
-                                {type:'dial_continuous',name:'resolution_dial',data:{
-                                    x: 52.5, y: 47.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
-                                }},
-                    
-                                {type:'text', name:'overSample_title', data:{x:67,   y:41.5, text:'overSamp', style:style.h1}},
-                                {type:'text', name:'overSample_0',     data:{x:61,   y:12,   text:'none',     style:style.h2}},
-                                {type:'text', name:'overSample_50',    data:{x:77.5, y:7.5,  text:'2x',       style:style.h2}},
-                                {type:'text', name:'overSample_100',   data:{x:90.5, y:12,   text:'4x',       style:style.h2}},
-                                {type:'dial_discrete',name:'overSample_dial',data:{
-                                    x: 80, y: 23, r: 12, startAngle: (1.25*Math.PI), maxAngle: 0.5*Math.PI, arcDistance: 1.35, optionCount: 3,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
-                                }},
-                    
-                                {type:'text', name:'inGain_title', data:{x:76,   y:91,   text:'in', style:style.h1}},
-                                {type:'text', name:'inGain_0',     data:{x:67,   y:85.5, text:'0',   style:style.h2}},
-                                {type:'text', name:'inGain_1/2',   data:{x:76.5, y:57,   text:'1/2', style:style.h2}},
-                                {type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   style:style.h2}},
-                                {type:'dial_continuous',name:'inGain_dial',data:{
-                                    x: 80, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = alphaUnit.builder(this.distortionUnit,design);
-                    
-                        //import/export
-                            object.importData = function(data){
-                                object.elements.dial_continuous.outGain_dial.set(data.outGain);
-                                object.elements.dial_continuous.distortionAmount_dial.set(data.distortionAmount);
-                                object.elements.dial_continuous.resolution_dial.set(data.resolution);
-                                object.elements.dial_discrete.overSample_dial.set(data.overSample);
-                                object.elements.dial_continuous.inGain_dial.set(data.inGain);
-                            };
-                            object.exportData = function(){
-                                return {
-                                    outGain:          object.elements.dial_continuous.outGain_dial.get(), 
-                                    distortionAmount: object.elements.dial_continuous.distortionAmount_dial.get(), 
-                                    resolution:       object.elements.dial_continuous.resolution_dial.get(), 
-                                    overSample:       object.elements.dial_discrete.overSample_dial.get(), 
-                                    inGain:           object.elements.dial_continuous.inGain_dial.get()
-                                };
-                            };
-                    
-                        //circuitry
-                            object.distortionCircuit = new workspace.interface.circuit.alpha.distortionUnit(workspace.library.audio.context);
-                            object.elements.connectionNode_audio.audioIn.out().connect( object.distortionCircuit.in() );
-                            object.distortionCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
-                    
-                        //wiring
-                            object.elements.dial_continuous.outGain_dial.onchange = function(value){object.distortionCircuit.outGain(value);};
-                            object.elements.dial_continuous.distortionAmount_dial.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
-                            object.elements.dial_continuous.resolution_dial.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
-                            object.elements.dial_discrete.overSample_dial.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
-                            object.elements.dial_continuous.inGain_dial.onchange = function(value){object.distortionCircuit.inGain(2*value);};
-                    
-                        //setup
-                            object.elements.dial_continuous.resolution_dial.set(0.5);
-                            object.elements.dial_continuous.inGain_dial.set(0.5);
-                            object.elements.dial_continuous.outGain_dial.set(1);
-                    
-                        return object;
-                    };
-                    
-                    this.distortionUnit.metadata = {
-                        name:'Distortion Unit',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/distortionUnit/'
-                    };
                     this.filterUnit = function(x,y,a){
                         var state = {
                             freqRange:{ low: 0.1, high: 20000, },
@@ -14095,6 +13944,149 @@
                     this.filterUnit.metadata = {
                         name:'Filter Unit',
                         helpURL:'https://metasophiea.com/curve/help/units/alpha/filterUnit/'
+                    };
+
+                    this.reverbUnit = function(x,y){
+                        var state = {
+                            reverbTypeSelected: 0,
+                            availableTypes: [],
+                        };
+                        var style = {
+                            background: {fill:'rgba(200,200,200,1)'},
+                            h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
+                            h2:{fill:'rgba(0,0,0,1)', font:'3pt Courier New'},
+                    
+                            dial:{
+                                handle:{fill:'rgba(220,220,220,1)'},
+                                slot:{fill:'rgba(50,50,50,1)'},
+                                needle:{fill:'rgba(250,150,150,1)'},
+                            },
+                            button:{
+                                background__up__fill:'rgba(175,175,175,1)', 
+                                background__hover__fill:'rgba(220,220,220,1)', 
+                                background__hover_press__fill:'rgba(150,150,150,1)',
+                            }
+                        };
+                        var design = {
+                            name: 'reverbUnit',
+                            category: 'audioEffectUnits',
+                            collection: 'alpha',
+                            x: x, y: y,
+                            space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],
+                            // spaceOutline:true,
+                            elements:[
+                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], style:style.background }},
+                    
+                                {type:'connectionNode_audio', name:'audioIn', data:{ x: 102.5, y: 16, width: 10, height: 20 }},
+                                {type:'connectionNode_audio', name:'audioOut', data:{ x: -10, y: 16, width: 10, height: 20, isAudioOutput:true }},
+                                
+                                {type:'text', name:'outGain_0',   data:{x:8,    y:38, text:'0', style:style.h2}},
+                                {type:'text', name:'outGain_1/2', data:{x:16.5, y:11, text:'1/2', style:style.h2}},
+                                {type:'text', name:'outGain_1',   data:{x:29,   y:38, text:'1', style:style.h2}},
+                                {type:'dial_continuous',name:'outGain_dial',data:{
+                                    x: 20, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, 
+                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                }},
+                    
+                                {type:'text', name:'wetdry_1/2', data:{x:66.5, y:39, text:'wet', style:style.h2}},
+                                {type:'text', name:'wetdry_1',   data:{x:91.5, y:39, text:'dry', style:style.h2}},
+                                {type:'dial_continuous',name:'wetdry_dial',data:{
+                                    x: 82.5, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                }},
+                    
+                                {type:'button_rect',name:'raiseByOne',data:{
+                                    x:51, y:6, width: 10.25, height: 5, style:style.button, 
+                                    onpress: function(){ incReverbType(); },
+                                }},
+                                {type:'button_rect',name:'raiseByTen',data:{
+                                    x:38.75, y:6, width: 10.25, height: 5, style:style.button, 
+                                    onpress: function(){ inc10ReverbType(); },
+                                }},
+                                {type:'button_rect',name:'lowerByOne',data:{
+                                    x:51, y:39, width: 10.25, height: 5, style:style.button, 
+                                    onpress: function(){ decReverbType(); },
+                                }},
+                                {type:'button_rect',name:'lowerByTen',data:{
+                                    x:38.75, y:39, width: 10.25, height: 5, style:style.button, 
+                                    onpress: function(){ dec10ReverbType(); },
+                                }},
+                    
+                                {type:'sevenSegmentDisplay_static',name:'tens',data:{
+                                    x:50, y:12.5, width:12.5, height:25,
+                                }},
+                                {type:'sevenSegmentDisplay_static',name:'ones',data:{
+                                    x:37.5, y:12.5, width:12.5, height:25,
+                                }},
+                            ]
+                        };
+                    
+                        //main object
+                            var object = alphaUnit.builder(this.reverbUnit,design);
+                    
+                        //import/export
+                            object.importData = function(data){
+                                state.reverbTypeSelected = data.selectedType;
+                                object.elements.dial_continuous.wetdry_dial.set(data.wetdry);
+                                object.elements.dial_continuous.outGain_dial.set(data.outGain);
+                            };
+                            object.exportData = function(){
+                                return {
+                                    selectedType: state.reverbTypeSelected,
+                                    wetdry: object.elements.dial_continuous.wetdry_dial.get(),
+                                    outGain: object.elements.dial_continuous.outGain_dial.get(),
+                                };
+                            };
+                    
+                        //circuitry
+                            //reverb
+                                object.reverbCircuit = new workspace.interface.circuit.alpha.reverbUnit(workspace.library.audio.context);
+                                object.elements.connectionNode_audio.audioIn.out().connect( object.reverbCircuit.in() );
+                                object.reverbCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
+                                object.reverbCircuit.getTypes( function(a){state.availableTypes = a;} );
+                                
+                            //internal functions
+                                function setReadout(num){
+                                    num = ("0" + num).slice(-2);
+                    
+                                    object.elements.sevenSegmentDisplay_static.ones.enterCharacter(num[0]);
+                                    object.elements.sevenSegmentDisplay_static.tens.enterCharacter(num[1]);
+                                }
+                                function setReverbType(a){
+                                    if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return;}
+                    
+                                    if( a >= state.availableTypes.length ){a = state.availableTypes.length-1;}
+                                    else if( a < 0 ){a = 0;}
+                        
+                                    state.reverbTypeSelected = a;
+                                    object.reverbCircuit.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
+                                }
+                                function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
+                                function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
+                                function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
+                                function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
+                    
+                            //wiring
+                            object.elements.dial_continuous.outGain_dial.onchange = function(value){ object.reverbCircuit.outGain(value); };
+                            object.elements.dial_continuous.wetdry_dial.onchange = function(value){ object.reverbCircuit.wetdry(1-value); };
+                    
+                        //interface
+                            object.i = {
+                                gain:function(a){object.elements.dial_continuous.outGain_dial.set(a);},
+                                wetdry:function(a){object.elements.dial_continuous.wetdry_dial.set(a);},
+                            };
+                    
+                        //setup
+                            object.elements.dial_continuous.outGain_dial.set(1/2);
+                            object.elements.dial_continuous.wetdry_dial.set(1/2);
+                            setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
+                    
+                        return object;
+                    };
+                    
+                    this.reverbUnit.metadata = {
+                        name:'Reverb Unit',
+                        helpURL:'https://metasophiea.com/curve/help/units/alpha/reverbUnit/'
                     };
 
                     this.multibandFilter = function(x,y,a){
@@ -14347,11 +14339,7 @@
                         name:'Multiband Filter',
                         helpURL:'https://metasophiea.com/curve/help/units/alpha/multibandFilter/'
                     };
-                    this.reverbUnit = function(x,y){
-                        var state = {
-                            reverbTypeSelected: 0,
-                            availableTypes: [],
-                        };
+                    this.distortionUnit = function(x,y,a){
                         var style = {
                             background: {fill:'rgba(200,200,200,1)'},
                             h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
@@ -14361,138 +14349,293 @@
                                 handle:{fill:'rgba(220,220,220,1)'},
                                 slot:{fill:'rgba(50,50,50,1)'},
                                 needle:{fill:'rgba(250,150,150,1)'},
-                            },
-                            button:{
-                                background__up__fill:'rgba(175,175,175,1)', 
-                                background__hover__fill:'rgba(220,220,220,1)', 
-                                background__hover_press__fill:'rgba(150,150,150,1)',
                             }
                         };
                         var design = {
-                            name: 'reverbUnit',
+                            name: 'distortionUnit',
                             category: 'audioEffectUnits',
                             collection: 'alpha',
-                            x: x, y: y,
-                            space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],
+                            x:x, y:y, a:a,
+                            space:[
+                                    { x:0,           y:10     },
+                                    { x:10,          y:0      },
+                                    { x:102.5/3,     y:0      },
+                                    { x:102.5*0.45,  y:10     },
+                                    { x:102.5*0.55,  y:10     },
+                                    { x:2*(102.5/3), y:0      },
+                                    { x:102.5-10,    y:0      },
+                                    { x:102.5,       y:10     },
+                                    { x:102.5,       y:95-10  },
+                                    { x:102.5-10,    y:95     },
+                                    { x:2*(102.5/3), y:95     },
+                                    { x:102.5*0.55,  y:95-10  },
+                                    { x:102.5*0.45,  y:95-10  },
+                                    { x:102.5/3,     y:95     },
+                                    { x:10,          y:95     },
+                                    { x:0,           y:95-10  }
+                                ],
                             // spaceOutline:true,
                             elements:[
-                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], style:style.background }},
+                                {type:'polygon', name:'backing', data:{ points:[
+                                    { x:0,           y:10     },
+                                    { x:10,          y:0      },
+                                    { x:102.5/3,     y:0      },
+                                    { x:102.5*0.45,  y:10     },
+                                    { x:102.5*0.55,  y:10     },
+                                    { x:2*(102.5/3), y:0      },
+                                    { x:102.5-10,    y:0      },
+                                    { x:102.5,       y:10     },
+                                    { x:102.5,       y:95-10  },
+                                    { x:102.5-10,    y:95     },
+                                    { x:2*(102.5/3), y:95     },
+                                    { x:102.5*0.55,  y:95-10  },
+                                    { x:102.5*0.45,  y:95-10  },
+                                    { x:102.5/3,     y:95     },
+                                    { x:10,          y:95     },
+                                    { x:0,           y:95-10  }
+                                ], style:style.background }},
                     
-                                {type:'connectionNode_audio', name:'audioIn', data:{ x: 102.5, y: 16, width: 10, height: 20 }},
-                                {type:'connectionNode_audio', name:'audioOut', data:{ x: -10, y: 16, width: 10, height: 20, isAudioOutput:true }},
-                                
-                                {type:'text', name:'outGain_0',   data:{x:8,    y:38, text:'0', style:style.h2}},
-                                {type:'text', name:'outGain_1/2', data:{x:16.5, y:11, text:'1/2', style:style.h2}},
-                                {type:'text', name:'outGain_1',   data:{x:29,   y:38, text:'1', style:style.h2}},
+                                {type:'connectionNode_audio', name:'audioIn', data: { x: 102.5, y: 61.5, width: 10, height: 20 }},
+                                {type:'connectionNode_audio', name:'audioOut', data:{ x: -10, y: 61.5, width: 10, height: 20, isAudioOutput:true }},
+                            
+                                {type:'text', name:'outGain_title', data:{x:17.5, y:91,   text:'out', style:style.h1}},
+                                {type:'text', name:'outGain_0',     data:{x:9.5,  y:85.5, text:'0',   style:style.h2}},
+                                {type:'text', name:'outGain_1/2',   data:{x:19,   y:57,   text:'1/2', style:style.h2}},
+                                {type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   style:style.h2}},
                                 {type:'dial_continuous',name:'outGain_dial',data:{
-                                    x: 20, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, 
+                                    x: 22.5, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
                                     style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
                                 }},
                     
-                                {type:'text', name:'wetdry_1/2', data:{x:66.5, y:39, text:'wet', style:style.h2}},
-                                {type:'text', name:'wetdry_1',   data:{x:91.5, y:39, text:'dry', style:style.h2}},
-                                {type:'dial_continuous',name:'wetdry_dial',data:{
-                                    x: 82.5, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
+                                {type:'text', name:'distortionAmount_title', data:{x:16.5,   y:41.5, text:'dist', style:style.h1}},
+                                {type:'text', name:'distortionAmount_0',     data:{x:9.5,  y:36,   text:'0',    style:style.h2}},
+                                {type:'text', name:'distortionAmount_50',    data:{x:20,   y:7.5,  text:'50',   style:style.h2}},
+                                {type:'text', name:'distortionAmount_100',   data:{x:33,   y:36,   text:'100',  style:style.h2}},
+                                {type:'dial_continuous',name:'distortionAmount_dial',data:{
+                                    x: 22.5, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
                                     style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
                                 }},
                     
-                                {type:'button_rect',name:'raiseByOne',data:{
-                                    x:51, y:6, width: 10.25, height: 5, style:style.button, 
-                                    onpress: function(){ incReverbType(); },
-                                }},
-                                {type:'button_rect',name:'raiseByTen',data:{
-                                    x:38.75, y:6, width: 10.25, height: 5, style:style.button, 
-                                    onpress: function(){ inc10ReverbType(); },
-                                }},
-                                {type:'button_rect',name:'lowerByOne',data:{
-                                    x:51, y:39, width: 10.25, height: 5, style:style.button, 
-                                    onpress: function(){ decReverbType(); },
-                                }},
-                                {type:'button_rect',name:'lowerByTen',data:{
-                                    x:38.75, y:39, width: 10.25, height: 5, style:style.button, 
-                                    onpress: function(){ dec10ReverbType(); },
+                                {type:'text', name:'resolution_title', data:{x:47, y:66, text:'res',  style:style.h1}},
+                                {type:'text', name:'resolution_2',     data:{x:39, y:60, text:'2',    style:style.h2}},
+                                {type:'text', name:'resolution_50',    data:{x:49, y:32, text:'500',  style:style.h2}},
+                                {type:'text', name:'resolution_100',   data:{x:63, y:60, text:'1000', style:style.h2}},
+                                {type:'dial_continuous',name:'resolution_dial',data:{
+                                    x: 52.5, y: 47.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
                                 }},
                     
-                                {type:'sevenSegmentDisplay_static',name:'tens',data:{
-                                    x:50, y:12.5, width:12.5, height:25,
+                                {type:'text', name:'overSample_title', data:{x:67,   y:41.5, text:'overSamp', style:style.h1}},
+                                {type:'text', name:'overSample_0',     data:{x:61,   y:12,   text:'none',     style:style.h2}},
+                                {type:'text', name:'overSample_50',    data:{x:77.5, y:7.5,  text:'2x',       style:style.h2}},
+                                {type:'text', name:'overSample_100',   data:{x:90.5, y:12,   text:'4x',       style:style.h2}},
+                                {type:'dial_discrete',name:'overSample_dial',data:{
+                                    x: 80, y: 23, r: 12, startAngle: (1.25*Math.PI), maxAngle: 0.5*Math.PI, arcDistance: 1.35, optionCount: 3,
+                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
                                 }},
-                                {type:'sevenSegmentDisplay_static',name:'ones',data:{
-                                    x:37.5, y:12.5, width:12.5, height:25,
+                    
+                                {type:'text', name:'inGain_title', data:{x:76,   y:91,   text:'in', style:style.h1}},
+                                {type:'text', name:'inGain_0',     data:{x:67,   y:85.5, text:'0',   style:style.h2}},
+                                {type:'text', name:'inGain_1/2',   data:{x:76.5, y:57,   text:'1/2', style:style.h2}},
+                                {type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   style:style.h2}},
+                                {type:'dial_continuous',name:'inGain_dial',data:{
+                                    x: 80, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
                                 }},
                             ]
                         };
                     
                         //main object
-                            var object = alphaUnit.builder(this.reverbUnit,design);
+                            var object = alphaUnit.builder(this.distortionUnit,design);
                     
                         //import/export
                             object.importData = function(data){
-                                state.reverbTypeSelected = data.selectedType;
-                                object.elements.dial_continuous.wetdry_dial.set(data.wetdry);
                                 object.elements.dial_continuous.outGain_dial.set(data.outGain);
+                                object.elements.dial_continuous.distortionAmount_dial.set(data.distortionAmount);
+                                object.elements.dial_continuous.resolution_dial.set(data.resolution);
+                                object.elements.dial_discrete.overSample_dial.set(data.overSample);
+                                object.elements.dial_continuous.inGain_dial.set(data.inGain);
                             };
                             object.exportData = function(){
                                 return {
-                                    selectedType: state.reverbTypeSelected,
-                                    wetdry: object.elements.dial_continuous.wetdry_dial.get(),
-                                    outGain: object.elements.dial_continuous.outGain_dial.get(),
+                                    outGain:          object.elements.dial_continuous.outGain_dial.get(), 
+                                    distortionAmount: object.elements.dial_continuous.distortionAmount_dial.get(), 
+                                    resolution:       object.elements.dial_continuous.resolution_dial.get(), 
+                                    overSample:       object.elements.dial_discrete.overSample_dial.get(), 
+                                    inGain:           object.elements.dial_continuous.inGain_dial.get()
                                 };
                             };
                     
                         //circuitry
-                            //reverb
-                                object.reverbCircuit = new workspace.interface.circuit.alpha.reverbUnit(workspace.library.audio.context);
-                                object.elements.connectionNode_audio.audioIn.out().connect( object.reverbCircuit.in() );
-                                object.reverbCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
-                                object.reverbCircuit.getTypes( function(a){state.availableTypes = a;} );
-                                
-                            //internal functions
-                                function setReadout(num){
-                                    num = ("0" + num).slice(-2);
+                            object.distortionCircuit = new workspace.interface.circuit.alpha.distortionUnit(workspace.library.audio.context);
+                            object.elements.connectionNode_audio.audioIn.out().connect( object.distortionCircuit.in() );
+                            object.distortionCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
                     
-                                    object.elements.sevenSegmentDisplay_static.ones.enterCharacter(num[0]);
-                                    object.elements.sevenSegmentDisplay_static.tens.enterCharacter(num[1]);
-                                }
-                                function setReverbType(a){
-                                    if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return;}
-                    
-                                    if( a >= state.availableTypes.length ){a = state.availableTypes.length-1;}
-                                    else if( a < 0 ){a = 0;}
-                        
-                                    state.reverbTypeSelected = a;
-                                    object.reverbCircuit.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
-                                }
-                                function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
-                                function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
-                                function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
-                                function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
-                    
-                            //wiring
-                            object.elements.dial_continuous.outGain_dial.onchange = function(value){ object.reverbCircuit.outGain(value); };
-                            object.elements.dial_continuous.wetdry_dial.onchange = function(value){ object.reverbCircuit.wetdry(1-value); };
-                    
-                        //interface
-                            object.i = {
-                                gain:function(a){object.elements.dial_continuous.outGain_dial.set(a);},
-                                wetdry:function(a){object.elements.dial_continuous.wetdry_dial.set(a);},
-                            };
+                        //wiring
+                            object.elements.dial_continuous.outGain_dial.onchange = function(value){object.distortionCircuit.outGain(value);};
+                            object.elements.dial_continuous.distortionAmount_dial.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
+                            object.elements.dial_continuous.resolution_dial.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
+                            object.elements.dial_discrete.overSample_dial.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
+                            object.elements.dial_continuous.inGain_dial.onchange = function(value){object.distortionCircuit.inGain(2*value);};
                     
                         //setup
-                            object.elements.dial_continuous.outGain_dial.set(1/2);
-                            object.elements.dial_continuous.wetdry_dial.set(1/2);
-                            setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
+                            object.elements.dial_continuous.resolution_dial.set(0.5);
+                            object.elements.dial_continuous.inGain_dial.set(0.5);
+                            object.elements.dial_continuous.outGain_dial.set(1);
                     
                         return object;
                     };
                     
-                    this.reverbUnit.metadata = {
-                        name:'Reverb Unit',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/reverbUnit/'
+                    this.distortionUnit.metadata = {
+                        name:'Distortion Unit',
+                        helpURL:'https://metasophiea.com/curve/help/units/alpha/distortionUnit/'
                     };
-
                 };
                 
                 this.audioFile = new function(){
+                    this.recorder = function(x,y,a){
+                        var style = {
+                            background:{fill:'rgba(200,200,200,1)'},
+                            h1: {fill:'rgba(100,100,100,1)', font:'6pt Bookman'},
+                            h2: {fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
+                            button:{
+                                background__up__fill:'rgba(175,175,175,1)', 
+                                background__hover__fill:'rgba(220,220,220,1)', 
+                                background__hover_press__fill:'rgba(150,150,150,1)',
+                            },
+                            readout_sixteenSegmentDisplay_static:{background:'rgb(0,0,0)', glow:'rgb(200,200,200)',dim:'rgb(20,20,20)'},
+                        };
+                        var design = {
+                            name: 'recorder',
+                            category: 'audioFile',
+                            collection: 'alpha',
+                            x:x, y:y, a:a,
+                            space:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}],
+                            // spaceOutline:true,
+                            elements:[
+                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], style:style.background }},
+                    
+                                {type:'connectionNode_audio', name:'inRight', data: {x:175, y:2.5, width:10, height:15}},
+                                {type:'connectionNode_audio', name:'inLeft', data: {x:175, y:22.5, width:10, height:15}},
+                    
+                    
+                                //logo label
+                                    {type:'rectangle', name:'logo_rect', data:{x:135, y:27.5, angle:-0.25, width:35, height:10, style:{fill:'rgb(230,230,230)'}}},
+                                    {type:'text', name:'logo_label', data:{x:139, y:34.5, angle:-0.25, text:'REcorder', style:style.h1}},
+                    
+                                //rec
+                                    {type:'button_rect', name:'rec', data: {
+                                        x:5, y: 25, width:20, height:10, style:style.button,
+                                        onpress: function(){
+                                            if(state == 'paused'){object.recorder.resume();}
+                                            else{object.recorder.start();}
+                                            updateLights('rec');
+                                        }
+                                    }},
+                                    {type:'text', name:'button_rect_text', data:{x:10.5, y:31.5, text:'rec', angle:0, style:style.h2}},
+                                //pause/resume
+                                    {type:'button_rect', name:'pause/resume', data: {
+                                        x:27.5, y: 25, width:20, height:10, style:style.button,
+                                        onpress: function(){
+                                            if(state == 'paused'){object.recorder.resume();}
+                                            else{object.recorder.pause();}
+                                            updateLights('pause/resume');
+                                        }
+                                    }},
+                                    {type:'text', name:'button_pause/resume_text', data:{x:30, y:31.5, text:'pause', angle:0, style:style.h2}},
+                                //stop
+                                    {type:'button_rect', name:'stop', data: {
+                                        x:50, y: 25, width:20, height:10, style:style.button,
+                                        onpress: function(){updateLights('stop');object.recorder.stop();}
+                                    }},
+                                    {type:'text', name:'button_stop_text', data:{x:54, y:31.5, text:'stop', angle:0, style:style.h2}},
+                                //save
+                                    {type:'button_rect', name:'save', data: {
+                                        x:72.5, y: 25, width:20, height:10, style:style.button,
+                                        onpress: function(){
+                                            updateLights('save');
+                                            if(state != 'empty'){ object.recorder.save(); }
+                                        }
+                                    }},
+                                    {type:'text', name:'button_save_text', data:{x:76.5, y:31.5, text:'save', angle:0, style:style.h2}},
+                                //clear
+                                    {type:'button_rect', name:'clear', data: {
+                                        x:95, y: 25, width:20, height:10, style:style.button,
+                                        onpress: function(){updateLights('clear');object.recorder.clear();}
+                                    }},
+                                    {type:'text', name:'button_clear_text', data:{x:97.5, y:31.5, text:'clear', angle:0, style:style.h2}},
+                    
+                                //time readout
+                                    {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
+                                        x: 70, y: 5, angle:0, width:100, height:15, count:11, style:style.readout_sixteenSegmentDisplay_static
+                                    }},
+                    
+                                //activity lights
+                                    //recording
+                                        {type:'glowbox_rect', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:'rgb(255, 63, 63)', dim:'rgb(25, 6, 6)'}}},
+                                        {type:'text', name:'activityLight_recording_text', data:{x:8, y:14, text:'rec', angle:0, style:style.h2}},
+                                    //paused
+                                        {type:'glowbox_rect', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:'rgb(126, 186, 247)', dim:'rgb(12, 18, 24)'}}},
+                                        {type:'text', name:'activityLight_paused_text', data:{x:23, y:14, text:'pau', angle:0, style:style.h2}},
+                                    //empty
+                                        {type:'glowbox_rect', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:'rgb(199, 249, 244)', dim:'rgb(19, 24, 24)'}}},
+                                        {type:'text', name:'activityLight_empty_text', data:{x:38, y:14, text:'emp', angle:0, style:style.h2}},
+                                    //ready to save
+                                        {type:'glowbox_rect', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:'rgb(61, 224, 35)', dim:'rgb(6, 22, 3)'}}},
+                                        {type:'text', name:'activityLight_full_text', data:{x:53, y:14, text:'ful', angle:0, style:style.h2}},
+                            ]
+                        };
+                    
+                        //main object
+                            var object = workspace.interface.unit.alpha.builder(this.recorder,design);
+                    
+                        //circuitry
+                            //update functions
+                                //time readout
+                                    setInterval(function(){
+                                        var time = object.recorder.recordingTime();
+                                        var decimalValues = time % 1;
+                                        time = workspace.library.math.seconds2time( Math.round(time) );
+                    
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                                            workspace.library.misc.padString(time.h,2,'0')+':'+
+                                            workspace.library.misc.padString(time.m,2,'0')+':'+
+                                            workspace.library.misc.padString(time.s,2,'0')+'.'+
+                                            workspace.library.misc.padString((''+decimalValues).slice(2),2,'0')
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                                    },100);
+                                //lights
+                                    var state = 'empty'; //empty - recording - paused - full
+                                    function updateLights(action){
+                                        if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
+                                        if( action == 'stop' || action == 'save' ){ state = 'full'; }
+                                        if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
+                                        if( action == 'clear' ){ state = 'empty'; }
+                                        if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
+                                        else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
+                    
+                                        if(state == 'empty'){object.elements.glowbox_rect.activityLight_empty.on();}else{object.elements.glowbox_rect.activityLight_empty.off();}
+                                        if(state == 'recording'){object.elements.glowbox_rect.activityLight_recording.on();}else{object.elements.glowbox_rect.activityLight_recording.off();}
+                                        if(state == 'paused'){object.elements.glowbox_rect.activityLight_paused.on();}else{object.elements.glowbox_rect.activityLight_paused.off();}
+                                        if(state == 'full'){object.elements.glowbox_rect.activityLight_full.on();}else{object.elements.glowbox_rect.activityLight_full.off();}
+                                    }
+                                    updateLights('clear');
+                                    object.elements.glowbox_rect.activityLight_empty.on();
+                    
+                            //audio recorder
+                                object.recorder = new workspace.interface.circuit.alpha.recorder(workspace.library.audio.context);
+                                object.elements.connectionNode_audio.inRight.out().connect( object.recorder.in_right() );
+                                object.elements.connectionNode_audio.inLeft.out().connect( object.recorder.in_left() );
+                    
+                        return object;
+                    };
+                    
+                    this.recorder.metadata = {
+                        name:'Recorder',
+                        helpURL:'https://metasophiea.com/curve/help/units/alpha/recorder/'
+                    };
+
                     this.looper = function(x,y,a){
                         var style = {
                             background: {fill:'rgba(200,200,200,1)'},
@@ -14630,6 +14773,132 @@
                         name:'Looper',
                         helpURL:'https://metasophiea.com/curve/help/units/alpha/looper/'
                     };
+                    this.oneShot_single = function(x,y,a){
+                        var style = {
+                            background: {fill:'rgba(200,200,200,1)'},
+                            markings: {fill:'rgba(150,150,150,1)'},
+                            strokeMarkings: {fill:'rgba(0,0,0,0)', stroke:'rgba(150,150,150,1)', lineWidth:1},
+                            button:{
+                                background__up__fill:'rgba(175,175,175,1)', 
+                                background__hover__fill:'rgba(220,220,220,1)', 
+                                background__hover_press__fill:'rgba(150,150,150,1)',
+                            },
+                            fire_button:{
+                                background__up__fill:'rgba(175,195,175,1)', 
+                                background__hover__fill:'rgba(220,240,220,1)', 
+                                background__hover_press__fill:'rgba(150,170,150,1)',
+                            },
+                            stop_button:{
+                                background__up__fill:'rgba(195,175,175,1)', 
+                                background__hover__fill:'rgba(240,220,220,1)', 
+                                background__hover_press__fill:'rgba(170,150,150,1)',
+                            },
+                        };
+                        var design = {
+                            name: 'oneShot_single',
+                            category: 'audioFile',
+                            collection: 'alpha',
+                            x:x, y:y, a:a,
+                            space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
+                            // spaceOutline:true,
+                            elements:[
+                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], style:style.background }},
+                    
+                                {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                                {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+                                {type:'connectionNode_data', name:'trigger', data:{
+                                    x:220, y:17.5, width:10, height:20,
+                                    onreceive:function(address, data){ object.elements.button_rect.fire.press(); object.elements.button_rect.fire.release(); }
+                                }},
+                    
+                                //symbol
+                                    {type:'path', name:'symbol_arrow', data:{ points:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
+                                    {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
+                                    {type:'circle', name:'symbol_outerCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
+                                    {type:'rectangle', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, style:style.markings }},
+                    
+                                {type:'button_rect', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
+                                    onpress: function(){
+                                        object.oneShot.load('file',function(data){
+                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
+                                        });
+                                    }
+                                }},
+                                {type:'button_rect',name:'fire',data:{ x:5, y: 17.5, width:20, height:10, style:style.fire_button,
+                                    onpress:function(){
+                                        //no file = don't bother
+                                            if(object.oneShot.duration() < 0){return;}
+                                
+                                        //actually start the audio
+                                            object.oneShot.fire();
+                    
+                                        //perform graphical movements
+                                            var duration = object.oneShot.duration();
+                    
+                                        //if there's a playhead, remove it
+                                            if(needleExists){
+                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                                clearTimeout(needleInterval);
+                                            }
+                    
+                                        //create new needle, and send it on its way
+                                            previousPosition = undefined;
+                                            currentPosition = 0;
+                    
+                                            var desiredIntervalTime = 10;
+                                            var step = desiredIntervalTime/(duration*1000)
+                                            needleInterval = setInterval(function(){
+                                                //remove previous mark
+                                                    if(previousPosition != undefined){
+                                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                                    }
+                    
+                                                previousPosition = currentPosition;
+                                                currentPosition += step;
+                    
+                                                //add new mark
+                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                    
+                                                //check for ending
+                                                    if( currentPosition > 1 ){
+                                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                                        currentPosition = 0;
+                                                        previousPosition = undefined;
+                                                        clearInterval(needleInterval);
+                                                    }
+                                            },desiredIntervalTime);
+                                            
+                                            needleExists = true;
+                                    },
+                                }},
+                    
+                                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
+                            ]
+                        };
+                    
+                        //main object
+                            var object = alphaUnit.builder(this.oneShot_single,design);
+                    
+                        //circuitry
+                            var needleExists = undefined;
+                            var needleInterval = undefined;
+                            var currentPosition = undefined;
+                            var previousPosition = undefined;
+                    
+                            //audioFilePlayer
+                                object.oneShot = new workspace.interface.circuit.alpha.oneShot_single(workspace.library.audio.context);
+                                object.oneShot.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
+                                object.oneShot.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
+                    
+                        return object;
+                    };
+                    
+                    this.oneShot_single.metadata = {
+                        name:'One Shot (Single)',
+                        helpURL:'https://metasophiea.com/curve/help/objects/units/oneShot_single/'
+                    };
+                    
+
                     this.oneShot_multi = function(x,y,a){
                         var style = {
                             background: {fill:'rgba(200,200,200,1)'},
@@ -15083,132 +15352,6 @@
                         name:'One Shot (Multi)(8 Track)',
                         helpURL:'https://metasophiea.com/curve/help/units/alpha/oneShot_multi_multiTrack/'
                     };
-                    this.oneShot_single = function(x,y,a){
-                        var style = {
-                            background: {fill:'rgba(200,200,200,1)'},
-                            markings: {fill:'rgba(150,150,150,1)'},
-                            strokeMarkings: {fill:'rgba(0,0,0,0)', stroke:'rgba(150,150,150,1)', lineWidth:1},
-                            button:{
-                                background__up__fill:'rgba(175,175,175,1)', 
-                                background__hover__fill:'rgba(220,220,220,1)', 
-                                background__hover_press__fill:'rgba(150,150,150,1)',
-                            },
-                            fire_button:{
-                                background__up__fill:'rgba(175,195,175,1)', 
-                                background__hover__fill:'rgba(220,240,220,1)', 
-                                background__hover_press__fill:'rgba(150,170,150,1)',
-                            },
-                            stop_button:{
-                                background__up__fill:'rgba(195,175,175,1)', 
-                                background__hover__fill:'rgba(240,220,220,1)', 
-                                background__hover_press__fill:'rgba(170,150,150,1)',
-                            },
-                        };
-                        var design = {
-                            name: 'oneShot_single',
-                            category: 'audioFile',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], style:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_data', name:'trigger', data:{
-                                    x:220, y:17.5, width:10, height:20,
-                                    onreceive:function(address, data){ object.elements.button_rect.fire.press(); object.elements.button_rect.fire.release(); }
-                                }},
-                    
-                                //symbol
-                                    {type:'path', name:'symbol_arrow', data:{ points:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
-                                    {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
-                                    {type:'circle', name:'symbol_outerCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
-                                    {type:'rectangle', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, style:style.markings }},
-                    
-                                {type:'button_rect', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
-                                    onpress: function(){
-                                        object.oneShot.load('file',function(data){
-                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
-                                        });
-                                    }
-                                }},
-                                {type:'button_rect',name:'fire',data:{ x:5, y: 17.5, width:20, height:10, style:style.fire_button,
-                                    onpress:function(){
-                                        //no file = don't bother
-                                            if(object.oneShot.duration() < 0){return;}
-                                
-                                        //actually start the audio
-                                            object.oneShot.fire();
-                    
-                                        //perform graphical movements
-                                            var duration = object.oneShot.duration();
-                    
-                                        //if there's a playhead, remove it
-                                            if(needleExists){
-                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                                                clearTimeout(needleInterval);
-                                            }
-                    
-                                        //create new needle, and send it on its way
-                                            previousPosition = undefined;
-                                            currentPosition = 0;
-                    
-                                            var desiredIntervalTime = 10;
-                                            var step = desiredIntervalTime/(duration*1000)
-                                            needleInterval = setInterval(function(){
-                                                //remove previous mark
-                                                    if(previousPosition != undefined){
-                                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                                                    }
-                    
-                                                previousPosition = currentPosition;
-                                                currentPosition += step;
-                    
-                                                //add new mark
-                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                    
-                                                //check for ending
-                                                    if( currentPosition > 1 ){
-                                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                                                        currentPosition = 0;
-                                                        previousPosition = undefined;
-                                                        clearInterval(needleInterval);
-                                                    }
-                                            },desiredIntervalTime);
-                                            
-                                            needleExists = true;
-                                    },
-                                }},
-                    
-                                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = alphaUnit.builder(this.oneShot_single,design);
-                    
-                        //circuitry
-                            var needleExists = undefined;
-                            var needleInterval = undefined;
-                            var currentPosition = undefined;
-                            var previousPosition = undefined;
-                    
-                            //audioFilePlayer
-                                object.oneShot = new workspace.interface.circuit.alpha.oneShot_single(workspace.library.audio.context);
-                                object.oneShot.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
-                                object.oneShot.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
-                    
-                        return object;
-                    };
-                    
-                    this.oneShot_single.metadata = {
-                        name:'One Shot (Single)',
-                        helpURL:'https://metasophiea.com/curve/help/objects/units/oneShot_single/'
-                    };
-                    
-
                     this.player = function(x,y,a){
                         var style = {
                             background:{fill:'rgba(200,200,200,1)'},
@@ -15361,149 +15504,6 @@
                         name:'Player',
                         helpURL:'https://metasophiea.com/curve/help/units/alpha/player/'
                     };
-                    this.recorder = function(x,y,a){
-                        var style = {
-                            background:{fill:'rgba(200,200,200,1)'},
-                            h1: {fill:'rgba(100,100,100,1)', font:'6pt Bookman'},
-                            h2: {fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
-                            button:{
-                                background__up__fill:'rgba(175,175,175,1)', 
-                                background__hover__fill:'rgba(220,220,220,1)', 
-                                background__hover_press__fill:'rgba(150,150,150,1)',
-                            },
-                            readout_sixteenSegmentDisplay_static:{background:'rgb(0,0,0)', glow:'rgb(200,200,200)',dim:'rgb(20,20,20)'},
-                        };
-                        var design = {
-                            name: 'recorder',
-                            category: 'audioFile',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], style:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'inRight', data: {x:175, y:2.5, width:10, height:15}},
-                                {type:'connectionNode_audio', name:'inLeft', data: {x:175, y:22.5, width:10, height:15}},
-                    
-                    
-                                //logo label
-                                    {type:'rectangle', name:'logo_rect', data:{x:135, y:27.5, angle:-0.25, width:35, height:10, style:{fill:'rgb(230,230,230)'}}},
-                                    {type:'text', name:'logo_label', data:{x:139, y:34.5, angle:-0.25, text:'REcorder', style:style.h1}},
-                    
-                                //rec
-                                    {type:'button_rect', name:'rec', data: {
-                                        x:5, y: 25, width:20, height:10, style:style.button,
-                                        onpress: function(){
-                                            if(state == 'paused'){object.recorder.resume();}
-                                            else{object.recorder.start();}
-                                            updateLights('rec');
-                                        }
-                                    }},
-                                    {type:'text', name:'button_rect_text', data:{x:10.5, y:31.5, text:'rec', angle:0, style:style.h2}},
-                                //pause/resume
-                                    {type:'button_rect', name:'pause/resume', data: {
-                                        x:27.5, y: 25, width:20, height:10, style:style.button,
-                                        onpress: function(){
-                                            if(state == 'paused'){object.recorder.resume();}
-                                            else{object.recorder.pause();}
-                                            updateLights('pause/resume');
-                                        }
-                                    }},
-                                    {type:'text', name:'button_pause/resume_text', data:{x:30, y:31.5, text:'pause', angle:0, style:style.h2}},
-                                //stop
-                                    {type:'button_rect', name:'stop', data: {
-                                        x:50, y: 25, width:20, height:10, style:style.button,
-                                        onpress: function(){updateLights('stop');object.recorder.stop();}
-                                    }},
-                                    {type:'text', name:'button_stop_text', data:{x:54, y:31.5, text:'stop', angle:0, style:style.h2}},
-                                //save
-                                    {type:'button_rect', name:'save', data: {
-                                        x:72.5, y: 25, width:20, height:10, style:style.button,
-                                        onpress: function(){
-                                            updateLights('save');
-                                            if(state != 'empty'){ object.recorder.save(); }
-                                        }
-                                    }},
-                                    {type:'text', name:'button_save_text', data:{x:76.5, y:31.5, text:'save', angle:0, style:style.h2}},
-                                //clear
-                                    {type:'button_rect', name:'clear', data: {
-                                        x:95, y: 25, width:20, height:10, style:style.button,
-                                        onpress: function(){updateLights('clear');object.recorder.clear();}
-                                    }},
-                                    {type:'text', name:'button_clear_text', data:{x:97.5, y:31.5, text:'clear', angle:0, style:style.h2}},
-                    
-                                //time readout
-                                    {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
-                                        x: 70, y: 5, angle:0, width:100, height:15, count:11, style:style.readout_sixteenSegmentDisplay_static
-                                    }},
-                    
-                                //activity lights
-                                    //recording
-                                        {type:'glowbox_rect', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:'rgb(255, 63, 63)', dim:'rgb(25, 6, 6)'}}},
-                                        {type:'text', name:'activityLight_recording_text', data:{x:8, y:14, text:'rec', angle:0, style:style.h2}},
-                                    //paused
-                                        {type:'glowbox_rect', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:'rgb(126, 186, 247)', dim:'rgb(12, 18, 24)'}}},
-                                        {type:'text', name:'activityLight_paused_text', data:{x:23, y:14, text:'pau', angle:0, style:style.h2}},
-                                    //empty
-                                        {type:'glowbox_rect', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:'rgb(199, 249, 244)', dim:'rgb(19, 24, 24)'}}},
-                                        {type:'text', name:'activityLight_empty_text', data:{x:38, y:14, text:'emp', angle:0, style:style.h2}},
-                                    //ready to save
-                                        {type:'glowbox_rect', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:'rgb(61, 224, 35)', dim:'rgb(6, 22, 3)'}}},
-                                        {type:'text', name:'activityLight_full_text', data:{x:53, y:14, text:'ful', angle:0, style:style.h2}},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = workspace.interface.unit.alpha.builder(this.recorder,design);
-                    
-                        //circuitry
-                            //update functions
-                                //time readout
-                                    setInterval(function(){
-                                        var time = object.recorder.recordingTime();
-                                        var decimalValues = time % 1;
-                                        time = workspace.library.math.seconds2time( Math.round(time) );
-                    
-                                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                            workspace.library.misc.padString(time.h,2,'0')+':'+
-                                            workspace.library.misc.padString(time.m,2,'0')+':'+
-                                            workspace.library.misc.padString(time.s,2,'0')+'.'+
-                                            workspace.library.misc.padString((''+decimalValues).slice(2),2,'0')
-                                        );
-                                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
-                                    },100);
-                                //lights
-                                    var state = 'empty'; //empty - recording - paused - full
-                                    function updateLights(action){
-                                        if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
-                                        if( action == 'stop' || action == 'save' ){ state = 'full'; }
-                                        if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
-                                        if( action == 'clear' ){ state = 'empty'; }
-                                        if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
-                                        else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
-                    
-                                        if(state == 'empty'){object.elements.glowbox_rect.activityLight_empty.on();}else{object.elements.glowbox_rect.activityLight_empty.off();}
-                                        if(state == 'recording'){object.elements.glowbox_rect.activityLight_recording.on();}else{object.elements.glowbox_rect.activityLight_recording.off();}
-                                        if(state == 'paused'){object.elements.glowbox_rect.activityLight_paused.on();}else{object.elements.glowbox_rect.activityLight_paused.off();}
-                                        if(state == 'full'){object.elements.glowbox_rect.activityLight_full.on();}else{object.elements.glowbox_rect.activityLight_full.off();}
-                                    }
-                                    updateLights('clear');
-                                    object.elements.glowbox_rect.activityLight_empty.on();
-                    
-                            //audio recorder
-                                object.recorder = new workspace.interface.circuit.alpha.recorder(workspace.library.audio.context);
-                                object.elements.connectionNode_audio.inRight.out().connect( object.recorder.in_right() );
-                                object.elements.connectionNode_audio.inLeft.out().connect( object.recorder.in_left() );
-                    
-                        return object;
-                    };
-                    
-                    this.recorder.metadata = {
-                        name:'Recorder',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/recorder/'
-                    };
-
                 };
                 
                 this.humanInputDevices = new function(){
@@ -16052,170 +16052,6 @@
                         name:'Basic Sequencer (Multi Pulse Out)',
                         helpURL:'https://metasophiea.com/curve/help/units/alpha/basicSequencer_pulseOut/'
                     };
-                    this.basicSequencer_midiOut = function(x,y,a){
-                        var vals = {
-                            sequencer:{
-                                width:64, height:undefined,
-                                midiRange:{ bottom:24, top:131 },
-                                pattern:[0,0,1,0,1,0,1,0,0,1,0,1],
-                            }
-                        };
-                        vals.sequencer.height = vals.sequencer.midiRange.top - vals.sequencer.midiRange.bottom + 1;
-                        //calculate pattern based on midi range
-                            var temp = vals.sequencer.pattern.length - ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(workspace.library.audio.num2name(vals.sequencer.midiRange.top).slice(1))
-                            vals.sequencer.pattern = vals.sequencer.pattern.slice(temp).concat(vals.sequencer.pattern.slice(0,temp));
-                    
-                        var style = {
-                            background:{fill:'rgba(200,200,200,1)'},
-                            markings: {
-                                fill:{fill:'rgba(150,150,150,1)'},
-                                stroke:{stroke:'rgba(150,150,150,1)', lineWidth:1}, 
-                            },
-                            rangeslide:{
-                                handle:'rgba(240,240,240,1)',
-                                backing:'rgba(150,150,150,1)',
-                                slot:'rgba(50,50,50,1)',
-                                invisibleHandle:'rgba(0,0,0,0)',
-                                span:'rgba(220,220,220,1)',
-                            },
-                            rangeslide_loop:{
-                                handle:'rgba(240,240,240,1)',
-                                backing:'rgba(150,150,150,1)',
-                                slot:'rgba(50,50,50,1)',
-                                span:'rgba(255,247,145,0.5)',
-                            },
-                            button:{
-                                background__up__fill:'rgba(220,220,220,1)', 
-                                background__hover__fill:'rgba(240,240,240,1)', 
-                                background__hover_press__fill:'rgba(180,180,180,1)',
-                            },
-                            checkbox:{
-                                backing:'rgba(229, 229, 229,1)',
-                                check:'rgba(252,252,252,1)',
-                            },
-                            checkbox_loop:{
-                                backing:'rgba(229, 221, 112,1)',
-                                check:'rgba(252,244,128,1)',
-                            },
-                        };
-                    
-                        var design = {
-                            name: 'basicSequencer_midiOut',
-                            category:'sequencers',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], style:style.background }},
-                    
-                                //midi out
-                                    {type:'connectionNode_data', name:'midiout', data:{ x: -5, y: 11.25, width: 5, height: 17.5 }},
-                    
-                                //main sequencer
-                                    {type:'sequencer', name:'main', data:{ x:20, y:20, width:770, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
-                                        horizontalStripStyle_pattern:vals.sequencer.pattern,
-                                        event:function(event){
-                                            for(var a = 0; a < event.length; a++){
-                                                object.elements.connectionNode_data.midiout.send('midinumber',{num:midiNumber_line_converter(event[a].line), velocity:event[a].strength});
-                                            }
-                                        },
-                                        onchangeviewarea:function(data){ object.elements.rangeslide.viewselect.set( {start:data.left, end:data.right}, false ); },
-                                    }},
-                                    {type:'rangeslide', name:'viewselect_y', data:{ x:10, y:20, height:170, width: 10, angle:0, handleHeight:1/16, spanWidth:1, style:style.rangeslide }},
-                                    {type:'rangeslide', name:'viewselect_x', data:{ x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},   
-                    
-                                //follow playhead
-                                    {type:'checkbox_rect', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
-                                        onchange:function(value){object.elements.sequencer.main.automove(value);},
-                                    }},
-                    
-                                //loop control
-                                    {type:'checkbox_rect', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
-                                        onchange:function(value){object.elements.sequencer.main.loopActive(value);},
-                                    }},
-                                    {type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
-                    
-                                //progression
-                                    {type:'connectionNode_data', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
-                                        onreceive:function(){object.elements.sequencer.main.progress();},
-                                    }},
-                                    {type:'button_rect', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
-                                        onpress:function(){object.elements.sequencer.main.progress();},
-                                    }},
-                                    {type:'path', name:'progress_arrow', data:{ points:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
-                    
-                                //reset
-                                    {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
-                                        onreceive:function(){object.elements.sequencer.main.playheadPosition(0);},
-                                    }},
-                                    {type:'button_rect', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
-                                        onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
-                                    }},
-                                    {type:'path', name:'reset_arrow', data:{ points:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
-                                    {type:'path', name:'reset_line', data:{ points:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
-                            ]
-                        };
-                    
-                        //internal functions
-                            function midiNumber_line_converter(num){ return vals.sequencer.midiRange.top - num; }
-                    
-                        //main object
-                            var object = alphaUnit.builder(this.basicSequencer,design);
-                    
-                        //wiring
-                            object.elements.rangeslide.viewselect_y.onchange = function(values){ object.elements.sequencer.main.viewarea({topLeft:{y:values.start}, bottomRight:{y:values.end}},false); };
-                            object.elements.rangeslide.viewselect_x.onchange = function(values){ object.elements.sequencer.main.viewarea({topLeft:{x:values.start}, bottomRight:{x:values.end}},false); };
-                            object.elements.rangeslide.loopSelect.onchange = function(values){ 
-                                var a = Math.round(values.start*vals.sequencer.width);
-                                var b = Math.round(values.end*vals.sequencer.width);
-                                if(b == 0){b = 1;}
-                                object.elements.sequencer.main.loopPeriod(a,b);
-                            };
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    loop:{
-                                        active: object.elements.checkbox_rect.loopActive.get(),
-                                        range: object.elements.rangeslide.loopSelect.get(),
-                                    },
-                                    autofollow: object.elements.checkbox_rect.followPlayhead.get(),
-                                    notes: object.elements.sequencer.main.getAllSignals(),
-                                    viewarea:{
-                                        horizontal: object.elements.rangeslide.viewselect_y.get(),
-                                        vertical: object.elements.rangeslide.viewselect_x.get(),
-                                    }
-                                };
-                            };
-                            object.importData = function(data){
-                                object.elements.sequencer.main.addSignals(data.notes);
-                                object.i.loopActive(data.loop.active);
-                                object.elements.rangeslide.loopSelect.set(data.loop.range);
-                                object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
-                                object.elements.rangeslide.viewselect_y.set(data.viewarea.horizontal);
-                                object.elements.rangeslide.viewselect_x.set(data.viewarea.vertical);
-                            };
-                    
-                        //interface
-                            object.i = {
-                                addNote:function(number, position, length, strength=1){object.elements.sequencer.main.addSignal(midiNumber_line_converter(number), position, length, strength);},
-                                addNotes:function(data){ for(var a = 0; a < data.length; a++){ this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength); } },
-                                getNotes:function(){return object.elements.sequencer.main.getAllSignals();},
-                                loopActive:function(a){object.elements.checkbox_rect.loopActive.set(a);},
-                                step:object.elements.sequencer.step,
-                            };
-                    
-                        //setup
-                            object.elements.rangeslide.viewselect_y.set({start:0.3, end:0.7});
-                            
-                        return object;
-                    };
-                    
-                    this.basicSequencer_midiOut.metadata = {
-                        name:'Basic Sequencer (Midi Out)',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/basicSequencer_midiOut/'
-                    };
                     this.launchpad = function(x,y,a){
                         var values = {
                             xCount:8, yCount:8,
@@ -16453,6 +16289,170 @@
                         //callbacks
                             this.commands = function(){};
                             this.pageChange = function(){};
+                    };
+                    this.basicSequencer_midiOut = function(x,y,a){
+                        var vals = {
+                            sequencer:{
+                                width:64, height:undefined,
+                                midiRange:{ bottom:24, top:131 },
+                                pattern:[0,0,1,0,1,0,1,0,0,1,0,1],
+                            }
+                        };
+                        vals.sequencer.height = vals.sequencer.midiRange.top - vals.sequencer.midiRange.bottom + 1;
+                        //calculate pattern based on midi range
+                            var temp = vals.sequencer.pattern.length - ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(workspace.library.audio.num2name(vals.sequencer.midiRange.top).slice(1))
+                            vals.sequencer.pattern = vals.sequencer.pattern.slice(temp).concat(vals.sequencer.pattern.slice(0,temp));
+                    
+                        var style = {
+                            background:{fill:'rgba(200,200,200,1)'},
+                            markings: {
+                                fill:{fill:'rgba(150,150,150,1)'},
+                                stroke:{stroke:'rgba(150,150,150,1)', lineWidth:1}, 
+                            },
+                            rangeslide:{
+                                handle:'rgba(240,240,240,1)',
+                                backing:'rgba(150,150,150,1)',
+                                slot:'rgba(50,50,50,1)',
+                                invisibleHandle:'rgba(0,0,0,0)',
+                                span:'rgba(220,220,220,1)',
+                            },
+                            rangeslide_loop:{
+                                handle:'rgba(240,240,240,1)',
+                                backing:'rgba(150,150,150,1)',
+                                slot:'rgba(50,50,50,1)',
+                                span:'rgba(255,247,145,0.5)',
+                            },
+                            button:{
+                                background__up__fill:'rgba(220,220,220,1)', 
+                                background__hover__fill:'rgba(240,240,240,1)', 
+                                background__hover_press__fill:'rgba(180,180,180,1)',
+                            },
+                            checkbox:{
+                                backing:'rgba(229, 229, 229,1)',
+                                check:'rgba(252,252,252,1)',
+                            },
+                            checkbox_loop:{
+                                backing:'rgba(229, 221, 112,1)',
+                                check:'rgba(252,244,128,1)',
+                            },
+                        };
+                    
+                        var design = {
+                            name: 'basicSequencer_midiOut',
+                            category:'sequencers',
+                            collection: 'alpha',
+                            x:x, y:y, a:a,
+                            space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
+                            // spaceOutline:true,
+                            elements:[
+                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], style:style.background }},
+                    
+                                //midi out
+                                    {type:'connectionNode_data', name:'midiout', data:{ x: -5, y: 11.25, width: 5, height: 17.5 }},
+                    
+                                //main sequencer
+                                    {type:'sequencer', name:'main', data:{ x:20, y:20, width:770, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                                        horizontalStripStyle_pattern:vals.sequencer.pattern,
+                                        event:function(event){
+                                            for(var a = 0; a < event.length; a++){
+                                                object.elements.connectionNode_data.midiout.send('midinumber',{num:midiNumber_line_converter(event[a].line), velocity:event[a].strength});
+                                            }
+                                        },
+                                        onchangeviewarea:function(data){ object.elements.rangeslide.viewselect.set( {start:data.left, end:data.right}, false ); },
+                                    }},
+                                    {type:'rangeslide', name:'viewselect_y', data:{ x:10, y:20, height:170, width: 10, angle:0, handleHeight:1/16, spanWidth:1, style:style.rangeslide }},
+                                    {type:'rangeslide', name:'viewselect_x', data:{ x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},   
+                    
+                                //follow playhead
+                                    {type:'checkbox_rect', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
+                                        onchange:function(value){object.elements.sequencer.main.automove(value);},
+                                    }},
+                    
+                                //loop control
+                                    {type:'checkbox_rect', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
+                                        onchange:function(value){object.elements.sequencer.main.loopActive(value);},
+                                    }},
+                                    {type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
+                    
+                                //progression
+                                    {type:'connectionNode_data', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
+                                        onreceive:function(){object.elements.sequencer.main.progress();},
+                                    }},
+                                    {type:'button_rect', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
+                                        onpress:function(){object.elements.sequencer.main.progress();},
+                                    }},
+                                    {type:'path', name:'progress_arrow', data:{ points:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
+                    
+                                //reset
+                                    {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
+                                        onreceive:function(){object.elements.sequencer.main.playheadPosition(0);},
+                                    }},
+                                    {type:'button_rect', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
+                                        onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
+                                    }},
+                                    {type:'path', name:'reset_arrow', data:{ points:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
+                                    {type:'path', name:'reset_line', data:{ points:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
+                            ]
+                        };
+                    
+                        //internal functions
+                            function midiNumber_line_converter(num){ return vals.sequencer.midiRange.top - num; }
+                    
+                        //main object
+                            var object = alphaUnit.builder(this.basicSequencer,design);
+                    
+                        //wiring
+                            object.elements.rangeslide.viewselect_y.onchange = function(values){ object.elements.sequencer.main.viewarea({topLeft:{y:values.start}, bottomRight:{y:values.end}},false); };
+                            object.elements.rangeslide.viewselect_x.onchange = function(values){ object.elements.sequencer.main.viewarea({topLeft:{x:values.start}, bottomRight:{x:values.end}},false); };
+                            object.elements.rangeslide.loopSelect.onchange = function(values){ 
+                                var a = Math.round(values.start*vals.sequencer.width);
+                                var b = Math.round(values.end*vals.sequencer.width);
+                                if(b == 0){b = 1;}
+                                object.elements.sequencer.main.loopPeriod(a,b);
+                            };
+                    
+                        //import/export
+                            object.exportData = function(){
+                                return {
+                                    loop:{
+                                        active: object.elements.checkbox_rect.loopActive.get(),
+                                        range: object.elements.rangeslide.loopSelect.get(),
+                                    },
+                                    autofollow: object.elements.checkbox_rect.followPlayhead.get(),
+                                    notes: object.elements.sequencer.main.getAllSignals(),
+                                    viewarea:{
+                                        horizontal: object.elements.rangeslide.viewselect_y.get(),
+                                        vertical: object.elements.rangeslide.viewselect_x.get(),
+                                    }
+                                };
+                            };
+                            object.importData = function(data){
+                                object.elements.sequencer.main.addSignals(data.notes);
+                                object.i.loopActive(data.loop.active);
+                                object.elements.rangeslide.loopSelect.set(data.loop.range);
+                                object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
+                                object.elements.rangeslide.viewselect_y.set(data.viewarea.horizontal);
+                                object.elements.rangeslide.viewselect_x.set(data.viewarea.vertical);
+                            };
+                    
+                        //interface
+                            object.i = {
+                                addNote:function(number, position, length, strength=1){object.elements.sequencer.main.addSignal(midiNumber_line_converter(number), position, length, strength);},
+                                addNotes:function(data){ for(var a = 0; a < data.length; a++){ this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength); } },
+                                getNotes:function(){return object.elements.sequencer.main.getAllSignals();},
+                                loopActive:function(a){object.elements.checkbox_rect.loopActive.set(a);},
+                                step:object.elements.sequencer.step,
+                            };
+                    
+                        //setup
+                            object.elements.rangeslide.viewselect_y.set({start:0.3, end:0.7});
+                            
+                        return object;
+                    };
+                    
+                    this.basicSequencer_midiOut.metadata = {
+                        name:'Basic Sequencer (Midi Out)',
+                        helpURL:'https://metasophiea.com/curve/help/units/alpha/basicSequencer_midiOut/'
                     };
                 };
                 
@@ -16824,379 +16824,74 @@
                         name:'Audio Duplicator',
                         helpURL:'https://metasophiea.com/curve/help/units/alpha/audioDuplicator/'
                     };
-                    this.basicMixer = function(x,y,a){
-                        var connectionCount = 8;
+                    this.universalreadout = function(x,y,a){
                         var style = {
                             background:{fill:'rgba(200,200,200,1)'},
-                            markings: {fill:'rgba(150,150,150,1)'},
-                            h1: {fill:'rgba(0,0,0,1)', font:'8pt Courier New'},
-                            h2: {fill:'rgb(150,150,150)', font:'5pt Courier New'},
-                    
-                            dial:{
-                                handle: 'rgba(220,220,220,1)',
-                                slot: 'rgba(50,50,50,1)',
-                                needle: 'rgba(250,150,150,1)',
-                            }
+                            text:{fill:'rgba(0,0,0,1)', size:0.75, font:'Courier New'},
                         };
                         var design = {
-                            name:'basicMixer',
-                            category: 'misc',
+                            name: 'universalreadout',
+                            category:'misc',
                             collection: 'alpha',
                             x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'connectionNode_audio', name:'output_0', data:{ x:-10, y:5, width:20, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'output_1', data:{ x:-10, y:30, width:20, height:20, isAudioOutput:true }},
+                            space:[
+                                {x:-5,y:-5}, 
+                                {x:10,y:-10}, 
                     
-                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}], style:style.background }},
+                                {x:25,y:-5}, 
+                                {x:30,y:10}, 
                     
-                                {type:'text', name:'gain', data:{ x:77.5, y:8, text:'gain', style:style.h2 } }, 
-                                {type:'text', name:'pan', data:{  x:54,   y:8, text:'pan', style:style.h2 } }, 
-                                
-                                {type:'rectangle', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, style:style.markings }},
-                                {type:'rectangle', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, style:style.markings }},
-                                {type:'rectangle', name:'down', data:{ x:10, y:6, width:2, height:35, style:style.markings }},
-                                {type:'rectangle', name:'inTo0', data:{ x:2, y:14, width:10, height:2, style:style.markings }},
-                                {type:'rectangle', name:'inTo1', data:{ x:2, y:39, width:10, height:2, style:style.markings }},
+                                {x:25,y:25}, 
+                                {x:10,y:30}, 
+                    
+                                {x:-5,y:25}, 
+                                {x:-10,y:10}, 
                             ],
-                        };
-                    
-                        //dynamic design
-                        for(var a = 0; a < connectionCount; a++){
-                            design.elements.unshift(
-                                {type:'connectionNode_audio', name:'input_'+a, data:{ 
-                                    x:90, y:10+(a*25), width:20, height:20 
-                                }},
-                            );
-                    
-                            design.elements.push(
-                                {type:'rectangle', name:'line_'+a, data:{
-                                    x:23, y:19.1+a*25, width:75, height:2, 
-                                    style:style.markings,
-                                }}
-                            );
-                    
-                            design.elements.push(
-                                {type:'dial_continuous',name:'gain_'+a,data:{
-                                    x:85, y:20+a*25, r:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }}
-                            );
-                            design.elements.push(
-                                {type:'dial_continuous',name:'pan_'+a,data:{
-                                    x:60, y:20+a*25, r:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }}
-                            );
-                        }
-                    
-                        //main object
-                            var object = alphaUnit.builder(this.basicMixer,design);
-                    
-                        
-                    
-                        //internal circuitry
-                            for(var a = 0; a < connectionCount; a++){
-                                object['splitter_'+a] = new workspace.interface.circuit.alpha.channelMultiplier(workspace.library.audio.context,2);
-                                object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
-                                object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_0'].in() );
-                                object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_1'].in() );
-                    
-                                object.elements.dial_continuous['gain_'+a].onchange = function(a){
-                                    return function(value){
-                                        object['splitter_'+a].inGain(value);
-                                    }
-                                }(a);
-                                object.elements.dial_continuous['gain_'+a].onchange = function(a){
-                                    return function(value){
-                                        object['splitter_'+a].outGain(0,value);
-                                        object['splitter_'+a].outGain(1,1-value);
-                                    }
-                                }(a);
-                            }
-                    
-                        //interface
-                            object.i = {
-                                gain:function(track,value){object.elements.dial_continuous['gain_'+track].set(value);},
-                                pan:function(track,value){object.elements.dial_continuous['pan_'+track].set(value);},
-                            };
-                    
-                        //setup
-                            for(var a = 0; a < connectionCount; a++){
-                                object.i.gain(a,0.5);
-                                object.i.pan(a,0.5);
-                            }
-                        
-                        return object;
-                    };
-                    
-                    this.basicMixer.metadata = {
-                        name:'Basic Audio Mixer',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/basicAudioMixer/'
-                    };
-                    this.data_duplicator = function(x,y,a){
-                        var style = {
-                            background:{fill:'rgba(200,200,200,1)'},
-                            markings:{fill:'rgba(150,150,150,1)'},
-                        };
-                        var design = {
-                            name:'data_duplicator',
-                            category:'misc',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
                             // spaceOutline: true,
                             elements:[
-                                {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
-                                {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
-                                {type:'connectionNode_data', name:'input', data:{ 
-                                    x:45, y:5, width:20, height:20,
-                                    onreceive:function(address,data){
-                                        object.io.data.output_1.send(address,data);
-                                        object.io.data.output_2.send(address,data);
-                                    }
+                                {type:'circle', name:'base', data:{
+                                    x:10, y:10, r:20, style:style.background,
                                 }},
-                    
-                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], style:style.background }},
-                    
-                                {type:'polygon', name:'upperArrow', data:{ points:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], style:style.markings }},
-                                {type:'polygon', name:'lowerArrow', data:{ points:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], style:style.markings }},
-                                {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, style:style.markings }},
-                                {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, style:style.markings }},
-                                {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, style:style.markings }},
+                                {type:'connectionNode_data', name:'in', data:{
+                                    x: 0, y: 0, width: 20, height: 20,
+                                    onreceive: function(address,data){ print('address: '+address+' data: '+JSON.stringify(data)); }
+                                }},
                             ]
                         };
                     
                         //main object
-                            var object = alphaUnit.builder(this.data_duplicator,design);
-                        
-                        return object;
-                    
-                    };
-                    
-                    this.data_duplicator.metadata = {
-                        name:'Data Duplicator',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/dataDuplicator/'
-                    };
-                    
-                    //Operation Note:
-                    //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
-                    //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
-                    //  then the 2nd port
-                    this.pulseGenerator = function(x,y,a){
-                        var maxTempo = 240;
-                    
-                        var style = {
-                            background:{fill:'rgba(200,200,200,1)'},
-                            text:{fill:'rgba(0,0,0,1)', size:4, font:'Courier New'},
-                    
-                            dial:{
-                                handle: 'rgba(220,220,220,1)',
-                                slot: 'rgba(50,50,50,1)',
-                                needle: 'rgba(250,150,150,1)',
-                            }
-                        };
-                        var design = {
-                            name: 'pulseGenerator',
-                            category:'misc',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'connectionNode_data', name:'out', data:{
-                                    x: -5, y: 11.25, width: 5, height: 17.5,
-                                }},
-                                {type:'connectionNode_data', name:'sync', data:{
-                                    x: 115, y: 11.25, width: 5, height: 17.5,
-                                    receive:function(){ object.elements.button_rect.sync.press();},
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ points:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], style:style.background }},
-                    
-                                {type:'button_rect', name:'syncButton', data:{
-                                    x:102.5, y: 11.25, width:10, height: 17.5,
-                                    selectable:false, 
-                                    style:{ 
-                                        background__up__fill:'rgba(175,175,175,1)', 
-                                        background__hover__fill:'rgba(220,220,220,1)', 
-                                        background__hover_press__fill:'rgba(150,150,150,1)'
-                                    }, 
-                                    onpress:function(){updateTempo(tempo)},
-                                }},
-                                {type:'dial_continuous',name:'tempo',data:{
-                                    x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = alphaUnit.builder(this.pulseGenerator,design);
-                    
-                        //internal circuitry
-                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return object.elements.dial_continuous.tempo.get();
-                            };
-                            object.importData = function(data){
-                                object.elements.dial_continuous.tempo.set(data);
-                            };
+                            var object = alphaUnit.builder(this.universalreadout,design);
                     
                         //internal functions
-                            var interval = null;
-                            var tempo = 120;
-                            function updateTempo(newTempo){
-                                //update readout
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
-                                        workspace.library.misc.padString(newTempo,3,' ')+'bpm'
-                                    );
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                            var lines = [];
+                            var lineElements = [];
+                            var lineLimit = 10;
+                            var tickerCount = 0;
+                            function print(text){
+                                //add ticker to text
+                                text = (tickerCount++)+'> '+text;
                     
-                                //update interval
-                                    if(interval){ clearInterval(interval); }
-                                    if(newTempo > 0){
-                                        interval = setInterval(function(){
-                                            object.io.data.out.send('pulse');
-                                        },1000*(60/newTempo));
-                                    }
+                                //add the new text to the list, and if the list becomes too long, remove the oldest item
+                                lines.unshift(text);
+                                if( lines.length > lineLimit ){ lines.pop(); }
                     
-                                object.io.data.out.send('pulse');
-                                tempo = newTempo;
+                                //remove all the text elements
+                                for(var a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
+                                lineElements = [];
+                    
+                                //write in the new list
+                                for(var a = 0; a < lines.length; a++){
+                                    lineElements[a] = workspace.interface.part.alpha.builder('text','universalreadout_'+a,{ x:40, y:a*5, size:style.text.size, text:lines[a], style:style.text })
+                                    object.append( lineElements[a] );
+                                }
                             }
-                    
-                        //interface
-                            object.i = {
-                                setTempo:function(value){
-                                    object.elements.dial_continuous.tempo.set(value);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.tempo.set(0.5);
                     
                         return object;
                     };
                     
-                    this.pulseGenerator.metadata = {
-                        name:'Pulse Generator',
-                        helpURL:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator/'
-                    };
-                    this.pulseGenerator_hyper = function(x,y,a){
-                        var maxTempo = 999;
-                    
-                        var style = {
-                            background:{fill:'rgba(200,200,200,1)'},
-                            text:{fill:'rgba(0,0,0,1)', size:4, font:'Courier New'},
-                    
-                            dial:{
-                                handle: 'rgba(220,220,220,1)',
-                                slot: 'rgba(50,50,50,1)',
-                                needle: 'rgba(250,150,150,1)',
-                            }
-                        };
-                        var design = {
-                            name: 'pulseGenerator_hyper',
-                            category:'misc',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'connectionNode_data', name:'out', data:{
-                                    x: -5, y: 11.25, width: 5, height: 17.5,
-                                }},
-                                {type:'connectionNode_data', name:'sync', data:{
-                                    x: 115, y: 11.25, width: 5, height: 17.5,
-                                    receive:function(){ object.elements.button_rect.sync.press();},
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ points:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], style:style.background }},
-                    
-                                {type:'button_rect', name:'syncButton', data:{
-                                    x:102.5, y: 11.25, width:10, height: 17.5,
-                                    selectable:false, 
-                                    style:{ 
-                                        background__up__fill:'rgba(175,175,175,1)', 
-                                        background__hover__fill:'rgba(220,220,220,1)', 
-                                        background__hover_press__fill:'rgba(150,150,150,1)'
-                                    }, 
-                                    onpress:function(){updateTempo(tempo)},
-                                }},
-                                {type:'dial_continuous',name:'tempo',data:{
-                                    x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = alphaUnit.builder(this.pulseGenerator_hyper,design);
-                    
-                        //internal circuitry
-                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return object.elements.dial_continuous.tempo.get();
-                            };
-                            object.importData = function(data){
-                                object.elements.dial_continuous.tempo.set(data);
-                            };
-                    
-                        //internal functions
-                            var interval = null;
-                            var tempo = 120;
-                            function updateTempo(newTempo){
-                                //update readout
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
-                                        workspace.library.misc.padString(newTempo,3,' ')+'bpm'
-                                    );
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
-                    
-                                //update interval
-                                    if(interval){ clearInterval(interval); }
-                                    if(newTempo > 0){
-                                        interval = setInterval(function(){
-                                            object.io.data.out.send('pulse');
-                                        },1000*(60/newTempo));
-                                    }
-                    
-                                object.io.data.out.send('pulse');
-                                tempo = newTempo;
-                            }
-                    
-                        //interface
-                            object.i = {
-                                setTempo:function(value){
-                                    object.elements.dial_continuous.tempo.set(value);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.tempo.set(0.5);
-                    
-                        return object;
-                    };
-                    
-                    this.pulseGenerator_hyper.metadata = {
-                        name:'Pulse Generator (Hyper)',
-                        helpURL:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator_hyper/'
+                    this.universalreadout.metadata = {
+                        name:'Universal Readout',
+                        helpURL:'https://metasophiea.com/curve/help/units/alpha/universalReadout/'
                     };
                     this.testObject = function(x,y,a){
                         var design = {
@@ -17343,74 +17038,379 @@
                         name:'Test Object',
                         helpURL:'https://metasophiea.com/curve/help/units/alpha/testObject/'
                     };
-                    this.universalreadout = function(x,y,a){
+                    this.pulseGenerator_hyper = function(x,y,a){
+                        var maxTempo = 999;
+                    
                         var style = {
                             background:{fill:'rgba(200,200,200,1)'},
-                            text:{fill:'rgba(0,0,0,1)', size:0.75, font:'Courier New'},
+                            text:{fill:'rgba(0,0,0,1)', size:4, font:'Courier New'},
+                    
+                            dial:{
+                                handle: 'rgba(220,220,220,1)',
+                                slot: 'rgba(50,50,50,1)',
+                                needle: 'rgba(250,150,150,1)',
+                            }
                         };
                         var design = {
-                            name: 'universalreadout',
+                            name: 'pulseGenerator_hyper',
                             category:'misc',
                             collection: 'alpha',
                             x:x, y:y, a:a,
                             space:[
-                                {x:-5,y:-5}, 
-                                {x:10,y:-10}, 
-                    
-                                {x:25,y:-5}, 
-                                {x:30,y:10}, 
-                    
-                                {x:25,y:25}, 
-                                {x:10,y:30}, 
-                    
-                                {x:-5,y:25}, 
-                                {x:-10,y:10}, 
-                            ],
+                                {x:0,y:10},{x:10,y:0},
+                                {x:100,y:0},{x:115,y:10},
+                                {x:115,y:30},{x:100,y:40},
+                                {x:10,y:40},{x:0,y:30}
+                            ], 
                             // spaceOutline: true,
                             elements:[
-                                {type:'circle', name:'base', data:{
-                                    x:10, y:10, r:20, style:style.background,
+                                {type:'connectionNode_data', name:'out', data:{
+                                    x: -5, y: 11.25, width: 5, height: 17.5,
                                 }},
-                                {type:'connectionNode_data', name:'in', data:{
-                                    x: 0, y: 0, width: 20, height: 20,
-                                    onreceive: function(address,data){ print('address: '+address+' data: '+JSON.stringify(data)); }
+                                {type:'connectionNode_data', name:'sync', data:{
+                                    x: 115, y: 11.25, width: 5, height: 17.5,
+                                    receive:function(){ object.elements.button_rect.sync.press();},
                                 }},
+                    
+                                {type:'polygon', name:'backing', data:{ points:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], style:style.background }},
+                    
+                                {type:'button_rect', name:'syncButton', data:{
+                                    x:102.5, y: 11.25, width:10, height: 17.5,
+                                    selectable:false, 
+                                    style:{ 
+                                        background__up__fill:'rgba(175,175,175,1)', 
+                                        background__hover__fill:'rgba(220,220,220,1)', 
+                                        background__hover_press__fill:'rgba(150,150,150,1)'
+                                    }, 
+                                    onpress:function(){updateTempo(tempo)},
+                                }},
+                                {type:'dial_continuous',name:'tempo',data:{
+                                    x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                }},
+                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
                             ]
                         };
                     
                         //main object
-                            var object = alphaUnit.builder(this.universalreadout,design);
+                            var object = alphaUnit.builder(this.pulseGenerator_hyper,design);
+                    
+                        //internal circuitry
+                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                    
+                        //import/export
+                            object.exportData = function(){
+                                return object.elements.dial_continuous.tempo.get();
+                            };
+                            object.importData = function(data){
+                                object.elements.dial_continuous.tempo.set(data);
+                            };
                     
                         //internal functions
-                            var lines = [];
-                            var lineElements = [];
-                            var lineLimit = 10;
-                            var tickerCount = 0;
-                            function print(text){
-                                //add ticker to text
-                                text = (tickerCount++)+'> '+text;
+                            var interval = null;
+                            var tempo = 120;
+                            function updateTempo(newTempo){
+                                //update readout
+                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                        workspace.library.misc.padString(newTempo,3,' ')+'bpm'
+                                    );
+                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
                     
-                                //add the new text to the list, and if the list becomes too long, remove the oldest item
-                                lines.unshift(text);
-                                if( lines.length > lineLimit ){ lines.pop(); }
+                                //update interval
+                                    if(interval){ clearInterval(interval); }
+                                    if(newTempo > 0){
+                                        interval = setInterval(function(){
+                                            object.io.data.out.send('pulse');
+                                        },1000*(60/newTempo));
+                                    }
                     
-                                //remove all the text elements
-                                for(var a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
-                                lineElements = [];
-                    
-                                //write in the new list
-                                for(var a = 0; a < lines.length; a++){
-                                    lineElements[a] = workspace.interface.part.alpha.builder('text','universalreadout_'+a,{ x:40, y:a*5, size:style.text.size, text:lines[a], style:style.text })
-                                    object.append( lineElements[a] );
-                                }
+                                object.io.data.out.send('pulse');
+                                tempo = newTempo;
                             }
+                    
+                        //interface
+                            object.i = {
+                                setTempo:function(value){
+                                    object.elements.dial_continuous.tempo.set(value);
+                                },
+                            };
+                    
+                        //setup
+                            object.elements.dial_continuous.tempo.set(0.5);
                     
                         return object;
                     };
                     
-                    this.universalreadout.metadata = {
-                        name:'Universal Readout',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/universalReadout/'
+                    this.pulseGenerator_hyper.metadata = {
+                        name:'Pulse Generator (Hyper)',
+                        helpURL:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator_hyper/'
+                    };
+                    this.pulseGenerator = function(x,y,a){
+                        var maxTempo = 240;
+                    
+                        var style = {
+                            background:{fill:'rgba(200,200,200,1)'},
+                            text:{fill:'rgba(0,0,0,1)', size:4, font:'Courier New'},
+                    
+                            dial:{
+                                handle: 'rgba(220,220,220,1)',
+                                slot: 'rgba(50,50,50,1)',
+                                needle: 'rgba(250,150,150,1)',
+                            }
+                        };
+                        var design = {
+                            name: 'pulseGenerator',
+                            category:'misc',
+                            collection: 'alpha',
+                            x:x, y:y, a:a,
+                            space:[
+                                {x:0,y:10},{x:10,y:0},
+                                {x:100,y:0},{x:115,y:10},
+                                {x:115,y:30},{x:100,y:40},
+                                {x:10,y:40},{x:0,y:30}
+                            ], 
+                            // spaceOutline: true,
+                            elements:[
+                                {type:'connectionNode_data', name:'out', data:{
+                                    x: -5, y: 11.25, width: 5, height: 17.5,
+                                }},
+                                {type:'connectionNode_data', name:'sync', data:{
+                                    x: 115, y: 11.25, width: 5, height: 17.5,
+                                    receive:function(){ object.elements.button_rect.sync.press();},
+                                }},
+                    
+                                {type:'polygon', name:'backing', data:{ points:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], style:style.background }},
+                    
+                                {type:'button_rect', name:'syncButton', data:{
+                                    x:102.5, y: 11.25, width:10, height: 17.5,
+                                    selectable:false, 
+                                    style:{ 
+                                        background__up__fill:'rgba(175,175,175,1)', 
+                                        background__hover__fill:'rgba(220,220,220,1)', 
+                                        background__hover_press__fill:'rgba(150,150,150,1)'
+                                    }, 
+                                    onpress:function(){updateTempo(tempo)},
+                                }},
+                                {type:'dial_continuous',name:'tempo',data:{
+                                    x:20, y:20, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                }},
+                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+                            ]
+                        };
+                    
+                        //main object
+                            var object = alphaUnit.builder(this.pulseGenerator,design);
+                    
+                        //internal circuitry
+                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                    
+                        //import/export
+                            object.exportData = function(){
+                                return object.elements.dial_continuous.tempo.get();
+                            };
+                            object.importData = function(data){
+                                object.elements.dial_continuous.tempo.set(data);
+                            };
+                    
+                        //internal functions
+                            var interval = null;
+                            var tempo = 120;
+                            function updateTempo(newTempo){
+                                //update readout
+                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                        workspace.library.misc.padString(newTempo,3,' ')+'bpm'
+                                    );
+                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                    
+                                //update interval
+                                    if(interval){ clearInterval(interval); }
+                                    if(newTempo > 0){
+                                        interval = setInterval(function(){
+                                            object.io.data.out.send('pulse');
+                                        },1000*(60/newTempo));
+                                    }
+                    
+                                object.io.data.out.send('pulse');
+                                tempo = newTempo;
+                            }
+                    
+                        //interface
+                            object.i = {
+                                setTempo:function(value){
+                                    object.elements.dial_continuous.tempo.set(value);
+                                },
+                            };
+                    
+                        //setup
+                            object.elements.dial_continuous.tempo.set(0.5);
+                    
+                        return object;
+                    };
+                    
+                    this.pulseGenerator.metadata = {
+                        name:'Pulse Generator',
+                        helpURL:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator/'
+                    };
+                    this.data_duplicator = function(x,y,a){
+                        var style = {
+                            background:{fill:'rgba(200,200,200,1)'},
+                            markings:{fill:'rgba(150,150,150,1)'},
+                        };
+                        var design = {
+                            name:'data_duplicator',
+                            category:'misc',
+                            collection: 'alpha',
+                            x:x, y:y, a:a,
+                            space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                            // spaceOutline: true,
+                            elements:[
+                                {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
+                                {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
+                                {type:'connectionNode_data', name:'input', data:{ 
+                                    x:45, y:5, width:20, height:20,
+                                    onreceive:function(address,data){
+                                        object.io.data.output_1.send(address,data);
+                                        object.io.data.output_2.send(address,data);
+                                    }
+                                }},
+                    
+                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], style:style.background }},
+                    
+                                {type:'polygon', name:'upperArrow', data:{ points:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], style:style.markings }},
+                                {type:'polygon', name:'lowerArrow', data:{ points:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], style:style.markings }},
+                                {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, style:style.markings }},
+                                {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, style:style.markings }},
+                                {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, style:style.markings }},
+                            ]
+                        };
+                    
+                        //main object
+                            var object = alphaUnit.builder(this.data_duplicator,design);
+                        
+                        return object;
+                    
+                    };
+                    
+                    this.data_duplicator.metadata = {
+                        name:'Data Duplicator',
+                        helpURL:'https://metasophiea.com/curve/help/units/alpha/dataDuplicator/'
+                    };
+                    
+                    //Operation Note:
+                    //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
+                    //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
+                    //  then the 2nd port
+                    this.basicMixer = function(x,y,a){
+                        var connectionCount = 8;
+                        var style = {
+                            background:{fill:'rgba(200,200,200,1)'},
+                            markings: {fill:'rgba(150,150,150,1)'},
+                            h1: {fill:'rgba(0,0,0,1)', font:'8pt Courier New'},
+                            h2: {fill:'rgb(150,150,150)', font:'5pt Courier New'},
+                    
+                            dial:{
+                                handle: 'rgba(220,220,220,1)',
+                                slot: 'rgba(50,50,50,1)',
+                                needle: 'rgba(250,150,150,1)',
+                            }
+                        };
+                        var design = {
+                            name:'basicMixer',
+                            category: 'misc',
+                            collection: 'alpha',
+                            x:x, y:y, a:a,
+                            space:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
+                            // spaceOutline: true,
+                            elements:[
+                                {type:'connectionNode_audio', name:'output_0', data:{ x:-10, y:5, width:20, height:20, isAudioOutput:true }},
+                                {type:'connectionNode_audio', name:'output_1', data:{ x:-10, y:30, width:20, height:20, isAudioOutput:true }},
+                    
+                                {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}], style:style.background }},
+                    
+                                {type:'text', name:'gain', data:{ x:77.5, y:8, text:'gain', style:style.h2 } }, 
+                                {type:'text', name:'pan', data:{  x:54,   y:8, text:'pan', style:style.h2 } }, 
+                                
+                                {type:'rectangle', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, style:style.markings }},
+                                {type:'rectangle', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, style:style.markings }},
+                                {type:'rectangle', name:'down', data:{ x:10, y:6, width:2, height:35, style:style.markings }},
+                                {type:'rectangle', name:'inTo0', data:{ x:2, y:14, width:10, height:2, style:style.markings }},
+                                {type:'rectangle', name:'inTo1', data:{ x:2, y:39, width:10, height:2, style:style.markings }},
+                            ],
+                        };
+                    
+                        //dynamic design
+                        for(var a = 0; a < connectionCount; a++){
+                            design.elements.unshift(
+                                {type:'connectionNode_audio', name:'input_'+a, data:{ 
+                                    x:90, y:10+(a*25), width:20, height:20 
+                                }},
+                            );
+                    
+                            design.elements.push(
+                                {type:'rectangle', name:'line_'+a, data:{
+                                    x:23, y:19.1+a*25, width:75, height:2, 
+                                    style:style.markings,
+                                }}
+                            );
+                    
+                            design.elements.push(
+                                {type:'dial_continuous',name:'gain_'+a,data:{
+                                    x:85, y:20+a*25, r:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                }}
+                            );
+                            design.elements.push(
+                                {type:'dial_continuous',name:'pan_'+a,data:{
+                                    x:60, y:20+a*25, r:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                }}
+                            );
+                        }
+                    
+                        //main object
+                            var object = alphaUnit.builder(this.basicMixer,design);
+                    
+                        
+                    
+                        //internal circuitry
+                            for(var a = 0; a < connectionCount; a++){
+                                object['splitter_'+a] = new workspace.interface.circuit.alpha.channelMultiplier(workspace.library.audio.context,2);
+                                object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
+                                object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_0'].in() );
+                                object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_1'].in() );
+                    
+                                object.elements.dial_continuous['gain_'+a].onchange = function(a){
+                                    return function(value){
+                                        object['splitter_'+a].inGain(value);
+                                    }
+                                }(a);
+                                object.elements.dial_continuous['gain_'+a].onchange = function(a){
+                                    return function(value){
+                                        object['splitter_'+a].outGain(0,value);
+                                        object['splitter_'+a].outGain(1,1-value);
+                                    }
+                                }(a);
+                            }
+                    
+                        //interface
+                            object.i = {
+                                gain:function(track,value){object.elements.dial_continuous['gain_'+track].set(value);},
+                                pan:function(track,value){object.elements.dial_continuous['pan_'+track].set(value);},
+                            };
+                    
+                        //setup
+                            for(var a = 0; a < connectionCount; a++){
+                                object.i.gain(a,0.5);
+                                object.i.pan(a,0.5);
+                            }
+                        
+                        return object;
+                    };
+                    
+                    this.basicMixer.metadata = {
+                        name:'Basic Audio Mixer',
+                        helpURL:'https://metasophiea.com/curve/help/units/alpha/basicAudioMixer/'
                     };
                 };
                 

@@ -16,3 +16,4 @@ workspace.control.switch.enableSceneModification = !true;
 // workspace.control.switch.enableUnitInterface = !true;
 
 workspace.control.viewport.activeRender(true);
+workspace.control.viewport.stopMouseScroll(true);
