@@ -103,5 +103,5 @@ this.pulseGenerator_hyper = function(x,y,a){
 
 this.pulseGenerator_hyper.metadata = {
     name:'Pulse Generator (Hyper)',
-    helpURL:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator_hyper/'
+    helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator_hyper/'
 };

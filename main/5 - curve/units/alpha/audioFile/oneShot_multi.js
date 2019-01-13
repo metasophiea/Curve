@@ -173,5 +173,5 @@ this.oneShot_multi = function(x,y,a){
 
 this.oneShot_multi.metadata = {
     name:'One Shot (Multi)',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/oneShot_multi/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/oneShot_multi/'
 };

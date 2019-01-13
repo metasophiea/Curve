@@ -271,5 +271,5 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
 this.oneShot_multi_multiTrack.metadata = {
     name:'One Shot (Multi)(8 Track)',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/oneShot_multi_multiTrack/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/oneShot_multi_multiTrack/'
 };

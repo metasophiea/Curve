@@ -120,6 +120,6 @@ this.oneShot_single = function(x,y,a){
 
 this.oneShot_single.metadata = {
     name:'One Shot (Single)',
-    helpURL:'https://metasophiea.com/curve/help/objects/units/oneShot_single/'
+    helpURL:'https://curve.metasophiea.com/help/objects/units/oneShot_single/'
 };
 

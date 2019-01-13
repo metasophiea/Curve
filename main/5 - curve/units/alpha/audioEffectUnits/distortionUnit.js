@@ -147,5 +147,5 @@ this.distortionUnit = function(x,y,a){
 
 this.distortionUnit.metadata = {
     name:'Distortion Unit',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/distortionUnit/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/distortionUnit/'
 };

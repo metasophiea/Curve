@@ -160,5 +160,5 @@ this.basicSequencer_midiOut = function(x,y,a){
 
 this.basicSequencer_midiOut.metadata = {
     name:'Basic Sequencer (Midi Out)',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/basicSequencer_midiOut/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_midiOut/'
 };

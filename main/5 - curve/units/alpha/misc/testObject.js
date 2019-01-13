@@ -141,5 +141,5 @@ this.testObject = function(x,y,a){
 this.testObject.devUnit = true;
 this.testObject.metadata = {
     name:'Test Object',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/testObject/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/testObject/'
 };

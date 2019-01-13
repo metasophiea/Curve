@@ -1625,6 +1625,15 @@
     terrible, but it works. I probably need to write a new control object for it
 
 
+2018-07-08
+  Compilation Results
+  - workspace.js                        572 Kb   (100%)
+  - workspace.min.js                    200 Kb   ( 34.96%)
+  - workspace.min.js (web compressed)   38.8 Kb  (  5.78%)
+
+
+
+
 2018-07-06
   - fifth rewrite on the pianoroll, things are going pretty well this time. The
     'noteBlock' element has gotten an upgrade and the mouse interaction is being

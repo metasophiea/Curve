@@ -66,5 +66,5 @@ this.audioScope = function(x,y,a){
 
 this.audioScope.metadata = {
     name:'Audio Scope',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/audioScope/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/audioScope/'
 };

@@ -129,7 +129,7 @@ this.launchpad = function(x,y,a){
 
 this.launchpad.metadata = {
     name:'Launchpad',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/launchpad/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/launchpad/'
 };
 
 

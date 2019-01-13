@@ -246,5 +246,5 @@ this.multibandFilter = function(x,y,a){
 
 this.multibandFilter.metadata = {
     name:'Multiband Filter',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/multibandFilter/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/multibandFilter/'
 };

@@ -133,5 +133,5 @@ this.looper = function(x,y,a){
 
 this.looper.metadata = {
     name:'Looper',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/looper/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/looper/'
 };

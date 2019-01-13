@@ -138,5 +138,5 @@ this.recorder = function(x,y,a){
 
 this.recorder.metadata = {
     name:'Recorder',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/recorder/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/recorder/'
 };

@@ -38,5 +38,5 @@ this.audio_duplicator = function(x,y,a){
 
 this.audio_duplicator.metadata = {
     name:'Audio Duplicator',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/audioDuplicator/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
 };

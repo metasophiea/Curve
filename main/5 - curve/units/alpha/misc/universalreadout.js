@@ -65,5 +65,5 @@ this.universalreadout = function(x,y,a){
 
 this.universalreadout.metadata = {
     name:'Universal Readout',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/universalReadout/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/universalReadout/'
 };

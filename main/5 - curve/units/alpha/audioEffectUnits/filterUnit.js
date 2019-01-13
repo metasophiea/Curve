@@ -160,5 +160,5 @@ this.filterUnit = function(x,y,a){
 
 this.filterUnit.metadata = {
     name:'Filter Unit',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/filterUnit/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/filterUnit/'
 };

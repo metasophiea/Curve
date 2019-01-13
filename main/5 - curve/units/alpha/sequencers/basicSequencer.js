@@ -152,5 +152,5 @@ this.basicSequencer = function(x,y,a){
 
 this.basicSequencer.metadata = {
     name:'Basic Sequencer (Multi Pulse Out)',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/basicSequencer_pulseOut/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_pulseOut/'
 };

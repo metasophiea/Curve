@@ -59,5 +59,5 @@ this.audioSink = function(x,y,a){
 
 this.audioSink.metadata = {
     name:'Audio Sink',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/audioSink/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/audioSink/'
 };

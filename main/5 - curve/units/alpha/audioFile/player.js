@@ -148,5 +148,5 @@ this.player = function(x,y,a){
 
 this.player.metadata = {
     name:'Player',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/player/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/player/'
 };

@@ -113,5 +113,5 @@ this.audioIn = function(x,y,a,setupConnect=true){
 
 this.audioIn.metadata = {
     name:'Audio Input',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/audioInput/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/audioInput/'
 };

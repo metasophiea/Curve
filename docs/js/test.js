@@ -12644,7 +12644,7 @@
                         this.testUnit.devUnit = true;
                         this.testUnit.metadata = {
                             name:'Test Unit',
-                            helpURL:'https://metasophiea.com/curve/help/units/test/testUnit/'
+                            helpURL:'https://curve.metasophiea.com/help/units/test/testUnit/'
                         };
                         /*
                             a design
@@ -13943,7 +13943,7 @@
                     
                     this.filterUnit.metadata = {
                         name:'Filter Unit',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/filterUnit/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/filterUnit/'
                     };
 
                     this.reverbUnit = function(x,y){
@@ -14086,7 +14086,7 @@
                     
                     this.reverbUnit.metadata = {
                         name:'Reverb Unit',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/reverbUnit/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/reverbUnit/'
                     };
 
                     this.multibandFilter = function(x,y,a){
@@ -14337,7 +14337,7 @@
                     
                     this.multibandFilter.metadata = {
                         name:'Multiband Filter',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/multibandFilter/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/multibandFilter/'
                     };
                     this.distortionUnit = function(x,y,a){
                         var style = {
@@ -14488,7 +14488,7 @@
                     
                     this.distortionUnit.metadata = {
                         name:'Distortion Unit',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/distortionUnit/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/distortionUnit/'
                     };
                 };
                 
@@ -14633,7 +14633,7 @@
                     
                     this.recorder.metadata = {
                         name:'Recorder',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/recorder/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/recorder/'
                     };
 
                     this.looper = function(x,y,a){
@@ -14771,7 +14771,7 @@
                     
                     this.looper.metadata = {
                         name:'Looper',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/looper/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/looper/'
                     };
                     this.oneShot_single = function(x,y,a){
                         var style = {
@@ -14895,7 +14895,7 @@
                     
                     this.oneShot_single.metadata = {
                         name:'One Shot (Single)',
-                        helpURL:'https://metasophiea.com/curve/help/objects/units/oneShot_single/'
+                        helpURL:'https://curve.metasophiea.com/help/objects/units/oneShot_single/'
                     };
                     
 
@@ -15074,7 +15074,7 @@
                     
                     this.oneShot_multi.metadata = {
                         name:'One Shot (Multi)',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/oneShot_multi/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/oneShot_multi/'
                     };
 
                     this.oneShot_multi_multiTrack = function(x,y,a){
@@ -15350,7 +15350,7 @@
                     
                     this.oneShot_multi_multiTrack.metadata = {
                         name:'One Shot (Multi)(8 Track)',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/oneShot_multi_multiTrack/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/oneShot_multi_multiTrack/'
                     };
                     this.player = function(x,y,a){
                         var style = {
@@ -15502,7 +15502,7 @@
                     
                     this.player.metadata = {
                         name:'Player',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/player/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/player/'
                     };
                 };
                 
@@ -15622,7 +15622,7 @@
                     
                     this.audioIn.metadata = {
                         name:'Audio Input',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/audioInput/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/audioInput/'
                     };
                     this.musicalKeyboard = function(x,y,a){
                         var state = {
@@ -15755,7 +15755,7 @@
                     
                     this.musicalKeyboard.metadata = {
                         name:'Musical Keyboard',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/musicalKeyboard/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/musicalKeyboard/'
                     };
                 };
                 
@@ -15828,7 +15828,7 @@
                     
                     this.audioScope.metadata = {
                         name:'Audio Scope',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/audioScope/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/audioScope/'
                     };
                     this.audioSink = function(x,y,a){
                         var style = {
@@ -15891,7 +15891,7 @@
                     
                     this.audioSink.metadata = {
                         name:'Audio Sink',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/audioSink/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/audioSink/'
                     };
                 };
                 
@@ -16050,7 +16050,7 @@
                     
                     this.basicSequencer.metadata = {
                         name:'Basic Sequencer (Multi Pulse Out)',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/basicSequencer_pulseOut/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_pulseOut/'
                     };
                     this.launchpad = function(x,y,a){
                         var values = {
@@ -16183,7 +16183,7 @@
                     
                     this.launchpad.metadata = {
                         name:'Launchpad',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/launchpad/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/launchpad/'
                     };
                     
                     
@@ -16452,7 +16452,7 @@
                     
                     this.basicSequencer_midiOut.metadata = {
                         name:'Basic Sequencer (Midi Out)',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/basicSequencer_midiOut/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_midiOut/'
                     };
                 };
                 
@@ -16777,7 +16777,7 @@
                     
                     this.basicSynthesizer.metadata = {
                         name:'Basic Synthesizer',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/basicSynthesizer/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSynthesizer/'
                     };
                 };
                 
@@ -16822,7 +16822,7 @@
                     
                     this.audio_duplicator.metadata = {
                         name:'Audio Duplicator',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/audioDuplicator/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
                     };
                     this.universalreadout = function(x,y,a){
                         var style = {
@@ -16891,7 +16891,7 @@
                     
                     this.universalreadout.metadata = {
                         name:'Universal Readout',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/universalReadout/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/universalReadout/'
                     };
                     this.testObject = function(x,y,a){
                         var design = {
@@ -17036,7 +17036,7 @@
                     this.testObject.devUnit = true;
                     this.testObject.metadata = {
                         name:'Test Object',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/testObject/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/testObject/'
                     };
                     this.pulseGenerator_hyper = function(x,y,a){
                         var maxTempo = 999;
@@ -17143,7 +17143,7 @@
                     
                     this.pulseGenerator_hyper.metadata = {
                         name:'Pulse Generator (Hyper)',
-                        helpURL:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator_hyper/'
+                        helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator_hyper/'
                     };
                     this.pulseGenerator = function(x,y,a){
                         var maxTempo = 240;
@@ -17250,7 +17250,7 @@
                     
                     this.pulseGenerator.metadata = {
                         name:'Pulse Generator',
-                        helpURL:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator/'
+                        helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
                     };
                     this.data_duplicator = function(x,y,a){
                         var style = {
@@ -17294,7 +17294,7 @@
                     
                     this.data_duplicator.metadata = {
                         name:'Data Duplicator',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/dataDuplicator/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/dataDuplicator/'
                     };
                     
                     //Operation Note:
@@ -17410,7 +17410,7 @@
                     
                     this.basicMixer.metadata = {
                         name:'Basic Audio Mixer',
-                        helpURL:'https://metasophiea.com/curve/help/units/alpha/basicAudioMixer/'
+                        helpURL:'https://curve.metasophiea.com/help/units/alpha/basicAudioMixer/'
                     };
                 };
                 

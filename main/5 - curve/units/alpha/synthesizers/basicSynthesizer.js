@@ -318,5 +318,5 @@ this.basicSynthesizer = function(x,y,a){
 
 this.basicSynthesizer.metadata = {
     name:'Basic Synthesizer',
-    helpURL:'https://metasophiea.com/curve/help/units/alpha/basicSynthesizer/'
+    helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSynthesizer/'
 };

@@ -103,5 +103,5 @@ this.pulseGenerator = function(x,y,a){
 
 this.pulseGenerator.metadata = {
     name:'Pulse Generator',
-    helpURL:'https://metasophiea.com/curve/help/objectects/alpha/pulseGenerator/'
+    helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
 };
