@@ -47,19 +47,19 @@ this.reverbUnit = function(x,y){
                 style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
             }},
 
-            {type:'button_rect',name:'raiseByOne',data:{
+            {type:'button_rectangle',name:'raiseByOne',data:{
                 x:51, y:6, width: 10.25, height: 5, style:style.button, 
                 onpress: function(){ incReverbType(); },
             }},
-            {type:'button_rect',name:'raiseByTen',data:{
+            {type:'button_rectangle',name:'raiseByTen',data:{
                 x:38.75, y:6, width: 10.25, height: 5, style:style.button, 
                 onpress: function(){ inc10ReverbType(); },
             }},
-            {type:'button_rect',name:'lowerByOne',data:{
+            {type:'button_rectangle',name:'lowerByOne',data:{
                 x:51, y:39, width: 10.25, height: 5, style:style.button, 
                 onpress: function(){ decReverbType(); },
             }},
-            {type:'button_rect',name:'lowerByTen',data:{
+            {type:'button_rectangle',name:'lowerByTen',data:{
                 x:38.75, y:39, width: 10.25, height: 5, style:style.button, 
                 onpress: function(){ dec10ReverbType(); },
             }},
@@ -74,7 +74,7 @@ this.reverbUnit = function(x,y){
     };
 
     //main object
-        var object = alphaUnit.builder(this.reverbUnit,design);
+        var object = workspace.interface.unit.builder(this.reverbUnit,design);
 
     //import/export
         object.importData = function(data){
@@ -92,7 +92,7 @@ this.reverbUnit = function(x,y){
 
     //circuitry
         //reverb
-            object.reverbCircuit = new workspace.interface.circuit.alpha.reverbUnit(workspace.library.audio.context);
+            object.reverbCircuit = new workspace.interface.circuit.reverbUnit(workspace.library.audio.context);
             object.elements.connectionNode_audio.audioIn.out().connect( object.reverbCircuit.in() );
             object.reverbCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
             object.reverbCircuit.getTypes( function(a){state.availableTypes = a;} );
@@ -138,5 +138,6 @@ this.reverbUnit = function(x,y){
 
 this.reverbUnit.metadata = {
     name:'Reverb Unit',
+    category:'audioEffectUnits',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/reverbUnit/'
 };

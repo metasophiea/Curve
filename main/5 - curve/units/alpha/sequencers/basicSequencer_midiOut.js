@@ -86,7 +86,7 @@ this.basicSequencer_midiOut = function(x,y,a){
                 {type:'connectionNode_data', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
                     onreceive:function(){object.elements.sequencer.main.progress();},
                 }},
-                {type:'button_rect', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
+                {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
                     onpress:function(){object.elements.sequencer.main.progress();},
                 }},
                 {type:'path', name:'progress_arrow', data:{ points:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
@@ -95,7 +95,7 @@ this.basicSequencer_midiOut = function(x,y,a){
                 {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
                     onreceive:function(){object.elements.sequencer.main.playheadPosition(0);},
                 }},
-                {type:'button_rect', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
+                {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
                     onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
                 }},
                 {type:'path', name:'reset_arrow', data:{ points:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
@@ -107,7 +107,7 @@ this.basicSequencer_midiOut = function(x,y,a){
         function midiNumber_line_converter(num){ return vals.sequencer.midiRange.top - num; }
 
     //main object
-        var object = alphaUnit.builder(this.basicSequencer,design);
+        var object = workspace.interface.unit.builder(this.basicSequencer,design);
 
     //wiring
         object.elements.rangeslide.viewselect_y.onchange = function(values){ object.elements.sequencer.main.viewarea({topLeft:{y:values.start}, bottomRight:{y:values.end}},false); };
@@ -160,5 +160,6 @@ this.basicSequencer_midiOut = function(x,y,a){
 
 this.basicSequencer_midiOut.metadata = {
     name:'Basic Sequencer (Midi Out)',
+    category:'sequencer',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_midiOut/'
 };

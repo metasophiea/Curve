@@ -4,6 +4,11 @@ console.log('%cTesting - system.library.math', 'font-size:15px; font-weight:bold
         tester(workspace.library.math.averageArray([1]),1);
         tester(workspace.library.math.averageArray([1,1,1,1,1,1,1,1]),1);
         tester(workspace.library.math.averageArray([0,1,2,3,4,5,6,7,8,9]),4.5);
+    console.log('%c-- averagePoint', 'font-weight: bold;');
+        tester(workspace.library.math.averagePoint([{x:0,y:0}]),{x:0,y:0});
+        tester(workspace.library.math.averagePoint([{x:0,y:0},{x:10,y:0}]),{x:5,y:0});
+        tester(workspace.library.math.averagePoint([{x:-10,y:0},{x:10,y:0}]),{x:0,y:0});
+        tester(workspace.library.math.averagePoint([{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:0,y:10}]),{x:5,y:5});
 
     console.log('%c-- boundingBoxFromPoints', 'font-weight: bold;');
         console.log('%c- simple box', 'font-weight: bold;');

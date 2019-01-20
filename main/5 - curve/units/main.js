@@ -1,3 +1,3 @@
-workspace.interface.unit.alpha = new function(){
-    {{include:alpha/main.js}}
+workspace.interface.unit.collection.alpha = new function(){
+    {{include:alpha/*}} /**/
 };

@@ -105,7 +105,7 @@ this.distortionUnit = function(x,y,a){
     };
 
     //main object
-        var object = alphaUnit.builder(this.distortionUnit,design);
+        var object = workspace.interface.unit.builder(this.distortionUnit,design);
 
     //import/export
         object.importData = function(data){
@@ -126,7 +126,7 @@ this.distortionUnit = function(x,y,a){
         };
 
     //circuitry
-        object.distortionCircuit = new workspace.interface.circuit.alpha.distortionUnit(workspace.library.audio.context);
+        object.distortionCircuit = new workspace.interface.circuit.distortionUnit(workspace.library.audio.context);
         object.elements.connectionNode_audio.audioIn.out().connect( object.distortionCircuit.in() );
         object.distortionCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
 
@@ -147,5 +147,6 @@ this.distortionUnit = function(x,y,a){
 
 this.distortionUnit.metadata = {
     name:'Distortion Unit',
+    category:'audioEffectUnits',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/distortionUnit/'
 };

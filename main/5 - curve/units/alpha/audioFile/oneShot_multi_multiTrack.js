@@ -73,7 +73,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
             //load button
                 design.elements.push(
-                    {type:'button_rect', name:'loadFile_'+a, data: { x:5, y: 5+a*(2+45), width:20, height:10, style:style.button,
+                    {type:'button_rectangle', name:'loadFile_'+a, data: { x:5, y: 5+a*(2+45), width:20, height:10, style:style.button,
                         onpress:function(instance){
                             return function(){
                                 object.oneShot_multi_array[instance].load('file',
@@ -90,7 +90,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
             //fire button
                 design.elements.push(
-                    {type:'button_rect',name:'fire_'+a,data:{ x:5, y: 17.5+a*(2+45), width:10, height:10, style:style.fire_button,
+                    {type:'button_rectangle',name:'fire_'+a,data:{ x:5, y: 17.5+a*(2+45), width:10, height:10, style:style.fire_button,
                         onpress:function(instance){
                             return function(){
                                 var filePlayer = object.oneShot_multi_array[instance];
@@ -160,7 +160,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
             //panic button
                 design.elements.push(
-                    {type:'button_rect',name:'panic_'+a,data:{ x:15, y: 17.5+a*(2+45), width:10, height:10, style:style.stop_button,
+                    {type:'button_rectangle',name:'panic_'+a,data:{ x:15, y: 17.5+a*(2+45), width:10, height:10, style:style.stop_button,
                         onpress:function(instance){
                             return function(value){
                                 var filePlayer = object.oneShot_multi_array[instance];
@@ -187,13 +187,13 @@ this.oneShot_multi_multiTrack = function(x,y,a){
                         onreceive:function(instance){
                             return function(address,data){
                                 if(address == 'pulse'){ 
-                                    object.elements.button_rect['fire_'+instance].press();
-                                    object.elements.button_rect['fire_'+instance].release();
+                                    object.elements.button_rectangle['fire_'+instance].press();
+                                    object.elements.button_rectangle['fire_'+instance].release();
                                 }
                                 else if(address == 'hit'){
                                     if(data.velocity > 0.49){
-                                        object.elements.button_rect['fire_'+instance].press();
-                                        object.elements.button_rect['fire_'+instance].release();
+                                        object.elements.button_rectangle['fire_'+instance].press();
+                                        object.elements.button_rectangle['fire_'+instance].release();
                                     }
                                 }
                             }
@@ -204,7 +204,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
         }
 
     //main object
-        var object = alphaUnit.builder(this.oneShot_multi_multiTrack,design);
+        var object = workspace.interface.unit.builder(this.oneShot_multi_multiTrack,design);
 
     //import/export
         object.exportData = function(){
@@ -237,7 +237,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
             object.oneShot_multi_array = [];
             for(var a = 0; a < trackCount; a++){
-                object.oneShot_multi_array.push( new workspace.interface.circuit.alpha.oneShot_multi(workspace.library.audio.context) );
+                object.oneShot_multi_array.push( new workspace.interface.circuit.oneShot_multi(workspace.library.audio.context) );
                 object.oneShot_multi_array[a].out_right().connect( object.elements.connectionNode_audio.outRight.in() );
                 object.oneShot_multi_array[a].out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
 
@@ -271,5 +271,6 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
 this.oneShot_multi_multiTrack.metadata = {
     name:'One Shot (Multi)(8 Track)',
+    category:'audioFile',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/oneShot_multi_multiTrack/'
 };

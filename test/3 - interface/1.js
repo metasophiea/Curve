@@ -1,63 +1,78 @@
-//basic
-    var basicGroup = workspace.interface.part.alpha.builder( 'group', 'basic', { x:10, y:10, angle:0 } );
-    workspace.system.pane.mm.append( basicGroup );
-    basicGroup.append( workspace.interface.part.alpha.builder( 'rectangle', 'testRectangle', { x:5, y:5, width:30, height:30, style:{ fill:'rgba(255,0,0,1)' } } ) );
-    basicGroup.append( workspace.interface.part.alpha.builder( 'circle', 'testCircle', { x:20, y:55, r:15 } ) );
-    basicGroup.append( workspace.interface.part.alpha.builder( 'image', 'testImage', { x:40, y:40, width:30, height:30, url:'https://t2.genius.com/unsafe/300x300/https%3A%2F%2Fimages.genius.com%2F72ee0b753f056baa410c17a6ad9fea70.588x588x1.jpg' } ) );
-    basicGroup.append( workspace.interface.part.alpha.builder( 'polygon', 'testPolygon', { points:[{x:55,y:5}, {x:70,y:35}, {x:40,y:35}], style:{ fill:'rgba(0,255,0,1)' } } ) );
-    basicGroup.append( workspace.interface.part.alpha.builder( 'text', 'testText', { x:7.5, y:95, text:'Hello', style:{font:'20pt Arial', fill:'rgba(150,150,255,1)' } } ) );
-    basicGroup.append( workspace.interface.part.alpha.builder( 'path', 'testPath', { points:[{x:0,y:0},{x:0,y:90},{x:2.5,y:90},{x:2.5,y:72.5},{x:75,y:72.5}] }) );
+//test of all parts
 
-//display
-    var displayGroup = workspace.interface.part.alpha.builder( 'group', 'display', { x:10, y:150, angle:0 } );
-    workspace.system.pane.mm.append( displayGroup );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'glowbox_rect', 'test_glowbox_rect', {x:0,y:0} ) );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'sevenSegmentDisplay', 'test_sevenSegmentDisplay', {x:35,y:0} ) );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'sevenSegmentDisplay_static', 'test_sevenSegmentDisplay_static', {x:35,y:70} ) );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay', {x:60,y:0} ) );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'sixteenSegmentDisplay_static', 'test_sixteenSegmentDisplay_static', {x:60,y:70} ) );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay', {x:85,y:0} ) );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'readout_sixteenSegmentDisplay_static', 'test_readout_sixteenSegmentDisplay_static', {x:85,y:70} ) );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'level', 'test_level1', {x:190, y:0} ) );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'meter_level', 'test_meterLevel1', {x:215, y:0} ) );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'audio_meter_level', 'test_audioMeterLevel1', {x:240, y:0} ) );
-    displayGroup.append( workspace.interface.part.alpha.builder( 'rastorDisplay', 'test_rastorDisplay1', {x:265, y:0} ) );
-    var grapher = workspace.interface.part.alpha.builder( 'grapher', 'test_grapher1', {x:330, y:0} );
-        displayGroup.append( grapher );
-        grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
-        grapher.draw([0,0.25,1],undefined,1);
-    var grapher = workspace.interface.part.alpha.builder( 'grapher_static', 'test_grapher_static1', {x:330, y:70} );
-        displayGroup.append( grapher );
-        grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
-        grapher.draw([0,0.25,1],undefined,1);
-    var grapher = workspace.interface.part.alpha.builder( 'grapher_periodicWave', 'test_grapher_periodicWave1', {x:455, y:0} );
-        displayGroup.append( grapher );
-        grapher.updateBackground();
-        grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
-        grapher.draw();
-    var grapher = workspace.interface.part.alpha.builder( 'grapher_periodicWave_static', 'test_grapher_periodicWave_static1', {x:455, y:70} );
-        displayGroup.append( grapher );
-        grapher.updateBackground();
-        grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
-        grapher.draw();
-    var grapher = workspace.interface.part.alpha.builder( 'grapher_audioScope', 'test_grapher_audioScope1', {x:580, y:0} );
-        displayGroup.append( grapher );
-    var grapher = workspace.interface.part.alpha.builder( 'grapher_audioScope_static', 'test_grapher_audioScope_static1', {x:580, y:70} );
-        displayGroup.append( grapher );
+
+// //basic
+//     var basicGroup = workspace.interface.part.builder( 'group', 'basic', { x:10, y:10, angle:0 } );
+//     workspace.system.pane.mm.append( basicGroup );
+//     basicGroup.append( workspace.interface.part.builder( 'rectangle', 'testRectangle', { x:5, y:5, width:30, height:30, style:{ fill:'rgba(255,0,0,1)' } } ) );
+//     basicGroup.append( workspace.interface.part.builder( 'circle', 'testCircle', { x:20, y:55, r:15 } ) );
+//     basicGroup.append( workspace.interface.part.builder( 'image', 'testImage', { x:40, y:40, width:30, height:30, url:'https://t2.genius.com/unsafe/300x300/https%3A%2F%2Fimages.genius.com%2F72ee0b753f056baa410c17a6ad9fea70.588x588x1.jpg' } ) );
+//     basicGroup.append( workspace.interface.part.builder( 'clippedImage', 'testClippedImage', { 
+//         x:75, y:5, width:50, height:50, 
+//         url:'https://t2.genius.com/unsafe/300x300/https%3A%2F%2Fimages.genius.com%2F72ee0b753f056baa410c17a6ad9fea70.588x588x1.jpg',
+//         points:[{x:0,y:0},{x:1,y:0},{x:1,y:1}]
+//     } ) );
+//     basicGroup.append( workspace.interface.part.builder( 'polygon', 'testPolygon', { points:[{x:55,y:5}, {x:70,y:35}, {x:40,y:35}], style:{ fill:'rgba(0,255,0,1)' } } ) );
+//     basicGroup.append( workspace.interface.part.builder( 'text', 'testText', { x:7.5, y:95, text:'Hello', style:{font:'20pt Arial', fill:'rgba(150,150,255,1)' } } ) );
+//     basicGroup.append( workspace.interface.part.builder( 'path', 'testPath', { points:[{x:0,y:0},{x:0,y:90},{x:2.5,y:90},{x:2.5,y:72.5},{x:75,y:72.5}] }) );
+
+// //display
+//     var displayGroup = workspace.interface.part.builder( 'group', 'display', { x:10, y:150, angle:0 } );
+//     workspace.system.pane.mm.append( displayGroup );
+//     displayGroup.append( workspace.interface.part.builder( 'glowbox_rect', 'test_glowbox_rect', {x:0,y:0} ) );
+//     displayGroup.append( workspace.interface.part.builder( 'sevenSegmentDisplay', 'test_sevenSegmentDisplay', {x:35,y:0} ) );
+//     displayGroup.append( workspace.interface.part.builder( 'sevenSegmentDisplay_static', 'test_sevenSegmentDisplay_static', {x:35,y:70} ) );
+//     displayGroup.append( workspace.interface.part.builder( 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay', {x:60,y:0} ) );
+//     displayGroup.append( workspace.interface.part.builder( 'sixteenSegmentDisplay_static', 'test_sixteenSegmentDisplay_static', {x:60,y:70} ) );
+//     displayGroup.append( workspace.interface.part.builder( 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay', {x:85,y:0} ) );
+//     displayGroup.append( workspace.interface.part.builder( 'readout_sixteenSegmentDisplay_static', 'test_readout_sixteenSegmentDisplay_static', {x:85,y:70} ) );
+//     displayGroup.append( workspace.interface.part.builder( 'level', 'test_level1', {x:190, y:0} ) );
+//     displayGroup.append( workspace.interface.part.builder( 'meter_level', 'test_meterLevel1', {x:215, y:0} ) );
+//     displayGroup.append( workspace.interface.part.builder( 'audio_meter_level', 'test_audioMeterLevel1', {x:240, y:0} ) );
+//     displayGroup.append( workspace.interface.part.builder( 'rastorDisplay', 'test_rastorDisplay1', {x:265, y:0} ) );
+//     var grapher = workspace.interface.part.builder( 'grapher', 'test_grapher1', {x:330, y:0} );
+//         displayGroup.append( grapher );
+//         grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
+//         grapher.draw([0,0.25,1],undefined,1);
+//     var grapher = workspace.interface.part.builder( 'grapher_static', 'test_grapher_static1', {x:330, y:70} );
+//         displayGroup.append( grapher );
+//         grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
+//         grapher.draw([0,0.25,1],undefined,1);
+//     var grapher = workspace.interface.part.builder( 'grapher_periodicWave', 'test_grapher_periodicWave1', {x:455, y:0} );
+//         displayGroup.append( grapher );
+//         grapher.updateBackground();
+//         grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
+//         grapher.draw();
+//     var grapher = workspace.interface.part.builder( 'grapher_periodicWave_static', 'test_grapher_periodicWave_static1', {x:455, y:70} );
+//         displayGroup.append( grapher );
+//         grapher.updateBackground();
+//         grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
+//         grapher.draw();
+//     var grapher = workspace.interface.part.builder( 'grapher_audioScope', 'test_grapher_audioScope1', {x:580, y:0} );
+//         displayGroup.append( grapher );
+//     var grapher = workspace.interface.part.builder( 'grapher_audioScope_static', 'test_grapher_audioScope_static1', {x:580, y:70} );
+//         displayGroup.append( grapher );
 
 //control
-    var controlGroup = workspace.interface.part.alpha.builder( 'group', 'control', { x:10, y:300, angle:0 } );
+    var controlGroup = workspace.interface.part.builder( 'group', 'control', { x:10, y:300, angle:0 } );
     workspace.system.pane.mm.append( controlGroup );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'slide', 'test_slide1', {x:0,y:0} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'slidePanel', 'test_slidePanel1', {x:15,y:0} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'slide', 'test_slide2', {x:100,y:10,angle:-Math.PI/2} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'slidePanel', 'test_slidePanel2', {x:200,y:80,angle:-Math.PI/2} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'rangeslide', 'test_rangeslide1', {x:300,y:0} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'rangeslide', 'test_rangeslide2', {x:315,y:10,angle:-Math.PI/2} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'dial_continuous', 'test_dial_continuous1', {x:430,y:20} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'dial_discrete', 'test_dial_discrete1', {x:470,y:20} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'button_rect', 'test_button_rect1', {x:490,y:0} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'list', 'test_list1', {x:525,y:0,list:[
+
+    var sli_1 = workspace.interface.part.builder( 'slide', 'test_slide1', {x:0,y:0} ); controlGroup.append( sli_1 );
+    var sp_1 = workspace.interface.part.builder( 'slidePanel', 'test_slidePanel1', {x:15,y:0} ); controlGroup.append( sp_1 );
+    var sli_2 = workspace.interface.part.builder( 'slide', 'test_slide2', {x:100,y:10,angle:-Math.PI/2} ); controlGroup.append( sli_2 );
+    var sp_2 = workspace.interface.part.builder( 'slidePanel', 'test_slidePanel2', {x:200,y:80,angle:-Math.PI/2} ); controlGroup.append( sp_2 );
+    var ran_1 = workspace.interface.part.builder( 'rangeslide', 'test_rangeslide1', {x:300,y:0} ); controlGroup.append(ran_1);
+    var ran_2 = workspace.interface.part.builder( 'rangeslide', 'test_rangeslide2', {x:315,y:10,angle:-Math.PI/2} ); controlGroup.append(ran_2);
+
+    var dc_1 = workspace.interface.part.builder( 'dial_continuous', 'test_dial_continuous1', {x:430,y:20} ); controlGroup.append(dc_1);
+    var dd_1 = workspace.interface.part.builder( 'dial_discrete', 'test_dial_discrete1', {x:470,y:20} ); controlGroup.append(dd_1);
+    var dic_1 = workspace.interface.part.builder( 'dial_image_continuous', 'test_dial_image_continuous1', {x:430,y:60} ); controlGroup.append(dic_1);
+    var di_1 = workspace.interface.part.builder( 'dial_image_discrete', 'test_dial_image_discrete1', {x:470,y:60} ); controlGroup.append(di_1);
+    var br_1 = workspace.interface.part.builder( 'button_rectangle', 'test_button_rectangle1', {x:490,y:0,text_centre:'rectangle'} ); controlGroup.append(br_1);
+    var bc_1 = workspace.interface.part.builder( 'button_circle', 'test_button_circle1', {x:505,y:37.5,text_centre:'circle'} ); controlGroup.append(bc_1);
+    var bp_1 = workspace.interface.part.builder( 'button_polygon', 'test_button_polygon1', {x:490,y:55,text_centre:'polygon'} ); controlGroup.append(bp_1);
+    var bi_1 = workspace.interface.part.builder( 'button_image', 'test_button_image1', {x:490,y:87.5} ); controlGroup.append(bi_1);
+    var lis_1 = workspace.interface.part.builder( 'list', 'test_list1', {x:525,y:0,list:[
         'space',
         { text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
         { text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
@@ -77,20 +92,21 @@
         { text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
         { text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
         'space',
-    ]} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'checkbox_rect', 'test_checkbox_rect1', {x:580,y:0} ) );
-    controlGroup.append( workspace.interface.part.alpha.builder( 'rastorgrid', 'test_rastorgrid1', {x:605,y:0} ) );
-    var no = workspace.interface.part.alpha.builder( 'needleOverlay', 'test_needleOverlay1', {x:690,y:0} );
+    ]} ); controlGroup.append(lis_1);
+    var che_1 = workspace.interface.part.builder( 'checkbox_rect', 'test_checkbox_rect1', {x:580,y:0} ); controlGroup.append(che_1);
+    var ras_1 = workspace.interface.part.builder( 'rastorgrid', 'test_rastorgrid1', {x:605,y:0} ); controlGroup.append(ras_1);
+
+    var no = workspace.interface.part.builder( 'needleOverlay', 'test_needleOverlay1', {x:690,y:0} );
         controlGroup.append( no );
         no.select(0.25);
         no.area(0.5,0.75);
         no.mark(0.1);
         no.mark(0.1);
-    var gww = workspace.interface.part.alpha.builder( 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:815,y:0} );
+    var gww = workspace.interface.part.builder( 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:815,y:0} );
         controlGroup.append( gww );
         gww.select(0.2);
         gww.area(0.5,0.7);
-    var seq = workspace.interface.part.alpha.builder( 'sequencer', 'test_sequencer1', {x:940,y:0} );
+    var seq = workspace.interface.part.builder( 'sequencer', 'test_sequencer1', {x:940,y:0,zoomLevel_x:1/2} );
         controlGroup.append( seq );
         seq.addSignal( 0,0,  10,0.0 );
         seq.addSignal( 1,1,  10,0.1 );
@@ -106,27 +122,37 @@
         seq.event = function(data){console.log(data);};
 
 
-//dynamic
-    var dynamicGroup = workspace.interface.part.alpha.builder( 'group', 'dynamic', { x:10, y:450, angle:0 } );
-    workspace.system.pane.mm.append( dynamicGroup );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode', 'test_connectionNode1', { x:25, y:25 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode', 'test_connectionNode2', { x:0,  y:75 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode', 'test_connectionNode3', { x:50, y:75 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:125, y:25 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:100, y:75 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:150, y:75 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_voltage', 'test_connectionNode_voltage1', { x:225, y:25 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_voltage', 'test_connectionNode_voltage2', { x:200, y:75 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_voltage', 'test_connectionNode_voltage3', { x:250, y:75 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:325, y:25 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:300, y:75 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:350, y:75 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ) );
-    dynamicGroup.append( workspace.interface.part.alpha.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:75 } ) );
+// //dynamic
+//     var dynamicGroup = workspace.interface.part.builder( 'group', 'dynamic', { x:10, y:450, angle:0 } );
+//     workspace.system.pane.mm.append( dynamicGroup );
+//     dynamicGroup.append( workspace.interface.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
 
+//     var cn_reg_0 = workspace.interface.part.builder( 'connectionNode', 'test_connectionNode1', { x:25, y:25 } ); dynamicGroup.append( cn_reg_0 );
+//     var cn_reg_1 = workspace.interface.part.builder( 'connectionNode', 'test_connectionNode2', { x:0,  y:75 } ); dynamicGroup.append( cn_reg_1 );
+//     var cn_reg_2 = workspace.interface.part.builder( 'connectionNode', 'test_connectionNode3', { x:50, y:60 } ); dynamicGroup.append( cn_reg_2 );
+//     var cn_reg_3 = workspace.interface.part.builder( 'connectionNode', 'test_connectionNode4', { x:30, y:100 } ); dynamicGroup.append( cn_reg_3 );
+//     var cn_sig_0 = workspace.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:125, y:25 } ); dynamicGroup.append( cn_sig_0 );
+//     var cn_sig_1 = workspace.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:100, y:75 } ); dynamicGroup.append( cn_sig_1 );
+//     var cn_sig_2 = workspace.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:150, y:60 } ); dynamicGroup.append( cn_sig_2 );
+//     var cn_sig_3 = workspace.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal4', { x:130, y:100 } ); dynamicGroup.append( cn_sig_3 );
+//     var cn_vol_0 = workspace.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage1', { x:225, y:25 } ); dynamicGroup.append( cn_vol_0 ); 
+//     var cn_vol_1 = workspace.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage2', { x:200, y:75 } ); dynamicGroup.append( cn_vol_1 ); 
+//     var cn_vol_2 = workspace.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage3', { x:250, y:60 } ); dynamicGroup.append( cn_vol_2 ); 
+//     var cn_vol_3 = workspace.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage4', { x:230, y:100 } ); dynamicGroup.append( cn_vol_3 ); 
+//     var cn_dat_0 = workspace.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:325, y:25 } ); dynamicGroup.append( cn_dat_0 ); 
+//     var cn_dat_1 = workspace.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:300, y:75 } ); dynamicGroup.append( cn_dat_1 ); 
+//     var cn_dat_2 = workspace.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:350, y:60 } ); dynamicGroup.append( cn_dat_2 ); 
+//     var cn_dat_3 = workspace.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data4', { x:320, y:100 } ); dynamicGroup.append( cn_dat_3 ); 
+//     var cn_aud_0 = workspace.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ); dynamicGroup.append( cn_aud_0 ); 
+//     var cn_aud_1 = workspace.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ); dynamicGroup.append( cn_aud_1 ); 
+//     var cn_aud_2 = workspace.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:60 } ); dynamicGroup.append( cn_aud_2 ); 
+//     var cn_aud_3 = workspace.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio4', { x:420, y:100, isAudioOutput:true} ); dynamicGroup.append( cn_aud_3 ); 
 
+//     cn_reg_0.connectTo(cn_reg_1); cn_reg_0.allowConnections(false); cn_reg_0.allowDisconnections(false);
+//     cn_sig_0.connectTo(cn_sig_1); cn_sig_0.allowConnections(false); cn_sig_0.allowDisconnections(false);
+//     cn_vol_0.connectTo(cn_vol_1); cn_vol_0.allowConnections(false); cn_vol_0.allowDisconnections(false);
+//     cn_dat_0.connectTo(cn_dat_1); cn_dat_0.allowConnections(false); cn_dat_0.allowDisconnections(false);
+//     cn_aud_0.connectTo(cn_aud_1); cn_aud_0.allowConnections(false); cn_aud_0.allowDisconnections(false);
 
 
 
@@ -137,4 +163,4 @@ workspace.core.viewport.stopMouseScroll(true);
 
 // //view positioning
 //     workspace.core.viewport.scale(10);
-//     workspace.core.viewport.position(-945, -295);
+//     workspace.core.viewport.position(0,-290);

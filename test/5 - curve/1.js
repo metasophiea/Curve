@@ -1,27 +1,33 @@
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.audio_duplicator(20,10) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.basicMixer(100,10) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.data_duplicator(230,10) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.pulseGenerator(330,10) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.pulseGenerator_hyper(470,10) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.misc.universalreadout(300,50) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.synthesizers.basicSynthesizer(350,70) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.humanOutputDevices.audioScope(10,225) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.humanOutputDevices.audioSink(10,70) );
-// workspace.system.pane.mm.append( workspace.interface.unit.alpha.humanInputDevices.audioIn(20,340) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.humanInputDevices.musicalKeyboard(350,175) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioEffectUnits.distortionUnit(225,85) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioEffectUnits.filterUnit(225,185) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioEffectUnits.reverbUnit(225,290) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioEffectUnits.multibandFilter(380,250) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.sequencers.launchpad(610,10) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.sequencers.basicSequencer(750,10) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.sequencers.basicSequencer_midiOut(750,250) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.player(20,395) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.recorder(20,480) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.looper(20,525) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.oneShot_single(20,585) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.oneShot_multi(20,645) );
-workspace.system.pane.mm.append( workspace.interface.unit.alpha.audioFile.oneShot_multi_multiTrack(20,705) );
+workspace.control.scene.addUnit(20,10,0,'audio_duplicator');
+workspace.control.scene.addUnit(100,10,0,'basicMixer');
+workspace.control.scene.addUnit(230,10,0,'data_duplicator');
+workspace.control.scene.addUnit(470,10,0,'pulseGenerator_hyper');
+workspace.control.scene.addUnit(330,10,0,'pulseGenerator');
+workspace.control.scene.addUnit(300,50,0,'universalreadout');
+
+workspace.control.scene.addUnit(350,70,0,'basicSynthesizer');
+
+workspace.control.scene.addUnit(10,225,0,'audioScope');
+workspace.control.scene.addUnit(10,70,0,'audioSink');
+
+workspace.control.scene.addUnit(350,175,0,'musicalKeyboard');
+// workspace.control.scene.addUnit(10,340,0,'audioIn');
+
+workspace.control.scene.addUnit(225,85,0,'distortionUnit');
+workspace.control.scene.addUnit(225,185,0,'filterUnit');
+workspace.control.scene.addUnit(380,250,0,'multibandFilter');
+workspace.control.scene.addUnit(225,290,0,'reverbUnit');
+
+workspace.control.scene.addUnit(610,10,0,'launchpad');
+workspace.control.scene.addUnit(750,250,0,'basicSequencer_midiOut');
+workspace.control.scene.addUnit(750,10,0,'basicSequencer');
+
+workspace.control.scene.addUnit(20,525,0,'looper');
+workspace.control.scene.addUnit(20,705,0,'oneShot_multi_multiTrack');
+workspace.control.scene.addUnit(20,645,0,'oneShot_multi');
+workspace.control.scene.addUnit(20,585,0,'oneShot_single');
+workspace.control.scene.addUnit(20,395,0,'player');
+workspace.control.scene.addUnit(20,480,0,'recorder');
 
 
 // // //view positioning

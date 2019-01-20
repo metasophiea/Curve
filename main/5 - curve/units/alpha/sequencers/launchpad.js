@@ -37,14 +37,14 @@ this.launchpad = function(x,y,a){
                 {type:'connectionNode_data', name:'nextPage_input', data:{ x: 125, y: 22.5, width: 5, height: 10 }},
                 {type:'connectionNode_data', name:'prevPage_input', data:{ x: 125, y: 35, width: 5, height: 10 }},
             //pulse
-                {type:'button_rect',name:'pulse_button',data:{ x:100, y:5, width:20, height:10, style:style.button }},
+                {type:'button_rectangle',name:'pulse_button',data:{ x:100, y:5, width:20, height:10, style:style.button }},
             //rastorgrid
                 {type:'rectangle', name:'rastorBacking', data:{x:5, y:5, width:90, height:90, style:{fill:style.grid.backing}}},
                 {type:'rastorgrid',name:'rastorgrid',data:{ x:5, y:5, width:90, height:90, xCount:values.xCount, yCount:values.yCount, style:style.grid }},
             //page select
                 {type:'sevenSegmentDisplay',name:'pageNumber',data:{ x:100, y:22.5, width:20, height:22.5, style:style.button }},
-                {type:'button_rect',name:'nextPage',data:{ x:102.5, y:17.5, width:15, height:5, style:style.button }},
-                {type:'button_rect',name:'prevPage',data:{ x:102.5, y:45, width:15, height:5, style:style.button }},
+                {type:'button_rectangle',name:'nextPage',data:{ x:102.5, y:17.5, width:15, height:5, style:style.button }},
+                {type:'button_rectangle',name:'prevPage',data:{ x:102.5, y:45, width:15, height:5, style:style.button }},
         ]
     };
     //dynamic design
@@ -54,7 +54,7 @@ this.launchpad = function(x,y,a){
 
 
     //main object
-        var object = alphaUnit.builder(this.launchpad,design);
+        var object = workspace.interface.unit.builder(this.launchpad,design);
 
     //import/export
         object.exportData = function(){
@@ -99,10 +99,10 @@ this.launchpad = function(x,y,a){
         object.elements.connectionNode_data.pulse_input.onreceive = function(){object.internalCircuits.inc();lightLine();};
         object.elements.connectionNode_data.nextPage_input.onreceive = function(){object.internalCircuits.incPage();};
         object.elements.connectionNode_data.prevPage_input.onreceive = function(){object.internalCircuits.decPage();};
-        object.elements.button_rect.pulse_button.onreceive = function(){object.internalCircuits.inc();lightLine();};
+        object.elements.button_rectangle.pulse_button.onreceive = function(){object.internalCircuits.inc();lightLine();};
         object.elements.rastorgrid.rastorgrid.onchange = function(data){object.internalCircuits.importPage(data);};
-        object.elements.button_rect.nextPage.onpress = function(){object.internalCircuits.incPage();};
-        object.elements.button_rect.prevPage.onpress = function(){object.internalCircuits.decPage();};
+        object.elements.button_rectangle.nextPage.onpress = function(){object.internalCircuits.incPage();};
+        object.elements.button_rectangle.prevPage.onpress = function(){object.internalCircuits.decPage();};
 
     //interface
         object.i = {
@@ -129,6 +129,7 @@ this.launchpad = function(x,y,a){
 
 this.launchpad.metadata = {
     name:'Launchpad',
+    category:'sequencer',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/launchpad/'
 };
 

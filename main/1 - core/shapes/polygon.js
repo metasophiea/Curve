@@ -20,9 +20,6 @@ this.polygon = function(){
         lineWidth:1,
         lineJoin:'round',
         miterLimit:2,
-        shadowColour:'rgba(0,0,0,0)',
-        shadowBlur:20,
-        shadowOffset:{x:20, y:20},
     };
 
     
@@ -111,17 +108,12 @@ this.polygon = function(){
                     return { x:a.x+offset.x, y:a.y+offset.y };
                 } ),
                 lineWidth: this.style.lineWidth,
-                shadowBlur: this.style.shadowBlur,
-                shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
             };
         
         //adapt values
             if(!static){
                 shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
                 shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
             }
 
         //clipping
@@ -141,10 +133,6 @@ this.polygon = function(){
             context.lineWidth = shapeValue.lineWidth;
             context.lineJoin = this.style.lineJoin;
             context.miterLimit = this.style.miterLimit;
-            context.shadowColor = this.style.shadowColour;
-            context.shadowBlur = shapeValue.shadowBlur;
-            context.shadowOffsetX = shapeValue.shadowOffset.x;
-            context.shadowOffsetY = shapeValue.shadowOffset.y;
 
             context.beginPath(); 
             context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);

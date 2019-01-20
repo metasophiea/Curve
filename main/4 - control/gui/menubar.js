@@ -26,14 +26,14 @@ this.menubar = function(x,y,scale){
 
     //elements
         //main
-            var object = workspace.interface.part.alpha.builder( 'group', 'menubar', {});
-            var bar = workspace.interface.part.alpha.builder( 'rectangle', 'rectangle', {x:0, y:0, width:vars.height, height:vars.height, style:style.bar} );
+            var object = workspace.interface.part.builder( 'group', 'menubar', {});
+            var bar = workspace.interface.part.builder( 'rectangle', 'rectangle', {x:0, y:0, width:vars.height, height:vars.height, style:style.bar} );
                 object.append(bar);
 
         //items
             var accWidth = 0;
             for(var a = 0; a < this.menubar.dropdowns.length; a++){
-                var item = workspace.interface.part.alpha.builder( 'button_rect', 'dropdownButton_'+a, {
+                var item = workspace.interface.part.builder( 'button_rectangle', 'dropdownButton_'+a, {
                     x:accWidth*scale, y:0, 
                     width:this.menubar.dropdowns[a].width*scale, height:vars.height, 
                     hoverable:false, selectable:true,
@@ -74,7 +74,7 @@ this.menubar = function(x,y,scale){
                         }
 
                     //produce dropdown
-                        vars.activedropdown = workspace.interface.part.alpha.builder( 'list', 'dropdown', {
+                        vars.activedropdown = workspace.interface.part.builder( 'list', 'dropdown', {
                             x:x*scale, y:vars.height, style:style.list,
                             width:that.menubar.dropdowns[a].listWidth*scale, height:height,
 

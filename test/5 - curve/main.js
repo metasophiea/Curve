@@ -6,4 +6,5 @@
 {{include:../../main/5 - curve/main.js}}
 
 // {{include:1.js}}
-{{include:2.js}}
+// {{include:2.js}}
+{{include:3.js}}

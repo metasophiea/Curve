@@ -39,8 +39,8 @@ this.audioIn = function(x,y,a,setupConnect=true){
             {type:'connectionNode_audio', name:'audioOut', data:{x: -10, y: 15, width: 10, height: 20, isAudioOutput:true }},
             {type:'readout_sixteenSegmentDisplay_static', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
             {type:'readout_sixteenSegmentDisplay_static', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
-            {type:'button_rect', name:'up',   data:{x:225, y: 15, width:15, height:10, selectable:false, style:style.button, onpress:function(){incSelection();}}},
-            {type:'button_rect', name:'down', data:{x:225, y: 25, width:15, height:10, selectable:false, style:style.button, onpress:function(){decSelection();}}},
+            {type:'button_rectangle', name:'up',   data:{x:225, y: 15, width:15, height:10, selectable:false, style:style.button, onpress:function(){incSelection();}}},
+            {type:'button_rectangle', name:'down', data:{x:225, y: 25, width:15, height:10, selectable:false, style:style.button, onpress:function(){decSelection();}}},
             {type:'text', name:'gainLabel_name', data:{x:21.25, y:44, text:'gain', style:style.h1, angle:0}},
             {type:'text', name:'gainLabel_0',    data:{x:17,    y:39, text:'0', style:style.h2, angle:0}},
             {type:'text', name:'gainLabel_1',    data:{x:28.75, y:10, text:'1', style:style.h2, angle:0}},
@@ -53,13 +53,13 @@ this.audioIn = function(x,y,a,setupConnect=true){
     };
 
     //main object
-        var object = alphaUnit.builder(this.audioIn,design);
+        var object = workspace.interface.unit.builder(this.audioIn,design);
 
     //keycapture
         object.onkeydown = function(x,y,event){
             switch(event.key){
-                case 'ArrowUp':    object.elements.button_rect.up.press(); break;
-                case 'ArrowDown':  object.elements.button_rect.down.press(); break;
+                case 'ArrowUp':    object.elements.button_rectangle.up.press(); break;
+                case 'ArrowDown':  object.elements.button_rectangle.down.press(); break;
                 case 'ArrowLeft':  object.elements.dial_continuous.outputGain.set(object.elements.dial_continuous.outputGain.get()-0.1); break;
                 case 'ArrowRight': object.elements.dial_continuous.outputGain.set(object.elements.dial_continuous.outputGain.get()+0.1); break;
             }
@@ -67,7 +67,7 @@ this.audioIn = function(x,y,a,setupConnect=true){
 
     //circuitry
         object.circuitry = {
-            unit: new workspace.interface.circuit.alpha.audioIn(workspace.library.audio.context,setupConnect)
+            unit: new workspace.interface.circuit.audioIn(workspace.library.audio.context,setupConnect)
         };
         object.circuitry.unit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
         object.circuitry.unit.out().connect( object.elements.audio_meter_level.audioIn.audioIn() );
@@ -113,5 +113,6 @@ this.audioIn = function(x,y,a,setupConnect=true){
 
 this.audioIn.metadata = {
     name:'Audio Input',
+    category:'humanInputDevices',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/audioInput/'
 };

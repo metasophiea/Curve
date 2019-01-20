@@ -29,7 +29,7 @@ this.recorder = function(x,y,a){
                 {type:'text', name:'logo_label', data:{x:139, y:34.5, angle:-0.25, text:'REcorder', style:style.h1}},
 
             //rec
-                {type:'button_rect', name:'rec', data: {
+                {type:'button_rectangle', name:'rec', data: {
                     x:5, y: 25, width:20, height:10, style:style.button,
                     onpress: function(){
                         if(state == 'paused'){object.recorder.resume();}
@@ -37,9 +37,9 @@ this.recorder = function(x,y,a){
                         updateLights('rec');
                     }
                 }},
-                {type:'text', name:'button_rect_text', data:{x:10.5, y:31.5, text:'rec', angle:0, style:style.h2}},
+                {type:'text', name:'button_rectangle_text', data:{x:10.5, y:31.5, text:'rec', angle:0, style:style.h2}},
             //pause/resume
-                {type:'button_rect', name:'pause/resume', data: {
+                {type:'button_rectangle', name:'pause/resume', data: {
                     x:27.5, y: 25, width:20, height:10, style:style.button,
                     onpress: function(){
                         if(state == 'paused'){object.recorder.resume();}
@@ -49,13 +49,13 @@ this.recorder = function(x,y,a){
                 }},
                 {type:'text', name:'button_pause/resume_text', data:{x:30, y:31.5, text:'pause', angle:0, style:style.h2}},
             //stop
-                {type:'button_rect', name:'stop', data: {
+                {type:'button_rectangle', name:'stop', data: {
                     x:50, y: 25, width:20, height:10, style:style.button,
                     onpress: function(){updateLights('stop');object.recorder.stop();}
                 }},
                 {type:'text', name:'button_stop_text', data:{x:54, y:31.5, text:'stop', angle:0, style:style.h2}},
             //save
-                {type:'button_rect', name:'save', data: {
+                {type:'button_rectangle', name:'save', data: {
                     x:72.5, y: 25, width:20, height:10, style:style.button,
                     onpress: function(){
                         updateLights('save');
@@ -64,7 +64,7 @@ this.recorder = function(x,y,a){
                 }},
                 {type:'text', name:'button_save_text', data:{x:76.5, y:31.5, text:'save', angle:0, style:style.h2}},
             //clear
-                {type:'button_rect', name:'clear', data: {
+                {type:'button_rectangle', name:'clear', data: {
                     x:95, y: 25, width:20, height:10, style:style.button,
                     onpress: function(){updateLights('clear');object.recorder.clear();}
                 }},
@@ -92,7 +92,7 @@ this.recorder = function(x,y,a){
     };
 
     //main object
-        var object = workspace.interface.unit.alpha.builder(this.recorder,design);
+        var object = workspace.interface.unit.builder(this.recorder,design);
 
     //circuitry
         //update functions
@@ -129,7 +129,7 @@ this.recorder = function(x,y,a){
                 object.elements.glowbox_rect.activityLight_empty.on();
 
         //audio recorder
-            object.recorder = new workspace.interface.circuit.alpha.recorder(workspace.library.audio.context);
+            object.recorder = new workspace.interface.circuit.recorder(workspace.library.audio.context);
             object.elements.connectionNode_audio.inRight.out().connect( object.recorder.in_right() );
             object.elements.connectionNode_audio.inLeft.out().connect( object.recorder.in_left() );
 
@@ -138,5 +138,6 @@ this.recorder = function(x,y,a){
 
 this.recorder.metadata = {
     name:'Recorder',
+    category:'audioFile',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/recorder/'
 };

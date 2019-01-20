@@ -51,9 +51,9 @@ this.player = function(x,y,a){
             {type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{ x: 30, y: 5, angle:0, width:100, height:20, count:10, style:style.readout_sixteenSegmentDisplay_static }},
             {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 135, y: 5, angle:0, width:80, height:20, count:8, style:style.readout_sixteenSegmentDisplay_static }},
 
-            {type:'button_rect', name:'load', data: { x:5, y: 5, width:20, height:10, style:style.load_button, onpress:function(){ object.i.loadByFile(); } }},
-            {type:'button_rect',name:'start',data:{ x:5, y: 17.5, width:20, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
-            {type:'button_rect',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button, onpress:function(){ object.player.stop(); } }},
+            {type:'button_rectangle', name:'load', data: { x:5, y: 5, width:20, height:10, style:style.load_button, onpress:function(){ object.i.loadByFile(); } }},
+            {type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:20, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
+            {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button, onpress:function(){ object.player.stop(); } }},
 
             {type:'text', name:'rate_label_name', data:{ x:8.5, y:79, text:'rate', style:style.h1 }},
             {type:'text', name:'rate_label_0', data:{ x:5, y:75, text:'0', style:style.h2 }},
@@ -66,7 +66,7 @@ this.player = function(x,y,a){
     };
 
     //main object
-        var object = alphaUnit.builder(this.player,design);
+        var object = workspace.interface.unit.builder(this.player,design);
 
     //internal 
         function loadProcess(data){
@@ -80,7 +80,7 @@ this.player = function(x,y,a){
         
     //circuitry
         //audio file player
-            object.player = new workspace.interface.circuit.alpha.player(workspace.library.audio.context);
+            object.player = new workspace.interface.circuit.player(workspace.library.audio.context);
             object.player.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
             object.player.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
 
@@ -148,5 +148,6 @@ this.player = function(x,y,a){
 
 this.player.metadata = {
     name:'Player',
+    category:'audioFile',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/player/'
 };

@@ -14,7 +14,6 @@ this.documentUnits = function(units){
     // position             -   the X, Y and angle of the original object
     // details              -   data on the unit's type
     //      collection
-    //      category
     //      model
     // data                 -   the exported data from the original object
     // connections          -   an array of where to connect what
@@ -39,7 +38,6 @@ this.documentUnits = function(units){
             //unitDetails
                 entry.details = {
                     collection: unit.collection,
-                    category: unit.category,
                     model: unit.model,
                 };
 
@@ -81,7 +79,7 @@ this.printUnits = function(units){
         var item = units[a];
 
         //create the object with its new position adding it to the pane
-            var unit = control.scene.addUnit(item.position.x, item.position.y,  item.position.angle, item.details.model, item.details.category, item.details.collection);
+            var unit = control.scene.addUnit(item.position.x, item.position.y,  item.position.angle, item.details.model, item.details.collection);
             printedUnits.push(unit);
 
         //import data and select unit
@@ -113,7 +111,7 @@ this.export = function(){
 this.import = function(data){ this.printUnits( data ); };
 this.save = function(filename='project',compress=true){
     //control switch
-        if(!workspace.control.switch.enableSceneSave){return;}
+        if(!workspace.control.interaction.enableSceneSave()){return;}
     
 
 
@@ -152,7 +150,7 @@ this.save = function(filename='project',compress=true){
 };
 this.load = function(url,callback,askForConfirmation=false){
     //control switch
-        if(!workspace.control.switch.enableSceneLoad){return;}
+        if(!workspace.control.interaction.enableSceneLoad()){return;}
 
 
 
@@ -219,9 +217,9 @@ this.load = function(url,callback,askForConfirmation=false){
 };
 
 this.generateUnitName = function(){ return IDcounter++; };
-this.addUnit = function(x,y,a,model,category,collection='alpha'){
+this.addUnit = function(x,y,a,model,collection='alpha'){
     //control switch
-        if(!workspace.control.switch.enableSceneModification){return;}
+        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 
@@ -229,7 +227,16 @@ this.addUnit = function(x,y,a,model,category,collection='alpha'){
         var name = this.generateUnitName();
 
     //produce unit, assign its name and add grapple code
-        var tmp = category == undefined ? workspace.interface.unit[collection][model](x,y,a) : workspace.interface.unit[collection][category][model](x,y,a);
+        if( workspace.interface.unit.collection[collection] == undefined ){
+            console.warn('unknown unit collection "'+collection+'" (workspace.interface.unit.collection['+collection+'])'); 
+            return;
+        }
+        if( workspace.interface.unit.collection[collection][model] == undefined ){
+            console.warn('unknown unit model "'+model+'" (workspace.interface.unit.collection['+collection+']['+model+'])'); 
+            return;
+        }
+
+        var tmp = workspace.interface.unit.collection[collection][model](x,y,a);
         tmp.name = ''+name;
         tmp = workspace.control.grapple.declare(tmp);
 
@@ -243,13 +250,14 @@ this.addUnit = function(x,y,a,model,category,collection='alpha'){
 };
 this.removeUnit = function(unit){
     //control switch
-        if(!workspace.control.switch.enableSceneModification){return;}
+        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
         
         pane.remove(unit);
 };
 
+this.getAllUnits = function(){ return pane.children.filter( a => !a._isCable ); };
 this.getUnitByName = function(name){ return pane.getChildByName(name); };
-this.getUnitsByType = function(type){ return pane.children.filter( a => a.unitType == type ); };
+// this.getUnitsByType = function(type){ return pane.children.filter( a => a.unitType == type ); };
 this.getUnitUnderPoint = function(x,y){
     for( var a = 0; a < pane.children.length; a++){
         if( workspace.library.math.detectOverlap.boundingBoxes({bottomRight:{x:x,y:y},topLeft:{x:x,y:y}}, pane.children[a].space.box) ){
@@ -261,16 +269,23 @@ this.getUnitUnderPoint = function(x,y){
 };
 this.getUnitsWithinPoly = function(points){
     var box = workspace.library.math.boundingBoxFromPoints(points);
-    return pane.children.filter(function(a){ return !a._isCable && workspace.library.math.detectOverlap.boundingBoxes(box, a.space.box) && workspace.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
+    return pane.children.filter(function(a){ return !a._isCable && workspace.library.math.detectOverlap.boundingBoxes(box, a.space.boundingBox) && workspace.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
 };
 
-
-
-
-
-
-
-
 this.rectifyUnitPosition = function(unit){
-    return false;
+    //control switch
+        if(!workspace.control.interaction.enableUnitCollision()){return;}
+
+    //discover if there's an overlap; if not skip all this
+        var allOtherUnits = control.scene.getAllUnits().filter(a => a != unit).map(a => { return a.space; });
+        if( !workspace.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
+
+    //get the offset which will allow this unit to fit
+        var offset = workspace.library.math.fitPolyIn( unit.space, allOtherUnits );
+        
+    //apply offset
+        unit.parameter.x( unit.parameter.x() + offset.x);
+        unit.parameter.y( unit.parameter.y() + offset.y);
+    
+    return true; //false: no change was made - true: a change was made
 };

@@ -36,27 +36,33 @@ workspace.control.gui.elements.menubar.dropdowns = [
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:(function(){
-            var outputArray = [];
+            //collect units and separate by category
+                var collection = {};
+                for(design in workspace.interface.unit.collection.alpha){
+                    var data = workspace.interface.unit.collection.alpha[design].metadata;
+                    if(data.dev){continue;}
 
-            for(category in workspace.interface.unit.alpha){
-                if(category == 'builder'){continue;}
-
-                for(model in workspace.interface.unit.alpha[category]){
-                    if( workspace.interface.unit.alpha[category][model].devUnit ){continue;}
-
-                    outputArray.push({
-                        text_left: workspace.interface.unit.alpha[category][model].metadata.name,
-                        function:function(model,category){return function(){
-                            var p = workspace.core.viewport.windowPoint2workspacePoint(30,30);
-                            workspace.control.scene.addUnit(p.x,p.y,0,model,category,'alpha');
-                        }}(model,category),
-                    });
+                    if(collection[ data.category == undefined ? '' : data.category ] == undefined){
+                        collection[ data.category == undefined ? '' : data.category ] = [];
+                    }
+                    collection[ data.category == undefined ? '' : data.category ].push(
+                        {
+                            text_left: data.name,
+                            function:function(design){return function(){
+                                var p = workspace.core.viewport.windowPoint2workspacePoint(30,30);
+                                workspace.control.scene.addUnit(p.x,p.y,0,design,'alpha');
+                            }}(design),
+                        }
+                    );
                 }
 
-                outputArray.push('break');
-            }
-
-            outputArray.pop();
+            //covert to an array, separating categories by breaks
+                var outputArray = [];
+                for(category in collection){
+                    outputArray = outputArray.concat( collection[category] );
+                    outputArray.push('break');
+                }
+                outputArray.pop();
         
             return outputArray;
         })()

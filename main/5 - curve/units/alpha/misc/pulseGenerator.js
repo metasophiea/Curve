@@ -29,12 +29,12 @@ this.pulseGenerator = function(x,y,a){
             }},
             {type:'connectionNode_data', name:'sync', data:{
                 x: 115, y: 11.25, width: 5, height: 17.5,
-                receive:function(){ object.elements.button_rect.sync.press();},
+                receive:function(){ object.elements.button_rectangle.sync.press();},
             }},
 
             {type:'polygon', name:'backing', data:{ points:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], style:style.background }},
 
-            {type:'button_rect', name:'syncButton', data:{
+            {type:'button_rectangle', name:'syncButton', data:{
                 x:102.5, y: 11.25, width:10, height: 17.5,
                 selectable:false, 
                 style:{ 
@@ -53,7 +53,7 @@ this.pulseGenerator = function(x,y,a){
     };
 
     //main object
-        var object = alphaUnit.builder(this.pulseGenerator,design);
+        var object = workspace.interface.unit.builder(this.pulseGenerator,design);
 
     //internal circuitry
         object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
@@ -103,5 +103,6 @@ this.pulseGenerator = function(x,y,a){
 
 this.pulseGenerator.metadata = {
     name:'Pulse Generator',
+    category:'misc',
     helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
 };

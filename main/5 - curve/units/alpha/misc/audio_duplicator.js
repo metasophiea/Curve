@@ -22,12 +22,11 @@ this.audio_duplicator = function(x,y,a){
             {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, style:style.markings }},
             {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, style:style.markings }},
             {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, style:style.markings }},
-
         ],
     };
 
     //main object
-        var object = alphaUnit.builder(workspace.interface.unit.alpha.misc.audio_duplicator,design);
+        var object = workspace.interface.unit.builder(this.audio_duplicator,design);
 
     //circuitry
         object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
@@ -38,5 +37,6 @@ this.audio_duplicator = function(x,y,a){
 
 this.audio_duplicator.metadata = {
     name:'Audio Duplicator',
+    category:'misc',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
 };

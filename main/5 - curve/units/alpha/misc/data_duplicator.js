@@ -32,7 +32,7 @@ this.data_duplicator = function(x,y,a){
     };
 
     //main object
-        var object = alphaUnit.builder(this.data_duplicator,design);
+        var object = workspace.interface.unit.builder(this.data_duplicator,design);
     
     return object;
 
@@ -40,6 +40,7 @@ this.data_duplicator = function(x,y,a){
 
 this.data_duplicator.metadata = {
     name:'Data Duplicator',
+    category:'misc',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/dataDuplicator/'
 };
 

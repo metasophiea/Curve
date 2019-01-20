@@ -66,13 +66,13 @@ this.basicMixer = function(x,y,a){
     }
 
     //main object
-        var object = alphaUnit.builder(this.basicMixer,design);
+        var object = workspace.interface.unit.builder(this.basicMixer,design);
 
     
 
     //internal circuitry
         for(var a = 0; a < connectionCount; a++){
-            object['splitter_'+a] = new workspace.interface.circuit.alpha.channelMultiplier(workspace.library.audio.context,2);
+            object['splitter_'+a] = new workspace.interface.circuit.channelMultiplier(workspace.library.audio.context,2);
             object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
             object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_0'].in() );
             object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_1'].in() );
@@ -107,5 +107,6 @@ this.basicMixer = function(x,y,a){
 
 this.basicMixer.metadata = {
     name:'Basic Audio Mixer',
+    category:'misc',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/basicAudioMixer/'
 };

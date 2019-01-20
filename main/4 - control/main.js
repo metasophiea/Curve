@@ -4,21 +4,100 @@
 workspace.control = new function(){
     var control = this;
 
-    this.switch = {
-        devMode: (new URL(window.location.href)).searchParams.get("dev") != null,
+    this.interaction = new function(){
+        //global dev mode
+            var devMode = false;
+            this.devMode = function(bool){
+                if(bool==undefined){return devMode;}
+                devMode = bool;
 
-        mouseWheelZoomEnabled: true,
-        mouseGripPanningEnabled: true,
-        mouseGroupSelect: true,
-        enableSceneSave: true,
-        enableSceneLoad: true,
-        enableMenubar: true,
-        enableWindowScrollbarAutomaticRemoval: true,
-        enableUnitSelection: true,
-        enableSceneModification: true,
+                //if we're in dev mode; enable all switches
+                    if(devMode){
+                        for(item in this){
+                            if(item != 'devMode'){
+                                this[item](true);
+                            }
+                        }
+                    }
+            };
 
-        // enablCableDisconnectionConnection: true,
-        // enableUnitInterface: true,
+        //control
+            var enableMenubar = true;
+            this.enableMenubar = function(bool){
+                if(bool==undefined){return enableMenubar;}
+                // if(devMode){return;}
+                enableMenubar = bool;
+                if(!enableMenubar){ control.gui.hideMenubar(); }
+            };
+            var enableSceneSave = true;
+            this.enableSceneSave = function(bool){
+                if(bool==undefined){return enableSceneSave;}
+                if(devMode){return;}
+                enableSceneSave = bool;
+            };
+            var enableSceneLoad = true;
+            this.enableSceneLoad = function(bool){
+                if(bool==undefined){return enableSceneLoad;}
+                if(devMode){return;}
+                enableSceneLoad = bool;
+        };
+
+        //unit modifications
+            var enableUnitAdditionRemoval = true;
+            this.enableUnitAdditionRemoval = function(bool){
+                if(bool==undefined){return enableUnitAdditionRemoval;}
+                if(devMode){return;}
+                enableUnitAdditionRemoval = bool;
+            };
+            var enableUnitSelection = true;
+            this.enableUnitSelection = function(bool){
+                if(bool==undefined){return enableUnitSelection;}
+                if(devMode){return;}
+                enableUnitSelection = bool;
+            };
+            var enableUnitInteractable = true;
+            this.enableUnitInteractable = function(bool){
+                if(bool==undefined){return enableUnitInteractable;}
+                if(devMode){return;}
+                enableUnitInteractable = bool;
+                control.scene.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
+            };
+            var enableUnitCollision = true;
+            this.enableUnitCollision = function(bool){
+                if(bool==undefined){return enableUnitCollision;}
+                if(devMode){return;}
+                enableUnitCollision = bool;
+            };
+            var enablCableDisconnectionConnection = true;
+            this.enableCableDisconnectionConnection = function(bool){
+                if(bool==undefined){return enablCableDisconnectionConnection;}
+                if(devMode){return;}
+                enablCableDisconnectionConnection = bool;
+                control.scene.getAllUnits().forEach(a => {
+                    a.allowIOConnections(enablCableDisconnectionConnection);
+                    a.allowIODisconnections(enablCableDisconnectionConnection);
+                });
+            };
+
+        //general mouse actions
+            var mouseGripPanningEnabled = true;
+            this.mouseGripPanningEnabled = function(bool){
+                if(bool==undefined){return mouseGripPanningEnabled;}
+                if(devMode){return;}
+                mouseGripPanningEnabled = bool;
+            };
+            var mouseWheelZoomEnabled = true;
+            this.mouseWheelZoomEnabled = function(bool){
+                if(bool==undefined){return mouseWheelZoomEnabled;}
+                if(devMode){return;}
+                mouseWheelZoomEnabled = bool;
+            };
+            var mouseGroupSelect = true;
+            this.mouseGroupSelect = function(bool){
+                if(bool==undefined){return mouseGroupSelect;}
+                if(devMode){return;}
+                mouseGroupSelect = bool;
+            };
     };
 
     this.gui = new function(){
@@ -32,7 +111,7 @@ workspace.control = new function(){
 
         this.showMenubar = function(){
             //control switch
-                if(!workspace.control.switch.enableMenubar){
+                if(!workspace.control.interaction.enableMenubar()){
                     this.hideMenubar();
                     return;
                 }
@@ -67,12 +146,6 @@ workspace.control = new function(){
             control.gui.refresh();
         };
         this.stopMouseScroll = function(bool){
-            //control switch
-                if(!workspace.control.switch.enableWindowScrollbarAutomaticRemoval){
-                    workspace.core.viewport.stopMouseScroll(false);
-                    return false;
-                }
-
             return workspace.core.viewport.stopMouseScroll(bool);
         }
         this.activeRender = function(bool){ return workspace.core.render.active(bool); };
@@ -91,3 +164,4 @@ workspace.control = new function(){
 {{include:grapple.js}}
 
 window.onresize = workspace.control.viewport.refresh; 
+workspace.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );

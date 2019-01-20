@@ -14,12 +14,12 @@ workspace.system.mouse.functionList.onmousedown.push(
         requiredKeys:[['shift']],
         function:function(data){
             //control switch
-                if(!workspace.control.switch.mouseGroupSelect){return;}
+                if(!workspace.control.interaction.mouseGroupSelect()){return;}
 
 
 
             //creat selection graphic and add it to the foregroud
-                workspace.system.mouse.tmp.selectionRectangle = workspace.interface.part.alpha.builder( 
+                workspace.system.mouse.tmp.selectionRectangle = workspace.interface.part.builder( 
                     'rectangle', 'selectionRectangle', 
                     { x:data.x, y:data.y, width:0, height:0, style:{ fill:'rgba(224, 184, 252, 0.25)' } } 
                 );
@@ -58,7 +58,7 @@ workspace.system.mouse.functionList.onmousedown.push(
         requiredKeys:[],
         function:function(data){
             //control switch
-                if(!workspace.control.switch.mouseGripPanningEnabled){return;}
+                if(!workspace.control.interaction.mouseGripPanningEnabled()){return;}
 
 
 
@@ -92,7 +92,7 @@ workspace.system.mouse.functionList.onwheel.push(
         requiredKeys:[],
         function:function(data){
             //control switch
-                if(!workspace.control.switch.mouseWheelZoomEnabled){return;}
+                if(!workspace.control.interaction.mouseWheelZoomEnabled()){return;}
 
 
 

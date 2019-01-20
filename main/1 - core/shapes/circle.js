@@ -20,9 +20,6 @@ this.circle = function(){
         fill:'rgba(255,100,255,1)',
         stroke:'rgba(0,0,0,0)',
         lineWidth:1,
-        shadowColour:'rgba(0,0,0,0)',
-        shadowBlur:2,
-        shadowOffset:{x:1, y:1},
     };
 
     
@@ -133,8 +130,6 @@ this.circle = function(){
                 },
                 radius:this.r,
                 lineWidth: this.style.lineWidth,
-                shadowBlur: this.style.shadowBlur,
-                shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
             };
         
         //adapt values
@@ -142,9 +137,6 @@ this.circle = function(){
                 shapeValue.location = adapter.workspacePoint2windowPoint(shapeValue.location.x,shapeValue.location.y);
                 shapeValue.radius = adapter.length(shapeValue.radius);
                 shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
             }
 
         //clipping
@@ -159,10 +151,6 @@ this.circle = function(){
             context.fillStyle = this.style.fill;
             context.strokeStyle = this.style.stroke;
             context.lineWidth = shapeValue.lineWidth;
-            context.shadowColor = this.style.shadowColour;
-            context.shadowBlur = shapeValue.shadowBlur;
-            context.shadowOffsetX = shapeValue.shadowOffset.x;
-            context.shadowOffsetY = shapeValue.shadowOffset.y;
 
         //actual render
             context.beginPath();

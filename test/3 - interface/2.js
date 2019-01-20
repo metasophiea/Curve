@@ -1,3 +1,5 @@
+//test of unit builder
+
 var design = {
     name: 'name of unit (unique to collection)',
     collection: 'name of the collection to which this unit belongs',

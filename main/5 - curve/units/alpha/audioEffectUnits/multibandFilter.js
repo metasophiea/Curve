@@ -113,7 +113,7 @@ this.multibandFilter = function(x,y,a){
     }
 
     //main object
-        var object = alphaUnit.builder(this.multibandFilter,design);
+        var object = workspace.interface.unit.builder(this.multibandFilter,design);
 
     //import/export
         object.exportData = function(){
@@ -129,8 +129,8 @@ this.multibandFilter = function(x,y,a){
         object.importData = function(data){};
 
     //circuitry
-        object.filterCircuit_0 = new workspace.interface.circuit.alpha.multibandFilter(workspace.library.audio.context, vars.channelCount, true);
-        object.filterCircuit_1 = new workspace.interface.circuit.alpha.multibandFilter(workspace.library.audio.context, vars.channelCount, true);
+        object.filterCircuit_0 = new workspace.interface.circuit.multibandFilter(workspace.library.audio.context, vars.channelCount, true);
+        object.filterCircuit_1 = new workspace.interface.circuit.multibandFilter(workspace.library.audio.context, vars.channelCount, true);
         object.elements.connectionNode_audio.audioIn_0.out().connect( object.filterCircuit_0.in() );
         object.elements.connectionNode_audio.audioIn_1.out().connect( object.filterCircuit_1.in() );
         object.filterCircuit_0.out().connect( object.elements.connectionNode_audio.audioOut_0.in() );
@@ -246,5 +246,6 @@ this.multibandFilter = function(x,y,a){
 
 this.multibandFilter.metadata = {
     name:'Multiband Filter',
+    category:'audioEffectUnits',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/multibandFilter/'
 };

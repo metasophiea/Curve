@@ -1,4 +1,131 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-01-20
+  - fixed curve's dropdown problem from yesterday by adding category data to the
+    unit's metadata 
+  - added button_ (a generic version, for making more types of buttons faster
+    and easier)
+  - replaced button_rect with button_rectangle (a more advanced version)
+  - added button_circle
+  - added button_polygon
+  - added button_image
+  - added dial_image_continuous and dial_image_discrete
+  - continued the basicSynthesizer (with an image for a background) to give it
+    dials that had images for their parts.. doesn't look great (mainly because I
+    spent 0 time on what the images are), but it totally works :D
+
+  Compilation Results
+  - workspace.js                         1243 Kb  (100%)
+  - workspace.min.js                      378 Kb  (30.42%)
+
+2019-01-19
+  - improved workspace.library.math.fitPolyIn initial position finding routine
+    by making is search in increasing circles of size, where the step between
+    each circle's radius also increases, thus allowing for more accurate poly
+    placement (particularly when sandwiched between two other polys)
+  - created basicSynthesizer with an image for a background
+  - removed the concept of "categories" from units
+  - removed the concept of "alpha" from parts, and replaced with "collection"
+  - began developing more advanced versions of parts, starting with buttons
+
+  bugs
+  - borked curve's create dropdown along the way
+
+  future ideas
+  - transparent image overlays for parts and units
+
+
+2019-01-18
+  - workspace.library.math.fitPolyIn is now working wonderfully
+  - workspace.control.scene.rectifyUnitPosition has also been updated, which
+    applies fitPolyIn to all units. Things are pretty sweet.
+  - fixed problem of rotating a unit and the space not rotating with it
+  - added 'enableUnitCollision' to control.interaction 
+  - added "clippedImage" basic part to interface layer
+
+  Compilation Results
+  - workspace.js                         1196 Kb  (100%)
+  - workspace.min.js                      354 Kb  (29.65%)
+
+  bugs
+  - when moving a group of things; they shouldn't collide off eachother
+    ...probably?
+  -  control.scene.getUnitsByType just doesn't work
+
+
+2019-01-17
+  - latest version of workspace.library.math.fitPolyIn is working pretty
+    beautifully; it's still based on the brute method from before, but now does
+    things is a more efficient way, and seems to be able to deliver an accurate
+    offset very quickly.
+   - developing workspace.library.math.fitPolyIn2 (almost there)
+
+  bugs
+  - rotation of unit doesn't rotate it's space at all
+
+
+2019-01-16
+  - redid control switches as "interaction"
+  - added "getAllUnits" method to control.scene
+  - added 'enableUnitInteractable' and 'enableCableDisconnectionConnection'
+    methods to control.interaction (which runs through all units in the scene
+    and activates their 'allowIOConnections', 'allowIODisconnections' and
+    'interactable' functions as necessary)
+  - activating devMode stops all changes to control.interaction from working (it
+    essentially locks things in place, back before any of the interaction
+    settings were changed to 'false')
+  - renamed 'testUnit' to 'testUnit_1'
+  - created new test unit 'testUnit_2'
+  - added workspace.library.math.fitPolyIn, which is used for finding the closet
+    place a poly can fit in a field. To be used with
+    workspace.control.scene.rectifyUnitPosition
+    ..it kinda works? Right now it's using a simple spiral algorithm, which does
+    the job, just not very efficiently..or that well. Doesn't get the closet fit
+    either. Needs work. Need to set up a proper testing environment for it.
+
+    developed future to include a correction part..its really inefficient, but
+    actually returns better accuracy, and is less jumpy too. Needs more work
+    though
+  - filled in workspace.control.scene.rectifyUnitPosition to use 
+    workspace.library.math.fitPolyIn..which doesn't totally work yet, but we're
+    getting there
+
+
+2019-01-15
+  - added "interactable" argument and methods to (all control parts)
+      button_rect
+      slide
+      slidePanel
+      rangeSlide,
+      checkbox_rect
+      dial_continuous
+      dial_discrete
+      list
+      needleOverlay
+      grapher_waveWorkspace
+      rastorgrid
+      sequencer
+  - fixed problem with needleOverlay mouse interaction movement being borked
+    by commenting out some "/2"s...need to check again how it is on mac (with
+    its high density pixel display) and if things are good, remove the
+    aforementioned commented out parts.
+  - added "interactable" method to units, to allow blanket setting of all
+    control parts (except connection nodes)
+  - added "interactable" methods to units, to allow blanket setting of all
+    IO connection nodes: "allowIOConnections" and "allowIODisconnections"
+  - renamed "enableSceneModification" to "enableUnitAdditionRemoval"
+
+
+2019-01-14
+  - removed all shadow related things from core shapes and interface (which is
+    everywhere)
+  - updated connectionNodes so that one can disactivate mouse-started
+    connection and disconnetion (while allowing programmable changes)
+
+  notes
+  - need to do this "disable mouse interaction" thing to all control parts, then
+    add complimentary functionality to units
+
+
 2019-01-13
   - fixed menubar scaling
 

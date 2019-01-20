@@ -29,7 +29,7 @@ this.audioScope = function(x,y,a){
 
             {type:'connectionNode_audio', name:'input', data:{ x:195, y:5, width:10, height:20 }},
             {type:'grapher_audioScope_static', name:'waveport', data:{ x:5, y:5, width:150, height:100 }},
-            {type:'button_rect', name:'holdKey', data:{ x:160, y:5, width:30, height:20, style:style.button }},
+            {type:'button_rectangle', name:'holdKey', data:{ x:160, y:5, width:30, height:20, style:style.button }},
 
             {type:'text', name:'framerate_name', data:{x: 155+6.5,  y: 30+38, text: 'framerate', style: style.h1}},
             {type:'text', name:'framerate_1',    data:{x: 155+7,    y: 30+32, text: '1',         style: style.h2}},
@@ -43,11 +43,11 @@ this.audioScope = function(x,y,a){
     };
 
     //main object
-        var object = alphaUnit.builder(this.audioScope,design);
+        var object = workspace.interface.unit.builder(this.audioScope,design);
     
     //circuitry
-        object.elements.button_rect.holdKey.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};
-        object.elements.button_rect.holdKey.onrelease = function(){object.elements.grapher_audioScope_static.waveport.start();};
+        object.elements.button_rectangle.holdKey.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};
+        object.elements.button_rectangle.holdKey.onrelease = function(){object.elements.grapher_audioScope_static.waveport.start();};
         object.elements.connectionNode_audio.input.out().connect(object.elements.grapher_audioScope_static.waveport.getNode());
 
     //wiring
@@ -66,5 +66,6 @@ this.audioScope = function(x,y,a){
 
 this.audioScope.metadata = {
     name:'Audio Scope',
+    category:'humanOutputDevices',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/audioScope/'
 };

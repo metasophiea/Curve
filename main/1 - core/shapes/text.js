@@ -25,9 +25,6 @@ this.text = function(){
         fill:'rgba(255,100,100,1)',
         stroke:'rgba(0,0,0,0)',
         lineWidth:1,
-        shadowColour:'rgba(0,0,0,0)',
-        shadowBlur:2,
-        shadowOffset:{x:20, y:20},
     };
 
     
@@ -132,8 +129,6 @@ this.text = function(){
                 size: this.size,
                 angle:(this.angle+offset.a),
                 lineWidth: this.style.lineWidth,
-                shadowBlur: this.style.shadowBlur,
-                shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
             };
         
         //adapt values
@@ -141,9 +136,6 @@ this.text = function(){
                 shapeValue.location = adapter.workspacePoint2windowPoint( shapeValue.location.x, shapeValue.location.y );   
         
                 shapeValue.size = adapter.length(shapeValue.size);
-                shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
             }
 
         //post adaptation calculations
@@ -162,16 +154,11 @@ this.text = function(){
             context.fillStyle = this.style.fill;
             context.strokeStyle = this.style.stroke;
             context.lineWidth = shapeValue.lineWidth;
-            context.shadowColor = this.style.shadowColour;
-            context.shadowBlur = shapeValue.shadowBlur;
-            context.shadowOffsetX = shapeValue.shadowOffset.x;
-            context.shadowOffsetY = shapeValue.shadowOffset.y;
 
             context.save();
             context.rotate( shapeValue.angle );
             context.scale(shapeValue.size,shapeValue.size);
             context.fillText( this.text, shapeValue.location.x/shapeValue.size, shapeValue.location.y/shapeValue.size );
-            context.shadowColor = 'rgba(0,0,0,0)'; //to stop stroke shadows drawing over the fill text (an uncreative solution)
             context.strokeText( this.text, shapeValue.location.x/shapeValue.size, shapeValue.location.y/shapeValue.size );
             context.restore();
 

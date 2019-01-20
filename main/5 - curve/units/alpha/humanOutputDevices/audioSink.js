@@ -26,7 +26,7 @@ this.audioSink = function(x,y,a){
     };
  
     //main object
-        var object = alphaUnit.builder(this.audioSink,design);
+        var object = workspace.interface.unit.builder(this.audioSink,design);
 
     //circuitry
         var flow = {
@@ -59,5 +59,6 @@ this.audioSink = function(x,y,a){
 
 this.audioSink.metadata = {
     name:'Audio Sink',
+    category:'humanOutputDevices',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/audioSink/'
 };

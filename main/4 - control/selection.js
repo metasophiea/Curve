@@ -4,7 +4,7 @@ this.clipboard = [];
 
 this.selectUnit = function(unit,shiftToFront=true){
     //control switch
-        if(!workspace.control.switch.enableUnitSelection){return;}
+        if(!workspace.control.interaction.enableUnitSelection()){return;}
 
     //check if object is already selected
         if( this.selectedUnits.indexOf(unit) != -1 ){return;}
@@ -17,10 +17,10 @@ this.selectUnit = function(unit,shiftToFront=true){
         }
 
     //colourize space
-        var tmp = workspace.interface.part.alpha.builder( 
+        var tmp = workspace.interface.part.builder( 
             'polygon', 'selectionGlow-'+unit.getAddress(), 
             { 
-                points:unit.space.points.map(function(a){ return {x:a.x-unit.x,y:a.y-unit.y};}), 
+                points:unit.space.points.map(a => { return workspace.library.math.cartesianAngleAdjust( a.x - unit.x, a.y - unit.y, -unit.parameter.angle() ); }), 
                 style:{ fill:'rgba(244, 226, 66, 0.25)', stroke:'rgba(244, 226, 66, 1)' } 
             } 
         );
@@ -66,7 +66,7 @@ this.deselectEverything = function(){
 
 this.cut = function(){
     //control switch
-        if(!workspace.control.switch.enableSceneModification){return;}
+        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
         
@@ -75,7 +75,7 @@ this.cut = function(){
 };
 this.copy = function(){
     //control switch
-        if(!workspace.control.switch.enableSceneModification){return;}
+        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 
@@ -83,7 +83,7 @@ this.copy = function(){
 };
 this.paste = function(position){
     //control switch
-        if(!workspace.control.switch.enableSceneModification){return;}
+        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 
@@ -125,7 +125,7 @@ this.paste = function(position){
 };
 this.duplicate = function(){
     //control switch
-        if(!workspace.control.switch.enableSceneModification){return;}
+        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 
@@ -135,7 +135,7 @@ this.duplicate = function(){
 };
 this.delete = function(){
     //control switch
-        if(!workspace.control.switch.enableSceneModification){return;}
+        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 

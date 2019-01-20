@@ -1,3 +1,2 @@
-this.test = new function(){
-    {{include:test/main.js}}
-};
+{{include:collection/main.js}}
+{{include:builder.js}}

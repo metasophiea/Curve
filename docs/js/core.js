@@ -8,6 +8,10 @@
                 
                 this.math = new function(){
                     this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
+                    this.averagePoint = function(points){
+                        var sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
+                        return {x:sum.x/points.length,y:sum.y/points.length};
+                    };
                     this.distanceBetweenTwoPoints = function(a, b){ return Math.pow(Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2),0.5) };
                     this.seconds2time = function(seconds){
                         var result = {h:0, m:0, s:0};
@@ -52,9 +56,18 @@
                         return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
                     };
                     this.cartesianAngleAdjust = function(x,y,angle){
+                        if(angle == 0 || angle%Math.PI*2 == 0){ return {x:x,y:y}; }
                         var polar = this.cartesian2polar( x, y );
                         polar.ang += angle;
                         return this.polar2cartesian( polar.ang, polar.dis );
+                    };
+                    this.applyOffsetToPoints = function(offset,points){
+                        return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
+                    };
+                    this.applyOffsetToPolygon = function(offset,poly){
+                        var newPolygon = { points: this.applyOffsetToPoints(offset,poly.points), boundingBox:{} };
+                        newPolygon.boundingBox = this.boundingBoxFromPoints(newPolygon.points);
+                        return newPolygon;
                     };
                     this.boundingBoxFromPoints = function(points){
                         if(points.length == 0){
@@ -312,8 +325,8 @@
                                 (a.bottomRight.y < b.topLeft.y) ||
                                 (a.topLeft.y > b.bottomRight.y) ||
                                 (a.bottomRight.x < b.topLeft.x) ||
-                                (a.topLeft.x > b.bottomRight.x)   
-                        );};
+                                (a.topLeft.x > b.bottomRight.x) );
+                        };
                         this.pointWithinBoundingBox = function(point,box){
                             return !(
                                 point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
@@ -370,8 +383,131 @@
                     
                             return false;
                         };
+                        this.overlappingPolygonWithPolygons = function(poly,polys){ 
+                            for(var a = 0; a < polys.length; a++){
+                                if(this.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
+                                    if(this.overlappingPolygons(poly.points, polys[a].points)){
+                                        return true;
+                                    }
+                                }
+                            }
+                            return false;
+                        };
                     };
-
+                    this.fitPolyIn = function(newPoly,existingPolys,dev=false){
+                        var offset = {x:0,y:0};
+                        var paths = [[],[],[]];
+                    
+                        //get the middle ("average") point of newPoly
+                            var middlePoint = coreGraphics.library.math.averagePoint(newPoly.points);
+                    
+                        //circle out to find initial offsets
+                            var stepCount = 1;
+                            var maxItrationCount = 100;
+                    
+                            var sucessfulOffsets = [];
+                            for(stepCount = 1; stepCount < maxItrationCount+1; stepCount++){
+                                sucessfulOffsets = [];
+                                var stepsInThisCircle = 2*stepCount + 1;
+                                var circularStepSizeInRad = (2*Math.PI) / stepsInThisCircle;
+                                var radius = Math.pow(stepCount,2);
+                                
+                                //head round the circle, testing each point as an offset
+                                    for(var a = 0; a < stepsInThisCircle; a++){
+                                        //calculate the current offset
+                                            var tmpOffset = library.math.polar2cartesian( circularStepSizeInRad*a, radius );
+                                            if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
+                                        
+                                        //if offsetting the shape in this way results in no collision; save this offset in 'sucessfulOffsets'
+                                            if(!this.detectOverlap.overlappingPolygonWithPolygons(this.applyOffsetToPolygon(tmpOffset,newPoly),existingPolys)){
+                                                sucessfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
+                                            }
+                                    }
+                    
+                                //if on this circle we've found at least one possible location; break out of this section and move on to the next
+                                    if( sucessfulOffsets.length != 0 ){break;}
+                            }
+                    
+                    
+                        //use midpointing from these points to find the single closest circular offset
+                            var maxItrationCount = 10;
+                            var sucessfulOffset;
+                    
+                            if(sucessfulOffsets.length == 1){
+                                sucessfulOffset = sucessfulOffsets[0];
+                            }else{
+                                //there was more than one possible offset for this radius, so we need to edge each of them closer
+                                //to the original point, to whittle them down to the one angle that can provide the smallest radius
+                    
+                                var maxRadius = Math.pow(stepCount,2);
+                                var minRadius = Math.pow(stepCount-1,2);
+                    
+                                var provenFunctionalOffsets = [];
+                                for(var i = 0; i < maxItrationCount; i++){
+                                    var tmpSucessfulOffsets = [];
+                                    var midRadius = (maxRadius - minRadius)/2 + minRadius;
+                    
+                                    //check this new midpoint radius with the sucessfulOffset values 
+                                        for(var a = 0; a < sucessfulOffsets.length; a++){
+                                            //calculate the current offset using the midpoint value
+                                                var tmpOffset = library.math.polar2cartesian( sucessfulOffsets[a].ang, midRadius );
+                                                if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
+                                                        
+                                            //if offsetting the shape in this way results in no collision; save this offset in 'tmpSucessfulOffsets'
+                                                if(!this.detectOverlap.overlappingPolygonWithPolygons(this.applyOffsetToPolygon(tmpOffset,newPoly),existingPolys)){
+                                                    tmpSucessfulOffsets.push( {ang:sucessfulOffsets[a].ang, dis:midRadius} );
+                                                    provenFunctionalOffsets.push( {ang:sucessfulOffsets[a].ang, dis:midRadius} );
+                                                }
+                                        }
+                    
+                                    //check if there's only one offset left
+                                        if( tmpSucessfulOffsets.length == 1 ){ sucessfulOffset = tmpSucessfulOffsets[0]; break; }
+                    
+                                    //decide wherther to check further out or closer in
+                                        if( tmpSucessfulOffsets.length == 0 ){
+                                            minRadius = midRadius; //somewhere further out
+                                        }else{
+                                            maxRadius = midRadius; //somewhere further in
+                                        }
+                                }
+                    
+                                //if everything goes wrong with the midpoint method; and we end up with no offsets, use whatever the last proven functional offset was
+                                    if(sucessfulOffset == undefined){ sucessfulOffset = provenFunctionalOffsets.pop(); }
+                            }
+                    
+                        //adjust along x and y to find the closest offset
+                            var maxItrationCount = 10;
+                    
+                            var offset = library.math.polar2cartesian( sucessfulOffset.ang, sucessfulOffset.dis );
+                            if(dev){paths[2].push( {x:offset.x+middlePoint.x, y:offset.y+middlePoint.y} );}
+                            var max = {x:offset.x, y:offset.y};
+                            var min = {x:0, y:0};
+                            
+                            //use midpoint methods to edge the shape (over x and y) to as close as it can be to the original point
+                                for(var i = 0; i < maxItrationCount; i++){
+                                    var midpoint = { x:(max.x-min.x)/2 + min.x, y:(max.y-min.y)/2 + min.y };
+                    
+                                    //can you make a x movement? you can? then do it
+                                        if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}
+                                        if(!this.detectOverlap.overlappingPolygonWithPolygons(this.applyOffsetToPolygon({x:midpoint.x, y:max.y},newPoly),existingPolys)){
+                                            max.x = midpoint.x; //too far
+                                        }else{ 
+                                            min.x = midpoint.x; //too close
+                                        }
+                    
+                                    //can you make a y movement? you can? then do it
+                                        if(dev){paths[2].push( {x:max.x+middlePoint.x, y:midpoint.y+middlePoint.y} );}
+                                        if(!this.detectOverlap.overlappingPolygonWithPolygons(this.applyOffsetToPolygon({x:max.x, y:midpoint.y},newPoly),existingPolys)){
+                                            max.y = midpoint.y; //too far
+                                        }else{
+                                            min.y = midpoint.y; //too close
+                                        }
+                                }
+                    
+                            offset = {x:max.x, y:max.y};
+                    
+                        return dev ? {offset:offset,paths:paths} : offset;
+                    };
                 };
                 this.structure = new function(){
                     this.functionListRunner = function(list,activeKeys){
@@ -1425,9 +1561,6 @@
                                 lineWidth:1,
                                 lineJoin:'round',
                                 miterLimit:2,
-                                shadowColour:'rgba(0,0,0,0)',
-                                shadowBlur:20,
-                                shadowOffset:{x:20, y:20},
                             };
                         
                             
@@ -1516,17 +1649,12 @@
                                             return { x:a.x+offset.x, y:a.y+offset.y };
                                         } ),
                                         lineWidth: this.style.lineWidth,
-                                        shadowBlur: this.style.shadowBlur,
-                                        shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
                                     };
                                 
                                 //adapt values
                                     if(!static){
                                         shapeValue.points = shapeValue.points.map( function(a){ return adapter.coreGraphicsPoint2windowPoint(a.x, a.y); } );
                                         shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                        shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                        shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                        shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
                                     }
                         
                                 //clipping
@@ -1546,10 +1674,6 @@
                                     context.lineWidth = shapeValue.lineWidth;
                                     context.lineJoin = this.style.lineJoin;
                                     context.miterLimit = this.style.miterLimit;
-                                    context.shadowColor = this.style.shadowColour;
-                                    context.shadowBlur = shapeValue.shadowBlur;
-                                    context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                    context.shadowOffsetY = shapeValue.shadowOffset.y;
                         
                                     context.beginPath(); 
                                     context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
@@ -1599,9 +1723,6 @@
                                 fill:'rgba(255,100,255,1)',
                                 stroke:'rgba(0,0,0,0)',
                                 lineWidth:1,
-                                shadowColour:'rgba(0,0,0,0)',
-                                shadowBlur:2,
-                                shadowOffset:{x:1, y:1},
                             };
                         
                             
@@ -1712,8 +1833,6 @@
                                         },
                                         radius:this.r,
                                         lineWidth: this.style.lineWidth,
-                                        shadowBlur: this.style.shadowBlur,
-                                        shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
                                     };
                                 
                                 //adapt values
@@ -1721,9 +1840,6 @@
                                         shapeValue.location = adapter.coreGraphicsPoint2windowPoint(shapeValue.location.x,shapeValue.location.y);
                                         shapeValue.radius = adapter.length(shapeValue.radius);
                                         shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                        shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                        shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                        shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
                                     }
                         
                                 //clipping
@@ -1738,10 +1854,6 @@
                                     context.fillStyle = this.style.fill;
                                     context.strokeStyle = this.style.stroke;
                                     context.lineWidth = shapeValue.lineWidth;
-                                    context.shadowColor = this.style.shadowColour;
-                                    context.shadowBlur = shapeValue.shadowBlur;
-                                    context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                    context.shadowOffsetY = shapeValue.shadowOffset.y;
                         
                                 //actual render
                                     context.beginPath();
@@ -1968,11 +2080,6 @@
                             this.url = '';
                             var imageObject = {};
                         
-                            this.style = {
-                                shadowColour:'rgba(0,0,0,0)',
-                                shadowBlur:2,
-                                shadowOffset:{x:1, y:1},
-                            };
                         
                             
                             this.parameter = {};
@@ -2069,8 +2176,6 @@
                                         angle:(this.angle+offset.a),
                                         width: this.width,
                                         height: this.height,
-                                        // lineWidth: this.style.lineWidth,
-                                        // shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
                                     };
                                     shapeValue.location = {
                                         x:( (this.x+offset.x) - this.anchor.x*(this.width*Math.cos(shapeValue.angle) + this.height*Math.sin(-shapeValue.angle)) ), 
@@ -2082,10 +2187,6 @@
                                         shapeValue.location = adapter.coreGraphicsPoint2windowPoint(shapeValue.location.x, shapeValue.location.y);
                                         shapeValue.width = adapter.length(shapeValue.width);
                                         shapeValue.height = adapter.length(shapeValue.height);
-                                        // shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                        // shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                        // shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                        // shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
                                     }
                         
                                 //post adaptation calculations
@@ -2098,10 +2199,6 @@
                                     }
                         
                                 //actual render
-                                    // context.shadowColor = this.style.shadowColour;
-                                    // context.shadowBlur = shapeValue.shadowBlur;
-                                    // context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                    // context.shadowOffsetY = shapeValue.shadowOffset.y;
                                     context.save();
                                     context.rotate( shapeValue.angle );
                                     context.drawImage( imageObject[this.url], shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
@@ -2123,192 +2220,6 @@
                             }
                         
                         };
-                        
-                        
-                        
-                        
-                        
-                        
-                        //pre 2019 01 09
-                        // this.image = function(){
-                        
-                        //     this.type = 'image';
-                        
-                        //     this.name = '';
-                        //     this.ignored = false;
-                        //     this.static = false;
-                        //     this.parent = undefined;
-                        //     this.dotFrame = false;
-                        //     this.extremities = {
-                        //         points:[],
-                        //         boundingBox:{},
-                        //     };
-                        
-                        //     this.x = 0;
-                        //     this.y = 0;
-                        //     this.angle = 0;
-                        //     this.anchor = {x:0,y:0};
-                        //     this.width = 10;
-                        //     this.height = 10;
-                        
-                        //     this.url = '';
-                        //     var imageObject = {};
-                        
-                        //     this.style = {
-                        //         shadowColour:'rgba(0,0,0,0)',
-                        //         shadowBlur:2,
-                        //         shadowOffset:{x:1, y:1},
-                        //     };
-                        
-                            
-                        //     this.parameter = {};
-                        //     this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
-                        //     this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
-                        //     this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
-                        //     this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
-                        //     this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities();} }(this);
-                        //     this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities();} }(this);
-                        
-                        
-                            
-                        
-                        //     this.getAddress = function(){
-                        //         var address = '';
-                        //         var tmp = this;
-                        //         do{
-                        //             address = tmp.name + '/' + address;
-                        //         }while((tmp = tmp.parent) != undefined)
-                        
-                        //         return '/'+address;
-                        //     };
-                            
-                        //     this.computeExtremities = function(offset){
-                        //         //discover if this shape should be static
-                        //             var isStatic = this.static;
-                        //             var tmp = this;
-                        //             while((tmp = tmp.parent) != undefined && !isStatic){
-                        //                 isStatic = isStatic || tmp.static;
-                        //             }
-                        //             this.static = isStatic;
-                        
-                        //         //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                        //         //in which case; gather the offset of all parents. Otherwise just use what was provided
-                        //             offset = offset == undefined ? gatherParentOffset(this) : offset;
-                        
-                        //         //reset variables
-                        //             this.extremities = {
-                        //                 points:[],
-                        //                 boundingBox:{},
-                        //             };
-                        
-                        //         //calculate points
-                        //             this.extremities.points = coreGraphics.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
-                        //             this.extremities.points = this.extremities.points.map(function(point){
-                        //                 point = coreGraphics.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                        //                 point.x += offset.x;
-                        //                 point.y += offset.y;
-                        //                 return point;
-                        //             });
-                        
-                        //         //calculate boundingBox
-                        //             this.extremities.boundingBox = coreGraphics.library.math.boundingBoxFromPoints( this.extremities.points );
-                        
-                        //         //update the points and bounding box of the parent
-                        //             if(this.parent != undefined){
-                        //                 this.parent.computeExtremities();
-                        //             }
-                        //     };
-                        
-                        //     function isPointWithinBoundingBox(x,y,shape){
-                        //         if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                        //         return coreGraphics.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                        //     }
-                        //     function isPointWithinHitBox(x,y,shape){
-                        //         if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                        //         return coreGraphics.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                        //     }
-                        //     this.isPointWithin = function(x,y){
-                        //         if( isPointWithinBoundingBox(x,y,this) ){
-                        //             return isPointWithinHitBox(x,y,this);
-                        //         }
-                        //         return false;
-                        //     };
-                        
-                        //     function shouldRender(shape){ 
-                        //         //if this shape is static, always render
-                        //             if(shape.static){return true;}
-                                    
-                        //         //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                        //             return coreGraphics.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                        //     };
-                        //     this.render = function(context,offset={x:0,y:0,a:0},static=false){
-                        //         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                        //             if(!shouldRender(this)){return;}
-                        
-                        //         //adjust offset for parent's angle
-                        //             var point = coreGraphics.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                        //             offset.x += point.x - this.x;
-                        //             offset.y += point.y - this.y;
-                                
-                        //         //collect and consolidate shape values into a neat package
-                        //             var shapeValue = {
-                        //                 location:{
-                        //                     x:(this.x+offset.x),
-                        //                     y:(this.y+offset.y)
-                        //                 },
-                        //                 angle:(this.angle+offset.a),
-                        //                 width: this.width,
-                        //                 height: this.height,
-                        //                 // lineWidth: this.style.lineWidth,
-                        //                 // shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
-                        //             };
-                                
-                        //         //adapt values
-                        //             if(!static){
-                        //                 shapeValue.location = adapter.coreGraphicsPoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-                        //                 shapeValue.width = adapter.length(shapeValue.width);
-                        //                 shapeValue.height = adapter.length(shapeValue.height);
-                        //                 // shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                        //                 // shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                        //                 // shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                        //                 // shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
-                        //             }
-                        
-                        //         //post adaptation calculations
-                        //             shapeValue.location = coreGraphics.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
-                        
-                        //         //if this image url is not cached; cache it
-                        //             if( !imageObject.hasOwnProperty(this.url) ){
-                        //                 imageObject[this.url] = new Image(); 
-                        //                 imageObject[this.url].src = this.url;
-                        //             }
-                        
-                        //         //actual render
-                        //             // context.shadowColor = this.style.shadowColour;
-                        //             // context.shadowBlur = shapeValue.shadowBlur;
-                        //             // context.shadowOffsetX = shapeValue.shadowOffset.x;
-                        //             // context.shadowOffsetY = shapeValue.shadowOffset.y;
-                        //             context.save();
-                        //             context.rotate( shapeValue.angle );
-                        //             context.drawImage( imageObject[this.url], shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
-                        //             context.restore();
-                        
-                        //         //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                        //             if(this.dotFrame){
-                        //                 //points
-                        //                     for(var a = 0; a < this.extremities.points.length; a++){
-                        //                         var temp = adapter.coreGraphicsPoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                        //                         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                        //                     }
-                        //                 //boudning box
-                        //                     var temp = adapter.coreGraphicsPoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                        //                     core.render.drawDot( temp.x, temp.y );
-                        //                     var temp = adapter.coreGraphicsPoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                        //                     core.render.drawDot( temp.x, temp.y );
-                        //             }
-                        //     }
-                        
-                        // };
                         this.path = function(){
                         
                             this.type = 'path';
@@ -2331,9 +2242,6 @@
                                 lineCap:'butt',
                                 lineJoin:'miter',
                                 miterLimit:2,
-                                shadowColour:'rgba(0,0,0,0)',
-                                shadowBlur:20,
-                                shadowOffset:{x:20, y:20},
                             };
                         
                             
@@ -2430,17 +2338,12 @@
                                             return { x:a.x+offset.x, y:a.y+offset.y };
                                         } ),
                                         lineWidth: this.style.lineWidth,
-                                        shadowBlur: this.style.shadowBlur,
-                                        shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
                                     };
                                 
                                 //adapt values
                                     if(!static){
                                         shapeValue.points = shapeValue.points.map( function(a){ return adapter.coreGraphicsPoint2windowPoint(a.x, a.y); } );
                                         shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                        shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                        shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                        shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
                                     }
                         
                                 //paint this shape as requested
@@ -2450,10 +2353,6 @@
                                     context.lineCap = this.style.lineCap;
                                     context.lineJoin = this.style.lineJoin;
                                     context.miterLimit = this.style.miterLimit;
-                                    context.shadowColor = this.style.shadowColour;
-                                    context.shadowBlur = shapeValue.shadowBlur;
-                                    context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                    context.shadowOffsetY = shapeValue.shadowOffset.y;
                         
                                     context.beginPath(); 
                                     context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
@@ -2503,9 +2402,6 @@
                                 fill:'rgba(255,100,255,1)',
                                 stroke:'rgba(0,0,0,0)',
                                 lineWidth:1,
-                                shadowColour:'rgba(0,0,0,0)',
-                                shadowBlur:2,
-                                shadowOffset:{x:1, y:1},
                             };
                         
                             
@@ -2604,8 +2500,6 @@
                                         width: this.width,
                                         height: this.height,
                                         lineWidth: this.style.lineWidth,
-                                        shadowBlur: this.style.shadowBlur,
-                                        shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
                                     };
                                     shapeValue.location = {
                                         x:( (this.x+offset.x) - this.anchor.x*(this.width*Math.cos(shapeValue.angle) + this.height*Math.sin(-shapeValue.angle)) ), 
@@ -2618,9 +2512,6 @@
                                         shapeValue.width = adapter.length(shapeValue.width);
                                         shapeValue.height = adapter.length(shapeValue.height);
                                         shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                                        shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                        shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                        shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
                                     }
                         
                                 //post adaptation calculations
@@ -2640,10 +2531,6 @@
                                     context.fillStyle = this.style.fill;
                                     context.strokeStyle = this.style.stroke;
                                     context.lineWidth = shapeValue.lineWidth;
-                                    context.shadowColor = this.style.shadowColour;
-                                    context.shadowBlur = shapeValue.shadowBlur;
-                                    context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                    context.shadowOffsetY = shapeValue.shadowOffset.y;
                                     
                                     context.save();
                                     context.rotate( shapeValue.angle );
@@ -2666,207 +2553,6 @@
                                     }
                             }
                         };
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        //pre 2019 01 09
-                        // this.rectangle = function(){
-                        
-                        //     this.type = 'rectangle';
-                        
-                        //     this.name = '';
-                        //     this.ignored = false;
-                        //     this.static = false;
-                        //     this.parent = undefined;
-                        //     this.dotFrame = false;
-                        //     this.extremities = {
-                        //         points:[],
-                        //         boundingBox:{},
-                        //     };
-                        
-                        //     this.x = 0;
-                        //     this.y = 0;
-                        //     this.angle = 0;
-                        //     this.anchor = {x:0,y:0};
-                        //     this.width = 10;
-                        //     this.height = 10;
-                        
-                        //     this.style = {
-                        //         fill:'rgba(255,100,255,1)',
-                        //         stroke:'rgba(0,0,0,0)',
-                        //         lineWidth:1,
-                        //         shadowColour:'rgba(0,0,0,0)',
-                        //         shadowBlur:2,
-                        //         shadowOffset:{x:1, y:1},
-                        //     };
-                        
-                            
-                        //     this.parameter = {};
-                        //     this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
-                        //     this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
-                        //     this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
-                        //     this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
-                        //     this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities();} }(this);
-                        //     this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities();} }(this);
-                        
-                        
-                        
-                        //     this.getAddress = function(){
-                        //         var address = '';
-                        //         var tmp = this;
-                        //         do{
-                        //             address = tmp.name + '/' + address;
-                        //         }while((tmp = tmp.parent) != undefined)
-                        
-                        //         return '/'+address;
-                        //     };
-                            
-                        //     this.getOffset = function(){return gatherParentOffset(this);};
-                        //     this.computeExtremities = function(offset,deepCompute){
-                        //         //discover if this shape should be static
-                        //             var isStatic = this.static;
-                        //             var tmp = this;
-                        //             while((tmp = tmp.parent) != undefined && !isStatic){
-                        //                 isStatic = isStatic || tmp.static;
-                        //             }
-                        //             this.static = isStatic;
-                        
-                        //         //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                        //         //in which case; gather the offset of all parents. Otherwise just use what was provided
-                        //             offset = offset == undefined ? gatherParentOffset(this) : offset;
-                        
-                        //         //reset variables
-                        //             this.extremities = {
-                        //                 points:[],
-                        //                 boundingBox:{},
-                        //             };
-                        
-                        //         //calculate points
-                        //             this.extremities.points = coreGraphics.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
-                        //             this.extremities.points = this.extremities.points.map(function(point){
-                        //                 point = coreGraphics.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                        //                 point.x += offset.x;
-                        //                 point.y += offset.y;
-                        //                 return point;
-                        //             });
-                        
-                        //         //calculate boundingBox
-                        //             this.extremities.boundingBox = coreGraphics.library.math.boundingBoxFromPoints( this.extremities.points );
-                        
-                        //         //update the points and bounding box of the parent
-                        //             if(this.parent != undefined){
-                        //                 this.parent.computeExtremities();
-                        //             }
-                        //     };
-                        
-                        //     function isPointWithinBoundingBox(x,y,shape){
-                        //         if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                        //         return coreGraphics.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                        //     }
-                        //     function isPointWithinHitBox(x,y,shape){
-                        //         if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                        //         return coreGraphics.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                        //     }
-                        //     this.isPointWithin = function(x,y){
-                        //         if( isPointWithinBoundingBox(x,y,this) ){
-                        //             return isPointWithinHitBox(x,y,this);
-                        //         }
-                        //         return false;
-                        //     };
-                        
-                        //     function shouldRender(shape){ 
-                        //         //if this shape is static, always render
-                        //             if(shape.static){return true;}
-                                    
-                        //         //determine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                        //             return coreGraphics.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                        //     };
-                        //     this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
-                        //         //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                        //             if(!shouldRender(this)){return;}
-                        
-                        //         //adjust offset for parent's angle
-                        //             var point = coreGraphics.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                        //             offset.x += point.x - this.x;
-                        //             offset.y += point.y - this.y;
-                                
-                        //         //collect and consolidate shape values into a neat package
-                        //             var shapeValue = {
-                        //                 location:{
-                        //                     x:(this.x+offset.x),
-                        //                     y:(this.y+offset.y)
-                        //                 },
-                        //                 angle:(this.angle+offset.a),
-                        //                 width: this.width,
-                        //                 height: this.height,
-                        //                 lineWidth: this.style.lineWidth,
-                        //                 shadowBlur: this.style.shadowBlur,
-                        //                 shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
-                        //             };
-                                
-                        //         //adapt values
-                        //             if(!static){
-                        //                 shapeValue.location = adapter.coreGraphicsPoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-                        //                 shapeValue.width = adapter.length(shapeValue.width);
-                        //                 shapeValue.height = adapter.length(shapeValue.height);
-                        //                 shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-                        //                 shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                        //                 shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                        //                 shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
-                        //             }
-                        
-                        //         //post adaptation calculations
-                        //             shapeValue.location = coreGraphics.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
-                                    
-                        //         //clipping
-                        //             if(isClipper){
-                        //                 context.rotate( shapeValue.angle );
-                        //                 var region = new Path2D();
-                        //                 region.rect(shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height);
-                        //                 context.clip(region);
-                        //                 context.rotate( -shapeValue.angle );
-                        //                 return;
-                        //             }
-                        
-                        //         //actual render
-                        //             context.fillStyle = this.style.fill;
-                        //             context.strokeStyle = this.style.stroke;
-                        //             context.lineWidth = shapeValue.lineWidth;
-                        //             context.shadowColor = this.style.shadowColour;
-                        //             context.shadowBlur = shapeValue.shadowBlur;
-                        //             context.shadowOffsetX = shapeValue.shadowOffset.x;
-                        //             context.shadowOffsetY = shapeValue.shadowOffset.y;
-                                    
-                        //             context.save();
-                        //             context.rotate( shapeValue.angle );
-                        //             context.fillRect( shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
-                        //             context.strokeRect( shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
-                        //             context.restore();
-                        
-                        //         //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                        //             if(this.dotFrame){
-                        //                 //points
-                        //                     for(var a = 0; a < this.extremities.points.length; a++){
-                        //                         var temp = adapter.coreGraphicsPoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                        //                         core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                        //                     }
-                        //                 //boudning box
-                        //                     var temp = adapter.coreGraphicsPoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                        //                     core.render.drawDot( temp.x, temp.y );
-                        //                     var temp = adapter.coreGraphicsPoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                        //                     core.render.drawDot( temp.x, temp.y );
-                        //             }
-                        //     }
-                        // };
                         this.group = function(){
                         
                             this.type = 'group';
@@ -3210,9 +2896,6 @@
                                 fill:'rgba(255,100,100,1)',
                                 stroke:'rgba(0,0,0,0)',
                                 lineWidth:1,
-                                shadowColour:'rgba(0,0,0,0)',
-                                shadowBlur:2,
-                                shadowOffset:{x:20, y:20},
                             };
                         
                             
@@ -3317,8 +3000,6 @@
                                         size: this.size,
                                         angle:(this.angle+offset.a),
                                         lineWidth: this.style.lineWidth,
-                                        shadowBlur: this.style.shadowBlur,
-                                        shadowOffset: { x:this.style.shadowOffset.x, y:this.style.shadowOffset.y },
                                     };
                                 
                                 //adapt values
@@ -3326,9 +3007,6 @@
                                         shapeValue.location = adapter.coreGraphicsPoint2windowPoint( shapeValue.location.x, shapeValue.location.y );   
                                 
                                         shapeValue.size = adapter.length(shapeValue.size);
-                                        shapeValue.shadowBlur = adapter.length(shapeValue.shadowBlur);
-                                        shapeValue.shadowOffset.x = adapter.length(shapeValue.shadowOffset.x);
-                                        shapeValue.shadowOffset.y = adapter.length(shapeValue.shadowOffset.y);
                                     }
                         
                                 //post adaptation calculations
@@ -3347,16 +3025,11 @@
                                     context.fillStyle = this.style.fill;
                                     context.strokeStyle = this.style.stroke;
                                     context.lineWidth = shapeValue.lineWidth;
-                                    context.shadowColor = this.style.shadowColour;
-                                    context.shadowBlur = shapeValue.shadowBlur;
-                                    context.shadowOffsetX = shapeValue.shadowOffset.x;
-                                    context.shadowOffsetY = shapeValue.shadowOffset.y;
                         
                                     context.save();
                                     context.rotate( shapeValue.angle );
                                     context.scale(shapeValue.size,shapeValue.size);
                                     context.fillText( this.text, shapeValue.location.x/shapeValue.size, shapeValue.location.y/shapeValue.size );
-                                    context.shadowColor = 'rgba(0,0,0,0)'; //to stop stroke shadows drawing over the fill text (an uncreative solution)
                                     context.strokeText( this.text, shapeValue.location.x/shapeValue.size, shapeValue.location.y/shapeValue.size );
                                     context.restore();
                         

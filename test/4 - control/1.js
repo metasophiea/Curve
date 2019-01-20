@@ -1,19 +1,20 @@
-workspace.control.scene.addUnit(10,10,0,'testUnit',undefined,'test');
+workspace.control.scene.addUnit(10,10,0,'testUnit_1',undefined,'test');
 
 
 
-workspace.control.switch.mouseWheelZoomEnabled = !true;
-workspace.control.switch.mouseGripPanningEnabled = !true;
-workspace.control.switch.mouseGroupSelect = !true;
-workspace.control.switch.enableSceneSave = !true;
-workspace.control.switch.enableSceneLoad = !true;
-workspace.control.switch.enableMenubar = !true;
-workspace.control.switch.enableWindowScrollbarAutomaticRemoval = !true;
-workspace.control.switch.enableUnitSelection = !true;
-workspace.control.switch.enableSceneModification = !true;
+workspace.control.interaction.enableMenubar(false);
+workspace.control.interaction.enableSceneSave(false);
+workspace.control.interaction.enableSceneLoad(false);
+workspace.control.interaction.enableUnitAdditionRemoval(false);
+workspace.control.interaction.enableUnitSelection(false);
+workspace.control.interaction.enableUnitInteractable(false);
+workspace.control.interaction.enableUnitCollision(false);
+workspace.control.interaction.enableCableDisconnectionConnection(false);
+workspace.control.interaction.mouseGripPanningEnabled(false);
+workspace.control.interaction.mouseWheelZoomEnabled(false);
+workspace.control.interaction.mouseGroupSelect(false);
 
-// workspace.control.switch.enablCableDisconnectionConnection = !true;
-// workspace.control.switch.enableUnitInterface = !true;
+
 
 workspace.control.viewport.activeRender(true);
 workspace.control.viewport.stopMouseScroll(true);

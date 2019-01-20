@@ -34,7 +34,7 @@ this.universalreadout = function(x,y,a){
     };
 
     //main object
-        var object = alphaUnit.builder(this.universalreadout,design);
+        var object = workspace.interface.unit.builder(this.universalreadout,design);
 
     //internal functions
         var lines = [];
@@ -55,7 +55,7 @@ this.universalreadout = function(x,y,a){
 
             //write in the new list
             for(var a = 0; a < lines.length; a++){
-                lineElements[a] = workspace.interface.part.alpha.builder('text','universalreadout_'+a,{ x:40, y:a*5, size:style.text.size, text:lines[a], style:style.text })
+                lineElements[a] = workspace.interface.part.builder('text','universalreadout_'+a,{ x:40, y:a*5, size:style.text.size, text:lines[a], style:style.text })
                 object.append( lineElements[a] );
             }
         }
@@ -65,5 +65,6 @@ this.universalreadout = function(x,y,a){
 
 this.universalreadout.metadata = {
     name:'Universal Readout',
+    category:'misc',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/universalReadout/'
 };

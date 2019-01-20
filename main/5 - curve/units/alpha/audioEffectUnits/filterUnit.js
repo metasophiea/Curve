@@ -88,7 +88,7 @@ this.filterUnit = function(x,y,a){
     };
 
     //main object
-        var object = alphaUnit.builder(this.filterUnit,design);
+        var object = workspace.interface.unit.builder(this.filterUnit,design);
 
     //import/export
         object.importData = function(data){
@@ -108,7 +108,7 @@ this.filterUnit = function(x,y,a){
 
     //circuitry
         //filter
-            object.filterCircuit = new workspace.interface.circuit.alpha.filterUnit(workspace.library.audio.context);
+            object.filterCircuit = new workspace.interface.circuit.filterUnit(workspace.library.audio.context);
             object.elements.connectionNode_audio.audioIn.out().connect( object.filterCircuit.in() );
             object.filterCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
 
@@ -160,5 +160,6 @@ this.filterUnit = function(x,y,a){
 
 this.filterUnit.metadata = {
     name:'Filter Unit',
+    category:'audioEffectUnits',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/filterUnit/'
 };

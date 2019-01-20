@@ -231,7 +231,7 @@ this.basicSynthesizer = function(x,y,a){
                     style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
                 }},
 
-            {type:'button_rect', name:'panicButton', data: {
+            {type:'button_rectangle', name:'panicButton', data: {
                 x:197.5, y: 47.5, width:20, height:20, angle: Math.PI/4,
                 style:style.button, 
             }},
@@ -239,7 +239,7 @@ this.basicSynthesizer = function(x,y,a){
     };
 
     //main object
-        var object = alphaUnit.builder(this.basicSynthesizer,design);
+        var object = workspace.interface.unit.builder(this.basicSynthesizer,design);
 
     //import/export
         object.exportData = function(){
@@ -276,7 +276,7 @@ this.basicSynthesizer = function(x,y,a){
         };
 
     //circuitry
-        object.__synthesizer = new workspace.interface.circuit.alpha.synthesizer(workspace.library.audio.context);
+        object.__synthesizer = new workspace.interface.circuit.synthesizer(workspace.library.audio.context);
         object.__synthesizer.out().connect( object.elements.connectionNode_audio.audioOut.in() );
 
     //wiring
@@ -290,7 +290,7 @@ this.basicSynthesizer = function(x,y,a){
         object.elements.dial_continuous.dial_gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value); },
         object.elements.dial_continuous.dial_detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
         object.elements.dial_continuous.dial_detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); }
-        object.elements.button_rect.panicButton.onpress = function(){ object.__synthesizer.panic(); },
+        object.elements.button_rectangle.panicButton.onpress = function(){ object.__synthesizer.panic(); },
 
     //interface
         object.i = {
@@ -318,5 +318,6 @@ this.basicSynthesizer = function(x,y,a){
 
 this.basicSynthesizer.metadata = {
     name:'Basic Synthesizer',
+    category:'synthesizer',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSynthesizer/'
 };

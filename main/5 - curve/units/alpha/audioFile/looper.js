@@ -33,7 +33,7 @@ this.looper = function(x,y,a){
             {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
             {type:'connectionNode_data', name:'trigger', data:{
                 x: 220, y: 17.5, width: 10, height: 20,
-                onreceive:function(address, data){ object.elements.button_rect.fire.press(); }
+                onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); }
             }},
 
             //symbol
@@ -43,14 +43,14 @@ this.looper = function(x,y,a){
                 {type:'path', name:'symbol_upperarrow', data:{ points:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], style:style.strokeMarkings }},
                 {type:'path', name:'symbol_lowerarrow', data:{ points:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], style:style.strokeMarkings }},
 
-            {type:'button_rect', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
+            {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                 onpress: function(){
                     object.looper.load('file',function(data){
                         object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.looper.waveformSegment() );
                     });
                 }
             }},
-            {type:'button_rect',name:'fire',data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
+            {type:'button_rectangle',name:'fire',data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
                 onpress:function(){
                     //no file -> don't bother
                         if(object.looper.duration() < 0){return;}
@@ -95,7 +95,7 @@ this.looper = function(x,y,a){
                         needleExists = true;
                 },
             }},
-            {type:'button_rect',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
+            {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
                 onpress:function(){
                     object.looper.stop();
 
@@ -115,7 +115,7 @@ this.looper = function(x,y,a){
     };
 
     //main object
-        var object = workspace.interface.unit.alpha.builder(this.looper,design);
+        var object = workspace.interface.unit.builder(this.looper,design);
 
     //circuitry
         var needleExists = false;
@@ -124,7 +124,7 @@ this.looper = function(x,y,a){
         var previousPosition = undefined;
 
         //audioFilePlayer
-            object.looper = new workspace.interface.circuit.alpha.looper(workspace.library.audio.context);
+            object.looper = new workspace.interface.circuit.looper(workspace.library.audio.context);
             object.looper.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
             object.looper.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
 
@@ -133,5 +133,6 @@ this.looper = function(x,y,a){
 
 this.looper.metadata = {
     name:'Looper',
+    category:'audioFile',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/looper/'
 };

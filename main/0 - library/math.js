@@ -1,4 +1,8 @@
 this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
+this.averagePoint = function(points){
+    var sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
+    return {x:sum.x/points.length,y:sum.y/points.length};
+};
 this.distanceBetweenTwoPoints = function(a, b){ return Math.pow(Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2),0.5) };
 this.seconds2time = function(seconds){
     var result = {h:0, m:0, s:0};
@@ -43,9 +47,18 @@ this.polar2cartesian = function(angle,distance){
     return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
 };
 this.cartesianAngleAdjust = function(x,y,angle){
+    if(angle == 0 || angle%Math.PI*2 == 0){ return {x:x,y:y}; }
     var polar = this.cartesian2polar( x, y );
     polar.ang += angle;
     return this.polar2cartesian( polar.ang, polar.dis );
+};
+this.applyOffsetToPoints = function(offset,points){
+    return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
+};
+this.applyOffsetToPolygon = function(offset,poly){
+    var newPolygon = { points: this.applyOffsetToPoints(offset,poly.points), boundingBox:{} };
+    newPolygon.boundingBox = this.boundingBoxFromPoints(newPolygon.points);
+    return newPolygon;
 };
 this.boundingBoxFromPoints = function(points){
     if(points.length == 0){
@@ -303,8 +316,8 @@ this.detectOverlap = new function(){
             (a.bottomRight.y < b.topLeft.y) ||
             (a.topLeft.y > b.bottomRight.y) ||
             (a.bottomRight.x < b.topLeft.x) ||
-            (a.topLeft.x > b.bottomRight.x)   
-    );};
+            (a.topLeft.x > b.bottomRight.x) );
+    };
     this.pointWithinBoundingBox = function(point,box){
         return !(
             point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
@@ -361,4 +374,128 @@ this.detectOverlap = new function(){
 
         return false;
     };
+    this.overlappingPolygonWithPolygons = function(poly,polys){ 
+        for(var a = 0; a < polys.length; a++){
+            if(this.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
+                if(this.overlappingPolygons(poly.points, polys[a].points)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+};
+this.fitPolyIn = function(newPoly,existingPolys,dev=false){
+    var offset = {x:0,y:0};
+    var paths = [[],[],[]];
+
+    //get the middle ("average") point of newPoly
+        var middlePoint = workspace.library.math.averagePoint(newPoly.points);
+
+    //circle out to find initial offsets
+        var stepCount = 1;
+        var maxItrationCount = 100;
+
+        var sucessfulOffsets = [];
+        for(stepCount = 1; stepCount < maxItrationCount+1; stepCount++){
+            sucessfulOffsets = [];
+            var stepsInThisCircle = 2*stepCount + 1;
+            var circularStepSizeInRad = (2*Math.PI) / stepsInThisCircle;
+            var radius = Math.pow(stepCount,2);
+            
+            //head round the circle, testing each point as an offset
+                for(var a = 0; a < stepsInThisCircle; a++){
+                    //calculate the current offset
+                        var tmpOffset = library.math.polar2cartesian( circularStepSizeInRad*a, radius );
+                        if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
+                    
+                    //if offsetting the shape in this way results in no collision; save this offset in 'sucessfulOffsets'
+                        if(!this.detectOverlap.overlappingPolygonWithPolygons(this.applyOffsetToPolygon(tmpOffset,newPoly),existingPolys)){
+                            sucessfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
+                        }
+                }
+
+            //if on this circle we've found at least one possible location; break out of this section and move on to the next
+                if( sucessfulOffsets.length != 0 ){break;}
+        }
+
+
+    //use midpointing from these points to find the single closest circular offset
+        var maxItrationCount = 10;
+        var sucessfulOffset;
+
+        if(sucessfulOffsets.length == 1){
+            sucessfulOffset = sucessfulOffsets[0];
+        }else{
+            //there was more than one possible offset for this radius, so we need to edge each of them closer
+            //to the original point, to whittle them down to the one angle that can provide the smallest radius
+
+            var maxRadius = Math.pow(stepCount,2);
+            var minRadius = Math.pow(stepCount-1,2);
+
+            var provenFunctionalOffsets = [];
+            for(var i = 0; i < maxItrationCount; i++){
+                var tmpSucessfulOffsets = [];
+                var midRadius = (maxRadius - minRadius)/2 + minRadius;
+
+                //check this new midpoint radius with the sucessfulOffset values 
+                    for(var a = 0; a < sucessfulOffsets.length; a++){
+                        //calculate the current offset using the midpoint value
+                            var tmpOffset = library.math.polar2cartesian( sucessfulOffsets[a].ang, midRadius );
+                            if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
+                                    
+                        //if offsetting the shape in this way results in no collision; save this offset in 'tmpSucessfulOffsets'
+                            if(!this.detectOverlap.overlappingPolygonWithPolygons(this.applyOffsetToPolygon(tmpOffset,newPoly),existingPolys)){
+                                tmpSucessfulOffsets.push( {ang:sucessfulOffsets[a].ang, dis:midRadius} );
+                                provenFunctionalOffsets.push( {ang:sucessfulOffsets[a].ang, dis:midRadius} );
+                            }
+                    }
+
+                //check if there's only one offset left
+                    if( tmpSucessfulOffsets.length == 1 ){ sucessfulOffset = tmpSucessfulOffsets[0]; break; }
+
+                //decide wherther to check further out or closer in
+                    if( tmpSucessfulOffsets.length == 0 ){
+                        minRadius = midRadius; //somewhere further out
+                    }else{
+                        maxRadius = midRadius; //somewhere further in
+                    }
+            }
+
+            //if everything goes wrong with the midpoint method; and we end up with no offsets, use whatever the last proven functional offset was
+                if(sucessfulOffset == undefined){ sucessfulOffset = provenFunctionalOffsets.pop(); }
+        }
+
+    //adjust along x and y to find the closest offset
+        var maxItrationCount = 10;
+
+        var offset = library.math.polar2cartesian( sucessfulOffset.ang, sucessfulOffset.dis );
+        if(dev){paths[2].push( {x:offset.x+middlePoint.x, y:offset.y+middlePoint.y} );}
+        var max = {x:offset.x, y:offset.y};
+        var min = {x:0, y:0};
+        
+        //use midpoint methods to edge the shape (over x and y) to as close as it can be to the original point
+            for(var i = 0; i < maxItrationCount; i++){
+                var midpoint = { x:(max.x-min.x)/2 + min.x, y:(max.y-min.y)/2 + min.y };
+
+                //can you make a x movement? you can? then do it
+                    if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}
+                    if(!this.detectOverlap.overlappingPolygonWithPolygons(this.applyOffsetToPolygon({x:midpoint.x, y:max.y},newPoly),existingPolys)){
+                        max.x = midpoint.x; //too far
+                    }else{ 
+                        min.x = midpoint.x; //too close
+                    }
+
+                //can you make a y movement? you can? then do it
+                    if(dev){paths[2].push( {x:max.x+middlePoint.x, y:midpoint.y+middlePoint.y} );}
+                    if(!this.detectOverlap.overlappingPolygonWithPolygons(this.applyOffsetToPolygon({x:max.x, y:midpoint.y},newPoly),existingPolys)){
+                        max.y = midpoint.y; //too far
+                    }else{
+                        min.y = midpoint.y; //too close
+                    }
+            }
+
+        offset = {x:max.x, y:max.y};
+
+    return dev ? {offset:offset,paths:paths} : offset;
 };

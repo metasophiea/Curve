@@ -37,7 +37,7 @@ this.oneShot_multi = function(x,y,a){
             {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
             {type:'connectionNode_data', name:'trigger', data:{
                 x:220, y:17.5, width:10, height:20,
-                onreceive:function(address, data){ object.elements.button_rect.fire.press(); object.elements.button_rect.fire.release(); }
+                onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
             }},
 
             //symbol
@@ -48,14 +48,14 @@ this.oneShot_multi = function(x,y,a){
                 {type:'circle', name:'symbol_infCircle2', data:{ x:11.5, y:40, r:1.5, style:style.strokeMarkings }},
 
             //load/fire/panic buttons
-                {type:'button_rect', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
+                {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                     onpress: function(){
                         object.oneShot.load('file',function(data){
                             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
                         });
                     }
                 }},
-                {type:'button_rect', name:'fire', data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
+                {type:'button_rectangle', name:'fire', data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
                     onpress:function(){
                         var filePlayer = object.oneShot;
                         var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
@@ -115,7 +115,7 @@ this.oneShot_multi = function(x,y,a){
                             },desiredIntervalTime);
                     },
                 }},
-                {type:'button_rect', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
+                {type:'button_rectangle', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
                     onpress:function(){
                         var filePlayer = object.oneShot;
                         var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
@@ -146,13 +146,13 @@ this.oneShot_multi = function(x,y,a){
     };
 
     //main object
-        var object = alphaUnit.builder(this.oneShot_multi,design);
+        var object = workspace.interface.unit.builder(this.oneShot_multi,design);
 
     //circuitry
         var needles = [];
 
         //audioFilePlayer
-            object.oneShot = new workspace.interface.circuit.alpha.oneShot_multi(workspace.library.audio.context);
+            object.oneShot = new workspace.interface.circuit.oneShot_multi(workspace.library.audio.context);
             object.oneShot.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
             object.oneShot.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
 
@@ -173,5 +173,6 @@ this.oneShot_multi = function(x,y,a){
 
 this.oneShot_multi.metadata = {
     name:'One Shot (Multi)',
+    category:'audioFile',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/oneShot_multi/'
 };

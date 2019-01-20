@@ -43,8 +43,8 @@ this.musicalKeyboard = function(x,y,a){
                 x: 320, y: 5, width: 5, height: 10,
                 onreceive:function(address,data){
                     if(address != 'midinumber'){return;}
-                    if(data.velocity > 0){ object.elements.button_rect[workspace.library.audio.num2name(data.num)].press();   }
-                                     else{ object.elements.button_rect[workspace.library.audio.num2name(data.num)].release(); }
+                    if(data.velocity > 0){ object.elements.button_rectangle[workspace.library.audio.num2name(data.num)].press();   }
+                                     else{ object.elements.button_rectangle[workspace.library.audio.num2name(data.num)].release(); }
                 },
             }},
 
@@ -71,7 +71,7 @@ this.musicalKeyboard = function(x,y,a){
             for(var a = 0; a < glyphs.length; a++){
                 if( noteNames[a].slice(-1) != '#' ){
                     design.elements.push(
-                        {type:'button_rect', name:noteNames[a], data:{
+                        {type:'button_rectangle', name:noteNames[a], data:{
                             x:whiteX, y:12.5, width:whiteKeyWidth, height:50, hoverable:false,
                             style:style.keys.white,
                             onpress:function(){ object.io.data.midiout.send('midinumber', { num:workspace.library.audio.name2num(this.name), velocity:state.velocity } ); },
@@ -86,7 +86,7 @@ this.musicalKeyboard = function(x,y,a){
             for(var a = 0; a < glyphs.length; a++){
                 if( noteNames[a].slice(-1) == '#' ){
                     design.elements.push(
-                        {type:'button_rect', name:noteNames[a], data:{
+                        {type:'button_rectangle', name:noteNames[a], data:{
                             x:blackX, y:12.5, width:5, height:30, hoverable:false,
                             style:style.keys.black,
                             onpress:function(){ object.io.data.midiout.send('midinumber', { num:workspace.library.audio.name2num(this.name), velocity:state.velocity } ); },
@@ -102,17 +102,17 @@ this.musicalKeyboard = function(x,y,a){
 
 
     //main object
-        var object = alphaUnit.builder(this.musicalKeyboard,design);
+        var object = workspace.interface.unit.builder(this.musicalKeyboard,design);
 
     //keycapture
         object.onkeydown = function(x,y,event){
             if( glyphs.includes(event.key) ){
-                object.elements.button_rect[noteNames[glyphs.indexOf(event.key)]].press();
+                object.elements.button_rectangle[noteNames[glyphs.indexOf(event.key)]].press();
             }
         };
         object.onkeyup = function(x,y,event){
             if( glyphs.includes(event.key) ){
-                object.elements.button_rect[noteNames[glyphs.indexOf(event.key)]].release();
+                object.elements.button_rectangle[noteNames[glyphs.indexOf(event.key)]].release();
             }
         };
 
@@ -129,5 +129,6 @@ this.musicalKeyboard = function(x,y,a){
 
 this.musicalKeyboard.metadata = {
     name:'Musical Keyboard',
+    category:'humanInputDevices',
     helpURL:'https://curve.metasophiea.com/help/units/alpha/musicalKeyboard/'
 };

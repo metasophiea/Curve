@@ -33,7 +33,7 @@ this.oneShot_single = function(x,y,a){
             {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
             {type:'connectionNode_data', name:'trigger', data:{
                 x:220, y:17.5, width:10, height:20,
-                onreceive:function(address, data){ object.elements.button_rect.fire.press(); object.elements.button_rect.fire.release(); }
+                onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
             }},
 
             //symbol
@@ -42,14 +42,14 @@ this.oneShot_single = function(x,y,a){
                 {type:'circle', name:'symbol_outerCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
                 {type:'rectangle', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, style:style.markings }},
 
-            {type:'button_rect', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
+            {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                 onpress: function(){
                     object.oneShot.load('file',function(data){
                         object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
                     });
                 }
             }},
-            {type:'button_rect',name:'fire',data:{ x:5, y: 17.5, width:20, height:10, style:style.fire_button,
+            {type:'button_rectangle',name:'fire',data:{ x:5, y: 17.5, width:20, height:10, style:style.fire_button,
                 onpress:function(){
                     //no file = don't bother
                         if(object.oneShot.duration() < 0){return;}
@@ -102,7 +102,7 @@ this.oneShot_single = function(x,y,a){
     };
 
     //main object
-        var object = alphaUnit.builder(this.oneShot_single,design);
+        var object = workspace.interface.unit.builder(this.oneShot_single,design);
 
     //circuitry
         var needleExists = undefined;
@@ -111,7 +111,7 @@ this.oneShot_single = function(x,y,a){
         var previousPosition = undefined;
 
         //audioFilePlayer
-            object.oneShot = new workspace.interface.circuit.alpha.oneShot_single(workspace.library.audio.context);
+            object.oneShot = new workspace.interface.circuit.oneShot_single(workspace.library.audio.context);
             object.oneShot.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
             object.oneShot.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
 
@@ -120,6 +120,7 @@ this.oneShot_single = function(x,y,a){
 
 this.oneShot_single.metadata = {
     name:'One Shot (Single)',
+    category:'audioFile',
     helpURL:'https://curve.metasophiea.com/help/objects/units/oneShot_single/'
 };
 

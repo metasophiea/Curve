@@ -1,3 +1,4 @@
-this.alpha = new function(){
-    {{include:alpha/main.js}}
-};
+var interfacePart = this;
+
+{{include:collection/main.js}}
+{{include:builder.js}}
