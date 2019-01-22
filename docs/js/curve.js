@@ -3209,9 +3209,10 @@
                     this.render = new function(){
                         var context = workspace.getContext('2d', { alpha: false });
                         var animationRequestId = undefined;
+                        var clearColour = 'rgb(255,255,255)';
                     
                         function clearFrame(){
-                            context.fillStyle = 'rgb(255,255,255)';
+                            context.fillStyle =clearColour;
                             context.fillRect(0, 0, workspace.width, workspace.height);
                         }
                         function renderFrame(noClear=false){
@@ -3237,6 +3238,11 @@
                             //perform stats collection
                                 core.stats.collect(timestamp);
                         }
+                    
+                        this.clearColour = function(colour){
+                            if(colour == undefined){ return clearColour; }
+                            clearColour = colour;
+                        };
                     
                         this.drawDot = function(x,y,r=2,colour='rgba(150,150,255,1)'){
                             context.fillStyle = colour;
@@ -3530,6 +3536,7 @@
                     this.cursor = function(type){return core.viewport.cursor(type);};
                 };
                 this.render = new function(){
+                    this.clearColour = function(colour){return core.render.clearColour(colour);};
                     this.frame = function(noClear=false){return core.render.frame(noClear);};
                     this.active = function(bool){return core.render.active(bool);};
                 };
@@ -5822,6 +5829,321 @@
                                     
                                 return object;
                             };
+                            this.slidePanel = function(
+                                name='slidePanel', 
+                                x, y, width=80, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                            
+                                handleURL, backingURL, slotURL, overlayURL,
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //slides
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder(
+                                                'slide_image', 'slide_'+a, {
+                                                    x:a*(width/count), y:0,
+                                                    width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
+                                                    value:startValue, resetValue:resetValue,
+                                                    handleURL:handleURL, backingURL:backingURL, slotURL:slotURL,
+                                                    onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
+                                                    onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
+                                                }
+                                            );
+                                            // temp.dotFrame = true;
+                                            temp.__calculationAngle = angle;
+                                            object.append(temp);
+                                        }
+                                    //overlay
+                                        if(overlayURL != undefined){
+                                            var overlay = interfacePart.builder('image','overlay',{width:width, height:height, url:overlayURL});
+                                            object.append(overlay);
+                                        }
+                            
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                            
+                                        for(var a = 0; a < count; a++){
+                                            object.children[a].interactable(bool);
+                                        }
+                                    };
+                            
+                                return object;
+                            };
+                            this.rangeslide_image = function(
+                                name='rangeslide_image', 
+                                x, y, width=10, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
+                            
+                                handleURL, backingURL, slotURL,
+                                invisibleHandleStyle = 'rgba(255,0,0,0)',
+                                spanURL,
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //default to non-image version if image links are missing
+                                    if(handleURL == undefined || backingURL == undefined || slotURL == undefined || spanURL == undefined){
+                                        return this.rangeslide(
+                                            name, x, y, width, height, angle, interactable,
+                                            handleHeight, spanWidth, values, resetValues,
+                                            handleURL, backingURL, slotURL, invisibleHandleStyle, spanURL,
+                                            onchange, onrelease,
+                                        );
+                                    }
+                            
+                            
+                            
+                                var grappled = false;
+                                var handleNames = ['start','end'];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing and slot group
+                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
+                                        object.append(backingAndSlot);
+                                        //backing
+                                            var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                                            backingAndSlot.append(backing);
+                                        //slot
+                                            var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
+                                            backingAndSlot.append(slot);
+                                        //backing and slot cover
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                            backingAndSlot.append(backingAndSlotCover);
+                            
+                                    //span
+                                        var span = interfacePart.builder('image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:slotURL});
+                                        object.append(span);
+                            
+                                    //handles
+                                        var handles = {}
+                                        for(var a = 0; a < handleNames.length; a++){
+                                            //grouping
+                                                handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
+                                                object.append(handles[handleNames[a]]);
+                                            //handle
+                                                var handle = interfacePart.builder('image','handle',{width:width, height:height*handleHeight, url:handleURL});
+                                                handles[handleNames[a]].append(handle);
+                                            //invisible handle
+                                                var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                                                handles[handleNames[a]].append(invisibleHandle);
+                                        }
+                            
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(cover);
+                            
+                                        
+                            
+                            
+                                //graphical adjust
+                                    function set(a,handle,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        //make sure the handle order is maintained
+                                        //if necessary, one handle should push the other, though not past the ends
+                                            switch(handle){
+                                                default: console.error('unknown handle to adjust'); break;
+                                                case 'start':
+                                                    //don't allow start slide to encrouch on end slider's space
+                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                            
+                                                    //if start slide bumps up against end slide; move end slide accordingly
+                                                        var start_rightEdge = a + (1-a)*handleHeight;
+                                                        var end_leftEdge = values.end - (values.end)*handleHeight;
+                                                        if( start_rightEdge >= end_leftEdge ){
+                                                            values.end = start_rightEdge/(1-handleHeight);
+                                                        }
+                                                break;
+                                                case 'end':
+                                                    //don't allow end slide to encrouch on start slider's space
+                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                            
+                                                    //if end slide bumps up against start slide; move start slide accordingly
+                                                        var start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                                        var end_leftEdge = a - (a)*handleHeight;
+                                                        if( start_rightEdge >= end_leftEdge ){
+                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
+                                                        }
+                                                break;
+                                            }
+                            
+                                        //fill in data
+                                            values[handle] = a;
+                            
+                                        //adjust y positions
+                                            handles.start.parameter.y( values.start*height*(1-handleHeight) );
+                                            handles.end.parameter.y( values.end*height*(1-handleHeight) );
+                            
+                                        //adjust span height (with a little bit of padding so the span is under the handles a little)
+                                            span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
+                                            span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
+                            
+                                        if(update && object.onchange){object.onchange(values);}
+                                    }
+                                    function pan(a){
+                                        var diff = values.end - values.start;
+                            
+                                        var newPositions = [ a, a+diff ];
+                                        if(newPositions[0] <= 0){
+                                            newPositions[1] = newPositions[1] - newPositions[0];
+                                            newPositions[0] = 0;
+                                        }
+                                        else if(newPositions[1] >= 1){
+                                            newPositions[0] = newPositions[0] - (newPositions[1]-1);
+                                            newPositions[1] = 1;
+                                        }
+                            
+                                        set( newPositions[0],'start' );
+                                        set( newPositions[1],'end' );
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    object.get = function(){return values;};
+                                    object.set = function(values,update){
+                                        if(grappled){return;}
+                                        if(values.start != undefined){set(values.start,'start',update);}
+                                        if(values.end != undefined){set(values.end,'end',update);}
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                                    
+                                //interaction
+                                    function getPositionWithinFromMouse(x,y){
+                                        //calculate the distance the click is from the top of the slider (accounting for angle)
+                                            var offset = backingAndSlot.getOffset();
+                                            var delta = {
+                                                x: x - (backingAndSlot.x     + offset.x),
+                                                y: y - (backingAndSlot.y     + offset.y),
+                                                a: 0 - (backingAndSlot.angle + offset.a),
+                                            };
+                            
+                                        return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                                    }
+                            
+                                    //background click
+                                        //to stop clicks passing through the span
+                                            span.onmousedown = function(){};
+                                            span.onclick = function(){};
+                            
+                                        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
+                                        backingAndSlotCover.onclick = function(x,y,event){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                            
+                                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                                var d = getPositionWithinFromMouse(x,y);
+                            
+                                            //use the distance to calculate the correct value to set the slide to
+                                            //taking into account the slide handle's size also
+                                                var value = d + 0.5*handleHeight*((2*d)-1);
+                            
+                                            //whichever handle is closer; move that handle to the mouse's position
+                                                Math.abs(values.start-value) < Math.abs(values.end-value) ? set(value,'start') : set(value,'end');
+                                        };
+                            
+                                    //double-click reset
+                                        cover.ondblclick = function(){
+                                            if(!interactable){return;}
+                                            if(resetValues.start<0 || resetValues.end<0){return;}
+                                            if(grappled){return;}
+                            
+                                            set(resetValues.start,'start');
+                                            set(resetValues.end,'end');
+                                            object.onrelease(values);
+                                        };
+                            
+                                    //span panning - expand/shrink
+                                        cover.onwheel = function(){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                            
+                                            var move = event.deltaY/100;
+                                            var globalScale = workspace.core.viewport.scale();
+                                            var val = move/(10*globalScale);
+                            
+                                            set(values.start-val,'start');
+                                            set(values.end+val,'end');
+                                        };
+                            
+                                    //span panning - drag
+                                        span.onmousedown = function(x,y,event){
+                                            if(!interactable){return;}
+                                            grappled = true;
+                            
+                                            var initialValue = values.start;
+                                            var initialPosition = getPositionWithinFromMouse(x,y);
+                            
+                                            workspace.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                                    var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                    pan( initialValue+(livePosition-initialPosition) )
+                                                    object.onchange(values);
+                                                },
+                                                function(event){
+                                                    object.onrelease(values);
+                                                    grappled = false;
+                                                }
+                                            );
+                                        };
+                            
+                                    //handle movement
+                                        for(var a = 0; a < handleNames.length; a++){
+                                            handles[handleNames[a]].children[1].onmousedown = (function(a){
+                                                return function(x,y,event){
+                                                    if(!interactable){return;}
+                                                    grappled = true;
+                                        
+                                                    var initialValue = values[handleNames[a]];
+                                                    var initialPosition = getPositionWithinFromMouse(x,y);
+                                                    
+                                                    workspace.system.mouse.mouseInteractionHandler(
+                                                        function(event){
+                                                            var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                                            var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                            set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
+                                                            object.onchange(values);
+                                                        },
+                                                        function(event){
+                                                            object.onrelease(values);
+                                                            grappled = false;
+                                                        }
+                                                    );
+                                                }
+                                            })(a);
+                                        }
+                              
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                                    object.onrelease = onrelease;  
+                            
+                                //setup
+                                    set(0,'start');
+                                    set(1,'end');
+                            
+                                return object;
+                            };
                             this.slide = function(
                                 name='slide', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
@@ -5852,9 +6174,11 @@
                                         var handle = interfacePart.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
                                         object.append(handle);
                                     //invisible handle
-                                        var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height: height*(handleHeight+0.01) + handleHeight, style:{fill:invisibleHandleStyle}});
                                         object.append(invisibleHandle);
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(cover);
                             
                             
                             
@@ -5868,7 +6192,8 @@
                                         
                                         value = a;
                                         handle.y = a*height*(1-handleHeight);
-                                        invisibleHandle.y = a*height*(1-handleHeight);
+                                        invisibleHandle.y = handle.y - ( height*0.01 )/2;
+                            
                             
                                         handle.computeExtremities();
                                         invisibleHandle.computeExtremities();
@@ -5898,7 +6223,7 @@
                             
                             
                                 //interaction
-                                    object.ondblclick = function(){
+                                    cover.ondblclick = function(){
                                         if(!interactable){return;}
                                         if(resetValue<0){return;}
                                         if(grappled){return;}
@@ -5906,7 +6231,7 @@
                                         set(resetValue);
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    object.onwheel = function(){
+                                    cover.onwheel = function(){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
@@ -5915,8 +6240,8 @@
                                         set( value + move/(10*globalScale) );
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    backingAndSlot.onmousedown = function(x,y,event){};//to stop unit selection
-                                    backingAndSlot.onclick = function(x,y,event){
+                                    backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
+                                    backingAndSlotCover.onclick = function(x,y,event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
@@ -5988,7 +6313,7 @@
                                             var temp = interfacePart.builder(
                                                 'slide', 'slide_'+a, {
                                                     x:a*(width/count), y:0,
-                                                    width:width/count, height:height, interactable:interactable,
+                                                    width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
                                                     value:startValue, resetValue:resetValue,
                                                     style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
                                                     onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
@@ -6008,6 +6333,166 @@
                                             object.children[a].interactable(bool);
                                         }
                                     };
+                            
+                                return object;
+                            };
+                            this.slide_image = function(
+                                name='slide_image', 
+                                x, y, width=10, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, value=0, resetValue=-1,
+                                
+                                handleURL, backingURL, slotURL,
+                            
+                                invisibleHandleStyle = 'rgba(255,0,0,0)',
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //default to non-image version if image links are missing
+                                    if(handleURL == undefined || backingURL == undefined || slotURL == undefined){
+                                        return this.slide(
+                                            name, x, y, width, height, angle, interactable,
+                                            handleHeight, value, resetValue,
+                                            handleURL, backingURL, slotURL, invisibleHandleStyle,
+                                            onchange, onrelease,
+                                        );
+                                    }
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing and slot group
+                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
+                                        object.append(backingAndSlot);
+                                        //backing
+                                            var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                                            backingAndSlot.append(backing);
+                                        //slot
+                                            var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
+                                            backingAndSlot.append(slot);
+                                        //backing and slot cover
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                            backingAndSlot.append(backingAndSlotCover);
+                                    //handle
+                                        var handle = interfacePart.builder('image','handle',{width:width, height:height*handleHeight, url:handleURL});
+                                        object.append(handle);
+                                    //invisible handle
+                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, style:{fill:invisibleHandleStyle}});
+                                        object.append(invisibleHandle);
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(cover);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                                        
+                                        value = a;
+                                        handle.y = a*height*(1-handleHeight);
+                                        invisibleHandle.y = handle.y - ( height*0.01 )/2;
+                            
+                                        handle.computeExtremities();
+                                        invisibleHandle.computeExtremities();
+                                    }
+                                    object.__calculationAngle = angle;
+                                    function currentMousePosition(event){
+                                        return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    cover.ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                            
+                                        set(resetValue);
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    cover.onwheel = function(){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                                        var globalScale = workspace.core.viewport.scale();
+                                        set( value + move/(10*globalScale) );
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
+                                    backingAndSlotCover.onclick = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        //calculate the distance the click is from the top of the slider (accounting for angle)
+                                            var offset = backingAndSlot.getOffset();
+                                            var delta = {
+                                                x: x - (backingAndSlot.x     + offset.x),
+                                                y: y - (backingAndSlot.y     + offset.y),
+                                                a: 0 - (backingAndSlot.angle + offset.a),
+                                            };
+                                            var d = workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                            
+                                        //use the distance to calculate the correct value to set the slide to
+                                        //taking into account the slide handle's size also
+                                            var value = d + 0.5*handleHeight*((2*d)-1);
+                            
+                                        set(value);
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    invisibleHandle.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        grappled = true;
+                            
+                                        var initialValue = value;
+                                        var initialY = currentMousePosition(event);
+                                        var mux = height - height*handleHeight;
+                            
+                                        workspace.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = workspace.core.viewport.scale();
+                                                set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                            },
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = workspace.core.viewport.scale();
+                                                object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                                grappled = false;
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                                //setup
+                                    set(value);
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
                             
                                 return object;
                             };
@@ -6061,6 +6546,10 @@
                                                 var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
                                                 handles[handleNames[a]].append(invisibleHandle);
                                         }
+                            
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(cover);
                             
                             
                             
@@ -6160,8 +6649,12 @@
                                     }
                             
                                     //background click
-                                        backingAndSlot.onmousedown = function(x,y,event){};//to stop unit selection
-                                        backingAndSlot.onclick = function(x,y,event){
+                                        //to stop clicks passing through the span
+                                            span.onmousedown = function(){};
+                                            span.onclick = function(){};
+                                            
+                                        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
+                                        backingAndSlotCover.onclick = function(x,y,event){
                                             if(!interactable){return;}
                                             if(grappled){return;}
                             
@@ -6177,7 +6670,7 @@
                                         };
                             
                                     //double-click reset
-                                        object.ondblclick = function(){
+                                        cover.ondblclick = function(){
                                             if(!interactable){return;}
                                             if(resetValues.start<0 || resetValues.end<0){return;}
                                             if(grappled){return;}
@@ -6188,7 +6681,7 @@
                                         };
                             
                                     //span panning - expand/shrink
-                                        object.onwheel = function(){
+                                        cover.onwheel = function(){
                                             if(!interactable){return;}
                                             if(grappled){return;}
                             
@@ -6261,8 +6754,8 @@
                             
                                 return object;
                             };
-                            this.checkbox_rect = function(
-                                name='checkbox_rect',
+                            this.checkbox_rectangle = function(
+                                name='checkbox_rectangle',
                                 x, y, width=20, height=20, angle=0, interactable=true,
                                 checkStyle = 'rgba(150,150,150,1)',
                                 backingStyle = 'rgba(200,200,200,1)',
@@ -6270,31 +6763,30 @@
                                 backingGlowStyle = 'rgba(220,220,220,1)',
                                 onchange = function(){},
                             ){
-                                //elements 
+                                //adding on the specific shapes
                                     //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
                                     //backing
                                         var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
-                                        object.append(backing);
+                                        subject.append(backing);
                                     //check
                                         var checkrect = interfacePart.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:{fill:'rgba(0,0,0,0)'}});
-                                        object.append(checkrect);
+                                        subject.append(checkrect);
                                     //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        object.append(cover);
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
                             
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
                             
-                            
-                            
-                            
-                                //state
-                                    var state = {
-                                        checked:false,
-                                        glowing:false,
-                                    }
-                            
-                                    function updateGraphics(){
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
                                         if(state.glowing){
                                             backing.style.fill = backingGlowStyle;
                                             checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
@@ -6302,17 +6794,76 @@
                                             backing.style.fill = backingStyle;
                                             checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
                                         }
-                                    }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
                             
+                                return object;
+                            };
+                            this.checkbox_image = function(
+                                name='checkbox_image',
+                                x, y, width=20, height=20, angle=0, interactable=true,
+                                uncheckURL, checkURL, checkGlowURL, backingGlowURL,
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:uncheckURL});
+                                        subject.append(backing);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
                             
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
                             
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){ 
+                                        if(state.glowing){
+                                            backing.url = state.checked ? checkGlowURL : uncheckGlowURL;
+                                        }else{
+                                            backing.url = state.checked ? checkURL : uncheckURL;
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_ = function(
+                                name='checkbox_',
+                                x, y, angle=0, interactable=true,
+                            
+                                onchange = function(){},
+                            
+                                subject
+                            ){
+                                if(subject == undefined){console.warn('checkbox_ : No subject provided');}
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //subject
+                                        object.append(subject);
+                            
+                                //state
+                                    var state = {
+                                        checked:false,
+                                        glowing:false,
+                                    };
                             
                                 //methods
                                     object.get = function(){ return state.checked; };
                                     object.set = function(value, update=true){
                                         state.checked = value;
                                         
-                                        updateGraphics();
+                                        object.updateGraphics(state);
                                 
                                         if(update&&this.onchange){ this.onchange(value); }
                                     };
@@ -6321,28 +6872,115 @@
                             
                                         state.glowing = state;
                             
-                                        updateGraphics();
+                                        object.updateGraphics(state);
                                     };
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
                                     };
                             
-                            
-                            
-                            
                                 //interactivity
-                                    cover.onclick = function(event){
+                                    subject.cover.onclick = function(event){
                                         if(!interactable){return;}
                                         object.set(!object.get());
                                     };
-                                    cover.onmousedown = function(){};
-                            
-                            
-                            
+                                    subject.cover.onmousedown = function(){};
                             
                                 //callbacks
                                     object.onchange = onchange;
+                            
+                                return object;
+                            };
+                            this.checkbox_polygon = function(
+                                name='checkbox_polygon',
+                                x, y, 
+                                outterPoints=[{x:0,y:4},{x:4,y:0}, {x:16,y:0},{x:20,y:4}, {x:20,y:16},{x:16,y:20},{x:4,y:20},{x:0,y:16}],
+                                innerPoints=[ {x:2,y:4},{x:4,y:2}, {x:16,y:2},{x:18,y:4}, {x:18,y:16},{x:16,y:18}, {x:4,y:18},{x:2,y:16}],
+                                angle=0, interactable=true,
+                                checkStyle = 'rgba(150,150,150,1)',
+                                backingStyle = 'rgba(200,200,200,1)',
+                                checkGlowStyle = 'rgba(220,220,220,1)',
+                                backingGlowStyle = 'rgba(220,220,220,1)',
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('polygon','backing',{points:outterPoints, style:{fill:backingStyle}});
+                                        subject.append(backing);
+                                    //check
+                                        var checkrect = interfacePart.builder('polygon','checkrect',{points:innerPoints, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(checkrect);
+                                    //cover
+                                        subject.cover = interfacePart.builder('polygon','cover',{points:outterPoints, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.style.fill = backingGlowStyle;
+                                            checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
+                                        }else{
+                                            backing.style.fill = backingStyle;
+                                            checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_circle = function(
+                                name='checkbox_circle',
+                                x, y, r=10, angle=0, interactable=true,
+                                checkStyle = 'rgba(150,150,150,1)',
+                                backingStyle = 'rgba(200,200,200,1)',
+                                checkGlowStyle = 'rgba(220,220,220,1)',
+                                backingGlowStyle = 'rgba(220,220,220,1)',
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('circle','backing',{r:r, style:{fill:backingStyle}});
+                                        subject.append(backing);
+                                    //check
+                                        var checkrect = interfacePart.builder('circle','checkrect',{r:r*0.8, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(checkrect);
+                                    //cover
+                                        subject.cover = interfacePart.builder('circle','cover',{r:r, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.style.fill = backingGlowStyle;
+                                            checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
+                                        }else{
+                                            backing.style.fill = backingStyle;
+                                            checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
                             
                                 return object;
                             };
@@ -7498,372 +8136,36 @@
                             
                                 return object;
                             };
-                            this.list = function(
-                                name='list', 
-                                x, y, width=50, height=100, angle=0, interactable=true,
-                                list=[],
-                            
-                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
-                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
-                            
-                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
-                                breakHeightMux=0.0025, breakWidthMux=0.9, 
-                                spacingHeightMux=0.005,
-                                backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
-                            
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_fill = 'rgba(0,0,0,1)',
-                                text_stroke = 'rgba(0,0,0,0)',
-                                text_lineWidth = 1,
-                            
-                                item__off__fill=                          'rgba(180,180,180,1)',
-                                item__off__stroke=                        'rgba(0,0,0,0)',
-                                item__off__lineWidth=                     0,
-                                item__up__fill=                           'rgba(200,200,200,1)',
-                                item__up__stroke=                         'rgba(0,0,0,0)',
-                                item__up__lineWidth=                      0,
-                                item__press__fill=                        'rgba(230,230,230,1)',
-                                item__press__stroke=                      'rgba(0,0,0,0)',
-                                item__press__lineWidth=                   0,
-                                item__select__fill=                       'rgba(200,200,200,1)',
-                                item__select__stroke=                     'rgba(120,120,120,1)',
-                                item__select__lineWidth=                  2,
-                                item__select_press__fill=                 'rgba(230,230,230,1)',
-                                item__select_press__stroke=               'rgba(120,120,120,1)',
-                                item__select_press__lineWidth=            2,
-                                item__glow__fill=                         'rgba(220,220,220,1)',
-                                item__glow__stroke=                       'rgba(0,0,0,0)',
-                                item__glow__lineWidth=                    0,
-                                item__glow_press__fill=                   'rgba(250,250,250,1)',
-                                item__glow_press__stroke=                 'rgba(0,0,0,0)',
-                                item__glow_press__lineWidth=              0,
-                                item__glow_select__fill=                  'rgba(220,220,220,1)',
-                                item__glow_select__stroke=                'rgba(120,120,120,1)',
-                                item__glow_select__lineWidth=             2,
-                                item__glow_select_press__fill=            'rgba(250,250,250,1)',
-                                item__glow_select_press__stroke=          'rgba(120,120,120,1)',
-                                item__glow_select_press__lineWidth=       2,
-                                item__hover__fill=                        'rgba(220,220,220,1)',
-                                item__hover__stroke=                      'rgba(0,0,0,0)',
-                                item__hover__lineWidth=                   0,
-                                item__hover_press__fill=                  'rgba(240,240,240,1)',
-                                item__hover_press__stroke=                'rgba(0,0,0,0)',
-                                item__hover_press__lineWidth=             0,
-                                item__hover_select__fill=                 'rgba(220,220,220,1)',
-                                item__hover_select__stroke=               'rgba(120,120,120,1)',
-                                item__hover_select__lineWidth=            2,
-                                item__hover_select_press__fill=           'rgba(240,240,240,1)',
-                                item__hover_select_press__stroke=         'rgba(120,120,120,1)',
-                                item__hover_select_press__lineWidth=      2,
-                                item__hover_glow__fill=                   'rgba(240,240,240,1)',
-                                item__hover_glow__stroke=                 'rgba(0,0,0,0)',
-                                item__hover_glow__lineWidth=              0,
-                                item__hover_glow_press__fill=             'rgba(250,250,250,1)',
-                                item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-                                item__hover_glow_press__lineWidth=        0,
-                                item__hover_glow_select__fill=            'rgba(240,240,240,1)',
-                                item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-                                item__hover_glow_select__lineWidth=       2,
-                                item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-                                item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-                                item__hover_glow_select_press__lineWidth= 2,
-                            
-                                onenter=function(){},
-                                onleave=function(){},
-                                onpress=function(){},
-                                ondblpress=function(){},
-                                onrelease=function(){},
-                                onselection=function(){},
-                                onpositionchange=function(){},
-                            ){
-                                //state
-                                    var itemArray = [];
-                                    var selectedItems = [];
-                                    var lastNonShiftClicked = 0;
-                                    var position = 0;
-                                    var calculatedListHeight;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
-                                            fill:backing_style,
-                                        }});
-                                        object.append(backing);
-                                    //item collection
-                                        var itemCollection = interfacePart.builder('group','itemCollection');
-                                        object.append(itemCollection);
-                                        function refreshList(){
-                                            //clean out all values
-                                                itemArray = [];
-                                                itemCollection.clear();
-                                                selectedItems = [];
-                                                position = 0;
-                                                lastNonShiftClicked = 0;
-                            
-                                            //populate list
-                                                var accumulativeHeight = 0;
-                                                for(var a = 0; a < list.length; a++){
-                                                    if( list[a] == 'space' ){
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:0, y:accumulativeHeight,
-                                                            width:width, height:height*spacingHeightMux,
-                                                            style:{fill:'rgba(255,0,0,0)'}
-                                                        });
-                            
-                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else if( list[a] == 'break'){
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*breakWidthMux, height:height*breakHeightMux,
-                                                            style:{fill:break_style}
-                                                        });
-                            
-                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else{
-                                                        var temp = interfacePart.builder( 'button_rectangle', ''+a, {
-                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
-                                                            text_left: list[a].text_left,
-                                                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
-                                                            text_right: list[a].text_right,
-                            
-                                                            textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
-                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                                            style:{
-                                                                text_font:text_font,
-                                                                text_textBaseline:text_textBaseline,
-                                                                text_fill:text_fill,
-                                                                text_stroke:text_stroke,
-                                                                text_lineWidth:text_lineWidth,
-                            
-                                                                background__off__fill:                            item__off__fill,
-                                                                background__off__stroke:                          item__off__stroke,
-                                                                background__off__lineWidth:                       item__off__lineWidth,
-                                                                background__up__fill:                             item__up__fill,
-                                                                background__up__stroke:                           item__up__stroke,
-                                                                background__up__lineWidth:                        item__up__lineWidth,
-                                                                background__press__fill:                          item__press__fill,
-                                                                background__press__stroke:                        item__press__stroke,
-                                                                background__press__lineWidth:                     item__press__lineWidth,
-                                                                background__select__fill:                         item__select__fill,
-                                                                background__select__stroke:                       item__select__stroke,
-                                                                background__select__lineWidth:                    item__select__lineWidth,
-                                                                background__select_press__fill:                   item__select_press__fill,
-                                                                background__select_press__stroke:                 item__select_press__stroke,
-                                                                background__select_press__lineWidth:              item__select_press__lineWidth,
-                                                                background__glow__fill:                           item__glow__fill,
-                                                                background__glow__stroke:                         item__glow__stroke,
-                                                                background__glow__lineWidth:                      item__glow__lineWidth,
-                                                                background__glow_press__fill:                     item__glow_press__fill,
-                                                                background__glow_press__stroke:                   item__glow_press__stroke,
-                                                                background__glow_press__lineWidth:                item__glow_press__lineWidth,
-                                                                background__glow_select__fill:                    item__glow_select__fill,
-                                                                background__glow_select__stroke:                  item__glow_select__stroke,
-                                                                background__glow_select__lineWidth:               item__glow_select__lineWidth,
-                                                                background__glow_select_press__fill:              item__glow_select_press__fill,
-                                                                background__glow_select_press__stroke:            item__glow_select_press__stroke,
-                                                                background__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
-                                                                background__hover__fill:                          item__hover__fill,
-                                                                background__hover__stroke:                        item__hover__stroke,
-                                                                background__hover__lineWidth:                     item__hover__lineWidth,
-                                                                background__hover_press__fill:                    item__hover_press__fill,
-                                                                background__hover_press__stroke:                  item__hover_press__stroke,
-                                                                background__hover_press__lineWidth:               item__hover_press__lineWidth,
-                                                                background__hover_select__fill:                   item__hover_select__fill,
-                                                                background__hover_select__stroke:                 item__hover_select__stroke,
-                                                                background__hover_select__lineWidth:              item__hover_select__lineWidth,
-                                                                background__hover_select_press__fill:             item__hover_select_press__fill,
-                                                                background__hover_select_press__stroke:           item__hover_select_press__stroke,
-                                                                background__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
-                                                                background__hover_glow__fill:                     item__hover_glow__fill,
-                                                                background__hover_glow__stroke:                   item__hover_glow__stroke,
-                                                                background__hover_glow__lineWidth:                item__hover_glow__lineWidth,
-                                                                background__hover_glow_press__fill:               item__hover_glow_press__fill,
-                                                                background__hover_glow_press__stroke:             item__hover_glow_press__stroke,
-                                                                background__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
-                                                                background__hover_glow_select__fill:              item__hover_glow_select__fill,
-                                                                background__hover_glow_select__stroke:            item__hover_glow_select__stroke,
-                                                                background__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
-                                                                background__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
-                                                                background__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
-                                                                background__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
-                                                            }
-                                                        });
-                            
-                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                        temp.onrelease = function(a){
-                                                            return function(){
-                                                                if( list[a].function ){ list[a].function(); }
-                                                                object.onrelease(a);
-                                                            }
-                                                        }(a);
-                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-                            
-                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                        itemArray.push( temp );
-                                                    }
-                                                }
-                            
-                                            return accumulativeHeight - height*itemSpacingMux;
-                                        }
-                                        calculatedListHeight = refreshList();
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                                        object.append(cover);
-                                    //stencil
-                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                                        object.stencil(stencil);
-                                        object.clip(true);
-                            
-                            
-                                //interaction
-                                    cover.onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var move = event.deltaY/100;
-                                        object.position( object.position() + move/10 );
-                                        for(var a = 0; a < itemArray.length; a++){
-                                            itemArray[a].forceMouseLeave();
-                                        }
-                                    };
-                                
-                                //controls
-                                    object.position = function(a,update=true){
-                                        if(a == undefined){return position;}
-                                        a = a < 0 ? 0 : a;
-                                        a = a > 1 ? 1 : a;
-                                        position = a;
-                            
-                                        if( calculatedListHeight < height ){return;}
-                                        var movementSpace = calculatedListHeight - height;
-                                        itemCollection.parameter.y( -a*movementSpace );
-                                        
-                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
-                                    };
-                                    object.select = function(a,state,event,update=true){
-                                        if(!selectable){return;}
-                            
-                                        //where multi selection is not allowed
-                                            if(!multiSelect){
-                                                //where we want to select an item, which is not already selected
-                                                    if(state && !selectedItems.includes(a) ){
-                                                        //deselect all other items
-                                                            while( selectedItems.length > 0 ){
-                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
-                                                                selectedItems.shift();
-                                                            }
-                            
-                                                        //select current item
-                                                            selectedItems.push(a);
-                            
-                                                //where we want to deselect an item that is selected
-                                                    }else if(!state && selectedItems.includes(a)){
-                                                        selectedItems = [];
-                                                    }
-                            
-                                            //do not update the item itself, in the case that it was the item that sent this command
-                                            //(which would cause a little loop)
-                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
-                            
-                                        //where multi selection is allowed
-                                            }else{
-                                                //wherer range-selection is to be done
-                                                    if( event != undefined && event.shiftKey ){
-                                                        //gather top and bottom item
-                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
-                                                            var min = Math.min(lastNonShiftClicked, a);
-                                                            var max = Math.max(lastNonShiftClicked, a);
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( itemArray[b].name == ''+min ){min = b;}
-                                                                if( itemArray[b].name == ''+max ){max = b;}
-                                                            }
-                            
-                                                        //deselect all outside the range
-                                                            selectedItems = [];
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( b > max || b < min ){
-                                                                    if( itemArray[b].select() ){
-                                                                        itemArray[b].select(false,undefined,false);
-                                                                    }
-                                                                }
-                                                            }
-                            
-                                                        //select those within the range (that aren't already selected)
-                                                            for(var b = min; b <= max; b++){
-                                                                if( !itemArray[b].select() ){
-                                                                    itemArray[b].select(true,undefined,false);
-                                                                    selectedItems.push(b);
-                                                                }
-                                                            }
-                                                //where range-selection is not to be done
-                                                    }else{
-                                                        if(update){ itemArray[a].select(state); }
-                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
-                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                                        lastNonShiftClicked = a;
-                                                    }
-                                            }
-                            
-                                        object.onselection(selectedItems);
-                                    };
-                                    object.add = function(item){
-                                        list.push(item);
-                                        calculatedListHeight = refreshList();
-                                    };
-                                    object.remove = function(a){
-                                        list.splice(a,1);
-                                        calculatedListHeight = refreshList();
-                                    };
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                        refreshList();
-                                    };
-                            
-                                //callbacks
-                                    object.onenter = onenter;
-                                    object.onleave = onleave;
-                                    object.onpress = onpress;
-                                    object.ondblpress = ondblpress;
-                                    object.onrelease = onrelease;
-                                    object.onselection = onselection;
-                                    object.onpositionchange = onpositionchange;
-                                    
-                                return object;
-                            };
-                            this.dial_image_continuous = function(
-                                name='dial_image_continuous',
+                            this.dial_continuous_image = function(
+                                name='dial_continuous_image',
                                 x, y, r=15, angle=0, interactable=true,
                                 value=0, resetValue=-1,
                                 startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
                             
-                                handleUrl = 'http://space.alglobus.net/Basics/whyImages/earthFromSpace.gif',
-                                slotUrl = 'https://i.ytimg.com/vi/JS7NYKqhrFo/hqdefault.jpg',
-                                needleUrl = 'http://coolinterestingstuff.com/wp-content/uploads/2012/09/space-4.jpg',
-                            
+                                handleURL, slotURL, needleURL,
+                                
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                //default to non-image version if image links are missing
+                                    if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
+                                        return this.dial_continuous(
+                                            name, x, y, r, angle, interactable, value, resetValue, startAngle, maxAngle,
+                                            undefined, undefined, undefined,
+                                            onchange, onrelease
+                                        );
+                                    }
+                            
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     
                                     //slot
-                                        var slot = interfacePart.builder('image','slot',{width:2.2*r, height:2.2*r, anchor:{x:0.5,y:0.5}, url:slotUrl});
+                                        var slot = interfacePart.builder('image','slot',{width:2.2*r, height:2.2*r, anchor:{x:0.5,y:0.5}, url:slotURL});
                                         object.append(slot);
                             
                                     //handle
-                                        var handle = interfacePart.builder('image','handle',{width:2*r, height:2*r, anchor:{x:0.5,y:0.5}, url:handleUrl});
+                                        var handle = interfacePart.builder('image','handle',{width:2*r, height:2*r, anchor:{x:0.5,y:0.5}, url:handleURL});
                                         object.append(handle);
                             
                                     //needle group
@@ -7873,7 +8175,7 @@
                                         //needle
                                             var needleWidth = r/5;
                                             var needleLength = r;
-                                            var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleUrl});
+                                            var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
                                                 needleGroup.append(needle);
                             
                             
@@ -7970,9 +8272,9 @@
                                 value=0, resetValue=-1,
                                 startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
                             
-                                handleStyle = 'rgba(200,200,200,1)',
-                                slotStyle = 'rgba(50,50,50,1)',
-                                needleStyle = 'rgba(250,100,100,1)',
+                                handleStyle = {fill:'rgba(200,200,200,1)'},
+                                slotStyle = {fill:'rgba(50,50,50,1)'},
+                                needleStyle = {fill:'rgba(250,100,100,1)'},
                             
                                 onchange=function(){},
                                 onrelease=function(){},
@@ -7982,11 +8284,23 @@
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     
                                     //slot
-                                        var slot = interfacePart.builder('circle','slot',{r:r*1.1, style:{fill:slotStyle}});
+                                        var slot = interfacePart.builder('circle','slot',{r:r*1.1, style:{
+                                            fill:slotStyle.fill,
+                                            stroke:slotStyle.stroke,
+                                            lineWidth:slotStyle.lineWidth,
+                                            lineJoin:slotStyle.lineJoin,
+                                            miterLimit:slotStyle.miterLimit,
+                                        }});
                                         object.append(slot);
                             
                                     //handle
-                                        var handle = interfacePart.builder('circle','handle',{r:r, style:{fill:handleStyle}});
+                                        var handle = interfacePart.builder('circle','handle',{r:r, style:{
+                                            fill:handleStyle.fill,
+                                            stroke:handleStyle.stroke,
+                                            lineWidth:handleStyle.lineWidth,
+                                            lineJoin:handleStyle.lineJoin,
+                                            miterLimit:handleStyle.miterLimit,
+                                        }});
                                         object.append(handle);
                             
                                     //needle group
@@ -7996,8 +8310,14 @@
                                         //needle
                                             var needleWidth = r/5;
                                             var needleLength = r;
-                                            var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{fill:needleStyle}});
-                                                needleGroup.append(needle);
+                                            var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{
+                                                fill:needleStyle.fill,
+                                                stroke:needleStyle.stroke,
+                                                lineWidth:needleStyle.lineWidth,
+                                                lineJoin:needleStyle.lineJoin,
+                                                miterLimit:needleStyle.miterLimit,
+                                            }});
+                                            needleGroup.append(needle);
                             
                             
                             
@@ -8086,15 +8406,13 @@
                             
                                 return object;
                             };
-                            this.dial_image_discrete = function(
-                                name='dial_image_discrete',
+                            this.dial_discrete_image = function(
+                                name='dial_discrete_image',
                                 x, y, r=15, angle=0, interactable=true,
                                 value=0, resetValue=0, optionCount=5,
                                 startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
                             
-                                handleUrl = 'https://pbs.twimg.com/profile_images/927920625347383297/-ksNZr-Z_400x400.jpg',
-                                slotUrl = 'https://blueblots.com/wp-content/uploads/2009/07/space1.jpg',
-                                needleUrl = 'https://i.ytimg.com/vi/kpFryXQbVEA/hqdefault.jpg',
+                                handleURL, slotURL, needleURL,
                             
                                 onchange=function(){},
                                 onrelease=function(){},
@@ -8104,10 +8422,10 @@
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     
                                     //dial
-                                        var dial = interfacePart.builder('dial_image_continuous',name,{
+                                        var dial = interfacePart.builder('dial_continuous_image',name,{
                                             x:0, y:0, r:r, angle:0, interactable:interactable,
                                             startAngle:startAngle, maxAngle:maxAngle,
-                                            handleUrl:handleUrl, slotUrl:slotUrl, needleUrl:needleUrl,
+                                            handleURL:handleURL, slotURL:slotURL, needleURL:needleURL,
                                         });
                                         //clean out built-in interaction
                                         dial.getChildByName('handle').ondblclick = undefined;
@@ -8214,9 +8532,9 @@
                                 value=0, resetValue=0, optionCount=5,
                                 startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
                             
-                                handleStyle = 'rgba(200,200,200,1)',
-                                slotStyle = 'rgba(50,50,50,1)',
-                                needleStyle = 'rgba(250,100,100,1)',
+                                handleStyle = {fill:'rgba(200,200,200,1)'},
+                                slotStyle = {fill:'rgba(50,50,50,1)'},
+                                needleStyle = {fill:'rgba(250,100,100,1)'},
                             
                                 onchange=function(){},
                                 onrelease=function(){},
@@ -8957,23 +9275,23 @@
                                 
                                 active=true, hoverable=true, selectable=false, pressable=true,
                             
-                                backingImageUrl__off='http://space.alglobus.net/Basics/whyImages/earthFromSpace.gif',
-                                backingImageUrl__up='https://i.ytimg.com/vi/JS7NYKqhrFo/hqdefault.jpg',
-                                backingImageUrl__press='http://coolinterestingstuff.com/wp-content/uploads/2012/09/space-4.jpg',
-                                backingImageUrl__select='https://pbs.twimg.com/profile_images/927920625347383297/-ksNZr-Z_400x400.jpg',
-                                backingImageUrl__select_press='https://blueblots.com/wp-content/uploads/2009/07/space1.jpg',
-                                backingImageUrl__glow='https://i.ytimg.com/vi/kpFryXQbVEA/hqdefault.jpg',
-                                backingImageUrl__glow_press='https://fabiusmaximus.files.wordpress.com/2016/01/north-america-at-night-from-space.jpg',
-                                backingImageUrl__glow_select='https://s3.amazonaws.com/spoonflower/public/design_thumbnails/0263/6418/rspoonflower_space_picmonkey_blue_v2_shop_preview.png',
-                                backingImageUrl__glow_select_press='https://www.onlytoptens.com/wp-content/uploads/2011/03/top-10-space-facts-moon-moving-away-from-earth.jpeg',
-                                backingImageUrl__hover='https://cbsnews2.cbsistatic.com/hub/i/r/2015/04/14/5b5bc07b-95cf-4d06-9b98-a4738d904981/resize/620x465/9146eac2f7e3d92908bd5dfe4450a31d/hubble-telescope-anniversary12.jpg#',
-                                backingImageUrl__hover_press='http://1.bp.blogspot.com/-gCkpyF_ib9M/TWBP5ftaeII/AAAAAAAAAY0/r1yI-UNbSSY/s1600/tychePlanet.jpg',
-                                backingImageUrl__hover_select='http://vignette3.wikia.nocookie.net/freerealmswarriorcats/images/6/61/4293522-567779-space-background-star-heart-in-night-sky.jpg/revision/latest?cb=20140103064430',
-                                backingImageUrl__hover_select_press='https://spaceplace.nasa.gov/templates/featured/space/galaxies300.png',
-                                backingImageUrl__hover_glow='https://s3.amazonaws.com/spoonflower/public/design_thumbnails/0157/0136/SPACE_PRINT-ALIEN_2_shop_preview.png',
-                                backingImageUrl__hover_glow_press='http://1.bp.blogspot.com/-rbBG3L514tQ/UD9eJuVrH1I/AAAAAAAAIo0/RKOGYNs0WwM/s400/Outer+Space+Wallpapers+6.jpg',
-                                backingImageUrl__hover_glow_select='http://previewcf.turbosquid.com/Preview/2014/05/25__12_10_05/gamma%20wormhole%202.jpg0671fb75-c6d0-49ee-9555-9ca9bf1ba482Larger.jpg',
-                                backingImageUrl__hover_glow_select_press='http://imgc.allpostersimages.com/images/P-473-488-90/61/6172/E2RG100Z/posters/earth-from-space.jpg',
+                                backingURL__off,
+                                backingURL__up,
+                                backingURL__press,
+                                backingURL__select,
+                                backingURL__select_press,
+                                backingURL__glow,
+                                backingURL__glow_press,
+                                backingURL__glow_select,
+                                backingURL__glow_select_press,
+                                backingURL__hover,
+                                backingURL__hover_press,
+                                backingURL__hover_select,
+                                backingURL__hover_select_press,
+                                backingURL__hover_glow,
+                                backingURL__hover_glow_press,
+                                backingURL__hover_glow_select,
+                                backingURL__hover_glow_select_press,
                             
                                 onenter = function(event){},
                                 onleave = function(event){},
@@ -8983,11 +9301,36 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
+                                //default to non-image version if image links are missing
+                                    if(
+                                        backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
+                                        backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 
+                                        backingURL__glow_press == undefined ||         backingURL__glow_select == undefined ||          backingURL__glow_select_press == undefined || 
+                                        backingURL__hover == undefined ||              backingURL__hover_press == undefined ||          backingURL__hover_select == undefined ||
+                                        backingURL__hover_select_press == undefined || backingURL__hover_glow == undefined ||           backingURL__hover_glow_press == undefined || 
+                                        backingURL__hover_glow_select == undefined ||  backingURL__hover_glow_select_press == undefined
+                                    ){
+                                        return this.button_rectangle(
+                                            name, x, y, width, height, angle, interactable,
+                                            undefined, undefined, undefined, undefined, undefined,
+                                            active, hoverable, selectable, pressable,
+                                            undefined, undefined, undefined, undefined, undefined,
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined,
+                                            onenter, onleave, onpress, ondblpress, onrelease, onselect, ondeselect
+                                        );
+                                    }
+                            
+                            
                                 //adding on the specific shapes
                                     //main
                                         var subject = interfacePart.builder('group',name+'subGroup',{});
                                     //backing
-                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingImageUrl__off});
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL__off});
                                         subject.append(backing);
                                     //cover
                                         subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
@@ -9024,22 +9367,22 @@
                                         if(!selectable && state.selected ){ state.selected = false; }
                             
                                         backing.url = [
-                                            backingImageUrl__up,                     
-                                            backingImageUrl__press,                  
-                                            backingImageUrl__select,                 
-                                            backingImageUrl__select_press,           
-                                            backingImageUrl__glow,                   
-                                            backingImageUrl__glow_press,             
-                                            backingImageUrl__glow_select,            
-                                            backingImageUrl__glow_select_press,      
-                                            backingImageUrl__hover,                  
-                                            backingImageUrl__hover_press,            
-                                            backingImageUrl__hover_select,           
-                                            backingImageUrl__hover_select_press,     
-                                            backingImageUrl__hover_glow,             
-                                            backingImageUrl__hover_glow_press,       
-                                            backingImageUrl__hover_glow_select,      
-                                            backingImageUrl__hover_glow_select_press,
+                                            backingURL__up,                     
+                                            backingURL__press,                  
+                                            backingURL__select,                 
+                                            backingURL__select_press,           
+                                            backingURL__glow,                   
+                                            backingURL__glow_press,             
+                                            backingURL__glow_select,            
+                                            backingURL__glow_select_press,      
+                                            backingURL__hover,                  
+                                            backingURL__hover_press,            
+                                            backingURL__hover_select,           
+                                            backingURL__hover_select_press,     
+                                            backingURL__hover_glow,             
+                                            backingURL__hover_glow_press,       
+                                            backingURL__hover_glow_select,      
+                                            backingURL__hover_glow_select_press,
                                         ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ];
                                     };
                                     object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
@@ -9122,6 +9465,604 @@
                                     graph.drawBackground();
                                     overlay.select(0);
                             
+                                return object;
+                            };
+                            this.list_image = function(
+                                name='list_image', 
+                                x, y, width=50, height=100, angle=0, interactable=true,
+                                list=[],
+                            
+                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                                breakHeightMux=0.0025, breakWidthMux=0.9, 
+                                spacingHeightMux=0.005,
+                                backingURL, breakURL,
+                            
+                                itemURL__off,
+                                itemURL__up,
+                                itemURL__press,
+                                itemURL__select,
+                                itemURL__select_press,
+                                itemURL__glow,
+                                itemURL__glow_press,
+                                itemURL__glow_select,
+                                itemURL__glow_select_press,
+                                itemURL__hover,
+                                itemURL__hover_press,
+                                itemURL__hover_select,
+                                itemURL__hover_select_press,
+                                itemURL__hover_glow,
+                                itemURL__hover_glow_press,
+                                itemURL__hover_glow_select,
+                                itemURL__hover_glow_select_press,
+                            
+                                onenter=function(){},
+                                onleave=function(){},
+                                onpress=function(){},
+                                ondblpress=function(){},
+                                onrelease=function(){},
+                                onselection=function(){},
+                                onpositionchange=function(){},
+                            ){
+                                //state
+                                    var itemArray = [];
+                                    var selectedItems = [];
+                                    var lastNonShiftClicked = 0;
+                                    var position = 0;
+                                    var calculatedListHeight;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                                        object.append(backing);
+                                    //item collection
+                                        var itemCollection = interfacePart.builder('group','itemCollection');
+                                        object.append(itemCollection);
+                                        function refreshList(){
+                                            //clean out all values
+                                                itemArray = [];
+                                                itemCollection.clear();
+                                                selectedItems = [];
+                                                position = 0;
+                                                lastNonShiftClicked = 0;
+                            
+                                            //populate list
+                                                var accumulativeHeight = 0;
+                                                for(var a = 0; a < list.length; a++){
+                                                    if( list[a] == 'space' ){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:0, y:accumulativeHeight,
+                                                            width:width, height:height*spacingHeightMux,
+                                                            style:{fill:'rgba(255,0,0,0)'}
+                                                        });
+                            
+                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else if( list[a] == 'break'){
+                                                        var temp = interfacePart.builder('image',''+a,{
+                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*breakWidthMux, height:height*breakHeightMux,
+                                                            url:breakURL
+                                                        });
+                            
+                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else{
+                                                        var temp = interfacePart.builder( 'button_image', ''+a, {
+                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
+                            
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                                            backingURL__off:                     itemURL__off,
+                                                            backingURL__up:                      itemURL__up,
+                                                            backingURL__press:                   itemURL__press,
+                                                            backingURL__select:                  itemURL__select,
+                                                            backingURL__select_press:            itemURL__select_press,
+                                                            backingURL__glow:                    itemURL__glow,
+                                                            backingURL__glow_press:              itemURL__glow_press,
+                                                            backingURL__glow_select:             itemURL__glow_select,
+                                                            backingURL__glow_select_press:       itemURL__glow_select_press,
+                                                            backingURL__hover:                   itemURL__hover,
+                                                            backingURL__hover_press:             itemURL__hover_press,
+                                                            backingURL__hover_select:            itemURL__hover_select,
+                                                            backingURL__hover_select_press:      itemURL__hover_select_press,
+                                                            backingURL__hover_glow:              itemURL__hover_glow,
+                                                            backingURL__hover_glow_press:        itemURL__hover_glow_press,
+                                                            backingURL__hover_glow_select:       itemURL__hover_glow_select,
+                                                            backingURL__hover_glow_select_press: itemURL__hover_glow_select_press,
+                                                        });
+                            
+                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease(a);
+                                                            }
+                                                        }(a);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                            
+                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                        itemArray.push( temp );
+                                                    }
+                                                }
+                            
+                                            return accumulativeHeight - height*itemSpacingMux;
+                                        }
+                                        calculatedListHeight = refreshList();
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                                        object.append(cover);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                                        object.stencil(stencil);
+                                        object.clip(true);
+                            
+                            
+                                //interaction
+                                    cover.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var move = event.deltaY/100;
+                                        object.position( object.position() + move/10 );
+                                        for(var a = 0; a < itemArray.length; a++){
+                                            itemArray[a].forceMouseLeave();
+                                        }
+                                    };
+                                
+                                //controls
+                                    object.position = function(a,update=true){
+                                        if(a == undefined){return position;}
+                                        a = a < 0 ? 0 : a;
+                                        a = a > 1 ? 1 : a;
+                                        position = a;
+                            
+                                        if( calculatedListHeight < height ){return;}
+                                        var movementSpace = calculatedListHeight - height;
+                                        itemCollection.parameter.y( -a*movementSpace );
+                                        
+                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
+                                    };
+                                    object.select = function(a,state,event,update=true){
+                                        if(!selectable){return;}
+                            
+                                        //where multi selection is not allowed
+                                            if(!multiSelect){
+                                                //where we want to select an item, which is not already selected
+                                                    if(state && !selectedItems.includes(a) ){
+                                                        //deselect all other items
+                                                            while( selectedItems.length > 0 ){
+                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                selectedItems.shift();
+                                                            }
+                            
+                                                        //select current item
+                                                            selectedItems.push(a);
+                            
+                                                //where we want to deselect an item that is selected
+                                                    }else if(!state && selectedItems.includes(a)){
+                                                        selectedItems = [];
+                                                    }
+                            
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
+                            
+                                        //where multi selection is allowed
+                                            }else{
+                                                //wherer range-selection is to be done
+                                                    if( event != undefined && event.shiftKey ){
+                                                        //gather top and bottom item
+                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                            var min = Math.min(lastNonShiftClicked, a);
+                                                            var max = Math.max(lastNonShiftClicked, a);
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( itemArray[b].name == ''+min ){min = b;}
+                                                                if( itemArray[b].name == ''+max ){max = b;}
+                                                            }
+                            
+                                                        //deselect all outside the range
+                                                            selectedItems = [];
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( b > max || b < min ){
+                                                                    if( itemArray[b].select() ){
+                                                                        itemArray[b].select(false,undefined,false);
+                                                                    }
+                                                                }
+                                                            }
+                            
+                                                        //select those within the range (that aren't already selected)
+                                                            for(var b = min; b <= max; b++){
+                                                                if( !itemArray[b].select() ){
+                                                                    itemArray[b].select(true,undefined,false);
+                                                                    selectedItems.push(b);
+                                                                }
+                                                            }
+                                                //where range-selection is not to be done
+                                                    }else{
+                                                        if(update){ itemArray[a].select(state); }
+                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                                        lastNonShiftClicked = a;
+                                                    }
+                                            }
+                            
+                                        object.onselection(selectedItems);
+                                    };
+                                    object.add = function(item){
+                                        list.push(item);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.remove = function(a){
+                                        list.splice(a,1);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                        refreshList();
+                                    };
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselection = onselection;
+                                    object.onpositionchange = onpositionchange;
+                                    
+                                return object;
+                            };
+                            this.list = function(
+                                name='list', 
+                                x, y, width=50, height=100, angle=0, interactable=true,
+                                list=[],
+                            
+                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                                breakHeightMux=0.0025, breakWidthMux=0.9, 
+                                spacingHeightMux=0.005,
+                                backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_fill = 'rgba(0,0,0,1)',
+                                text_stroke = 'rgba(0,0,0,0)',
+                                text_lineWidth = 1,
+                            
+                                item__off__fill=                          'rgba(180,180,180,1)',
+                                item__off__stroke=                        'rgba(0,0,0,0)',
+                                item__off__lineWidth=                     0,
+                                item__up__fill=                           'rgba(200,200,200,1)',
+                                item__up__stroke=                         'rgba(0,0,0,0)',
+                                item__up__lineWidth=                      0,
+                                item__press__fill=                        'rgba(230,230,230,1)',
+                                item__press__stroke=                      'rgba(0,0,0,0)',
+                                item__press__lineWidth=                   0,
+                                item__select__fill=                       'rgba(200,200,200,1)',
+                                item__select__stroke=                     'rgba(120,120,120,1)',
+                                item__select__lineWidth=                  2,
+                                item__select_press__fill=                 'rgba(230,230,230,1)',
+                                item__select_press__stroke=               'rgba(120,120,120,1)',
+                                item__select_press__lineWidth=            2,
+                                item__glow__fill=                         'rgba(220,220,220,1)',
+                                item__glow__stroke=                       'rgba(0,0,0,0)',
+                                item__glow__lineWidth=                    0,
+                                item__glow_press__fill=                   'rgba(250,250,250,1)',
+                                item__glow_press__stroke=                 'rgba(0,0,0,0)',
+                                item__glow_press__lineWidth=              0,
+                                item__glow_select__fill=                  'rgba(220,220,220,1)',
+                                item__glow_select__stroke=                'rgba(120,120,120,1)',
+                                item__glow_select__lineWidth=             2,
+                                item__glow_select_press__fill=            'rgba(250,250,250,1)',
+                                item__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                                item__glow_select_press__lineWidth=       2,
+                                item__hover__fill=                        'rgba(220,220,220,1)',
+                                item__hover__stroke=                      'rgba(0,0,0,0)',
+                                item__hover__lineWidth=                   0,
+                                item__hover_press__fill=                  'rgba(240,240,240,1)',
+                                item__hover_press__stroke=                'rgba(0,0,0,0)',
+                                item__hover_press__lineWidth=             0,
+                                item__hover_select__fill=                 'rgba(220,220,220,1)',
+                                item__hover_select__stroke=               'rgba(120,120,120,1)',
+                                item__hover_select__lineWidth=            2,
+                                item__hover_select_press__fill=           'rgba(240,240,240,1)',
+                                item__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                                item__hover_select_press__lineWidth=      2,
+                                item__hover_glow__fill=                   'rgba(240,240,240,1)',
+                                item__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                                item__hover_glow__lineWidth=              0,
+                                item__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                                item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                                item__hover_glow_press__lineWidth=        0,
+                                item__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                                item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                                item__hover_glow_select__lineWidth=       2,
+                                item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                                item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                                item__hover_glow_select_press__lineWidth= 2,
+                            
+                                onenter=function(){},
+                                onleave=function(){},
+                                onpress=function(){},
+                                ondblpress=function(){},
+                                onrelease=function(){},
+                                onselection=function(){},
+                                onpositionchange=function(){},
+                            ){
+                                //state
+                                    var itemArray = [];
+                                    var selectedItems = [];
+                                    var lastNonShiftClicked = 0;
+                                    var position = 0;
+                                    var calculatedListHeight;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
+                                            fill:backing_style,
+                                        }});
+                                        object.append(backing);
+                                    //item collection
+                                        var itemCollection = interfacePart.builder('group','itemCollection');
+                                        object.append(itemCollection);
+                                        function refreshList(){
+                                            //clean out all values
+                                                itemArray = [];
+                                                itemCollection.clear();
+                                                selectedItems = [];
+                                                position = 0;
+                                                lastNonShiftClicked = 0;
+                            
+                                            //populate list
+                                                var accumulativeHeight = 0;
+                                                for(var a = 0; a < list.length; a++){
+                                                    if( list[a] == 'space' ){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:0, y:accumulativeHeight,
+                                                            width:width, height:height*spacingHeightMux,
+                                                            style:{fill:'rgba(255,0,0,0)'}
+                                                        });
+                            
+                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else if( list[a] == 'break'){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*breakWidthMux, height:height*breakHeightMux,
+                                                            style:{fill:break_style}
+                                                        });
+                            
+                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else{
+                                                        var temp = interfacePart.builder( 'button_rectangle', ''+a, {
+                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
+                                                            text_left: list[a].text_left,
+                                                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                                                            text_right: list[a].text_right,
+                            
+                                                            textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                                            style:{
+                                                                text_font:text_font,
+                                                                text_textBaseline:text_textBaseline,
+                                                                text_fill:text_fill,
+                                                                text_stroke:text_stroke,
+                                                                text_lineWidth:text_lineWidth,
+                            
+                                                                background__off__fill:                            item__off__fill,
+                                                                background__off__stroke:                          item__off__stroke,
+                                                                background__off__lineWidth:                       item__off__lineWidth,
+                                                                background__up__fill:                             item__up__fill,
+                                                                background__up__stroke:                           item__up__stroke,
+                                                                background__up__lineWidth:                        item__up__lineWidth,
+                                                                background__press__fill:                          item__press__fill,
+                                                                background__press__stroke:                        item__press__stroke,
+                                                                background__press__lineWidth:                     item__press__lineWidth,
+                                                                background__select__fill:                         item__select__fill,
+                                                                background__select__stroke:                       item__select__stroke,
+                                                                background__select__lineWidth:                    item__select__lineWidth,
+                                                                background__select_press__fill:                   item__select_press__fill,
+                                                                background__select_press__stroke:                 item__select_press__stroke,
+                                                                background__select_press__lineWidth:              item__select_press__lineWidth,
+                                                                background__glow__fill:                           item__glow__fill,
+                                                                background__glow__stroke:                         item__glow__stroke,
+                                                                background__glow__lineWidth:                      item__glow__lineWidth,
+                                                                background__glow_press__fill:                     item__glow_press__fill,
+                                                                background__glow_press__stroke:                   item__glow_press__stroke,
+                                                                background__glow_press__lineWidth:                item__glow_press__lineWidth,
+                                                                background__glow_select__fill:                    item__glow_select__fill,
+                                                                background__glow_select__stroke:                  item__glow_select__stroke,
+                                                                background__glow_select__lineWidth:               item__glow_select__lineWidth,
+                                                                background__glow_select_press__fill:              item__glow_select_press__fill,
+                                                                background__glow_select_press__stroke:            item__glow_select_press__stroke,
+                                                                background__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
+                                                                background__hover__fill:                          item__hover__fill,
+                                                                background__hover__stroke:                        item__hover__stroke,
+                                                                background__hover__lineWidth:                     item__hover__lineWidth,
+                                                                background__hover_press__fill:                    item__hover_press__fill,
+                                                                background__hover_press__stroke:                  item__hover_press__stroke,
+                                                                background__hover_press__lineWidth:               item__hover_press__lineWidth,
+                                                                background__hover_select__fill:                   item__hover_select__fill,
+                                                                background__hover_select__stroke:                 item__hover_select__stroke,
+                                                                background__hover_select__lineWidth:              item__hover_select__lineWidth,
+                                                                background__hover_select_press__fill:             item__hover_select_press__fill,
+                                                                background__hover_select_press__stroke:           item__hover_select_press__stroke,
+                                                                background__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
+                                                                background__hover_glow__fill:                     item__hover_glow__fill,
+                                                                background__hover_glow__stroke:                   item__hover_glow__stroke,
+                                                                background__hover_glow__lineWidth:                item__hover_glow__lineWidth,
+                                                                background__hover_glow_press__fill:               item__hover_glow_press__fill,
+                                                                background__hover_glow_press__stroke:             item__hover_glow_press__stroke,
+                                                                background__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
+                                                                background__hover_glow_select__fill:              item__hover_glow_select__fill,
+                                                                background__hover_glow_select__stroke:            item__hover_glow_select__stroke,
+                                                                background__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
+                                                                background__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
+                                                                background__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
+                                                                background__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
+                                                            }
+                                                        });
+                            
+                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease(a);
+                                                            }
+                                                        }(a);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                            
+                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                        itemArray.push( temp );
+                                                    }
+                                                }
+                            
+                                            return accumulativeHeight - height*itemSpacingMux;
+                                        }
+                                        calculatedListHeight = refreshList();
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                                        object.append(cover);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                                        object.stencil(stencil);
+                                        object.clip(true);
+                            
+                            
+                                //interaction
+                                    cover.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var move = event.deltaY/100;
+                                        object.position( object.position() + move/10 );
+                                        for(var a = 0; a < itemArray.length; a++){
+                                            itemArray[a].forceMouseLeave();
+                                        }
+                                    };
+                                
+                                //controls
+                                    object.position = function(a,update=true){
+                                        if(a == undefined){return position;}
+                                        a = a < 0 ? 0 : a;
+                                        a = a > 1 ? 1 : a;
+                                        position = a;
+                            
+                                        if( calculatedListHeight < height ){return;}
+                                        var movementSpace = calculatedListHeight - height;
+                                        itemCollection.parameter.y( -a*movementSpace );
+                                        
+                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
+                                    };
+                                    object.select = function(a,state,event,update=true){
+                                        if(!selectable){return;}
+                            
+                                        //where multi selection is not allowed
+                                            if(!multiSelect){
+                                                //where we want to select an item, which is not already selected
+                                                    if(state && !selectedItems.includes(a) ){
+                                                        //deselect all other items
+                                                            while( selectedItems.length > 0 ){
+                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                selectedItems.shift();
+                                                            }
+                            
+                                                        //select current item
+                                                            selectedItems.push(a);
+                            
+                                                //where we want to deselect an item that is selected
+                                                    }else if(!state && selectedItems.includes(a)){
+                                                        selectedItems = [];
+                                                    }
+                            
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
+                            
+                                        //where multi selection is allowed
+                                            }else{
+                                                //wherer range-selection is to be done
+                                                    if( event != undefined && event.shiftKey ){
+                                                        //gather top and bottom item
+                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                            var min = Math.min(lastNonShiftClicked, a);
+                                                            var max = Math.max(lastNonShiftClicked, a);
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( itemArray[b].name == ''+min ){min = b;}
+                                                                if( itemArray[b].name == ''+max ){max = b;}
+                                                            }
+                            
+                                                        //deselect all outside the range
+                                                            selectedItems = [];
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( b > max || b < min ){
+                                                                    if( itemArray[b].select() ){
+                                                                        itemArray[b].select(false,undefined,false);
+                                                                    }
+                                                                }
+                                                            }
+                            
+                                                        //select those within the range (that aren't already selected)
+                                                            for(var b = min; b <= max; b++){
+                                                                if( !itemArray[b].select() ){
+                                                                    itemArray[b].select(true,undefined,false);
+                                                                    selectedItems.push(b);
+                                                                }
+                                                            }
+                                                //where range-selection is not to be done
+                                                    }else{
+                                                        if(update){ itemArray[a].select(state); }
+                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                                        lastNonShiftClicked = a;
+                                                    }
+                                            }
+                            
+                                        object.onselection(selectedItems);
+                                    };
+                                    object.add = function(item){
+                                        list.push(item);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.remove = function(a){
+                                        list.splice(a,1);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                        refreshList();
+                                    };
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselection = onselection;
+                                    object.onpositionchange = onpositionchange;
+                                    
                                 return object;
                             };
                         };
@@ -12768,23 +13709,23 @@
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
                                         data.active, data.hoverable, data.selectable, data.pressable,
                     
-                                        data.backingImageUrl__off,
-                                        data.backingImageUrl__up,
-                                        data.backingImageUrl__press,
-                                        data.backingImageUrl__select,
-                                        data.backingImageUrl__select_press,
-                                        data.backingImageUrl__glow,
-                                        data.backingImageUrl__glow_press,
-                                        data.backingImageUrl__glow_select,
-                                        data.backingImageUrl__glow_select_press,
-                                        data.backingImageUrl__hover,
-                                        data.backingImageUrl__hover_press,
-                                        data.backingImageUrl__hover_select,
-                                        data.backingImageUrl__hover_select_press,
-                                        data.backingImageUrl__hover_glow,
-                                        data.backingImageUrl__hover_glow_press,
-                                        data.backingImageUrl__hover_glow_select,
-                                        data.backingImageUrl__hover_glow_select_press,
+                                        data.backingURL__off,
+                                        data.backingURL__up,
+                                        data.backingURL__press,
+                                        data.backingURL__select,
+                                        data.backingURL__select_press,
+                                        data.backingURL__glow,
+                                        data.backingURL__glow_press,
+                                        data.backingURL__glow_select,
+                                        data.backingURL__glow_select_press,
+                                        data.backingURL__hover,
+                                        data.backingURL__hover_press,
+                                        data.backingURL__hover_select,
+                                        data.backingURL__hover_select_press,
+                                        data.backingURL__hover_glow,
+                                        data.backingURL__hover_glow_press,
+                                        data.backingURL__hover_glow_select,
+                                        data.backingURL__hover_glow_select_press,
                                     
                                         data.onenter,
                                         data.onleave,
@@ -12911,20 +13852,20 @@
                                         data.style.handle, data.style.slot, data.style.needle,
                                         data.onchange, data.onrelease
                                     );
-                                    case 'dial_image_continuous': return this.collection.control.dial_image_continuous(
+                                    case 'dial_continuous_image': return this.collection.control.dial_continuous_image(
                                         name,
                                         data.x, data.y, data.r, data.angle, data.interactable,
                                         data.value, data.resetValue,
                                         data.startAngle, data.maxAngle,
-                                        data.handleUrl, data.slotUrl, data.needleUrl,
+                                        data.handleURL, data.slotURL, data.needleURL,
                                         data.onchange, data.onrelease
                                     );
-                                    case 'dial_image_discrete': return this.collection.control.dial_image_discrete(
+                                    case 'dial_discrete_image': return this.collection.control.dial_discrete_image(
                                         name,
                                         data.x, data.y, data.r, data.angle, data.interactable,
                                         data.value, data.resetValue, data.optionCount,
                                         data.startAngle, data.maxAngle,
-                                        data.handleUrl, data.slotUrl, data.needleUrl,
+                                        data.handleURL, data.slotURL, data.needleURL,
                                         data.onchange, data.onrelease
                                     );
                                 //slide
@@ -12933,17 +13874,32 @@
                                         data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
                                         data.onchange, data.onrelease
                                     );
+                                    case 'slide_image': return this.collection.control.slide_image(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
+                                        data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle,
+                                        data.onchange, data.onrelease
+                                    );
                                     case 'slidePanel': return this.collection.control.slidePanel(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
                                         data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
                                         data.onchange, data.onrelease
-                                        );
+                                    );
+                                    case 'slidePanel_image': return this.collection.control.slidePanel(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
+                                        data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
+                                        data.onchange, data.onrelease
+                                    );
                                     case 'rangeslide': return this.collection.control.rangeslide(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
                                         data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span,
                                         data.onchange, data.onrelease
                                     );
-                                //other
+                                    case 'rangeslide_image': return this.collection.control.rangeslide_image(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
+                                        data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle, data.spanURL,
+                                        data.onchange, data.onrelease
+                                    );
+                                //list
                                     case 'list': return this.collection.control.list(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
                                         data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
@@ -12975,11 +13931,63 @@
                                     
                                         data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
                                     );
-                                    case 'checkbox_rect': return this.collection.control.checkbox_rect(
+                                    case 'list_image': return this.collection.control.list_image(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
+                                        data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
+                                        data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
+                    
+                                        data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
+                                        data.breakHeightMux, data.breakWidthMux, 
+                                        data.spacingHeightMux,
+                    
+                                        data.backingURL, data.breakURL,
+                    
+                                        data.itemURL__off,
+                                        data.itemURL__up,
+                                        data.itemURL__press,
+                                        data.itemURL__select,
+                                        data.itemURL__select_press,
+                                        data.itemURL__glow,
+                                        data.itemURL__glow_press,
+                                        data.itemURL__glow_select,
+                                        data.itemURL__glow_select_press,
+                                        data.itemURL__hover,
+                                        data.itemURL__hover_press,
+                                        data.itemURL__hover_select,
+                                        data.itemURL__hover_select_press,
+                                        data.itemURL__hover_glow,
+                                        data.itemURL__hover_glow_press,
+                                        data.itemURL__hover_glow_select,
+                                        data.itemURL__hover_glow_select_press,
+                                    
+                                        data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
+                                    );
+                                //checkbox
+                                    case 'checkbox_': return this.collection.control.checkbox_(
+                                        name, data.x, data.y, data.angle, data.interactable,
+                                        data.onchange, data.subject,
+                                    );
+                                    case 'checkbox_circle': return this.collection.control.checkbox_circle(
+                                        name, data.x, data.y, data.r, data.angle, data.interactable,
+                                        data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                                        data.onchange,
+                                    );
+                                    case 'checkbox_image': return this.collection.control.checkbox_image(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                        data.uncheckURL, data.checkURL,
+                                        data.onchange,
+                                    );
+                                    case 'checkbox_polygon': return this.collection.control.checkbox_polygon(
+                                        name, data.x, data.y, data.outterPoints, data.innerPoints, data.angle, data.interactable,
+                                        data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                                        data.onchange,
+                                    );
+                                    case 'checkbox_rect': case 'checkbox_rectangle': return this.collection.control.checkbox_rectangle(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
                                         data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
-                                        data.onchange, 
+                                        data.onchange,
                                     );
+                                //other
                                     case 'rastorgrid': return this.collection.control.rastorgrid(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.xCount, data.yCount,
                                         data.style.backing, data.style.check, data.style.backingGlow, data.style.checkGlow,
@@ -13831,6 +14839,8 @@
                     var pane = workspace.system.pane.mm;
                     var IDcounter = 0;
             
+                    this.backgroundColour = function(colour){ return workspace.core.render.clearColour(colour); };
+                    
                     this.new = function(askForConfirmation=false){
                         if(askForConfirmation){
                             if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
@@ -15821,7 +16831,7 @@
                     var attributes = {
                         detuneLimits: {min:-100, max:100}
                     };
-                    var style = {
+                    var style = { //regular
                         background:{fill:'rgba(200,200,200,1)'},
                         h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
                         h2:{fill:'rgba(0,0,0,1)', font:'3pt Courier New'},
@@ -15837,6 +16847,36 @@
                             background__hover_press__fill:'rgba(150,150,150,1)',
                         }
                     };
+                    // var style = { //tron-like
+                    //     background:{
+                    //         fill:'rgba(200,200,200,0)',
+                    //         stroke:'rgba(255,255,255,1)',
+                    //         lineWidth:2,
+                    //         lineJoin:'miter',
+                    //     },
+                    //     h1:{fill:'rgba(255,255,255,1)', font:'4pt Courier New'},
+                    //     h2:{fill:'rgba(255,255,255,1)', font:'3pt Courier New'},
+                
+                    //     dial:{
+                    //         handle:{
+                    //             fill:'rgba(220,220,220,0)',
+                    //             stroke:'rgba(255,255,255,1)',
+                    //         },
+                    //         slot:{fill:'rgba(50,50,50,0)'},
+                    //         needle:{fill:'rgba(250,255,255,1)'},
+                    //     },
+                    //     button:{
+                    //         background__up__fill:'rgba(0,0,0,0)',
+                    //         background__hover__fill:'rgba(255,255,255,1)',
+                    //         background__hover_press__fill:'rgba(255,0,0,1)',
+                
+                    //         background__up__stroke:'rgba(255,255,255,1)', 
+                    //         background__hover__stroke:'rgba(255,255,255,1)', 
+                    //         background__hover_press__stroke:'rgba(255,255,255,1)',
+                    //     }
+                    // };
+                
+                
                     var design = {
                         name:'basicSynthesizer',
                         category:'synthesizers',
@@ -15948,31 +16988,31 @@
                             }},
                 
                             //gain dial
-                                {type:'text', name:'gain_gain', data:{x: 13,   y: 43, text: 'gain', size:style.h1.size, style: style.h1}},
-                                {type:'text', name:'gain_0',    data:{x: 7,    y: 37, text: '0',    size:style.h2.size, style: style.h2}},
-                                {type:'text', name:'gain_1/2',  data:{x: 16.5, y: 8,  text: '1/2',  size:style.h2.size, style: style.h2}},
-                                {type:'text', name:'gain_1',    data:{x: 31,   y: 37, text: '1',    size:style.h2.size, style: style.h2}},
+                                {type:'text', name:'gain_gain', data:{x: 13,   y: 43, text: 'gain', style: style.h1}},
+                                {type:'text', name:'gain_0',    data:{x: 7,    y: 37, text: '0',    style: style.h2}},
+                                {type:'text', name:'gain_1/2',  data:{x: 16.5, y: 8,  text: '1/2',  style: style.h2}},
+                                {type:'text', name:'gain_1',    data:{x: 31,   y: 37, text: '1',    style: style.h2}},
                                 {type:'dial_continuous',name:'dial_gain',data:{
                                     x: 20, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 }},
                             //attack dial
-                                {type:'text', name:'attack_gain', data:{x: 50,    y: 43, text: 'attack', size:style.h1.size, style: style.h1}},
-                                {type:'text', name:'attack_0',    data:{x: 47,    y: 37, text: '0',      size:style.h2.size, style: style.h2}},
-                                {type:'text', name:'attack_5',    data:{x: 58.75, y: 8,  text: '5',      size:style.h2.size, style: style.h2}},
-                                {type:'text', name:'attack_10',   data:{x: 71,    y: 37, text: '10',     size:style.h2.size, style: style.h2}},
+                                {type:'text', name:'attack_gain', data:{x: 50,    y: 43, text: 'attack', style: style.h1}},
+                                {type:'text', name:'attack_0',    data:{x: 47,    y: 37, text: '0',      style: style.h2}},
+                                {type:'text', name:'attack_5',    data:{x: 58.75, y: 8,  text: '5',      style: style.h2}},
+                                {type:'text', name:'attack_10',   data:{x: 71,    y: 37, text: '10',     style: style.h2}},
                                 {type:'dial_continuous',name:'dial_attack',data:{
                                     x: 60, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 }},
                             //release dial
                                 {type:'text', name:'release_gain', data:{x: 89,    y: 43, text: 'release', style: style.h1}},
-                                {type:'text', name:'release_0',    data:{x: 87,    y: 37, text: '0',      size:style.h2.size, style: style.h2}},
-                                {type:'text', name:'release_5',    data:{x: 98.75, y: 8,  text: '5',      size:style.h2.size, style: style.h2}},
-                                {type:'text', name:'release_10',   data:{x: 111,   y: 37, text: '10',     size:style.h2.size, style: style.h2}},
+                                {type:'text', name:'release_0',    data:{x: 87,    y: 37, text: '0',       style: style.h2}},
+                                {type:'text', name:'release_5',    data:{x: 98.75, y: 8,  text: '5',       style: style.h2}},
+                                {type:'text', name:'release_10',   data:{x: 111,   y: 37, text: '10',      style: style.h2}},
                                 {type:'dial_continuous',name:'dial_release',data:{
                                     x: 100, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 }},
                             //detune dial
                                 {type:'text', name:'detune_gain', data:{x: 131,    y: 43, text: 'detune', style: style.h1}},
@@ -15981,7 +17021,7 @@
                                 {type:'text', name:'detune_100',  data:{x: 148,    y: 37, text: '100',    style: style.h2}},
                                 {type:'dial_continuous',name:'dial_detune',data:{
                                     x: 140, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, value:0.5, resetValue:0.5,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 }},
                             //octave dial
                                 {type:'text', name:'octave_gain', data:{x: 170,    y: 43, text: 'octave', style: style.h1}},
@@ -15994,7 +17034,7 @@
                                 {type:'text', name:'octave_3',    data:{x: 190,    y: 35, text: '3',      style: style.h2}},
                                 {type:'dial_discrete',name:'dial_octave',data:{
                                     x: 180, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 7, value:3,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 }},
                             //waveType dial
                                 {type:'text', name:'waveType_gain', data:{x: 214, y: 43, text: 'wave', style: style.h1}},
@@ -16003,13 +17043,13 @@
                                 {type:'text', name:'waveType_squ',  data:{x: 210, y: 9,  text: 'squ',  style: style.h2}},
                                 {type:'text', name:'waveType_saw',  data:{x: 227, y: 10, text: 'saw',  style: style.h2}},
                                 {type:'rectangle', name:'periodicWaveType', data:{
-                                    x: 230, y: 21.75, angle: 0,
-                                    width: 10, height: 2.5,
-                                    style:style.dial.slot,
+                                    x: 232, y: 21.75, angle: 0,
+                                    width: 8, height: 2.5,
+                                    style:style.h1,
                                 }},
                                 {type:'dial_discrete',name:'dial_waveType',data:{
                                     x: 220, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4,  optionCount: 5,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 }},
                             //gainWobblePeriod dial
                                 {type:'text', name:'gainWobble', data:{x: 13, y: 70, angle: -Math.PI/2,text: 'gain', style: style.h2}}, 
@@ -16019,7 +17059,7 @@
                                 {type:'text', name:'gainWobblePeriod_100',  data:{x: 41,   y: 79,      text: '100',  style: style.h2}},
                                 {type:'dial_continuous', name:'dial_gainWobblePeriod',data:{
                                     x: 30, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 }},
                             //gainWobbleDepth dial
                                 {type:'text', name:'gainWobbleDepth_gain', data:{x: 57, y: 84, text: 'depth', style: style.h1}},
@@ -16028,7 +17068,7 @@
                                 {type:'text', name:'gainWobbleDepth_100',  data:{x: 76, y: 79, text: '1',     style: style.h2}},
                                 {type:'dial_continuous',name:'dial_gainWobbleDepth',data:{
                                     x: 65, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 }},
                             //detuneWobblePeriod dial
                                 {type:'text', name:'detuneWobble', data:{x: 98, y: 70, angle: -Math.PI/2, text: 'detune', style: style.h2}},    
@@ -16038,7 +17078,7 @@
                                 {type:'text', name:'detuneWobblePeriod_100',  data:{x: 125,   y: 79,      text: '100',    style: style.h2}},
                                 {type:'dial_continuous',name:'dial_detuneWobblePeriod',data:{
                                     x: 114, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 }},
                             //detuneWobbleDepth dial
                                 {type:'text', name:'detuneWobbleDepth_gain', data:{x: 141,   y: 84, text: 'depth', style: style.h1}},
@@ -16047,7 +17087,7 @@
                                 {type:'text', name:'detuneWobbleDepth_100',  data:{x: 160,   y: 79, text: '1',     style: style.h2}},
                                 {type:'dial_continuous',name:'dial_detuneWobbleDepth',data:{
                                     x: 149, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 }},
                 
                             {type:'button_rectangle', name:'panicButton', data: {
@@ -16177,10 +17217,10 @@
                                 x: 12.5, y: -7.5, width: 15, height: 7.5,
                                 onreceive: function(address,data){
                                     switch(address){
-                                        case '%': object.elements.dial_image_continuous.gain.set(data); break;
+                                        case '%': object.elements.dial_continuous_image.gain.set(data); break;
                                         case '%t': 
                                             object.__synthesizer.gain(data.target,data.time,data.curve);
-                                            object.elements.dial_image_continuous.gain.smoothSet(data.target,data.time,data.curve,false);
+                                            object.elements.dial_continuous_image.gain.smoothSet(data.target,data.time,data.curve,false);
                                         break;
                                         default: break;
                                     }
@@ -16190,24 +17230,24 @@
                                 x: 52.5, y: -7.5, width: 15, height: 7.5,
                                 onreceive: function(address,data){
                                     if(address != '%'){return;}
-                                    object.elements.dial_image_continuous.attack.set(data);
+                                    object.elements.dial_continuous_image.attack.set(data);
                                 } 
                             }},
                             {type:'connectionNode_data', name:'port_release', data:{
                                 x: 92.5, y: -7.5, width: 15, height: 7.5,
                                 onreceive: function(address,data){
                                     if(address != '%'){return;}
-                                    object.elements.dial_image_continuous.release.set(data);
+                                    object.elements.dial_continuous_image.release.set(data);
                                 } 
                             }},
                             {type:'connectionNode_data', name:'port_detune', data:{
                                 x: 132.5, y: -7.5, width: 15, height: 7.5,
                                 onreceive: function(address,data){ 
                                     switch(address){
-                                        case '%': object.elements.dial_image_continuous.detune.set(data); break;
+                                        case '%': object.elements.dial_continuous_image.detune.set(data); break;
                                         case '%t': 
                                             object.__synthesizer.detune((data.target*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min),data.time,data.curve);
-                                            object.elements.dial_image_continuous.detune.smoothSet(data.target,data.time,data.curve,false);
+                                            object.elements.dial_continuous_image.detune.smoothSet(data.target,data.time,data.curve,false);
                                         break;
                                         default: break;
                                     }
@@ -16217,14 +17257,14 @@
                                 x: 170.5, y: -7.5, width: 15, height: 7.5,
                                 onreceive: function(address,data){
                                     if(address != 'discrete'){return;}
-                                    object.elements.dial_image_discrete.octave.select(data);
+                                    object.elements.dial_discrete_image.octave.select(data);
                                 } 
                             }},
                             {type:'connectionNode_data', name:'port_waveType', data:{
                                 x: 210.5, y: -7.5, width: 15, height: 7.5,
                                 onreceive: function(address,data){
                                     if(address != 'discrete'){return;}
-                                    object.elements.dial_image_discrete.waveType.select(data);
+                                    object.elements.dial_discrete_image.waveType.select(data);
                                 }
                             }},
                             {type:'connectionNode_data', name:'port_periodicWave', data:{
@@ -16245,80 +17285,80 @@
                                 x: 22.5, y: 90, width: 15, height: 7.5,
                                 onreceive: function(address,data){
                                     if(address != '%'){return;}
-                                    object.elements.dial_image_continuous.gainWobblePeriod.set(data);
+                                    object.elements.dial_continuous_image.gainWobblePeriod.set(data);
                                 }
                             }},
                             {type:'connectionNode_data', name:'port_gainWobbleDepth', data:{
                                 x: 57.5, y: 90, width: 15, height: 7.5,
                                 onreceive: function(address,data){
                                     if(address != '%'){return;}
-                                    object.elements.dial_image_continuous.gainWobbleDepth.set(data);
+                                    object.elements.dial_continuous_image.gainWobbleDepth.set(data);
                                 }
                             }},
                             {type:'connectionNode_data', name:'port_detuneWobblePeriod', data:{
                                 x: 107.5, y: 90, width: 15, height: 7.5,
                                 onreceive: function(address,data){
                                     if(address != '%'){return;}
-                                    object.elements.dial_image_continuous.detuneWobblePeriod.set(data);
+                                    object.elements.dial_continuous_image.detuneWobblePeriod.set(data);
                                 }
                             }},
                             {type:'connectionNode_data', name:'port_detuneWobbleDepth', data:{
                                 x: 142.5, y: 90, width: 15, height: 7.5,
                                 onreceive: function(address,data){
                                     if(address != '%'){return;}
-                                    object.elements.dial_image_continuous.detuneWobbleDepth.set(data);
+                                    object.elements.dial_continuous_image.detuneWobbleDepth.set(data);
                                 }
                             }},
                 
                             //gain dial
-                                {type:'dial_image_continuous',name:'dial_gain',data:{
+                                {type:'dial_continuous_image',name:'dial_gain',data:{
                                     x: 20, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                 }},
                             //attack dial
-                                {type:'dial_image_continuous',name:'dial_attack',data:{
+                                {type:'dial_continuous_image',name:'dial_attack',data:{
                                     x: 60, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                 }},
                             //release dial
-                                {type:'dial_image_continuous',name:'dial_release',data:{
+                                {type:'dial_continuous_image',name:'dial_release',data:{
                                     x: 100, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                 }},
                             //detune dial
-                                {type:'dial_image_continuous',name:'dial_detune',data:{
+                                {type:'dial_continuous_image',name:'dial_detune',data:{
                                     x: 140, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, value:0.5, resetValue:0.5,
-                                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                 }},
                             //octave dial
-                                {type:'dial_image_discrete',name:'dial_octave',data:{
+                                {type:'dial_discrete_image',name:'dial_octave',data:{
                                     x: 180, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 7, value:3,
-                                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                 }},
                             //waveType dial
-                                {type:'dial_image_discrete',name:'dial_waveType',data:{
+                                {type:'dial_discrete_image',name:'dial_waveType',data:{
                                     x: 220, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4, optionCount: 5,
-                                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                 }},
                             //gainWobblePeriod dial
-                                {type:'dial_image_continuous', name:'dial_gainWobblePeriod',data:{
+                                {type:'dial_continuous_image', name:'dial_gainWobblePeriod',data:{
                                     x: 30, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                 }},
                             //gainWobbleDepth dial
-                                {type:'dial_image_continuous',name:'dial_gainWobbleDepth',data:{
+                                {type:'dial_continuous_image',name:'dial_gainWobbleDepth',data:{
                                     x: 65, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                 }},
                             //detuneWobblePeriod dial
-                                {type:'dial_image_continuous',name:'dial_detuneWobblePeriod',data:{
+                                {type:'dial_continuous_image',name:'dial_detuneWobblePeriod',data:{
                                     x: 114, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                 }},
                             //detuneWobbleDepth dial
-                                {type:'dial_image_continuous',name:'dial_detuneWobbleDepth',data:{
+                                {type:'dial_continuous_image',name:'dial_detuneWobbleDepth',data:{
                                     x: 149, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                 }},
                 
                             {type:'button_rectangle', name:'panicButton', data: {
@@ -16334,35 +17374,35 @@
                     //import/export
                         object.exportData = function(){
                             return {
-                                gain: object.elements.dial_image_continuous.dial_gain.get(),
-                                attack: object.elements.dial_image_continuous.dial_attack.get()*10,
-                                release: object.elements.dial_image_continuous.dial_release.get()*10,
-                                detune: 100*((object.elements.dial_image_continuous.dial_detune.get()*2)-1),
-                                octave: object.elements.dial_image_discrete.dial_octave.get()-3,
-                                waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_image_discrete.dial_waveType.get()],
+                                gain: object.elements.dial_continuous_image.dial_gain.get(),
+                                attack: object.elements.dial_continuous_image.dial_attack.get()*10,
+                                release: object.elements.dial_continuous_image.dial_release.get()*10,
+                                detune: 100*((object.elements.dial_continuous_image.dial_detune.get()*2)-1),
+                                octave: object.elements.dial_discrete_image.dial_octave.get()-3,
+                                waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_discrete_image.dial_waveType.get()],
                                 gainWobble:{
-                                    rate: object.elements.dial_image_continuous.dial_gainWobblePeriod.get()*100,
-                                    depth: object.elements.dial_image_continuous.dial_gainWobbleDepth.get()
+                                    rate: object.elements.dial_continuous_image.dial_gainWobblePeriod.get()*100,
+                                    depth: object.elements.dial_continuous_image.dial_gainWobbleDepth.get()
                                 },
                                 detuneWobble:{
-                                    rate: object.elements.dial_image_continuous.dial_detuneWobblePeriod.get()*100,
-                                    depth: object.elements.dial_image_continuous.dial_detuneWobbleDepth.get()
+                                    rate: object.elements.dial_continuous_image.dial_detuneWobblePeriod.get()*100,
+                                    depth: object.elements.dial_continuous_image.dial_detuneWobbleDepth.get()
                                 },
                             };
                         };
                         object.importData = function(data){
                             if(data == undefined){return;}
                 
-                            object.elements.dial_image_continuous.dial_gain.set(data.gain);
-                            object.elements.dial_image_continuous.dial_attack.set(data.attack/10);
-                            object.elements.dial_image_continuous.dial_release.set(data.release/10);
-                            object.elements.dial_image_continuous.dial_detune.set( (1+(data.detune/100))/2 );
-                            object.elements.dial_image_discrete.dial_octave.set(data.octave+3);
-                            object.elements.dial_image_discrete.dial_waveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
-                            object.elements.dial_image_continuous.dial_gainWobblePeriod.set(data.gainWobble.rate/100);
-                            object.elements.dial_image_continuous.dial_gainWobbleDepth.set(data.gainWobble.depth);
-                            object.elements.dial_image_continuous.dial_detuneWobblePeriod.set(data.detuneWobble.rate/100);
-                            object.elements.dial_image_continuous.dial_detuneWobbleDepth.set(data.detuneWobble.depth);
+                            object.elements.dial_continuous_image.dial_gain.set(data.gain);
+                            object.elements.dial_continuous_image.dial_attack.set(data.attack/10);
+                            object.elements.dial_continuous_image.dial_release.set(data.release/10);
+                            object.elements.dial_continuous_image.dial_detune.set( (1+(data.detune/100))/2 );
+                            object.elements.dial_discrete_image.dial_octave.set(data.octave+3);
+                            object.elements.dial_discrete_image.dial_waveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
+                            object.elements.dial_continuous_image.dial_gainWobblePeriod.set(data.gainWobble.rate/100);
+                            object.elements.dial_continuous_image.dial_gainWobbleDepth.set(data.gainWobble.depth);
+                            object.elements.dial_continuous_image.dial_detuneWobblePeriod.set(data.detuneWobble.rate/100);
+                            object.elements.dial_continuous_image.dial_detuneWobbleDepth.set(data.detuneWobble.depth);
                         };
                 
                     //circuitry
@@ -16370,38 +17410,38 @@
                         object.__synthesizer.out().connect( object.elements.connectionNode_audio.audioOut.in() );
                 
                     //wiring
-                        object.elements.dial_image_continuous.dial_gain.onchange = function(value){ object.__synthesizer.gain( value ); };
-                        object.elements.dial_image_continuous.dial_attack.onchange = function(value){ object.__synthesizer.attack( value ); }
-                        object.elements.dial_image_continuous.dial_release.onchange = function(value){ object.__synthesizer.release( value ); }
-                        object.elements.dial_image_continuous.dial_detune.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); }
-                        object.elements.dial_image_discrete.dial_octave.onchange = function(value){ object.__synthesizer.octave(value-3); }
-                        object.elements.dial_image_discrete.dial_waveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); }
-                        object.elements.dial_image_continuous.dial_gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
-                        object.elements.dial_image_continuous.dial_gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value); },
-                        object.elements.dial_image_continuous.dial_detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
-                        object.elements.dial_image_continuous.dial_detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); }
+                        object.elements.dial_continuous_image.dial_gain.onchange = function(value){ object.__synthesizer.gain( value ); };
+                        object.elements.dial_continuous_image.dial_attack.onchange = function(value){ object.__synthesizer.attack( value ); }
+                        object.elements.dial_continuous_image.dial_release.onchange = function(value){ object.__synthesizer.release( value ); }
+                        object.elements.dial_continuous_image.dial_detune.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); }
+                        object.elements.dial_discrete_image.dial_octave.onchange = function(value){ object.__synthesizer.octave(value-3); }
+                        object.elements.dial_discrete_image.dial_waveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); }
+                        object.elements.dial_continuous_image.dial_gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
+                        object.elements.dial_continuous_image.dial_gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value); },
+                        object.elements.dial_continuous_image.dial_detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
+                        object.elements.dial_continuous_image.dial_detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); }
                         object.elements.button_rectangle.panicButton.onpress = function(){ object.__synthesizer.panic(); },
                 
                     //interface
                         object.i = {
-                            gain:function(value){object.elements.dial_image_continuous.dial_gain.set(value);},
-                            attack:function(value){object.elements.dial_image_continuous.dial_attack.set(value);},
-                            release:function(value){object.elements.dial_image_continuous.dial_release.set(value);},
-                            detune:function(value){object.elements.dial_image_continuous.dial_detune.set(value);},
-                            octave:function(value){object.elements.dial_image_discrete.dial_octave.set(value);},
-                            waveType:function(value){object.elements.dial_image_discrete.dial_waveType.set(value);},
+                            gain:function(value){object.elements.dial_continuous_image.dial_gain.set(value);},
+                            attack:function(value){object.elements.dial_continuous_image.dial_attack.set(value);},
+                            release:function(value){object.elements.dial_continuous_image.dial_release.set(value);},
+                            detune:function(value){object.elements.dial_continuous_image.dial_detune.set(value);},
+                            octave:function(value){object.elements.dial_discrete_image.dial_octave.set(value);},
+                            waveType:function(value){object.elements.dial_discrete_image.dial_waveType.set(value);},
                             periodicWave:function(data){object.__synthesizer.periodicWave(data);},
                             midiNote:function(data){object.__synthesizer.perform(data);},
-                            gainWobblePeriod:function(value){object.elements.dial_image_continuous.dial_gainWobblePeriod.set(value);},
-                            gainWobbleDepth:function(value){object.elements.dial_image_continuous.dial_gainWobbleDepth.set(value);},
-                            detuneWobblePeriod:function(value){object.elements.dial_image_continuous.dial_detuneWobblePeriod.set(value);},
-                            detuneWobbleDepth:function(value){object.elements.dial_image_continuous.dial_detuneWobbleDepth.set(value);},
+                            gainWobblePeriod:function(value){object.elements.dial_continuous_image.dial_gainWobblePeriod.set(value);},
+                            gainWobbleDepth:function(value){object.elements.dial_continuous_image.dial_gainWobbleDepth.set(value);},
+                            detuneWobblePeriod:function(value){object.elements.dial_continuous_image.dial_detuneWobblePeriod.set(value);},
+                            detuneWobbleDepth:function(value){object.elements.dial_continuous_image.dial_detuneWobbleDepth.set(value);},
                         };
                 
                     //setup
-                        object.elements.dial_image_continuous.dial_gain.set(0.5);
-                        object.elements.dial_image_continuous.dial_detune.set(0.5);
-                        object.elements.dial_image_discrete.dial_octave.set(3);
+                        object.elements.dial_continuous_image.dial_gain.set(0.5);
+                        object.elements.dial_continuous_image.dial_detune.set(0.5);
+                        object.elements.dial_discrete_image.dial_octave.set(3);
                 
                     return object;
                 };
@@ -18328,6 +19368,7 @@
             if( !workspace.control.interaction.devMode() ){ window.onbeforeunload = function(){ return "Unsaved work will be lost"; }; }
             workspace.control.gui.showMenubar();
             workspace.control.viewport.stopMouseScroll(true);
+            // workspace.control.scene.backgroundColour('rgb(0,0,0)');
             workspace.control.viewport.activeRender(true);
         }
     }

@@ -4,9 +4,9 @@ this.dial_continuous = function(
     value=0, resetValue=-1,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
-    handleStyle = 'rgba(200,200,200,1)',
-    slotStyle = 'rgba(50,50,50,1)',
-    needleStyle = 'rgba(250,100,100,1)',
+    handleStyle = {fill:'rgba(200,200,200,1)'},
+    slotStyle = {fill:'rgba(50,50,50,1)'},
+    needleStyle = {fill:'rgba(250,100,100,1)'},
 
     onchange=function(){},
     onrelease=function(){},
@@ -16,11 +16,23 @@ this.dial_continuous = function(
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         
         //slot
-            var slot = interfacePart.builder('circle','slot',{r:r*1.1, style:{fill:slotStyle}});
+            var slot = interfacePart.builder('circle','slot',{r:r*1.1, style:{
+                fill:slotStyle.fill,
+                stroke:slotStyle.stroke,
+                lineWidth:slotStyle.lineWidth,
+                lineJoin:slotStyle.lineJoin,
+                miterLimit:slotStyle.miterLimit,
+            }});
             object.append(slot);
 
         //handle
-            var handle = interfacePart.builder('circle','handle',{r:r, style:{fill:handleStyle}});
+            var handle = interfacePart.builder('circle','handle',{r:r, style:{
+                fill:handleStyle.fill,
+                stroke:handleStyle.stroke,
+                lineWidth:handleStyle.lineWidth,
+                lineJoin:handleStyle.lineJoin,
+                miterLimit:handleStyle.miterLimit,
+            }});
             object.append(handle);
 
         //needle group
@@ -30,8 +42,14 @@ this.dial_continuous = function(
             //needle
                 var needleWidth = r/5;
                 var needleLength = r;
-                var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{fill:needleStyle}});
-                    needleGroup.append(needle);
+                var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{
+                    fill:needleStyle.fill,
+                    stroke:needleStyle.stroke,
+                    lineWidth:needleStyle.lineWidth,
+                    lineJoin:needleStyle.lineJoin,
+                    miterLimit:needleStyle.miterLimit,
+                }});
+                needleGroup.append(needle);
 
 
 

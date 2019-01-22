@@ -190,9 +190,10 @@ this.viewport = new function(){
 this.render = new function(){
     var context = workspace.getContext('2d', { alpha: false });
     var animationRequestId = undefined;
+    var clearColour = 'rgb(255,255,255)';
 
     function clearFrame(){
-        context.fillStyle = 'rgb(255,255,255)';
+        context.fillStyle =clearColour;
         context.fillRect(0, 0, workspace.width, workspace.height);
     }
     function renderFrame(noClear=false){
@@ -218,6 +219,11 @@ this.render = new function(){
         //perform stats collection
             core.stats.collect(timestamp);
     }
+
+    this.clearColour = function(colour){
+        if(colour == undefined){ return clearColour; }
+        clearColour = colour;
+    };
 
     this.drawDot = function(x,y,r=2,colour='rgba(150,150,255,1)'){
         context.fillStyle = colour;

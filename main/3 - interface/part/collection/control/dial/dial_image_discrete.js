@@ -1,12 +1,10 @@
-this.dial_image_discrete = function(
-    name='dial_image_discrete',
+this.dial_discrete_image = function(
+    name='dial_discrete_image',
     x, y, r=15, angle=0, interactable=true,
     value=0, resetValue=0, optionCount=5,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
-    handleUrl = 'https://pbs.twimg.com/profile_images/927920625347383297/-ksNZr-Z_400x400.jpg',
-    slotUrl = 'https://blueblots.com/wp-content/uploads/2009/07/space1.jpg',
-    needleUrl = 'https://i.ytimg.com/vi/kpFryXQbVEA/hqdefault.jpg',
+    handleURL, slotURL, needleURL,
 
     onchange=function(){},
     onrelease=function(){},
@@ -16,10 +14,10 @@ this.dial_image_discrete = function(
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         
         //dial
-            var dial = interfacePart.builder('dial_image_continuous',name,{
+            var dial = interfacePart.builder('dial_continuous_image',name,{
                 x:0, y:0, r:r, angle:0, interactable:interactable,
                 startAngle:startAngle, maxAngle:maxAngle,
-                handleUrl:handleUrl, slotUrl:slotUrl, needleUrl:needleUrl,
+                handleURL:handleURL, slotURL:slotURL, needleURL:needleURL,
             });
             //clean out built-in interaction
             dial.getChildByName('handle').ondblclick = undefined;

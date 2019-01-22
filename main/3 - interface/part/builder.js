@@ -144,23 +144,23 @@ this.builder = function(type,name,data){
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.backingImageUrl__off,
-                    data.backingImageUrl__up,
-                    data.backingImageUrl__press,
-                    data.backingImageUrl__select,
-                    data.backingImageUrl__select_press,
-                    data.backingImageUrl__glow,
-                    data.backingImageUrl__glow_press,
-                    data.backingImageUrl__glow_select,
-                    data.backingImageUrl__glow_select_press,
-                    data.backingImageUrl__hover,
-                    data.backingImageUrl__hover_press,
-                    data.backingImageUrl__hover_select,
-                    data.backingImageUrl__hover_select_press,
-                    data.backingImageUrl__hover_glow,
-                    data.backingImageUrl__hover_glow_press,
-                    data.backingImageUrl__hover_glow_select,
-                    data.backingImageUrl__hover_glow_select_press,
+                    data.backingURL__off,
+                    data.backingURL__up,
+                    data.backingURL__press,
+                    data.backingURL__select,
+                    data.backingURL__select_press,
+                    data.backingURL__glow,
+                    data.backingURL__glow_press,
+                    data.backingURL__glow_select,
+                    data.backingURL__glow_select_press,
+                    data.backingURL__hover,
+                    data.backingURL__hover_press,
+                    data.backingURL__hover_select,
+                    data.backingURL__hover_select_press,
+                    data.backingURL__hover_glow,
+                    data.backingURL__hover_glow_press,
+                    data.backingURL__hover_glow_select,
+                    data.backingURL__hover_glow_select_press,
                 
                     data.onenter,
                     data.onleave,
@@ -287,20 +287,20 @@ this.builder = function(type,name,data){
                     data.style.handle, data.style.slot, data.style.needle,
                     data.onchange, data.onrelease
                 );
-                case 'dial_image_continuous': return this.collection.control.dial_image_continuous(
+                case 'dial_continuous_image': return this.collection.control.dial_continuous_image(
                     name,
                     data.x, data.y, data.r, data.angle, data.interactable,
                     data.value, data.resetValue,
                     data.startAngle, data.maxAngle,
-                    data.handleUrl, data.slotUrl, data.needleUrl,
+                    data.handleURL, data.slotURL, data.needleURL,
                     data.onchange, data.onrelease
                 );
-                case 'dial_image_discrete': return this.collection.control.dial_image_discrete(
+                case 'dial_discrete_image': return this.collection.control.dial_discrete_image(
                     name,
                     data.x, data.y, data.r, data.angle, data.interactable,
                     data.value, data.resetValue, data.optionCount,
                     data.startAngle, data.maxAngle,
-                    data.handleUrl, data.slotUrl, data.needleUrl,
+                    data.handleURL, data.slotURL, data.needleURL,
                     data.onchange, data.onrelease
                 );
             //slide
@@ -309,17 +309,32 @@ this.builder = function(type,name,data){
                     data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
                     data.onchange, data.onrelease
                 );
+                case 'slide_image': return this.collection.control.slide_image(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
+                    data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle,
+                    data.onchange, data.onrelease
+                );
                 case 'slidePanel': return this.collection.control.slidePanel(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
                     data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
                     data.onchange, data.onrelease
-                    );
+                );
+                case 'slidePanel_image': return this.collection.control.slidePanel(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
+                    data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
+                    data.onchange, data.onrelease
+                );
                 case 'rangeslide': return this.collection.control.rangeslide(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
                     data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span,
                     data.onchange, data.onrelease
                 );
-            //other
+                case 'rangeslide_image': return this.collection.control.rangeslide_image(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
+                    data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle, data.spanURL,
+                    data.onchange, data.onrelease
+                );
+            //list
                 case 'list': return this.collection.control.list(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
                     data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
@@ -351,11 +366,63 @@ this.builder = function(type,name,data){
                 
                     data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
                 );
-                case 'checkbox_rect': return this.collection.control.checkbox_rect(
+                case 'list_image': return this.collection.control.list_image(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
+                    data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
+                    data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
+
+                    data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
+                    data.breakHeightMux, data.breakWidthMux, 
+                    data.spacingHeightMux,
+
+                    data.backingURL, data.breakURL,
+
+                    data.itemURL__off,
+                    data.itemURL__up,
+                    data.itemURL__press,
+                    data.itemURL__select,
+                    data.itemURL__select_press,
+                    data.itemURL__glow,
+                    data.itemURL__glow_press,
+                    data.itemURL__glow_select,
+                    data.itemURL__glow_select_press,
+                    data.itemURL__hover,
+                    data.itemURL__hover_press,
+                    data.itemURL__hover_select,
+                    data.itemURL__hover_select_press,
+                    data.itemURL__hover_glow,
+                    data.itemURL__hover_glow_press,
+                    data.itemURL__hover_glow_select,
+                    data.itemURL__hover_glow_select_press,
+                
+                    data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
+                );
+            //checkbox
+                case 'checkbox_': return this.collection.control.checkbox_(
+                    name, data.x, data.y, data.angle, data.interactable,
+                    data.onchange, data.subject,
+                );
+                case 'checkbox_circle': return this.collection.control.checkbox_circle(
+                    name, data.x, data.y, data.r, data.angle, data.interactable,
+                    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                    data.onchange,
+                );
+                case 'checkbox_image': return this.collection.control.checkbox_image(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                    data.uncheckURL, data.checkURL,
+                    data.onchange,
+                );
+                case 'checkbox_polygon': return this.collection.control.checkbox_polygon(
+                    name, data.x, data.y, data.outterPoints, data.innerPoints, data.angle, data.interactable,
+                    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                    data.onchange,
+                );
+                case 'checkbox_rect': case 'checkbox_rectangle': return this.collection.control.checkbox_rectangle(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
                     data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
-                    data.onchange, 
+                    data.onchange,
                 );
+            //other
                 case 'rastorgrid': return this.collection.control.rastorgrid(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.xCount, data.yCount,
                     data.style.backing, data.style.check, data.style.backingGlow, data.style.checkGlow,

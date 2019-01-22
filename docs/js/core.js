@@ -3209,9 +3209,10 @@
                     this.render = new function(){
                         var context = coreGraphics.getContext('2d', { alpha: false });
                         var animationRequestId = undefined;
+                        var clearColour = 'rgb(255,255,255)';
                     
                         function clearFrame(){
-                            context.fillStyle = 'rgb(255,255,255)';
+                            context.fillStyle =clearColour;
                             context.fillRect(0, 0, coreGraphics.width, coreGraphics.height);
                         }
                         function renderFrame(noClear=false){
@@ -3237,6 +3238,11 @@
                             //perform stats collection
                                 core.stats.collect(timestamp);
                         }
+                    
+                        this.clearColour = function(colour){
+                            if(colour == undefined){ return clearColour; }
+                            clearColour = colour;
+                        };
                     
                         this.drawDot = function(x,y,r=2,colour='rgba(150,150,255,1)'){
                             context.fillStyle = colour;
@@ -3530,6 +3536,7 @@
                     this.cursor = function(type){return core.viewport.cursor(type);};
                 };
                 this.render = new function(){
+                    this.clearColour = function(colour){return core.render.clearColour(colour);};
                     this.frame = function(noClear=false){return core.render.frame(noClear);};
                     this.active = function(bool){return core.render.active(bool);};
                 };

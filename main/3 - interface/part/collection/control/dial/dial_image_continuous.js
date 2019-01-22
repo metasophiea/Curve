@@ -1,26 +1,33 @@
-this.dial_image_continuous = function(
-    name='dial_image_continuous',
+this.dial_continuous_image = function(
+    name='dial_continuous_image',
     x, y, r=15, angle=0, interactable=true,
     value=0, resetValue=-1,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
-    handleUrl = 'http://space.alglobus.net/Basics/whyImages/earthFromSpace.gif',
-    slotUrl = 'https://i.ytimg.com/vi/JS7NYKqhrFo/hqdefault.jpg',
-    needleUrl = 'http://coolinterestingstuff.com/wp-content/uploads/2012/09/space-4.jpg',
-
+    handleURL, slotURL, needleURL,
+    
     onchange=function(){},
     onrelease=function(){},
 ){
+    //default to non-image version if image links are missing
+        if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
+            return this.dial_continuous(
+                name, x, y, r, angle, interactable, value, resetValue, startAngle, maxAngle,
+                undefined, undefined, undefined,
+                onchange, onrelease
+            );
+        }
+
     //elements 
         //main
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         
         //slot
-            var slot = interfacePart.builder('image','slot',{width:2.2*r, height:2.2*r, anchor:{x:0.5,y:0.5}, url:slotUrl});
+            var slot = interfacePart.builder('image','slot',{width:2.2*r, height:2.2*r, anchor:{x:0.5,y:0.5}, url:slotURL});
             object.append(slot);
 
         //handle
-            var handle = interfacePart.builder('image','handle',{width:2*r, height:2*r, anchor:{x:0.5,y:0.5}, url:handleUrl});
+            var handle = interfacePart.builder('image','handle',{width:2*r, height:2*r, anchor:{x:0.5,y:0.5}, url:handleURL});
             object.append(handle);
 
         //needle group
@@ -30,7 +37,7 @@ this.dial_image_continuous = function(
             //needle
                 var needleWidth = r/5;
                 var needleLength = r;
-                var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleUrl});
+                var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
                     needleGroup.append(needle);
 
 

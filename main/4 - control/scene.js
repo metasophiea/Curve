@@ -1,3 +1,5 @@
+this.backgroundColour = function(colour){ return workspace.core.render.clearColour(colour); };
+
 this.new = function(askForConfirmation=false){
     if(askForConfirmation){
         if( !confirm("This will clear the current scene! Are you sure?") ){ return; }

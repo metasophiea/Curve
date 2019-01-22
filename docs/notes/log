@@ -1,4 +1,78 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-01-22
+  - added way of selecting which colour to clear the canvas with (accessable
+    with workspace.core.render.clearColour)
+  - added similar method to control; workspace.controlscene.backgroundColour
+  - played around with adding "tron-like" stylings to the basicSynthesizer
+    (with some success)
+  - added slidePanel_image (which has an overlay texture)
+  - fixed slide_image a little. Seems to be a thung with the way shapes are
+    selected from a point with a callback. Core will search down for a shape that
+    has the callback, while system will use the frontmost shape and search up
+    through parents. This sometimes means that callbacks attached to groups are
+    not found. A solution is to use shape covers for callbacks that span over an
+    entire object (layering other elememts as necessary so that other
+    functionality isn't lost)
+     Updated slide along the way. Both are working better now.
+  - added rangeSlide_image (fixing some things about rangeSlide along the way)
+  - added list_image
+  - added checkbox_ (similar to the generic version of button) also
+    checkbox_rectangle, checkbox_circle, checkbox_polygon and checkbox_image
+
+  bugs
+  - strokeWidth's dissapear sometimes, making outlines very thin
+
+
+2019-01-21
+  - upgraded button_image, dial_continuous and dial_discrete to be able to deal
+    with no image links (they just default to the non-image version)
+  - added slide_image (with defaulting)
+
+  future ideas
+  - texture packs (of images so that all units can look the same thematically)
+    It would be good to store them in /docs aswel, making them accessible to the
+    web, and not impeding on /docs/images
+
+      docs
+        texture
+          curve
+            part
+              button
+                overlay.png
+                off.png
+                up.png                 press.png
+                select.png             select_press.png
+                glow.png               glow_press.png
+                glow_select.png        glow_select_press.png
+                hover.png              hover_press.png
+                hover_select.png       hover_select_press.png
+                hover_glow.png         hover_glow_press.png
+                hover_glow_select.png  hover_glow_select_press.png
+              dial
+                overlay.png
+                handle.png  slot.png  neelde.png
+              slide
+                overlay.png
+                handle.png  slot.png  backing.png
+              slidePanel
+                overlay
+                handle.png  slot.png  backing.png
+              ...
+            unit
+              basicSynthesizer.png
+              distortionUnit.png
+              ...
+
+    it makes sense that these textures are sorted as being specific to curve,
+    as then one can also bundle in the unit textures. One could drag the part
+    textures to other projects, but they aren't specific to the interface layer.
+      They're specific to curve, as the part textures are to match the unit 
+    textures.
+      The question is; what should the default textures should be? Right now,
+    I'm currently making them default to their non-image based cousins and in
+    turn using their defaults
+
+
 2019-01-20
   - fixed curve's dropdown problem from yesterday by adding category data to the
     unit's metadata 

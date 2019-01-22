@@ -27,6 +27,7 @@ this.viewport = new function(){
     this.cursor = function(type){return core.viewport.cursor(type);};
 };
 this.render = new function(){
+    this.clearColour = function(colour){return core.render.clearColour(colour);};
     this.frame = function(noClear=false){return core.render.frame(noClear);};
     this.active = function(bool){return core.render.active(bool);};
 };

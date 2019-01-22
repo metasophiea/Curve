@@ -1,14 +1,24 @@
-this.slide = function(
-    name='slide', 
+this.slide_image = function(
+    name='slide_image', 
     x, y, width=10, height=95, angle=0, interactable=true,
     handleHeight=0.1, value=0, resetValue=-1,
-    handleStyle = 'rgba(200,200,200,1)',
-    backingStyle = 'rgba(150,150,150,1)',
-    slotStyle = 'rgba(50,50,50,1)',
+    
+    handleURL, backingURL, slotURL,
+
     invisibleHandleStyle = 'rgba(255,0,0,0)',
     onchange=function(){},
     onrelease=function(){},
 ){
+    //default to non-image version if image links are missing
+        if(handleURL == undefined || backingURL == undefined || slotURL == undefined){
+            return this.slide(
+                name, x, y, width, height, angle, interactable,
+                handleHeight, value, resetValue,
+                handleURL, backingURL, slotURL, invisibleHandleStyle,
+                onchange, onrelease,
+            );
+        }
+
     //elements 
         //main
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
@@ -16,19 +26,19 @@ this.slide = function(
             var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
             object.append(backingAndSlot);
             //backing
-                var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
                 backingAndSlot.append(backing);
             //slot
-                var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
+                var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
                 backingAndSlot.append(slot);
             //backing and slot cover
                 var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
                 backingAndSlot.append(backingAndSlotCover);
         //handle
-            var handle = interfacePart.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
+            var handle = interfacePart.builder('image','handle',{width:width, height:height*handleHeight, url:handleURL});
             object.append(handle);
         //invisible handle
-            var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height: height*(handleHeight+0.01) + handleHeight, style:{fill:invisibleHandleStyle}});
+            var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, style:{fill:invisibleHandleStyle}});
             object.append(invisibleHandle);
         //cover
             var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
@@ -47,7 +57,6 @@ this.slide = function(
             value = a;
             handle.y = a*height*(1-handleHeight);
             invisibleHandle.y = handle.y - ( height*0.01 )/2;
-
 
             handle.computeExtremities();
             invisibleHandle.computeExtremities();

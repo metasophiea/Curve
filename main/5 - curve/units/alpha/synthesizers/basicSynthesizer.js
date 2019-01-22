@@ -2,7 +2,7 @@ this.basicSynthesizer = function(x,y,a){
     var attributes = {
         detuneLimits: {min:-100, max:100}
     };
-    var style = {
+    var style = { //regular
         background:{fill:'rgba(200,200,200,1)'},
         h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
         h2:{fill:'rgba(0,0,0,1)', font:'3pt Courier New'},
@@ -18,6 +18,36 @@ this.basicSynthesizer = function(x,y,a){
             background__hover_press__fill:'rgba(150,150,150,1)',
         }
     };
+    // var style = { //tron-like
+    //     background:{
+    //         fill:'rgba(200,200,200,0)',
+    //         stroke:'rgba(255,255,255,1)',
+    //         lineWidth:2,
+    //         lineJoin:'miter',
+    //     },
+    //     h1:{fill:'rgba(255,255,255,1)', font:'4pt Courier New'},
+    //     h2:{fill:'rgba(255,255,255,1)', font:'3pt Courier New'},
+
+    //     dial:{
+    //         handle:{
+    //             fill:'rgba(220,220,220,0)',
+    //             stroke:'rgba(255,255,255,1)',
+    //         },
+    //         slot:{fill:'rgba(50,50,50,0)'},
+    //         needle:{fill:'rgba(250,255,255,1)'},
+    //     },
+    //     button:{
+    //         background__up__fill:'rgba(0,0,0,0)',
+    //         background__hover__fill:'rgba(255,255,255,1)',
+    //         background__hover_press__fill:'rgba(255,0,0,1)',
+
+    //         background__up__stroke:'rgba(255,255,255,1)', 
+    //         background__hover__stroke:'rgba(255,255,255,1)', 
+    //         background__hover_press__stroke:'rgba(255,255,255,1)',
+    //     }
+    // };
+
+
     var design = {
         name:'basicSynthesizer',
         category:'synthesizers',
@@ -129,31 +159,31 @@ this.basicSynthesizer = function(x,y,a){
             }},
 
             //gain dial
-                {type:'text', name:'gain_gain', data:{x: 13,   y: 43, text: 'gain', size:style.h1.size, style: style.h1}},
-                {type:'text', name:'gain_0',    data:{x: 7,    y: 37, text: '0',    size:style.h2.size, style: style.h2}},
-                {type:'text', name:'gain_1/2',  data:{x: 16.5, y: 8,  text: '1/2',  size:style.h2.size, style: style.h2}},
-                {type:'text', name:'gain_1',    data:{x: 31,   y: 37, text: '1',    size:style.h2.size, style: style.h2}},
+                {type:'text', name:'gain_gain', data:{x: 13,   y: 43, text: 'gain', style: style.h1}},
+                {type:'text', name:'gain_0',    data:{x: 7,    y: 37, text: '0',    style: style.h2}},
+                {type:'text', name:'gain_1/2',  data:{x: 16.5, y: 8,  text: '1/2',  style: style.h2}},
+                {type:'text', name:'gain_1',    data:{x: 31,   y: 37, text: '1',    style: style.h2}},
                 {type:'dial_continuous',name:'dial_gain',data:{
                     x: 20, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 }},
             //attack dial
-                {type:'text', name:'attack_gain', data:{x: 50,    y: 43, text: 'attack', size:style.h1.size, style: style.h1}},
-                {type:'text', name:'attack_0',    data:{x: 47,    y: 37, text: '0',      size:style.h2.size, style: style.h2}},
-                {type:'text', name:'attack_5',    data:{x: 58.75, y: 8,  text: '5',      size:style.h2.size, style: style.h2}},
-                {type:'text', name:'attack_10',   data:{x: 71,    y: 37, text: '10',     size:style.h2.size, style: style.h2}},
+                {type:'text', name:'attack_gain', data:{x: 50,    y: 43, text: 'attack', style: style.h1}},
+                {type:'text', name:'attack_0',    data:{x: 47,    y: 37, text: '0',      style: style.h2}},
+                {type:'text', name:'attack_5',    data:{x: 58.75, y: 8,  text: '5',      style: style.h2}},
+                {type:'text', name:'attack_10',   data:{x: 71,    y: 37, text: '10',     style: style.h2}},
                 {type:'dial_continuous',name:'dial_attack',data:{
                     x: 60, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 }},
             //release dial
                 {type:'text', name:'release_gain', data:{x: 89,    y: 43, text: 'release', style: style.h1}},
-                {type:'text', name:'release_0',    data:{x: 87,    y: 37, text: '0',      size:style.h2.size, style: style.h2}},
-                {type:'text', name:'release_5',    data:{x: 98.75, y: 8,  text: '5',      size:style.h2.size, style: style.h2}},
-                {type:'text', name:'release_10',   data:{x: 111,   y: 37, text: '10',     size:style.h2.size, style: style.h2}},
+                {type:'text', name:'release_0',    data:{x: 87,    y: 37, text: '0',       style: style.h2}},
+                {type:'text', name:'release_5',    data:{x: 98.75, y: 8,  text: '5',       style: style.h2}},
+                {type:'text', name:'release_10',   data:{x: 111,   y: 37, text: '10',      style: style.h2}},
                 {type:'dial_continuous',name:'dial_release',data:{
                     x: 100, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 }},
             //detune dial
                 {type:'text', name:'detune_gain', data:{x: 131,    y: 43, text: 'detune', style: style.h1}},
@@ -162,7 +192,7 @@ this.basicSynthesizer = function(x,y,a){
                 {type:'text', name:'detune_100',  data:{x: 148,    y: 37, text: '100',    style: style.h2}},
                 {type:'dial_continuous',name:'dial_detune',data:{
                     x: 140, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, value:0.5, resetValue:0.5,
-                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 }},
             //octave dial
                 {type:'text', name:'octave_gain', data:{x: 170,    y: 43, text: 'octave', style: style.h1}},
@@ -175,7 +205,7 @@ this.basicSynthesizer = function(x,y,a){
                 {type:'text', name:'octave_3',    data:{x: 190,    y: 35, text: '3',      style: style.h2}},
                 {type:'dial_discrete',name:'dial_octave',data:{
                     x: 180, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 7, value:3,
-                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 }},
             //waveType dial
                 {type:'text', name:'waveType_gain', data:{x: 214, y: 43, text: 'wave', style: style.h1}},
@@ -184,13 +214,13 @@ this.basicSynthesizer = function(x,y,a){
                 {type:'text', name:'waveType_squ',  data:{x: 210, y: 9,  text: 'squ',  style: style.h2}},
                 {type:'text', name:'waveType_saw',  data:{x: 227, y: 10, text: 'saw',  style: style.h2}},
                 {type:'rectangle', name:'periodicWaveType', data:{
-                    x: 230, y: 21.75, angle: 0,
-                    width: 10, height: 2.5,
-                    style:style.dial.slot,
+                    x: 232, y: 21.75, angle: 0,
+                    width: 8, height: 2.5,
+                    style:style.h1,
                 }},
                 {type:'dial_discrete',name:'dial_waveType',data:{
                     x: 220, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4,  optionCount: 5,
-                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 }},
             //gainWobblePeriod dial
                 {type:'text', name:'gainWobble', data:{x: 13, y: 70, angle: -Math.PI/2,text: 'gain', style: style.h2}}, 
@@ -200,7 +230,7 @@ this.basicSynthesizer = function(x,y,a){
                 {type:'text', name:'gainWobblePeriod_100',  data:{x: 41,   y: 79,      text: '100',  style: style.h2}},
                 {type:'dial_continuous', name:'dial_gainWobblePeriod',data:{
                     x: 30, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 }},
             //gainWobbleDepth dial
                 {type:'text', name:'gainWobbleDepth_gain', data:{x: 57, y: 84, text: 'depth', style: style.h1}},
@@ -209,7 +239,7 @@ this.basicSynthesizer = function(x,y,a){
                 {type:'text', name:'gainWobbleDepth_100',  data:{x: 76, y: 79, text: '1',     style: style.h2}},
                 {type:'dial_continuous',name:'dial_gainWobbleDepth',data:{
                     x: 65, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 }},
             //detuneWobblePeriod dial
                 {type:'text', name:'detuneWobble', data:{x: 98, y: 70, angle: -Math.PI/2, text: 'detune', style: style.h2}},    
@@ -219,7 +249,7 @@ this.basicSynthesizer = function(x,y,a){
                 {type:'text', name:'detuneWobblePeriod_100',  data:{x: 125,   y: 79,      text: '100',    style: style.h2}},
                 {type:'dial_continuous',name:'dial_detuneWobblePeriod',data:{
                     x: 114, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 }},
             //detuneWobbleDepth dial
                 {type:'text', name:'detuneWobbleDepth_gain', data:{x: 141,   y: 84, text: 'depth', style: style.h1}},
@@ -228,7 +258,7 @@ this.basicSynthesizer = function(x,y,a){
                 {type:'text', name:'detuneWobbleDepth_100',  data:{x: 160,   y: 79, text: '1',     style: style.h2}},
                 {type:'dial_continuous',name:'dial_detuneWobbleDepth',data:{
                     x: 149, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                    style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 }},
 
             {type:'button_rectangle', name:'panicButton', data: {

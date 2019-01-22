@@ -35,10 +35,10 @@ this.basicSynthesizer_img = function(x,y,a){
                 x: 12.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     switch(address){
-                        case '%': object.elements.dial_image_continuous.gain.set(data); break;
+                        case '%': object.elements.dial_continuous_image.gain.set(data); break;
                         case '%t': 
                             object.__synthesizer.gain(data.target,data.time,data.curve);
-                            object.elements.dial_image_continuous.gain.smoothSet(data.target,data.time,data.curve,false);
+                            object.elements.dial_continuous_image.gain.smoothSet(data.target,data.time,data.curve,false);
                         break;
                         default: break;
                     }
@@ -48,24 +48,24 @@ this.basicSynthesizer_img = function(x,y,a){
                 x: 52.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
-                    object.elements.dial_image_continuous.attack.set(data);
+                    object.elements.dial_continuous_image.attack.set(data);
                 } 
             }},
             {type:'connectionNode_data', name:'port_release', data:{
                 x: 92.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
-                    object.elements.dial_image_continuous.release.set(data);
+                    object.elements.dial_continuous_image.release.set(data);
                 } 
             }},
             {type:'connectionNode_data', name:'port_detune', data:{
                 x: 132.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){ 
                     switch(address){
-                        case '%': object.elements.dial_image_continuous.detune.set(data); break;
+                        case '%': object.elements.dial_continuous_image.detune.set(data); break;
                         case '%t': 
                             object.__synthesizer.detune((data.target*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min),data.time,data.curve);
-                            object.elements.dial_image_continuous.detune.smoothSet(data.target,data.time,data.curve,false);
+                            object.elements.dial_continuous_image.detune.smoothSet(data.target,data.time,data.curve,false);
                         break;
                         default: break;
                     }
@@ -75,14 +75,14 @@ this.basicSynthesizer_img = function(x,y,a){
                 x: 170.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != 'discrete'){return;}
-                    object.elements.dial_image_discrete.octave.select(data);
+                    object.elements.dial_discrete_image.octave.select(data);
                 } 
             }},
             {type:'connectionNode_data', name:'port_waveType', data:{
                 x: 210.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != 'discrete'){return;}
-                    object.elements.dial_image_discrete.waveType.select(data);
+                    object.elements.dial_discrete_image.waveType.select(data);
                 }
             }},
             {type:'connectionNode_data', name:'port_periodicWave', data:{
@@ -103,80 +103,80 @@ this.basicSynthesizer_img = function(x,y,a){
                 x: 22.5, y: 90, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
-                    object.elements.dial_image_continuous.gainWobblePeriod.set(data);
+                    object.elements.dial_continuous_image.gainWobblePeriod.set(data);
                 }
             }},
             {type:'connectionNode_data', name:'port_gainWobbleDepth', data:{
                 x: 57.5, y: 90, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
-                    object.elements.dial_image_continuous.gainWobbleDepth.set(data);
+                    object.elements.dial_continuous_image.gainWobbleDepth.set(data);
                 }
             }},
             {type:'connectionNode_data', name:'port_detuneWobblePeriod', data:{
                 x: 107.5, y: 90, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
-                    object.elements.dial_image_continuous.detuneWobblePeriod.set(data);
+                    object.elements.dial_continuous_image.detuneWobblePeriod.set(data);
                 }
             }},
             {type:'connectionNode_data', name:'port_detuneWobbleDepth', data:{
                 x: 142.5, y: 90, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
-                    object.elements.dial_image_continuous.detuneWobbleDepth.set(data);
+                    object.elements.dial_continuous_image.detuneWobbleDepth.set(data);
                 }
             }},
 
             //gain dial
-                {type:'dial_image_continuous',name:'dial_gain',data:{
+                {type:'dial_continuous_image',name:'dial_gain',data:{
                     x: 20, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //attack dial
-                {type:'dial_image_continuous',name:'dial_attack',data:{
+                {type:'dial_continuous_image',name:'dial_attack',data:{
                     x: 60, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //release dial
-                {type:'dial_image_continuous',name:'dial_release',data:{
+                {type:'dial_continuous_image',name:'dial_release',data:{
                     x: 100, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //detune dial
-                {type:'dial_image_continuous',name:'dial_detune',data:{
+                {type:'dial_continuous_image',name:'dial_detune',data:{
                     x: 140, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, value:0.5, resetValue:0.5,
-                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //octave dial
-                {type:'dial_image_discrete',name:'dial_octave',data:{
+                {type:'dial_discrete_image',name:'dial_octave',data:{
                     x: 180, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 7, value:3,
-                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //waveType dial
-                {type:'dial_image_discrete',name:'dial_waveType',data:{
+                {type:'dial_discrete_image',name:'dial_waveType',data:{
                     x: 220, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4, optionCount: 5,
-                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //gainWobblePeriod dial
-                {type:'dial_image_continuous', name:'dial_gainWobblePeriod',data:{
+                {type:'dial_continuous_image', name:'dial_gainWobblePeriod',data:{
                     x: 30, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //gainWobbleDepth dial
-                {type:'dial_image_continuous',name:'dial_gainWobbleDepth',data:{
+                {type:'dial_continuous_image',name:'dial_gainWobbleDepth',data:{
                     x: 65, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //detuneWobblePeriod dial
-                {type:'dial_image_continuous',name:'dial_detuneWobblePeriod',data:{
+                {type:'dial_continuous_image',name:'dial_detuneWobblePeriod',data:{
                     x: 114, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //detuneWobbleDepth dial
-                {type:'dial_image_continuous',name:'dial_detuneWobbleDepth',data:{
+                {type:'dial_continuous_image',name:'dial_detuneWobbleDepth',data:{
                     x: 149, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                    handleUrl:style.dial.handle, slotUrl:style.dial.slot, needleUrl:style.dial.needle,
+                    handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
 
             {type:'button_rectangle', name:'panicButton', data: {
@@ -192,35 +192,35 @@ this.basicSynthesizer_img = function(x,y,a){
     //import/export
         object.exportData = function(){
             return {
-                gain: object.elements.dial_image_continuous.dial_gain.get(),
-                attack: object.elements.dial_image_continuous.dial_attack.get()*10,
-                release: object.elements.dial_image_continuous.dial_release.get()*10,
-                detune: 100*((object.elements.dial_image_continuous.dial_detune.get()*2)-1),
-                octave: object.elements.dial_image_discrete.dial_octave.get()-3,
-                waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_image_discrete.dial_waveType.get()],
+                gain: object.elements.dial_continuous_image.dial_gain.get(),
+                attack: object.elements.dial_continuous_image.dial_attack.get()*10,
+                release: object.elements.dial_continuous_image.dial_release.get()*10,
+                detune: 100*((object.elements.dial_continuous_image.dial_detune.get()*2)-1),
+                octave: object.elements.dial_discrete_image.dial_octave.get()-3,
+                waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_discrete_image.dial_waveType.get()],
                 gainWobble:{
-                    rate: object.elements.dial_image_continuous.dial_gainWobblePeriod.get()*100,
-                    depth: object.elements.dial_image_continuous.dial_gainWobbleDepth.get()
+                    rate: object.elements.dial_continuous_image.dial_gainWobblePeriod.get()*100,
+                    depth: object.elements.dial_continuous_image.dial_gainWobbleDepth.get()
                 },
                 detuneWobble:{
-                    rate: object.elements.dial_image_continuous.dial_detuneWobblePeriod.get()*100,
-                    depth: object.elements.dial_image_continuous.dial_detuneWobbleDepth.get()
+                    rate: object.elements.dial_continuous_image.dial_detuneWobblePeriod.get()*100,
+                    depth: object.elements.dial_continuous_image.dial_detuneWobbleDepth.get()
                 },
             };
         };
         object.importData = function(data){
             if(data == undefined){return;}
 
-            object.elements.dial_image_continuous.dial_gain.set(data.gain);
-            object.elements.dial_image_continuous.dial_attack.set(data.attack/10);
-            object.elements.dial_image_continuous.dial_release.set(data.release/10);
-            object.elements.dial_image_continuous.dial_detune.set( (1+(data.detune/100))/2 );
-            object.elements.dial_image_discrete.dial_octave.set(data.octave+3);
-            object.elements.dial_image_discrete.dial_waveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
-            object.elements.dial_image_continuous.dial_gainWobblePeriod.set(data.gainWobble.rate/100);
-            object.elements.dial_image_continuous.dial_gainWobbleDepth.set(data.gainWobble.depth);
-            object.elements.dial_image_continuous.dial_detuneWobblePeriod.set(data.detuneWobble.rate/100);
-            object.elements.dial_image_continuous.dial_detuneWobbleDepth.set(data.detuneWobble.depth);
+            object.elements.dial_continuous_image.dial_gain.set(data.gain);
+            object.elements.dial_continuous_image.dial_attack.set(data.attack/10);
+            object.elements.dial_continuous_image.dial_release.set(data.release/10);
+            object.elements.dial_continuous_image.dial_detune.set( (1+(data.detune/100))/2 );
+            object.elements.dial_discrete_image.dial_octave.set(data.octave+3);
+            object.elements.dial_discrete_image.dial_waveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
+            object.elements.dial_continuous_image.dial_gainWobblePeriod.set(data.gainWobble.rate/100);
+            object.elements.dial_continuous_image.dial_gainWobbleDepth.set(data.gainWobble.depth);
+            object.elements.dial_continuous_image.dial_detuneWobblePeriod.set(data.detuneWobble.rate/100);
+            object.elements.dial_continuous_image.dial_detuneWobbleDepth.set(data.detuneWobble.depth);
         };
 
     //circuitry
@@ -228,38 +228,38 @@ this.basicSynthesizer_img = function(x,y,a){
         object.__synthesizer.out().connect( object.elements.connectionNode_audio.audioOut.in() );
 
     //wiring
-        object.elements.dial_image_continuous.dial_gain.onchange = function(value){ object.__synthesizer.gain( value ); };
-        object.elements.dial_image_continuous.dial_attack.onchange = function(value){ object.__synthesizer.attack( value ); }
-        object.elements.dial_image_continuous.dial_release.onchange = function(value){ object.__synthesizer.release( value ); }
-        object.elements.dial_image_continuous.dial_detune.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); }
-        object.elements.dial_image_discrete.dial_octave.onchange = function(value){ object.__synthesizer.octave(value-3); }
-        object.elements.dial_image_discrete.dial_waveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); }
-        object.elements.dial_image_continuous.dial_gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
-        object.elements.dial_image_continuous.dial_gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value); },
-        object.elements.dial_image_continuous.dial_detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
-        object.elements.dial_image_continuous.dial_detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); }
+        object.elements.dial_continuous_image.dial_gain.onchange = function(value){ object.__synthesizer.gain( value ); };
+        object.elements.dial_continuous_image.dial_attack.onchange = function(value){ object.__synthesizer.attack( value ); }
+        object.elements.dial_continuous_image.dial_release.onchange = function(value){ object.__synthesizer.release( value ); }
+        object.elements.dial_continuous_image.dial_detune.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); }
+        object.elements.dial_discrete_image.dial_octave.onchange = function(value){ object.__synthesizer.octave(value-3); }
+        object.elements.dial_discrete_image.dial_waveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); }
+        object.elements.dial_continuous_image.dial_gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
+        object.elements.dial_continuous_image.dial_gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value); },
+        object.elements.dial_continuous_image.dial_detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
+        object.elements.dial_continuous_image.dial_detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); }
         object.elements.button_rectangle.panicButton.onpress = function(){ object.__synthesizer.panic(); },
 
     //interface
         object.i = {
-            gain:function(value){object.elements.dial_image_continuous.dial_gain.set(value);},
-            attack:function(value){object.elements.dial_image_continuous.dial_attack.set(value);},
-            release:function(value){object.elements.dial_image_continuous.dial_release.set(value);},
-            detune:function(value){object.elements.dial_image_continuous.dial_detune.set(value);},
-            octave:function(value){object.elements.dial_image_discrete.dial_octave.set(value);},
-            waveType:function(value){object.elements.dial_image_discrete.dial_waveType.set(value);},
+            gain:function(value){object.elements.dial_continuous_image.dial_gain.set(value);},
+            attack:function(value){object.elements.dial_continuous_image.dial_attack.set(value);},
+            release:function(value){object.elements.dial_continuous_image.dial_release.set(value);},
+            detune:function(value){object.elements.dial_continuous_image.dial_detune.set(value);},
+            octave:function(value){object.elements.dial_discrete_image.dial_octave.set(value);},
+            waveType:function(value){object.elements.dial_discrete_image.dial_waveType.set(value);},
             periodicWave:function(data){object.__synthesizer.periodicWave(data);},
             midiNote:function(data){object.__synthesizer.perform(data);},
-            gainWobblePeriod:function(value){object.elements.dial_image_continuous.dial_gainWobblePeriod.set(value);},
-            gainWobbleDepth:function(value){object.elements.dial_image_continuous.dial_gainWobbleDepth.set(value);},
-            detuneWobblePeriod:function(value){object.elements.dial_image_continuous.dial_detuneWobblePeriod.set(value);},
-            detuneWobbleDepth:function(value){object.elements.dial_image_continuous.dial_detuneWobbleDepth.set(value);},
+            gainWobblePeriod:function(value){object.elements.dial_continuous_image.dial_gainWobblePeriod.set(value);},
+            gainWobbleDepth:function(value){object.elements.dial_continuous_image.dial_gainWobbleDepth.set(value);},
+            detuneWobblePeriod:function(value){object.elements.dial_continuous_image.dial_detuneWobblePeriod.set(value);},
+            detuneWobbleDepth:function(value){object.elements.dial_continuous_image.dial_detuneWobbleDepth.set(value);},
         };
 
     //setup
-        object.elements.dial_image_continuous.dial_gain.set(0.5);
-        object.elements.dial_image_continuous.dial_detune.set(0.5);
-        object.elements.dial_image_discrete.dial_octave.set(3);
+        object.elements.dial_continuous_image.dial_gain.set(0.5);
+        object.elements.dial_continuous_image.dial_detune.set(0.5);
+        object.elements.dial_discrete_image.dial_octave.set(3);
 
     return object;
 };

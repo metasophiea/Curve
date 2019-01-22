@@ -4,9 +4,9 @@ this.dial_discrete = function(
     value=0, resetValue=0, optionCount=5,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
-    handleStyle = 'rgba(200,200,200,1)',
-    slotStyle = 'rgba(50,50,50,1)',
-    needleStyle = 'rgba(250,100,100,1)',
+    handleStyle = {fill:'rgba(200,200,200,1)'},
+    slotStyle = {fill:'rgba(50,50,50,1)'},
+    needleStyle = {fill:'rgba(250,100,100,1)'},
 
     onchange=function(){},
     onrelease=function(){},
