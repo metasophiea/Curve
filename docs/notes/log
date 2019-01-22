@@ -18,6 +18,7 @@
   - added list_image
   - added checkbox_ (similar to the generic version of button) also
     checkbox_rectangle, checkbox_circle, checkbox_polygon and checkbox_image
+  - borked curve unit descriptions along the way 
 
   bugs
   - strokeWidth's dissapear sometimes, making outlines very thin

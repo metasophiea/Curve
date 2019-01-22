@@ -7,9 +7,9 @@ this.basicMixer = function(x,y,a){
         h2: {fill:'rgb(150,150,150)', font:'5pt Courier New'},
 
         dial:{
-            handle: 'rgba(220,220,220,1)',
-            slot: 'rgba(50,50,50,1)',
-            needle: 'rgba(250,150,150,1)',
+            handle: {fill:'rgba(220,220,220,1)'},
+            slot: {fill:'rgba(50,50,50,1)'},
+            needle: {fill:'rgba(250,150,150,1)'},
         }
     };
     var design = {

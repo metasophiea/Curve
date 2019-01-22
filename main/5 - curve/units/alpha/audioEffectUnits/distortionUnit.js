@@ -63,7 +63,7 @@ this.distortionUnit = function(x,y,a){
             {type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   style:style.h2}},
             {type:'dial_continuous',name:'outGain_dial',data:{
                 x: 22.5, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
             {type:'text', name:'distortionAmount_title', data:{x:16.5,   y:41.5, text:'dist', style:style.h1}},
@@ -72,7 +72,7 @@ this.distortionUnit = function(x,y,a){
             {type:'text', name:'distortionAmount_100',   data:{x:33,   y:36,   text:'100',  style:style.h2}},
             {type:'dial_continuous',name:'distortionAmount_dial',data:{
                 x: 22.5, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
             {type:'text', name:'resolution_title', data:{x:47, y:66, text:'res',  style:style.h1}},
@@ -81,7 +81,7 @@ this.distortionUnit = function(x,y,a){
             {type:'text', name:'resolution_100',   data:{x:63, y:60, text:'1000', style:style.h2}},
             {type:'dial_continuous',name:'resolution_dial',data:{
                 x: 52.5, y: 47.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
             {type:'text', name:'overSample_title', data:{x:67,   y:41.5, text:'overSamp', style:style.h1}},
@@ -90,7 +90,7 @@ this.distortionUnit = function(x,y,a){
             {type:'text', name:'overSample_100',   data:{x:90.5, y:12,   text:'4x',       style:style.h2}},
             {type:'dial_discrete',name:'overSample_dial',data:{
                 x: 80, y: 23, r: 12, startAngle: (1.25*Math.PI), maxAngle: 0.5*Math.PI, arcDistance: 1.35, optionCount: 3,
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
             {type:'text', name:'inGain_title', data:{x:76,   y:91,   text:'in', style:style.h1}},
@@ -99,7 +99,7 @@ this.distortionUnit = function(x,y,a){
             {type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   style:style.h2}},
             {type:'dial_continuous',name:'inGain_dial',data:{
                 x: 80, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
         ]
     };

@@ -37,14 +37,14 @@ this.reverbUnit = function(x,y){
             {type:'text', name:'outGain_1',   data:{x:29,   y:38, text:'1', style:style.h2}},
             {type:'dial_continuous',name:'outGain_dial',data:{
                 x: 20, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, 
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
             {type:'text', name:'wetdry_1/2', data:{x:66.5, y:39, text:'wet', style:style.h2}},
             {type:'text', name:'wetdry_1',   data:{x:91.5, y:39, text:'dry', style:style.h2}},
             {type:'dial_continuous',name:'wetdry_dial',data:{
                 x: 82.5, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
             {type:'button_rectangle',name:'raiseByOne',data:{

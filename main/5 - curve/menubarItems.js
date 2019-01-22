@@ -8,9 +8,9 @@ workspace.control.gui.elements.menubar.dropdowns = [
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:[
-            {text_left:'New Scene', function:function(){ control.scene.new(true); } },
-            {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ control.scene.load(undefined,undefined,true); } },
-            {text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ control.scene.save('project.crv'); } },
+            {text_left:'New Scene', function:function(){ workspace.control.scene.new(true); } },
+            {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ workspace.control.scene.load(undefined,undefined,true); } },
+            {text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ workspace.control.scene.save('project.crv'); } },
         ]
     },
     {
@@ -21,11 +21,11 @@ workspace.control.gui.elements.menubar.dropdowns = [
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:[
-            {text_left:'Cut',       text_right:'ctrl-x', function:function(){control.selection.cut();}       },
-            {text_left:'Copy',      text_right:'ctrl-c', function:function(){control.selection.copy();}      },
-            {text_left:'Paste',     text_right:'ctrl-v', function:function(){control.selection.paste();}     },
-            {text_left:'Duplicate', text_right:'ctrl-b', function:function(){control.selection.duplicate();} },
-            {text_left:'Delete',    text_right:'del',    function:function(){control.selection.delete();}    },
+            {text_left:'Cut',       text_right:'ctrl-x', function:function(){workspace.control.selection.cut();}       },
+            {text_left:'Copy',      text_right:'ctrl-c', function:function(){workspace.control.selection.copy();}      },
+            {text_left:'Paste',     text_right:'ctrl-v', function:function(){workspace.control.selection.paste();}     },
+            {text_left:'Duplicate', text_right:'ctrl-b', function:function(){workspace.control.selection.duplicate();} },
+            {text_left:'Delete',    text_right:'del',    function:function(){workspace.control.selection.delete();}    },
         ]
     },
     {

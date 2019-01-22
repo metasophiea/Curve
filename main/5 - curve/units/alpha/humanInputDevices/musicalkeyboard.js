@@ -55,7 +55,7 @@ this.musicalKeyboard = function(x,y,a){
             {type:'text', name:'velocity_1',     data:{x:29, y:55,   text:'1',        style:style.h2}},
             {type:'dial_continuous',name:'velocity_dial',data:{
                 x:17.5, y:42, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, value:0.5,
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 onchange:function(value){ state.velocity = value; }
             }},
         ]

@@ -50,7 +50,7 @@ this.filterUnit = function(x,y,a){
             {type:'text', name:'Q_title', data:{x:81, y: 79,   text:'Q',   style:style.h1}},
             {type:'dial_continuous',name:'Q_dial',data:{
                 x: 82.5, y: 68.5, r: 7, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
             {type:'text', name:'gain_0',     data:{x:54,    y: 86,   text:'0',    style:style.h2}},
@@ -59,7 +59,7 @@ this.filterUnit = function(x,y,a){
             {type:'text', name:'gain_title', data:{x:58,    y: 89,   text:'Gain', style:style.h1}},
             {type:'dial_continuous',name:'gain_dial',data:{
                 x: 62.5, y: 77.5, r: 7, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
             
             {type:'text', name:'frequency_0',     data:{x:31.5, y: 86,   text:'0',     style:style.h2}},
@@ -68,7 +68,7 @@ this.filterUnit = function(x,y,a){
             {type:'text', name:'frequency_title', data:{x:35.5, y:89,    text:'Freq',  style:style.h1}},
             {type:'dial_continuous',name:'frequency_dial',data:{
                 x: 40, y: 77.5, r: 7, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, 
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
             {type:'text', name:'type_lowp',  data:{x:9,     y: 74.5, text:'lowp', style:style.h3}},
@@ -82,7 +82,7 @@ this.filterUnit = function(x,y,a){
             {type:'text', name:'type_title', data:{x:15.5,  y:78.5,  text:'Type', style:style.h1}},
             {type:'dial_discrete',name:'type_dial',data:{
                 x: 20, y: 67.5, r: 7, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 8,
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
         ]
     };

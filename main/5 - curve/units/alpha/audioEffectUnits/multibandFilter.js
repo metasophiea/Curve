@@ -43,9 +43,9 @@ this.multibandFilter = function(x,y,a){
             slot:'rgba(50,50,50,1)',
         },
         dial:{
-            handle:'rgba(220,220,220,1)',
-            slot:'rgba(50,50,50,1)',
-            needle:'rgba(250,150,150,1)',
+            handle:{fill:'rgba(220,220,220,1)'},
+            slot:{fill:'rgba(50,50,50,1)'},
+            needle:{fill:'rgba(250,150,150,1)'},
         },
 
         graph:{

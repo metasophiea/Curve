@@ -15609,9 +15609,9 @@
                         text:{fill:'rgba(0,0,0,1)', size:4, font:'Courier New'},
                 
                         dial:{
-                            handle: 'rgba(220,220,220,1)',
-                            slot: 'rgba(50,50,50,1)',
-                            needle: 'rgba(250,150,150,1)',
+                            handle: {fill:'rgba(220,220,220,1)'},
+                            slot: {fill:'rgba(50,50,50,1)'},
+                            needle: {fill:'rgba(250,150,150,1)'},
                         }
                     };
                     var design = {
@@ -15717,9 +15717,9 @@
                         text:{fill:'rgba(0,0,0,1)', size:4, font:'Courier New'},
                 
                         dial:{
-                            handle: 'rgba(220,220,220,1)',
-                            slot: 'rgba(50,50,50,1)',
-                            needle: 'rgba(250,150,150,1)',
+                            handle: {fill:'rgba(220,220,220,1)'},
+                            slot: {fill:'rgba(50,50,50,1)'},
+                            needle: {fill:'rgba(250,150,150,1)'},
                         }
                     };
                     var design = {
@@ -15876,9 +15876,9 @@
                         h2: {fill:'rgb(150,150,150)', font:'5pt Courier New'},
                 
                         dial:{
-                            handle: 'rgba(220,220,220,1)',
-                            slot: 'rgba(50,50,50,1)',
-                            needle: 'rgba(250,150,150,1)',
+                            handle: {fill:'rgba(220,220,220,1)'},
+                            slot: {fill:'rgba(50,50,50,1)'},
+                            needle: {fill:'rgba(250,150,150,1)'},
                         }
                     };
                     var design = {
@@ -16031,7 +16031,7 @@
                             {type:'text', name:'Q_title', data:{x:81, y: 79,   text:'Q',   style:style.h1}},
                             {type:'dial_continuous',name:'Q_dial',data:{
                                 x: 82.5, y: 68.5, r: 7, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                 
                             {type:'text', name:'gain_0',     data:{x:54,    y: 86,   text:'0',    style:style.h2}},
@@ -16040,7 +16040,7 @@
                             {type:'text', name:'gain_title', data:{x:58,    y: 89,   text:'Gain', style:style.h1}},
                             {type:'dial_continuous',name:'gain_dial',data:{
                                 x: 62.5, y: 77.5, r: 7, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                             
                             {type:'text', name:'frequency_0',     data:{x:31.5, y: 86,   text:'0',     style:style.h2}},
@@ -16049,7 +16049,7 @@
                             {type:'text', name:'frequency_title', data:{x:35.5, y:89,    text:'Freq',  style:style.h1}},
                             {type:'dial_continuous',name:'frequency_dial',data:{
                                 x: 40, y: 77.5, r: 7, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, 
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                 
                             {type:'text', name:'type_lowp',  data:{x:9,     y: 74.5, text:'lowp', style:style.h3}},
@@ -16063,7 +16063,7 @@
                             {type:'text', name:'type_title', data:{x:15.5,  y:78.5,  text:'Type', style:style.h1}},
                             {type:'dial_discrete',name:'type_dial',data:{
                                 x: 20, y: 67.5, r: 7, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 8,
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                         ]
                     };
@@ -16184,14 +16184,14 @@
                             {type:'text', name:'outGain_1',   data:{x:29,   y:38, text:'1', style:style.h2}},
                             {type:'dial_continuous',name:'outGain_dial',data:{
                                 x: 20, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, 
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                 
                             {type:'text', name:'wetdry_1/2', data:{x:66.5, y:39, text:'wet', style:style.h2}},
                             {type:'text', name:'wetdry_1',   data:{x:91.5, y:39, text:'dry', style:style.h2}},
                             {type:'dial_continuous',name:'wetdry_dial',data:{
                                 x: 82.5, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                 
                             {type:'button_rectangle',name:'raiseByOne',data:{
@@ -16334,9 +16334,9 @@
                             slot:'rgba(50,50,50,1)',
                         },
                         dial:{
-                            handle:'rgba(220,220,220,1)',
-                            slot:'rgba(50,50,50,1)',
-                            needle:'rgba(250,150,150,1)',
+                            handle:{fill:'rgba(220,220,220,1)'},
+                            slot:{fill:'rgba(50,50,50,1)'},
+                            needle:{fill:'rgba(250,150,150,1)'},
                         },
                 
                         graph:{
@@ -16605,7 +16605,7 @@
                             {type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   style:style.h2}},
                             {type:'dial_continuous',name:'outGain_dial',data:{
                                 x: 22.5, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                 
                             {type:'text', name:'distortionAmount_title', data:{x:16.5,   y:41.5, text:'dist', style:style.h1}},
@@ -16614,7 +16614,7 @@
                             {type:'text', name:'distortionAmount_100',   data:{x:33,   y:36,   text:'100',  style:style.h2}},
                             {type:'dial_continuous',name:'distortionAmount_dial',data:{
                                 x: 22.5, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                 
                             {type:'text', name:'resolution_title', data:{x:47, y:66, text:'res',  style:style.h1}},
@@ -16623,7 +16623,7 @@
                             {type:'text', name:'resolution_100',   data:{x:63, y:60, text:'1000', style:style.h2}},
                             {type:'dial_continuous',name:'resolution_dial',data:{
                                 x: 52.5, y: 47.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                 
                             {type:'text', name:'overSample_title', data:{x:67,   y:41.5, text:'overSamp', style:style.h1}},
@@ -16632,7 +16632,7 @@
                             {type:'text', name:'overSample_100',   data:{x:90.5, y:12,   text:'4x',       style:style.h2}},
                             {type:'dial_discrete',name:'overSample_dial',data:{
                                 x: 80, y: 23, r: 12, startAngle: (1.25*Math.PI), maxAngle: 0.5*Math.PI, arcDistance: 1.35, optionCount: 3,
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                 
                             {type:'text', name:'inGain_title', data:{x:76,   y:91,   text:'in', style:style.h1}},
@@ -16641,7 +16641,7 @@
                             {type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   style:style.h2}},
                             {type:'dial_continuous',name:'inGain_dial',data:{
                                 x: 80, y: 72.5, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                         ]
                     };
@@ -16731,7 +16731,7 @@
                             {type:'text', name:'framerate_30',   data:{x: 155+31,   y: 30+32, text: '30',        style: style.h2}},
                             {type:'dial_continuous', name:'framerate', data:{
                                 x:175, y:47.5, r:12, resetValue:0.5,
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                         ]
                     };
@@ -17627,7 +17627,7 @@
                             {type:'text', name:'velocity_1',     data:{x:29, y:55,   text:'1',        style:style.h2}},
                             {type:'dial_continuous',name:'velocity_dial',data:{
                                 x:17.5, y:42, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, value:0.5,
-                                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                                 onchange:function(value){ state.velocity = value; }
                             }},
                         ]
@@ -19293,9 +19293,9 @@
                     breakHeight: 0.5,
                     spaceHeight: 1,
                     itemList:[
-                        {text_left:'New Scene', function:function(){ control.scene.new(true); } },
-                        {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ control.scene.load(undefined,undefined,true); } },
-                        {text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ control.scene.save('project.crv'); } },
+                        {text_left:'New Scene', function:function(){ workspace.control.scene.new(true); } },
+                        {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ workspace.control.scene.load(undefined,undefined,true); } },
+                        {text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ workspace.control.scene.save('project.crv'); } },
                     ]
                 },
                 {
@@ -19306,11 +19306,11 @@
                     breakHeight: 0.5,
                     spaceHeight: 1,
                     itemList:[
-                        {text_left:'Cut',       text_right:'ctrl-x', function:function(){control.selection.cut();}       },
-                        {text_left:'Copy',      text_right:'ctrl-c', function:function(){control.selection.copy();}      },
-                        {text_left:'Paste',     text_right:'ctrl-v', function:function(){control.selection.paste();}     },
-                        {text_left:'Duplicate', text_right:'ctrl-b', function:function(){control.selection.duplicate();} },
-                        {text_left:'Delete',    text_right:'del',    function:function(){control.selection.delete();}    },
+                        {text_left:'Cut',       text_right:'ctrl-x', function:function(){workspace.control.selection.cut();}       },
+                        {text_left:'Copy',      text_right:'ctrl-c', function:function(){workspace.control.selection.copy();}      },
+                        {text_left:'Paste',     text_right:'ctrl-v', function:function(){workspace.control.selection.paste();}     },
+                        {text_left:'Duplicate', text_right:'ctrl-b', function:function(){workspace.control.selection.duplicate();} },
+                        {text_left:'Delete',    text_right:'del',    function:function(){workspace.control.selection.delete();}    },
                     ]
                 },
                 {

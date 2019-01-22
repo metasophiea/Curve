@@ -37,7 +37,7 @@ this.audioScope = function(x,y,a){
             {type:'text', name:'framerate_30',   data:{x: 155+31,   y: 30+32, text: '30',        style: style.h2}},
             {type:'dial_continuous', name:'framerate', data:{
                 x:175, y:47.5, r:12, resetValue:0.5,
-                style:{handle:style.dial.handle.fill, slot:style.dial.slot.fill, needle:style.dial.needle.fill},
+                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
         ]
     };
