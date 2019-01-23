@@ -1,4 +1,17 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-01-23
+  future ideas
+  - core version 2? this time in webGL and with little changes to how some 
+    other things are done ('getShapeUnderPoint' to actually return all shapes
+    that are under said point, in the order they are layered)
+    We could probable use roughly the same data structure for describing and
+    organising shapes.
+    ...now that I think about it..the "webGL" element needs only ot apply to
+    the actual render of the shapes; and not to do with the graphical structure
+    of anything like that..this could save alot of development time...maybe.
+    I'll start a webGL experiment in the workspace at some point
+
+
 2019-01-22
   - added way of selecting which colour to clear the canvas with (accessable
     with workspace.core.render.clearColour)
@@ -19,7 +32,7 @@
   - added checkbox_ (similar to the generic version of button) also
     checkbox_rectangle, checkbox_circle, checkbox_polygon and checkbox_image
   - fixed curve's menubar's calls to control functions
-  - borked curve unit descriptions along the way 
+  - borked curve unit descriptions along the way (but also fixed them)
 
   bugs
   - strokeWidth's dissapear sometimes, making outlines very thin
