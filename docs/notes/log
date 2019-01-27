@@ -4,11 +4,19 @@
   - core version 2? this time in webGL and with little changes to how some 
     other things are done ('getShapeUnderPoint' to actually return all shapes
     that are under said point, in the order they are layered)
+<<<<<<< HEAD
     We could probably use roughly the same data structure for describing and
     organising shapes.
     ...now that I think about it..the "webGL" element needs only ot apply to
     the actual render of the shapes; and not to do with the graphical structure
     or anything like that..this could save alot of development time...maybe.
+=======
+    We could probable use roughly the same data structure for describing and
+    organising shapes.
+    ...now that I think about it..the "webGL" element needs only ot apply to
+    the actual render of the shapes; and not to do with the graphical structure
+    of anything like that..this could save alot of development time...maybe.
+>>>>>>> c6518881b9bcdf4ac474a5aec7b751c73f97c949
     I'll start a webGL experiment in the workspace at some point
 
 

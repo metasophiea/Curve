@@ -1539,9 +1539,9 @@
                         };
                     };
                     var shapes = new function(){
-                        this.polygon = function(){
+                        this.canvas = function(){
                         
-                            this.type = 'polygon';
+                            this.type = 'canvas';
                         
                             this.name = '';
                             this.ignored = false;
@@ -1553,19 +1553,43 @@
                                 boundingBox:{},
                             };
                         
-                            this.points = [];
+                            this.x = 0;
+                            this.y = 0;
+                            this.angle = 0;
+                            this.anchor = {x:0,y:0};
+                            this.width = 10;
+                            this.height = 10;
                         
-                            this.style = {
-                                fill:'rgba(100,255,255,1)',
-                                stroke:'rgba(0,0,0,0)',
-                                lineWidth:1,
-                                lineJoin:'round',
-                                miterLimit:2,
+                            var canvasObject = {
+                                isChanged:true, 
+                                element:document.createElement('canvas'),
+                                resolution:1,
                             };
+                            canvasObject.context = canvasObject.element.getContext('2d',{ alpha: false });
+                            canvasObject.element.setAttribute('width',this.width*canvasObject.resolution);
+                            canvasObject.element.setAttribute('height',this.height*canvasObject.resolution);
                         
-                            
+                        
                             this.parameter = {};
-                            this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
+                            this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
+                            this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
+                            this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
+                            this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
+                            this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities(); canvasObject.element.setAttribute('width',shape.width*canvasObject.resolution); } }(this);
+                            this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities(); canvasObject.element.setAttribute('height',shape.height*canvasObject.resolution); } }(this);
+                        
+                        
+                        
+                        
+                            this.resolution = function(a){
+                                if(a == undefined){return canvasObject.resolution;}
+                                canvasObject.resolution = a;
+                                canvasObject.element.setAttribute('width',this.width*canvasObject.resolution);
+                                canvasObject.element.setAttribute('height',this.height*canvasObject.resolution); 
+                                canvasObject.isChanged = true;
+                            };
+                            this._ = canvasObject.context;
+                            this.$ = function(a){return a*canvasObject.resolution;};
                         
                         
                         
@@ -1579,7 +1603,6 @@
                         
                                 return '/'+address;
                             };
-                            
                             this.computeExtremities = function(offset){
                                 //discover if this shape should be static
                                     var isStatic = this.static;
@@ -1600,7 +1623,8 @@
                                     };
                         
                                 //calculate points
-                                    this.extremities.points = this.points.map(function(point){
+                                    this.extremities.points = workspace.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
+                                    this.extremities.points = this.extremities.points.map(function(point){
                                         point = workspace.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
                                         point.x += offset.x;
                                         point.y += offset.y;
@@ -1615,7 +1639,6 @@
                                         this.parent.computeExtremities();
                                     }
                             };
-                        
                             function isPointWithinBoundingBox(x,y,shape){
                                 if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
                                 return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
@@ -1630,7 +1653,6 @@
                                 }
                                 return false;
                             };
-                        
                             function shouldRender(shape){ 
                                 //if this shape is static, always render
                                     if(shape.static){return true;}
@@ -1638,52 +1660,45 @@
                                 //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                     return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                             };
-                            this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
+                        
+                        
+                        
+                            
+                            this.render = function(context,offset={x:0,y:0,a:0},static=false){
                                 //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                     if(!shouldRender(this)){return;}
+                        
+                                //adjust offset for parent's angle
+                                    var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                    offset.x += point.x - this.x;
+                                    offset.y += point.y - this.y;
                                 
                                 //collect and consolidate shape values into a neat package
                                     var shapeValue = {
-                                        points: this.points.map( function(a){
-                                            a = workspace.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
-                                            return { x:a.x+offset.x, y:a.y+offset.y };
-                                        } ),
-                                        lineWidth: this.style.lineWidth,
+                                        location:{
+                                            x:(this.x+offset.x),
+                                            y:(this.y+offset.y)
+                                        },
+                                        angle:(this.angle+offset.a),
+                                        width: this.width,
+                                        height: this.height,
                                     };
                                 
                                 //adapt values
                                     if(!static){
-                                        shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
-                                        shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                        shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
+                                        shapeValue.width = adapter.length(shapeValue.width);
+                                        shapeValue.height = adapter.length(shapeValue.height);
                                     }
                         
-                                //clipping
-                                    if(isClipper){
-                                        var region = new Path2D();
-                                        region.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-                                        for(var a = 1; a < shapeValue.points.length; a++){
-                                            region.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
-                                        }
-                                        context.clip(region);
-                                        return;
-                                    }
+                                //post adaptation calculations
+                                    shapeValue.location = workspace.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
                         
-                                //paint this shape as requested
-                                    context.fillStyle = this.style.fill;
-                                    context.strokeStyle = this.style.stroke;
-                                    context.lineWidth = shapeValue.lineWidth;
-                                    context.lineJoin = this.style.lineJoin;
-                                    context.miterLimit = this.style.miterLimit;
-                        
-                                    context.beginPath(); 
-                                    context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-                                    for(var a = 1; a < shapeValue.points.length; a++){
-                                        context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
-                                    }
-                                    context.closePath(); 
-                        
-                                    context.fill(); 
-                                    context.stroke();
+                                //actual render
+                                    context.save();
+                                    context.rotate( shapeValue.angle );
+                                    context.drawImage( canvasObject.element, shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
+                                    context.restore();
                         
                                 //if dotFrame is set, draw in dots fot the points and bounding box extremities
                                     if(this.dotFrame){
@@ -1698,8 +1713,7 @@
                                             var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
                                             core.render.drawDot( temp.x, temp.y );
                                     }
-                            };
-                        
+                            }
                         };
                         this.circle = function(){
                         
@@ -1880,13 +1894,14 @@
                                     }
                             };
                         };
-                        this.canvas = function(){
+                        this.group = function(){
                         
-                            this.type = 'canvas';
+                            this.type = 'group';
                         
                             this.name = '';
                             this.ignored = false;
                             this.static = false;
+                            this.clipActive = false;
                             this.parent = undefined;
                             this.dotFrame = false;
                             this.extremities = {
@@ -1897,43 +1912,30 @@
                             this.x = 0;
                             this.y = 0;
                             this.angle = 0;
-                            this.anchor = {x:0,y:0};
-                            this.width = 10;
-                            this.height = 10;
-                        
-                            var canvasObject = {
-                                isChanged:true, 
-                                element:document.createElement('canvas'),
-                                resolution:1,
-                            };
-                            canvasObject.context = canvasObject.element.getContext('2d',{ alpha: false });
-                            canvasObject.element.setAttribute('width',this.width*canvasObject.resolution);
-                            canvasObject.element.setAttribute('height',this.height*canvasObject.resolution);
+                            this.children = [];
+                            this.clippingStencil;
                         
                         
                             this.parameter = {};
-                            this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities();} }(this);
-                            this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities();} }(this);
-                            this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities();} }(this);
-                            this.parameter.anchor = function(shape){ return function(a){if(a==undefined){return shape.anchor;} shape.anchor = a; shape.computeExtremities();} }(this);
-                            this.parameter.width = function(shape){ return function(a){if(a==undefined){return shape.width;} shape.width = a; shape.computeExtremities(); canvasObject.element.setAttribute('width',shape.width*canvasObject.resolution); } }(this);
-                            this.parameter.height = function(shape){ return function(a){if(a==undefined){return shape.height;} shape.height = a; shape.computeExtremities(); canvasObject.element.setAttribute('height',shape.height*canvasObject.resolution); } }(this);
+                            this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities(undefined,true);} }(this);
+                            this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities(undefined,true);} }(this);
+                            this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities(undefined,true);} }(this);
                         
                         
                         
+                            function checkElementIsValid(group,element){
+                                if(element == undefined){return group.getAddress()+' >> no element provided';}
                         
-                            this.resolution = function(a){
-                                if(a == undefined){return canvasObject.resolution;}
-                                canvasObject.resolution = a;
-                                canvasObject.element.setAttribute('width',this.width*canvasObject.resolution);
-                                canvasObject.element.setAttribute('height',this.height*canvasObject.resolution); 
-                                canvasObject.isChanged = true;
-                            };
-                            this._ = canvasObject.context;
-                            this.$ = function(a){return a*canvasObject.resolution;};
-                        
-                        
-                        
+                                //check for name
+                                    if(element.name == undefined || element.name == ''){return group.getAddress()+' >> element has no name'}
+                            
+                                //check that the name is not already taken in this grouping
+                                    for(var a = 0; a < group.children.length; a++){
+                                        if( group.children[a].name == element.name ){ 
+                                            return 'element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+group.name+'"'); 
+                                        }
+                                    }
+                            }
                         
                             this.getAddress = function(){
                                 var address = '';
@@ -1944,7 +1946,100 @@
                         
                                 return '/'+address;
                             };
-                            this.computeExtremities = function(offset){
+                            this.clip = function(bool){
+                                if(bool == undefined){return this.clipActive;}
+                                this.clipActive = (this.clippingStencil == undefined) ? false : bool;
+                        
+                                //computation of extremities
+                                    this.computeExtremities();
+                            };
+                            this.stencil = function(shape){
+                                if(shape == undefined){return this.clippingStencil;}
+                                this.clippingStencil = shape;
+                        
+                                //computation of extremities
+                                    this.computeExtremities();
+                            };
+                            this.prepend = function(element){
+                                //check that the element is valid
+                                    var temp = checkElementIsValid(this,element);
+                                    if(temp != undefined){console.error('element invalid:',temp); return;}
+                        
+                                //actually add the element
+                                    this.children.unshift(element);
+                        
+                                //inform element of who it's parent is
+                                    element.parent = this;
+                        
+                                //computation of extremities
+                                    element.computeExtremities(undefined,true);
+                            };
+                            this.append = function(element){
+                                //check that the element is valid
+                                    var temp = checkElementIsValid(this, element);
+                                    if(temp != undefined){console.error('element invalid:',temp); return;}
+                        
+                                //actually add the element
+                                    this.children.push(element);
+                        
+                                //inform element of who it's parent is
+                                    element.parent = this;
+                        
+                                //computation of extremities
+                                    element.computeExtremities(undefined,true);
+                            };
+                            this.remove = function(element){
+                                //check that an element was provided
+                                    if(element == undefined){return;}
+                        
+                                //get index of element (if this element isn't in the group, just bail)
+                                    var index = this.children.indexOf(element);
+                                    if(index < 0){return;}
+                        
+                                //actual removal
+                                    this.children.splice(index, 1);
+                        
+                                //computation of extremities
+                                    this.computeExtremities();
+                            };
+                            this.clear = function(){
+                                //empty out children
+                                    this.children = [];
+                        
+                                //computation of extremities
+                                    this.computeExtremities();
+                            };
+                            this.contains = function(element){
+                                for(var a = 0; a < this.children.length; a++){
+                                    if(this.children[a] == element){return true;}
+                                }
+                        
+                                return false;
+                            };
+                            this.getChildByName = function(name){
+                                for(var a = 0; a < this.children.length; a++){
+                                    if( this.children[a].name == name ){ return this.children[a]; }
+                                }
+                            };
+                            this.getElementsWithName = function(name){
+                                var result = [];
+                                for(var a = 0; a < this.children.length; a++){
+                                    if( this.children[a].name == name ){
+                                        result.push(this.children[a]);
+                                    }
+                                    if( this.children[a].type == 'group' ){
+                                        var list = this.children[a].getElementsWithName(name);
+                                        for(var b = 0; b < list.length; b++){ result.push( list[b] ); } //because concat doesn't work
+                                    }
+                                }
+                                return result;
+                            };
+                        
+                            this.getOffset = function(){return gatherParentOffset(this);};
+                            this.computeExtremities = function(offset,deepCompute=false){
+                                //root calculation element
+                                    var rootCalculationElement = offset == undefined;
+                        
                                 //discover if this shape should be static
                                     var isStatic = this.static;
                                     var tmp = this;
@@ -1957,6 +2052,20 @@
                                 //in which case; gather the offset of all parents. Otherwise just use what was provided
                                     offset = offset == undefined ? gatherParentOffset(this) : offset;
                         
+                                //if 'deepCompute' is set, recalculate the extremities for all children
+                                    if(deepCompute){
+                                        //calculate offset to be sent down to this group's children
+                                            var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
+                                            var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                                combinedOffset.x += point.x;
+                                                combinedOffset.y += point.y;
+                        
+                                        //request deep calculation from all children
+                                            for(var a = 0; a < this.children.length; a++){
+                                                this.children[a].computeExtremities(combinedOffset,true);
+                                            }
+                                    }
+                        
                                 //reset variables
                                     this.extremities = {
                                         points:[],
@@ -1964,22 +2073,43 @@
                                     };
                         
                                 //calculate points
-                                    this.extremities.points = workspace.library.math.pointsOfRect(this.x, this.y, this.width, this.height, -this.angle, this.anchor);
-                                    this.extremities.points = this.extremities.points.map(function(point){
-                                        point = workspace.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                                        point.x += offset.x;
-                                        point.y += offset.y;
-                                        return point;
-                                    });
+                                    //assuming clipping is turned off
+                                        if(!this.clipActive){
+                                            //the points for a group, is just the four corners of the bounding box, calculated using
+                                            //the bounding boxes of all the children
+                                            //  -> this method needs to be trashed <-
+                                                var temp = [];
+                                                for(var a = 0; a < this.children.length; a++){
+                                                    temp.push(this.children[a].extremities.boundingBox.topLeft);
+                                                    temp.push(this.children[a].extremities.boundingBox.bottomRight);
+                                                }
+                                                temp = workspace.library.math.boundingBoxFromPoints( temp );
+                                                this.extremities.points = [
+                                                    { x: temp.topLeft.x,     y: temp.topLeft.y,     },
+                                                    { x: temp.bottomRight.x, y: temp.topLeft.y,     },
+                                                    { x: temp.bottomRight.x, y: temp.bottomRight.y, },
+                                                    { x: temp.topLeft.x,     y: temp.bottomRight.y, },
+                                                ];
+                                    //assuming clipping is turned on
+                                        }else{
+                                            //the points for this group are the same as the stencil shape's
+                                                var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
+                                                var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
+                                                    combinedOffset.x += point.x;
+                                                    combinedOffset.y += point.y;
+                                                this.clippingStencil.computeExtremities(combinedOffset);
+                                                this.extremities.points = this.clippingStencil.extremities.points;
+                                        }
                         
                                 //calculate boundingBox
                                     this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
                         
                                 //update the points and bounding box of the parent
-                                    if(this.parent != undefined){
+                                    if(this.parent != undefined && rootCalculationElement){
                                         this.parent.computeExtremities();
                                     }
                             };
+                        
                             function isPointWithinBoundingBox(x,y,shape){
                                 if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
                                 return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
@@ -1989,57 +2119,81 @@
                                 return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
                             }
                             this.isPointWithin = function(x,y){
+                                if(this.clipActive){ return this.clippingStencil.isPointWithin(x,y); }
+                        
                                 if( isPointWithinBoundingBox(x,y,this) ){
                                     return isPointWithinHitBox(x,y,this);
                                 }
                                 return false;
                             };
-                            function shouldRender(shape){ 
+                            this.getElementUnderPoint = function(x,y,static=false,getList=false){
+                                //go through the children in reverse order, discovering if
+                                //  the object is not ignored and,
+                                //  the point is within their bounding box
+                                //if so; if it's a group, follow the 'getElementUnderPoint' function down
+                                //if it's not, return that shape
+                                //otherwise, carry onto the next shape
+                        
+                                var returnList = [];
+                        
+                                for(var a = this.children.length-1; a >= 0; a--){
+                                    //if child shape is static (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
+                                        var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
+                        
+                                        if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
+                                            if( this.children[a].type == 'group' ){
+                                                var temp = this.children[a].getElementUnderPoint(x,y,(this.children[a].static || static),getList);
+                                                if(temp != undefined){
+                                                    if(getList){ returnList = returnList.concat(temp); }
+                                                    else{ return temp; }
+                                                }
+                                            }else{
+                                                if(getList){ returnList.push(this.children[a]); }
+                                                else{ return this.children[a]; }
+                                            }
+                                        }
+                                }
+                        
+                                if(getList){return returnList;}
+                            };
+                        
+                            function shouldRender(shape){
                                 //if this shape is static, always render
                                     if(shape.static){return true;}
-                                    
+                        
+                                //if any of this shape's children are static, render the group (and let the individuals decide to render themselves or not)
+                                    for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
+                        
                                 //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
                                     return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
                             };
-                        
-                        
-                        
-                            
-                            this.render = function(context,offset={x:0,y:0,a:0},static=false){
+                            this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
                                 //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
                                     if(!shouldRender(this)){return;}
                         
                                 //adjust offset for parent's angle
                                     var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                    offset.x += point.x - this.x;
-                                    offset.y += point.y - this.y;
-                                
-                                //collect and consolidate shape values into a neat package
-                                    var shapeValue = {
-                                        location:{
-                                            x:(this.x+offset.x),
-                                            y:(this.y+offset.y)
-                                        },
-                                        angle:(this.angle+offset.a),
-                                        width: this.width,
-                                        height: this.height,
+                                    var packagedOffset = {
+                                        a: offset.a + this.angle,
+                                        x: offset.x + point.x,
+                                        y: offset.y + point.y,
                                     };
-                                
-                                //adapt values
-                                    if(!static){
-                                        shapeValue.location = adapter.workspacePoint2windowPoint( (shapeValue.location.x - this.anchor.x*shapeValue.width), (shapeValue.location.y - this.anchor.y*shapeValue.height) );              
-                                        shapeValue.width = adapter.length(shapeValue.width);
-                                        shapeValue.height = adapter.length(shapeValue.height);
+                        
+                        
+                                //draw clipping (if active)
+                                    if(this.clipActive || isClipper){
+                                        context.save();
+                                        this.clippingStencil.render( context, Object.assign({},packagedOffset), (static||this.clippingStencil.static), (isClipper||this.clipActive) );
                                     }
                         
-                                //post adaptation calculations
-                                    shapeValue.location = workspace.library.math.cartesianAngleAdjust(shapeValue.location.x,shapeValue.location.y,-shapeValue.angle);
+                                //cycle through all children, activating their render functions
+                                    for(var a = 0; a < this.children.length; a++){
+                                        var item = this.children[a];
+                                        item.render( context, Object.assign({},packagedOffset), (static||item.static) );
+                                    }
                         
-                                //actual render
-                                    context.save();
-                                    context.rotate( shapeValue.angle );
-                                    context.drawImage( canvasObject.element, shapeValue.location.x, shapeValue.location.y, shapeValue.width, shapeValue.height );
-                                    context.restore();
+                                //undo the clipping (only if there was clipping, ofcourse)
+                                    if(this.clipActive){ context.restore(); }
                         
                                 //if dotFrame is set, draw in dots fot the points and bounding box extremities
                                     if(this.dotFrame){
@@ -2054,7 +2208,7 @@
                                             var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
                                             core.render.drawDot( temp.x, temp.y );
                                     }
-                            }
+                            };
                         };
                         this.image = function(){
                         
@@ -2377,6 +2531,168 @@
                                     }
                             };
                         };
+                        this.polygon = function(){
+                        
+                            this.type = 'polygon';
+                        
+                            this.name = '';
+                            this.ignored = false;
+                            this.static = false;
+                            this.parent = undefined;
+                            this.dotFrame = false;
+                            this.extremities = {
+                                points:[],
+                                boundingBox:{},
+                            };
+                        
+                            this.points = [];
+                        
+                            this.style = {
+                                fill:'rgba(100,255,255,1)',
+                                stroke:'rgba(0,0,0,0)',
+                                lineWidth:1,
+                                lineJoin:'round',
+                                miterLimit:2,
+                            };
+                        
+                            
+                            this.parameter = {};
+                            this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
+                        
+                        
+                        
+                        
+                            this.getAddress = function(){
+                                var address = '';
+                                var tmp = this;
+                                do{
+                                    address = tmp.name + '/' + address;
+                                }while((tmp = tmp.parent) != undefined)
+                        
+                                return '/'+address;
+                            };
+                            
+                            this.computeExtremities = function(offset){
+                                //discover if this shape should be static
+                                    var isStatic = this.static;
+                                    var tmp = this;
+                                    while((tmp = tmp.parent) != undefined && !isStatic){
+                                        isStatic = isStatic || tmp.static;
+                                    }
+                                    this.static = isStatic;
+                        
+                                //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
+                                //in which case; gather the offset of all parents. Otherwise just use what was provided
+                                    offset = offset == undefined ? gatherParentOffset(this) : offset;
+                        
+                                //reset variables
+                                    this.extremities = {
+                                        points:[],
+                                        boundingBox:{},
+                                    };
+                        
+                                //calculate points
+                                    this.extremities.points = this.points.map(function(point){
+                                        point = workspace.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
+                                        point.x += offset.x;
+                                        point.y += offset.y;
+                                        return point;
+                                    });
+                        
+                                //calculate boundingBox
+                                    this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
+                        
+                                //update the points and bounding box of the parent
+                                    if(this.parent != undefined){
+                                        this.parent.computeExtremities();
+                                    }
+                            };
+                        
+                            function isPointWithinBoundingBox(x,y,shape){
+                                if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
+                                return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
+                            }
+                            function isPointWithinHitBox(x,y,shape){
+                                if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
+                                return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
+                            }
+                            this.isPointWithin = function(x,y){
+                                if( isPointWithinBoundingBox(x,y,this) ){
+                                    return isPointWithinHitBox(x,y,this);
+                                }
+                                return false;
+                            };
+                        
+                            function shouldRender(shape){ 
+                                //if this shape is static, always render
+                                    if(shape.static){return true;}
+                                    
+                                //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
+                                    return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
+                            };
+                            this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
+                                //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
+                                    if(!shouldRender(this)){return;}
+                                
+                                //collect and consolidate shape values into a neat package
+                                    var shapeValue = {
+                                        points: this.points.map( function(a){
+                                            a = workspace.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
+                                            return { x:a.x+offset.x, y:a.y+offset.y };
+                                        } ),
+                                        lineWidth: this.style.lineWidth,
+                                    };
+                                
+                                //adapt values
+                                    if(!static){
+                                        shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
+                                        shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
+                                    }
+                        
+                                //clipping
+                                    if(isClipper){
+                                        var region = new Path2D();
+                                        region.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                                        for(var a = 1; a < shapeValue.points.length; a++){
+                                            region.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                                        }
+                                        context.clip(region);
+                                        return;
+                                    }
+                        
+                                //paint this shape as requested
+                                    context.fillStyle = this.style.fill;
+                                    context.strokeStyle = this.style.stroke;
+                                    context.lineWidth = shapeValue.lineWidth;
+                                    context.lineJoin = this.style.lineJoin;
+                                    context.miterLimit = this.style.miterLimit;
+                        
+                                    context.beginPath(); 
+                                    context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
+                                    for(var a = 1; a < shapeValue.points.length; a++){
+                                        context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                                    }
+                                    context.closePath(); 
+                        
+                                    context.fill(); 
+                                    context.stroke();
+                        
+                                //if dotFrame is set, draw in dots fot the points and bounding box extremities
+                                    if(this.dotFrame){
+                                        //points
+                                            for(var a = 0; a < this.extremities.points.length; a++){
+                                                var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
+                                                core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                                            }
+                                        //boudning box
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
+                                            core.render.drawDot( temp.x, temp.y );
+                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
+                                            core.render.drawDot( temp.x, temp.y );
+                                    }
+                            };
+                        
+                        };
                         this.rectangle = function(){
                         
                             this.type = 'rectangle';
@@ -2552,322 +2868,6 @@
                                             core.render.drawDot( temp.x, temp.y );
                                     }
                             }
-                        };
-                        this.group = function(){
-                        
-                            this.type = 'group';
-                        
-                            this.name = '';
-                            this.ignored = false;
-                            this.static = false;
-                            this.clipActive = false;
-                            this.parent = undefined;
-                            this.dotFrame = false;
-                            this.extremities = {
-                                points:[],
-                                boundingBox:{},
-                            };
-                        
-                            this.x = 0;
-                            this.y = 0;
-                            this.angle = 0;
-                            this.children = [];
-                            this.clippingStencil;
-                        
-                        
-                            this.parameter = {};
-                            this.parameter.x = function(shape){ return function(a){if(a==undefined){return shape.x;} shape.x = a; shape.computeExtremities(undefined,true);} }(this);
-                            this.parameter.y = function(shape){ return function(a){if(a==undefined){return shape.y;} shape.y = a; shape.computeExtremities(undefined,true);} }(this);
-                            this.parameter.angle = function(shape){ return function(a){if(a==undefined){return shape.angle;} shape.angle = a; shape.computeExtremities(undefined,true);} }(this);
-                        
-                        
-                        
-                            function checkElementIsValid(group,element){
-                                if(element == undefined){return group.getAddress()+' >> no element provided';}
-                        
-                                //check for name
-                                    if(element.name == undefined || element.name == ''){return group.getAddress()+' >> element has no name'}
-                            
-                                //check that the name is not already taken in this grouping
-                                    for(var a = 0; a < group.children.length; a++){
-                                        if( group.children[a].name == element.name ){ 
-                                            return 'element with the name "'+element.name+'" already exists in the '+(parent==undefined?'design root':'group "'+group.name+'"'); 
-                                        }
-                                    }
-                            }
-                        
-                            this.getAddress = function(){
-                                var address = '';
-                                var tmp = this;
-                                do{
-                                    address = tmp.name + '/' + address;
-                                }while((tmp = tmp.parent) != undefined)
-                        
-                                return '/'+address;
-                            };
-                            this.clip = function(bool){
-                                if(bool == undefined){return this.clipActive;}
-                                this.clipActive = (this.clippingStencil == undefined) ? false : bool;
-                        
-                                //computation of extremities
-                                    this.computeExtremities();
-                            };
-                            this.stencil = function(shape){
-                                if(shape == undefined){return this.clippingStencil;}
-                                this.clippingStencil = shape;
-                        
-                                //computation of extremities
-                                    this.computeExtremities();
-                            };
-                            this.prepend = function(element){
-                                //check that the element is valid
-                                    var temp = checkElementIsValid(this,element);
-                                    if(temp != undefined){console.error('element invalid:',temp); return;}
-                        
-                                //actually add the element
-                                    this.children.unshift(element);
-                        
-                                //inform element of who it's parent is
-                                    element.parent = this;
-                        
-                                //computation of extremities
-                                    element.computeExtremities(undefined,true);
-                            };
-                            this.append = function(element){
-                                //check that the element is valid
-                                    var temp = checkElementIsValid(this, element);
-                                    if(temp != undefined){console.error('element invalid:',temp); return;}
-                        
-                                //actually add the element
-                                    this.children.push(element);
-                        
-                                //inform element of who it's parent is
-                                    element.parent = this;
-                        
-                                //computation of extremities
-                                    element.computeExtremities(undefined,true);
-                            };
-                            this.remove = function(element){
-                                //check that an element was provided
-                                    if(element == undefined){return;}
-                        
-                                //get index of element (if this element isn't in the group, just bail)
-                                    var index = this.children.indexOf(element);
-                                    if(index < 0){return;}
-                        
-                                //actual removal
-                                    this.children.splice(index, 1);
-                        
-                                //computation of extremities
-                                    this.computeExtremities();
-                            };
-                            this.clear = function(){
-                                //empty out children
-                                    this.children = [];
-                        
-                                //computation of extremities
-                                    this.computeExtremities();
-                            };
-                            this.contains = function(element){
-                                for(var a = 0; a < this.children.length; a++){
-                                    if(this.children[a] == element){return true;}
-                                }
-                        
-                                return false;
-                            };
-                            this.getChildByName = function(name){
-                                for(var a = 0; a < this.children.length; a++){
-                                    if( this.children[a].name == name ){ return this.children[a]; }
-                                }
-                            };
-                            this.getElementsWithName = function(name){
-                                var result = [];
-                                for(var a = 0; a < this.children.length; a++){
-                                    if( this.children[a].name == name ){
-                                        result.push(this.children[a]);
-                                    }
-                                    if( this.children[a].type == 'group' ){
-                                        var list = this.children[a].getElementsWithName(name);
-                                        for(var b = 0; b < list.length; b++){ result.push( list[b] ); } //because concat doesn't work
-                                    }
-                                }
-                                return result;
-                            };
-                        
-                            this.getOffset = function(){return gatherParentOffset(this);};
-                            this.computeExtremities = function(offset,deepCompute=false){
-                                //root calculation element
-                                    var rootCalculationElement = offset == undefined;
-                        
-                                //discover if this shape should be static
-                                    var isStatic = this.static;
-                                    var tmp = this;
-                                    while((tmp = tmp.parent) != undefined && !isStatic){
-                                        isStatic = isStatic || tmp.static;
-                                    }
-                                    this.static = isStatic;
-                        
-                                //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-                                //in which case; gather the offset of all parents. Otherwise just use what was provided
-                                    offset = offset == undefined ? gatherParentOffset(this) : offset;
-                        
-                                //if 'deepCompute' is set, recalculate the extremities for all children
-                                    if(deepCompute){
-                                        //calculate offset to be sent down to this group's children
-                                            var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
-                                            var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                                combinedOffset.x += point.x;
-                                                combinedOffset.y += point.y;
-                        
-                                        //request deep calculation from all children
-                                            for(var a = 0; a < this.children.length; a++){
-                                                this.children[a].computeExtremities(combinedOffset,true);
-                                            }
-                                    }
-                        
-                                //reset variables
-                                    this.extremities = {
-                                        points:[],
-                                        boundingBox:{},
-                                    };
-                        
-                                //calculate points
-                                    //assuming clipping is turned off
-                                        if(!this.clipActive){
-                                            //the points for a group, is just the four corners of the bounding box, calculated using
-                                            //the bounding boxes of all the children
-                                            //  -> this method needs to be trashed <-
-                                                var temp = [];
-                                                for(var a = 0; a < this.children.length; a++){
-                                                    temp.push(this.children[a].extremities.boundingBox.topLeft);
-                                                    temp.push(this.children[a].extremities.boundingBox.bottomRight);
-                                                }
-                                                temp = workspace.library.math.boundingBoxFromPoints( temp );
-                                                this.extremities.points = [
-                                                    { x: temp.topLeft.x,     y: temp.topLeft.y,     },
-                                                    { x: temp.bottomRight.x, y: temp.topLeft.y,     },
-                                                    { x: temp.bottomRight.x, y: temp.bottomRight.y, },
-                                                    { x: temp.topLeft.x,     y: temp.bottomRight.y, },
-                                                ];
-                                    //assuming clipping is turned on
-                                        }else{
-                                            //the points for this group are the same as the stencil shape's
-                                                var combinedOffset = { x: offset.x, y: offset.y, a: offset.a + this.angle };
-                                                var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                                    combinedOffset.x += point.x;
-                                                    combinedOffset.y += point.y;
-                                                this.clippingStencil.computeExtremities(combinedOffset);
-                                                this.extremities.points = this.clippingStencil.extremities.points;
-                                        }
-                        
-                                //calculate boundingBox
-                                    this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
-                        
-                                //update the points and bounding box of the parent
-                                    if(this.parent != undefined && rootCalculationElement){
-                                        this.parent.computeExtremities();
-                                    }
-                            };
-                        
-                            function isPointWithinBoundingBox(x,y,shape){
-                                if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-                                return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-                            }
-                            function isPointWithinHitBox(x,y,shape){
-                                if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-                                return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-                            }
-                            this.isPointWithin = function(x,y){
-                                if(this.clipActive){ return this.clippingStencil.isPointWithin(x,y); }
-                        
-                                if( isPointWithinBoundingBox(x,y,this) ){
-                                    return isPointWithinHitBox(x,y,this);
-                                }
-                                return false;
-                            };
-                            this.getElementUnderPoint = function(x,y,static=false,getList=false){
-                                //go through the children in reverse order, discovering if
-                                //  the object is not ignored and,
-                                //  the point is within their bounding box
-                                //if so; if it's a group, follow the 'getElementUnderPoint' function down
-                                //if it's not, return that shape
-                                //otherwise, carry onto the next shape
-                        
-                                var returnList = [];
-                        
-                                for(var a = this.children.length-1; a >= 0; a--){
-                                    //if child shape is static (or any of its parents), use adjusted x and y values for 'isPointWithin' judgement
-                                        var point = (this.children[a].static || static) ? adapter.workspacePoint2windowPoint(x,y) : {x:x,y:y};
-                        
-                                        if( !this.children[a].ignored && this.children[a].isPointWithin(point.x,point.y) ){
-                                            if( this.children[a].type == 'group' ){
-                                                var temp = this.children[a].getElementUnderPoint(x,y,(this.children[a].static || static),getList);
-                                                if(temp != undefined){
-                                                    if(getList){ returnList = returnList.concat(temp); }
-                                                    else{ return temp; }
-                                                }
-                                            }else{
-                                                if(getList){ returnList.push(this.children[a]); }
-                                                else{ return this.children[a]; }
-                                            }
-                                        }
-                                }
-                        
-                                if(getList){return returnList;}
-                            };
-                        
-                            function shouldRender(shape){
-                                //if this shape is static, always render
-                                    if(shape.static){return true;}
-                        
-                                //if any of this shape's children are static, render the group (and let the individuals decide to render themselves or not)
-                                    for(var a = 0; a < shape.children.length; a++){ if(shape.children[a].static){return true;} }
-                        
-                                //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-                                    return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-                            };
-                            this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
-                                //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-                                    if(!shouldRender(this)){return;}
-                        
-                                //adjust offset for parent's angle
-                                    var point = workspace.library.math.cartesianAngleAdjust(this.x,this.y,offset.a);
-                                    var packagedOffset = {
-                                        a: offset.a + this.angle,
-                                        x: offset.x + point.x,
-                                        y: offset.y + point.y,
-                                    };
-                        
-                        
-                                //draw clipping (if active)
-                                    if(this.clipActive || isClipper){
-                                        context.save();
-                                        this.clippingStencil.render( context, Object.assign({},packagedOffset), (static||this.clippingStencil.static), (isClipper||this.clipActive) );
-                                    }
-                        
-                                //cycle through all children, activating their render functions
-                                    for(var a = 0; a < this.children.length; a++){
-                                        var item = this.children[a];
-                                        item.render( context, Object.assign({},packagedOffset), (static||item.static) );
-                                    }
-                        
-                                //undo the clipping (only if there was clipping, ofcourse)
-                                    if(this.clipActive){ context.restore(); }
-                        
-                                //if dotFrame is set, draw in dots fot the points and bounding box extremities
-                                    if(this.dotFrame){
-                                        //points
-                                            for(var a = 0; a < this.extremities.points.length; a++){
-                                                var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                                                core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
-                                            }
-                                        //boudning box
-                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                                            core.render.drawDot( temp.x, temp.y );
-                                            var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                                            core.render.drawDot( temp.x, temp.y );
-                                    }
-                            };
                         };
                         this.text = function(){
                         
@@ -3830,115 +3830,52 @@
                 var interface = this;
             
                 this.circuit = new function(){
-                    this.recorder = function(context){
-                    
-                        //state
-                            var state = {
-                                recordedChunks: [],
-                                recordingStartTime: -1,
-                                recordingLength: 0,
+                    this.audio2percentage = function(){
+                        return new function(){
+                            var analyser = {
+                                timeDomainDataArray: null,
+                                frequencyData: null,
+                                refreshRate: 30,
+                                refreshInterval: null,
+                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                resolution: 128
                             };
+                            analyser.analyserNode = workspace.library.audio.context.createAnalyser();
+                            analyser.analyserNode.fftSize = analyser.resolution;
+                            analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
+                            analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
                     
-                        //flow
-                            //flow chain
-                                var flow = {
-                                    leftIn:{}, rightIn:{},
-                                    recordingNode:{},
-                                    leftOut:{}, rightOut:{},
-                                };
+                            this.__render = function(){
+                                    analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
                     
-                            //leftIn
-                                flow.leftIn.node = context.createAnalyser();
-                            //rightIn
-                                flow.rightIn.node = context.createAnalyser();
+                                    var numbers = [];
+                                    for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
+                                        numbers.push(
+                                            analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
+                                        );
+                                    }
                     
-                            //recordingNode
-                                flow.recordingNode.audioDest = new MediaStreamAudioDestinationNode(context);
-                                flow.recordingNode.node = new MediaRecorder(flow.recordingNode.audioDest.stream, {mimeType : 'audio/webm'});
+                                    var val = 0;
+                                    numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
                     
-                                flow.recordingNode.node.onstart = function(){};
-                                flow.recordingNode.node.ondataavailable = function(e){
-                                    state.recordedChunks.push(e.data);
-                                };
-                                flow.recordingNode.node.onpause = function(){};
-                                flow.recordingNode.node.onresume = function(){};
-                                flow.recordingNode.node.onerror = function(error){console.log(error);};
-                                flow.recordingNode.node.onstop = function(){};
-                    
-                                flow.leftIn.node.connect(flow.recordingNode.audioDest);
-                                flow.rightIn.node.connect(flow.recordingNode.audioDest);
-                    
-                            //leftOut
-                                flow.leftOut.node = context.createAnalyser();
-                                flow.leftIn.node.connect(flow.leftOut.node);
-                            //rightIn
-                                flow.rightOut.node = context.createAnalyser();
-                                flow.rightIn.node.connect(flow.rightOut.node);
-                    
-                    
-                        //internal functions
-                            function getRecordingLength(){
-                                switch(flow.recordingNode.node.state){
-                                    case 'inactive': case 'paused':
-                                        return state.recordingLength;
-                                    break;
-                                    case 'recording':
-                                        return context.currentTime - state.recordingStartTime;
-                                    break;
-                                }            
+                                    this.newValue(val);
                             }
                     
-                        //controls
-                            this.clear =  function(){
-                                this.stop();
-                                state.recordedChunks = [];
-                                state.recordingStartTime = -1;
-                                state.recordingLength = 0;
-                            };
-                            this.start =  function(){
-                                this.clear();
-                                flow.recordingNode.node.start();
-                                state.recordingStartTime = context.currentTime;
-                            };
-                            this.pause =  function(){
-                                if(this.state() == 'inactive'){return;}
-                                state.recordingLength = getRecordingLength();
-                                flow.recordingNode.node.pause();
-                            };
-                            this.resume = function(){
-                                flow.recordingNode.node.resume();
-                                state.recordingStartTime = context.currentTime - state.recordingLength;
-                            };
-                            this.stop =   function(){
-                                if(this.state() == 'inactive'){return;}
-                                state.recordingLength = getRecordingLength();
-                                flow.recordingNode.node.stop();
-                            };
-                            this.export = function(){
-                                return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' });
-                            };
-                            this.save = function(filename='output'){
-                                var a = document.createElement('a');
-                                a.href = URL.createObjectURL(this.export());
-                                a.download = filename+'.ogg';
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                            };
+                            //audio connections
+                                this.audioIn = function(){return analyser.analyserNode;};
                     
-                            this.state = function(){return flow.recordingNode.node.state;};
-                            this.recordingTime = function(){
-                                return getRecordingLength();
-                            };
-                            this.getTrack = function(){return this.export(); };
+                            //methods
+                                this.start = function(){
+                                    analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
+                                };
+                                this.stop = function(){
+                                    clearInterval(analyser.refreshInterval);
+                                };
                     
-                        //io
-                            this.in_left  =  function(){return flow.leftIn.node;};
-                            this.in_right =  function(){return flow.rightIn.node;};
-                            this.out_left  = function(){return flow.leftOut.node;};
-                            this.out_right = function(){return flow.rightOut.node;};
+                            //callbacks
+                                this.newValue = function(a){};
+                        };
                     };
-
                     this.audioIn = function(
                         context, setupConnect=true
                     ){
@@ -3987,6 +3924,176 @@
                         //setup
                             if(setupConnect){this.selectDevice('default');}
                     };
+                    this.channelMultiplier = function(
+                        context, outputCount=2
+                    ){
+                        //flow
+                            //flow chain
+                                var flow = {
+                                    in: {},
+                                    outs:[],
+                                    out_0: {}, out_1: {},
+                                };
+                            
+                            //in
+                                flow.in.gain = 1;
+                                flow.in.node = context.createGain();    
+                                workspace.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                    
+                            //outs
+                                for(var a = 0; a < outputCount; a++){
+                                    var temp = { gain:0.5, node:context.createGain() };
+                                    workspace.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
+                                    flow.outs.push(temp);
+                                    flow.in.node.connect(temp.node);
+                                }
+                    
+                        //input/output node
+                            this.in = function(){return flow.in.node;}
+                            this.out = function(a){return flow.outs[a].node;}
+                    
+                        //controls
+                            this.inGain = function(a){
+                                if(a == undefined){return flow.in.gain;}
+                                flow.in.gain = a;
+                                workspace.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                            };
+                            this.outGain = function(a,value){
+                                if(value == undefined){ return flow.outs[a].gain; }
+                                flow.outs[a].gain = value;
+                                workspace.library.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
+                            };
+                    };
+                        
+                    this.distortionUnit = function(
+                        context,
+                    ){
+                        //flow chain
+                        var flow = {
+                            inAggregator: {},
+                            distortionNode: {},
+                            outAggregator: {},
+                        };
+                    
+                        //inAggregator
+                            flow.inAggregator.gain = 0;
+                            flow.inAggregator.node = context.createGain();
+                            workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                    
+                        //distortionNode
+                            flow.distortionNode.distortionAmount = 0;
+                            flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
+                            flow.distortionNode.resolution = 100;
+                            function makeDistortionNode(){
+                                flow.inAggregator.node.disconnect();
+                                if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
+                                
+                                flow.distortionNode.node = context.createWaveShaper();
+                                    flow.distortionNode.curve = new Float32Array(workspace.library.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
+                                    flow.distortionNode.node.curve = flow.distortionNode.curve;
+                                    flow.distortionNode.node.oversample = flow.distortionNode.oversample;
+                                    
+                                flow.inAggregator.node.connect(flow.distortionNode.node);
+                                flow.distortionNode.node.connect(flow.outAggregator.node);
+                            }
+                    
+                        //outAggregator
+                            flow.outAggregator.gain = 0;
+                            flow.outAggregator.node = context.createGain();    
+                            workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                    
+                    
+                        //input/output node
+                            this.in = function(){return flow.inAggregator.node;}
+                            this.out = function(){return flow.outAggregator.node;}
+                    
+                        //controls
+                            this.inGain = function(a){
+                                if(a==null){return flow.inAggregator.gain;}
+                                flow.inAggregator.gain=a;
+                                workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
+                            };
+                            this.outGain = function(a){
+                                if(a==null){return flow.outAggregator.gain;}
+                                flow.outAggregator.gain=a;
+                                workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                            };
+                            this.distortionAmount = function(a){
+                                if(a==null){return flow.distortionNode.distortionAmount;}
+                                flow.distortionNode.distortionAmount=a;
+                                makeDistortionNode();
+                            };
+                            this.oversample = function(a){
+                                if(a==null){return flow.distortionNode.oversample;}
+                                flow.distortionNode.oversample=a;
+                                makeDistortionNode();
+                            };
+                            this.resolution = function(a){
+                                if(a==null){return flow.distortionNode.resolution;}
+                                flow.distortionNode.resolution = a>=2?a:2;
+                                makeDistortionNode();
+                            };
+                    
+                        //setup
+                            makeDistortionNode();
+                    };
+                    this.filterUnit = function(
+                        context
+                    ){
+                        //flow chain
+                            var flow = {
+                                inAggregator: {},
+                                filterNode: {},
+                                outAggregator: {},
+                            };
+                    
+                        //inAggregator
+                            flow.inAggregator.gain = 1;
+                            flow.inAggregator.node = context.createGain();
+                            workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                    
+                        //filterNode
+                            flow.filterNode.node = context.createBiquadFilter();
+                    	    flow.filterNode.node.type = "lowpass";
+                            workspace.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
+                            workspace.library.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
+                            workspace.library.audio.changeAudioParam(context, flow.filterNode.node.Q,0.1,0.01,'instant',true);
+                    
+                        //outAggregator
+                            flow.outAggregator.gain = 1;
+                            flow.outAggregator.node = context.createGain();
+                            workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                    
+                    
+                        //do connections
+                            flow.inAggregator.node.connect(flow.filterNode.node);
+                            flow.filterNode.node.connect(flow.outAggregator.node);
+                    
+                        //input/output node
+                            this.in = function(){return flow.inAggregator.node;}
+                            this.out = function(){return flow.outAggregator.node;}
+                    
+                        //methods
+                            this.type = function(type){flow.filterNode.node.type = type;};
+                            this.frequency = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
+                            this.gain = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
+                            this.Q = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
+                            this.measureFrequencyResponse = function(start,end,step){
+                                var frequencyArray = [];
+                                for(var a = start; a < end; a += step){frequencyArray.push(a);}
+                            
+                                return this.measureFrequencyResponse_values(frequencyArray);
+                            };
+                            this.measureFrequencyResponse_values = function(frequencyArray){
+                                var Float32_frequencyArray = new Float32Array(frequencyArray);
+                                var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                            
+                                flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+                                return [magResponseOutput,frequencyArray];
+                            };
+                    };
+
                     this.looper = function(context){
                         //state
                             var state = {
@@ -4086,355 +4193,6 @@
                                 state.loop.start = data.start!=undefined ? data.start : state.loop.start;
                                 state.loop.end   = data.end!=undefined ? data.end : state.loop.end;
                             };
-                    };
-
-                    this.oneShot_single = function(context){
-                        //state
-                            var state = {
-                                itself:this,
-                                fileLoaded:false,
-                                rate:1,
-                            };
-                    
-                        //flow
-                            //chain
-                            var flow = {
-                                track:{},
-                                bufferSource:null,
-                                channelSplitter:{},
-                                leftOut:{}, rightOut:{}
-                            };
-                    
-                            //channelSplitter
-                                flow.channelSplitter = context.createChannelSplitter(2);
-                    
-                            //leftOut
-                                flow.leftOut.gain = 1;
-                                flow.leftOut.node = context.createGain();
-                                flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
-                                flow.channelSplitter.connect(flow.leftOut.node, 0);
-                            //rightOut
-                                flow.rightOut.gain = 1;
-                                flow.rightOut.node = context.createGain();
-                                flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
-                                flow.channelSplitter.connect(flow.rightOut.node, 1);
-                    
-                            //output node
-                                this.out_left  = function(){return flow.leftOut.node;}
-                                this.out_right = function(){return flow.rightOut.node;}
-                    
-                                
-                        //controls
-                            this.load = function(type,callback,url=''){
-                                state.fileLoaded = false;
-                                workspace.library.audio.loadAudioFile(
-                                    function(data){
-                                        state.itself.stop();
-                                        flow.track = data;
-                                        state.fileLoaded = true;
-                                        state.needlePosition = 0.0;
-                                        callback(data);
-                                    },
-                                type,url);
-                            };
-                            this.fire = function(){
-                                //check if we should play at all (the file must be loaded)
-                                    if(!state.fileLoaded){return;}
-                                //stop any previous buffers, load buffer, enter settings and start from zero
-                                    if(flow.bufferSource){
-                                        flow.bufferSource.onended = function(){};
-                                        flow.bufferSource.stop(0);
-                                    }
-                                    flow.bufferSource = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
-                                    flow.bufferSource.playbackRate.value = state.rate;
-                                    flow.bufferSource.start(0,0);
-                                    flow.bufferSource.onended = function(){flow.bufferSource = null;};
-                            };
-                            this.stop = function(){
-                                if(!state.fileLoaded){return;}
-                                flow.bufferSource.stop(0);
-                                flow.bufferSource = undefined;
-                            };
-                            this.rate = function(){
-                                state.rate = value;
-                            };
-                    
-                        //info
-                            this.duration = function(){
-                                if(!state.fileLoaded){return -1;}
-                                return flow.track.duration;
-                            };
-                            this.title = function(){
-                                if(!state.fileLoaded){return '';}
-                                return flow.track.name;
-                            };
-                            this.waveformSegment = function(data={start:0,end:1}){
-                                if(data==undefined){return [];}
-                                if(!state.fileLoaded){return [];}
-                                return workspace.library.audio.waveformSegment(flow.track.buffer,data);
-                            };
-                    };
-
-                    this.oneShot_multi = function(context){
-                        //state
-                            var state = {
-                                itself:this,
-                                fileLoaded:false,
-                                rate:1,
-                            };
-                    
-                        //flow
-                            //chain
-                            var flow = {
-                                track:{},
-                                bufferSource:null,
-                                bufferSourceArray:[],
-                                channelSplitter:{},
-                                leftOut:{}, rightOut:{}
-                            };
-                    
-                            //channelSplitter
-                                flow.channelSplitter = context.createChannelSplitter(2);
-                    
-                            //leftOut
-                                flow.leftOut.gain = 1;
-                                flow.leftOut.node = context.createGain();
-                                flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
-                                flow.channelSplitter.connect(flow.leftOut.node, 0);
-                            //rightOut
-                                flow.rightOut.gain = 1;
-                                flow.rightOut.node = context.createGain();
-                                flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
-                                flow.channelSplitter.connect(flow.rightOut.node, 1);
-                    
-                            //output node
-                                this.audioOut = function(channel){
-                                    switch(channel){
-                                        case 'r': return flow.rightOut.node; break;
-                                        case 'l': return flow.leftOut.node; break;
-                                        default: console.error('"part.circuit.alpha.oneShot_multi.audioOut" unknown channel "'+channel+'"'); break;
-                                    }
-                                };
-                                this.out_left  = function(){return this.audioOut('l');}
-                                this.out_right = function(){return this.audioOut('r');}
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                        //loading/unloading
-                            this.loadRaw = function(data){
-                                if(Object.keys(data).length === 0){return;}
-                                flow.track = data;
-                                state.fileLoaded = true;
-                                state.needlePosition = 0.0;
-                            };
-                            this.load = function(type,callback,url){
-                                state.fileLoaded = false;
-                                workspace.library.audio.loadAudioFile(
-                                    function(data){
-                                        state.itself.loadRaw(data);
-                                        if(callback != undefined){ callback(data); }
-                                    },
-                                type,url);
-                            };
-                            this.unloadRaw = function(){
-                                return flow.track;
-                            };
-                    
-                        //control
-                            //play
-                                this.fire = function(start=0,duration){
-                                    //check if we should play at all (the file must be loaded)
-                                        if(!state.fileLoaded){return;}
-                                    //load buffer, add onend code, enter rate setting, start and add to the array
-                                        var temp = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
-                                            flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
-                                        });
-                                        temp.playbackRate.value = state.rate;
-                                        temp.start(0,start*state.rate,duration*state.rate);
-                                        flow.bufferSourceArray.push(temp);
-                                };
-                                this.panic = function(){
-                                    while(flow.bufferSourceArray.length > 0){
-                                        flow.bufferSourceArray.shift().stop(0);
-                                    }
-                                };
-                            //options
-                                this.rate = function(value){ 
-                                    if(value == undefined){return state.rate;}
-                                    if(value == 0){value = 1/1000000;}
-                                    state.rate = value;
-                                };
-                    
-                        //info
-                            this.duration = function(){
-                                if(!state.fileLoaded){return -1;}
-                                return flow.track.duration / state.rate;
-                            };
-                            this.title = function(){
-                                if(!state.fileLoaded){return '';}
-                                return flow.track.name;
-                            };
-                            this.waveformSegment = function(data={start:0,end:1}){
-                                if(data==undefined){return [];}
-                                if(!state.fileLoaded){return [];}
-                                return workspace.library.audio.waveformSegment(flow.track.buffer,data);
-                            };
-                    };
-                    this.audio2percentage = function(){
-                        return new function(){
-                            var analyser = {
-                                timeDomainDataArray: null,
-                                frequencyData: null,
-                                refreshRate: 30,
-                                refreshInterval: null,
-                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                resolution: 128
-                            };
-                            analyser.analyserNode = workspace.library.audio.context.createAnalyser();
-                            analyser.analyserNode.fftSize = analyser.resolution;
-                            analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
-                            analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
-                    
-                            this.__render = function(){
-                                    analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
-                    
-                                    var numbers = [];
-                                    for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
-                                        numbers.push(
-                                            analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
-                                        );
-                                    }
-                    
-                                    var val = 0;
-                                    numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
-                    
-                                    this.newValue(val);
-                            }
-                    
-                            //audio connections
-                                this.audioIn = function(){return analyser.analyserNode;};
-                    
-                            //methods
-                                this.start = function(){
-                                    analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
-                                };
-                                this.stop = function(){
-                                    clearInterval(analyser.refreshInterval);
-                                };
-                    
-                            //callbacks
-                                this.newValue = function(a){};
-                        };
-                    };
-                    this.reverbUnit = function(
-                        context,
-                    ){
-                        //flow chain
-                            var flow = {
-                                inAggregator: {},
-                                reverbGain: {}, bypassGain: {},
-                                reverbNode: {},
-                                outAggregator: {},
-                            };
-                    
-                        //inAggregator
-                            flow.inAggregator.gain = 1;
-                            flow.inAggregator.node = context.createGain();
-                            workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
-                    
-                        //reverbGain / bypassGain
-                            flow.reverbGain.gain = 0.5;
-                            flow.bypassGain.gain = 0.5;
-                            flow.reverbGain.node = context.createGain();
-                            flow.bypassGain.node = context.createGain();
-                            workspace.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
-                            workspace.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
-                    
-                        //reverbNode
-                            flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
-                            flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
-                            flow.reverbNode.node = context.createConvolver();
-                    
-                            function setReverbType(repoURL,type,callback){
-                                var ajaxRequest = new XMLHttpRequest();
-                                ajaxRequest.open('GET', repoURL+type, true);
-                                ajaxRequest.responseType = 'arraybuffer';
-                                ajaxRequest.onload = function(){
-                                    //undo connections
-                                        flow.reverbNode.node.disconnect();
-                                    //create new convolver
-                                        flow.reverbNode.node = context.createConvolver();
-                                    //redo connections
-                                        flow.reverbGain.node.connect(flow.reverbNode.node);
-                                        flow.reverbNode.node.connect(flow.outAggregator.node);
-                                    //load in new buffer
-                                        context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
-                                    //run any callbacks
-                                        if(callback){callback();}  
-                                };
-                                ajaxRequest.send();
-                            }
-                            function getReverbTypeList(repoURL,callback=null){
-                                var ajaxRequest = new XMLHttpRequest();
-                                ajaxRequest.open('GET', repoURL+'available2.list', true);
-                                ajaxRequest.onload = function() {
-                                    var list = ajaxRequest.response.split('\n'); var temp = '';
-                                    
-                                    list[list.length-1] = list[list.length-1].split(''); 
-                                    list[list.length-1].pop();
-                                    list[list.length-1] = list[list.length-1].join('');		
-                    
-                                    list.splice(-1,1);
-                                    
-                                    if(callback == null){console.log(list);}
-                                    else{callback(list);}
-                                }
-                                ajaxRequest.send();
-                            }	
-                    
-                        //outAggregator
-                            flow.outAggregator.gain = 1;
-                            flow.outAggregator.node = context.createGain();    
-                            workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                    
-                        //do connections
-                            flow.inAggregator.node.connect(flow.reverbGain.node);
-                            flow.inAggregator.node.connect(flow.bypassGain.node);
-                            flow.reverbGain.node.connect(flow.reverbNode.node);
-                            flow.bypassGain.node.connect(flow.outAggregator.node);
-                            flow.reverbNode.node.connect(flow.outAggregator.node);
-                    
-                        //input/output node
-                            this.in = function(){return flow.inAggregator.node;}
-                            this.out = function(){return flow.outAggregator.node;}
-                        
-                        //controls
-                            this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
-                            this.type = function(name,callback){
-                                if(name==null){return flow.reverbNode.selectedReverbType;}
-                                flow.reverbNode.selectedReverbType = name;
-                                setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
-                            };
-                            this.outGain = function(a){
-                                if(a==null){return flow.outAggregator.gain;}
-                                flow.outAggregator.gain=a;
-                                workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
-                            };
-                            this.wetdry = function(a){
-                                if(a==null){return flow.reverbGain.gain;}
-                                flow.reverbGain.gain=a;
-                                flow.bypassGain.gain=1-a;
-                                workspace.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
-                                workspace.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
-                            };
-                    
-                        //setup
-                            setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
                     };
 
                     this.multibandFilter = function(
@@ -4563,78 +4321,203 @@
                                     return [magResponseOutput.map(a => a*flow.gainNodes[band].gain*flow.outAggregator.gain),frequencyArray];
                             };
                     };
-                    this.distortionUnit = function(
-                        context,
-                    ){
-                        //flow chain
-                        var flow = {
-                            inAggregator: {},
-                            distortionNode: {},
-                            outAggregator: {},
-                        };
-                    
-                        //inAggregator
-                            flow.inAggregator.gain = 0;
-                            flow.inAggregator.node = context.createGain();
-                            workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
-                    
-                        //distortionNode
-                            flow.distortionNode.distortionAmount = 0;
-                            flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
-                            flow.distortionNode.resolution = 100;
-                            function makeDistortionNode(){
-                                flow.inAggregator.node.disconnect();
-                                if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
-                                
-                                flow.distortionNode.node = context.createWaveShaper();
-                                    flow.distortionNode.curve = new Float32Array(workspace.library.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
-                                    flow.distortionNode.node.curve = flow.distortionNode.curve;
-                                    flow.distortionNode.node.oversample = flow.distortionNode.oversample;
-                                    
-                                flow.inAggregator.node.connect(flow.distortionNode.node);
-                                flow.distortionNode.node.connect(flow.outAggregator.node);
-                            }
-                    
-                        //outAggregator
-                            flow.outAggregator.gain = 0;
-                            flow.outAggregator.node = context.createGain();    
-                            workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                    
-                    
-                        //input/output node
-                            this.in = function(){return flow.inAggregator.node;}
-                            this.out = function(){return flow.outAggregator.node;}
-                    
-                        //controls
-                            this.inGain = function(a){
-                                if(a==null){return flow.inAggregator.gain;}
-                                flow.inAggregator.gain=a;
-                                workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
-                            };
-                            this.outGain = function(a){
-                                if(a==null){return flow.outAggregator.gain;}
-                                flow.outAggregator.gain=a;
-                                workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
-                            };
-                            this.distortionAmount = function(a){
-                                if(a==null){return flow.distortionNode.distortionAmount;}
-                                flow.distortionNode.distortionAmount=a;
-                                makeDistortionNode();
-                            };
-                            this.oversample = function(a){
-                                if(a==null){return flow.distortionNode.oversample;}
-                                flow.distortionNode.oversample=a;
-                                makeDistortionNode();
-                            };
-                            this.resolution = function(a){
-                                if(a==null){return flow.distortionNode.resolution;}
-                                flow.distortionNode.resolution = a>=2?a:2;
-                                makeDistortionNode();
+                    this.oneShot_multi = function(context){
+                        //state
+                            var state = {
+                                itself:this,
+                                fileLoaded:false,
+                                rate:1,
                             };
                     
-                        //setup
-                            makeDistortionNode();
+                        //flow
+                            //chain
+                            var flow = {
+                                track:{},
+                                bufferSource:null,
+                                bufferSourceArray:[],
+                                channelSplitter:{},
+                                leftOut:{}, rightOut:{}
+                            };
+                    
+                            //channelSplitter
+                                flow.channelSplitter = context.createChannelSplitter(2);
+                    
+                            //leftOut
+                                flow.leftOut.gain = 1;
+                                flow.leftOut.node = context.createGain();
+                                flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                flow.channelSplitter.connect(flow.leftOut.node, 0);
+                            //rightOut
+                                flow.rightOut.gain = 1;
+                                flow.rightOut.node = context.createGain();
+                                flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                flow.channelSplitter.connect(flow.rightOut.node, 1);
+                    
+                            //output node
+                                this.audioOut = function(channel){
+                                    switch(channel){
+                                        case 'r': return flow.rightOut.node; break;
+                                        case 'l': return flow.leftOut.node; break;
+                                        default: console.error('"part.circuit.alpha.oneShot_multi.audioOut" unknown channel "'+channel+'"'); break;
+                                    }
+                                };
+                                this.out_left  = function(){return this.audioOut('l');}
+                                this.out_right = function(){return this.audioOut('r');}
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                        //loading/unloading
+                            this.loadRaw = function(data){
+                                if(Object.keys(data).length === 0){return;}
+                                flow.track = data;
+                                state.fileLoaded = true;
+                                state.needlePosition = 0.0;
+                            };
+                            this.load = function(type,callback,url){
+                                state.fileLoaded = false;
+                                workspace.library.audio.loadAudioFile(
+                                    function(data){
+                                        state.itself.loadRaw(data);
+                                        if(callback != undefined){ callback(data); }
+                                    },
+                                type,url);
+                            };
+                            this.unloadRaw = function(){
+                                return flow.track;
+                            };
+                    
+                        //control
+                            //play
+                                this.fire = function(start=0,duration){
+                                    //check if we should play at all (the file must be loaded)
+                                        if(!state.fileLoaded){return;}
+                                    //load buffer, add onend code, enter rate setting, start and add to the array
+                                        var temp = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
+                                            flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
+                                        });
+                                        temp.playbackRate.value = state.rate;
+                                        temp.start(0,start*state.rate,duration*state.rate);
+                                        flow.bufferSourceArray.push(temp);
+                                };
+                                this.panic = function(){
+                                    while(flow.bufferSourceArray.length > 0){
+                                        flow.bufferSourceArray.shift().stop(0);
+                                    }
+                                };
+                            //options
+                                this.rate = function(value){ 
+                                    if(value == undefined){return state.rate;}
+                                    if(value == 0){value = 1/1000000;}
+                                    state.rate = value;
+                                };
+                    
+                        //info
+                            this.duration = function(){
+                                if(!state.fileLoaded){return -1;}
+                                return flow.track.duration / state.rate;
+                            };
+                            this.title = function(){
+                                if(!state.fileLoaded){return '';}
+                                return flow.track.name;
+                            };
+                            this.waveformSegment = function(data={start:0,end:1}){
+                                if(data==undefined){return [];}
+                                if(!state.fileLoaded){return [];}
+                                return workspace.library.audio.waveformSegment(flow.track.buffer,data);
+                            };
                     };
+                    this.oneShot_single = function(context){
+                        //state
+                            var state = {
+                                itself:this,
+                                fileLoaded:false,
+                                rate:1,
+                            };
+                    
+                        //flow
+                            //chain
+                            var flow = {
+                                track:{},
+                                bufferSource:null,
+                                channelSplitter:{},
+                                leftOut:{}, rightOut:{}
+                            };
+                    
+                            //channelSplitter
+                                flow.channelSplitter = context.createChannelSplitter(2);
+                    
+                            //leftOut
+                                flow.leftOut.gain = 1;
+                                flow.leftOut.node = context.createGain();
+                                flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                flow.channelSplitter.connect(flow.leftOut.node, 0);
+                            //rightOut
+                                flow.rightOut.gain = 1;
+                                flow.rightOut.node = context.createGain();
+                                flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                flow.channelSplitter.connect(flow.rightOut.node, 1);
+                    
+                            //output node
+                                this.out_left  = function(){return flow.leftOut.node;}
+                                this.out_right = function(){return flow.rightOut.node;}
+                    
+                                
+                        //controls
+                            this.load = function(type,callback,url=''){
+                                state.fileLoaded = false;
+                                workspace.library.audio.loadAudioFile(
+                                    function(data){
+                                        state.itself.stop();
+                                        flow.track = data;
+                                        state.fileLoaded = true;
+                                        state.needlePosition = 0.0;
+                                        callback(data);
+                                    },
+                                type,url);
+                            };
+                            this.fire = function(){
+                                //check if we should play at all (the file must be loaded)
+                                    if(!state.fileLoaded){return;}
+                                //stop any previous buffers, load buffer, enter settings and start from zero
+                                    if(flow.bufferSource){
+                                        flow.bufferSource.onended = function(){};
+                                        flow.bufferSource.stop(0);
+                                    }
+                                    flow.bufferSource = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                                    flow.bufferSource.playbackRate.value = state.rate;
+                                    flow.bufferSource.start(0,0);
+                                    flow.bufferSource.onended = function(){flow.bufferSource = null;};
+                            };
+                            this.stop = function(){
+                                if(!state.fileLoaded){return;}
+                                flow.bufferSource.stop(0);
+                                flow.bufferSource = undefined;
+                            };
+                            this.rate = function(){
+                                state.rate = value;
+                            };
+                    
+                        //info
+                            this.duration = function(){
+                                if(!state.fileLoaded){return -1;}
+                                return flow.track.duration;
+                            };
+                            this.title = function(){
+                                if(!state.fileLoaded){return '';}
+                                return flow.track.name;
+                            };
+                            this.waveformSegment = function(data={start:0,end:1}){
+                                if(data==undefined){return [];}
+                                if(!state.fileLoaded){return [];}
+                                return workspace.library.audio.waveformSegment(flow.track.buffer,data);
+                            };
+                    };
+
                     this.player = function(context){
                         //state
                             var state = {
@@ -4836,54 +4719,123 @@
                             };
                     };
 
-                    this.channelMultiplier = function(
-                        context, outputCount=2
-                    ){
+                    this.recorder = function(context){
+                    
+                        //state
+                            var state = {
+                                recordedChunks: [],
+                                recordingStartTime: -1,
+                                recordingLength: 0,
+                            };
+                    
                         //flow
                             //flow chain
                                 var flow = {
-                                    in: {},
-                                    outs:[],
-                                    out_0: {}, out_1: {},
+                                    leftIn:{}, rightIn:{},
+                                    recordingNode:{},
+                                    leftOut:{}, rightOut:{},
                                 };
-                            
-                            //in
-                                flow.in.gain = 1;
-                                flow.in.node = context.createGain();    
-                                workspace.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
                     
-                            //outs
-                                for(var a = 0; a < outputCount; a++){
-                                    var temp = { gain:0.5, node:context.createGain() };
-                                    workspace.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
-                                    flow.outs.push(temp);
-                                    flow.in.node.connect(temp.node);
-                                }
+                            //leftIn
+                                flow.leftIn.node = context.createAnalyser();
+                            //rightIn
+                                flow.rightIn.node = context.createAnalyser();
                     
-                        //input/output node
-                            this.in = function(){return flow.in.node;}
-                            this.out = function(a){return flow.outs[a].node;}
+                            //recordingNode
+                                flow.recordingNode.audioDest = new MediaStreamAudioDestinationNode(context);
+                                flow.recordingNode.node = new MediaRecorder(flow.recordingNode.audioDest.stream, {mimeType : 'audio/webm'});
+                    
+                                flow.recordingNode.node.onstart = function(){};
+                                flow.recordingNode.node.ondataavailable = function(e){
+                                    state.recordedChunks.push(e.data);
+                                };
+                                flow.recordingNode.node.onpause = function(){};
+                                flow.recordingNode.node.onresume = function(){};
+                                flow.recordingNode.node.onerror = function(error){console.log(error);};
+                                flow.recordingNode.node.onstop = function(){};
+                    
+                                flow.leftIn.node.connect(flow.recordingNode.audioDest);
+                                flow.rightIn.node.connect(flow.recordingNode.audioDest);
+                    
+                            //leftOut
+                                flow.leftOut.node = context.createAnalyser();
+                                flow.leftIn.node.connect(flow.leftOut.node);
+                            //rightIn
+                                flow.rightOut.node = context.createAnalyser();
+                                flow.rightIn.node.connect(flow.rightOut.node);
+                    
+                    
+                        //internal functions
+                            function getRecordingLength(){
+                                switch(flow.recordingNode.node.state){
+                                    case 'inactive': case 'paused':
+                                        return state.recordingLength;
+                                    break;
+                                    case 'recording':
+                                        return context.currentTime - state.recordingStartTime;
+                                    break;
+                                }            
+                            }
                     
                         //controls
-                            this.inGain = function(a){
-                                if(a == undefined){return flow.in.gain;}
-                                flow.in.gain = a;
-                                workspace.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                            this.clear =  function(){
+                                this.stop();
+                                state.recordedChunks = [];
+                                state.recordingStartTime = -1;
+                                state.recordingLength = 0;
                             };
-                            this.outGain = function(a,value){
-                                if(value == undefined){ return flow.outs[a].gain; }
-                                flow.outs[a].gain = value;
-                                workspace.library.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
+                            this.start =  function(){
+                                this.clear();
+                                flow.recordingNode.node.start();
+                                state.recordingStartTime = context.currentTime;
                             };
+                            this.pause =  function(){
+                                if(this.state() == 'inactive'){return;}
+                                state.recordingLength = getRecordingLength();
+                                flow.recordingNode.node.pause();
+                            };
+                            this.resume = function(){
+                                flow.recordingNode.node.resume();
+                                state.recordingStartTime = context.currentTime - state.recordingLength;
+                            };
+                            this.stop =   function(){
+                                if(this.state() == 'inactive'){return;}
+                                state.recordingLength = getRecordingLength();
+                                flow.recordingNode.node.stop();
+                            };
+                            this.export = function(){
+                                return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' });
+                            };
+                            this.save = function(filename='output'){
+                                var a = document.createElement('a');
+                                a.href = URL.createObjectURL(this.export());
+                                a.download = filename+'.ogg';
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                            };
+                    
+                            this.state = function(){return flow.recordingNode.node.state;};
+                            this.recordingTime = function(){
+                                return getRecordingLength();
+                            };
+                            this.getTrack = function(){return this.export(); };
+                    
+                        //io
+                            this.in_left  =  function(){return flow.leftIn.node;};
+                            this.in_right =  function(){return flow.rightIn.node;};
+                            this.out_left  = function(){return flow.leftOut.node;};
+                            this.out_right = function(){return flow.rightOut.node;};
                     };
-                        
-                    this.filterUnit = function(
-                        context
+
+                    this.reverbUnit = function(
+                        context,
                     ){
                         //flow chain
                             var flow = {
                                 inAggregator: {},
-                                filterNode: {},
+                                reverbGain: {}, bypassGain: {},
+                                reverbNode: {},
                                 outAggregator: {},
                             };
                     
@@ -4892,46 +4844,94 @@
                             flow.inAggregator.node = context.createGain();
                             workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
                     
-                        //filterNode
-                            flow.filterNode.node = context.createBiquadFilter();
-                    	    flow.filterNode.node.type = "lowpass";
-                            workspace.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
-                            workspace.library.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
-                            workspace.library.audio.changeAudioParam(context, flow.filterNode.node.Q,0.1,0.01,'instant',true);
+                        //reverbGain / bypassGain
+                            flow.reverbGain.gain = 0.5;
+                            flow.bypassGain.gain = 0.5;
+                            flow.reverbGain.node = context.createGain();
+                            flow.bypassGain.node = context.createGain();
+                            workspace.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                            workspace.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                    
+                        //reverbNode
+                            flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
+                            flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
+                            flow.reverbNode.node = context.createConvolver();
+                    
+                            function setReverbType(repoURL,type,callback){
+                                var ajaxRequest = new XMLHttpRequest();
+                                ajaxRequest.open('GET', repoURL+type, true);
+                                ajaxRequest.responseType = 'arraybuffer';
+                                ajaxRequest.onload = function(){
+                                    //undo connections
+                                        flow.reverbNode.node.disconnect();
+                                    //create new convolver
+                                        flow.reverbNode.node = context.createConvolver();
+                                    //redo connections
+                                        flow.reverbGain.node.connect(flow.reverbNode.node);
+                                        flow.reverbNode.node.connect(flow.outAggregator.node);
+                                    //load in new buffer
+                                        context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
+                                    //run any callbacks
+                                        if(callback){callback();}  
+                                };
+                                ajaxRequest.send();
+                            }
+                            function getReverbTypeList(repoURL,callback=null){
+                                var ajaxRequest = new XMLHttpRequest();
+                                ajaxRequest.open('GET', repoURL+'available2.list', true);
+                                ajaxRequest.onload = function() {
+                                    var list = ajaxRequest.response.split('\n'); var temp = '';
+                                    
+                                    list[list.length-1] = list[list.length-1].split(''); 
+                                    list[list.length-1].pop();
+                                    list[list.length-1] = list[list.length-1].join('');		
+                    
+                                    list.splice(-1,1);
+                                    
+                                    if(callback == null){console.log(list);}
+                                    else{callback(list);}
+                                }
+                                ajaxRequest.send();
+                            }	
                     
                         //outAggregator
                             flow.outAggregator.gain = 1;
-                            flow.outAggregator.node = context.createGain();
+                            flow.outAggregator.node = context.createGain();    
                             workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
                     
-                    
                         //do connections
-                            flow.inAggregator.node.connect(flow.filterNode.node);
-                            flow.filterNode.node.connect(flow.outAggregator.node);
+                            flow.inAggregator.node.connect(flow.reverbGain.node);
+                            flow.inAggregator.node.connect(flow.bypassGain.node);
+                            flow.reverbGain.node.connect(flow.reverbNode.node);
+                            flow.bypassGain.node.connect(flow.outAggregator.node);
+                            flow.reverbNode.node.connect(flow.outAggregator.node);
                     
                         //input/output node
                             this.in = function(){return flow.inAggregator.node;}
                             this.out = function(){return flow.outAggregator.node;}
+                        
+                        //controls
+                            this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
+                            this.type = function(name,callback){
+                                if(name==null){return flow.reverbNode.selectedReverbType;}
+                                flow.reverbNode.selectedReverbType = name;
+                                setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
+                            };
+                            this.outGain = function(a){
+                                if(a==null){return flow.outAggregator.gain;}
+                                flow.outAggregator.gain=a;
+                                workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                            };
+                            this.wetdry = function(a){
+                                if(a==null){return flow.reverbGain.gain;}
+                                flow.reverbGain.gain=a;
+                                flow.bypassGain.gain=1-a;
+                                workspace.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                                workspace.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                            };
                     
-                        //methods
-                            this.type = function(type){flow.filterNode.node.type = type;};
-                            this.frequency = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
-                            this.gain = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
-                            this.Q = function(value){workspace.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
-                            this.measureFrequencyResponse = function(start,end,step){
-                                var frequencyArray = [];
-                                for(var a = start; a < end; a += step){frequencyArray.push(a);}
-                            
-                                return this.measureFrequencyResponse_values(frequencyArray);
-                            };
-                            this.measureFrequencyResponse_values = function(frequencyArray){
-                                var Float32_frequencyArray = new Float32Array(frequencyArray);
-                                var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                                var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                            
-                                flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
-                                return [magResponseOutput,frequencyArray];
-                            };
+                        //setup
+                            setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
                     };
 
                     this.synthesizer = function(
@@ -5169,6 +5169,84 @@
                     
                     this.collection = new function(){
                         this.basic = new function(){
+                            this.canvas = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1){
+                                var temp = workspace.core.arrangement.createElement('canvas');
+                                temp.name = name;
+                                temp.x = x; temp.y = y;
+                                temp.parameter.width(width);
+                                temp.parameter.height(height);
+                                temp.resolution(resolution);
+                                temp.angle = angle;
+                                temp.anchor = anchor;
+                                temp.ignored = ignored;
+                                return temp;
+                            };
+                            this.circle = function(
+                                name=null, 
+                                x=0, 
+                                y=0, 
+                                r=2,
+                                ignored=false,
+                                fillStyle='rgba(255,100,255,1)', 
+                                strokeStyle='rgba(0,0,0,0)', 
+                                lineWidth=1,
+                                lineJoin='round',
+                                miterLimit=2,
+                            ){
+                                var temp = workspace.core.arrangement.createElement('circle');
+                                temp.name = name;
+                                temp.x = x; temp.y = y;
+                                temp.r = r;
+                                temp.ignored = ignored;
+                                temp.style.fill = fillStyle;
+                                temp.style.stroke = strokeStyle;
+                                temp.style.lineWidth = lineWidth;
+                                temp.style.lineJoin = lineJoin;
+                                temp.style.miterLimit = miterLimit;
+                                return temp;
+                            };
+                            this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
+                                var temp = workspace.core.arrangement.createElement('group');
+                                temp.name = name;
+                                temp.x = x; 
+                                temp.y = y;
+                                temp.angle = angle;
+                                temp.ignored = ignored;
+                                return temp;
+                            };
+                            this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
+                                var temp = workspace.core.arrangement.createElement('image');
+                                temp.name = name;
+                                temp.x = x; temp.y = y;
+                                temp.width = width; temp.height = height;
+                                temp.angle = angle;
+                                temp.anchor = anchor;
+                                temp.ignored = ignored;
+                                temp.url = url;
+                                return temp;
+                            };
+                            this.path = function(
+                                name=null, 
+                                points=[],
+                                ignored=false,
+                                strokeStyle='rgba(0,0,0,1)', 
+                                lineWidth=1,
+                                lineCap='butt',
+                                lineJoin='miter',
+                                miterLimit=2,
+                            ){
+                                var temp = workspace.core.arrangement.createElement('path');
+                                temp.name = name;
+                                temp.points = points;
+                                temp.ignored = ignored;
+                                temp.style.stroke = strokeStyle;
+                                temp.style.lineWidth = lineWidth;
+                                temp.style.lineCap = lineCap;
+                                temp.style.lineJoin = lineJoin;
+                                temp.style.miterLimit = miterLimit;
+                                
+                                return temp;
+                            };
                             this.polygon = function(
                                 name=null, 
                                 points=[], 
@@ -5212,75 +5290,6 @@
                             
                             //     return temp;
                             // };
-                            this.circle = function(
-                                name=null, 
-                                x=0, 
-                                y=0, 
-                                r=2,
-                                ignored=false,
-                                fillStyle='rgba(255,100,255,1)', 
-                                strokeStyle='rgba(0,0,0,0)', 
-                                lineWidth=1,
-                                lineJoin='round',
-                                miterLimit=2,
-                            ){
-                                var temp = workspace.core.arrangement.createElement('circle');
-                                temp.name = name;
-                                temp.x = x; temp.y = y;
-                                temp.r = r;
-                                temp.ignored = ignored;
-                                temp.style.fill = fillStyle;
-                                temp.style.stroke = strokeStyle;
-                                temp.style.lineWidth = lineWidth;
-                                temp.style.lineJoin = lineJoin;
-                                temp.style.miterLimit = miterLimit;
-                                return temp;
-                            };
-                            this.canvas = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1){
-                                var temp = workspace.core.arrangement.createElement('canvas');
-                                temp.name = name;
-                                temp.x = x; temp.y = y;
-                                temp.parameter.width(width);
-                                temp.parameter.height(height);
-                                temp.resolution(resolution);
-                                temp.angle = angle;
-                                temp.anchor = anchor;
-                                temp.ignored = ignored;
-                                return temp;
-                            };
-                            this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
-                                var temp = workspace.core.arrangement.createElement('image');
-                                temp.name = name;
-                                temp.x = x; temp.y = y;
-                                temp.width = width; temp.height = height;
-                                temp.angle = angle;
-                                temp.anchor = anchor;
-                                temp.ignored = ignored;
-                                temp.url = url;
-                                return temp;
-                            };
-                            this.path = function(
-                                name=null, 
-                                points=[],
-                                ignored=false,
-                                strokeStyle='rgba(0,0,0,1)', 
-                                lineWidth=1,
-                                lineCap='butt',
-                                lineJoin='miter',
-                                miterLimit=2,
-                            ){
-                                var temp = workspace.core.arrangement.createElement('path');
-                                temp.name = name;
-                                temp.points = points;
-                                temp.ignored = ignored;
-                                temp.style.stroke = strokeStyle;
-                                temp.style.lineWidth = lineWidth;
-                                temp.style.lineCap = lineCap;
-                                temp.style.lineJoin = lineJoin;
-                                temp.style.miterLimit = miterLimit;
-                                
-                                return temp;
-                            };
                             this.rectangle = function(
                                 name=null, 
                                 x=0, 
@@ -5308,15 +5317,6 @@
                                 temp.style.lineWidth = lineWidth;
                                 temp.style.lineJoin = lineJoin;
                                 temp.style.miterLimit = miterLimit;
-                                return temp;
-                            };
-                            this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
-                                var temp = workspace.core.arrangement.createElement('group');
-                                temp.name = name;
-                                temp.x = x; 
-                                temp.y = y;
-                                temp.angle = angle;
-                                temp.ignored = ignored;
                                 return temp;
                             };
                             this.text = function(
@@ -5358,84 +5358,2163 @@
                             };
                         };
                         this.control = new function(){
-                            this.rastorgrid = function(
-                                name='rastorgrid', 
-                                x, y, width=80, height=80, angle=0, interactable=true,
-                                xcount=5, ycount=5,
-                                backingStyle = 'rgba(200,200,200,1)',
-                                checkStyle = 'rgba(150,150,150,1)',
-                                backingGlowStyle = 'rgba(220,220,220,1)',
-                                checkGlowStyle = 'rgba(220,220,220,1)',
+                            this.button_ = function(
+                                name='',
+                                x, y, angle=0, interactable=true,
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            
+                                subject
+                            ){
+                                if(subject == undefined){console.warn('button_ : No subject provided');}
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //subject
+                                        object.append(subject);
+                            
+                                //state
+                                    object.state = {
+                                        hovering:false,
+                                        glowing:false,
+                                        selected:false,
+                                        pressed:false,
+                                    };
+                            
+                                //control
+                                    object.press = function(event){
+                                        if(!active){return;}
+                            
+                                        if( pressable ){
+                                            if(this.state.pressed){return;}
+                                            this.state.pressed = true;
+                                            if(this.onpress){this.onpress(this, event);}
+                                        }
+                                        
+                                        this.select( !this.select(), event );
+                            
+                                        object.activateGraphicalState(object.state);
+                                    };
+                                    object.release = function(event){
+                                        if(!active || !pressable){return;}
+                            
+                                        if(!this.state.pressed){return;}
+                                        this.state.pressed = false;
+                                        object.activateGraphicalState(object.state);
+                                        if(this.onrelease){this.onrelease(this, event);}
+                                    };
+                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; object.activateGraphicalState(object.state); };
+                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  object.activateGraphicalState(object.state); };
+                                    object.select = function(bool,event,callback=true){ 
+                                        if(!active){return;}
+                            
+                                        if(bool == undefined){return this.state.selected;}
+                                        if(!selectable){return;}
+                                        if(this.state.selected == bool){return;}
+                                        this.state.selected = bool; object.activateGraphicalState(object.state);
+                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                                    object.forceMouseLeave = function(){
+                                        object.state.hovering = false; 
+                                        object.release('forced'); 
+                                        object.activateGraphicalState(object.state); 
+                                        if(object.onleave){object.onleave('forced');}
+                                    };
+                            
+                            
+                            
+                            
+                                //interactivity
+                                    subject.cover.onmouseenter = function(x,y,event){
+                                        object.state.hovering = true;  
+                                        object.activateGraphicalState(object.state);
+                                        if(object.onenter){object.onenter(event);}
+                                        if(event.buttons == 1){subject.cover.onmousedown(event);} 
+                                    };
+                                    subject.cover.onmouseleave = function(x,y,event){ 
+                                        object.state.hovering = false; 
+                                        object.release(event); 
+                                        object.activateGraphicalState(object.state); 
+                                        if(object.onleave){object.onleave(event);}
+                                    };
+                                    subject.cover.onmouseup = function(x,y,event){   if(!interactable){return;} object.release(event); };
+                                    subject.cover.onmousedown = function(x,y,event){ if(!interactable){return;} object.press(event); };
+                                    subject.cover.ondblclick = function(x,y,event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
+                                    
+                            
+                            
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselect = onselect;
+                                    object.ondeselect = ondeselect;
+                            
+                                return object;
+                            };
+                            this.button_circle = function(
+                                name='button_circle',
+                                x, y, r=15,  angle=0, interactable=true,
+                                text_centre='',
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_fill = 'rgba(0,0,0,1)',
+                                text_stroke = 'rgba(0,0,0,0)',
+                                text_lineWidth = 1,
+                            
+                                backing__off__fill=                          'rgba(180,180,180,1)',
+                                backing__off__stroke=                        'rgba(0,0,0,0)',
+                                backing__off__lineWidth=                     0,
+                                backing__up__fill=                           'rgba(200,200,200,1)',
+                                backing__up__stroke=                         'rgba(0,0,0,0)',
+                                backing__up__lineWidth=                      0,
+                                backing__press__fill=                        'rgba(230,230,230,1)',
+                                backing__press__stroke=                      'rgba(0,0,0,0)',
+                                backing__press__lineWidth=                   0,
+                                backing__select__fill=                       'rgba(200,200,200,1)',
+                                backing__select__stroke=                     'rgba(120,120,120,1)',
+                                backing__select__lineWidth=                  0.75,
+                                backing__select_press__fill=                 'rgba(230,230,230,1)',
+                                backing__select_press__stroke=               'rgba(120,120,120,1)',
+                                backing__select_press__lineWidth=            0.75,
+                                backing__glow__fill=                         'rgba(220,220,220,1)',
+                                backing__glow__stroke=                       'rgba(0,0,0,0)',
+                                backing__glow__lineWidth=                    0,
+                                backing__glow_press__fill=                   'rgba(250,250,250,1)',
+                                backing__glow_press__stroke=                 'rgba(0,0,0,0)',
+                                backing__glow_press__lineWidth=              0,
+                                backing__glow_select__fill=                  'rgba(220,220,220,1)',
+                                backing__glow_select__stroke=                'rgba(120,120,120,1)',
+                                backing__glow_select__lineWidth=             0.75,
+                                backing__glow_select_press__fill=            'rgba(250,250,250,1)',
+                                backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                                backing__glow_select_press__lineWidth=       0.75,
+                                backing__hover__fill=                        'rgba(220,220,220,1)',
+                                backing__hover__stroke=                      'rgba(0,0,0,0)',
+                                backing__hover__lineWidth=                   0,
+                                backing__hover_press__fill=                  'rgba(240,240,240,1)',
+                                backing__hover_press__stroke=                'rgba(0,0,0,0)',
+                                backing__hover_press__lineWidth=             0,
+                                backing__hover_select__fill=                 'rgba(220,220,220,1)',
+                                backing__hover_select__stroke=               'rgba(120,120,120,1)',
+                                backing__hover_select__lineWidth=            0.75,
+                                backing__hover_select_press__fill=           'rgba(240,240,240,1)',
+                                backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                                backing__hover_select_press__lineWidth=      0.75,
+                                backing__hover_glow__fill=                   'rgba(240,240,240,1)',
+                                backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                                backing__hover_glow__lineWidth=              0,
+                                backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                                backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                                backing__hover_glow_press__lineWidth=        0,
+                                backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                                backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                                backing__hover_glow_select__lineWidth=       0.75,
+                                backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                                backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                                backing__hover_glow_select_press__lineWidth= 0.75,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('circle','backing',{r:r, style:{
+                                            fill:backing__off__fill,
+                                            stroke:backing__off__stroke,
+                                            lineWidth:backing__off__lineWidth,
+                                        }});
+                                        subject.append(backing);
+                                    //text
+                                        var text_centre = interfacePart.builder('text','centre', {
+                                            text:text_centre, 
+                                            style:{
+                                                font:text_font,
+                                                testBaseline:text_textBaseline,
+                                                fill:text_fill,
+                                                stroke:text_stroke,
+                                                lineWidth:text_lineWidth,
+                                                textAlign:'center',
+                                                textBaseline:'middle',
+                                            }
+                                        });
+                                        subject.append(text_centre);
+                                    //cover
+                                        subject.cover = interfacePart.builder('circle','cover',{r:r, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.style.fill = backing__off__fill;
+                                            backing.style.stroke = backing__off__stroke;
+                                            backing.style.lineWidth = backing__off__lineWidth;
+                                            return;
+                                        }
+                            
+                                        var styles = [
+                                            { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
+                                            { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
+                                            { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
+                                            { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
+                                            { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
+                                            { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
+                                            { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
+                                            { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
+                                            { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
+                                            { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
+                                            { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
+                                            { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
+                                            { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
+                                            { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
+                                            { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
+                                            { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
+                                        ];
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+                                        backing.style.fill =       styles[i].fill;
+                                        backing.style.stroke =     styles[i].stroke;
+                                        backing.style.lineWidth =  styles[i].lineWidth;
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.button_image = function(
+                                name='button_image',
+                                x, y, width=30, height=20, angle=0, interactable=true,
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                backingURL__off,
+                                backingURL__up,
+                                backingURL__press,
+                                backingURL__select,
+                                backingURL__select_press,
+                                backingURL__glow,
+                                backingURL__glow_press,
+                                backingURL__glow_select,
+                                backingURL__glow_select_press,
+                                backingURL__hover,
+                                backingURL__hover_press,
+                                backingURL__hover_select,
+                                backingURL__hover_select_press,
+                                backingURL__hover_glow,
+                                backingURL__hover_glow_press,
+                                backingURL__hover_glow_select,
+                                backingURL__hover_glow_select_press,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //default to non-image version if image links are missing
+                                    if(
+                                        backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
+                                        backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 
+                                        backingURL__glow_press == undefined ||         backingURL__glow_select == undefined ||          backingURL__glow_select_press == undefined || 
+                                        backingURL__hover == undefined ||              backingURL__hover_press == undefined ||          backingURL__hover_select == undefined ||
+                                        backingURL__hover_select_press == undefined || backingURL__hover_glow == undefined ||           backingURL__hover_glow_press == undefined || 
+                                        backingURL__hover_glow_select == undefined ||  backingURL__hover_glow_select_press == undefined
+                                    ){
+                                        return this.button_rectangle(
+                                            name, x, y, width, height, angle, interactable,
+                                            undefined, undefined, undefined, undefined, undefined,
+                                            active, hoverable, selectable, pressable,
+                                            undefined, undefined, undefined, undefined, undefined,
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined,
+                                            onenter, onleave, onpress, ondblpress, onrelease, onselect, ondeselect
+                                        );
+                                    }
+                            
+                            
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL__off});
+                                        subject.append(backing);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.style.fill = backing__off__fill;
+                                            backing.style.stroke = backing__off__stroke;
+                                            backing.style.lineWidth = backing__off__lineWidth;
+                                            return;
+                                        }
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        backing.url = [
+                                            backingURL__up,                     
+                                            backingURL__press,                  
+                                            backingURL__select,                 
+                                            backingURL__select_press,           
+                                            backingURL__glow,                   
+                                            backingURL__glow_press,             
+                                            backingURL__glow_select,            
+                                            backingURL__glow_select_press,      
+                                            backingURL__hover,                  
+                                            backingURL__hover_press,            
+                                            backingURL__hover_select,           
+                                            backingURL__hover_select_press,     
+                                            backingURL__hover_glow,             
+                                            backingURL__hover_glow_press,       
+                                            backingURL__hover_glow_select,      
+                                            backingURL__hover_glow_select_press,
+                                        ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ];
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.button_polygon = function(
+                                name='button_polygon',
+                                x, y, points=[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}], angle=0, interactable=true,
+                                text_centre='',
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_fill = 'rgba(0,0,0,1)',
+                                text_stroke = 'rgba(0,0,0,0)',
+                                text_lineWidth = 1,
+                            
+                                backing__off__fill=                          'rgba(180,180,180,1)',
+                                backing__off__stroke=                        'rgba(0,0,0,0)',
+                                backing__off__lineWidth=                     0,
+                                backing__up__fill=                           'rgba(200,200,200,1)',
+                                backing__up__stroke=                         'rgba(0,0,0,0)',
+                                backing__up__lineWidth=                      0,
+                                backing__press__fill=                        'rgba(230,230,230,1)',
+                                backing__press__stroke=                      'rgba(0,0,0,0)',
+                                backing__press__lineWidth=                   0,
+                                backing__select__fill=                       'rgba(200,200,200,1)',
+                                backing__select__stroke=                     'rgba(120,120,120,1)',
+                                backing__select__lineWidth=                  0.75,
+                                backing__select_press__fill=                 'rgba(230,230,230,1)',
+                                backing__select_press__stroke=               'rgba(120,120,120,1)',
+                                backing__select_press__lineWidth=            0.75,
+                                backing__glow__fill=                         'rgba(220,220,220,1)',
+                                backing__glow__stroke=                       'rgba(0,0,0,0)',
+                                backing__glow__lineWidth=                    0,
+                                backing__glow_press__fill=                   'rgba(250,250,250,1)',
+                                backing__glow_press__stroke=                 'rgba(0,0,0,0)',
+                                backing__glow_press__lineWidth=              0,
+                                backing__glow_select__fill=                  'rgba(220,220,220,1)',
+                                backing__glow_select__stroke=                'rgba(120,120,120,1)',
+                                backing__glow_select__lineWidth=             0.75,
+                                backing__glow_select_press__fill=            'rgba(250,250,250,1)',
+                                backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                                backing__glow_select_press__lineWidth=       0.75,
+                                backing__hover__fill=                        'rgba(220,220,220,1)',
+                                backing__hover__stroke=                      'rgba(0,0,0,0)',
+                                backing__hover__lineWidth=                   0,
+                                backing__hover_press__fill=                  'rgba(240,240,240,1)',
+                                backing__hover_press__stroke=                'rgba(0,0,0,0)',
+                                backing__hover_press__lineWidth=             0,
+                                backing__hover_select__fill=                 'rgba(220,220,220,1)',
+                                backing__hover_select__stroke=               'rgba(120,120,120,1)',
+                                backing__hover_select__lineWidth=            0.75,
+                                backing__hover_select_press__fill=           'rgba(240,240,240,1)',
+                                backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                                backing__hover_select_press__lineWidth=      0.75,
+                                backing__hover_glow__fill=                   'rgba(240,240,240,1)',
+                                backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                                backing__hover_glow__lineWidth=              0,
+                                backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                                backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                                backing__hover_glow_press__lineWidth=        0,
+                                backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                                backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                                backing__hover_glow_select__lineWidth=       0.75,
+                                backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                                backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                                backing__hover_glow_select_press__lineWidth= 0.75,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('polygon','backing',{points:points, style:{
+                                            fill:backing__off__fill,
+                                            stroke:backing__off__stroke,
+                                            lineWidth:backing__off__lineWidth,
+                                        }});
+                                        subject.append(backing);
+                                        var avgPoint = workspace.library.math.averagePoint(points);
+                                    //text
+                                        var text_centre = interfacePart.builder('text','centre', {
+                                            x:avgPoint.x, y:avgPoint.y,
+                                            text:text_centre, 
+                                            style:{
+                                                font:text_font,
+                                                testBaseline:text_textBaseline,
+                                                fill:text_fill,
+                                                stroke:text_stroke,
+                                                lineWidth:text_lineWidth,
+                                                textAlign:'center',
+                                                textBaseline:'middle',
+                                            }
+                                        });
+                                        subject.append(text_centre);
+                                    //cover
+                                        subject.cover = interfacePart.builder('polygon','cover',{points:points, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.style.fill = backing__off__fill;
+                                            backing.style.stroke = backing__off__stroke;
+                                            backing.style.lineWidth = backing__off__lineWidth;
+                                            return;
+                                        }
+                            
+                                        var styles = [
+                                            { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
+                                            { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
+                                            { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
+                                            { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
+                                            { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
+                                            { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
+                                            { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
+                                            { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
+                                            { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
+                                            { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
+                                            { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
+                                            { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
+                                            { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
+                                            { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
+                                            { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
+                                            { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
+                                        ];
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+                                        backing.style.fill =       styles[i].fill;
+                                        backing.style.stroke =     styles[i].stroke;
+                                        backing.style.lineWidth =  styles[i].lineWidth;
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.button_rectangle = function(
+                                name='button_rectangle',
+                                x, y, width=30, height=20, angle=0, interactable=true,
+                                text_centre='', text_left='', text_right='',
+                                textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_fill = 'rgba(0,0,0,1)',
+                                text_stroke = 'rgba(0,0,0,0)',
+                                text_lineWidth = 1,
+                            
+                                backing__off__fill=                          'rgba(180,180,180,1)',
+                                backing__off__stroke=                        'rgba(0,0,0,0)',
+                                backing__off__lineWidth=                     0,
+                                backing__up__fill=                           'rgba(200,200,200,1)',
+                                backing__up__stroke=                         'rgba(0,0,0,0)',
+                                backing__up__lineWidth=                      0,
+                                backing__press__fill=                        'rgba(230,230,230,1)',
+                                backing__press__stroke=                      'rgba(0,0,0,0)',
+                                backing__press__lineWidth=                   0,
+                                backing__select__fill=                       'rgba(200,200,200,1)',
+                                backing__select__stroke=                     'rgba(120,120,120,1)',
+                                backing__select__lineWidth=                  0.75,
+                                backing__select_press__fill=                 'rgba(230,230,230,1)',
+                                backing__select_press__stroke=               'rgba(120,120,120,1)',
+                                backing__select_press__lineWidth=            0.75,
+                                backing__glow__fill=                         'rgba(220,220,220,1)',
+                                backing__glow__stroke=                       'rgba(0,0,0,0)',
+                                backing__glow__lineWidth=                    0,
+                                backing__glow_press__fill=                   'rgba(250,250,250,1)',
+                                backing__glow_press__stroke=                 'rgba(0,0,0,0)',
+                                backing__glow_press__lineWidth=              0,
+                                backing__glow_select__fill=                  'rgba(220,220,220,1)',
+                                backing__glow_select__stroke=                'rgba(120,120,120,1)',
+                                backing__glow_select__lineWidth=             0.75,
+                                backing__glow_select_press__fill=            'rgba(250,250,250,1)',
+                                backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                                backing__glow_select_press__lineWidth=       0.75,
+                                backing__hover__fill=                        'rgba(220,220,220,1)',
+                                backing__hover__stroke=                      'rgba(0,0,0,0)',
+                                backing__hover__lineWidth=                   0,
+                                backing__hover_press__fill=                  'rgba(240,240,240,1)',
+                                backing__hover_press__stroke=                'rgba(0,0,0,0)',
+                                backing__hover_press__lineWidth=             0,
+                                backing__hover_select__fill=                 'rgba(220,220,220,1)',
+                                backing__hover_select__stroke=               'rgba(120,120,120,1)',
+                                backing__hover_select__lineWidth=            0.75,
+                                backing__hover_select_press__fill=           'rgba(240,240,240,1)',
+                                backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                                backing__hover_select_press__lineWidth=      0.75,
+                                backing__hover_glow__fill=                   'rgba(240,240,240,1)',
+                                backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                                backing__hover_glow__lineWidth=              0,
+                                backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                                backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                                backing__hover_glow_press__lineWidth=        0,
+                                backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                                backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                                backing__hover_glow_select__lineWidth=       0.75,
+                                backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                                backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                                backing__hover_glow_select_press__lineWidth= 0.75,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
+                                            fill:backing__off__fill,
+                                            stroke:backing__off__stroke,
+                                            lineWidth:backing__off__lineWidth,
+                                        }});
+                                        subject.append(backing);
+                                    //text
+                                        var text_centre = interfacePart.builder('text','centre', {
+                                            x:width/2, 
+                                            y:height*textVerticalOffsetMux, 
+                                            text:text_centre, 
+                                            style:{
+                                                font:text_font,
+                                                testBaseline:text_textBaseline,
+                                                fill:text_fill,
+                                                stroke:text_stroke,
+                                                lineWidth:text_lineWidth,
+                                                textAlign:'center',
+                                                textBaseline:'middle',
+                                            }
+                                        });
+                                        subject.append(text_centre);
+                                        var text_left = interfacePart.builder('text','left',     {
+                                            x:width*textHorizontalOffsetMux, 
+                                            y:height*textVerticalOffsetMux, 
+                                            text:text_left, 
+                                            style:{
+                                                font:text_font,
+                                                testBaseline:text_textBaseline,
+                                                fill:text_fill,
+                                                stroke:text_stroke,
+                                                lineWidth:text_lineWidth,
+                                                textAlign:'left',
+                                                textBaseline:'middle',
+                                            }
+                                        });
+                                        subject.append(text_left);
+                                        var text_right = interfacePart.builder('text','right',   {
+                                            x:width-(width*textHorizontalOffsetMux), 
+                                            y:height*textVerticalOffsetMux, 
+                                            text:text_right, 
+                                            style:{
+                                                font:text_font,
+                                                testBaseline:text_textBaseline,
+                                                fill:text_fill,
+                                                stroke:text_stroke,
+                                                lineWidth:text_lineWidth,
+                                                textAlign:'right',
+                                                textBaseline:'middle',
+                                            }
+                                        });
+                                        subject.append(text_right);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.style.fill = backing__off__fill;
+                                            backing.style.stroke = backing__off__stroke;
+                                            backing.style.lineWidth = backing__off__lineWidth;
+                                            return;
+                                        }
+                            
+                                        var styles = [
+                                            { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
+                                            { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
+                                            { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
+                                            { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
+                                            { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
+                                            { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
+                                            { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
+                                            { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
+                                            { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
+                                            { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
+                                            { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
+                                            { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
+                                            { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
+                                            { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
+                                            { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
+                                            { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
+                                        ];
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+                                        backing.style.fill =       styles[i].fill;
+                                        backing.style.stroke =     styles[i].stroke;
+                                        backing.style.lineWidth =  styles[i].lineWidth;
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.checkbox_ = function(
+                                name='checkbox_',
+                                x, y, angle=0, interactable=true,
+                            
                                 onchange = function(){},
+                            
+                                subject
+                            ){
+                                if(subject == undefined){console.warn('checkbox_ : No subject provided');}
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //subject
+                                        object.append(subject);
+                            
+                                //state
+                                    var state = {
+                                        checked:false,
+                                        glowing:false,
+                                    };
+                            
+                                //methods
+                                    object.get = function(){ return state.checked; };
+                                    object.set = function(value, update=true){
+                                        state.checked = value;
+                                        
+                                        object.updateGraphics(state);
+                                
+                                        if(update&&this.onchange){ this.onchange(value); }
+                                    };
+                                    object.light = function(state){
+                                        if(state == undefined){ return state.glowing; }
+                            
+                                        state.glowing = state;
+                            
+                                        object.updateGraphics(state);
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                                //interactivity
+                                    subject.cover.onclick = function(event){
+                                        if(!interactable){return;}
+                                        object.set(!object.get());
+                                    };
+                                    subject.cover.onmousedown = function(){};
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                            
+                                return object;
+                            };
+                            this.checkbox_circle = function(
+                                name='checkbox_circle',
+                                x, y, r=10, angle=0, interactable=true,
+                                checkStyle = 'rgba(150,150,150,1)',
+                                backingStyle = 'rgba(200,200,200,1)',
+                                checkGlowStyle = 'rgba(220,220,220,1)',
+                                backingGlowStyle = 'rgba(220,220,220,1)',
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('circle','backing',{r:r, style:{fill:backingStyle}});
+                                        subject.append(backing);
+                                    //check
+                                        var checkrect = interfacePart.builder('circle','checkrect',{r:r*0.8, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(checkrect);
+                                    //cover
+                                        subject.cover = interfacePart.builder('circle','cover',{r:r, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.style.fill = backingGlowStyle;
+                                            checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
+                                        }else{
+                                            backing.style.fill = backingStyle;
+                                            checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_image = function(
+                                name='checkbox_image',
+                                x, y, width=20, height=20, angle=0, interactable=true,
+                                uncheckURL, checkURL, checkGlowURL, backingGlowURL,
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:uncheckURL});
+                                        subject.append(backing);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){ 
+                                        if(state.glowing){
+                                            backing.url = state.checked ? checkGlowURL : uncheckGlowURL;
+                                        }else{
+                                            backing.url = state.checked ? checkURL : uncheckURL;
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_polygon = function(
+                                name='checkbox_polygon',
+                                x, y, 
+                                outterPoints=[{x:0,y:4},{x:4,y:0}, {x:16,y:0},{x:20,y:4}, {x:20,y:16},{x:16,y:20},{x:4,y:20},{x:0,y:16}],
+                                innerPoints=[ {x:2,y:4},{x:4,y:2}, {x:16,y:2},{x:18,y:4}, {x:18,y:16},{x:16,y:18}, {x:4,y:18},{x:2,y:16}],
+                                angle=0, interactable=true,
+                                checkStyle = 'rgba(150,150,150,1)',
+                                backingStyle = 'rgba(200,200,200,1)',
+                                checkGlowStyle = 'rgba(220,220,220,1)',
+                                backingGlowStyle = 'rgba(220,220,220,1)',
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('polygon','backing',{points:outterPoints, style:{fill:backingStyle}});
+                                        subject.append(backing);
+                                    //check
+                                        var checkrect = interfacePart.builder('polygon','checkrect',{points:innerPoints, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(checkrect);
+                                    //cover
+                                        subject.cover = interfacePart.builder('polygon','cover',{points:outterPoints, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.style.fill = backingGlowStyle;
+                                            checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
+                                        }else{
+                                            backing.style.fill = backingStyle;
+                                            checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_rectangle = function(
+                                name='checkbox_rectangle',
+                                x, y, width=20, height=20, angle=0, interactable=true,
+                                checkStyle = 'rgba(150,150,150,1)',
+                                backingStyle = 'rgba(200,200,200,1)',
+                                checkGlowStyle = 'rgba(220,220,220,1)',
+                                backingGlowStyle = 'rgba(220,220,220,1)',
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                                        subject.append(backing);
+                                    //check
+                                        var checkrect = interfacePart.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(checkrect);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.style.fill = backingGlowStyle;
+                                            checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
+                                        }else{
+                                            backing.style.fill = backingStyle;
+                                            checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.dial_continuous = function(
+                                name='dial_continuous',
+                                x, y, r=15, angle=0, interactable=true,
+                                value=0, resetValue=-1,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleStyle = {fill:'rgba(200,200,200,1)'},
+                                slotStyle = {fill:'rgba(50,50,50,1)'},
+                                needleStyle = {fill:'rgba(250,100,100,1)'},
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
                             ){
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     
-                                    //checkboxes
-                                        for(var y = 0; y < ycount; y++){
-                                            for(var x = 0; x < xcount; x++){
-                                                var temp = interfacePart.builder('checkbox_rect',y+'_'+x,{
-                                                    x:x*(width/xcount),  y:y*(height/ycount), 
-                                                    width:width/xcount,  height:height/ycount, interactable:interactable,
-                                                    style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
-                                                    onchange:function(){ if(object.onchange){object.onchange(object.get());} },
-                                                });
-                                                object.append(temp);
-                                            }
-                                        }
+                                    //slot
+                                        var slot = interfacePart.builder('circle','slot',{r:r*1.1, style:{
+                                            fill:slotStyle.fill,
+                                            stroke:slotStyle.stroke,
+                                            lineWidth:slotStyle.lineWidth,
+                                            lineJoin:slotStyle.lineJoin,
+                                            miterLimit:slotStyle.miterLimit,
+                                        }});
+                                        object.append(slot);
+                            
+                                    //handle
+                                        var handle = interfacePart.builder('circle','handle',{r:r, style:{
+                                            fill:handleStyle.fill,
+                                            stroke:handleStyle.stroke,
+                                            lineWidth:handleStyle.lineWidth,
+                                            lineJoin:handleStyle.lineJoin,
+                                            miterLimit:handleStyle.miterLimit,
+                                        }});
+                                        object.append(handle);
+                            
+                                    //needle group
+                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
+                                        object.append(needleGroup);
+                            
+                                        //needle
+                                            var needleWidth = r/5;
+                                            var needleLength = r;
+                                            var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{
+                                                fill:needleStyle.fill,
+                                                stroke:needleStyle.stroke,
+                                                lineWidth:needleStyle.lineWidth,
+                                                lineJoin:needleStyle.lineJoin,
+                                                miterLimit:needleStyle.miterLimit,
+                                            }});
+                                            needleGroup.append(needle);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        value = a;
+                                        needleGroup.parameter.angle(startAngle + maxAngle*value);
+                                    }
                             
                             
                             
                             
                                 //methods
-                                    object.box = function(x,y){ return object.getChildByName(y+'_'+x); };
-                                    object.get = function(){
-                                        var outputArray = [];
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var turningSpeed = r*4;
+                                    
+                                    handle.ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue); 
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                                        
+                                        var move = event.deltaY/100;
+                                        var globalScale = workspace.core.viewport.scale();
+                                        set( value - move/(10*globalScale) );
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        workspace.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var value = initialValue;
+                                                var numerator = event.y - initialY;
+                                                var divider = workspace.core.viewport.scale();
+                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.dial_discrete = function(
+                                name='dial_discrete',
+                                x, y, r=15, angle=0, interactable=true,
+                                value=0, resetValue=0, optionCount=5,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleStyle = {fill:'rgba(200,200,200,1)'},
+                                slotStyle = {fill:'rgba(50,50,50,1)'},
+                                needleStyle = {fill:'rgba(250,100,100,1)'},
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //dial
+                                        var dial = interfacePart.builder('dial_continuous',name,{
+                                            x:0, y:0, r:r, angle:0, interactable:interactable,
+                                            startAngle:startAngle, maxAngle:maxAngle,
+                                            style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
+                                        });
+                                        //clean out built-in interaction
+                                        dial.getChildByName('handle').ondblclick = undefined;
+                                        dial.getChildByName('handle').onwheel = undefined;
+                                        dial.getChildByName('handle').onmousedown = undefined;
+                            
+                                        object.append(dial);
+                                    
+                            
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){ 
+                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        a = Math.round(a);
+                                        value = a;
+                                        dial.set( value/(optionCount-1) );
+                                    };
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var acc = 0;
+                            
+                                    dial.getChildByName('handle').ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue);
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    dial.getChildByName('handle').onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                            
+                                        acc += move;
+                                        if( Math.abs(acc) >= 1 ){
+                                            set( value -1*Math.sign(acc) );
+                                            acc = 0;
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        }
+                                    };
+                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        workspace.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var diff = Math.round( (event.y - initialY)/25 );
+                                                set( initialValue - diff );
+                                                if(object.onchange != undefined){object.onchange(value);}
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.dial_continuous_image = function(
+                                name='dial_continuous_image',
+                                x, y, r=15, angle=0, interactable=true,
+                                value=0, resetValue=-1,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleURL, slotURL, needleURL,
                                 
-                                        for(var y = 0; y < ycount; y++){
-                                            var temp = [];
-                                            for(var x = 0; x < xcount; x++){
-                                                temp.push(this.box(x,y).get());
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //default to non-image version if image links are missing
+                                    if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
+                                        return this.dial_continuous(
+                                            name, x, y, r, angle, interactable, value, resetValue, startAngle, maxAngle,
+                                            undefined, undefined, undefined,
+                                            onchange, onrelease
+                                        );
+                                    }
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //slot
+                                        var slot = interfacePart.builder('image','slot',{width:2.2*r, height:2.2*r, anchor:{x:0.5,y:0.5}, url:slotURL});
+                                        object.append(slot);
+                            
+                                    //handle
+                                        var handle = interfacePart.builder('image','handle',{width:2*r, height:2*r, anchor:{x:0.5,y:0.5}, url:handleURL});
+                                        object.append(handle);
+                            
+                                    //needle group
+                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
+                                        object.append(needleGroup);
+                            
+                                        //needle
+                                            var needleWidth = r/5;
+                                            var needleLength = r;
+                                            var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
+                                                needleGroup.append(needle);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        value = a;
+                                        needleGroup.parameter.angle(startAngle + maxAngle*value);
+                                        handle.parameter.angle(startAngle + maxAngle*value);
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var turningSpeed = r*4;
+                                    
+                                    handle.ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue); 
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                                        
+                                        var move = event.deltaY/100;
+                                        var globalScale = workspace.core.viewport.scale();
+                                        set( value - move/(10*globalScale) );
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        workspace.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var value = initialValue;
+                                                var numerator = event.y - initialY;
+                                                var divider = workspace.core.viewport.scale();
+                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
                                             }
-                                            outputArray.push(temp);
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.dial_discrete_image = function(
+                                name='dial_discrete_image',
+                                x, y, r=15, angle=0, interactable=true,
+                                value=0, resetValue=0, optionCount=5,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleURL, slotURL, needleURL,
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //dial
+                                        var dial = interfacePart.builder('dial_continuous_image',name,{
+                                            x:0, y:0, r:r, angle:0, interactable:interactable,
+                                            startAngle:startAngle, maxAngle:maxAngle,
+                                            handleURL:handleURL, slotURL:slotURL, needleURL:needleURL,
+                                        });
+                                        //clean out built-in interaction
+                                        dial.getChildByName('handle').ondblclick = undefined;
+                                        dial.getChildByName('handle').onwheel = undefined;
+                                        dial.getChildByName('handle').onmousedown = undefined;
+                            
+                                        object.append(dial);
+                                    
+                            
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){ 
+                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        a = Math.round(a);
+                                        value = a;
+                                        dial.set( value/(optionCount-1) );
+                                    };
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var acc = 0;
+                            
+                                    dial.getChildByName('handle').ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue);
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    dial.getChildByName('handle').onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                            
+                                        acc += move;
+                                        if( Math.abs(acc) >= 1 ){
+                                            set( value -1*Math.sign(acc) );
+                                            acc = 0;
+                                            if(object.onrelease != undefined){object.onrelease(value);}
                                         }
+                                    };
+                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        workspace.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var diff = Math.round( (event.y - initialY)/25 );
+                                                set( initialValue - diff );
+                                                if(object.onchange != undefined){object.onchange(value);}
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.grapher_waveWorkspace = function(
+                                name='grapher_waveWorkspace',
+                                x, y, width=120, height=60, angle=0, interactable=true, selectNeedle=true, selectionArea=true,
+                            
+                                foregroundStyles=[
+                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.25, lineJoin:'round'},
+                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.25, lineJoin:'round'},
+                                ],
+                                foregroundTextStyles=[
+                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+                                ],
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_font='10pt Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            
+                                onchange=function(needle,value){}, 
+                                onrelease=function(needle,value){}, 
+                                selectionAreaToggle=function(bool){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //main graph
+                                        var graph = interfacePart.builder('grapher_static', 'graph', {
+                                            width:width, height:height,
+                                            style:{
+                                                foregrounds:foregroundStyles,   
+                                                foregroundText:foregroundTextStyles,
+                                                background_stroke:backgroundStyle_stroke,
+                                                background_lineWidth:backgroundStyle_lineWidth,
+                                                backgroundText_fill:backgroundTextStyle_fill,
+                                                backgroundText_font:backgroundTextStyle_font,
+                                                backing:backingStyle,
+                                            }
+                                        });
+                                        graph.resolution(10);
+                                        object.append(graph);
+                                    //needle overlay
+                                        var overlay = interfacePart.builder('needleOverlay', 'overlay', {
+                                            width:width, height:height, interactable:interactable, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                                            needleStyles:foregroundStyles.map(a => a.stroke),
+                                        });
+                                        object.append(overlay);
+                            
+                                //controls
+                                    //grapher
+                                        object.horizontalMarkings = graph.horizontalMarkings;
+                                        object.verticalMarkings = graph.verticalMarkings;
+                                        object.drawBackground = graph.drawBackground;
+                                        object.drawForeground = graph.drawForeground;
+                                        object.draw = graph.draw;
+                                    //needle overlay
+                                        object.mark = overlay.mark;
+                                        object.removeAllMarks = overlay.removeAllMarks;
+                                        object.select = overlay.select;
+                                        object.area = overlay.area;
+                                        object.interactable = overlay.interactable;
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                                    object.onrelease = onrelease;
+                                    object.selectionAreaToggle = selectionAreaToggle;
+                                    overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
+                                    overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
+                                    overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
+                            
+                                //setup
+                                    graph.viewbox({left:0});
+                                    graph.drawBackground();
+                                    overlay.select(0);
+                            
+                                return object;
+                            };
+                            this.list = function(
+                                name='list', 
+                                x, y, width=50, height=100, angle=0, interactable=true,
+                                list=[],
+                            
+                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                                breakHeightMux=0.0025, breakWidthMux=0.9, 
+                                spacingHeightMux=0.005,
+                                backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_fill = 'rgba(0,0,0,1)',
+                                text_stroke = 'rgba(0,0,0,0)',
+                                text_lineWidth = 1,
+                            
+                                item__off__fill=                          'rgba(180,180,180,1)',
+                                item__off__stroke=                        'rgba(0,0,0,0)',
+                                item__off__lineWidth=                     0,
+                                item__up__fill=                           'rgba(200,200,200,1)',
+                                item__up__stroke=                         'rgba(0,0,0,0)',
+                                item__up__lineWidth=                      0,
+                                item__press__fill=                        'rgba(230,230,230,1)',
+                                item__press__stroke=                      'rgba(0,0,0,0)',
+                                item__press__lineWidth=                   0,
+                                item__select__fill=                       'rgba(200,200,200,1)',
+                                item__select__stroke=                     'rgba(120,120,120,1)',
+                                item__select__lineWidth=                  2,
+                                item__select_press__fill=                 'rgba(230,230,230,1)',
+                                item__select_press__stroke=               'rgba(120,120,120,1)',
+                                item__select_press__lineWidth=            2,
+                                item__glow__fill=                         'rgba(220,220,220,1)',
+                                item__glow__stroke=                       'rgba(0,0,0,0)',
+                                item__glow__lineWidth=                    0,
+                                item__glow_press__fill=                   'rgba(250,250,250,1)',
+                                item__glow_press__stroke=                 'rgba(0,0,0,0)',
+                                item__glow_press__lineWidth=              0,
+                                item__glow_select__fill=                  'rgba(220,220,220,1)',
+                                item__glow_select__stroke=                'rgba(120,120,120,1)',
+                                item__glow_select__lineWidth=             2,
+                                item__glow_select_press__fill=            'rgba(250,250,250,1)',
+                                item__glow_select_press__stroke=          'rgba(120,120,120,1)',
+                                item__glow_select_press__lineWidth=       2,
+                                item__hover__fill=                        'rgba(220,220,220,1)',
+                                item__hover__stroke=                      'rgba(0,0,0,0)',
+                                item__hover__lineWidth=                   0,
+                                item__hover_press__fill=                  'rgba(240,240,240,1)',
+                                item__hover_press__stroke=                'rgba(0,0,0,0)',
+                                item__hover_press__lineWidth=             0,
+                                item__hover_select__fill=                 'rgba(220,220,220,1)',
+                                item__hover_select__stroke=               'rgba(120,120,120,1)',
+                                item__hover_select__lineWidth=            2,
+                                item__hover_select_press__fill=           'rgba(240,240,240,1)',
+                                item__hover_select_press__stroke=         'rgba(120,120,120,1)',
+                                item__hover_select_press__lineWidth=      2,
+                                item__hover_glow__fill=                   'rgba(240,240,240,1)',
+                                item__hover_glow__stroke=                 'rgba(0,0,0,0)',
+                                item__hover_glow__lineWidth=              0,
+                                item__hover_glow_press__fill=             'rgba(250,250,250,1)',
+                                item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
+                                item__hover_glow_press__lineWidth=        0,
+                                item__hover_glow_select__fill=            'rgba(240,240,240,1)',
+                                item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
+                                item__hover_glow_select__lineWidth=       2,
+                                item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
+                                item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
+                                item__hover_glow_select_press__lineWidth= 2,
+                            
+                                onenter=function(){},
+                                onleave=function(){},
+                                onpress=function(){},
+                                ondblpress=function(){},
+                                onrelease=function(){},
+                                onselection=function(){},
+                                onpositionchange=function(){},
+                            ){
+                                //state
+                                    var itemArray = [];
+                                    var selectedItems = [];
+                                    var lastNonShiftClicked = 0;
+                                    var position = 0;
+                                    var calculatedListHeight;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
+                                            fill:backing_style,
+                                        }});
+                                        object.append(backing);
+                                    //item collection
+                                        var itemCollection = interfacePart.builder('group','itemCollection');
+                                        object.append(itemCollection);
+                                        function refreshList(){
+                                            //clean out all values
+                                                itemArray = [];
+                                                itemCollection.clear();
+                                                selectedItems = [];
+                                                position = 0;
+                                                lastNonShiftClicked = 0;
+                            
+                                            //populate list
+                                                var accumulativeHeight = 0;
+                                                for(var a = 0; a < list.length; a++){
+                                                    if( list[a] == 'space' ){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:0, y:accumulativeHeight,
+                                                            width:width, height:height*spacingHeightMux,
+                                                            style:{fill:'rgba(255,0,0,0)'}
+                                                        });
+                            
+                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else if( list[a] == 'break'){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*breakWidthMux, height:height*breakHeightMux,
+                                                            style:{fill:break_style}
+                                                        });
+                            
+                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else{
+                                                        var temp = interfacePart.builder( 'button_rectangle', ''+a, {
+                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
+                                                            text_left: list[a].text_left,
+                                                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                                                            text_right: list[a].text_right,
+                            
+                                                            textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                                            style:{
+                                                                text_font:text_font,
+                                                                text_textBaseline:text_textBaseline,
+                                                                text_fill:text_fill,
+                                                                text_stroke:text_stroke,
+                                                                text_lineWidth:text_lineWidth,
+                            
+                                                                background__off__fill:                            item__off__fill,
+                                                                background__off__stroke:                          item__off__stroke,
+                                                                background__off__lineWidth:                       item__off__lineWidth,
+                                                                background__up__fill:                             item__up__fill,
+                                                                background__up__stroke:                           item__up__stroke,
+                                                                background__up__lineWidth:                        item__up__lineWidth,
+                                                                background__press__fill:                          item__press__fill,
+                                                                background__press__stroke:                        item__press__stroke,
+                                                                background__press__lineWidth:                     item__press__lineWidth,
+                                                                background__select__fill:                         item__select__fill,
+                                                                background__select__stroke:                       item__select__stroke,
+                                                                background__select__lineWidth:                    item__select__lineWidth,
+                                                                background__select_press__fill:                   item__select_press__fill,
+                                                                background__select_press__stroke:                 item__select_press__stroke,
+                                                                background__select_press__lineWidth:              item__select_press__lineWidth,
+                                                                background__glow__fill:                           item__glow__fill,
+                                                                background__glow__stroke:                         item__glow__stroke,
+                                                                background__glow__lineWidth:                      item__glow__lineWidth,
+                                                                background__glow_press__fill:                     item__glow_press__fill,
+                                                                background__glow_press__stroke:                   item__glow_press__stroke,
+                                                                background__glow_press__lineWidth:                item__glow_press__lineWidth,
+                                                                background__glow_select__fill:                    item__glow_select__fill,
+                                                                background__glow_select__stroke:                  item__glow_select__stroke,
+                                                                background__glow_select__lineWidth:               item__glow_select__lineWidth,
+                                                                background__glow_select_press__fill:              item__glow_select_press__fill,
+                                                                background__glow_select_press__stroke:            item__glow_select_press__stroke,
+                                                                background__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
+                                                                background__hover__fill:                          item__hover__fill,
+                                                                background__hover__stroke:                        item__hover__stroke,
+                                                                background__hover__lineWidth:                     item__hover__lineWidth,
+                                                                background__hover_press__fill:                    item__hover_press__fill,
+                                                                background__hover_press__stroke:                  item__hover_press__stroke,
+                                                                background__hover_press__lineWidth:               item__hover_press__lineWidth,
+                                                                background__hover_select__fill:                   item__hover_select__fill,
+                                                                background__hover_select__stroke:                 item__hover_select__stroke,
+                                                                background__hover_select__lineWidth:              item__hover_select__lineWidth,
+                                                                background__hover_select_press__fill:             item__hover_select_press__fill,
+                                                                background__hover_select_press__stroke:           item__hover_select_press__stroke,
+                                                                background__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
+                                                                background__hover_glow__fill:                     item__hover_glow__fill,
+                                                                background__hover_glow__stroke:                   item__hover_glow__stroke,
+                                                                background__hover_glow__lineWidth:                item__hover_glow__lineWidth,
+                                                                background__hover_glow_press__fill:               item__hover_glow_press__fill,
+                                                                background__hover_glow_press__stroke:             item__hover_glow_press__stroke,
+                                                                background__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
+                                                                background__hover_glow_select__fill:              item__hover_glow_select__fill,
+                                                                background__hover_glow_select__stroke:            item__hover_glow_select__stroke,
+                                                                background__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
+                                                                background__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
+                                                                background__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
+                                                                background__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
+                                                            }
+                                                        });
+                            
+                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease(a);
+                                                            }
+                                                        }(a);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                            
+                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                        itemArray.push( temp );
+                                                    }
+                                                }
+                            
+                                            return accumulativeHeight - height*itemSpacingMux;
+                                        }
+                                        calculatedListHeight = refreshList();
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                                        object.append(cover);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                                        object.stencil(stencil);
+                                        object.clip(true);
+                            
+                            
+                                //interaction
+                                    cover.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var move = event.deltaY/100;
+                                        object.position( object.position() + move/10 );
+                                        for(var a = 0; a < itemArray.length; a++){
+                                            itemArray[a].forceMouseLeave();
+                                        }
+                                    };
                                 
-                                        return outputArray;
+                                //controls
+                                    object.position = function(a,update=true){
+                                        if(a == undefined){return position;}
+                                        a = a < 0 ? 0 : a;
+                                        a = a > 1 ? 1 : a;
+                                        position = a;
+                            
+                                        if( calculatedListHeight < height ){return;}
+                                        var movementSpace = calculatedListHeight - height;
+                                        itemCollection.parameter.y( -a*movementSpace );
+                                        
+                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
                                     };
-                                    object.set = function(value, update=true){
-                                        for(var y = 0; y < ycount; y++){
-                                            for(var x = 0; x < xcount; x++){
-                                                object.box(x,y).set(value[y][x],false);
+                                    object.select = function(a,state,event,update=true){
+                                        if(!selectable){return;}
+                            
+                                        //where multi selection is not allowed
+                                            if(!multiSelect){
+                                                //where we want to select an item, which is not already selected
+                                                    if(state && !selectedItems.includes(a) ){
+                                                        //deselect all other items
+                                                            while( selectedItems.length > 0 ){
+                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                selectedItems.shift();
+                                                            }
+                            
+                                                        //select current item
+                                                            selectedItems.push(a);
+                            
+                                                //where we want to deselect an item that is selected
+                                                    }else if(!state && selectedItems.includes(a)){
+                                                        selectedItems = [];
+                                                    }
+                            
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
+                            
+                                        //where multi selection is allowed
+                                            }else{
+                                                //wherer range-selection is to be done
+                                                    if( event != undefined && event.shiftKey ){
+                                                        //gather top and bottom item
+                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                            var min = Math.min(lastNonShiftClicked, a);
+                                                            var max = Math.max(lastNonShiftClicked, a);
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( itemArray[b].name == ''+min ){min = b;}
+                                                                if( itemArray[b].name == ''+max ){max = b;}
+                                                            }
+                            
+                                                        //deselect all outside the range
+                                                            selectedItems = [];
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( b > max || b < min ){
+                                                                    if( itemArray[b].select() ){
+                                                                        itemArray[b].select(false,undefined,false);
+                                                                    }
+                                                                }
+                                                            }
+                            
+                                                        //select those within the range (that aren't already selected)
+                                                            for(var b = min; b <= max; b++){
+                                                                if( !itemArray[b].select() ){
+                                                                    itemArray[b].select(true,undefined,false);
+                                                                    selectedItems.push(b);
+                                                                }
+                                                            }
+                                                //where range-selection is not to be done
+                                                    }else{
+                                                        if(update){ itemArray[a].select(state); }
+                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                                        lastNonShiftClicked = a;
+                                                    }
                                             }
-                                        }
+                            
+                                        object.onselection(selectedItems);
                                     };
-                                    object.clear = function(){
-                                        for(var y = 0; y < ycount; y++){
-                                            for(var x = 0; x < xcount; x++){
-                                                object.box(x,y).set(false,false);
-                                            }
-                                        }
+                                    object.add = function(item){
+                                        list.push(item);
+                                        calculatedListHeight = refreshList();
                                     };
-                                    object.light = function(x,y,state){
-                                        object.box(x,y).light(state);
+                                    object.remove = function(a){
+                                        list.splice(a,1);
+                                        calculatedListHeight = refreshList();
                                     };
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
-                                        for(var y = 0; y < ycount; y++){
-                                            for(var x = 0; x < xcount; x++){
-                                                object.getChildByName(y+'_'+x).interactable(bool);
-                                            }
-                                        }
+                                        refreshList();
                                     };
                             
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselection = onselection;
+                                    object.onpositionchange = onpositionchange;
+                                    
+                                return object;
+                            };
+                            this.list_image = function(
+                                name='list_image', 
+                                x, y, width=50, height=100, angle=0, interactable=true,
+                                list=[],
+                            
+                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                                breakHeightMux=0.0025, breakWidthMux=0.9, 
+                                spacingHeightMux=0.005,
+                                backingURL, breakURL,
+                            
+                                itemURL__off,
+                                itemURL__up,
+                                itemURL__press,
+                                itemURL__select,
+                                itemURL__select_press,
+                                itemURL__glow,
+                                itemURL__glow_press,
+                                itemURL__glow_select,
+                                itemURL__glow_select_press,
+                                itemURL__hover,
+                                itemURL__hover_press,
+                                itemURL__hover_select,
+                                itemURL__hover_select_press,
+                                itemURL__hover_glow,
+                                itemURL__hover_glow_press,
+                                itemURL__hover_glow_select,
+                                itemURL__hover_glow_select_press,
+                            
+                                onenter=function(){},
+                                onleave=function(){},
+                                onpress=function(){},
+                                ondblpress=function(){},
+                                onrelease=function(){},
+                                onselection=function(){},
+                                onpositionchange=function(){},
+                            ){
+                                //state
+                                    var itemArray = [];
+                                    var selectedItems = [];
+                                    var lastNonShiftClicked = 0;
+                                    var position = 0;
+                                    var calculatedListHeight;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                                        object.append(backing);
+                                    //item collection
+                                        var itemCollection = interfacePart.builder('group','itemCollection');
+                                        object.append(itemCollection);
+                                        function refreshList(){
+                                            //clean out all values
+                                                itemArray = [];
+                                                itemCollection.clear();
+                                                selectedItems = [];
+                                                position = 0;
+                                                lastNonShiftClicked = 0;
+                            
+                                            //populate list
+                                                var accumulativeHeight = 0;
+                                                for(var a = 0; a < list.length; a++){
+                                                    if( list[a] == 'space' ){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:0, y:accumulativeHeight,
+                                                            width:width, height:height*spacingHeightMux,
+                                                            style:{fill:'rgba(255,0,0,0)'}
+                                                        });
+                            
+                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else if( list[a] == 'break'){
+                                                        var temp = interfacePart.builder('image',''+a,{
+                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*breakWidthMux, height:height*breakHeightMux,
+                                                            url:breakURL
+                                                        });
+                            
+                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else{
+                                                        var temp = interfacePart.builder( 'button_image', ''+a, {
+                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
+                            
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                                            backingURL__off:                     itemURL__off,
+                                                            backingURL__up:                      itemURL__up,
+                                                            backingURL__press:                   itemURL__press,
+                                                            backingURL__select:                  itemURL__select,
+                                                            backingURL__select_press:            itemURL__select_press,
+                                                            backingURL__glow:                    itemURL__glow,
+                                                            backingURL__glow_press:              itemURL__glow_press,
+                                                            backingURL__glow_select:             itemURL__glow_select,
+                                                            backingURL__glow_select_press:       itemURL__glow_select_press,
+                                                            backingURL__hover:                   itemURL__hover,
+                                                            backingURL__hover_press:             itemURL__hover_press,
+                                                            backingURL__hover_select:            itemURL__hover_select,
+                                                            backingURL__hover_select_press:      itemURL__hover_select_press,
+                                                            backingURL__hover_glow:              itemURL__hover_glow,
+                                                            backingURL__hover_glow_press:        itemURL__hover_glow_press,
+                                                            backingURL__hover_glow_select:       itemURL__hover_glow_select,
+                                                            backingURL__hover_glow_select_press: itemURL__hover_glow_select_press,
+                                                        });
+                            
+                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease(a);
+                                                            }
+                                                        }(a);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                            
+                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                        itemArray.push( temp );
+                                                    }
+                                                }
+                            
+                                            return accumulativeHeight - height*itemSpacingMux;
+                                        }
+                                        calculatedListHeight = refreshList();
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                                        object.append(cover);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+                                        object.stencil(stencil);
+                                        object.clip(true);
                             
                             
+                                //interaction
+                                    cover.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var move = event.deltaY/100;
+                                        object.position( object.position() + move/10 );
+                                        for(var a = 0; a < itemArray.length; a++){
+                                            itemArray[a].forceMouseLeave();
+                                        }
+                                    };
+                                
+                                //controls
+                                    object.position = function(a,update=true){
+                                        if(a == undefined){return position;}
+                                        a = a < 0 ? 0 : a;
+                                        a = a > 1 ? 1 : a;
+                                        position = a;
                             
-                                //callback
-                                    object.onchange = onchange;
+                                        if( calculatedListHeight < height ){return;}
+                                        var movementSpace = calculatedListHeight - height;
+                                        itemCollection.parameter.y( -a*movementSpace );
+                                        
+                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
+                                    };
+                                    object.select = function(a,state,event,update=true){
+                                        if(!selectable){return;}
                             
+                                        //where multi selection is not allowed
+                                            if(!multiSelect){
+                                                //where we want to select an item, which is not already selected
+                                                    if(state && !selectedItems.includes(a) ){
+                                                        //deselect all other items
+                                                            while( selectedItems.length > 0 ){
+                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                selectedItems.shift();
+                                                            }
+                            
+                                                        //select current item
+                                                            selectedItems.push(a);
+                            
+                                                //where we want to deselect an item that is selected
+                                                    }else if(!state && selectedItems.includes(a)){
+                                                        selectedItems = [];
+                                                    }
+                            
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
+                            
+                                        //where multi selection is allowed
+                                            }else{
+                                                //wherer range-selection is to be done
+                                                    if( event != undefined && event.shiftKey ){
+                                                        //gather top and bottom item
+                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                            var min = Math.min(lastNonShiftClicked, a);
+                                                            var max = Math.max(lastNonShiftClicked, a);
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( itemArray[b].name == ''+min ){min = b;}
+                                                                if( itemArray[b].name == ''+max ){max = b;}
+                                                            }
+                            
+                                                        //deselect all outside the range
+                                                            selectedItems = [];
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( b > max || b < min ){
+                                                                    if( itemArray[b].select() ){
+                                                                        itemArray[b].select(false,undefined,false);
+                                                                    }
+                                                                }
+                                                            }
+                            
+                                                        //select those within the range (that aren't already selected)
+                                                            for(var b = min; b <= max; b++){
+                                                                if( !itemArray[b].select() ){
+                                                                    itemArray[b].select(true,undefined,false);
+                                                                    selectedItems.push(b);
+                                                                }
+                                                            }
+                                                //where range-selection is not to be done
+                                                    }else{
+                                                        if(update){ itemArray[a].select(state); }
+                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                                        lastNonShiftClicked = a;
+                                                    }
+                                            }
+                            
+                                        object.onselection(selectedItems);
+                                    };
+                                    object.add = function(item){
+                                        list.push(item);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.remove = function(a){
+                                        list.splice(a,1);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                        refreshList();
+                                    };
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselection = onselection;
+                                    object.onpositionchange = onpositionchange;
+                                    
                                 return object;
                             };
                             this.needleOverlay = function(
@@ -5829,1158 +7908,83 @@
                                     
                                 return object;
                             };
-                            this.slidePanel = function(
-                                name='slidePanel', 
-                                x, y, width=80, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
-                            
-                                handleURL, backingURL, slotURL, overlayURL,
-                            
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //slides
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder(
-                                                'slide_image', 'slide_'+a, {
-                                                    x:a*(width/count), y:0,
-                                                    width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
-                                                    value:startValue, resetValue:resetValue,
-                                                    handleURL:handleURL, backingURL:backingURL, slotURL:slotURL,
-                                                    onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
-                                                    onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
-                                                }
-                                            );
-                                            // temp.dotFrame = true;
-                                            temp.__calculationAngle = angle;
-                                            object.append(temp);
-                                        }
-                                    //overlay
-                                        if(overlayURL != undefined){
-                                            var overlay = interfacePart.builder('image','overlay',{width:width, height:height, url:overlayURL});
-                                            object.append(overlay);
-                                        }
-                            
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                            
-                                        for(var a = 0; a < count; a++){
-                                            object.children[a].interactable(bool);
-                                        }
-                                    };
-                            
-                                return object;
-                            };
-                            this.rangeslide_image = function(
-                                name='rangeslide_image', 
-                                x, y, width=10, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
-                            
-                                handleURL, backingURL, slotURL,
-                                invisibleHandleStyle = 'rgba(255,0,0,0)',
-                                spanURL,
-                            
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //default to non-image version if image links are missing
-                                    if(handleURL == undefined || backingURL == undefined || slotURL == undefined || spanURL == undefined){
-                                        return this.rangeslide(
-                                            name, x, y, width, height, angle, interactable,
-                                            handleHeight, spanWidth, values, resetValues,
-                                            handleURL, backingURL, slotURL, invisibleHandleStyle, spanURL,
-                                            onchange, onrelease,
-                                        );
-                                    }
-                            
-                            
-                            
-                                var grappled = false;
-                                var handleNames = ['start','end'];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing and slot group
-                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
-                                        object.append(backingAndSlot);
-                                        //backing
-                                            var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
-                                            backingAndSlot.append(backing);
-                                        //slot
-                                            var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
-                                            backingAndSlot.append(slot);
-                                        //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                            backingAndSlot.append(backingAndSlotCover);
-                            
-                                    //span
-                                        var span = interfacePart.builder('image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:slotURL});
-                                        object.append(span);
-                            
-                                    //handles
-                                        var handles = {}
-                                        for(var a = 0; a < handleNames.length; a++){
-                                            //grouping
-                                                handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
-                                                object.append(handles[handleNames[a]]);
-                                            //handle
-                                                var handle = interfacePart.builder('image','handle',{width:width, height:height*handleHeight, url:handleURL});
-                                                handles[handleNames[a]].append(handle);
-                                            //invisible handle
-                                                var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
-                                                handles[handleNames[a]].append(invisibleHandle);
-                                        }
-                            
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        object.append(cover);
-                            
-                                        
-                            
-                            
-                                //graphical adjust
-                                    function set(a,handle,update=true){
-                                        a = (a>1 ? 1 : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        //make sure the handle order is maintained
-                                        //if necessary, one handle should push the other, though not past the ends
-                                            switch(handle){
-                                                default: console.error('unknown handle to adjust'); break;
-                                                case 'start':
-                                                    //don't allow start slide to encrouch on end slider's space
-                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
-                            
-                                                    //if start slide bumps up against end slide; move end slide accordingly
-                                                        var start_rightEdge = a + (1-a)*handleHeight;
-                                                        var end_leftEdge = values.end - (values.end)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.end = start_rightEdge/(1-handleHeight);
-                                                        }
-                                                break;
-                                                case 'end':
-                                                    //don't allow end slide to encrouch on start slider's space
-                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
-                            
-                                                    //if end slide bumps up against start slide; move start slide accordingly
-                                                        var start_rightEdge= values.start + (1-values.start)*handleHeight;
-                                                        var end_leftEdge = a - (a)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
-                                                        }
-                                                break;
-                                            }
-                            
-                                        //fill in data
-                                            values[handle] = a;
-                            
-                                        //adjust y positions
-                                            handles.start.parameter.y( values.start*height*(1-handleHeight) );
-                                            handles.end.parameter.y( values.end*height*(1-handleHeight) );
-                            
-                                        //adjust span height (with a little bit of padding so the span is under the handles a little)
-                                            span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
-                                            span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
-                            
-                                        if(update && object.onchange){object.onchange(values);}
-                                    }
-                                    function pan(a){
-                                        var diff = values.end - values.start;
-                            
-                                        var newPositions = [ a, a+diff ];
-                                        if(newPositions[0] <= 0){
-                                            newPositions[1] = newPositions[1] - newPositions[0];
-                                            newPositions[0] = 0;
-                                        }
-                                        else if(newPositions[1] >= 1){
-                                            newPositions[0] = newPositions[0] - (newPositions[1]-1);
-                                            newPositions[1] = 1;
-                                        }
-                            
-                                        set( newPositions[0],'start' );
-                                        set( newPositions[1],'end' );
-                                    }
-                            
-                            
-                            
-                            
-                                //methods
-                                    object.get = function(){return values;};
-                                    object.set = function(values,update){
-                                        if(grappled){return;}
-                                        if(values.start != undefined){set(values.start,'start',update);}
-                                        if(values.end != undefined){set(values.end,'end',update);}
-                                    };
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                                    
-                                //interaction
-                                    function getPositionWithinFromMouse(x,y){
-                                        //calculate the distance the click is from the top of the slider (accounting for angle)
-                                            var offset = backingAndSlot.getOffset();
-                                            var delta = {
-                                                x: x - (backingAndSlot.x     + offset.x),
-                                                y: y - (backingAndSlot.y     + offset.y),
-                                                a: 0 - (backingAndSlot.angle + offset.a),
-                                            };
-                            
-                                        return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
-                                    }
-                            
-                                    //background click
-                                        //to stop clicks passing through the span
-                                            span.onmousedown = function(){};
-                                            span.onclick = function(){};
-                            
-                                        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-                                        backingAndSlotCover.onclick = function(x,y,event){
-                                            if(!interactable){return;}
-                                            if(grappled){return;}
-                            
-                                            //calculate the distance the click is from the top of the slider (accounting for angle)
-                                                var d = getPositionWithinFromMouse(x,y);
-                            
-                                            //use the distance to calculate the correct value to set the slide to
-                                            //taking into account the slide handle's size also
-                                                var value = d + 0.5*handleHeight*((2*d)-1);
-                            
-                                            //whichever handle is closer; move that handle to the mouse's position
-                                                Math.abs(values.start-value) < Math.abs(values.end-value) ? set(value,'start') : set(value,'end');
-                                        };
-                            
-                                    //double-click reset
-                                        cover.ondblclick = function(){
-                                            if(!interactable){return;}
-                                            if(resetValues.start<0 || resetValues.end<0){return;}
-                                            if(grappled){return;}
-                            
-                                            set(resetValues.start,'start');
-                                            set(resetValues.end,'end');
-                                            object.onrelease(values);
-                                        };
-                            
-                                    //span panning - expand/shrink
-                                        cover.onwheel = function(){
-                                            if(!interactable){return;}
-                                            if(grappled){return;}
-                            
-                                            var move = event.deltaY/100;
-                                            var globalScale = workspace.core.viewport.scale();
-                                            var val = move/(10*globalScale);
-                            
-                                            set(values.start-val,'start');
-                                            set(values.end+val,'end');
-                                        };
-                            
-                                    //span panning - drag
-                                        span.onmousedown = function(x,y,event){
-                                            if(!interactable){return;}
-                                            grappled = true;
-                            
-                                            var initialValue = values.start;
-                                            var initialPosition = getPositionWithinFromMouse(x,y);
-                            
-                                            workspace.system.mouse.mouseInteractionHandler(
-                                                function(event){
-                                                    var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                                    var livePosition = getPositionWithinFromMouse(point.x,point.y);
-                                                    pan( initialValue+(livePosition-initialPosition) )
-                                                    object.onchange(values);
-                                                },
-                                                function(event){
-                                                    object.onrelease(values);
-                                                    grappled = false;
-                                                }
-                                            );
-                                        };
-                            
-                                    //handle movement
-                                        for(var a = 0; a < handleNames.length; a++){
-                                            handles[handleNames[a]].children[1].onmousedown = (function(a){
-                                                return function(x,y,event){
-                                                    if(!interactable){return;}
-                                                    grappled = true;
-                                        
-                                                    var initialValue = values[handleNames[a]];
-                                                    var initialPosition = getPositionWithinFromMouse(x,y);
-                                                    
-                                                    workspace.system.mouse.mouseInteractionHandler(
-                                                        function(event){
-                                                            var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                                            var livePosition = getPositionWithinFromMouse(point.x,point.y);
-                                                            set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
-                                                            object.onchange(values);
-                                                        },
-                                                        function(event){
-                                                            object.onrelease(values);
-                                                            grappled = false;
-                                                        }
-                                                    );
-                                                }
-                                            })(a);
-                                        }
-                              
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange;
-                                    object.onrelease = onrelease;  
-                            
-                                //setup
-                                    set(0,'start');
-                                    set(1,'end');
-                            
-                                return object;
-                            };
-                            this.slide = function(
-                                name='slide', 
-                                x, y, width=10, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, value=0, resetValue=-1,
-                                handleStyle = 'rgba(200,200,200,1)',
-                                backingStyle = 'rgba(150,150,150,1)',
-                                slotStyle = 'rgba(50,50,50,1)',
-                                invisibleHandleStyle = 'rgba(255,0,0,0)',
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing and slot group
-                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
-                                        object.append(backingAndSlot);
-                                        //backing
-                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
-                                            backingAndSlot.append(backing);
-                                        //slot
-                                            var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
-                                            backingAndSlot.append(slot);
-                                        //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                            backingAndSlot.append(backingAndSlotCover);
-                                    //handle
-                                        var handle = interfacePart.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
-                                        object.append(handle);
-                                    //invisible handle
-                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height: height*(handleHeight+0.01) + handleHeight, style:{fill:invisibleHandleStyle}});
-                                        object.append(invisibleHandle);
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        object.append(cover);
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){
-                                        a = (a>1 ? 1 : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                                        
-                                        value = a;
-                                        handle.y = a*height*(1-handleHeight);
-                                        invisibleHandle.y = handle.y - ( height*0.01 )/2;
-                            
-                            
-                                        handle.computeExtremities();
-                                        invisibleHandle.computeExtremities();
-                                    }
-                                    object.__calculationAngle = angle;
-                                    function currentMousePosition(event){
-                                        return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
-                                    }
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                            
-                                //interaction
-                                    cover.ondblclick = function(){
-                                        if(!interactable){return;}
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                            
-                                        set(resetValue);
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    cover.onwheel = function(){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                            
-                                        var move = event.deltaY/100;
-                                        var globalScale = workspace.core.viewport.scale();
-                                        set( value + move/(10*globalScale) );
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-                                    backingAndSlotCover.onclick = function(x,y,event){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                            
-                                        //calculate the distance the click is from the top of the slider (accounting for angle)
-                                            var offset = backingAndSlot.getOffset();
-                                            var delta = {
-                                                x: x - (backingAndSlot.x     + offset.x),
-                                                y: y - (backingAndSlot.y     + offset.y),
-                                                a: 0 - (backingAndSlot.angle + offset.a),
-                                            };
-                                            var d = workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
-                            
-                                        //use the distance to calculate the correct value to set the slide to
-                                        //taking into account the slide handle's size also
-                                            var value = d + 0.5*handleHeight*((2*d)-1);
-                            
-                                        set(value);
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    invisibleHandle.onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        grappled = true;
-                            
-                                        var initialValue = value;
-                                        var initialY = currentMousePosition(event);
-                                        var mux = height - height*handleHeight;
-                            
-                                        workspace.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var numerator = initialY-currentMousePosition(event);
-                                                var divider = workspace.core.viewport.scale();
-                                                set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
-                                            },
-                                            function(event){
-                                                var numerator = initialY-currentMousePosition(event);
-                                                var divider = workspace.core.viewport.scale();
-                                                object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
-                                                grappled = false;
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                                //setup
-                                    set(value);
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                return object;
-                            };
-                            this.slidePanel = function(
-                                name='slidePanel', 
-                                x, y, width=80, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
-                                handleStyle = 'rgba(200,200,200,1)',
-                                backingStyle = 'rgba(150,150,150,1)',
-                                slotStyle = 'rgba(50,50,50,1)',
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //slides
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder(
-                                                'slide', 'slide_'+a, {
-                                                    x:a*(width/count), y:0,
-                                                    width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
-                                                    value:startValue, resetValue:resetValue,
-                                                    style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
-                                                    onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
-                                                    onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
-                                                }
-                                            );
-                                            // temp.dotFrame = true;
-                                            temp.__calculationAngle = angle;
-                                            object.append(temp);
-                                        }
-                            
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                            
-                                        for(var a = 0; a < count; a++){
-                                            object.children[a].interactable(bool);
-                                        }
-                                    };
-                            
-                                return object;
-                            };
-                            this.slide_image = function(
-                                name='slide_image', 
-                                x, y, width=10, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, value=0, resetValue=-1,
-                                
-                                handleURL, backingURL, slotURL,
-                            
-                                invisibleHandleStyle = 'rgba(255,0,0,0)',
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //default to non-image version if image links are missing
-                                    if(handleURL == undefined || backingURL == undefined || slotURL == undefined){
-                                        return this.slide(
-                                            name, x, y, width, height, angle, interactable,
-                                            handleHeight, value, resetValue,
-                                            handleURL, backingURL, slotURL, invisibleHandleStyle,
-                                            onchange, onrelease,
-                                        );
-                                    }
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing and slot group
-                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
-                                        object.append(backingAndSlot);
-                                        //backing
-                                            var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
-                                            backingAndSlot.append(backing);
-                                        //slot
-                                            var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
-                                            backingAndSlot.append(slot);
-                                        //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                            backingAndSlot.append(backingAndSlotCover);
-                                    //handle
-                                        var handle = interfacePart.builder('image','handle',{width:width, height:height*handleHeight, url:handleURL});
-                                        object.append(handle);
-                                    //invisible handle
-                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, style:{fill:invisibleHandleStyle}});
-                                        object.append(invisibleHandle);
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        object.append(cover);
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){
-                                        a = (a>1 ? 1 : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                                        
-                                        value = a;
-                                        handle.y = a*height*(1-handleHeight);
-                                        invisibleHandle.y = handle.y - ( height*0.01 )/2;
-                            
-                                        handle.computeExtremities();
-                                        invisibleHandle.computeExtremities();
-                                    }
-                                    object.__calculationAngle = angle;
-                                    function currentMousePosition(event){
-                                        return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
-                                    }
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                            
-                                //interaction
-                                    cover.ondblclick = function(){
-                                        if(!interactable){return;}
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                            
-                                        set(resetValue);
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    cover.onwheel = function(){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                            
-                                        var move = event.deltaY/100;
-                                        var globalScale = workspace.core.viewport.scale();
-                                        set( value + move/(10*globalScale) );
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-                                    backingAndSlotCover.onclick = function(x,y,event){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                            
-                                        //calculate the distance the click is from the top of the slider (accounting for angle)
-                                            var offset = backingAndSlot.getOffset();
-                                            var delta = {
-                                                x: x - (backingAndSlot.x     + offset.x),
-                                                y: y - (backingAndSlot.y     + offset.y),
-                                                a: 0 - (backingAndSlot.angle + offset.a),
-                                            };
-                                            var d = workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
-                            
-                                        //use the distance to calculate the correct value to set the slide to
-                                        //taking into account the slide handle's size also
-                                            var value = d + 0.5*handleHeight*((2*d)-1);
-                            
-                                        set(value);
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    invisibleHandle.onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        grappled = true;
-                            
-                                        var initialValue = value;
-                                        var initialY = currentMousePosition(event);
-                                        var mux = height - height*handleHeight;
-                            
-                                        workspace.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var numerator = initialY-currentMousePosition(event);
-                                                var divider = workspace.core.viewport.scale();
-                                                set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
-                                            },
-                                            function(event){
-                                                var numerator = initialY-currentMousePosition(event);
-                                                var divider = workspace.core.viewport.scale();
-                                                object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
-                                                grappled = false;
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                                //setup
-                                    set(value);
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                return object;
-                            };
-                            this.rangeslide = function(
-                                name='rangeslide', 
-                                x, y, width=10, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
-                                handleStyle = 'rgba(200,200,200,1)',
-                                backingStyle = 'rgba(150,150,150,1)',
-                                slotStyle = 'rgba(50,50,50,1)',
-                                invisibleHandleStyle = 'rgba(255,0,0,0)',
-                                spanStyle='rgba(200,0,200,0.5)',
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                var grappled = false;
-                                var handleNames = ['start','end'];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing and slot group
-                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
-                                        // backingAndSlot.dotFrame = true;
-                                        object.append(backingAndSlot);
-                                        //backing
-                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
-                                            backingAndSlot.append(backing);
-                                        //slot
-                                            var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
-                                            backingAndSlot.append(slot);
-                                        //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                            backingAndSlot.append(backingAndSlotCover);
-                            
-                                    //span
-                                        var span = interfacePart.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, style:{fill:spanStyle} });
-                                        object.append(span);
-                            
-                                    //handles
-                                        var handles = {}
-                                        for(var a = 0; a < handleNames.length; a++){
-                                            //grouping
-                                                handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
-                                                object.append(handles[handleNames[a]]);
-                                            //handle
-                                                var handle = interfacePart.builder('rectangle','handle',{width:width,height:height*handleHeight, style:{fill:handleStyle}});
-                                                handles[handleNames[a]].append(handle);
-                                            //invisible handle
-                                                var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
-                                                handles[handleNames[a]].append(invisibleHandle);
-                                        }
-                            
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        object.append(cover);
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,handle,update=true){
-                                        a = (a>1 ? 1 : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        //make sure the handle order is maintained
-                                        //if necessary, one handle should push the other, though not past the ends
-                                            switch(handle){
-                                                default: console.error('unknown handle to adjust'); break;
-                                                case 'start':
-                                                    //don't allow start slide to encrouch on end slider's space
-                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
-                            
-                                                    //if start slide bumps up against end slide; move end slide accordingly
-                                                        var start_rightEdge = a + (1-a)*handleHeight;
-                                                        var end_leftEdge = values.end - (values.end)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.end = start_rightEdge/(1-handleHeight);
-                                                        }
-                                                break;
-                                                case 'end':
-                                                    //don't allow end slide to encrouch on start slider's space
-                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
-                            
-                                                    //if end slide bumps up against start slide; move start slide accordingly
-                                                        var start_rightEdge= values.start + (1-values.start)*handleHeight;
-                                                        var end_leftEdge = a - (a)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
-                                                        }
-                                                break;
-                                            }
-                            
-                                        //fill in data
-                                            values[handle] = a;
-                            
-                                        //adjust y positions
-                                            handles.start.parameter.y( values.start*height*(1-handleHeight) );
-                                            handles.end.parameter.y( values.end*height*(1-handleHeight) );
-                            
-                                        //adjust span height (with a little bit of padding so the span is under the handles a little)
-                                            span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
-                                            span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
-                            
-                                        if(update && object.onchange){object.onchange(values);}
-                                    }
-                                    function pan(a){
-                                        var diff = values.end - values.start;
-                            
-                                        var newPositions = [ a, a+diff ];
-                                        if(newPositions[0] <= 0){
-                                            newPositions[1] = newPositions[1] - newPositions[0];
-                                            newPositions[0] = 0;
-                                        }
-                                        else if(newPositions[1] >= 1){
-                                            newPositions[0] = newPositions[0] - (newPositions[1]-1);
-                                            newPositions[1] = 1;
-                                        }
-                            
-                                        set( newPositions[0],'start' );
-                                        set( newPositions[1],'end' );
-                                    }
-                            
-                            
-                            
-                            
-                                //methods
-                                    object.get = function(){return values;};
-                                    object.set = function(values,update){
-                                        if(grappled){return;}
-                                        if(values.start != undefined){set(values.start,'start',update);}
-                                        if(values.end != undefined){set(values.end,'end',update);}
-                                    };
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                                    
-                                //interaction
-                                    function getPositionWithinFromMouse(x,y){
-                                        //calculate the distance the click is from the top of the slider (accounting for angle)
-                                            var offset = backingAndSlot.getOffset();
-                                            var delta = {
-                                                x: x - (backingAndSlot.x     + offset.x),
-                                                y: y - (backingAndSlot.y     + offset.y),
-                                                a: 0 - (backingAndSlot.angle + offset.a),
-                                            };
-                            
-                                        return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
-                                    }
-                            
-                                    //background click
-                                        //to stop clicks passing through the span
-                                            span.onmousedown = function(){};
-                                            span.onclick = function(){};
-                                            
-                                        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-                                        backingAndSlotCover.onclick = function(x,y,event){
-                                            if(!interactable){return;}
-                                            if(grappled){return;}
-                            
-                                            //calculate the distance the click is from the top of the slider (accounting for angle)
-                                                var d = getPositionWithinFromMouse(x,y);
-                            
-                                            //use the distance to calculate the correct value to set the slide to
-                                            //taking into account the slide handle's size also
-                                                var value = d + 0.5*handleHeight*((2*d)-1);
-                            
-                                            //whichever handle is closer; move that handle to the mouse's position
-                                                Math.abs(values.start-value) < Math.abs(values.end-value) ? set(value,'start') : set(value,'end');
-                                        };
-                            
-                                    //double-click reset
-                                        cover.ondblclick = function(){
-                                            if(!interactable){return;}
-                                            if(resetValues.start<0 || resetValues.end<0){return;}
-                                            if(grappled){return;}
-                            
-                                            set(resetValues.start,'start');
-                                            set(resetValues.end,'end');
-                                            object.onrelease(values);
-                                        };
-                            
-                                    //span panning - expand/shrink
-                                        cover.onwheel = function(){
-                                            if(!interactable){return;}
-                                            if(grappled){return;}
-                            
-                                            var move = event.deltaY/100;
-                                            var globalScale = workspace.core.viewport.scale();
-                                            var val = move/(10*globalScale);
-                            
-                                            set(values.start-val,'start');
-                                            set(values.end+val,'end');
-                                        };
-                            
-                                    //span panning - drag
-                                        span.onmousedown = function(x,y,event){
-                                            if(!interactable){return;}
-                                            grappled = true;
-                            
-                                            var initialValue = values.start;
-                                            var initialPosition = getPositionWithinFromMouse(x,y);
-                            
-                                            workspace.system.mouse.mouseInteractionHandler(
-                                                function(event){
-                                                    var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                                    var livePosition = getPositionWithinFromMouse(point.x,point.y);
-                                                    pan( initialValue+(livePosition-initialPosition) )
-                                                    object.onchange(values);
-                                                },
-                                                function(event){
-                                                    object.onrelease(values);
-                                                    grappled = false;
-                                                }
-                                            );
-                                        };
-                            
-                                    //handle movement
-                                        for(var a = 0; a < handleNames.length; a++){
-                                            handles[handleNames[a]].children[1].onmousedown = (function(a){
-                                                return function(x,y,event){
-                                                    if(!interactable){return;}
-                                                    grappled = true;
-                                        
-                                                    var initialValue = values[handleNames[a]];
-                                                    var initialPosition = getPositionWithinFromMouse(x,y);
-                                                    
-                                                    workspace.system.mouse.mouseInteractionHandler(
-                                                        function(event){
-                                                            var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                                            var livePosition = getPositionWithinFromMouse(point.x,point.y);
-                                                            set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
-                                                            object.onchange(values);
-                                                        },
-                                                        function(event){
-                                                            object.onrelease(values);
-                                                            grappled = false;
-                                                        }
-                                                    );
-                                                }
-                                            })(a);
-                                        }
-                              
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange;
-                                    object.onrelease = onrelease;  
-                            
-                                //setup
-                                    set(0,'start');
-                                    set(1,'end');
-                            
-                                return object;
-                            };
-                            this.checkbox_rectangle = function(
-                                name='checkbox_rectangle',
-                                x, y, width=20, height=20, angle=0, interactable=true,
-                                checkStyle = 'rgba(150,150,150,1)',
+                            this.rastorgrid = function(
+                                name='rastorgrid', 
+                                x, y, width=80, height=80, angle=0, interactable=true,
+                                xcount=5, ycount=5,
                                 backingStyle = 'rgba(200,200,200,1)',
-                                checkGlowStyle = 'rgba(220,220,220,1)',
+                                checkStyle = 'rgba(150,150,150,1)',
                                 backingGlowStyle = 'rgba(220,220,220,1)',
+                                checkGlowStyle = 'rgba(220,220,220,1)',
                                 onchange = function(){},
                             ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
-                                        subject.append(backing);
-                                    //check
-                                        var checkrect = interfacePart.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(checkrect);
-                                    //cover
-                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(subject.cover);
-                            
-                                //generic checkbox part
-                                    var object = interfacePart.builder(
-                                        'checkbox_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            onchange:onchange,
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.updateGraphics = function(state){
-                                        if(state.glowing){
-                                            backing.style.fill = backingGlowStyle;
-                                            checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
-                                        }else{
-                                            backing.style.fill = backingStyle;
-                                            checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
-                                        }
-                                    };
-                                    object.updateGraphics({checked:false,glowing:false});
-                            
-                                return object;
-                            };
-                            this.checkbox_image = function(
-                                name='checkbox_image',
-                                x, y, width=20, height=20, angle=0, interactable=true,
-                                uncheckURL, checkURL, checkGlowURL, backingGlowURL,
-                                onchange = function(){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:uncheckURL});
-                                        subject.append(backing);
-                                    //cover
-                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(subject.cover);
-                            
-                                //generic checkbox part
-                                    var object = interfacePart.builder(
-                                        'checkbox_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            onchange:onchange,
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.updateGraphics = function(state){ 
-                                        if(state.glowing){
-                                            backing.url = state.checked ? checkGlowURL : uncheckGlowURL;
-                                        }else{
-                                            backing.url = state.checked ? checkURL : uncheckURL;
-                                        }
-                                    };
-                                    object.updateGraphics({checked:false,glowing:false});
-                            
-                                return object;
-                            };
-                            this.checkbox_ = function(
-                                name='checkbox_',
-                                x, y, angle=0, interactable=true,
-                            
-                                onchange = function(){},
-                            
-                                subject
-                            ){
-                                if(subject == undefined){console.warn('checkbox_ : No subject provided');}
-                            
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //subject
-                                        object.append(subject);
+                                    
+                                    //checkboxes
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                var temp = interfacePart.builder('checkbox_rect',y+'_'+x,{
+                                                    x:x*(width/xcount),  y:y*(height/ycount), 
+                                                    width:width/xcount,  height:height/ycount, interactable:interactable,
+                                                    style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
+                                                    onchange:function(){ if(object.onchange){object.onchange(object.get());} },
+                                                });
+                                                object.append(temp);
+                                            }
+                                        }
                             
-                                //state
-                                    var state = {
-                                        checked:false,
-                                        glowing:false,
-                                    };
+                            
+                            
                             
                                 //methods
-                                    object.get = function(){ return state.checked; };
+                                    object.box = function(x,y){ return object.getChildByName(y+'_'+x); };
+                                    object.get = function(){
+                                        var outputArray = [];
+                                
+                                        for(var y = 0; y < ycount; y++){
+                                            var temp = [];
+                                            for(var x = 0; x < xcount; x++){
+                                                temp.push(this.box(x,y).get());
+                                            }
+                                            outputArray.push(temp);
+                                        }
+                                
+                                        return outputArray;
+                                    };
                                     object.set = function(value, update=true){
-                                        state.checked = value;
-                                        
-                                        object.updateGraphics(state);
-                                
-                                        if(update&&this.onchange){ this.onchange(value); }
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                object.box(x,y).set(value[y][x],false);
+                                            }
+                                        }
                                     };
-                                    object.light = function(state){
-                                        if(state == undefined){ return state.glowing; }
-                            
-                                        state.glowing = state;
-                            
-                                        object.updateGraphics(state);
+                                    object.clear = function(){
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                object.box(x,y).set(false,false);
+                                            }
+                                        }
+                                    };
+                                    object.light = function(x,y,state){
+                                        object.box(x,y).light(state);
                                     };
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                object.getChildByName(y+'_'+x).interactable(bool);
+                                            }
+                                        }
                                     };
                             
-                                //interactivity
-                                    subject.cover.onclick = function(event){
-                                        if(!interactable){return;}
-                                        object.set(!object.get());
-                                    };
-                                    subject.cover.onmousedown = function(){};
                             
-                                //callbacks
+                            
+                            
+                                //callback
                                     object.onchange = onchange;
-                            
-                                return object;
-                            };
-                            this.checkbox_polygon = function(
-                                name='checkbox_polygon',
-                                x, y, 
-                                outterPoints=[{x:0,y:4},{x:4,y:0}, {x:16,y:0},{x:20,y:4}, {x:20,y:16},{x:16,y:20},{x:4,y:20},{x:0,y:16}],
-                                innerPoints=[ {x:2,y:4},{x:4,y:2}, {x:16,y:2},{x:18,y:4}, {x:18,y:16},{x:16,y:18}, {x:4,y:18},{x:2,y:16}],
-                                angle=0, interactable=true,
-                                checkStyle = 'rgba(150,150,150,1)',
-                                backingStyle = 'rgba(200,200,200,1)',
-                                checkGlowStyle = 'rgba(220,220,220,1)',
-                                backingGlowStyle = 'rgba(220,220,220,1)',
-                                onchange = function(){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('polygon','backing',{points:outterPoints, style:{fill:backingStyle}});
-                                        subject.append(backing);
-                                    //check
-                                        var checkrect = interfacePart.builder('polygon','checkrect',{points:innerPoints, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(checkrect);
-                                    //cover
-                                        subject.cover = interfacePart.builder('polygon','cover',{points:outterPoints, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(subject.cover);
-                            
-                                //generic checkbox part
-                                    var object = interfacePart.builder(
-                                        'checkbox_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            onchange:onchange,
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.updateGraphics = function(state){
-                                        if(state.glowing){
-                                            backing.style.fill = backingGlowStyle;
-                                            checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
-                                        }else{
-                                            backing.style.fill = backingStyle;
-                                            checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
-                                        }
-                                    };
-                                    object.updateGraphics({checked:false,glowing:false});
-                            
-                                return object;
-                            };
-                            this.checkbox_circle = function(
-                                name='checkbox_circle',
-                                x, y, r=10, angle=0, interactable=true,
-                                checkStyle = 'rgba(150,150,150,1)',
-                                backingStyle = 'rgba(200,200,200,1)',
-                                checkGlowStyle = 'rgba(220,220,220,1)',
-                                backingGlowStyle = 'rgba(220,220,220,1)',
-                                onchange = function(){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('circle','backing',{r:r, style:{fill:backingStyle}});
-                                        subject.append(backing);
-                                    //check
-                                        var checkrect = interfacePart.builder('circle','checkrect',{r:r*0.8, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(checkrect);
-                                    //cover
-                                        subject.cover = interfacePart.builder('circle','cover',{r:r, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(subject.cover);
-                            
-                                //generic checkbox part
-                                    var object = interfacePart.builder(
-                                        'checkbox_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            onchange:onchange,
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.updateGraphics = function(state){
-                                        if(state.glowing){
-                                            backing.style.fill = backingGlowStyle;
-                                            checkrect.style.fill = state.checked ? checkGlowStyle : 'rgba(0,0,0,0)';
-                                        }else{
-                                            backing.style.fill = backingStyle;
-                                            checkrect.style.fill = state.checked ? checkStyle : 'rgba(0,0,0,0)';
-                                        }
-                                    };
-                                    object.updateGraphics({checked:false,glowing:false});
                             
                                 return object;
                             };
@@ -8136,2012 +9140,1207 @@
                             
                                 return object;
                             };
-                            this.dial_continuous_image = function(
-                                name='dial_continuous_image',
-                                x, y, r=15, angle=0, interactable=true,
-                                value=0, resetValue=-1,
-                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            this.rangeslide = function(
+                                name='rangeslide', 
+                                x, y, width=10, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
+                                handleStyle = 'rgba(200,200,200,1)',
+                                backingStyle = 'rgba(150,150,150,1)',
+                                slotStyle = 'rgba(50,50,50,1)',
+                                invisibleHandleStyle = 'rgba(255,0,0,0)',
+                                spanStyle='rgba(200,0,200,0.5)',
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                var grappled = false;
+                                var handleNames = ['start','end'];
                             
-                                handleURL, slotURL, needleURL,
-                                
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing and slot group
+                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
+                                        // backingAndSlot.dotFrame = true;
+                                        object.append(backingAndSlot);
+                                        //backing
+                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                                            backingAndSlot.append(backing);
+                                        //slot
+                                            var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
+                                            backingAndSlot.append(slot);
+                                        //backing and slot cover
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                            backingAndSlot.append(backingAndSlotCover);
+                            
+                                    //span
+                                        var span = interfacePart.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, style:{fill:spanStyle} });
+                                        object.append(span);
+                            
+                                    //handles
+                                        var handles = {}
+                                        for(var a = 0; a < handleNames.length; a++){
+                                            //grouping
+                                                handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
+                                                object.append(handles[handleNames[a]]);
+                                            //handle
+                                                var handle = interfacePart.builder('rectangle','handle',{width:width,height:height*handleHeight, style:{fill:handleStyle}});
+                                                handles[handleNames[a]].append(handle);
+                                            //invisible handle
+                                                var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                                                handles[handleNames[a]].append(invisibleHandle);
+                                        }
+                            
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(cover);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,handle,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        //make sure the handle order is maintained
+                                        //if necessary, one handle should push the other, though not past the ends
+                                            switch(handle){
+                                                default: console.error('unknown handle to adjust'); break;
+                                                case 'start':
+                                                    //don't allow start slide to encrouch on end slider's space
+                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                            
+                                                    //if start slide bumps up against end slide; move end slide accordingly
+                                                        var start_rightEdge = a + (1-a)*handleHeight;
+                                                        var end_leftEdge = values.end - (values.end)*handleHeight;
+                                                        if( start_rightEdge >= end_leftEdge ){
+                                                            values.end = start_rightEdge/(1-handleHeight);
+                                                        }
+                                                break;
+                                                case 'end':
+                                                    //don't allow end slide to encrouch on start slider's space
+                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                            
+                                                    //if end slide bumps up against start slide; move start slide accordingly
+                                                        var start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                                        var end_leftEdge = a - (a)*handleHeight;
+                                                        if( start_rightEdge >= end_leftEdge ){
+                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
+                                                        }
+                                                break;
+                                            }
+                            
+                                        //fill in data
+                                            values[handle] = a;
+                            
+                                        //adjust y positions
+                                            handles.start.parameter.y( values.start*height*(1-handleHeight) );
+                                            handles.end.parameter.y( values.end*height*(1-handleHeight) );
+                            
+                                        //adjust span height (with a little bit of padding so the span is under the handles a little)
+                                            span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
+                                            span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
+                            
+                                        if(update && object.onchange){object.onchange(values);}
+                                    }
+                                    function pan(a){
+                                        var diff = values.end - values.start;
+                            
+                                        var newPositions = [ a, a+diff ];
+                                        if(newPositions[0] <= 0){
+                                            newPositions[1] = newPositions[1] - newPositions[0];
+                                            newPositions[0] = 0;
+                                        }
+                                        else if(newPositions[1] >= 1){
+                                            newPositions[0] = newPositions[0] - (newPositions[1]-1);
+                                            newPositions[1] = 1;
+                                        }
+                            
+                                        set( newPositions[0],'start' );
+                                        set( newPositions[1],'end' );
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    object.get = function(){return values;};
+                                    object.set = function(values,update){
+                                        if(grappled){return;}
+                                        if(values.start != undefined){set(values.start,'start',update);}
+                                        if(values.end != undefined){set(values.end,'end',update);}
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                                    
+                                //interaction
+                                    function getPositionWithinFromMouse(x,y){
+                                        //calculate the distance the click is from the top of the slider (accounting for angle)
+                                            var offset = backingAndSlot.getOffset();
+                                            var delta = {
+                                                x: x - (backingAndSlot.x     + offset.x),
+                                                y: y - (backingAndSlot.y     + offset.y),
+                                                a: 0 - (backingAndSlot.angle + offset.a),
+                                            };
+                            
+                                        return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                                    }
+                            
+                                    //background click
+                                        //to stop clicks passing through the span
+                                            span.onmousedown = function(){};
+                                            span.onclick = function(){};
+                                            
+                                        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
+                                        backingAndSlotCover.onclick = function(x,y,event){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                            
+                                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                                var d = getPositionWithinFromMouse(x,y);
+                            
+                                            //use the distance to calculate the correct value to set the slide to
+                                            //taking into account the slide handle's size also
+                                                var value = d + 0.5*handleHeight*((2*d)-1);
+                            
+                                            //whichever handle is closer; move that handle to the mouse's position
+                                                Math.abs(values.start-value) < Math.abs(values.end-value) ? set(value,'start') : set(value,'end');
+                                        };
+                            
+                                    //double-click reset
+                                        cover.ondblclick = function(){
+                                            if(!interactable){return;}
+                                            if(resetValues.start<0 || resetValues.end<0){return;}
+                                            if(grappled){return;}
+                            
+                                            set(resetValues.start,'start');
+                                            set(resetValues.end,'end');
+                                            object.onrelease(values);
+                                        };
+                            
+                                    //span panning - expand/shrink
+                                        cover.onwheel = function(){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                            
+                                            var move = event.deltaY/100;
+                                            var globalScale = workspace.core.viewport.scale();
+                                            var val = move/(10*globalScale);
+                            
+                                            set(values.start-val,'start');
+                                            set(values.end+val,'end');
+                                        };
+                            
+                                    //span panning - drag
+                                        span.onmousedown = function(x,y,event){
+                                            if(!interactable){return;}
+                                            grappled = true;
+                            
+                                            var initialValue = values.start;
+                                            var initialPosition = getPositionWithinFromMouse(x,y);
+                            
+                                            workspace.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                                    var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                    pan( initialValue+(livePosition-initialPosition) )
+                                                    object.onchange(values);
+                                                },
+                                                function(event){
+                                                    object.onrelease(values);
+                                                    grappled = false;
+                                                }
+                                            );
+                                        };
+                            
+                                    //handle movement
+                                        for(var a = 0; a < handleNames.length; a++){
+                                            handles[handleNames[a]].children[1].onmousedown = (function(a){
+                                                return function(x,y,event){
+                                                    if(!interactable){return;}
+                                                    grappled = true;
+                                        
+                                                    var initialValue = values[handleNames[a]];
+                                                    var initialPosition = getPositionWithinFromMouse(x,y);
+                                                    
+                                                    workspace.system.mouse.mouseInteractionHandler(
+                                                        function(event){
+                                                            var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                                            var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                            set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
+                                                            object.onchange(values);
+                                                        },
+                                                        function(event){
+                                                            object.onrelease(values);
+                                                            grappled = false;
+                                                        }
+                                                    );
+                                                }
+                                            })(a);
+                                        }
+                              
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                                    object.onrelease = onrelease;  
+                            
+                                //setup
+                                    set(0,'start');
+                                    set(1,'end');
+                            
+                                return object;
+                            };
+                            this.rangeslide_image = function(
+                                name='rangeslide_image', 
+                                x, y, width=10, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
+                            
+                                handleURL, backingURL, slotURL,
+                                invisibleHandleStyle = 'rgba(255,0,0,0)',
+                                spanURL,
+                            
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
                                 //default to non-image version if image links are missing
-                                    if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
-                                        return this.dial_continuous(
-                                            name, x, y, r, angle, interactable, value, resetValue, startAngle, maxAngle,
-                                            undefined, undefined, undefined,
-                                            onchange, onrelease
-                                        );
-                                    }
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //slot
-                                        var slot = interfacePart.builder('image','slot',{width:2.2*r, height:2.2*r, anchor:{x:0.5,y:0.5}, url:slotURL});
-                                        object.append(slot);
-                            
-                                    //handle
-                                        var handle = interfacePart.builder('image','handle',{width:2*r, height:2*r, anchor:{x:0.5,y:0.5}, url:handleURL});
-                                        object.append(handle);
-                            
-                                    //needle group
-                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
-                                        object.append(needleGroup);
-                            
-                                        //needle
-                                            var needleWidth = r/5;
-                                            var needleLength = r;
-                                            var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
-                                                needleGroup.append(needle);
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){
-                                        a = (a>1 ? 1 : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                                        value = a;
-                                        needleGroup.parameter.angle(startAngle + maxAngle*value);
-                                        handle.parameter.angle(startAngle + maxAngle*value);
-                                    }
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                            
-                                //interaction
-                                    var turningSpeed = r*4;
-                                    
-                                    handle.ondblclick = function(){
-                                        if(!interactable){return;}
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                                        
-                                        set(resetValue); 
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    handle.onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                                        
-                                        var move = event.deltaY/100;
-                                        var globalScale = workspace.core.viewport.scale();
-                                        set( value - move/(10*globalScale) );
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    handle.onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var initialValue = value;
-                                        var initialY = event.y;
-                            
-                                        grappled = true;
-                                        workspace.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var value = initialValue;
-                                                var numerator = event.y - initialY;
-                                                var divider = workspace.core.viewport.scale();
-                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                                if(object.onrelease != undefined){object.onrelease(value);}
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                //setup
-                                    set(value);
-                            
-                                return object;
-                            };
-                            this.dial_continuous = function(
-                                name='dial_continuous',
-                                x, y, r=15, angle=0, interactable=true,
-                                value=0, resetValue=-1,
-                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            
-                                handleStyle = {fill:'rgba(200,200,200,1)'},
-                                slotStyle = {fill:'rgba(50,50,50,1)'},
-                                needleStyle = {fill:'rgba(250,100,100,1)'},
-                            
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //slot
-                                        var slot = interfacePart.builder('circle','slot',{r:r*1.1, style:{
-                                            fill:slotStyle.fill,
-                                            stroke:slotStyle.stroke,
-                                            lineWidth:slotStyle.lineWidth,
-                                            lineJoin:slotStyle.lineJoin,
-                                            miterLimit:slotStyle.miterLimit,
-                                        }});
-                                        object.append(slot);
-                            
-                                    //handle
-                                        var handle = interfacePart.builder('circle','handle',{r:r, style:{
-                                            fill:handleStyle.fill,
-                                            stroke:handleStyle.stroke,
-                                            lineWidth:handleStyle.lineWidth,
-                                            lineJoin:handleStyle.lineJoin,
-                                            miterLimit:handleStyle.miterLimit,
-                                        }});
-                                        object.append(handle);
-                            
-                                    //needle group
-                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
-                                        object.append(needleGroup);
-                            
-                                        //needle
-                                            var needleWidth = r/5;
-                                            var needleLength = r;
-                                            var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{
-                                                fill:needleStyle.fill,
-                                                stroke:needleStyle.stroke,
-                                                lineWidth:needleStyle.lineWidth,
-                                                lineJoin:needleStyle.lineJoin,
-                                                miterLimit:needleStyle.miterLimit,
-                                            }});
-                                            needleGroup.append(needle);
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){
-                                        a = (a>1 ? 1 : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                                        value = a;
-                                        needleGroup.parameter.angle(startAngle + maxAngle*value);
-                                    }
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                            
-                                //interaction
-                                    var turningSpeed = r*4;
-                                    
-                                    handle.ondblclick = function(){
-                                        if(!interactable){return;}
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                                        
-                                        set(resetValue); 
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    handle.onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                                        
-                                        var move = event.deltaY/100;
-                                        var globalScale = workspace.core.viewport.scale();
-                                        set( value - move/(10*globalScale) );
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    handle.onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var initialValue = value;
-                                        var initialY = event.y;
-                            
-                                        grappled = true;
-                                        workspace.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var value = initialValue;
-                                                var numerator = event.y - initialY;
-                                                var divider = workspace.core.viewport.scale();
-                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                                if(object.onrelease != undefined){object.onrelease(value);}
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                //setup
-                                    set(value);
-                            
-                                return object;
-                            };
-                            this.dial_discrete_image = function(
-                                name='dial_discrete_image',
-                                x, y, r=15, angle=0, interactable=true,
-                                value=0, resetValue=0, optionCount=5,
-                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            
-                                handleURL, slotURL, needleURL,
-                            
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //dial
-                                        var dial = interfacePart.builder('dial_continuous_image',name,{
-                                            x:0, y:0, r:r, angle:0, interactable:interactable,
-                                            startAngle:startAngle, maxAngle:maxAngle,
-                                            handleURL:handleURL, slotURL:slotURL, needleURL:needleURL,
-                                        });
-                                        //clean out built-in interaction
-                                        dial.getChildByName('handle').ondblclick = undefined;
-                                        dial.getChildByName('handle').onwheel = undefined;
-                                        dial.getChildByName('handle').onmousedown = undefined;
-                            
-                                        object.append(dial);
-                                    
-                            
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){ 
-                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                                        a = Math.round(a);
-                                        value = a;
-                                        dial.set( value/(optionCount-1) );
-                                    };
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                            
-                                //interaction
-                                    var acc = 0;
-                            
-                                    dial.getChildByName('handle').ondblclick = function(){
-                                        if(!interactable){return;}
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                                        
-                                        set(resetValue);
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    dial.getChildByName('handle').onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                            
-                                        var move = event.deltaY/100;
-                            
-                                        acc += move;
-                                        if( Math.abs(acc) >= 1 ){
-                                            set( value -1*Math.sign(acc) );
-                                            acc = 0;
-                                            if(object.onrelease != undefined){object.onrelease(value);}
-                                        }
-                                    };
-                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var initialValue = value;
-                                        var initialY = event.y;
-                            
-                                        grappled = true;
-                                        workspace.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var diff = Math.round( (event.y - initialY)/25 );
-                                                set( initialValue - diff );
-                                                if(object.onchange != undefined){object.onchange(value);}
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                                if(object.onrelease != undefined){object.onrelease(value);}
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                //setup
-                                    set(value);
-                            
-                                return object;
-                            };
-                            this.dial_discrete = function(
-                                name='dial_discrete',
-                                x, y, r=15, angle=0, interactable=true,
-                                value=0, resetValue=0, optionCount=5,
-                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            
-                                handleStyle = {fill:'rgba(200,200,200,1)'},
-                                slotStyle = {fill:'rgba(50,50,50,1)'},
-                                needleStyle = {fill:'rgba(250,100,100,1)'},
-                            
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //dial
-                                        var dial = interfacePart.builder('dial_continuous',name,{
-                                            x:0, y:0, r:r, angle:0, interactable:interactable,
-                                            startAngle:startAngle, maxAngle:maxAngle,
-                                            style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
-                                        });
-                                        //clean out built-in interaction
-                                        dial.getChildByName('handle').ondblclick = undefined;
-                                        dial.getChildByName('handle').onwheel = undefined;
-                                        dial.getChildByName('handle').onmousedown = undefined;
-                            
-                                        object.append(dial);
-                                    
-                            
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){ 
-                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                                        a = Math.round(a);
-                                        value = a;
-                                        dial.set( value/(optionCount-1) );
-                                    };
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                            
-                                //interaction
-                                    var acc = 0;
-                            
-                                    dial.getChildByName('handle').ondblclick = function(){
-                                        if(!interactable){return;}
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                                        
-                                        set(resetValue);
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    dial.getChildByName('handle').onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                            
-                                        var move = event.deltaY/100;
-                            
-                                        acc += move;
-                                        if( Math.abs(acc) >= 1 ){
-                                            set( value -1*Math.sign(acc) );
-                                            acc = 0;
-                                            if(object.onrelease != undefined){object.onrelease(value);}
-                                        }
-                                    };
-                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var initialValue = value;
-                                        var initialY = event.y;
-                            
-                                        grappled = true;
-                                        workspace.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var diff = Math.round( (event.y - initialY)/25 );
-                                                set( initialValue - diff );
-                                                if(object.onchange != undefined){object.onchange(value);}
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                                if(object.onrelease != undefined){object.onrelease(value);}
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                //setup
-                                    set(value);
-                            
-                                return object;
-                            };
-                            this.button_circle = function(
-                                name='button_circle',
-                                x, y, r=15,  angle=0, interactable=true,
-                                text_centre='',
-                                
-                                active=true, hoverable=true, selectable=false, pressable=true,
-                            
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_fill = 'rgba(0,0,0,1)',
-                                text_stroke = 'rgba(0,0,0,0)',
-                                text_lineWidth = 1,
-                            
-                                backing__off__fill=                          'rgba(180,180,180,1)',
-                                backing__off__stroke=                        'rgba(0,0,0,0)',
-                                backing__off__lineWidth=                     0,
-                                backing__up__fill=                           'rgba(200,200,200,1)',
-                                backing__up__stroke=                         'rgba(0,0,0,0)',
-                                backing__up__lineWidth=                      0,
-                                backing__press__fill=                        'rgba(230,230,230,1)',
-                                backing__press__stroke=                      'rgba(0,0,0,0)',
-                                backing__press__lineWidth=                   0,
-                                backing__select__fill=                       'rgba(200,200,200,1)',
-                                backing__select__stroke=                     'rgba(120,120,120,1)',
-                                backing__select__lineWidth=                  0.75,
-                                backing__select_press__fill=                 'rgba(230,230,230,1)',
-                                backing__select_press__stroke=               'rgba(120,120,120,1)',
-                                backing__select_press__lineWidth=            0.75,
-                                backing__glow__fill=                         'rgba(220,220,220,1)',
-                                backing__glow__stroke=                       'rgba(0,0,0,0)',
-                                backing__glow__lineWidth=                    0,
-                                backing__glow_press__fill=                   'rgba(250,250,250,1)',
-                                backing__glow_press__stroke=                 'rgba(0,0,0,0)',
-                                backing__glow_press__lineWidth=              0,
-                                backing__glow_select__fill=                  'rgba(220,220,220,1)',
-                                backing__glow_select__stroke=                'rgba(120,120,120,1)',
-                                backing__glow_select__lineWidth=             0.75,
-                                backing__glow_select_press__fill=            'rgba(250,250,250,1)',
-                                backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
-                                backing__glow_select_press__lineWidth=       0.75,
-                                backing__hover__fill=                        'rgba(220,220,220,1)',
-                                backing__hover__stroke=                      'rgba(0,0,0,0)',
-                                backing__hover__lineWidth=                   0,
-                                backing__hover_press__fill=                  'rgba(240,240,240,1)',
-                                backing__hover_press__stroke=                'rgba(0,0,0,0)',
-                                backing__hover_press__lineWidth=             0,
-                                backing__hover_select__fill=                 'rgba(220,220,220,1)',
-                                backing__hover_select__stroke=               'rgba(120,120,120,1)',
-                                backing__hover_select__lineWidth=            0.75,
-                                backing__hover_select_press__fill=           'rgba(240,240,240,1)',
-                                backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
-                                backing__hover_select_press__lineWidth=      0.75,
-                                backing__hover_glow__fill=                   'rgba(240,240,240,1)',
-                                backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
-                                backing__hover_glow__lineWidth=              0,
-                                backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
-                                backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-                                backing__hover_glow_press__lineWidth=        0,
-                                backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
-                                backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-                                backing__hover_glow_select__lineWidth=       0.75,
-                                backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-                                backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-                                backing__hover_glow_select_press__lineWidth= 0.75,
-                            
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('circle','backing',{r:r, style:{
-                                            fill:backing__off__fill,
-                                            stroke:backing__off__stroke,
-                                            lineWidth:backing__off__lineWidth,
-                                        }});
-                                        subject.append(backing);
-                                    //text
-                                        var text_centre = interfacePart.builder('text','centre', {
-                                            text:text_centre, 
-                                            style:{
-                                                font:text_font,
-                                                testBaseline:text_textBaseline,
-                                                fill:text_fill,
-                                                stroke:text_stroke,
-                                                lineWidth:text_lineWidth,
-                                                textAlign:'center',
-                                                textBaseline:'middle',
-                                            }
-                                        });
-                                        subject.append(text_centre);
-                                    //cover
-                                        subject.cover = interfacePart.builder('circle','cover',{r:r, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(subject.cover);
-                            
-                                //generic button part
-                                    var object = interfacePart.builder(
-                                        'button_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                            onenter:onenter,
-                                            onleave:onleave,
-                                            onpress:onpress,
-                                            ondblpress:ondblpress,
-                                            onrelease:onrelease,
-                                            onselect:onselect,
-                                            ondeselect:ondeselect,
-                            
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.activateGraphicalState = function(state){
-                                        if(!active){ 
-                                            backing.style.fill = backing__off__fill;
-                                            backing.style.stroke = backing__off__stroke;
-                                            backing.style.lineWidth = backing__off__lineWidth;
-                                            return;
-                                        }
-                            
-                                        var styles = [
-                                            { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
-                                            { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
-                                            { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
-                                            { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
-                                            { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
-                                            { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
-                                            { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
-                                            { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
-                                            { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
-                                            { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
-                                            { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
-                                            { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
-                                            { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
-                                            { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
-                                            { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
-                                            { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
-                                        ];
-                            
-                                        if(!hoverable && state.hovering ){ state.hovering = false; }
-                                        if(!selectable && state.selected ){ state.selected = false; }
-                            
-                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
-                                        backing.style.fill =       styles[i].fill;
-                                        backing.style.stroke =     styles[i].stroke;
-                                        backing.style.lineWidth =  styles[i].lineWidth;
-                                    };
-                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
-                            
-                                return object;
-                            };
-                            this.button_rectangle = function(
-                                name='button_rectangle',
-                                x, y, width=30, height=20, angle=0, interactable=true,
-                                text_centre='', text_left='', text_right='',
-                                textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
-                                
-                                active=true, hoverable=true, selectable=false, pressable=true,
-                            
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_fill = 'rgba(0,0,0,1)',
-                                text_stroke = 'rgba(0,0,0,0)',
-                                text_lineWidth = 1,
-                            
-                                backing__off__fill=                          'rgba(180,180,180,1)',
-                                backing__off__stroke=                        'rgba(0,0,0,0)',
-                                backing__off__lineWidth=                     0,
-                                backing__up__fill=                           'rgba(200,200,200,1)',
-                                backing__up__stroke=                         'rgba(0,0,0,0)',
-                                backing__up__lineWidth=                      0,
-                                backing__press__fill=                        'rgba(230,230,230,1)',
-                                backing__press__stroke=                      'rgba(0,0,0,0)',
-                                backing__press__lineWidth=                   0,
-                                backing__select__fill=                       'rgba(200,200,200,1)',
-                                backing__select__stroke=                     'rgba(120,120,120,1)',
-                                backing__select__lineWidth=                  0.75,
-                                backing__select_press__fill=                 'rgba(230,230,230,1)',
-                                backing__select_press__stroke=               'rgba(120,120,120,1)',
-                                backing__select_press__lineWidth=            0.75,
-                                backing__glow__fill=                         'rgba(220,220,220,1)',
-                                backing__glow__stroke=                       'rgba(0,0,0,0)',
-                                backing__glow__lineWidth=                    0,
-                                backing__glow_press__fill=                   'rgba(250,250,250,1)',
-                                backing__glow_press__stroke=                 'rgba(0,0,0,0)',
-                                backing__glow_press__lineWidth=              0,
-                                backing__glow_select__fill=                  'rgba(220,220,220,1)',
-                                backing__glow_select__stroke=                'rgba(120,120,120,1)',
-                                backing__glow_select__lineWidth=             0.75,
-                                backing__glow_select_press__fill=            'rgba(250,250,250,1)',
-                                backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
-                                backing__glow_select_press__lineWidth=       0.75,
-                                backing__hover__fill=                        'rgba(220,220,220,1)',
-                                backing__hover__stroke=                      'rgba(0,0,0,0)',
-                                backing__hover__lineWidth=                   0,
-                                backing__hover_press__fill=                  'rgba(240,240,240,1)',
-                                backing__hover_press__stroke=                'rgba(0,0,0,0)',
-                                backing__hover_press__lineWidth=             0,
-                                backing__hover_select__fill=                 'rgba(220,220,220,1)',
-                                backing__hover_select__stroke=               'rgba(120,120,120,1)',
-                                backing__hover_select__lineWidth=            0.75,
-                                backing__hover_select_press__fill=           'rgba(240,240,240,1)',
-                                backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
-                                backing__hover_select_press__lineWidth=      0.75,
-                                backing__hover_glow__fill=                   'rgba(240,240,240,1)',
-                                backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
-                                backing__hover_glow__lineWidth=              0,
-                                backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
-                                backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-                                backing__hover_glow_press__lineWidth=        0,
-                                backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
-                                backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-                                backing__hover_glow_select__lineWidth=       0.75,
-                                backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-                                backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-                                backing__hover_glow_select_press__lineWidth= 0.75,
-                            
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
-                                            fill:backing__off__fill,
-                                            stroke:backing__off__stroke,
-                                            lineWidth:backing__off__lineWidth,
-                                        }});
-                                        subject.append(backing);
-                                    //text
-                                        var text_centre = interfacePart.builder('text','centre', {
-                                            x:width/2, 
-                                            y:height*textVerticalOffsetMux, 
-                                            text:text_centre, 
-                                            style:{
-                                                font:text_font,
-                                                testBaseline:text_textBaseline,
-                                                fill:text_fill,
-                                                stroke:text_stroke,
-                                                lineWidth:text_lineWidth,
-                                                textAlign:'center',
-                                                textBaseline:'middle',
-                                            }
-                                        });
-                                        subject.append(text_centre);
-                                        var text_left = interfacePart.builder('text','left',     {
-                                            x:width*textHorizontalOffsetMux, 
-                                            y:height*textVerticalOffsetMux, 
-                                            text:text_left, 
-                                            style:{
-                                                font:text_font,
-                                                testBaseline:text_textBaseline,
-                                                fill:text_fill,
-                                                stroke:text_stroke,
-                                                lineWidth:text_lineWidth,
-                                                textAlign:'left',
-                                                textBaseline:'middle',
-                                            }
-                                        });
-                                        subject.append(text_left);
-                                        var text_right = interfacePart.builder('text','right',   {
-                                            x:width-(width*textHorizontalOffsetMux), 
-                                            y:height*textVerticalOffsetMux, 
-                                            text:text_right, 
-                                            style:{
-                                                font:text_font,
-                                                testBaseline:text_textBaseline,
-                                                fill:text_fill,
-                                                stroke:text_stroke,
-                                                lineWidth:text_lineWidth,
-                                                textAlign:'right',
-                                                textBaseline:'middle',
-                                            }
-                                        });
-                                        subject.append(text_right);
-                                    //cover
-                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(subject.cover);
-                            
-                                //generic button part
-                                    var object = interfacePart.builder(
-                                        'button_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                            onenter:onenter,
-                                            onleave:onleave,
-                                            onpress:onpress,
-                                            ondblpress:ondblpress,
-                                            onrelease:onrelease,
-                                            onselect:onselect,
-                                            ondeselect:ondeselect,
-                            
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.activateGraphicalState = function(state){
-                                        if(!active){ 
-                                            backing.style.fill = backing__off__fill;
-                                            backing.style.stroke = backing__off__stroke;
-                                            backing.style.lineWidth = backing__off__lineWidth;
-                                            return;
-                                        }
-                            
-                                        var styles = [
-                                            { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
-                                            { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
-                                            { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
-                                            { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
-                                            { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
-                                            { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
-                                            { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
-                                            { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
-                                            { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
-                                            { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
-                                            { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
-                                            { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
-                                            { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
-                                            { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
-                                            { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
-                                            { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
-                                        ];
-                            
-                                        if(!hoverable && state.hovering ){ state.hovering = false; }
-                                        if(!selectable && state.selected ){ state.selected = false; }
-                            
-                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
-                                        backing.style.fill =       styles[i].fill;
-                                        backing.style.stroke =     styles[i].stroke;
-                                        backing.style.lineWidth =  styles[i].lineWidth;
-                                    };
-                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
-                            
-                                return object;
-                            };
-                            this.button_ = function(
-                                name='',
-                                x, y, angle=0, interactable=true,
-                                active=true, hoverable=true, selectable=false, pressable=true,
-                            
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
-                            
-                                subject
-                            ){
-                                if(subject == undefined){console.warn('button_ : No subject provided');}
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //subject
-                                        object.append(subject);
-                            
-                                //state
-                                    object.state = {
-                                        hovering:false,
-                                        glowing:false,
-                                        selected:false,
-                                        pressed:false,
-                                    };
-                            
-                                //control
-                                    object.press = function(event){
-                                        if(!active){return;}
-                            
-                                        if( pressable ){
-                                            if(this.state.pressed){return;}
-                                            this.state.pressed = true;
-                                            if(this.onpress){this.onpress(this, event);}
-                                        }
-                                        
-                                        this.select( !this.select(), event );
-                            
-                                        object.activateGraphicalState(object.state);
-                                    };
-                                    object.release = function(event){
-                                        if(!active || !pressable){return;}
-                            
-                                        if(!this.state.pressed){return;}
-                                        this.state.pressed = false;
-                                        object.activateGraphicalState(object.state);
-                                        if(this.onrelease){this.onrelease(this, event);}
-                                    };
-                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; object.activateGraphicalState(object.state); };
-                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  object.activateGraphicalState(object.state); };
-                                    object.select = function(bool,event,callback=true){ 
-                                        if(!active){return;}
-                            
-                                        if(bool == undefined){return this.state.selected;}
-                                        if(!selectable){return;}
-                                        if(this.state.selected == bool){return;}
-                                        this.state.selected = bool; object.activateGraphicalState(object.state);
-                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
-                                    };
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                                    object.forceMouseLeave = function(){
-                                        object.state.hovering = false; 
-                                        object.release('forced'); 
-                                        object.activateGraphicalState(object.state); 
-                                        if(object.onleave){object.onleave('forced');}
-                                    };
-                            
-                            
-                            
-                            
-                                //interactivity
-                                    subject.cover.onmouseenter = function(x,y,event){
-                                        object.state.hovering = true;  
-                                        object.activateGraphicalState(object.state);
-                                        if(object.onenter){object.onenter(event);}
-                                        if(event.buttons == 1){subject.cover.onmousedown(event);} 
-                                    };
-                                    subject.cover.onmouseleave = function(x,y,event){ 
-                                        object.state.hovering = false; 
-                                        object.release(event); 
-                                        object.activateGraphicalState(object.state); 
-                                        if(object.onleave){object.onleave(event);}
-                                    };
-                                    subject.cover.onmouseup = function(x,y,event){   if(!interactable){return;} object.release(event); };
-                                    subject.cover.onmousedown = function(x,y,event){ if(!interactable){return;} object.press(event); };
-                                    subject.cover.ondblclick = function(x,y,event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
-                                    
-                            
-                            
-                            
-                                //callbacks
-                                    object.onenter = onenter;
-                                    object.onleave = onleave;
-                                    object.onpress = onpress;
-                                    object.ondblpress = ondblpress;
-                                    object.onrelease = onrelease;
-                                    object.onselect = onselect;
-                                    object.ondeselect = ondeselect;
-                            
-                                return object;
-                            };
-                            this.button_polygon = function(
-                                name='button_polygon',
-                                x, y, points=[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}], angle=0, interactable=true,
-                                text_centre='',
-                                
-                                active=true, hoverable=true, selectable=false, pressable=true,
-                            
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_fill = 'rgba(0,0,0,1)',
-                                text_stroke = 'rgba(0,0,0,0)',
-                                text_lineWidth = 1,
-                            
-                                backing__off__fill=                          'rgba(180,180,180,1)',
-                                backing__off__stroke=                        'rgba(0,0,0,0)',
-                                backing__off__lineWidth=                     0,
-                                backing__up__fill=                           'rgba(200,200,200,1)',
-                                backing__up__stroke=                         'rgba(0,0,0,0)',
-                                backing__up__lineWidth=                      0,
-                                backing__press__fill=                        'rgba(230,230,230,1)',
-                                backing__press__stroke=                      'rgba(0,0,0,0)',
-                                backing__press__lineWidth=                   0,
-                                backing__select__fill=                       'rgba(200,200,200,1)',
-                                backing__select__stroke=                     'rgba(120,120,120,1)',
-                                backing__select__lineWidth=                  0.75,
-                                backing__select_press__fill=                 'rgba(230,230,230,1)',
-                                backing__select_press__stroke=               'rgba(120,120,120,1)',
-                                backing__select_press__lineWidth=            0.75,
-                                backing__glow__fill=                         'rgba(220,220,220,1)',
-                                backing__glow__stroke=                       'rgba(0,0,0,0)',
-                                backing__glow__lineWidth=                    0,
-                                backing__glow_press__fill=                   'rgba(250,250,250,1)',
-                                backing__glow_press__stroke=                 'rgba(0,0,0,0)',
-                                backing__glow_press__lineWidth=              0,
-                                backing__glow_select__fill=                  'rgba(220,220,220,1)',
-                                backing__glow_select__stroke=                'rgba(120,120,120,1)',
-                                backing__glow_select__lineWidth=             0.75,
-                                backing__glow_select_press__fill=            'rgba(250,250,250,1)',
-                                backing__glow_select_press__stroke=          'rgba(120,120,120,1)',
-                                backing__glow_select_press__lineWidth=       0.75,
-                                backing__hover__fill=                        'rgba(220,220,220,1)',
-                                backing__hover__stroke=                      'rgba(0,0,0,0)',
-                                backing__hover__lineWidth=                   0,
-                                backing__hover_press__fill=                  'rgba(240,240,240,1)',
-                                backing__hover_press__stroke=                'rgba(0,0,0,0)',
-                                backing__hover_press__lineWidth=             0,
-                                backing__hover_select__fill=                 'rgba(220,220,220,1)',
-                                backing__hover_select__stroke=               'rgba(120,120,120,1)',
-                                backing__hover_select__lineWidth=            0.75,
-                                backing__hover_select_press__fill=           'rgba(240,240,240,1)',
-                                backing__hover_select_press__stroke=         'rgba(120,120,120,1)',
-                                backing__hover_select_press__lineWidth=      0.75,
-                                backing__hover_glow__fill=                   'rgba(240,240,240,1)',
-                                backing__hover_glow__stroke=                 'rgba(0,0,0,0)',
-                                backing__hover_glow__lineWidth=              0,
-                                backing__hover_glow_press__fill=             'rgba(250,250,250,1)',
-                                backing__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-                                backing__hover_glow_press__lineWidth=        0,
-                                backing__hover_glow_select__fill=            'rgba(240,240,240,1)',
-                                backing__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-                                backing__hover_glow_select__lineWidth=       0.75,
-                                backing__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-                                backing__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-                                backing__hover_glow_select_press__lineWidth= 0.75,
-                            
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('polygon','backing',{points:points, style:{
-                                            fill:backing__off__fill,
-                                            stroke:backing__off__stroke,
-                                            lineWidth:backing__off__lineWidth,
-                                        }});
-                                        subject.append(backing);
-                                        var avgPoint = workspace.library.math.averagePoint(points);
-                                    //text
-                                        var text_centre = interfacePart.builder('text','centre', {
-                                            x:avgPoint.x, y:avgPoint.y,
-                                            text:text_centre, 
-                                            style:{
-                                                font:text_font,
-                                                testBaseline:text_textBaseline,
-                                                fill:text_fill,
-                                                stroke:text_stroke,
-                                                lineWidth:text_lineWidth,
-                                                textAlign:'center',
-                                                textBaseline:'middle',
-                                            }
-                                        });
-                                        subject.append(text_centre);
-                                    //cover
-                                        subject.cover = interfacePart.builder('polygon','cover',{points:points, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(subject.cover);
-                            
-                                //generic button part
-                                    var object = interfacePart.builder(
-                                        'button_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                            onenter:onenter,
-                                            onleave:onleave,
-                                            onpress:onpress,
-                                            ondblpress:ondblpress,
-                                            onrelease:onrelease,
-                                            onselect:onselect,
-                                            ondeselect:ondeselect,
-                            
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.activateGraphicalState = function(state){
-                                        if(!active){ 
-                                            backing.style.fill = backing__off__fill;
-                                            backing.style.stroke = backing__off__stroke;
-                                            backing.style.lineWidth = backing__off__lineWidth;
-                                            return;
-                                        }
-                            
-                                        var styles = [
-                                            { fill:backing__up__fill,                      stroke:backing__up__stroke,                      lineWidth:backing__up__lineWidth                      },
-                                            { fill:backing__press__fill,                   stroke:backing__press__stroke,                   lineWidth:backing__press__lineWidth                   },
-                                            { fill:backing__select__fill,                  stroke:backing__select__stroke,                  lineWidth:backing__select__lineWidth                  },
-                                            { fill:backing__select_press__fill,            stroke:backing__select_press__stroke,            lineWidth:backing__select_press__lineWidth            },
-                                            { fill:backing__glow__fill,                    stroke:backing__glow__stroke,                    lineWidth:backing__glow__lineWidth                    },
-                                            { fill:backing__glow_press__fill,              stroke:backing__glow_press__stroke,              lineWidth:backing__glow_press__lineWidth              },
-                                            { fill:backing__glow_select__fill,             stroke:backing__glow_select__stroke,             lineWidth:backing__glow_select__lineWidth             },
-                                            { fill:backing__glow_select_press__fill,       stroke:backing__glow_select_press__stroke,       lineWidth:backing__glow_select_press__lineWidth       },
-                                            { fill:backing__hover__fill,                   stroke:backing__hover__stroke,                   lineWidth:backing__hover__lineWidth                   },
-                                            { fill:backing__hover_press__fill,             stroke:backing__hover_press__stroke,             lineWidth:backing__hover_press__lineWidth             },
-                                            { fill:backing__hover_select__fill,            stroke:backing__hover_select__stroke,            lineWidth:backing__hover_select__lineWidth            },
-                                            { fill:backing__hover_select_press__fill,      stroke:backing__hover_select_press__stroke,      lineWidth:backing__hover_select_press__lineWidth      },
-                                            { fill:backing__hover_glow__fill,              stroke:backing__hover_glow__stroke,              lineWidth:backing__hover_glow__lineWidth              },
-                                            { fill:backing__hover_glow_press__fill,        stroke:backing__hover_glow_press__stroke,        lineWidth:backing__hover_glow_press__lineWidth        },
-                                            { fill:backing__hover_glow_select__fill,       stroke:backing__hover_glow_select__stroke,       lineWidth:backing__hover_glow_select__lineWidth       },
-                                            { fill:backing__hover_glow_select_press__fill, stroke:backing__hover_glow_select_press__stroke, lineWidth:backing__hover_glow_select_press__lineWidth },
-                                        ];
-                            
-                                        if(!hoverable && state.hovering ){ state.hovering = false; }
-                                        if(!selectable && state.selected ){ state.selected = false; }
-                            
-                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
-                                        backing.style.fill =       styles[i].fill;
-                                        backing.style.stroke =     styles[i].stroke;
-                                        backing.style.lineWidth =  styles[i].lineWidth;
-                                    };
-                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
-                            
-                                return object;
-                            };
-                            this.button_image = function(
-                                name='button_image',
-                                x, y, width=30, height=20, angle=0, interactable=true,
-                                
-                                active=true, hoverable=true, selectable=false, pressable=true,
-                            
-                                backingURL__off,
-                                backingURL__up,
-                                backingURL__press,
-                                backingURL__select,
-                                backingURL__select_press,
-                                backingURL__glow,
-                                backingURL__glow_press,
-                                backingURL__glow_select,
-                                backingURL__glow_select_press,
-                                backingURL__hover,
-                                backingURL__hover_press,
-                                backingURL__hover_select,
-                                backingURL__hover_select_press,
-                                backingURL__hover_glow,
-                                backingURL__hover_glow_press,
-                                backingURL__hover_glow_select,
-                                backingURL__hover_glow_select_press,
-                            
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
-                            ){
-                                //default to non-image version if image links are missing
-                                    if(
-                                        backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
-                                        backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 
-                                        backingURL__glow_press == undefined ||         backingURL__glow_select == undefined ||          backingURL__glow_select_press == undefined || 
-                                        backingURL__hover == undefined ||              backingURL__hover_press == undefined ||          backingURL__hover_select == undefined ||
-                                        backingURL__hover_select_press == undefined || backingURL__hover_glow == undefined ||           backingURL__hover_glow_press == undefined || 
-                                        backingURL__hover_glow_select == undefined ||  backingURL__hover_glow_select_press == undefined
-                                    ){
-                                        return this.button_rectangle(
+                                    if(handleURL == undefined || backingURL == undefined || slotURL == undefined || spanURL == undefined){
+                                        return this.rangeslide(
                                             name, x, y, width, height, angle, interactable,
-                                            undefined, undefined, undefined, undefined, undefined,
-                                            active, hoverable, selectable, pressable,
-                                            undefined, undefined, undefined, undefined, undefined,
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined,
-                                            onenter, onleave, onpress, ondblpress, onrelease, onselect, ondeselect
+                                            handleHeight, spanWidth, values, resetValues,
+                                            handleURL, backingURL, slotURL, invisibleHandleStyle, spanURL,
+                                            onchange, onrelease,
                                         );
                                     }
                             
                             
-                                //adding on the specific shapes
+                            
+                                var grappled = false;
+                                var handleNames = ['start','end'];
+                            
+                                //elements 
                                     //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL__off});
-                                        subject.append(backing);
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing and slot group
+                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
+                                        object.append(backingAndSlot);
+                                        //backing
+                                            var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                                            backingAndSlot.append(backing);
+                                        //slot
+                                            var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
+                                            backingAndSlot.append(slot);
+                                        //backing and slot cover
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                            backingAndSlot.append(backingAndSlotCover);
+                            
+                                    //span
+                                        var span = interfacePart.builder('image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:slotURL});
+                                        object.append(span);
+                            
+                                    //handles
+                                        var handles = {}
+                                        for(var a = 0; a < handleNames.length; a++){
+                                            //grouping
+                                                handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
+                                                object.append(handles[handleNames[a]]);
+                                            //handle
+                                                var handle = interfacePart.builder('image','handle',{width:width, height:height*handleHeight, url:handleURL});
+                                                handles[handleNames[a]].append(handle);
+                                            //invisible handle
+                                                var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                                                handles[handleNames[a]].append(invisibleHandle);
+                                        }
+                            
                                     //cover
-                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(subject.cover);
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(cover);
                             
-                                //generic button part
-                                    var object = interfacePart.builder(
-                                        'button_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                                        
                             
-                                            onenter:onenter,
-                                            onleave:onleave,
-                                            onpress:onpress,
-                                            ondblpress:ondblpress,
-                                            onrelease:onrelease,
-                                            onselect:onselect,
-                                            ondeselect:ondeselect,
                             
-                                            subject:subject,
+                                //graphical adjust
+                                    function set(a,handle,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        //make sure the handle order is maintained
+                                        //if necessary, one handle should push the other, though not past the ends
+                                            switch(handle){
+                                                default: console.error('unknown handle to adjust'); break;
+                                                case 'start':
+                                                    //don't allow start slide to encrouch on end slider's space
+                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                            
+                                                    //if start slide bumps up against end slide; move end slide accordingly
+                                                        var start_rightEdge = a + (1-a)*handleHeight;
+                                                        var end_leftEdge = values.end - (values.end)*handleHeight;
+                                                        if( start_rightEdge >= end_leftEdge ){
+                                                            values.end = start_rightEdge/(1-handleHeight);
+                                                        }
+                                                break;
+                                                case 'end':
+                                                    //don't allow end slide to encrouch on start slider's space
+                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                            
+                                                    //if end slide bumps up against start slide; move start slide accordingly
+                                                        var start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                                        var end_leftEdge = a - (a)*handleHeight;
+                                                        if( start_rightEdge >= end_leftEdge ){
+                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
+                                                        }
+                                                break;
+                                            }
+                            
+                                        //fill in data
+                                            values[handle] = a;
+                            
+                                        //adjust y positions
+                                            handles.start.parameter.y( values.start*height*(1-handleHeight) );
+                                            handles.end.parameter.y( values.end*height*(1-handleHeight) );
+                            
+                                        //adjust span height (with a little bit of padding so the span is under the handles a little)
+                                            span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
+                                            span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
+                            
+                                        if(update && object.onchange){object.onchange(values);}
+                                    }
+                                    function pan(a){
+                                        var diff = values.end - values.start;
+                            
+                                        var newPositions = [ a, a+diff ];
+                                        if(newPositions[0] <= 0){
+                                            newPositions[1] = newPositions[1] - newPositions[0];
+                                            newPositions[0] = 0;
                                         }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.activateGraphicalState = function(state){
-                                        if(!active){ 
-                                            backing.style.fill = backing__off__fill;
-                                            backing.style.stroke = backing__off__stroke;
-                                            backing.style.lineWidth = backing__off__lineWidth;
-                                            return;
+                                        else if(newPositions[1] >= 1){
+                                            newPositions[0] = newPositions[0] - (newPositions[1]-1);
+                                            newPositions[1] = 1;
                                         }
                             
-                                        if(!hoverable && state.hovering ){ state.hovering = false; }
-                                        if(!selectable && state.selected ){ state.selected = false; }
+                                        set( newPositions[0],'start' );
+                                        set( newPositions[1],'end' );
+                                    }
                             
-                                        backing.url = [
-                                            backingURL__up,                     
-                                            backingURL__press,                  
-                                            backingURL__select,                 
-                                            backingURL__select_press,           
-                                            backingURL__glow,                   
-                                            backingURL__glow_press,             
-                                            backingURL__glow_select,            
-                                            backingURL__glow_select_press,      
-                                            backingURL__hover,                  
-                                            backingURL__hover_press,            
-                                            backingURL__hover_select,           
-                                            backingURL__hover_select_press,     
-                                            backingURL__hover_glow,             
-                                            backingURL__hover_glow_press,       
-                                            backingURL__hover_glow_select,      
-                                            backingURL__hover_glow_select_press,
-                                        ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ];
+                            
+                            
+                            
+                                //methods
+                                    object.get = function(){return values;};
+                                    object.set = function(values,update){
+                                        if(grappled){return;}
+                                        if(values.start != undefined){set(values.start,'start',update);}
+                                        if(values.end != undefined){set(values.end,'end',update);}
                                     };
-                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                                    
+                                //interaction
+                                    function getPositionWithinFromMouse(x,y){
+                                        //calculate the distance the click is from the top of the slider (accounting for angle)
+                                            var offset = backingAndSlot.getOffset();
+                                            var delta = {
+                                                x: x - (backingAndSlot.x     + offset.x),
+                                                y: y - (backingAndSlot.y     + offset.y),
+                                                a: 0 - (backingAndSlot.angle + offset.a),
+                                            };
+                            
+                                        return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                                    }
+                            
+                                    //background click
+                                        //to stop clicks passing through the span
+                                            span.onmousedown = function(){};
+                                            span.onclick = function(){};
+                            
+                                        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
+                                        backingAndSlotCover.onclick = function(x,y,event){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                            
+                                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                                var d = getPositionWithinFromMouse(x,y);
+                            
+                                            //use the distance to calculate the correct value to set the slide to
+                                            //taking into account the slide handle's size also
+                                                var value = d + 0.5*handleHeight*((2*d)-1);
+                            
+                                            //whichever handle is closer; move that handle to the mouse's position
+                                                Math.abs(values.start-value) < Math.abs(values.end-value) ? set(value,'start') : set(value,'end');
+                                        };
+                            
+                                    //double-click reset
+                                        cover.ondblclick = function(){
+                                            if(!interactable){return;}
+                                            if(resetValues.start<0 || resetValues.end<0){return;}
+                                            if(grappled){return;}
+                            
+                                            set(resetValues.start,'start');
+                                            set(resetValues.end,'end');
+                                            object.onrelease(values);
+                                        };
+                            
+                                    //span panning - expand/shrink
+                                        cover.onwheel = function(){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                            
+                                            var move = event.deltaY/100;
+                                            var globalScale = workspace.core.viewport.scale();
+                                            var val = move/(10*globalScale);
+                            
+                                            set(values.start-val,'start');
+                                            set(values.end+val,'end');
+                                        };
+                            
+                                    //span panning - drag
+                                        span.onmousedown = function(x,y,event){
+                                            if(!interactable){return;}
+                                            grappled = true;
+                            
+                                            var initialValue = values.start;
+                                            var initialPosition = getPositionWithinFromMouse(x,y);
+                            
+                                            workspace.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                                    var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                    pan( initialValue+(livePosition-initialPosition) )
+                                                    object.onchange(values);
+                                                },
+                                                function(event){
+                                                    object.onrelease(values);
+                                                    grappled = false;
+                                                }
+                                            );
+                                        };
+                            
+                                    //handle movement
+                                        for(var a = 0; a < handleNames.length; a++){
+                                            handles[handleNames[a]].children[1].onmousedown = (function(a){
+                                                return function(x,y,event){
+                                                    if(!interactable){return;}
+                                                    grappled = true;
+                                        
+                                                    var initialValue = values[handleNames[a]];
+                                                    var initialPosition = getPositionWithinFromMouse(x,y);
+                                                    
+                                                    workspace.system.mouse.mouseInteractionHandler(
+                                                        function(event){
+                                                            var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
+                                                            var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                            set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
+                                                            object.onchange(values);
+                                                        },
+                                                        function(event){
+                                                            object.onrelease(values);
+                                                            grappled = false;
+                                                        }
+                                                    );
+                                                }
+                                            })(a);
+                                        }
+                              
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                                    object.onrelease = onrelease;  
+                            
+                                //setup
+                                    set(0,'start');
+                                    set(1,'end');
                             
                                 return object;
                             };
-                            this.grapher_waveWorkspace = function(
-                                name='grapher_waveWorkspace',
-                                x, y, width=120, height=60, angle=0, interactable=true, selectNeedle=true, selectionArea=true,
+                            this.slide = function(
+                                name='slide', 
+                                x, y, width=10, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, value=0, resetValue=-1,
+                                handleStyle = 'rgba(200,200,200,1)',
+                                backingStyle = 'rgba(150,150,150,1)',
+                                slotStyle = 'rgba(50,50,50,1)',
+                                invisibleHandleStyle = 'rgba(255,0,0,0)',
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing and slot group
+                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
+                                        object.append(backingAndSlot);
+                                        //backing
+                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                                            backingAndSlot.append(backing);
+                                        //slot
+                                            var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
+                                            backingAndSlot.append(slot);
+                                        //backing and slot cover
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                            backingAndSlot.append(backingAndSlotCover);
+                                    //handle
+                                        var handle = interfacePart.builder('rectangle','handle',{width:width, height:height*handleHeight, style:{fill:handleStyle}});
+                                        object.append(handle);
+                                    //invisible handle
+                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height: height*(handleHeight+0.01) + handleHeight, style:{fill:invisibleHandleStyle}});
+                                        object.append(invisibleHandle);
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(cover);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                                        
+                                        value = a;
+                                        handle.y = a*height*(1-handleHeight);
+                                        invisibleHandle.y = handle.y - ( height*0.01 )/2;
+                            
+                            
+                                        handle.computeExtremities();
+                                        invisibleHandle.computeExtremities();
+                                    }
+                                    object.__calculationAngle = angle;
+                                    function currentMousePosition(event){
+                                        return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    cover.ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                            
+                                        set(resetValue);
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    cover.onwheel = function(){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                                        var globalScale = workspace.core.viewport.scale();
+                                        set( value + move/(10*globalScale) );
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
+                                    backingAndSlotCover.onclick = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        //calculate the distance the click is from the top of the slider (accounting for angle)
+                                            var offset = backingAndSlot.getOffset();
+                                            var delta = {
+                                                x: x - (backingAndSlot.x     + offset.x),
+                                                y: y - (backingAndSlot.y     + offset.y),
+                                                a: 0 - (backingAndSlot.angle + offset.a),
+                                            };
+                                            var d = workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                            
+                                        //use the distance to calculate the correct value to set the slide to
+                                        //taking into account the slide handle's size also
+                                            var value = d + 0.5*handleHeight*((2*d)-1);
+                            
+                                        set(value);
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    invisibleHandle.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        grappled = true;
+                            
+                                        var initialValue = value;
+                                        var initialY = currentMousePosition(event);
+                                        var mux = height - height*handleHeight;
+                            
+                                        workspace.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = workspace.core.viewport.scale();
+                                                set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                            },
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = workspace.core.viewport.scale();
+                                                object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                                grappled = false;
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                                //setup
+                                    set(value);
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                return object;
+                            };
+                            this.slidePanel = function(
+                                name='slidePanel', 
+                                x, y, width=80, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                                handleStyle = 'rgba(200,200,200,1)',
+                                backingStyle = 'rgba(150,150,150,1)',
+                                slotStyle = 'rgba(50,50,50,1)',
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //slides
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder(
+                                                'slide', 'slide_'+a, {
+                                                    x:a*(width/count), y:0,
+                                                    width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
+                                                    value:startValue, resetValue:resetValue,
+                                                    style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
+                                                    onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
+                                                    onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
+                                                }
+                                            );
+                                            // temp.dotFrame = true;
+                                            temp.__calculationAngle = angle;
+                                            object.append(temp);
+                                        }
+                            
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                            
+                                        for(var a = 0; a < count; a++){
+                                            object.children[a].interactable(bool);
+                                        }
+                                    };
+                            
+                                return object;
+                            };
+                            this.slidePanel = function(
+                                name='slidePanel', 
+                                x, y, width=80, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                            
+                                handleURL, backingURL, slotURL, overlayURL,
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //slides
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder(
+                                                'slide_image', 'slide_'+a, {
+                                                    x:a*(width/count), y:0,
+                                                    width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
+                                                    value:startValue, resetValue:resetValue,
+                                                    handleURL:handleURL, backingURL:backingURL, slotURL:slotURL,
+                                                    onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
+                                                    onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
+                                                }
+                                            );
+                                            // temp.dotFrame = true;
+                                            temp.__calculationAngle = angle;
+                                            object.append(temp);
+                                        }
+                                    //overlay
+                                        if(overlayURL != undefined){
+                                            var overlay = interfacePart.builder('image','overlay',{width:width, height:height, url:overlayURL});
+                                            object.append(overlay);
+                                        }
+                            
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                            
+                                        for(var a = 0; a < count; a++){
+                                            object.children[a].interactable(bool);
+                                        }
+                                    };
+                            
+                                return object;
+                            };
+                            this.slide_image = function(
+                                name='slide_image', 
+                                x, y, width=10, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, value=0, resetValue=-1,
+                                
+                                handleURL, backingURL, slotURL,
+                            
+                                invisibleHandleStyle = 'rgba(255,0,0,0)',
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //default to non-image version if image links are missing
+                                    if(handleURL == undefined || backingURL == undefined || slotURL == undefined){
+                                        return this.slide(
+                                            name, x, y, width, height, angle, interactable,
+                                            handleHeight, value, resetValue,
+                                            handleURL, backingURL, slotURL, invisibleHandleStyle,
+                                            onchange, onrelease,
+                                        );
+                                    }
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing and slot group
+                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
+                                        object.append(backingAndSlot);
+                                        //backing
+                                            var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                                            backingAndSlot.append(backing);
+                                        //slot
+                                            var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
+                                            backingAndSlot.append(slot);
+                                        //backing and slot cover
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                            backingAndSlot.append(backingAndSlotCover);
+                                    //handle
+                                        var handle = interfacePart.builder('image','handle',{width:width, height:height*handleHeight, url:handleURL});
+                                        object.append(handle);
+                                    //invisible handle
+                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, style:{fill:invisibleHandleStyle}});
+                                        object.append(invisibleHandle);
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        object.append(cover);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                                        
+                                        value = a;
+                                        handle.y = a*height*(1-handleHeight);
+                                        invisibleHandle.y = handle.y - ( height*0.01 )/2;
+                            
+                                        handle.computeExtremities();
+                                        invisibleHandle.computeExtremities();
+                                    }
+                                    object.__calculationAngle = angle;
+                                    function currentMousePosition(event){
+                                        return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    cover.ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                            
+                                        set(resetValue);
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    cover.onwheel = function(){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                                        var globalScale = workspace.core.viewport.scale();
+                                        set( value + move/(10*globalScale) );
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
+                                    backingAndSlotCover.onclick = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        //calculate the distance the click is from the top of the slider (accounting for angle)
+                                            var offset = backingAndSlot.getOffset();
+                                            var delta = {
+                                                x: x - (backingAndSlot.x     + offset.x),
+                                                y: y - (backingAndSlot.y     + offset.y),
+                                                a: 0 - (backingAndSlot.angle + offset.a),
+                                            };
+                                            var d = workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                            
+                                        //use the distance to calculate the correct value to set the slide to
+                                        //taking into account the slide handle's size also
+                                            var value = d + 0.5*handleHeight*((2*d)-1);
+                            
+                                        set(value);
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    invisibleHandle.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        grappled = true;
+                            
+                                        var initialValue = value;
+                                        var initialY = currentMousePosition(event);
+                                        var mux = height - height*handleHeight;
+                            
+                                        workspace.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = workspace.core.viewport.scale();
+                                                set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                            },
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = workspace.core.viewport.scale();
+                                                object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                                grappled = false;
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                                //setup
+                                    set(value);
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                return object;
+                            };
+                        };
+                        this.display = new function(){
+                            this.audio_meter_level = function(
+                                name='audio_meter_level',
+                                x, y, angle=0,
+                                width=20, height=60,
+                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                            
+                                backingStyle='rgb(10,10,10)',
+                                levelStyles=['rgba(250,250,250,1)','rgb(100,100,100)'],
+                                markingStyle_fill='rgba(220,220,220,1)',
+                                markingStyle_font='1pt Courier New',
+                            ){
+                                //elements
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //meter
+                                        var meter = interfacePart.builder('meter_level','meter',{
+                                            width:width, height:height, markings:markings,
+                                            style:{
+                                                backing:backingStyle,
+                                                levels:levelStyles,
+                                                markingStyle_fill:markingStyle_fill,
+                                                markingStyle_font:markingStyle_font,
+                                            },
+                                        });
+                                        object.append(meter);
+                            
+                                //circuitry
+                                    var converter = interface.circuit.audio2percentage()
+                                    converter.newValue = function(val){meter.set( val );};
+                            
+                                //audio connections
+                                    object.audioIn = function(){ return converter.audioIn(); }
+                            
+                                //methods
+                                    object.start = function(){ converter.start(); };
+                                    object.stop = function(){ converter.stop(); };
+                            
+                                return object;
+                            };
+                            this.glowbox_rect = function(
+                                name='glowbox_rect',
+                                x, y, width=30, height=30, angle=0,
+                                glowStyle = 'rgba(244,234,141,1)',
+                                dimStyle = 'rgba(80,80,80,1)'
+                            ){
+                                //elements 
+                                    var object = interfacePart.builder('group',name,{x:x, y:y});
+                                    var rect = interfacePart.builder('rectangle','light',{ width:width, height:height, angle:angle, style:{fill:dimStyle} });
+                                        object.append(rect);
+                            
+                                //methods
+                                    object.on = function(){
+                                        rect.style.fill = glowStyle;
+                                    };
+                                    object.off = function(){
+                                        rect.style.fill = dimStyle;
+                                    };
+                            
+                                return object;
+                            };
+                            
+                            // this.glowbox_rect_img = function(
+                            //     name='glowbox_rect',
+                            //     x, y, width=30, height=30, angle=0,
+                            //     glowStyle = 'rgba(244,234,141,1)',
+                            //     dimStyle = 'rgba(80,80,80,1)',
+                            //     imageOverlay='images/units/alpha/glowbox_rect_overlay_1.png',
+                            // ){
+                            //     //elements 
+                            //         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                            //         var rect = interfacePart.builder('rectangle','light',{ width:width, height:height, style:{fill:dimStyle} });
+                            //             object.append(rect);
+                            //         var overlay = interfacePart.builder('clippedImage','overlay',{ width:width, height:height, url:imageOverlay, points:[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}] });
+                            //             object.append(overlay);
+                            
+                            //     //methods
+                            //         object.on = function(){
+                            //             rect.style.fill = glowStyle;
+                            //         };
+                            //         object.off = function(){
+                            //             rect.style.fill = dimStyle;
+                            //         };
+                            
+                            //     return object;
+                            // };
+                            this.grapher = function(
+                                name='grapher',
+                                x, y, width=120, height=60, angle=0,
                             
                                 foregroundStyles=[
-                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.25, lineJoin:'round'},
-                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.25, lineJoin:'round'},
+                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                    {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
                                 ],
                                 foregroundTextStyles=[
                                     {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
                                     {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
                                 ],
                             
                                 backgroundStyle_stroke='rgba(0,100,0,1)',
                                 backgroundStyle_lineWidth=0.25,
                                 backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_font='10pt Helvetica',
+                                backgroundTextStyle_font='1.5pt Helvetica',
                             
                                 backingStyle='rgba(50,50,50,1)',
-                            
-                                onchange=function(needle,value){}, 
-                                onrelease=function(needle,value){}, 
-                                selectionAreaToggle=function(bool){},
                             ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //main graph
-                                        var graph = interfacePart.builder('grapher_static', 'graph', {
-                                            width:width, height:height,
-                                            style:{
-                                                foregrounds:foregroundStyles,   
-                                                foregroundText:foregroundTextStyles,
-                                                background_stroke:backgroundStyle_stroke,
-                                                background_lineWidth:backgroundStyle_lineWidth,
-                                                backgroundText_fill:backgroundTextStyle_fill,
-                                                backgroundText_font:backgroundTextStyle_font,
-                                                backing:backingStyle,
-                                            }
-                                        });
-                                        graph.resolution(10);
-                                        object.append(graph);
-                                    //needle overlay
-                                        var overlay = interfacePart.builder('needleOverlay', 'overlay', {
-                                            width:width, height:height, interactable:interactable, selectNeedle:selectNeedle, selectionArea:selectionArea,
-                                            needleStyles:foregroundStyles.map(a => a.stroke),
-                                        });
-                                        object.append(overlay);
-                            
-                                //controls
-                                    //grapher
-                                        object.horizontalMarkings = graph.horizontalMarkings;
-                                        object.verticalMarkings = graph.verticalMarkings;
-                                        object.drawBackground = graph.drawBackground;
-                                        object.drawForeground = graph.drawForeground;
-                                        object.draw = graph.draw;
-                                    //needle overlay
-                                        object.mark = overlay.mark;
-                                        object.removeAllMarks = overlay.removeAllMarks;
-                                        object.select = overlay.select;
-                                        object.area = overlay.area;
-                                        object.interactable = overlay.interactable;
-                            
-                                //callbacks
-                                    object.onchange = onchange;
-                                    object.onrelease = onrelease;
-                                    object.selectionAreaToggle = selectionAreaToggle;
-                                    overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
-                                    overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
-                                    overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
-                            
-                                //setup
-                                    graph.viewbox({left:0});
-                                    graph.drawBackground();
-                                    overlay.select(0);
-                            
-                                return object;
-                            };
-                            this.list_image = function(
-                                name='list_image', 
-                                x, y, width=50, height=100, angle=0, interactable=true,
-                                list=[],
-                            
-                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
-                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
-                            
-                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
-                                breakHeightMux=0.0025, breakWidthMux=0.9, 
-                                spacingHeightMux=0.005,
-                                backingURL, breakURL,
-                            
-                                itemURL__off,
-                                itemURL__up,
-                                itemURL__press,
-                                itemURL__select,
-                                itemURL__select_press,
-                                itemURL__glow,
-                                itemURL__glow_press,
-                                itemURL__glow_select,
-                                itemURL__glow_select_press,
-                                itemURL__hover,
-                                itemURL__hover_press,
-                                itemURL__hover_select,
-                                itemURL__hover_select_press,
-                                itemURL__hover_glow,
-                                itemURL__hover_glow_press,
-                                itemURL__hover_glow_select,
-                                itemURL__hover_glow_select_press,
-                            
-                                onenter=function(){},
-                                onleave=function(){},
-                                onpress=function(){},
-                                ondblpress=function(){},
-                                onrelease=function(){},
-                                onselection=function(){},
-                                onpositionchange=function(){},
-                            ){
-                                //state
-                                    var itemArray = [];
-                                    var selectedItems = [];
-                                    var lastNonShiftClicked = 0;
-                                    var position = 0;
-                                    var calculatedListHeight;
+                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
+                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var foregroundElementsGroup = [];
                             
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     //backing
-                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
-                                        object.append(backing);
-                                    //item collection
-                                        var itemCollection = interfacePart.builder('group','itemCollection');
-                                        object.append(itemCollection);
-                                        function refreshList(){
-                                            //clean out all values
-                                                itemArray = [];
-                                                itemCollection.clear();
-                                                selectedItems = [];
-                                                position = 0;
-                                                lastNonShiftClicked = 0;
-                            
-                                            //populate list
-                                                var accumulativeHeight = 0;
-                                                for(var a = 0; a < list.length; a++){
-                                                    if( list[a] == 'space' ){
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:0, y:accumulativeHeight,
-                                                            width:width, height:height*spacingHeightMux,
-                                                            style:{fill:'rgba(255,0,0,0)'}
-                                                        });
-                            
-                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else if( list[a] == 'break'){
-                                                        var temp = interfacePart.builder('image',''+a,{
-                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*breakWidthMux, height:height*breakHeightMux,
-                                                            url:breakURL
-                                                        });
-                            
-                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else{
-                                                        var temp = interfacePart.builder( 'button_image', ''+a, {
-                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
-                            
-                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                                            backingURL__off:                     itemURL__off,
-                                                            backingURL__up:                      itemURL__up,
-                                                            backingURL__press:                   itemURL__press,
-                                                            backingURL__select:                  itemURL__select,
-                                                            backingURL__select_press:            itemURL__select_press,
-                                                            backingURL__glow:                    itemURL__glow,
-                                                            backingURL__glow_press:              itemURL__glow_press,
-                                                            backingURL__glow_select:             itemURL__glow_select,
-                                                            backingURL__glow_select_press:       itemURL__glow_select_press,
-                                                            backingURL__hover:                   itemURL__hover,
-                                                            backingURL__hover_press:             itemURL__hover_press,
-                                                            backingURL__hover_select:            itemURL__hover_select,
-                                                            backingURL__hover_select_press:      itemURL__hover_select_press,
-                                                            backingURL__hover_glow:              itemURL__hover_glow,
-                                                            backingURL__hover_glow_press:        itemURL__hover_glow_press,
-                                                            backingURL__hover_glow_select:       itemURL__hover_glow_select,
-                                                            backingURL__hover_glow_select_press: itemURL__hover_glow_select_press,
-                                                        });
-                            
-                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                        temp.onrelease = function(a){
-                                                            return function(){
-                                                                if( list[a].function ){ list[a].function(); }
-                                                                object.onrelease(a);
-                                                            }
-                                                        }(a);
-                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-                            
-                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                        itemArray.push( temp );
-                                                    }
-                                                }
-                            
-                                            return accumulativeHeight - height*itemSpacingMux;
-                                        }
-                                        calculatedListHeight = refreshList();
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                                        object.append(cover);
-                                    //stencil
-                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                                        object.stencil(stencil);
-                                        object.clip(true);
-                            
-                            
-                                //interaction
-                                    cover.onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var move = event.deltaY/100;
-                                        object.position( object.position() + move/10 );
-                                        for(var a = 0; a < itemArray.length; a++){
-                                            itemArray[a].forceMouseLeave();
-                                        }
-                                    };
-                                
-                                //controls
-                                    object.position = function(a,update=true){
-                                        if(a == undefined){return position;}
-                                        a = a < 0 ? 0 : a;
-                                        a = a > 1 ? 1 : a;
-                                        position = a;
-                            
-                                        if( calculatedListHeight < height ){return;}
-                                        var movementSpace = calculatedListHeight - height;
-                                        itemCollection.parameter.y( -a*movementSpace );
-                                        
-                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
-                                    };
-                                    object.select = function(a,state,event,update=true){
-                                        if(!selectable){return;}
-                            
-                                        //where multi selection is not allowed
-                                            if(!multiSelect){
-                                                //where we want to select an item, which is not already selected
-                                                    if(state && !selectedItems.includes(a) ){
-                                                        //deselect all other items
-                                                            while( selectedItems.length > 0 ){
-                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
-                                                                selectedItems.shift();
-                                                            }
-                            
-                                                        //select current item
-                                                            selectedItems.push(a);
-                            
-                                                //where we want to deselect an item that is selected
-                                                    }else if(!state && selectedItems.includes(a)){
-                                                        selectedItems = [];
-                                                    }
-                            
-                                            //do not update the item itself, in the case that it was the item that sent this command
-                                            //(which would cause a little loop)
-                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
-                            
-                                        //where multi selection is allowed
-                                            }else{
-                                                //wherer range-selection is to be done
-                                                    if( event != undefined && event.shiftKey ){
-                                                        //gather top and bottom item
-                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
-                                                            var min = Math.min(lastNonShiftClicked, a);
-                                                            var max = Math.max(lastNonShiftClicked, a);
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( itemArray[b].name == ''+min ){min = b;}
-                                                                if( itemArray[b].name == ''+max ){max = b;}
-                                                            }
-                            
-                                                        //deselect all outside the range
-                                                            selectedItems = [];
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( b > max || b < min ){
-                                                                    if( itemArray[b].select() ){
-                                                                        itemArray[b].select(false,undefined,false);
-                                                                    }
-                                                                }
-                                                            }
-                            
-                                                        //select those within the range (that aren't already selected)
-                                                            for(var b = min; b <= max; b++){
-                                                                if( !itemArray[b].select() ){
-                                                                    itemArray[b].select(true,undefined,false);
-                                                                    selectedItems.push(b);
-                                                                }
-                                                            }
-                                                //where range-selection is not to be done
-                                                    }else{
-                                                        if(update){ itemArray[a].select(state); }
-                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
-                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                                        lastNonShiftClicked = a;
-                                                    }
-                                            }
-                            
-                                        object.onselection(selectedItems);
-                                    };
-                                    object.add = function(item){
-                                        list.push(item);
-                                        calculatedListHeight = refreshList();
-                                    };
-                                    object.remove = function(a){
-                                        list.splice(a,1);
-                                        calculatedListHeight = refreshList();
-                                    };
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                        refreshList();
-                                    };
-                            
-                                //callbacks
-                                    object.onenter = onenter;
-                                    object.onleave = onleave;
-                                    object.onpress = onpress;
-                                    object.ondblpress = ondblpress;
-                                    object.onrelease = onrelease;
-                                    object.onselection = onselection;
-                                    object.onpositionchange = onpositionchange;
-                                    
-                                return object;
-                            };
-                            this.list = function(
-                                name='list', 
-                                x, y, width=50, height=100, angle=0, interactable=true,
-                                list=[],
-                            
-                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
-                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
-                            
-                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
-                                breakHeightMux=0.0025, breakWidthMux=0.9, 
-                                spacingHeightMux=0.005,
-                                backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
-                            
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_fill = 'rgba(0,0,0,1)',
-                                text_stroke = 'rgba(0,0,0,0)',
-                                text_lineWidth = 1,
-                            
-                                item__off__fill=                          'rgba(180,180,180,1)',
-                                item__off__stroke=                        'rgba(0,0,0,0)',
-                                item__off__lineWidth=                     0,
-                                item__up__fill=                           'rgba(200,200,200,1)',
-                                item__up__stroke=                         'rgba(0,0,0,0)',
-                                item__up__lineWidth=                      0,
-                                item__press__fill=                        'rgba(230,230,230,1)',
-                                item__press__stroke=                      'rgba(0,0,0,0)',
-                                item__press__lineWidth=                   0,
-                                item__select__fill=                       'rgba(200,200,200,1)',
-                                item__select__stroke=                     'rgba(120,120,120,1)',
-                                item__select__lineWidth=                  2,
-                                item__select_press__fill=                 'rgba(230,230,230,1)',
-                                item__select_press__stroke=               'rgba(120,120,120,1)',
-                                item__select_press__lineWidth=            2,
-                                item__glow__fill=                         'rgba(220,220,220,1)',
-                                item__glow__stroke=                       'rgba(0,0,0,0)',
-                                item__glow__lineWidth=                    0,
-                                item__glow_press__fill=                   'rgba(250,250,250,1)',
-                                item__glow_press__stroke=                 'rgba(0,0,0,0)',
-                                item__glow_press__lineWidth=              0,
-                                item__glow_select__fill=                  'rgba(220,220,220,1)',
-                                item__glow_select__stroke=                'rgba(120,120,120,1)',
-                                item__glow_select__lineWidth=             2,
-                                item__glow_select_press__fill=            'rgba(250,250,250,1)',
-                                item__glow_select_press__stroke=          'rgba(120,120,120,1)',
-                                item__glow_select_press__lineWidth=       2,
-                                item__hover__fill=                        'rgba(220,220,220,1)',
-                                item__hover__stroke=                      'rgba(0,0,0,0)',
-                                item__hover__lineWidth=                   0,
-                                item__hover_press__fill=                  'rgba(240,240,240,1)',
-                                item__hover_press__stroke=                'rgba(0,0,0,0)',
-                                item__hover_press__lineWidth=             0,
-                                item__hover_select__fill=                 'rgba(220,220,220,1)',
-                                item__hover_select__stroke=               'rgba(120,120,120,1)',
-                                item__hover_select__lineWidth=            2,
-                                item__hover_select_press__fill=           'rgba(240,240,240,1)',
-                                item__hover_select_press__stroke=         'rgba(120,120,120,1)',
-                                item__hover_select_press__lineWidth=      2,
-                                item__hover_glow__fill=                   'rgba(240,240,240,1)',
-                                item__hover_glow__stroke=                 'rgba(0,0,0,0)',
-                                item__hover_glow__lineWidth=              0,
-                                item__hover_glow_press__fill=             'rgba(250,250,250,1)',
-                                item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-                                item__hover_glow_press__lineWidth=        0,
-                                item__hover_glow_select__fill=            'rgba(240,240,240,1)',
-                                item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-                                item__hover_glow_select__lineWidth=       2,
-                                item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-                                item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-                                item__hover_glow_select_press__lineWidth= 2,
-                            
-                                onenter=function(){},
-                                onleave=function(){},
-                                onpress=function(){},
-                                ondblpress=function(){},
-                                onrelease=function(){},
-                                onselection=function(){},
-                                onpositionchange=function(){},
-                            ){
-                                //state
-                                    var itemArray = [];
-                                    var selectedItems = [];
-                                    var lastNonShiftClicked = 0;
-                                    var position = 0;
-                                    var calculatedListHeight;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
-                                            fill:backing_style,
-                                        }});
-                                        object.append(backing);
-                                    //item collection
-                                        var itemCollection = interfacePart.builder('group','itemCollection');
-                                        object.append(itemCollection);
-                                        function refreshList(){
-                                            //clean out all values
-                                                itemArray = [];
-                                                itemCollection.clear();
-                                                selectedItems = [];
-                                                position = 0;
-                                                lastNonShiftClicked = 0;
-                            
-                                            //populate list
-                                                var accumulativeHeight = 0;
-                                                for(var a = 0; a < list.length; a++){
-                                                    if( list[a] == 'space' ){
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:0, y:accumulativeHeight,
-                                                            width:width, height:height*spacingHeightMux,
-                                                            style:{fill:'rgba(255,0,0,0)'}
-                                                        });
-                            
-                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else if( list[a] == 'break'){
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*breakWidthMux, height:height*breakHeightMux,
-                                                            style:{fill:break_style}
-                                                        });
-                            
-                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else{
-                                                        var temp = interfacePart.builder( 'button_rectangle', ''+a, {
-                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
-                                                            text_left: list[a].text_left,
-                                                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
-                                                            text_right: list[a].text_right,
-                            
-                                                            textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
-                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                                            style:{
-                                                                text_font:text_font,
-                                                                text_textBaseline:text_textBaseline,
-                                                                text_fill:text_fill,
-                                                                text_stroke:text_stroke,
-                                                                text_lineWidth:text_lineWidth,
-                            
-                                                                background__off__fill:                            item__off__fill,
-                                                                background__off__stroke:                          item__off__stroke,
-                                                                background__off__lineWidth:                       item__off__lineWidth,
-                                                                background__up__fill:                             item__up__fill,
-                                                                background__up__stroke:                           item__up__stroke,
-                                                                background__up__lineWidth:                        item__up__lineWidth,
-                                                                background__press__fill:                          item__press__fill,
-                                                                background__press__stroke:                        item__press__stroke,
-                                                                background__press__lineWidth:                     item__press__lineWidth,
-                                                                background__select__fill:                         item__select__fill,
-                                                                background__select__stroke:                       item__select__stroke,
-                                                                background__select__lineWidth:                    item__select__lineWidth,
-                                                                background__select_press__fill:                   item__select_press__fill,
-                                                                background__select_press__stroke:                 item__select_press__stroke,
-                                                                background__select_press__lineWidth:              item__select_press__lineWidth,
-                                                                background__glow__fill:                           item__glow__fill,
-                                                                background__glow__stroke:                         item__glow__stroke,
-                                                                background__glow__lineWidth:                      item__glow__lineWidth,
-                                                                background__glow_press__fill:                     item__glow_press__fill,
-                                                                background__glow_press__stroke:                   item__glow_press__stroke,
-                                                                background__glow_press__lineWidth:                item__glow_press__lineWidth,
-                                                                background__glow_select__fill:                    item__glow_select__fill,
-                                                                background__glow_select__stroke:                  item__glow_select__stroke,
-                                                                background__glow_select__lineWidth:               item__glow_select__lineWidth,
-                                                                background__glow_select_press__fill:              item__glow_select_press__fill,
-                                                                background__glow_select_press__stroke:            item__glow_select_press__stroke,
-                                                                background__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
-                                                                background__hover__fill:                          item__hover__fill,
-                                                                background__hover__stroke:                        item__hover__stroke,
-                                                                background__hover__lineWidth:                     item__hover__lineWidth,
-                                                                background__hover_press__fill:                    item__hover_press__fill,
-                                                                background__hover_press__stroke:                  item__hover_press__stroke,
-                                                                background__hover_press__lineWidth:               item__hover_press__lineWidth,
-                                                                background__hover_select__fill:                   item__hover_select__fill,
-                                                                background__hover_select__stroke:                 item__hover_select__stroke,
-                                                                background__hover_select__lineWidth:              item__hover_select__lineWidth,
-                                                                background__hover_select_press__fill:             item__hover_select_press__fill,
-                                                                background__hover_select_press__stroke:           item__hover_select_press__stroke,
-                                                                background__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
-                                                                background__hover_glow__fill:                     item__hover_glow__fill,
-                                                                background__hover_glow__stroke:                   item__hover_glow__stroke,
-                                                                background__hover_glow__lineWidth:                item__hover_glow__lineWidth,
-                                                                background__hover_glow_press__fill:               item__hover_glow_press__fill,
-                                                                background__hover_glow_press__stroke:             item__hover_glow_press__stroke,
-                                                                background__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
-                                                                background__hover_glow_select__fill:              item__hover_glow_select__fill,
-                                                                background__hover_glow_select__stroke:            item__hover_glow_select__stroke,
-                                                                background__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
-                                                                background__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
-                                                                background__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
-                                                                background__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
-                                                            }
-                                                        });
-                            
-                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                        temp.onrelease = function(a){
-                                                            return function(){
-                                                                if( list[a].function ){ list[a].function(); }
-                                                                object.onrelease(a);
-                                                            }
-                                                        }(a);
-                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-                            
-                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                        itemArray.push( temp );
-                                                    }
-                                                }
-                            
-                                            return accumulativeHeight - height*itemSpacingMux;
-                                        }
-                                        calculatedListHeight = refreshList();
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                                        object.append(cover);
-                                    //stencil
-                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
-                                        object.stencil(stencil);
-                                        object.clip(true);
-                            
-                            
-                                //interaction
-                                    cover.onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var move = event.deltaY/100;
-                                        object.position( object.position() + move/10 );
-                                        for(var a = 0; a < itemArray.length; a++){
-                                            itemArray[a].forceMouseLeave();
-                                        }
-                                    };
-                                
-                                //controls
-                                    object.position = function(a,update=true){
-                                        if(a == undefined){return position;}
-                                        a = a < 0 ? 0 : a;
-                                        a = a > 1 ? 1 : a;
-                                        position = a;
-                            
-                                        if( calculatedListHeight < height ){return;}
-                                        var movementSpace = calculatedListHeight - height;
-                                        itemCollection.parameter.y( -a*movementSpace );
-                                        
-                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
-                                    };
-                                    object.select = function(a,state,event,update=true){
-                                        if(!selectable){return;}
-                            
-                                        //where multi selection is not allowed
-                                            if(!multiSelect){
-                                                //where we want to select an item, which is not already selected
-                                                    if(state && !selectedItems.includes(a) ){
-                                                        //deselect all other items
-                                                            while( selectedItems.length > 0 ){
-                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
-                                                                selectedItems.shift();
-                                                            }
-                            
-                                                        //select current item
-                                                            selectedItems.push(a);
-                            
-                                                //where we want to deselect an item that is selected
-                                                    }else if(!state && selectedItems.includes(a)){
-                                                        selectedItems = [];
-                                                    }
-                            
-                                            //do not update the item itself, in the case that it was the item that sent this command
-                                            //(which would cause a little loop)
-                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
-                            
-                                        //where multi selection is allowed
-                                            }else{
-                                                //wherer range-selection is to be done
-                                                    if( event != undefined && event.shiftKey ){
-                                                        //gather top and bottom item
-                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
-                                                            var min = Math.min(lastNonShiftClicked, a);
-                                                            var max = Math.max(lastNonShiftClicked, a);
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( itemArray[b].name == ''+min ){min = b;}
-                                                                if( itemArray[b].name == ''+max ){max = b;}
-                                                            }
-                            
-                                                        //deselect all outside the range
-                                                            selectedItems = [];
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( b > max || b < min ){
-                                                                    if( itemArray[b].select() ){
-                                                                        itemArray[b].select(false,undefined,false);
-                                                                    }
-                                                                }
-                                                            }
-                            
-                                                        //select those within the range (that aren't already selected)
-                                                            for(var b = min; b <= max; b++){
-                                                                if( !itemArray[b].select() ){
-                                                                    itemArray[b].select(true,undefined,false);
-                                                                    selectedItems.push(b);
-                                                                }
-                                                            }
-                                                //where range-selection is not to be done
-                                                    }else{
-                                                        if(update){ itemArray[a].select(state); }
-                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
-                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                                        lastNonShiftClicked = a;
-                                                    }
-                                            }
-                            
-                                        object.onselection(selectedItems);
-                                    };
-                                    object.add = function(item){
-                                        list.push(item);
-                                        calculatedListHeight = refreshList();
-                                    };
-                                    object.remove = function(a){
-                                        list.splice(a,1);
-                                        calculatedListHeight = refreshList();
-                                    };
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                        refreshList();
-                                    };
-                            
-                                //callbacks
-                                    object.onenter = onenter;
-                                    object.onleave = onleave;
-                                    object.onpress = onpress;
-                                    object.ondblpress = ondblpress;
-                                    object.onrelease = onrelease;
-                                    object.onselection = onselection;
-                                    object.onpositionchange = onpositionchange;
-                                    
-                                return object;
-                            };
-                        };
-                        this.display = new function(){
-                            this.rastorDisplay = function(
-                                name='rastorDisplay',
-                                x, y, angle=0, width=60, height=60,
-                                xCount=8, yCount=8, xGappage=0.1, yGappage=0.1,
-                                backing='rgba(50,50,50)', defaultPixelValue='rgba(0,0,0)',
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backing} });
+                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
                                         object.append(rect);
-                                    //pixels
-                                        var pixelGroup = interfacePart.builder('group','pixels');
-                                        object.append(pixelGroup);
+                                    //background group
+                                        var backgroundGroup = interfacePart.builder( 'group', 'background' );
+                                        object.append(backgroundGroup);
+                                    //foreground group
+                                        var foregroundGroup = interfacePart.builder( 'group', 'foreground' );
+                                        object.append(foregroundGroup);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
+                                        object.stencil(stencil);
+                                        object.clip(true);
                             
-                                        var pixels = [];
-                                        var pixelValues = [];
-                                        var pixWidth = width/xCount;
-                                        var pixHeight = height/yCount;
+                                //graphics
+                                    function drawBackground(){
+                                        backgroundGroup.clear();
                             
-                                        for(var x = 0; x < xCount; x++){
-                                            var temp_pixels = [];
-                                            var temp_pixelValues = [];
-                                            for(var y = 0; y < yCount; y++){
-                                                var rect = interfacePart.builder('rectangle',x+'_'+y,{ 
-                                                    x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
-                                                    width:pixWidth-xGappage,    height:pixHeight-yGappage,
-                                                    style:{fill:defaultPixelValue},
-                                                });
+                                        //horizontal lines
+                                            //calculate the x value for all parts of this section
+                                                var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
+                            
+                                            //add all horizontal markings
+                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
+                                    
+                                                    //calculate the y value for this section
+                                                        var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
+                            
+                                                    //add line and text to group
+                                                        //lines
+                                                            var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineWidth,style:{fill:backgroundStyle_stroke}} );
+                                                            backgroundGroup.append(path);
+                                                        //text
+                                                            if( horizontalMarkings.printText ){
+                                                                var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
+                                                                    x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y,
+                                                                    text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                                                                    style:{
+                                                                        fill:backgroundTextStyle_fill,
+                                                                        font:backgroundTextStyle_font
+                                                                    }
+                                                                } );
+                                                                backgroundGroup.append(text);
+                                                            }
+                                                }
+                            
+                                        //vertical lines
+                                            //calculate the y value for all parts of this section
+                                                var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
+                            
+                                            //add all vertical markings
+                                                for(var a = 0; a < verticalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
+                            
+                                                    //calculate the x value for this section
+                                                        var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                            
+                                                    //add line and text to group
+                                                        //lines
+                                                            var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineWidth,height:height,style:{fill:backgroundStyle_stroke}} );
+                                                            backgroundGroup.append(path);
                                                     
-                                                temp_pixels.push(rect);
-                                                temp_pixelValues.push([0,0,0]);
-                                                pixelGroup.append(rect);
-                                            }
-                                            pixels.push(temp_pixels);
-                                            pixelValues.push(temp_pixelValues);
-                                        }
+                                                        //text
+                                                            if( verticalMarkings.printText ){
+                                                                var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
+                                                                    x:x+verticalMarkings.textPositionOffset.x, y:y+verticalMarkings.textPositionOffset.y,
+                                                                    text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                                                                    style:{
+                                                                        fill:backgroundTextStyle_fill,
+                                                                        font:backgroundTextStyle_font
+                                                                    }
+                                                                } );
+                                                                backgroundGroup.append(text);
+                                                        }
+                                                }
+                                    }
+                                    function drawForeground(y,x,layer=0){
+                                        foregroundGroup.clear();
                             
-                                //graphical update
-                                    function render(){
-                                        for(var x = 0; x < xCount; x++){
-                                            for(var y = 0; y < yCount; y++){
-                                                pixels[x][y].style.fill = 'rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')';
+                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
+                                        //otherwise, just update the layer's data sets
+                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
+                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
+                            
+                                        //input check
+                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
+                                                console.warn('grapher error',name,'attempting to add line with no y component');
+                                                console.warn('x:',foregroundElementsGroup[layer].x);
+                                                console.warn('y:',foregroundElementsGroup[layer].y);
+                                                return;
                                             }
-                                        }
+                            
+                                        //draw layers
+                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
+                                                if(foregroundElementsGroup[L] == undefined){continue;}
+                            
+                                                var layer = foregroundElementsGroup[L];
+                                                var points = [];
+                            
+                                                //generate path points
+                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
+                                                        for(var a = 0; a < layer.y.length; a++){ 
+                                                            points.push( {
+                                                                x: a*(width/(layer.y.length-1)), 
+                                                                y: height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
+                                                            } );
+                                                        }
+                                                    }else if( layer.y.length == layer.x.length ){ //straight print
+                                                        for(var a = 0; a < layer.y.length; a++){ 
+                                                            points.push( {
+                                                                x:          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true), 
+                                                                y: height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
+                                                            } );
+                                                        }
+                                                    }else{console.error('grapher::'+name,':layers are of differnt length:',layer.y,layer.x);}
+                            
+                                                //create path shape and add it to the group
+                                                    foregroundGroup.append(
+                                                        interfacePart.builder( 'path', 'layer_'+L, { 
+                                                            points:points, 
+                                                            style:{
+                                                                stroke: foregroundStyles[L].stroke,
+                                                                lineWidth: foregroundStyles[L].lineWidth,
+                                                                lineJoin: foregroundStyles[L].lineJoin,
+                                                                lineCap: foregroundStyles[L].lineJoin,
+                                                            }
+                                                        })
+                                                    );
+                                            }
                                     }
                             
-                                //control
-                                    object.get = function(x,y){ return pixelValues[x][y]; };
-                                    object.set = function(x,y,state){ pixelValues[x][y] = state; render(); };
-                                    object.import = function(data){
-                                        for(var x = 0; x < xCount; x++){
-                                            for(var y = 0; y < yCount; y++){
-                                                this.set(x,y,data[x][y]);
-                                            }
-                                        }
-                                        render();
+                                //controls
+                                    object.viewbox = function(a){
+                                        if(a==null){return viewbox;}
+                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
+                                        if( a.top != undefined ){viewbox.top = a.top;}
+                                        if( a.left != undefined ){viewbox.left = a.left;}
+                                        if( a.right != undefined ){viewbox.right = a.right;}
                                     };
-                                    object.export = function(){ return pixelValues; }
-                                    object.setAll = function(value){
-                                        for(var x = 0; x < xCount; x++){
-                                            for(var y = 0; y < yCount; y++){
-                                                this.set(x,y,value);
-                                            }
-                                        }
-                                    }
-                                    object.test = function(){
-                                        this.setAll([1,1,1]);
-                                        this.set(1,1,[1,0.5,0.5]);
-                                        this.set(2,2,[0.5,1,0.5]);
-                                        this.set(3,3,[0.5,0.5,1]);
-                                        this.set(4,4,[1,0.5,1]);
-                                        render();
+                                    object.horizontalMarkings = function(a){
+                                        if(a==null){return horizontalMarkings;}
+                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
                                     };
+                                    object.verticalMarkings = function(a){
+                                        if(a==null){return verticalMarkings;}
+                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
+                                    };
+                                    object.drawBackground = function(){ drawBackground(); };
+                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
+                                    object.draw = function(y,x,layer=0){ drawBackground(); drawForeground(y,x,layer); };
                             
                                 return object;
                             };
@@ -10238,6 +10437,797 @@
                             
                                 //setup
                                     setBackground();
+                            
+                                return object;
+                            };
+                            this.grapher_audioScope_static = function(
+                                name='grapher_audioScope_static',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_size=0.1,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                //attributes
+                                    var attributes = {
+                                        analyser:{
+                                            analyserNode: workspace.library.audio.context.createAnalyser(),
+                                            timeDomainDataArray: null,
+                                            frequencyData: null,
+                                            refreshRate: 10,
+                                            scopeRefreshInterval: null,
+                                            returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                        },
+                                        graph:{
+                                            resolution: 256
+                                        }
+                                    };
+                                    attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
+                                    attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                                    attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //grapher
+                                        var grapher = interfacePart.builder('grapher_static',name,{
+                                            x:0, y:0, width:width, height:height,
+                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                            backgroundStyle_stroke:backgroundStyle_stroke, 
+                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                            backgroundTextStyle_size:backgroundTextStyle_size,
+                                            backgroundTextStyle_font:backgroundTextStyle_font,
+                                            backingStyle:backingStyle,
+                                        });
+                                        object.append(grapher);
+                            
+                                //utility functions
+                                    function render(){
+                                        var numbers = [];
+                                        attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
+                                        for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
+                                            numbers.push(
+                                                attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
+                                            );
+                                        }
+                                        grapher.draw(numbers);
+                                    }
+                                    function setBackground(){
+                                        grapher.viewbox( {'l':-1.1,'h':1.1} );
+                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+                                        grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
+                                        grapher.drawBackground();
+                                    };
+                            
+                                //controls
+                                    object.start = function(){
+                                        if(attributes.analyser.scopeRefreshInterval == null){
+                                            attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
+                                        }
+                                    };
+                                    object.stop = function(){
+                                        clearInterval(attributes.analyser.scopeRefreshInterval);
+                                        attributes.analyser.scopeRefreshInterval = null;
+                                    };
+                                    object.getNode = function(){return attributes.analyser.analyserNode;};
+                                    object.resolution = function(res=null){
+                                        if(res==null){return attributes.graph.resolution;}
+                                        attributes.graph.resolution = res;
+                                        this.stop();
+                                        this.start();
+                                    };
+                                    object.refreshRate = function(a){
+                                        if(a==null){return attributes.analyser.refreshRate;}
+                                        attributes.analyser.refreshRate = a;
+                                        this.stop();
+                                        this.start();
+                                    };
+                            
+                                //setup
+                                    setBackground();
+                            
+                                return object;
+                            };
+                            this.grapher_periodicWave = function(
+                                name='grapher_periodicWave',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_size=0.1,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                var wave = {'sin':[],'cos':[]};
+                                var resolution = 100;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //grapher
+                                        var grapher = interfacePart.builder('grapher',name,{
+                                            x:0, y:0, width:width, height:height,
+                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                            backgroundStyle_stroke:backgroundStyle_stroke, 
+                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                            backgroundTextStyle_size:backgroundTextStyle_size,
+                                            backgroundTextStyle_font:backgroundTextStyle_font,
+                                            backingStyle:backingStyle,
+                                        });
+                                        object.append(grapher);
+                            
+                                //controls
+                                    object.wave = function(a=null,type=null){
+                                        if(a==null){
+                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
+                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
+                                            for(var a = 0; a < wave['sin'].length; a++){
+                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
+                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
+                                            }
+                                            return wave;
+                                        }
+                            
+                                        if(type==null){
+                                            wave = a;
+                                        }
+                                        switch(type){
+                                            case 'sin': wave.sin = a; break;
+                                            case 'cos': wave.cos = a; break;
+                                            default: break;
+                                        }
+                                    };
+                                    object.waveElement = function(type, mux, a){
+                                        if(a==null){return wave[type][mux];}
+                                        wave[type][mux] = a;
+                                    };
+                                    object.resolution = function(a=null){
+                                        if(a==null){return resolution;}
+                                        resolution = a;
+                                    };
+                                    object.updateBackground = function(){
+                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
+                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
+                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
+                                        grapher.drawBackground();
+                                    };
+                                    object.draw = function(){
+                                        var data = [];
+                                        var temp = 0;
+                                        for(var a = 0; a <= resolution; a++){
+                                            temp = 0;
+                                            for(var b = 0; b < wave['sin'].length; b++){
+                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
+                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
+                                            }
+                                            for(var b = 0; b < wave['cos'].length; b++){
+                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
+                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
+                                            }
+                                            data.push(temp);
+                                        }
+                                
+                                        grapher.draw( data );
+                                    };
+                                    object.reset = function(){
+                                        this.wave({'sin':[],'cos':[]});
+                                        this.resolution(100);
+                                        this.updateBackground();
+                                    };
+                                    
+                                return object;
+                            };
+                            this.grapher_periodicWave_static = function(
+                                name='grapher_periodicWave_static',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_size=0.1,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                var wave = {'sin':[],'cos':[]};
+                                var resolution = 100;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //grapher
+                                        var grapher = interfacePart.builder('grapher_static',name,{
+                                            x:0, y:0, width:width, height:height,
+                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                            backgroundStyle_stroke:backgroundStyle_stroke, 
+                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                            backgroundTextStyle_size:backgroundTextStyle_size,
+                                            backgroundTextStyle_font:backgroundTextStyle_font,
+                                            backingStyle:backingStyle,
+                                        });
+                                        object.append(grapher);
+                            
+                                //controls
+                                    object.wave = function(a=null,type=null){
+                                        if(a==null){
+                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
+                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
+                                            for(var a = 0; a < wave['sin'].length; a++){
+                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
+                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
+                                            }
+                                            return wave;
+                                        }
+                            
+                                        if(type==null){
+                                            wave = a;
+                                        }
+                                        switch(type){
+                                            case 'sin': wave.sin = a; break;
+                                            case 'cos': wave.cos = a; break;
+                                            default: break;
+                                        }
+                                    };
+                                    object.waveElement = function(type, mux, a){
+                                        if(a==null){return wave[type][mux];}
+                                        wave[type][mux] = a;
+                                    };
+                                    object.resolution = function(a=null){
+                                        if(a==null){return resolution;}
+                                        resolution = a;
+                                    };
+                                    object.updateBackground = function(){
+                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
+                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
+                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
+                                        grapher.drawBackground();
+                                    };
+                                    object.draw = function(){
+                                        var data = [];
+                                        var temp = 0;
+                                        for(var a = 0; a <= resolution; a++){
+                                            temp = 0;
+                                            for(var b = 0; b < wave['sin'].length; b++){
+                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
+                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
+                                            }
+                                            for(var b = 0; b < wave['cos'].length; b++){
+                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
+                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
+                                            }
+                                            data.push(temp);
+                                        }
+                                
+                                        grapher.draw( data );
+                                    };
+                                    object.reset = function(){
+                                        this.wave({'sin':[],'cos':[]});
+                                        this.resolution(100);
+                                        this.updateBackground();
+                                    };
+                                    
+                                return object;
+                            };
+                            this.grapher_static = function(
+                                name='grapher_static',
+                                x, y, width=120, height=60, angle=0, resolution=5,
+                            
+                                foregroundStyles=[
+                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                    {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
+                                ],
+                                foregroundTextStyles=[
+                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
+                                ],
+                            
+                                backgroundStyle_stroke='rgba(0,100,0,1)',
+                                backgroundStyle_lineWidth=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_font='7.5pt Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
+                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var foregroundElementsGroup = [];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //canvas
+                                        var canvas = interfacePart.builder('canvas','backing',{ width:width, height:height, resolution:resolution });
+                                        object.append(canvas);
+                            
+                                //graphics
+                                    function clear(){
+                                        canvas._.fillStyle = backingStyle;
+                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+                                    };
+                                    function drawBackground(){
+                                        //horizontal lines
+                                            //calculate the x value for all parts of this section
+                                                var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
+                            
+                                            //add all horizontal markings
+                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
+                                    
+                                                    //calculate the y value for this section
+                                                        var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
+                            
+                                                    //add line and text to group
+                                                        //lines
+                                                            canvas._.fillStyle = backgroundStyle_stroke;
+                                                            canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_lineWidth));
+                            
+                                                        //text
+                                                            if( horizontalMarkings.printText ){
+                                                                canvas._.fillStyle = backgroundTextStyle_fill;
+                                                                canvas._.font = backgroundTextStyle_font;
+                                                                canvas._.fillText(
+                                                                    (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                                                                    canvas.$(x+horizontalMarkings.textPositionOffset.x),
+                                                                    canvas.$(y+horizontalMarkings.textPositionOffset.y),
+                                                                );
+                                                            }
+                                                }
+                            
+                                        //vertical lines
+                                            //calculate the y value for all parts of this section
+                                                var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
+                            
+                                            //add all vertical markings
+                                                for(var a = 0; a < verticalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
+                            
+                                                    //calculate the x value for this section
+                                                        var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                            
+                                                    //add line and text to group
+                                                        //lines
+                                                            canvas._.fillStyle = backgroundStyle_stroke;
+                                                            canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_lineWidth),canvas.$(height));
+                                                    
+                                                        //text
+                                                            if( verticalMarkings.printText ){
+                                                                canvas._.fillStyle = backgroundTextStyle_fill;
+                                                                canvas._.font = backgroundTextStyle_font;
+                                                                canvas._.fillText(
+                                                                    (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                                                                    canvas.$(x+verticalMarkings.textPositionOffset.x),
+                                                                    canvas.$(y+verticalMarkings.textPositionOffset.y),
+                                                                );
+                                                            }
+                                                }
+                            
+                                    }
+                                    function drawForeground(y,x,layer=0){
+                            
+                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
+                                        //otherwise, just update the layer's data sets
+                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
+                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
+                            
+                                        //input check
+                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
+                                                console.warn('grapher_static error',name,'attempting to add line with no y component');
+                                                console.warn('x:',foregroundElementsGroup[layer].x);
+                                                console.warn('y:',foregroundElementsGroup[layer].y);
+                                                return;
+                                            }
+                            
+                                        //draw layers
+                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
+                                                if(foregroundElementsGroup[L] == undefined){continue;}
+                            
+                                                var layer = foregroundElementsGroup[L];
+                            
+                                                //draw path
+                                                    canvas._.strokeStyle = foregroundStyles[L].stroke;
+                                                    canvas._.lineWidth = canvas.$(foregroundStyles[L].lineWidth);
+                                                    canvas._.lineJoin = foregroundStyles[L].lineJoin;
+                                                    canvas._.lineCap = foregroundStyles[L].lineJoin;
+                                                    canvas._.beginPath();
+                            
+                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
+                                                        canvas._.moveTo( 0, canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) ) );
+                                                        for(var a = 1; a < layer.y.length; a++){ 
+                                                            canvas._.lineTo(
+                                                                canvas.$(a*(width/(layer.y.length-1))),
+                                                                canvas.$(height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true)),
+                                                            );
+                                                        }
+                                                    }else if( layer.y.length == layer.x.length ){ //straight print
+                                                        for(var a = 0; a < layer.y.length; a++){ 
+                                                            canvas._.moveTo( 
+                                                                canvas.$(          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
+                                                                canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
+                                                            );
+                                                            for(var a = 1; a < layer.y.length; a++){ 
+                                                                canvas._.lineTo(
+                                                                    canvas.$(          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
+                                                                    canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
+                                                                );
+                                                            }
+                                                        }
+                                                    }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
+                            
+                                                    canvas._.stroke();
+                                            }
+                                    }
+                            
+                                //controls
+                                    object.resolution = function(a){return canvas.resolution(a);};
+                                    object.viewbox = function(a){
+                                        if(a==null){return viewbox;}
+                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
+                                        if( a.top != undefined ){viewbox.top = a.top;}
+                                        if( a.left != undefined ){viewbox.left = a.left;}
+                                        if( a.right != undefined ){viewbox.right = a.right;}
+                                    };
+                                    object.horizontalMarkings = function(a){
+                                        if(a==null){return horizontalMarkings;}
+                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
+                                    };
+                                    object.verticalMarkings = function(a){
+                                        if(a==null){return verticalMarkings;}
+                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
+                                    };
+                                    object.drawBackground = function(){ clear(); drawBackground(); };
+                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
+                                    object.draw = function(y,x,layer=0){ clear(); drawBackground(); drawForeground(y,x,layer); };
+                            
+                                return object;
+                            };
+                            this.level = function(
+                                name='level',
+                                x, y, angle=0,
+                                width=20, height=60,
+                                backingStyle='rgb(10,10,10)',
+                                levelStyles=['rgb(250,250,250)','rgb(200,200,200)']
+                            ){
+                                var values = [];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+                                            object.append(rect);
+                                    //levels
+                                        var levels = interfacePart.builder('group','levels');
+                                            object.append(levels);
+                            
+                                        var level = [];
+                                        for(var a = 0; a < levelStyles.length; a++){
+                                            values.push(0);
+                                            level.push( interfacePart.builder('rectangle','movingRect_'+a,{
+                                                y:height,
+                                                width:width, height:0,
+                                                style:{fill:levelStyles[a]},
+                                            }) );
+                                            levels.prepend(level[a]);
+                                        }
+                            
+                            
+                                    
+                            
+                                    //methods
+                                        object.layer = function(value,layer=0){
+                                            if(layer == undefined){return values;}
+                                            if(value==null){return values[layer];}
+                            
+                                            value = (value>1 ? 1 : value);
+                                            value = (value<0 ? 0 : value);
+                            
+                                            values[layer] = value;
+                            
+                                            level[layer].parameter.height( height*value );
+                                            level[layer].parameter.y( height - height*value );
+                                        };
+                            
+                                return object;
+                            };
+                            this.meter_level = function(
+                                name='meter_level',
+                                x, y, angle=0,
+                                width=20, height=60,
+                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                            
+                                backingStyle='rgb(10,10,10)',
+                                levelStyles=['rgba(250,250,250,1)','fill:rgb(100,100,100)'],
+                                markingStyle_fill='rgba(220,220,220,1)',
+                                markingStyle_font='1pt Courier New',
+                            ){
+                            
+                                //elements
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //level
+                                        var level = interfacePart.builder('level','level',{
+                                            width:width, height:height,
+                                            style:{
+                                                backing:backingStyle,
+                                                levels:levelStyles,
+                                            },
+                                        });
+                                        object.append(level);
+                            
+                                    //markings
+                                        var marks = interfacePart.builder('group','markings');
+                                            object.append(marks);
+                            
+                                        function makeMark(y){
+                                            var markThickness = 0.2;
+                                            var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
+                                            return interfacePart.builder('polygon', 'mark_'+y, {points:path, style:{fill:markingStyle_fill}});
+                                        }
+                                        function insertText(y,text){
+                                            return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
+                                        }
+                            
+                                        for(var a = 0; a < markings.length; a++){
+                                            marks.append( makeMark(height*(1-markings[a])) );
+                                            marks.append( insertText(height*(1-markings[a]),markings[a]) );
+                                        }
+                            
+                            
+                            
+                            
+                                //update intervals
+                                    var framesPerSecond = 15;
+                                    var coolDownSpeed = ( 3/4 )/10;
+                            
+                                    var coolDownSub = coolDownSpeed/framesPerSecond;
+                            
+                                    var coolDown = 0;
+                                    var mostRecentSetting = 0;
+                                    setInterval(function(){        
+                                        level.layer(mostRecentSetting,0);
+                            
+                                        if(coolDown>0){coolDown-=coolDownSub;}
+                                        level.layer(coolDown,1);
+                            
+                                        if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                                    },1000/framesPerSecond);
+                            
+                            
+                            
+                            
+                                //method
+                                    object.set = function(a){
+                                        mostRecentSetting = a;
+                                    };
+                            
+                                return object;
+                            };
+                            this.rastorDisplay = function(
+                                name='rastorDisplay',
+                                x, y, angle=0, width=60, height=60,
+                                xCount=8, yCount=8, xGappage=0.1, yGappage=0.1,
+                                backing='rgba(50,50,50)', defaultPixelValue='rgba(0,0,0)',
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backing} });
+                                        object.append(rect);
+                                    //pixels
+                                        var pixelGroup = interfacePart.builder('group','pixels');
+                                        object.append(pixelGroup);
+                            
+                                        var pixels = [];
+                                        var pixelValues = [];
+                                        var pixWidth = width/xCount;
+                                        var pixHeight = height/yCount;
+                            
+                                        for(var x = 0; x < xCount; x++){
+                                            var temp_pixels = [];
+                                            var temp_pixelValues = [];
+                                            for(var y = 0; y < yCount; y++){
+                                                var rect = interfacePart.builder('rectangle',x+'_'+y,{ 
+                                                    x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
+                                                    width:pixWidth-xGappage,    height:pixHeight-yGappage,
+                                                    style:{fill:defaultPixelValue},
+                                                });
+                                                    
+                                                temp_pixels.push(rect);
+                                                temp_pixelValues.push([0,0,0]);
+                                                pixelGroup.append(rect);
+                                            }
+                                            pixels.push(temp_pixels);
+                                            pixelValues.push(temp_pixelValues);
+                                        }
+                            
+                                //graphical update
+                                    function render(){
+                                        for(var x = 0; x < xCount; x++){
+                                            for(var y = 0; y < yCount; y++){
+                                                pixels[x][y].style.fill = 'rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')';
+                                            }
+                                        }
+                                    }
+                            
+                                //control
+                                    object.get = function(x,y){ return pixelValues[x][y]; };
+                                    object.set = function(x,y,state){ pixelValues[x][y] = state; render(); };
+                                    object.import = function(data){
+                                        for(var x = 0; x < xCount; x++){
+                                            for(var y = 0; y < yCount; y++){
+                                                this.set(x,y,data[x][y]);
+                                            }
+                                        }
+                                        render();
+                                    };
+                                    object.export = function(){ return pixelValues; }
+                                    object.setAll = function(value){
+                                        for(var x = 0; x < xCount; x++){
+                                            for(var y = 0; y < yCount; y++){
+                                                this.set(x,y,value);
+                                            }
+                                        }
+                                    }
+                                    object.test = function(){
+                                        this.setAll([1,1,1]);
+                                        this.set(1,1,[1,0.5,0.5]);
+                                        this.set(2,2,[0.5,1,0.5]);
+                                        this.set(3,3,[0.5,0.5,1]);
+                                        this.set(4,4,[1,0.5,1]);
+                                        render();
+                                    };
+                            
+                                return object;
+                            };
+                            this.readout_sixteenSegmentDisplay = function(
+                                name='readout_sixteenSegmentDisplay',
+                                x, y, width=100, height=30, count=5, angle=0,
+                                backgroundStyle='rgb(0,0,0)',
+                                glowStyle='rgb(200,200,200)',
+                                dimStyle='rgb(20,20,20)'
+                            ){
+                                //values
+                                    var text = '';
+                                    var displayInterval = null;
+                                    var displayIntervalTime = 150;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                            
+                                    //display units
+                                        var units = [];
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder('sixteenSegmentDisplay', ''+a, {
+                                                x:(width/count)*a, width:width/count, height:height, 
+                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                            });
+                                            object.append( temp );
+                                            units.push(temp);
+                                        }
+                            
+                                //methods
+                                    object.text = function(a){
+                                        if(a==null){return text;}
+                                        text = a;
+                                    };
+                            
+                                    object.print = function(style){
+                                        clearInterval(displayInterval);
+                                        switch(style){
+                                            case 'smart':
+                                                if(text.length > units.length){this.print('r2lSweep');}
+                                                else{this.print('regular')}
+                                            break;
+                                            case 'r2lSweep':
+                                                var displayStage = 0;
+                            
+                                                displayInterval = setInterval(function(){
+                                                    for(var a = units.length-1; a >= 0; a--){
+                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                                    }
+                            
+                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                                },displayIntervalTime);
+                                            break;
+                                            case 'regular': default:
+                                                for(var a = 0; a < units.length; a++){
+                                                    units[a].enterCharacter(text[a]);
+                                                }
+                                            break;
+                                        }
+                                    };
+                            
+                                return object;
+                            };
+                            this.readout_sixteenSegmentDisplay_static = function(
+                                name='readout_sixteenSegmentDisplay_static',
+                                x, y, width=100, height=30, count=5, angle=0, resolution=5, 
+                                backgroundStyle='rgb(0,0,0)',
+                                glowStyle='rgb(200,200,200)',
+                                dimStyle='rgb(20,20,20)'
+                            ){
+                                //values
+                                    var text = '';
+                                    var displayInterval = null;
+                                    var displayIntervalTime = 150;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                            
+                                    //display units
+                                        var units = [];
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder('sixteenSegmentDisplay_static', ''+a, {
+                                                x:(width/count)*a, width:width/count, height:height, resolution:resolution,
+                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                            });
+                                            object.append( temp );
+                                            units.push(temp);
+                                        }
+                            
+                                //methods
+                                    object.text = function(a){
+                                        if(a==null){return text;}
+                                        text = a;
+                                    };
+                            
+                                    object.print = function(style){
+                                        clearInterval(displayInterval);
+                                        switch(style){
+                                            case 'smart':
+                                                if(text.length > units.length){this.print('r2lSweep');}
+                                                else{this.print('regular')}
+                                            break;
+                                            case 'r2lSweep':
+                                                var displayStage = 0;
+                            
+                                                displayInterval = setInterval(function(){
+                                                    for(var a = units.length-1; a >= 0; a--){
+                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                                    }
+                            
+                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                                },displayIntervalTime);
+                                            break;
+                                            case 'regular': default:
+                                                for(var a = 0; a < units.length; a++){
+                                                    units[a].enterCharacter(text[a]);
+                                                }
+                                            break;
+                                        }
+                                    };
                             
                                 return object;
                             };
@@ -10411,6 +11401,189 @@
                                             this.set(a, stamp[a]==1);
                                         }
                                     };
+                            
+                                return object;
+                            };
+                            this.sevenSegmentDisplay_static = function(
+                                name='sevenSegmentDisplay_static',
+                                x, y, width=20, height=30, angle=0, resolution=5, 
+                                backgroundStyle='rgb(0,0,0)',
+                                glowStyle='rgb(200,200,200)',
+                                dimStyle='rgb(20,20,20)'
+                            ){
+                                var margin = width/8;
+                                var division = width/8;
+                                var shapes = {
+                                    segments:{
+                                        points: {
+                                            top:{
+                                                left:[
+                                                    {x:division*1.0+margin,         y:division*1.0+margin},
+                                                    {x:division*0.5+margin,         y:division*0.5+margin},
+                                                    {x:division*1.0+margin,         y:division*0.0+margin},
+                                                    {x:division*0.0+margin,         y:division*1.0+margin},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:division*0.0+margin},
+                                                    {x:width-division*0.5-margin,   y:division*0.5+margin},
+                                                    {x:width-division*1.0-margin,   y:division*1.0+margin},
+                                                    {x:width-division*0.0-margin,   y:division*1.0+margin}
+                                                ]
+                                            },
+                                            middle: {
+                                                left:[
+                                                    {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
+                                                    {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                                    {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
+                                                    {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
+                                                    {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
+                                                ]
+                                            },
+                                            bottom: {
+                                                left:[
+                                                    {x:division*1.0+margin,         y:height-division*1.0-margin},
+                                                    {x:division*0.5+margin,         y:height-division*0.5-margin},
+                                                    {x:division*1.0+margin,         y:height-division*0.0-margin},
+                                                    {x:division*0.0+margin,         y:height-division*1.0-margin},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:height-division*0.0-margin},
+                                                    {x:width-division*0.5-margin,   y:height-division*0.5-margin},
+                                                    {x:width-division*1.0-margin,   y:height-division*1.0-margin},
+                                                    {x:width-division*0.0-margin,   y:height-division*1.0-margin}
+                                                ]
+                                            }
+                                        }
+                                    }
+                                };
+                                var points = [
+                                    [
+                                        shapes.segments.points.top.left[0],
+                                        shapes.segments.points.top.right[2],
+                                        shapes.segments.points.top.right[1],
+                                        shapes.segments.points.top.right[0],
+                                        shapes.segments.points.top.left[2],
+                                        shapes.segments.points.top.left[1],
+                                    ],
+                                    [
+                                        shapes.segments.points.top.left[1],
+                                        shapes.segments.points.top.left[3],
+                                        shapes.segments.points.middle.left[3],
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.left[0],
+                                        shapes.segments.points.top.left[0],  
+                                    ],
+                                    [
+                                        shapes.segments.points.top.right[1],  
+                                        shapes.segments.points.top.right[3],  
+                                        shapes.segments.points.middle.right[3],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.top.right[2],  
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.left[0], 
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[0],
+                                        shapes.segments.points.middle.left[2], 
+                                        shapes.segments.points.middle.left[1], 
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.left[4],
+                                        shapes.segments.points.bottom.left[3],
+                                        shapes.segments.points.bottom.left[1],
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.middle.left[2],
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[4],
+                                        shapes.segments.points.bottom.right[3],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.middle.right[0],
+                                    ],
+                                    [
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[0],
+                                        shapes.segments.points.bottom.left[2],
+                                        shapes.segments.points.bottom.left[1],
+                                    ]
+                                ];
+                                var stamp = [0,0,0,0,0,0,0];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //canvas
+                                        var canvas = interfacePart.builder('canvas','subcanvas',{ width:width, height:height, resolution:resolution });
+                                        object.append(canvas);
+                            
+                                //graphics
+                                    function clear(){
+                                        canvas._.fillStyle = backgroundStyle;
+                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+                                    };
+                                    function drawChar(){
+                                        //draw in segments 
+                                            for(var a = 0; a < points.length; a++){
+                                                canvas._.beginPath(); 
+                                                canvas._.moveTo(canvas.$(points[a][0].x),canvas.$(points[a][0].y));
+                                                for(var b = 1; b < points[a].length; b++){
+                                                    canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
+                                                }
+                                                canvas._.closePath(); 
+                                                canvas._.fillStyle = stamp[a] == 0 ? dimStyle : glowStyle;
+                                                canvas._.fill(); 
+                                            }
+                                    }
+                            
+                                //methods
+                                    object.set = function(segment,state){
+                                        stamp[segment].state = state;
+                                        drawChar();
+                                    };
+                                    object.get = function(segment){ return stamp[segment].state; };
+                                    object.clear = function(){
+                                        for(var a = 0; a < stamp.length; a++){
+                                            this.set(a,false);
+                                        }
+                                    };
+                            
+                                    object.enterCharacter = function(char){
+                                        //genreate stamp
+                                            switch(char){
+                                                case 0: case '0': stamp = [1,1,1,0,1,1,1]; break;
+                                                case 1: case '1': stamp = [0,0,1,0,0,1,0]; break;
+                                                case 2: case '2': stamp = [1,0,1,1,1,0,1]; break;
+                                                case 3: case '3': stamp = [1,0,1,1,0,1,1]; break;
+                                                case 4: case '4': stamp = [0,1,1,1,0,1,0]; break;
+                                                case 5: case '5': stamp = [1,1,0,1,0,1,1]; break;
+                                                case 6: case '6': stamp = [1,1,0,1,1,1,1]; break;
+                                                case 7: case '7': stamp = [1,0,1,0,0,1,0]; break;
+                                                case 8: case '8': stamp = [1,1,1,1,1,1,1]; break;
+                                                case 9: case '9': stamp = [1,1,1,1,0,1,1]; break;
+                                                default: stamp = [0,0,0,0,0,0,0]; break;
+                                            }
+                            
+                                        clear();
+                                        drawChar();
+                                    };
+                            
+                                //setup
+                                    clear();
+                                    drawChar();
                             
                                 return object;
                             };
@@ -11217,912 +12390,6 @@
                             
                             
                                 return object;      
-                            };
-                            this.glowbox_rect = function(
-                                name='glowbox_rect',
-                                x, y, width=30, height=30, angle=0,
-                                glowStyle = 'rgba(244,234,141,1)',
-                                dimStyle = 'rgba(80,80,80,1)'
-                            ){
-                                //elements 
-                                    var object = interfacePart.builder('group',name,{x:x, y:y});
-                                    var rect = interfacePart.builder('rectangle','light',{ width:width, height:height, angle:angle, style:{fill:dimStyle} });
-                                        object.append(rect);
-                            
-                                //methods
-                                    object.on = function(){
-                                        rect.style.fill = glowStyle;
-                                    };
-                                    object.off = function(){
-                                        rect.style.fill = dimStyle;
-                                    };
-                            
-                                return object;
-                            };
-                            
-                            // this.glowbox_rect_img = function(
-                            //     name='glowbox_rect',
-                            //     x, y, width=30, height=30, angle=0,
-                            //     glowStyle = 'rgba(244,234,141,1)',
-                            //     dimStyle = 'rgba(80,80,80,1)',
-                            //     imageOverlay='images/units/alpha/glowbox_rect_overlay_1.png',
-                            // ){
-                            //     //elements 
-                            //         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                            //         var rect = interfacePart.builder('rectangle','light',{ width:width, height:height, style:{fill:dimStyle} });
-                            //             object.append(rect);
-                            //         var overlay = interfacePart.builder('clippedImage','overlay',{ width:width, height:height, url:imageOverlay, points:[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}] });
-                            //             object.append(overlay);
-                            
-                            //     //methods
-                            //         object.on = function(){
-                            //             rect.style.fill = glowStyle;
-                            //         };
-                            //         object.off = function(){
-                            //             rect.style.fill = dimStyle;
-                            //         };
-                            
-                            //     return object;
-                            // };
-                            this.audio_meter_level = function(
-                                name='audio_meter_level',
-                                x, y, angle=0,
-                                width=20, height=60,
-                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                            
-                                backingStyle='rgb(10,10,10)',
-                                levelStyles=['rgba(250,250,250,1)','rgb(100,100,100)'],
-                                markingStyle_fill='rgba(220,220,220,1)',
-                                markingStyle_font='1pt Courier New',
-                            ){
-                                //elements
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //meter
-                                        var meter = interfacePart.builder('meter_level','meter',{
-                                            width:width, height:height, markings:markings,
-                                            style:{
-                                                backing:backingStyle,
-                                                levels:levelStyles,
-                                                markingStyle_fill:markingStyle_fill,
-                                                markingStyle_font:markingStyle_font,
-                                            },
-                                        });
-                                        object.append(meter);
-                            
-                                //circuitry
-                                    var converter = interface.circuit.audio2percentage()
-                                    converter.newValue = function(val){meter.set( val );};
-                            
-                                //audio connections
-                                    object.audioIn = function(){ return converter.audioIn(); }
-                            
-                                //methods
-                                    object.start = function(){ converter.start(); };
-                                    object.stop = function(){ converter.stop(); };
-                            
-                                return object;
-                            };
-                            this.grapher_static = function(
-                                name='grapher_static',
-                                x, y, width=120, height=60, angle=0, resolution=5,
-                            
-                                foregroundStyles=[
-                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
-                                ],
-                                foregroundTextStyles=[
-                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
-                                ],
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_font='7.5pt Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var foregroundElementsGroup = [];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //canvas
-                                        var canvas = interfacePart.builder('canvas','backing',{ width:width, height:height, resolution:resolution });
-                                        object.append(canvas);
-                            
-                                //graphics
-                                    function clear(){
-                                        canvas._.fillStyle = backingStyle;
-                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
-                                    };
-                                    function drawBackground(){
-                                        //horizontal lines
-                                            //calculate the x value for all parts of this section
-                                                var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
-                            
-                                            //add all horizontal markings
-                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
-                                    
-                                                    //calculate the y value for this section
-                                                        var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            canvas._.fillStyle = backgroundStyle_stroke;
-                                                            canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_lineWidth));
-                            
-                                                        //text
-                                                            if( horizontalMarkings.printText ){
-                                                                canvas._.fillStyle = backgroundTextStyle_fill;
-                                                                canvas._.font = backgroundTextStyle_font;
-                                                                canvas._.fillText(
-                                                                    (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                                                                    canvas.$(x+horizontalMarkings.textPositionOffset.x),
-                                                                    canvas.$(y+horizontalMarkings.textPositionOffset.y),
-                                                                );
-                                                            }
-                                                }
-                            
-                                        //vertical lines
-                                            //calculate the y value for all parts of this section
-                                                var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
-                            
-                                            //add all vertical markings
-                                                for(var a = 0; a < verticalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
-                            
-                                                    //calculate the x value for this section
-                                                        var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            canvas._.fillStyle = backgroundStyle_stroke;
-                                                            canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_lineWidth),canvas.$(height));
-                                                    
-                                                        //text
-                                                            if( verticalMarkings.printText ){
-                                                                canvas._.fillStyle = backgroundTextStyle_fill;
-                                                                canvas._.font = backgroundTextStyle_font;
-                                                                canvas._.fillText(
-                                                                    (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                                                                    canvas.$(x+verticalMarkings.textPositionOffset.x),
-                                                                    canvas.$(y+verticalMarkings.textPositionOffset.y),
-                                                                );
-                                                            }
-                                                }
-                            
-                                    }
-                                    function drawForeground(y,x,layer=0){
-                            
-                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
-                                        //otherwise, just update the layer's data sets
-                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
-                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
-                            
-                                        //input check
-                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
-                                                console.warn('grapher_static error',name,'attempting to add line with no y component');
-                                                console.warn('x:',foregroundElementsGroup[layer].x);
-                                                console.warn('y:',foregroundElementsGroup[layer].y);
-                                                return;
-                                            }
-                            
-                                        //draw layers
-                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
-                                                if(foregroundElementsGroup[L] == undefined){continue;}
-                            
-                                                var layer = foregroundElementsGroup[L];
-                            
-                                                //draw path
-                                                    canvas._.strokeStyle = foregroundStyles[L].stroke;
-                                                    canvas._.lineWidth = canvas.$(foregroundStyles[L].lineWidth);
-                                                    canvas._.lineJoin = foregroundStyles[L].lineJoin;
-                                                    canvas._.lineCap = foregroundStyles[L].lineJoin;
-                                                    canvas._.beginPath();
-                            
-                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
-                                                        canvas._.moveTo( 0, canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) ) );
-                                                        for(var a = 1; a < layer.y.length; a++){ 
-                                                            canvas._.lineTo(
-                                                                canvas.$(a*(width/(layer.y.length-1))),
-                                                                canvas.$(height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true)),
-                                                            );
-                                                        }
-                                                    }else if( layer.y.length == layer.x.length ){ //straight print
-                                                        for(var a = 0; a < layer.y.length; a++){ 
-                                                            canvas._.moveTo( 
-                                                                canvas.$(          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
-                                                                canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
-                                                            );
-                                                            for(var a = 1; a < layer.y.length; a++){ 
-                                                                canvas._.lineTo(
-                                                                    canvas.$(          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
-                                                                    canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
-                                                                );
-                                                            }
-                                                        }
-                                                    }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
-                            
-                                                    canvas._.stroke();
-                                            }
-                                    }
-                            
-                                //controls
-                                    object.resolution = function(a){return canvas.resolution(a);};
-                                    object.viewbox = function(a){
-                                        if(a==null){return viewbox;}
-                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
-                                        if( a.top != undefined ){viewbox.top = a.top;}
-                                        if( a.left != undefined ){viewbox.left = a.left;}
-                                        if( a.right != undefined ){viewbox.right = a.right;}
-                                    };
-                                    object.horizontalMarkings = function(a){
-                                        if(a==null){return horizontalMarkings;}
-                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
-                                    };
-                                    object.verticalMarkings = function(a){
-                                        if(a==null){return verticalMarkings;}
-                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
-                                    };
-                                    object.drawBackground = function(){ clear(); drawBackground(); };
-                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
-                                    object.draw = function(y,x,layer=0){ clear(); drawBackground(); drawForeground(y,x,layer); };
-                            
-                                return object;
-                            };
-                            this.grapher_periodicWave_static = function(
-                                name='grapher_periodicWave_static',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_size=0.1,
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                var wave = {'sin':[],'cos':[]};
-                                var resolution = 100;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //grapher
-                                        var grapher = interfacePart.builder('grapher_static',name,{
-                                            x:0, y:0, width:width, height:height,
-                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_stroke:backgroundStyle_stroke, 
-                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
-                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                            backgroundTextStyle_size:backgroundTextStyle_size,
-                                            backgroundTextStyle_font:backgroundTextStyle_font,
-                                            backingStyle:backingStyle,
-                                        });
-                                        object.append(grapher);
-                            
-                                //controls
-                                    object.wave = function(a=null,type=null){
-                                        if(a==null){
-                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
-                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
-                                            for(var a = 0; a < wave['sin'].length; a++){
-                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
-                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
-                                            }
-                                            return wave;
-                                        }
-                            
-                                        if(type==null){
-                                            wave = a;
-                                        }
-                                        switch(type){
-                                            case 'sin': wave.sin = a; break;
-                                            case 'cos': wave.cos = a; break;
-                                            default: break;
-                                        }
-                                    };
-                                    object.waveElement = function(type, mux, a){
-                                        if(a==null){return wave[type][mux];}
-                                        wave[type][mux] = a;
-                                    };
-                                    object.resolution = function(a=null){
-                                        if(a==null){return resolution;}
-                                        resolution = a;
-                                    };
-                                    object.updateBackground = function(){
-                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
-                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
-                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
-                                        grapher.drawBackground();
-                                    };
-                                    object.draw = function(){
-                                        var data = [];
-                                        var temp = 0;
-                                        for(var a = 0; a <= resolution; a++){
-                                            temp = 0;
-                                            for(var b = 0; b < wave['sin'].length; b++){
-                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
-                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
-                                            }
-                                            for(var b = 0; b < wave['cos'].length; b++){
-                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
-                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
-                                            }
-                                            data.push(temp);
-                                        }
-                                
-                                        grapher.draw( data );
-                                    };
-                                    object.reset = function(){
-                                        this.wave({'sin':[],'cos':[]});
-                                        this.resolution(100);
-                                        this.updateBackground();
-                                    };
-                                    
-                                return object;
-                            };
-                            this.grapher = function(
-                                name='grapher',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyles=[
-                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
-                                ],
-                                foregroundTextStyles=[
-                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
-                                ],
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_font='1.5pt Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var foregroundElementsGroup = [];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
-                                        object.append(rect);
-                                    //background group
-                                        var backgroundGroup = interfacePart.builder( 'group', 'background' );
-                                        object.append(backgroundGroup);
-                                    //foreground group
-                                        var foregroundGroup = interfacePart.builder( 'group', 'foreground' );
-                                        object.append(foregroundGroup);
-                                    //stencil
-                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
-                                        object.stencil(stencil);
-                                        object.clip(true);
-                            
-                                //graphics
-                                    function drawBackground(){
-                                        backgroundGroup.clear();
-                            
-                                        //horizontal lines
-                                            //calculate the x value for all parts of this section
-                                                var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
-                            
-                                            //add all horizontal markings
-                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
-                                    
-                                                    //calculate the y value for this section
-                                                        var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineWidth,style:{fill:backgroundStyle_stroke}} );
-                                                            backgroundGroup.append(path);
-                                                        //text
-                                                            if( horizontalMarkings.printText ){
-                                                                var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
-                                                                    x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y,
-                                                                    text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                                                                    style:{
-                                                                        fill:backgroundTextStyle_fill,
-                                                                        font:backgroundTextStyle_font
-                                                                    }
-                                                                } );
-                                                                backgroundGroup.append(text);
-                                                            }
-                                                }
-                            
-                                        //vertical lines
-                                            //calculate the y value for all parts of this section
-                                                var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
-                            
-                                            //add all vertical markings
-                                                for(var a = 0; a < verticalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
-                            
-                                                    //calculate the x value for this section
-                                                        var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineWidth,height:height,style:{fill:backgroundStyle_stroke}} );
-                                                            backgroundGroup.append(path);
-                                                    
-                                                        //text
-                                                            if( verticalMarkings.printText ){
-                                                                var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
-                                                                    x:x+verticalMarkings.textPositionOffset.x, y:y+verticalMarkings.textPositionOffset.y,
-                                                                    text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                                                                    style:{
-                                                                        fill:backgroundTextStyle_fill,
-                                                                        font:backgroundTextStyle_font
-                                                                    }
-                                                                } );
-                                                                backgroundGroup.append(text);
-                                                        }
-                                                }
-                                    }
-                                    function drawForeground(y,x,layer=0){
-                                        foregroundGroup.clear();
-                            
-                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
-                                        //otherwise, just update the layer's data sets
-                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
-                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
-                            
-                                        //input check
-                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
-                                                console.warn('grapher error',name,'attempting to add line with no y component');
-                                                console.warn('x:',foregroundElementsGroup[layer].x);
-                                                console.warn('y:',foregroundElementsGroup[layer].y);
-                                                return;
-                                            }
-                            
-                                        //draw layers
-                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
-                                                if(foregroundElementsGroup[L] == undefined){continue;}
-                            
-                                                var layer = foregroundElementsGroup[L];
-                                                var points = [];
-                            
-                                                //generate path points
-                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
-                                                        for(var a = 0; a < layer.y.length; a++){ 
-                                                            points.push( {
-                                                                x: a*(width/(layer.y.length-1)), 
-                                                                y: height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
-                                                            } );
-                                                        }
-                                                    }else if( layer.y.length == layer.x.length ){ //straight print
-                                                        for(var a = 0; a < layer.y.length; a++){ 
-                                                            points.push( {
-                                                                x:          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true), 
-                                                                y: height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
-                                                            } );
-                                                        }
-                                                    }else{console.error('grapher::'+name,':layers are of differnt length:',layer.y,layer.x);}
-                            
-                                                //create path shape and add it to the group
-                                                    foregroundGroup.append(
-                                                        interfacePart.builder( 'path', 'layer_'+L, { 
-                                                            points:points, 
-                                                            style:{
-                                                                stroke: foregroundStyles[L].stroke,
-                                                                lineWidth: foregroundStyles[L].lineWidth,
-                                                                lineJoin: foregroundStyles[L].lineJoin,
-                                                                lineCap: foregroundStyles[L].lineJoin,
-                                                            }
-                                                        })
-                                                    );
-                                            }
-                                    }
-                            
-                                //controls
-                                    object.viewbox = function(a){
-                                        if(a==null){return viewbox;}
-                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
-                                        if( a.top != undefined ){viewbox.top = a.top;}
-                                        if( a.left != undefined ){viewbox.left = a.left;}
-                                        if( a.right != undefined ){viewbox.right = a.right;}
-                                    };
-                                    object.horizontalMarkings = function(a){
-                                        if(a==null){return horizontalMarkings;}
-                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
-                                    };
-                                    object.verticalMarkings = function(a){
-                                        if(a==null){return verticalMarkings;}
-                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
-                                    };
-                                    object.drawBackground = function(){ drawBackground(); };
-                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
-                                    object.draw = function(y,x,layer=0){ drawBackground(); drawForeground(y,x,layer); };
-                            
-                                return object;
-                            };
-                            this.meter_level = function(
-                                name='meter_level',
-                                x, y, angle=0,
-                                width=20, height=60,
-                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                            
-                                backingStyle='rgb(10,10,10)',
-                                levelStyles=['rgba(250,250,250,1)','fill:rgb(100,100,100)'],
-                                markingStyle_fill='rgba(220,220,220,1)',
-                                markingStyle_font='1pt Courier New',
-                            ){
-                            
-                                //elements
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //level
-                                        var level = interfacePart.builder('level','level',{
-                                            width:width, height:height,
-                                            style:{
-                                                backing:backingStyle,
-                                                levels:levelStyles,
-                                            },
-                                        });
-                                        object.append(level);
-                            
-                                    //markings
-                                        var marks = interfacePart.builder('group','markings');
-                                            object.append(marks);
-                            
-                                        function makeMark(y){
-                                            var markThickness = 0.2;
-                                            var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                                            return interfacePart.builder('polygon', 'mark_'+y, {points:path, style:{fill:markingStyle_fill}});
-                                        }
-                                        function insertText(y,text){
-                                            return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
-                                        }
-                            
-                                        for(var a = 0; a < markings.length; a++){
-                                            marks.append( makeMark(height*(1-markings[a])) );
-                                            marks.append( insertText(height*(1-markings[a]),markings[a]) );
-                                        }
-                            
-                            
-                            
-                            
-                                //update intervals
-                                    var framesPerSecond = 15;
-                                    var coolDownSpeed = ( 3/4 )/10;
-                            
-                                    var coolDownSub = coolDownSpeed/framesPerSecond;
-                            
-                                    var coolDown = 0;
-                                    var mostRecentSetting = 0;
-                                    setInterval(function(){        
-                                        level.layer(mostRecentSetting,0);
-                            
-                                        if(coolDown>0){coolDown-=coolDownSub;}
-                                        level.layer(coolDown,1);
-                            
-                                        if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
-                                    },1000/framesPerSecond);
-                            
-                            
-                            
-                            
-                                //method
-                                    object.set = function(a){
-                                        mostRecentSetting = a;
-                                    };
-                            
-                                return object;
-                            };
-                            this.sevenSegmentDisplay_static = function(
-                                name='sevenSegmentDisplay_static',
-                                x, y, width=20, height=30, angle=0, resolution=5, 
-                                backgroundStyle='rgb(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)'
-                            ){
-                                var margin = width/8;
-                                var division = width/8;
-                                var shapes = {
-                                    segments:{
-                                        points: {
-                                            top:{
-                                                left:[
-                                                    {x:division*1.0+margin,         y:division*1.0+margin},
-                                                    {x:division*0.5+margin,         y:division*0.5+margin},
-                                                    {x:division*1.0+margin,         y:division*0.0+margin},
-                                                    {x:division*0.0+margin,         y:division*1.0+margin},
-                                                ],
-                                                right:[
-                                                    {x:width-division*1.0-margin,   y:division*0.0+margin},
-                                                    {x:width-division*0.5-margin,   y:division*0.5+margin},
-                                                    {x:width-division*1.0-margin,   y:division*1.0+margin},
-                                                    {x:width-division*0.0-margin,   y:division*1.0+margin}
-                                                ]
-                                            },
-                                            middle: {
-                                                left:[
-                                                    {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
-                                                    {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
-                                                    {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
-                                                ],
-                                                right:[
-                                                    {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
-                                                    {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
-                                                    {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
-                                                ]
-                                            },
-                                            bottom: {
-                                                left:[
-                                                    {x:division*1.0+margin,         y:height-division*1.0-margin},
-                                                    {x:division*0.5+margin,         y:height-division*0.5-margin},
-                                                    {x:division*1.0+margin,         y:height-division*0.0-margin},
-                                                    {x:division*0.0+margin,         y:height-division*1.0-margin},
-                                                ],
-                                                right:[
-                                                    {x:width-division*1.0-margin,   y:height-division*0.0-margin},
-                                                    {x:width-division*0.5-margin,   y:height-division*0.5-margin},
-                                                    {x:width-division*1.0-margin,   y:height-division*1.0-margin},
-                                                    {x:width-division*0.0-margin,   y:height-division*1.0-margin}
-                                                ]
-                                            }
-                                        }
-                                    }
-                                };
-                                var points = [
-                                    [
-                                        shapes.segments.points.top.left[0],
-                                        shapes.segments.points.top.right[2],
-                                        shapes.segments.points.top.right[1],
-                                        shapes.segments.points.top.right[0],
-                                        shapes.segments.points.top.left[2],
-                                        shapes.segments.points.top.left[1],
-                                    ],
-                                    [
-                                        shapes.segments.points.top.left[1],
-                                        shapes.segments.points.top.left[3],
-                                        shapes.segments.points.middle.left[3],
-                                        shapes.segments.points.middle.left[1],
-                                        shapes.segments.points.middle.left[0],
-                                        shapes.segments.points.top.left[0],  
-                                    ],
-                                    [
-                                        shapes.segments.points.top.right[1],  
-                                        shapes.segments.points.top.right[3],  
-                                        shapes.segments.points.middle.right[3],
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[2],
-                                        shapes.segments.points.top.right[2],  
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.left[0], 
-                                        shapes.segments.points.middle.right[2],
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[0],
-                                        shapes.segments.points.middle.left[2], 
-                                        shapes.segments.points.middle.left[1], 
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.left[1],
-                                        shapes.segments.points.middle.left[4],
-                                        shapes.segments.points.bottom.left[3],
-                                        shapes.segments.points.bottom.left[1],
-                                        shapes.segments.points.bottom.left[0],
-                                        shapes.segments.points.middle.left[2],
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[4],
-                                        shapes.segments.points.bottom.right[3],
-                                        shapes.segments.points.bottom.right[1],
-                                        shapes.segments.points.bottom.right[2],
-                                        shapes.segments.points.middle.right[0],
-                                    ],
-                                    [
-                                        shapes.segments.points.bottom.left[0],
-                                        shapes.segments.points.bottom.right[2],
-                                        shapes.segments.points.bottom.right[1],
-                                        shapes.segments.points.bottom.right[0],
-                                        shapes.segments.points.bottom.left[2],
-                                        shapes.segments.points.bottom.left[1],
-                                    ]
-                                ];
-                                var stamp = [0,0,0,0,0,0,0];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //canvas
-                                        var canvas = interfacePart.builder('canvas','subcanvas',{ width:width, height:height, resolution:resolution });
-                                        object.append(canvas);
-                            
-                                //graphics
-                                    function clear(){
-                                        canvas._.fillStyle = backgroundStyle;
-                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
-                                    };
-                                    function drawChar(){
-                                        //draw in segments 
-                                            for(var a = 0; a < points.length; a++){
-                                                canvas._.beginPath(); 
-                                                canvas._.moveTo(canvas.$(points[a][0].x),canvas.$(points[a][0].y));
-                                                for(var b = 1; b < points[a].length; b++){
-                                                    canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
-                                                }
-                                                canvas._.closePath(); 
-                                                canvas._.fillStyle = stamp[a] == 0 ? dimStyle : glowStyle;
-                                                canvas._.fill(); 
-                                            }
-                                    }
-                            
-                                //methods
-                                    object.set = function(segment,state){
-                                        stamp[segment].state = state;
-                                        drawChar();
-                                    };
-                                    object.get = function(segment){ return stamp[segment].state; };
-                                    object.clear = function(){
-                                        for(var a = 0; a < stamp.length; a++){
-                                            this.set(a,false);
-                                        }
-                                    };
-                            
-                                    object.enterCharacter = function(char){
-                                        //genreate stamp
-                                            switch(char){
-                                                case 0: case '0': stamp = [1,1,1,0,1,1,1]; break;
-                                                case 1: case '1': stamp = [0,0,1,0,0,1,0]; break;
-                                                case 2: case '2': stamp = [1,0,1,1,1,0,1]; break;
-                                                case 3: case '3': stamp = [1,0,1,1,0,1,1]; break;
-                                                case 4: case '4': stamp = [0,1,1,1,0,1,0]; break;
-                                                case 5: case '5': stamp = [1,1,0,1,0,1,1]; break;
-                                                case 6: case '6': stamp = [1,1,0,1,1,1,1]; break;
-                                                case 7: case '7': stamp = [1,0,1,0,0,1,0]; break;
-                                                case 8: case '8': stamp = [1,1,1,1,1,1,1]; break;
-                                                case 9: case '9': stamp = [1,1,1,1,0,1,1]; break;
-                                                default: stamp = [0,0,0,0,0,0,0]; break;
-                                            }
-                            
-                                        clear();
-                                        drawChar();
-                                    };
-                            
-                                //setup
-                                    clear();
-                                    drawChar();
-                            
-                                return object;
-                            };
-                            this.grapher_periodicWave = function(
-                                name='grapher_periodicWave',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_size=0.1,
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                var wave = {'sin':[],'cos':[]};
-                                var resolution = 100;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //grapher
-                                        var grapher = interfacePart.builder('grapher',name,{
-                                            x:0, y:0, width:width, height:height,
-                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_stroke:backgroundStyle_stroke, 
-                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
-                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                            backgroundTextStyle_size:backgroundTextStyle_size,
-                                            backgroundTextStyle_font:backgroundTextStyle_font,
-                                            backingStyle:backingStyle,
-                                        });
-                                        object.append(grapher);
-                            
-                                //controls
-                                    object.wave = function(a=null,type=null){
-                                        if(a==null){
-                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
-                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
-                                            for(var a = 0; a < wave['sin'].length; a++){
-                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
-                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
-                                            }
-                                            return wave;
-                                        }
-                            
-                                        if(type==null){
-                                            wave = a;
-                                        }
-                                        switch(type){
-                                            case 'sin': wave.sin = a; break;
-                                            case 'cos': wave.cos = a; break;
-                                            default: break;
-                                        }
-                                    };
-                                    object.waveElement = function(type, mux, a){
-                                        if(a==null){return wave[type][mux];}
-                                        wave[type][mux] = a;
-                                    };
-                                    object.resolution = function(a=null){
-                                        if(a==null){return resolution;}
-                                        resolution = a;
-                                    };
-                                    object.updateBackground = function(){
-                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
-                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
-                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
-                                        grapher.drawBackground();
-                                    };
-                                    object.draw = function(){
-                                        var data = [];
-                                        var temp = 0;
-                                        for(var a = 0; a <= resolution; a++){
-                                            temp = 0;
-                                            for(var b = 0; b < wave['sin'].length; b++){
-                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
-                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
-                                            }
-                                            for(var b = 0; b < wave['cos'].length; b++){
-                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
-                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
-                                            }
-                                            data.push(temp);
-                                        }
-                                
-                                        grapher.draw( data );
-                                    };
-                                    object.reset = function(){
-                                        this.wave({'sin':[],'cos':[]});
-                                        this.resolution(100);
-                                        this.updateBackground();
-                                    };
-                                    
-                                return object;
                             };
                             this.sixteenSegmentDisplay_static = function(
                                 name='sixteenSegmentDisplay_static',
@@ -12935,323 +13202,8 @@
                             
                                 return object;      
                             };
-                            this.readout_sixteenSegmentDisplay_static = function(
-                                name='readout_sixteenSegmentDisplay_static',
-                                x, y, width=100, height=30, count=5, angle=0, resolution=5, 
-                                backgroundStyle='rgb(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)'
-                            ){
-                                //values
-                                    var text = '';
-                                    var displayInterval = null;
-                                    var displayIntervalTime = 150;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                            
-                                    //display units
-                                        var units = [];
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder('sixteenSegmentDisplay_static', ''+a, {
-                                                x:(width/count)*a, width:width/count, height:height, resolution:resolution,
-                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                            });
-                                            object.append( temp );
-                                            units.push(temp);
-                                        }
-                            
-                                //methods
-                                    object.text = function(a){
-                                        if(a==null){return text;}
-                                        text = a;
-                                    };
-                            
-                                    object.print = function(style){
-                                        clearInterval(displayInterval);
-                                        switch(style){
-                                            case 'smart':
-                                                if(text.length > units.length){this.print('r2lSweep');}
-                                                else{this.print('regular')}
-                                            break;
-                                            case 'r2lSweep':
-                                                var displayStage = 0;
-                            
-                                                displayInterval = setInterval(function(){
-                                                    for(var a = units.length-1; a >= 0; a--){
-                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                                    }
-                            
-                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                                },displayIntervalTime);
-                                            break;
-                                            case 'regular': default:
-                                                for(var a = 0; a < units.length; a++){
-                                                    units[a].enterCharacter(text[a]);
-                                                }
-                                            break;
-                                        }
-                                    };
-                            
-                                return object;
-                            };
-                            this.readout_sixteenSegmentDisplay = function(
-                                name='readout_sixteenSegmentDisplay',
-                                x, y, width=100, height=30, count=5, angle=0,
-                                backgroundStyle='rgb(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)'
-                            ){
-                                //values
-                                    var text = '';
-                                    var displayInterval = null;
-                                    var displayIntervalTime = 150;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                            
-                                    //display units
-                                        var units = [];
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder('sixteenSegmentDisplay', ''+a, {
-                                                x:(width/count)*a, width:width/count, height:height, 
-                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                            });
-                                            object.append( temp );
-                                            units.push(temp);
-                                        }
-                            
-                                //methods
-                                    object.text = function(a){
-                                        if(a==null){return text;}
-                                        text = a;
-                                    };
-                            
-                                    object.print = function(style){
-                                        clearInterval(displayInterval);
-                                        switch(style){
-                                            case 'smart':
-                                                if(text.length > units.length){this.print('r2lSweep');}
-                                                else{this.print('regular')}
-                                            break;
-                                            case 'r2lSweep':
-                                                var displayStage = 0;
-                            
-                                                displayInterval = setInterval(function(){
-                                                    for(var a = units.length-1; a >= 0; a--){
-                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                                    }
-                            
-                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                                },displayIntervalTime);
-                                            break;
-                                            case 'regular': default:
-                                                for(var a = 0; a < units.length; a++){
-                                                    units[a].enterCharacter(text[a]);
-                                                }
-                                            break;
-                                        }
-                                    };
-                            
-                                return object;
-                            };
-                            this.grapher_audioScope_static = function(
-                                name='grapher_audioScope_static',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                            
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_size=0.1,
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                //attributes
-                                    var attributes = {
-                                        analyser:{
-                                            analyserNode: workspace.library.audio.context.createAnalyser(),
-                                            timeDomainDataArray: null,
-                                            frequencyData: null,
-                                            refreshRate: 10,
-                                            scopeRefreshInterval: null,
-                                            returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                        },
-                                        graph:{
-                                            resolution: 256
-                                        }
-                                    };
-                                    attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
-                                    attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                                    attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //grapher
-                                        var grapher = interfacePart.builder('grapher_static',name,{
-                                            x:0, y:0, width:width, height:height,
-                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_stroke:backgroundStyle_stroke, 
-                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
-                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                            backgroundTextStyle_size:backgroundTextStyle_size,
-                                            backgroundTextStyle_font:backgroundTextStyle_font,
-                                            backingStyle:backingStyle,
-                                        });
-                                        object.append(grapher);
-                            
-                                //utility functions
-                                    function render(){
-                                        var numbers = [];
-                                        attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
-                                        for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
-                                            numbers.push(
-                                                attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
-                                            );
-                                        }
-                                        grapher.draw(numbers);
-                                    }
-                                    function setBackground(){
-                                        grapher.viewbox( {'l':-1.1,'h':1.1} );
-                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
-                                        grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
-                                        grapher.drawBackground();
-                                    };
-                            
-                                //controls
-                                    object.start = function(){
-                                        if(attributes.analyser.scopeRefreshInterval == null){
-                                            attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
-                                        }
-                                    };
-                                    object.stop = function(){
-                                        clearInterval(attributes.analyser.scopeRefreshInterval);
-                                        attributes.analyser.scopeRefreshInterval = null;
-                                    };
-                                    object.getNode = function(){return attributes.analyser.analyserNode;};
-                                    object.resolution = function(res=null){
-                                        if(res==null){return attributes.graph.resolution;}
-                                        attributes.graph.resolution = res;
-                                        this.stop();
-                                        this.start();
-                                    };
-                                    object.refreshRate = function(a){
-                                        if(a==null){return attributes.analyser.refreshRate;}
-                                        attributes.analyser.refreshRate = a;
-                                        this.stop();
-                                        this.start();
-                                    };
-                            
-                                //setup
-                                    setBackground();
-                            
-                                return object;
-                            };
-                            this.level = function(
-                                name='level',
-                                x, y, angle=0,
-                                width=20, height=60,
-                                backingStyle='rgb(10,10,10)',
-                                levelStyles=['rgb(250,250,250)','rgb(200,200,200)']
-                            ){
-                                var values = [];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
-                                            object.append(rect);
-                                    //levels
-                                        var levels = interfacePart.builder('group','levels');
-                                            object.append(levels);
-                            
-                                        var level = [];
-                                        for(var a = 0; a < levelStyles.length; a++){
-                                            values.push(0);
-                                            level.push( interfacePart.builder('rectangle','movingRect_'+a,{
-                                                y:height,
-                                                width:width, height:0,
-                                                style:{fill:levelStyles[a]},
-                                            }) );
-                                            levels.prepend(level[a]);
-                                        }
-                            
-                            
-                                    
-                            
-                                    //methods
-                                        object.layer = function(value,layer=0){
-                                            if(layer == undefined){return values;}
-                                            if(value==null){return values[layer];}
-                            
-                                            value = (value>1 ? 1 : value);
-                                            value = (value<0 ? 0 : value);
-                            
-                                            values[layer] = value;
-                            
-                                            level[layer].parameter.height( height*value );
-                                            level[layer].parameter.y( height - height*value );
-                                        };
-                            
-                                return object;
-                            };
                         };
                         this.dynamic = new function(){
-                            this.connectionNode_voltage = function(
-                                name='connectionNode_voltage',
-                                x, y, angle=0, width=20, height=20,
-                                allowConnections=true, allowDisconnections=true,
-                                dimStyle='rgb(222, 255, 220)',
-                                glowStyle='rgb(240, 252, 239)',
-                                cable_dimStyle='rgb(84, 247, 111)',
-                                cable_glowStyle='rgb(159, 252, 174)',
-                                onchange=function(value){},
-                                onconnect=function(instigator){},
-                                ondisconnect=function(instigator){},
-                            ){
-                                //elements
-                                    var object = interfacePart.builder('connectionNode',name,{
-                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
-                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                                    });
-                            
-                                //circuitry
-                                    var localValue = 0;
-                            
-                                    object._getLocalValue = function(){ return localValue; };
-                                    object._update = function(a){
-                                        if(a>0){ object.activate(); }
-                                        else{ object.deactivate(); }
-                                        onchange(a);
-                                    }
-                            
-                                    object.set = function(a){
-                                        localValue = a;
-                            
-                                        var val = object.read();
-                                        object._update(val);
-                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
-                                    };
-                                    object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
-                            
-                                    object.onconnect = function(instigator){
-                                        if(onconnect){onconnect(instigator);}
-                                        object._update(object.read());
-                                    };
-                                    object.ondisconnect = function(instigator){
-                                        if(ondisconnect){ondisconnect(instigator);}
-                                        object._update(localValue);
-                                    };
-                            
-                                return object;
-                            };
                             this.cable = function(
                                 name='path', 
                                 x1=0, y1=0, x2=0, y2=0,
@@ -13284,88 +13236,6 @@
                             
                                 //identifier
                                     object._isCable = true;
-                            
-                                return object;
-                            };
-                            this.connectionNode_audio = function(
-                                name='connectionNode_audio',
-                                x, y, angle=0, width=20, height=20, allowConnections=true, allowDisconnections=true,
-                                isAudioOutput=false, audioContext,
-                                dimStyle='rgba(255, 244, 220, 1)',
-                                glowStyle='rgba(255, 244, 244, 1)',
-                                cable_dimStyle='rgb(247, 146, 84)',
-                                cable_glowStyle='rgb(242, 168, 123)',
-                                onconnect=function(){},
-                                ondisconnect=function(){},
-                            ){
-                                //elements
-                                    var object = interfacePart.builder('connectionNode',name,{
-                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
-                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                                    });
-                                    object._direction = isAudioOutput ? 'out' : 'in';
-                            
-                                //circuitry
-                                    object.audioNode = audioContext.createAnalyser();
-                            
-                                    //audio connections
-                                        object.out = function(){return object.audioNode;};
-                                        object.in = function(){return object.audioNode;};
-                            
-                                    object.onconnect = function(instigator){
-                                        if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
-                                        if(onconnect){onconnect(instigator);}
-                                    };
-                                    object.ondisconnect = function(instigator){
-                                        if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
-                                        if(ondisconnect){ondisconnect(instigator);}
-                                    };
-                                
-                                return object;
-                            };
-                            this.connectionNode_data = function(
-                                name='connectionNode_data',
-                                x, y, angle=0, width=20, height=20, 
-                                allowConnections=true, allowDisconnections=true,
-                                dimStyle='rgba(220, 244, 255,1)',
-                                glowStyle='rgba(244, 244, 255, 1)',
-                                cable_dimStyle='rgb(84, 146, 247)',
-                                cable_glowStyle='rgb(123, 168, 242)',
-                                onreceivedata=function(address, data){},
-                                ongivedata=function(address){},
-                                onconnect=function(){},
-                                ondisconnect=function(){},
-                            ){
-                                //elements
-                                    var object = interfacePart.builder('connectionNode',name,{
-                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'data',
-                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                                        onconnect, ondisconnect
-                                    });
-                            
-                                //circuitry
-                                    function flash(obj){
-                                        obj.activate();
-                                        setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
-                                        if(obj.getForeignNode()!=undefined){
-                                            obj.getForeignNode().activate();
-                                            setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
-                                        }
-                                    }
-                            
-                                    object.send = function(address,data){
-                                        flash(object);
-                            
-                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
-                                    };
-                                    object.request = function(address){
-                                        flash(object);
-                            
-                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
-                                    };
-                            
-                                    object.onreceivedata = onreceivedata;
-                                    object.ongivedata = ongivedata;
                             
                                 return object;
                             };
@@ -13513,6 +13383,88 @@
                             
                                 return object;
                             };
+                            this.connectionNode_audio = function(
+                                name='connectionNode_audio',
+                                x, y, angle=0, width=20, height=20, allowConnections=true, allowDisconnections=true,
+                                isAudioOutput=false, audioContext,
+                                dimStyle='rgba(255, 244, 220, 1)',
+                                glowStyle='rgba(255, 244, 244, 1)',
+                                cable_dimStyle='rgb(247, 146, 84)',
+                                cable_glowStyle='rgb(242, 168, 123)',
+                                onconnect=function(){},
+                                ondisconnect=function(){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                    });
+                                    object._direction = isAudioOutput ? 'out' : 'in';
+                            
+                                //circuitry
+                                    object.audioNode = audioContext.createAnalyser();
+                            
+                                    //audio connections
+                                        object.out = function(){return object.audioNode;};
+                                        object.in = function(){return object.audioNode;};
+                            
+                                    object.onconnect = function(instigator){
+                                        if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
+                                        if(onconnect){onconnect(instigator);}
+                                    };
+                                    object.ondisconnect = function(instigator){
+                                        if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
+                                        if(ondisconnect){ondisconnect(instigator);}
+                                    };
+                                
+                                return object;
+                            };
+                            this.connectionNode_data = function(
+                                name='connectionNode_data',
+                                x, y, angle=0, width=20, height=20, 
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle='rgba(220, 244, 255,1)',
+                                glowStyle='rgba(244, 244, 255, 1)',
+                                cable_dimStyle='rgb(84, 146, 247)',
+                                cable_glowStyle='rgb(123, 168, 242)',
+                                onreceivedata=function(address, data){},
+                                ongivedata=function(address){},
+                                onconnect=function(){},
+                                ondisconnect=function(){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'data',
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                        onconnect, ondisconnect
+                                    });
+                            
+                                //circuitry
+                                    function flash(obj){
+                                        obj.activate();
+                                        setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
+                                        if(obj.getForeignNode()!=undefined){
+                                            obj.getForeignNode().activate();
+                                            setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
+                                        }
+                                    }
+                            
+                                    object.send = function(address,data){
+                                        flash(object);
+                            
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
+                                    };
+                                    object.request = function(address){
+                                        flash(object);
+                            
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
+                                    };
+                            
+                                    object.onreceivedata = onreceivedata;
+                                    object.ongivedata = ongivedata;
+                            
+                                return object;
+                            };
                             this.connectionNode_signal = function(
                                 name='connectionNode_signal',
                                 x, y, angle=0, width=20, height=20,
@@ -13557,6 +13509,54 @@
                                     object.ondisconnect = function(instigator){
                                         if(ondisconnect){ondisconnect(instigator);}
                                         object._update();
+                                    };
+                            
+                                return object;
+                            };
+                            this.connectionNode_voltage = function(
+                                name='connectionNode_voltage',
+                                x, y, angle=0, width=20, height=20,
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle='rgb(222, 255, 220)',
+                                glowStyle='rgb(240, 252, 239)',
+                                cable_dimStyle='rgb(84, 247, 111)',
+                                cable_glowStyle='rgb(159, 252, 174)',
+                                onchange=function(value){},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                    });
+                            
+                                //circuitry
+                                    var localValue = 0;
+                            
+                                    object._getLocalValue = function(){ return localValue; };
+                                    object._update = function(a){
+                                        if(a>0){ object.activate(); }
+                                        else{ object.deactivate(); }
+                                        onchange(a);
+                                    }
+                            
+                                    object.set = function(a){
+                                        localValue = a;
+                            
+                                        var val = object.read();
+                                        object._update(val);
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
+                                    };
+                                    object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                            
+                                    object.onconnect = function(instigator){
+                                        if(onconnect){onconnect(instigator);}
+                                        object._update(object.read());
+                                    };
+                                    object.ondisconnect = function(instigator){
+                                        if(ondisconnect){ondisconnect(instigator);}
+                                        object._update(localValue);
                                     };
                             
                                 return object;
