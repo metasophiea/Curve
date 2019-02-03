@@ -1,22 +1,48 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-02-03
+  - webGL experiment
+    - there;s something wrong somewhere.. I can't get it to render polygons and
+      rectangles at the same time
+
+
+
+2019-02-02
+  - webGL experiment
+    - added pixel density adjustment (mostly)
+    - added stat taker
+    - added polygon shape
+
+
+2019-02-01
+  - planned progress order of core2
+    - basic drawing of shapes (with grouping) (essentially static shapes)
+    - drawing of shapes, with respect to camera "position", "angle" and "zoom"
+    - shape selection based on point (or area)
+      - calculation of extremities and bounding boxes
+    - callback attachment and returning
+    - clipping
+
+  - experiment is ongoing. I've implemented versions of the cartesian2polar,
+    polar2cartesian and cartesianAngleAdjust functions in GSLS, and things seem
+    to be going quite well..
+
+
+2019-01-31
+  - been spending a few days looking into webGL. Core might need a bit of a
+    rewrite (probably causing other things to be rewritten too) but we could see
+    some major performance boosts
+    
+
 2019-01-23
   future ideas
   - core version 2? this time in webGL and with little changes to how some 
     other things are done ('getShapeUnderPoint' to actually return all shapes
     that are under said point, in the order they are layered)
-<<<<<<< HEAD
-    We could probably use roughly the same data structure for describing and
-    organising shapes.
-    ...now that I think about it..the "webGL" element needs only ot apply to
-    the actual render of the shapes; and not to do with the graphical structure
-    or anything like that..this could save alot of development time...maybe.
-=======
     We could probable use roughly the same data structure for describing and
     organising shapes.
     ...now that I think about it..the "webGL" element needs only ot apply to
     the actual render of the shapes; and not to do with the graphical structure
     of anything like that..this could save alot of development time...maybe.
->>>>>>> c6518881b9bcdf4ac474a5aec7b751c73f97c949
     I'll start a webGL experiment in the workspace at some point
 
 

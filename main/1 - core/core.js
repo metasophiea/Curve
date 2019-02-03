@@ -193,7 +193,7 @@ this.render = new function(){
     var clearColour = 'rgb(255,255,255)';
 
     function clearFrame(){
-        context.fillStyle =clearColour;
+        context.fillStyle = clearColour;
         context.fillRect(0, 0, workspace.width, workspace.height);
     }
     function renderFrame(noClear=false){
