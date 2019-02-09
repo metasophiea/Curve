@@ -1,9 +1,66 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-02-08
+  ideas
+  - I'm thinking about redesigning core one last time, mainly around this whole
+    "static" thing. Right now there's a master group, and the 'camera' 's values
+    adjust that group's offset. Originally, additional code was added to modify
+    shapes' positions is they were selected to be static...which is messy.
+      My idea, is to have the camera not effect the root group, but only groups
+    that are the root's direct children, in an opt-in fashion. As such, this
+    would allow one to select which master layers had movement, and how those
+    layers were organised.
+
+  - webGL experiment
+    - fixed that alpha thing (turned out, there's extra setting one must set to
+      select what the fragment shader does (I guess))
+    - fixed derender
+    - added static shapes (in the way described above)
+    - added shape names and addresses
+
+
+2019-02-07
+  - webGL experiment
+    - added derender
+    - added shape selection based on point or area
+
+  bugs
+  - colours with alpha at anything below 1, don't render as expected
+
+
+2019-02-06
+  - webGL experiment
+    - upgraded group shape
+    - upgraded polygon shape
+    - upgraded circle shape
+    - added adapter functions 
+        core.viewport.adapter.windowPoint2workspacePoint
+        core.viewport.adapter.workspacePoint2windowPoint
+
+
+2019-02-05
+  - webGL experiment
+    - fixed up positions, angle and scaling for all shapes
+    - added a circle shape
+    - added dot maker
+    - stated on a more advanced version of the shapes
+    - upgraded rectangle shape
+
+
+2019-02-04
+  - webGL experiment
+    - fixed the thing from yesterday. Seems programs retain no data at all, thus
+      basic point data needs to be reintroduced after a different program has 
+      been selected for use
+    - fixed scaling on screens with lower pixel density..still needs work when
+      I get back to a high-density screen though
+    - unborked polygon along the way
+    - added camera positioning
+
+
 2019-02-03
   - webGL experiment
-    - there;s something wrong somewhere.. I can't get it to render polygons and
+    - there's something wrong somewhere.. I can't get it to render polygons and
       rectangles at the same time
-
 
 
 2019-02-02
@@ -17,9 +74,16 @@
   - planned progress order of core2
     - basic drawing of shapes (with grouping) (essentially static shapes)
     - drawing of shapes, with respect to camera "position", "angle" and "zoom"
-    - shape selection based on point (or area)
+    - extremities and bounding boundingBoxes
       - calculation of extremities and bounding boxes
+      - derender
+      - shape selection based on point (or area)
+    - static shapes
+    - shapes with uniquie names (per group) and addressing
     - callback attachment and returning
+    - path shape
+    - image shape
+    - canvas shape
     - clipping
 
   - experiment is ongoing. I've implemented versions of the cartesian2polar,

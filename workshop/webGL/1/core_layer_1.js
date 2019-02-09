@@ -1,217 +1,32 @@
 var core = new function(){
+    var canvas = document.getElementById("canvas");
     var core = this;
 
     this.shape = new function(){
-        this.library = new function(){
-            this.group = function(){
-                this.x = 0;
-                this.y = 0;
-                this.scale = 1;
-                this.angle = 0;
-                var children = [];
-    
-                this.children = function(){return children;};
-                this.append = function(shape){ children.push(shape); };
-                this.prepend = function(shape){ children.unshift(shape); };
-                this.remove = function(shape){ children.splice(children.indexOf(shape), 1); };
-                this.clear = function(){ children = []; };
-    
-                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                    var point = workspace.library.math.cartesianAngleAdjust(this.x*offset.scale,this.y*offset.scale,offset.angle);
-                    var result = { 
-                        x: point.x + offset.x, 
-                        y: point.y + offset.y, 
-                        scale: offset.scale*this.scale,
-                        angle: offset.angle + this.angle,
-                    };
-    
-                    children.forEach(a => a.render(context,result));
-                };
-            };
-            this.rectangle = function(){
-                this.x = 0;
-                this.y = 0;
-                this.width = 0;
-                this.height = 0;
-                this.scale = 1;
-                this.angle = 0;
-                this.anchor = {x:0,y:0};
-                this.colour = {r:1,g:0,b:0,a:1};
-        
-                var self = this;
-                var points = [
-                    0,0,
-                    1,0,
-                    1,1,
-                    0,1,
-                ];
-                var vertexShaderSource = `
-                    //constants
-                        attribute vec2 point;
-    
-                    //variables
-                        struct location{
-                            vec2 xy;
-                            float scale;
-                            float angle;
-                        };
-                        uniform location adjust;
-    
-                        uniform vec2 resolution;
-                        uniform vec2 dimensions;
-                        uniform vec2 anchor;
-                        uniform vec4 colour; varying vec4 FRAGMENTcolour;
-    
-                    void main(){
-                        //pass colour through
-                            FRAGMENTcolour = colour;
-    
-                        //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                        //(including scale adjust)
-                            vec2 P = point * dimensions * adjust.scale;
-                            P = vec2( P.x - dimensions.x*anchor.x, P.y - dimensions.y*anchor.y );
-                            P = vec2( 
-                                P.x*cos(adjust.angle) + P.y*sin(adjust.angle), 
-                                P.y*cos(adjust.angle) - P.x*sin(adjust.angle)
-                            );
-                            P += adjust.xy;
-    
-                        //convert from unit space to clipspace
-                            gl_Position = vec4( ((point+P) / resolution) * vec2(2, -2), 0, 1 );
-                    }
-                `;
-                var fragmentShaderSource = `  
-                    precision mediump float;
-                    varying vec4 FRAGMENTcolour;
-                                                                                
-                    void main(){
-                        gl_FragColor = FRAGMENTcolour;
-                    }
-                `;
-                function setup(context, program){
-                    //populate point buffer
-                        var pointAttributeLocation = context.getAttribLocation(program, "point");
-                        var pointBuffer = context.createBuffer();
-                        context.enableVertexAttribArray(pointAttributeLocation);
-                        context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                        context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
-                        context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                };
-                var program;
-        
-                function update(context,adjust){
-                    context.uniform2f(context.getUniformLocation(program.p, "adjust.xy"), adjust.x, adjust.y);
-                    context.uniform1f(context.getUniformLocation(program.p, "adjust.scale"), adjust.scale);
-                    context.uniform1f(context.getUniformLocation(program.p, "adjust.angle"), adjust.angle);
-                    context.uniform2f(context.getUniformLocation(program.p, "resolution"), context.canvas.width, context.canvas.height);
-                    context.uniform2f(context.getUniformLocation(program.p, "dimensions"), self.width, self.height);
-                    context.uniform2f(context.getUniformLocation(program.p, "anchor"), self.anchor.x, self.anchor.y);
-                    context.uniform4f(context.getUniformLocation(program.p, "colour"), self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                }
-    
-                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                    // if(program == undefined){
-                        program = {};
-                        program.name = 'rectangle';
-                        program.p = core.render.produceProgram('rectangle', vertexShaderSource, fragmentShaderSource, setup);
-                    // }
-    
-                    var point = workspace.library.math.cartesianAngleAdjust(this.x*offset.scale,this.y*offset.scale,offset.angle);
-                    var result = { 
-                        x: point.x + offset.x, 
-                        y: point.y + offset.y, 
-                        scale: offset.scale*this.scale,
-                        angle: -(offset.angle + this.angle),
-                    };
-    
-                    context.useProgram(program.p);
-                    update(context,result);
-                    context.drawArrays(context.TRIANGLE_FAN, 0, 4);
-                };
-            };
-            this.polygon = function(){
-                this.points = [];
-                this.scale = 1;
-                this.colour = {r:1,g:0,b:0,a:1};
-    
-                var self = this;
-    
-                var vertexShaderSource = 
-                GSLS_utilityFunctions + `
-                    //variables
-                        struct location{
-                            vec2 xy;
-                            float scale;
-                            float angle;
-                        };
-                        uniform location offset;
-    
-                        attribute vec2 point;
-                        uniform vec2 resolution;
-                        uniform vec4 colour; varying vec4 FRAGMENTcolour;
-    
-                    void main(){
-                        //pass colour through
-                            FRAGMENTcolour = colour;
-    
-                        //adjust point by offset
-                            vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
-    
-                        //convert from unit space to clipspace
-                            gl_Position = vec4( (P / resolution) * vec2(2, -2), 0, 1 );
-                    }
-                `;
-                var fragmentShaderSource = `  
-                    precision mediump float;
-                    varying vec4 FRAGMENTcolour;
-                                                                                
-                    void main(){
-                        gl_FragColor = FRAGMENTcolour;
-                    }
-                `;
-                var program;
-        
-                function update(context,offset={x:0,y:0,scale:1,angle:0}){
-                    var pointAttributeLocation = context.getAttribLocation(program.p, "point");
-                    var pointBuffer = context.createBuffer();
-                    context.enableVertexAttribArray(pointAttributeLocation);
-                    context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                    context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
-                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(self.points), context.STATIC_DRAW);
-    
-                    context.uniform2f(context.getUniformLocation(program.p, "offset.xy"), offset.x, offset.y);
-                    context.uniform1f(context.getUniformLocation(program.p, "offset.scale"), offset.scale);
-                    context.uniform1f(context.getUniformLocation(program.p, "offset.angle"), offset.angle);
-                    context.uniform2f(context.getUniformLocation(program.p, "resolution"), context.canvas.width, context.canvas.height);
-                    context.uniform4f(context.getUniformLocation(program.p, "colour"), self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                }
-    
-                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                    // if(program == undefined){
-                        program = {};
-                        program.name = 'polygon';
-                        program.p = core.render.produceProgram('polygon', vertexShaderSource, fragmentShaderSource);
-                    // }
-    
-                    context.useProgram(program.p);
-                    update(context,offset);
-                    context.drawArrays(context.TRIANGLE_FAN, 0, this.points.length/2);
-                };
-            };
-        };
+        this.library = new function(){};
 
-        this.create = function(type){ return new this.library[type](); };
+        this.create = function(type){ 
+            try{ return new this.library[type](); }
+            catch(e){
+                console.warn('the shape type: "'+type+'" could not be found');
+            }
+        };
     };
     this.arrangement = new function(){
-        var design = core.shape.create('group');
+        var design;
 
         this.createElement = function(type){ return new shape[type]; };
+
+        this.new = function(){ design = core.shape.create('group'); };
         this.get = function(){ return design; };
         this.set = function(arrangement){ design = arrangement; };
         this.prepend = function(element){ design.prepend(element); };
         this.append = function(element){ design.append(element); };
         this.remove = function(element){ design.remove(element); };
         this.clear = function(){ design.clear(); };
+
+        this.getElementUnderPoint = function(x,y){ return design.getElementUnderPoint(x,y); };
+        this.getElementsUnderArea = function(points){ return design.getElementsUnderArea(points); };
     };
     this.render = new function(){
         var pageData = {
@@ -220,13 +35,17 @@ var core = new function(){
             selectedWidth:0, selectedHeight:0,
             width:0, height:0,
         };
-        var context = document.getElementById("canvas").getContext("webgl", { alpha:false, preserveDrawingBuffer:true });
+        var context = canvas.getContext("webgl", {alpha:false, preserveDrawingBuffer:true });
         var animationRequestId = undefined;
         var clearColour = {r:1,g:1,b:1,a:1};
 
+        //webGL setup
+            context.enable(context.BLEND);
+            context.blendFunc(context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
+
         //webGL program production
             var storedPrograms = {};
-            this.produceProgram = function(name, vertexShaderSource, fragmentShaderSource, setup){
+            this.produceProgram = function(name, vertexShaderSource, fragmentShaderSource){
                 function compileProgram(vertexShaderSource, fragmentShaderSource){
                     function createShader(type, source){
                         var shader = context.createShader(type);
@@ -235,7 +54,7 @@ var core = new function(){
                         var success = context.getShaderParameter(shader, context.COMPILE_STATUS);
                         if(success){ return shader; }
                 
-                        console.error('major error in minicore\'s "'+ type +'" shader creation');
+                        console.error('major error in core\'s "'+ type +'" shader creation');
                         console.error(context.getShaderInfoLog(shader));
                         context.deleteShader(shader);
                     }
@@ -247,20 +66,16 @@ var core = new function(){
                     var success = context.getProgramParameter(program, context.LINK_STATUS);
                     if(success){ return program; }
                 
-                    console.error('major error in minicore\'s program creation');
+                    console.error('major error in core\'s program creation');
                     console.error(context.getProgramInfoLog(program));
                     context.deleteProgram(program);
                 };
 
-                // if( !(name in storedPrograms) ){
-                    console.log('the program "'+name+'" does not exist. Creating it..');
+                if( !(name in storedPrograms) ){
                     storedPrograms[name] = compileProgram(vertexShaderSource, fragmentShaderSource);
                     context.useProgram(storedPrograms[name]);
-                    if(setup){setup(context, storedPrograms[name]);}
-                // }else{
-                //     console.log('the program "'+name+'" already exists');
-                // }
-                console.log(storedPrograms);
+                }
+
                 return storedPrograms[name];
             }
         
@@ -312,21 +127,30 @@ var core = new function(){
                 return changesMade;
             };
             this.refreshCoordinates = function(){
+                var w = context.canvas.width;
+                var h = context.canvas.height;
+                var m = window.devicePixelRatio;
+
+                var x, y, width, height = 0;
                 if(window.devicePixelRatio == 1){
-                    context.viewport(0, 0, context.canvas.width, context.canvas.height);
+                    x = 0;
+                    y = 0;
+                    width = w;
+                    height = h;
                 }else{
-                    var w = context.canvas.width;
-                    var h = context.canvas.height;
-                    var m = window.devicePixelRatio;
-                    context.viewport( -(w*m)/2, (2*h)/m - (h*m)/2, w*m, h*m );
+                    x = 0;
+                    y = -h;
+                    width = w*2;
+                    height = h*2;
                 }
+
+                context.viewport( x, y, width, height );
             };
             this.refresh = function(){
                 this.clearColour(clearColour);
                 this.adjustCanvasSize();
                 this.refreshCoordinates();
-            };
-            this.refresh();
+            };this.refresh();
 
         //actual render
             function renderFrame(){
@@ -364,6 +188,14 @@ var core = new function(){
 
         //misc
             this.getCanvasDimensions = function(){ return {width:pageData.width, height:pageData.height}; };
+            this.drawDot = function(x,y,r=2,colour={r:1,g:0,b:0,a:1}){
+                var dot = core.shape.create('circle');
+                dot.x(x); dot.y(y);
+                dot.colour = colour;
+                dot.radius(r);
+                dot.dotFrame = false;
+                dot.render(context);
+            };
     };
     this.stats = new function(){
         var active = false;
@@ -398,3 +230,637 @@ var core = new function(){
         };
     };
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+core.shape.library.group = function(){
+    var self = this;
+
+    //attributes 
+        //protected attributes
+            const type = 'group'; this.getType = function(){return type;}
+
+        //simple attributes
+            this.name = '';
+            this.parent = undefined;
+            this.dotFrame = false;
+            this.extremities = { points:[], boundingBox:{} };
+            this.ignored = false;
+            this.heedCamera = false;
+        
+        //attributes pertinent to extremity calculation
+            var x = 0;               this.x =      function(a){ if(a==undefined){return x;}     x = a;      computeExtremities(); };
+            var y = 0;               this.y =      function(a){ if(a==undefined){return y;}     y = a;      computeExtremities(); };
+            var angle = 0;           this.angle =  function(a){ if(a==undefined){return angle;} angle = a;  computeExtremities(); };
+            var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;} scale = a;  computeExtremities(); };
+
+    //addressing
+        this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '/') + this.name; };
+
+    //group functions
+        function getChildByName(name){ return children.find(a => a.name == name); }
+        function checkForName(name){ return getChildByName(name) != undefined; }
+        function isValidShape(shape){
+            if( shape.name.length == 0 ){
+                console.warn('group error: shape with no name being inserted into group "'+self.getAddress()+'", therefore; the shape will not be added');
+                return false;
+            }
+            if( checkForName(shape.name) ){
+                console.warn('group error: shape with name "'+shape.name+'" already exists in group "'+self.getAddress()+'", therefore; the shape will not be added');
+                return false;
+            }
+
+            return true;
+        }
+
+        var children = [];
+        this.children = function(){return children;};
+        this.getChildByName = getChildByName;
+        this.append = function(shape){
+            if( !isValidShape(shape) ){ return; }
+
+            children.push(shape); 
+            shape.parent = this; 
+            shape.computeExtremities(); 
+        };
+        this.prepend = function(shape){
+            if( !isValidShape(shape) ){ return; }
+
+            children.unshift(shape); 
+            shape.parent = this; 
+            shape.computeExtremities(); 
+        };
+        this.remove = function(shape){ children.splice(children.indexOf(shape), 1); };
+        this.clear = function(){ children = []; };
+        this.getElementUnderPoint = function(x,y){
+            var returnList = [];
+
+            for(var a = children.length-1; a >= 0; a--){
+                var item = children[a];
+
+                if(item.ignored){return;}
+
+                if( workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, item.extremities.boundingBox ) ){
+                    if( item.getType() == 'group' ){
+                        returnList = returnList.concat( item.getElementUnderPoint(x,y) );
+                    }else{
+                        if( workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, item.extremities.points ) ){
+                            returnList = returnList.concat( item );
+                        }
+                    }
+                }
+            }
+
+            return returnList;
+        };
+        this.getElementsUnderArea = function(points){
+            var returnList = [];
+            children.forEach(function(item){
+                if(item.ignored){return;}
+
+                if( workspace.library.math.detectOverlap.boundingBoxes( workspace.library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){
+                    if( item.getType() == 'group' ){
+                        returnList = returnList.concat( item.getElementUnderArea(points) );
+                    }else{
+                        if( workspace.library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){
+                            returnList = returnList.concat( item );
+                        }
+                    }
+                }
+            });
+
+            return returnList;
+        };
+
+    //extremities
+        function computeExtremities(informParent=true){
+            //get offset from parent
+                offset = self.parent && ! self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+
+            //run computeExtremities on all children
+                children.forEach(a => a.computeExtremities(false,offset));
+
+            //gather extremities from children and calculate extremities here
+                self.extremities.points = [];
+                children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
+                self.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints(self.extremities.points);
+
+            //if told to do so, inform parent (if there is one) that extremities have changed
+                if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+        }
+        this.computeExtremities = computeExtremities;
+        this.getOffset = function(){
+            if(this.parent){
+                var offset = this.parent.getOffset();
+
+                var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                var adjust = { 
+                    x: point.x*offset.scale + offset.x,
+                    y: point.y*offset.scale + offset.y,
+                    scale: offset.scale*scale,
+                    angle: offset.angle + angle,
+                };
+
+                return adjust;
+            }else{
+                return {x:x ,y:y ,scale:scale ,angle:angle};
+            }
+        };
+
+    //lead render
+        function shouldRender(){
+            return workspace.library.math.detectOverlap.boundingBoxes( core.viewport.getCanvasBoundingBox(), self.extremities.boundingBox );
+        }
+        function drawDotFrame(){
+            // self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y,2,{r:0,g:0,b:1,a:1}) );
+
+            var tl = self.extremities.boundingBox.topLeft;
+            var br = self.extremities.boundingBox.bottomRight;
+            core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+            core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+        };
+        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            //if this shape shouldn't be rendered, just bail on the whole thing
+                if(!shouldRender()){return;}
+
+            //combine offset with group's position, angle and scale to produce new offset for chilren
+                var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                var newOffset = { 
+                    x: point.x*offset.scale + offset.x,
+                    y: point.y*offset.scale + offset.y,
+                    scale: offset.scale*scale,
+                    angle: offset.angle + angle,
+                };
+            
+            //render children
+                children.forEach(a => a.render(context,newOffset));
+
+            //if requested; draw dot frame
+                if(self.dotFrame){drawDotFrame();}
+        }
+};
+core.shape.library.rectangle = function(){
+    var self = this;
+
+    //attributes 
+        //protected attributes
+            const type = 'rectangle'; this.getType = function(){return type;}
+
+        //simple attributes
+            this.name = '';
+            this.parent = undefined;
+            this.dotFrame = false;
+            this.extremities = { points:[], boundingBox:{} };
+            this.ignored = false;
+            this.colour = {r:1,g:0,b:0,a:1};
+
+        //attributes pertinent to extremity calculation
+            var x = 0;               this.x =      function(a){ if(a==undefined){return x;}      x = a;      computeExtremities(); };
+            var y = 0;               this.y =      function(a){ if(a==undefined){return y;}      y = a;      computeExtremities(); };
+            var angle = 0;           this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  computeExtremities(); };
+            var anchor = {x:0,y:0};  this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; computeExtremities(); };
+            var width = 10;          this.width =  function(a){ if(a==undefined){return width;}  width = a;  computeExtremities(); };
+            var height = 10;         this.height = function(a){ if(a==undefined){return height;} height = a; computeExtremities(); };
+            var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  computeExtremities(); };
+
+    //addressing
+        this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+
+    //webGL rendering functions
+        var program;
+        var points = [
+            0,0,
+            1,0,
+            1,1,
+            0,1,
+        ];
+        var vertexShaderSource = `
+            //constants
+                attribute vec2 point;
+
+            //variables
+                struct location{
+                    vec2 xy;
+                    float scale;
+                    float angle;
+                };
+                uniform location adjust;
+
+                uniform vec2 resolution;
+                uniform vec2 dimensions;
+                uniform vec2 anchor;
+
+            void main(){
+                //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
+                //(including scale adjust)
+                    vec2 P = point * dimensions * adjust.scale;
+                    P = vec2( P.x - dimensions.x*anchor.x, P.y - dimensions.y*anchor.y );
+                    P = vec2( 
+                        P.x*cos(adjust.angle) + P.y*sin(adjust.angle), 
+                        P.y*cos(adjust.angle) - P.x*sin(adjust.angle)
+                    );
+                    P += adjust.xy;
+
+                //convert from unit space to clipspace
+                    gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+            }
+        `;
+        var fragmentShaderSource = `  
+            precision mediump float;
+            uniform vec4 colour;
+                                                                        
+            void main(){
+                gl_FragColor = colour;
+            }
+        `;
+        function updateGLAttributes(context,adjust){
+            var pointAttributeLocation = context.getAttribLocation(program, "point");
+            var pointBuffer = context.createBuffer();
+            context.enableVertexAttribArray(pointAttributeLocation);
+            context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
+            context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+            context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+    
+            context.uniform2f(context.getUniformLocation(program, "adjust.xy"), adjust.x, adjust.y);
+            context.uniform1f(context.getUniformLocation(program, "adjust.scale"), adjust.scale);
+            context.uniform1f(context.getUniformLocation(program, "adjust.angle"), adjust.angle);
+            context.uniform2f(context.getUniformLocation(program, "resolution"), context.canvas.width, context.canvas.height);
+            context.uniform2f(context.getUniformLocation(program, "dimensions"), width, height);
+            context.uniform2f(context.getUniformLocation(program, "anchor"), anchor.x, anchor.y);
+            context.uniform4f(context.getUniformLocation(program, "colour"), self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+        }
+        function activateGLRender(context,adjust){
+            if(program == undefined){ program = core.render.produceProgram('rectangle', vertexShaderSource, fragmentShaderSource); }
+    
+            context.useProgram(program);
+            updateGLAttributes(context,adjust);
+            context.drawArrays(context.TRIANGLE_FAN, 0, 4);
+        }
+
+    //extremities
+        function computeExtremities(informParent=true){
+            //get offset from parent
+                offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+
+            //calculate points based on the offset
+                var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                var adjusted = { 
+                    x: point.x*offset.scale + offset.x,
+                    y: point.y*offset.scale + offset.y,
+                    scale: offset.scale*scale,
+                    angle: -(offset.angle + angle),
+                };
+
+                self.extremities.points = [];
+                for(var a = 0; a < points.length; a+=2){
+                    var P = {
+                        x: points[a]   * width  * adjusted.scale , 
+                        y: points[a+1] * height * adjusted.scale ,
+                    };
+
+                    self.extremities.points.push({ 
+                        x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
+                        y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
+                    });
+                }
+                self.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints(self.extremities.points);
+            
+            //if told to do so, inform parent (if there is one) that extremities have changed
+                if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+        }
+        this.computeExtremities = computeExtremities;
+
+    //lead render
+        function shouldRender(){
+            return workspace.library.math.detectOverlap.boundingBoxes( core.viewport.getCanvasBoundingBox(), self.extremities.boundingBox );
+        }
+        function drawDotFrame(){
+            self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+
+            var tl = self.extremities.boundingBox.topLeft;
+            var br = self.extremities.boundingBox.bottomRight;
+            core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+            core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+        };
+        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            //if this shape shouldn't be rendered, just bail on the whole thing
+                if(!shouldRender()){return;}
+
+            //combine offset with shape's position, angle and scale to produce adjust value for render
+                var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                var adjust = { 
+                    x: point.x*offset.scale + offset.x,
+                    y: point.y*offset.scale + offset.y,
+                    scale: offset.scale*scale,
+                    angle: -(offset.angle + angle),
+                };
+
+            //activate shape render code
+                activateGLRender(context,adjust);
+
+            //if requested; draw dot frame
+                if(self.dotFrame){drawDotFrame();}
+        };
+};
+core.shape.library.polygon = function(){
+    var self = this;
+
+    //attributes 
+        //protected attributes
+            const type = 'polygon'; this.getType = function(){return type;}
+
+        //simple attributes
+            this.name = '';
+            this.parent = undefined;
+            this.dotFrame = false;
+            this.extremities = { points:[], boundingBox:{} };
+            this.ignored = false;
+            this.colour = {r:1,g:0,b:0,a:1};
+
+        //attributes pertinent to extremity calculation
+            var points = [];         this.points = function(a){ if(a==undefined){return points;} points = a; computeExtremities(); };
+            var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  computeExtremities(); };
+    
+    //addressing
+        this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+
+    //webGL rendering functions
+        var program;
+        var vertexShaderSource = 
+        GSLS_utilityFunctions + `
+            //variables
+                struct location{
+                    vec2 xy;
+                    float scale;
+                    float angle;
+                };
+                uniform location offset;
+    
+                attribute vec2 point;
+                uniform vec2 resolution;
+    
+            void main(){    
+                //adjust point by offset
+                    vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
+    
+                //convert from unit space to clipspace
+                    gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+            }
+        `;
+        var fragmentShaderSource = `  
+            precision mediump float;
+            uniform vec4 colour;
+                                                                        
+            void main(){
+                gl_FragColor = colour;
+            }
+        `;
+        function updateGLAttributes(context,offset){
+            var pointAttributeLocation = context.getAttribLocation(program, "point");
+            var pointBuffer = context.createBuffer();
+            context.enableVertexAttribArray(pointAttributeLocation);
+            context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
+            context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+            context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+    
+            context.uniform2f(context.getUniformLocation(program, "offset.xy"), offset.x, offset.y);
+            context.uniform1f(context.getUniformLocation(program, "offset.scale"), offset.scale);
+            context.uniform1f(context.getUniformLocation(program, "offset.angle"), offset.angle);
+            context.uniform2f(context.getUniformLocation(program, "resolution"), context.canvas.width, context.canvas.height);
+            context.uniform4f(context.getUniformLocation(program, "colour"), self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+        }
+        function activateGLRender(context,adjust){
+            if(program == undefined){ program = core.render.produceProgram('polygon', vertexShaderSource, fragmentShaderSource); }
+    
+            context.useProgram(program);
+            updateGLAttributes(context,adjust);
+            context.drawArrays(context.TRIANGLE_FAN, 0, points.length/2);
+        }
+
+    //extremities
+        function computeExtremities(informParent=true){
+            //get offset from parent
+                offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+
+            //calculate points based on the offset
+                self.extremities.points = [];
+                for(var a = 0; a < points.length; a+=2){
+                    var P = workspace.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                    self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
+                }
+                self.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints(self.extremities.points);
+
+            //if told to do so, inform parent (if there is one) that extremities have changed
+                if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+        }
+        this.computeExtremities = computeExtremities;
+
+    //lead render
+        function shouldRender(){
+            return workspace.library.math.detectOverlap.boundingBoxes( core.viewport.getCanvasBoundingBox(), self.extremities.boundingBox );
+        }
+        function drawDotFrame(){
+            self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+
+            var tl = self.extremities.boundingBox.topLeft;
+            var br = self.extremities.boundingBox.bottomRight;
+            core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+            core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+        }
+        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            //if this shape shouldn't be rendered, just bail on the whole thing
+                if(!shouldRender()){return;}
+
+            //activate shape render code
+                activateGLRender(context,offset);
+
+            //if requested; draw dot frame
+                if(self.dotFrame){drawDotFrame();}
+        };
+};
+core.shape.library.circle = function(){
+    var self = this;
+
+    //attributes 
+        //protected attributes
+            const type = 'circle'; this.getType = function(){return type;}
+
+        //simple attributes
+            this.name = '';
+            this.parent = undefined;
+            this.dotFrame = false;
+            this.extremities = { points:[], boundingBox:{} };
+            this.ignored = false;
+            this.colour = {r:1,g:0,b:0,a:1};
+
+        //attributes pertinent to extremity calculation
+            var x = 0;              this.x =      function(a){ if(a==undefined){return x;}      x = a;      computeExtremities(); };
+            var y = 0;              this.y =      function(a){ if(a==undefined){return y;}      y = a;      computeExtremities(); };
+            var radius = 10;        this.radius = function(a){ if(a==undefined){return radius;} radius = a; computeExtremities(); };
+            var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  computeExtremities(); };
+            var detail = 25;        this.detail = function(a){ 
+                                        if(a==undefined){return detail;} detail = a;
+
+                                        points = [];
+                                        for(var a = 0; a < detail; a++){
+                                            points.push(
+                                                Math.sin( 2*Math.PI * (a/detail) ),
+                                                Math.cos( 2*Math.PI * (a/detail) )
+                                            );
+                                        }
+
+                                        computeExtremities();
+                                    };
+           
+    //addressing
+        this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+
+    //webGL rendering functions
+        var program;
+        var points = []; this.detail(detail);
+        var vertexShaderSource = `
+        //constants
+            attribute vec2 point;
+
+        //variables
+            struct location{
+                vec2 xy;
+                float scale;
+                float angle;
+            };
+            uniform location adjust;
+
+            uniform vec2 resolution;
+            uniform float radius;
+            uniform vec2 anchor;
+
+        void main(){
+            //adjust points by radius and xy offset
+                vec2 P = point * radius * adjust.scale;
+                P += adjust.xy;  
+
+            //convert from unit space to clipspace
+                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+        }
+    `;
+    var fragmentShaderSource = `  
+        precision mediump float;
+        uniform vec4 colour;
+                                                                    
+        void main(){
+            gl_FragColor = colour;
+        }
+    `;
+    function updateGLAttributes(context,adjust){
+        var pointAttributeLocation = context.getAttribLocation(program, "point");
+        var pointBuffer = context.createBuffer();
+        context.enableVertexAttribArray(pointAttributeLocation);
+        context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
+        context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+        context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+
+        context.uniform2f(context.getUniformLocation(program, "adjust.xy"), adjust.x, adjust.y);
+        context.uniform1f(context.getUniformLocation(program, "adjust.scale"), adjust.scale);
+        context.uniform1f(context.getUniformLocation(program, "adjust.angle"), 0);
+        context.uniform2f(context.getUniformLocation(program, "resolution"), context.canvas.width, context.canvas.height);
+        context.uniform1f(context.getUniformLocation(program, "radius"), radius);
+        context.uniform4f(context.getUniformLocation(program, "colour"), self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+    }
+    function activateGLRender(context,adjust){
+        if(program == undefined){ program = core.render.produceProgram('circle', vertexShaderSource, fragmentShaderSource); }
+
+        context.useProgram(program);
+        updateGLAttributes(context,adjust);
+        context.drawArrays(context.TRIANGLE_FAN, 0, points.length/2);
+    }
+
+    //extremities
+        function computeExtremities(informParent=true){
+            //get offset from parent
+                offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+
+            //calculate points based on the offset
+                var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                var adjust = { 
+                    x: point.x*offset.scale + offset.x,
+                    y: point.y*offset.scale + offset.y,
+                    scale: offset.scale*scale,
+                    angle: -offset.angle,
+                };
+
+                self.extremities.points = [];
+                for(var a = 0; a < points.length; a+=2){
+                    self.extremities.points.push({
+                        x: (points[a]   * radius * adjust.scale) + adjust.x,
+                        y: (points[a+1] * radius * adjust.scale) + adjust.y,
+                    });
+                }
+                self.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints(self.extremities.points);
+            
+            //if told to do so, inform parent (if there is one) that extremities have changed
+                if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+        }
+        this.computeExtremities = computeExtremities;
+
+    //lead render
+        function shouldRender(){
+            return workspace.library.math.detectOverlap.boundingBoxes( core.viewport.getCanvasBoundingBox(), self.extremities.boundingBox );
+        }
+        function drawDotFrame(){
+            self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+
+            var tl = self.extremities.boundingBox.topLeft;
+            var br = self.extremities.boundingBox.bottomRight;
+            core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+            core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+        };
+        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            //if this shape shouldn't be rendered, just bail on the whole thing
+                if(!shouldRender()){return;}
+
+            //combine offset with shape's position, angle and scale to produce adjust value for render
+                var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                var adjust = { 
+                    x: point.x*offset.scale + offset.x,
+                    y: point.y*offset.scale + offset.y,
+                    scale: offset.scale*scale,
+                    angle: -offset.angle,
+                };
+
+            //activate shape render code
+                activateGLRender(context,adjust);
+
+            //if requested; draw dot frame
+                if(self.dotFrame){drawDotFrame();}
+        };
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+core.arrangement.new();
