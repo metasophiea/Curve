@@ -24,7 +24,7 @@ You can use the 'comp' function (./compliation/comp.sh) in the compliation folde
 The command uses a little JavaScript compiler written in Python3 called Gravity, which goes through JS files looking for commands to execute, ultimatly producing a single JS file. So far there's only one command - a straightforward include - but that's all I really need right now. The 'heavyComp' is used to produce "production" versions of the code. This version uses gravity to build together the program, then Clousure to pack it all up.
 
 ## Compatibility
-Reciently (3/1/2019) I finished my overhaul of the graphical backend of the project, taking out the SVG aspect and replacing it with Core (a custom written Canvas backend). So far it's been pretty happy working on most browsers, but more testing is needed. Safari is still unable to handle WebAudio, so I recommend just sticking with Chrome (and maybe Firefox) for now.
+Recently (3/1/2019) I finished my overhaul of the graphical backend of the project, taking out the SVG aspect and replacing it with Core (a custom written Canvas backend). So far it's been pretty happy working on most browsers, but more testing is needed. Safari is still unable to handle WebAudio, so I recommend just sticking with Chrome (and maybe Firefox) for now.
 
 ## Demos
 - [Demo 1](https://curve.metasophiea.com?demo=1) 
