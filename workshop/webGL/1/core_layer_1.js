@@ -1,6 +1,9 @@
 var core = new function(){
-    var canvas = document.getElementById("canvas");
+    var canvas = document.getElementById("canvasElement");
+    this.canvas = canvas;
     var core = this;
+
+    canvas.setAttribute('tabIndex',1);
 
     this.shape = new function(){
         this.library = new function(){};
@@ -25,7 +28,7 @@ var core = new function(){
         this.remove = function(element){ design.remove(element); };
         this.clear = function(){ design.clear(); };
 
-        this.getElementUnderPoint = function(x,y){ return design.getElementUnderPoint(x,y); };
+        this.getElementsUnderPoint = function(x,y){ return design.getElementsUnderPoint(x,y); };
         this.getElementsUnderArea = function(points){ return design.getElementsUnderArea(points); };
     };
     this.render = new function(){
@@ -262,10 +265,10 @@ core.shape.library.group = function(){
             this.heedCamera = false;
         
         //attributes pertinent to extremity calculation
-            var x = 0;               this.x =      function(a){ if(a==undefined){return x;}     x = a;      computeExtremities(); };
-            var y = 0;               this.y =      function(a){ if(a==undefined){return y;}     y = a;      computeExtremities(); };
-            var angle = 0;           this.angle =  function(a){ if(a==undefined){return angle;} angle = a;  computeExtremities(); };
-            var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;} scale = a;  computeExtremities(); };
+            var x = 0;               this.x =      function(a){ if(a==undefined){return x;}     x = a;     computeExtremities(); };
+            var y = 0;               this.y =      function(a){ if(a==undefined){return y;}     y = a;     computeExtremities(); };
+            var angle = 0;           this.angle =  function(a){ if(a==undefined){return angle;} angle = a; computeExtremities(); };
+            var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
 
     //addressing
         this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '/') + this.name; };
@@ -293,19 +296,19 @@ core.shape.library.group = function(){
             if( !isValidShape(shape) ){ return; }
 
             children.push(shape); 
-            shape.parent = this; 
-            shape.computeExtremities(); 
+            shape.parent = this;
+            computeExtremities(); 
         };
         this.prepend = function(shape){
             if( !isValidShape(shape) ){ return; }
 
             children.unshift(shape); 
-            shape.parent = this; 
-            shape.computeExtremities(); 
+            shape.parent = this;
+            augmentExtremities_addChild(shape);
         };
-        this.remove = function(shape){ children.splice(children.indexOf(shape), 1); };
+        this.remove = function(shape){ augmentExtremities_removeChild(shape); children.splice(children.indexOf(shape), 1); };
         this.clear = function(){ children = []; };
-        this.getElementUnderPoint = function(x,y){
+        this.getElementsUnderPoint = function(x,y){
             var returnList = [];
 
             for(var a = children.length-1; a >= 0; a--){
@@ -315,7 +318,7 @@ core.shape.library.group = function(){
 
                 if( workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, item.extremities.boundingBox ) ){
                     if( item.getType() == 'group' ){
-                        returnList = returnList.concat( item.getElementUnderPoint(x,y) );
+                        returnList = returnList.concat( item.getElementsUnderPoint(x,y) );
                     }else{
                         if( workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, item.extremities.points ) ){
                             returnList = returnList.concat( item );
@@ -346,12 +349,63 @@ core.shape.library.group = function(){
         };
 
     //extremities
-        function computeExtremities(informParent=true){
+        function augmentExtremities_addChild(newShape){
             //get offset from parent
-                offset = self.parent && ! self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+            //combine offset with group's position, angle and scale to produce new offset for chilren
+                var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                var newOffset = { 
+                    x: point.x*offset.scale + offset.x,
+                    y: point.y*offset.scale + offset.y,
+                    scale: offset.scale*scale,
+                    angle: offset.angle + angle,
+                };
+            //run computeExtremities on new child
+                newShape.computeExtremities(false,newOffset);
+            //add points to points list
+                self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
+            //recalculate bounding box
+                self.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints(self.extremities.points);
+            //inform parent of change
+                if(self.parent){self.parent.computeExtremities();}
+        }
+        function augmentExtremities_removeChild(departingShape){
+            //get offset from parent
+                var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+            //combine offset with group's position, angle and scale to produce new offset for chilren
+                var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                var newOffset = { 
+                    x: point.x*offset.scale + offset.x,
+                    y: point.y*offset.scale + offset.y,
+                    scale: offset.scale*scale,
+                    angle: offset.angle + angle,
+                };
+            //run computeExtremities on departing child
+                departingShape.computeExtremities(false,newOffset);
+            //remove matching points from points list
+                var index = workspace.library.math.getIndexOfSequence(self.extremities.points,departingShape.extremities.points);
+                if(index == undefined){console.error("group shape: departing shape points not found");}
+                self.extremities.points.splice(index, index+departingShape.extremities.points.length);
+            //recalculate bounding box
+                self.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints(self.extremities.points);
+            //inform parent of change
+                if(self.parent){self.parent.computeExtremities();}
+        }
+        function computeExtremities(informParent=true,offset){
+            //get offset from parent
+                if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+
+            //combine offset with group's position, angle and scale to produce new offset for chilren
+                var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                var newOffset = { 
+                    x: point.x*offset.scale + offset.x,
+                    y: point.y*offset.scale + offset.y,
+                    scale: offset.scale*scale,
+                    angle: offset.angle + angle,
+                };
 
             //run computeExtremities on all children
-                children.forEach(a => a.computeExtremities(false,offset));
+                children.forEach(a => a.computeExtremities(false,newOffset));
 
             //gather extremities from children and calculate extremities here
                 self.extremities.points = [];
@@ -423,18 +477,18 @@ core.shape.library.rectangle = function(){
             this.name = '';
             this.parent = undefined;
             this.dotFrame = false;
-            this.extremities = { points:[], boundingBox:{} };
+            this.extremities = { points:[], boundingBox:{}, isChanged:true };
             this.ignored = false;
             this.colour = {r:1,g:0,b:0,a:1};
 
         //attributes pertinent to extremity calculation
-            var x = 0;               this.x =      function(a){ if(a==undefined){return x;}      x = a;      computeExtremities(); };
-            var y = 0;               this.y =      function(a){ if(a==undefined){return y;}      y = a;      computeExtremities(); };
-            var angle = 0;           this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  computeExtremities(); };
-            var anchor = {x:0,y:0};  this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; computeExtremities(); };
-            var width = 10;          this.width =  function(a){ if(a==undefined){return width;}  width = a;  computeExtremities(); };
-            var height = 10;         this.height = function(a){ if(a==undefined){return height;} height = a; computeExtremities(); };
-            var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  computeExtremities(); };
+            var x = 0;               this.x =      function(a){ if(a==undefined){return x;}      x = a;      this.extremities.isChanged=true; this.computeExtremities(); };
+            var y = 0;               this.y =      function(a){ if(a==undefined){return y;}      y = a;      this.extremities.isChanged=true; this.computeExtremities(); };
+            var angle = 0;           this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  this.extremities.isChanged=true; this.computeExtremities(); };
+            var anchor = {x:0,y:0};  this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; this.extremities.isChanged=true; this.computeExtremities(); };
+            var width = 10;          this.width =  function(a){ if(a==undefined){return width;}  width = a;  this.extremities.isChanged=true; this.computeExtremities(); };
+            var height = 10;         this.height = function(a){ if(a==undefined){return height;} height = a; this.extremities.isChanged=true; this.computeExtremities(); };
+            var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged=true; this.computeExtremities(); };
 
     //addressing
         this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
@@ -511,9 +565,9 @@ core.shape.library.rectangle = function(){
         }
 
     //extremities
-        function computeExtremities(informParent=true){
+        function computeExtremities(informParent=true,offset){
             //get offset from parent
-                offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
 
             //calculate points based on the offset
                 var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -541,7 +595,22 @@ core.shape.library.rectangle = function(){
             //if told to do so, inform parent (if there is one) that extremities have changed
                 if(informParent){ if(self.parent){self.parent.computeExtremities();} }
         }
-        this.computeExtremities = computeExtremities;
+        var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+        this.computeExtremities = function(informParent,offset){
+            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+
+            if(
+                this.extremities.isChanged ||
+                oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+            ){
+                computeExtremities(informParent,offset);
+                this.extremities.isChanged = false;
+                oldOffset.x = offset.x;
+                oldOffset.y = offset.y;
+                oldOffset.scale = offset.scale;
+                oldOffset.angle = offset.angle;
+            }
+        };
 
     //lead render
         function shouldRender(){
@@ -586,13 +655,13 @@ core.shape.library.polygon = function(){
             this.name = '';
             this.parent = undefined;
             this.dotFrame = false;
-            this.extremities = { points:[], boundingBox:{} };
+            this.extremities = { points:[], boundingBox:{}, isChanged:true };
             this.ignored = false;
             this.colour = {r:1,g:0,b:0,a:1};
 
         //attributes pertinent to extremity calculation
-            var points = [];         this.points = function(a){ if(a==undefined){return points;} points = a; computeExtremities(); };
-            var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  computeExtremities(); };
+            var points = [];         this.points = function(a){ if(a==undefined){return points;} points = a; this.extremities.isChanged=true; computeExtremities(); };
+            var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged=true; computeExtremities(); };
     
     //addressing
         this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
@@ -651,9 +720,9 @@ core.shape.library.polygon = function(){
         }
 
     //extremities
-        function computeExtremities(informParent=true){
+        function computeExtremities(informParent=true,offset){
             //get offset from parent
-                offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
 
             //calculate points based on the offset
                 self.extremities.points = [];
@@ -666,7 +735,22 @@ core.shape.library.polygon = function(){
             //if told to do so, inform parent (if there is one) that extremities have changed
                 if(informParent){ if(self.parent){self.parent.computeExtremities();} }
         }
-        this.computeExtremities = computeExtremities;
+        var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+        this.computeExtremities = function(informParent,offset){
+            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+
+            if(
+                this.extremities.isChanged ||
+                oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+            ){
+                computeExtremities(informParent,offset);
+                this.extremities.isChanged = false;
+                oldOffset.x = offset.x;
+                oldOffset.y = offset.y;
+                oldOffset.scale = offset.scale;
+                oldOffset.angle = offset.angle;
+            }
+        };
 
     //lead render
         function shouldRender(){
@@ -788,9 +872,9 @@ core.shape.library.circle = function(){
     }
 
     //extremities
-        function computeExtremities(informParent=true){
+        function computeExtremities(informParent=true,offset){
             //get offset from parent
-                offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
 
             //calculate points based on the offset
                 var point = workspace.library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -813,7 +897,22 @@ core.shape.library.circle = function(){
             //if told to do so, inform parent (if there is one) that extremities have changed
                 if(informParent){ if(self.parent){self.parent.computeExtremities();} }
         }
-        this.computeExtremities = computeExtremities;
+        var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+        this.computeExtremities = function(informParent,offset){
+            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+
+            if(
+                this.extremities.isChanged ||
+                oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+            ){
+                computeExtremities(informParent,offset);
+                this.extremities.isChanged = false;
+                oldOffset.x = offset.x;
+                oldOffset.y = offset.y;
+                oldOffset.scale = offset.scale;
+                oldOffset.angle = offset.angle;
+            }
+        };
 
     //lead render
         function shouldRender(){
@@ -847,7 +946,140 @@ core.shape.library.circle = function(){
                 if(self.dotFrame){drawDotFrame();}
         };
 };
+core.shape.library.path = function(){
+    var self = this;
 
+    //attributes 
+        //protected attributes
+            const type = 'path'; this.getType = function(){return type;}
+
+        //simple attributes
+            this.name = '';
+            this.parent = undefined;
+            this.dotFrame = false;
+            this.extremities = { points:[], boundingBox:{}, isChanged:true };
+            this.ignored = false;
+            this.colour = {r:1,g:0,b:0,a:1};
+
+        //attributes pertinent to extremity calculation
+            var scale = 1; this.scale = function(a){ if(a==undefined){return scale;}  scale = a; this.extremities.isChanged=true; this.computeExtremities(); };
+            var points = [];      
+            function lineGenerator(){ points = workspace.library.math.pathToPolygonGenerator( path, thickness ); }
+            var path = [];      this.path =  function(a){ if(a==undefined){return path;} path = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); };
+            var thickness = 1;  this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); };
+            
+    //addressing
+        this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+
+    //webGL rendering functions
+        var program;
+        var vertexShaderSource = 
+            GSLS_utilityFunctions + `
+                //variables
+                    struct location{
+                        vec2 xy;
+                        float scale;
+                        float angle;
+                    };
+                    uniform location offset;
+
+                    attribute vec2 point;
+                    uniform vec2 resolution;
+
+                void main(){    
+                    //adjust point by offset
+                        vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
+
+                    //convert from unit space to clipspace
+                        gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                }
+            `;
+        var fragmentShaderSource = `  
+            precision mediump float;
+            uniform vec4 colour;
+                                                                        
+            void main(){
+                gl_FragColor = colour;
+            }
+        `;
+        function updateGLAttributes(context,offset){
+            var pointAttributeLocation = context.getAttribLocation(program, "point");
+            var pointBuffer = context.createBuffer();
+            context.enableVertexAttribArray(pointAttributeLocation);
+            context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
+            context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+            context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+
+            context.uniform2f(context.getUniformLocation(program, "offset.xy"), offset.x, offset.y);
+            context.uniform1f(context.getUniformLocation(program, "offset.scale"), offset.scale);
+            context.uniform1f(context.getUniformLocation(program, "offset.angle"), offset.angle);
+            context.uniform2f(context.getUniformLocation(program, "resolution"), context.canvas.width, context.canvas.height);
+            context.uniform4f(context.getUniformLocation(program, "colour"), self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+        }
+        function activateGLRender(context,adjust){
+            if(program == undefined){ program = core.render.produceProgram('polygon', vertexShaderSource, fragmentShaderSource); }
+
+            context.useProgram(program);
+            updateGLAttributes(context,adjust);
+            context.drawArrays(context.TRIANGLE_STRIP, 0, points.length/2);
+        }
+
+    //extremities
+        function computeExtremities(informParent=true,offset){
+            //get offset from parent
+                if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+
+            //calculate points based on the offset
+                self.extremities.points = [];
+                for(var a = 0; a < points.length; a+=2){
+                    var P = workspace.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                    self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
+                }
+                self.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints(self.extremities.points);
+
+            //if told to do so, inform parent (if there is one) that extremities have changed
+                if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+        }
+        var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+        this.computeExtremities = function(informParent,offset){
+            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+
+            if(
+                this.extremities.isChanged ||
+                oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+            ){
+                computeExtremities(informParent,offset);
+                this.extremities.isChanged = false;
+                oldOffset.x = offset.x;
+                oldOffset.y = offset.y;
+                oldOffset.scale = offset.scale;
+                oldOffset.angle = offset.angle;
+            }
+        };
+
+    //lead render
+        function shouldRender(){
+            return workspace.library.math.detectOverlap.boundingBoxes( core.viewport.getCanvasBoundingBox(), self.extremities.boundingBox );
+        }
+        function drawDotFrame(){
+            self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+
+            var tl = self.extremities.boundingBox.topLeft;
+            var br = self.extremities.boundingBox.bottomRight;
+            core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+            core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+        }
+        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            //if this shape shouldn't be rendered, just bail on the whole thing
+                if(!shouldRender()){return;}
+
+            //activate shape render code
+                activateGLRender(context,offset);
+
+            //if requested; draw dot frame
+                if(self.dotFrame){drawDotFrame();}
+        };
+};
 
 
 

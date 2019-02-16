@@ -155,3 +155,87 @@ workspace.library.math.detectOverlap = new function(){
         return false;
     };
 };
+
+workspace.library.math.getIndexOfSequence = function(array,sequence){
+    var index = 0;
+    for(index = 0; index < array.length; index++){
+        if( array[index] == sequence[0] ){
+
+            var match = true;
+            for(var a = 1; a < sequence.length; a++){
+                if( array[index+a] != sequence[a] ){
+                    match = false;
+                    break;
+                }
+            }
+            if(match){return index;}
+
+        }
+    }
+
+    return undefined;
+};
+
+workspace.library.math.getDifferenceOfArrays = function(array_a,array_b){
+    var out_a = []; var out_b = [];
+
+    for(var a = 0; a < array_a.length; a++){
+        if(array_b.indexOf(array_a[a]) == -1){ out_a.push(array_a[a]); }
+    }
+
+    for(var b = 0; b < array_b.length; b++){
+        if(array_a.indexOf(array_b[b]) == -1){ out_b.push(array_b[b]); }
+    }
+
+    return {a:out_a,b:out_b};
+};
+
+workspace.library.math.getAngleOfTwoPoints = function(point_1,point_2){
+    var xDelta = point_2.x - point_1.x;
+    var yDelta = point_2.y - point_1.y;
+    var angle = Math.atan( yDelta/xDelta );
+
+    if(xDelta < 0){ angle = Math.PI + angle; }
+    else if(yDelta < 0){ angle = Math.PI*2 + angle; }
+
+    return angle;
+};
+
+workspace.library.math.pathToPolygonGenerator = function(path,thickness){
+    var jointData = [];
+
+    //parse path
+        for(var a = 0; a < path.length/2; a++){
+            jointData.push({ point:{ x:path[a*2], y:path[a*2 +1] } });
+        }
+    //gather segment angles
+        for(var a = 0; a < jointData.length-1; a++){
+            var tmp = workspace.library.math.getAngleOfTwoPoints( jointData[a].point, jointData[a+1].point );
+            if(jointData[a] != undefined){jointData[a].departAngle = tmp;}
+            if(jointData[a+1] != undefined){jointData[a+1].implimentAngle = tmp;}
+        }
+    //calculate joing angles, wing angles and wing widths; then generate wing points
+        var outputPoints = [];
+        for(var a = 0; a < jointData.length; a++){
+            var item = jointData[a];
+
+            //joing angles
+                var joiningAngle = (a != 0 && a != jointData.length-1) ? joiningAngle = item.departAngle - item.implimentAngle + Math.PI : Math.PI;
+
+            //angle
+                var segmentAngle = item.implimentAngle != undefined ? item.implimentAngle : item.departAngle;
+                var wingAngle = segmentAngle + joiningAngle/2;
+
+            //width
+                var div = (a == 0 || a == jointData.length-1) ? 1 : (Math.sin(joiningAngle/2));
+                var wingWidth = thickness / div;
+
+            //wing points
+                var plus =  workspace.library.math.cartesianAngleAdjust(0,  wingWidth, Math.PI/2 + wingAngle);
+                var minus = workspace.library.math.cartesianAngleAdjust(0, -wingWidth, Math.PI/2 + wingAngle);
+                outputPoints.push( plus.x+ item.point.x, plus.y+ item.point.y );
+                outputPoints.push( minus.x+item.point.x, minus.y+item.point.y );
+        }
+
+    return outputPoints;
+};

@@ -1,4 +1,68 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-02-16
+  - webGL experiment
+    - version 4 works! now for clean up
+    - version 5, is a much cleaner version, and has replaced all other code in
+      there
+
+
+2019-02-15
+  - webGL experiment
+    - path shape still in development, it's a bit shakey right now, but I've
+      gotten the resizing of connection points to work pretty nicely
+    - version 3 seems to work a little nicer..not fully though
+
+
+2019-02-14
+  - webGL experiment
+    - have rudimentary version of the new path shape working
+
+
+2019-02-13
+  - webGL experiment
+    - added library function "workspace.library.math.getDifferenceOfArrays"
+      which returns the items from each list that don't appear in the other
+    - updated callback attachment/returning; now onmouseenter and onmouseleave
+      work as you would expect
+    - added keydown and key up sections to callback attachment/returning
+    - updated onmousedown/onmouseup/onclick callbacks to have a smarter version
+      of onclick (which only runs when the down and up occur over the same 
+      shape)
+    - work begins on 'path' shape (it seems that "LINE_STRIP" can only have a
+      thickness of 1, so, I'm going to have to do some magic with
+      TRIANGLE_STRIP or something)
+    
+
+2019-02-12
+  - webGL experiment
+    - made 'computeExtremities' a little more complicted in the rectangle shape
+      in order to stop it from recalculating it's extremities where there was no
+      change in it's position values or offset. It's done little to alleviate
+      the speed problem
+    - added 'augmentExtremities_addChild' function to the group shape, which has
+      sped things up greatly. Now the laptop is capable of adding 10,000 shapes
+      in just under 4 seconds.
+    - added library function "workspace.library.math.getIndexOfSequence", for
+      finding sequences of items in an array, and returning the index
+    - added 'augmentExtremities_removeChild' function to the group shape
+    - added the more advanced 'computeExtremities' code to the polygon and
+      circle shapes
+    - checked on shape callback attachment and returning, which seems to be
+      working (after a little bit of fixing)
+  
+  
+2019-02-11
+  - webGL experiment
+    - preformance review: group's "computeExtremities" is taking alot of time on
+      test 2 (where it adds lots and lots of rectangles to a group)
+      The hang up centers around the group calculating together the extremities
+      of every child shape every time a new shape is added. An
+      "augmentExtremitiesWithNewChild" function is required, though is something
+      similar possible for child removal?
+    - little bit of work; trying to make the offset pass though connected
+      "computeExtremities" functions. Still under works...
+
+
 2019-02-08
   ideas
   - I'm thinking about redesigning core one last time, mainly around this whole

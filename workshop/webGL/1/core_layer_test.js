@@ -2,6 +2,24 @@ core.test = function(){
     var testNumber = 1;
 
     if(testNumber == 0){
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:10,y:0}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:10,y:5}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:10,y:10}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:10,y:15}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:10}) );
+
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:-10,y:10}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:-10,y:1}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:-10,y:0}) );
+
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:-10,y:-1}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:-10,y:-10}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:-1,y:-10}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:-10}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:10,y:-10}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:10,y:-1}) );
+        console.log( workspace.library.math.getAngleOfTwoPoints({x:0,y:0},{x:10,y:-0.000001}) );
+    }else if(testNumber == 1){
         var tmp = core.shape.create('rectangle');
         tmp.name = 'rectangle_1';
         tmp.x(0); tmp.y(0);
@@ -61,6 +79,23 @@ core.test = function(){
         tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
         this.arrangement.append(tmp);
 
+        var tmp = core.shape.create('path');
+        tmp.name = 'path_1';
+        tmp.path([
+            110, 150,
+            100, 120,
+            200, 100,
+            250, 100,
+            300, 100,
+            275, 200,
+            400, 100,
+            500, 100,
+            500, 200,
+            400, 250,
+        ]);
+        tmp.thickness(2);
+        tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+        this.arrangement.append(tmp);
 
 
 
@@ -116,7 +151,7 @@ core.test = function(){
         // this.render.frame();
         // core.render.drawDot(100,100);
         this.render.active(true);
-    }else if(testNumber == 1){
+    }else if(testNumber == 2){
         var x = 200 + core.render.getCanvasDimensions().width/2;
         var y = -175 + core.render.getCanvasDimensions().height/2;
         var rectangleGroup_1 = [];
@@ -202,7 +237,7 @@ core.test = function(){
         this.arrangement.get().scale = 1;
         // this.stats.active(true);
         // setInterval(function(){console.log(core.stats.getReport());},1000);
-    }else if(testNumber == 2){
+    }else if(testNumber == 3){
         //Desktop Mac: 6000/~50fps
 
         for(var a = 0; a < 1500; a++){
@@ -216,10 +251,14 @@ core.test = function(){
             this.arrangement.append(tmp);
         }
 
-        this.render.active(true);
-        this.stats.active(true);
-        setInterval(function(){console.log(core.stats.getReport());},1000);
-    }else if(testNumber == 3){
+        this.arrangement.remove(tmp);
+
+        this.render.frame();
+
+        // this.render.active(true);
+        // this.stats.active(true);
+        // setInterval(function(){console.log(core.stats.getReport());},1000);
+    }else if(testNumber == 4){
         var group_1 = core.shape.create('group');
         group_1.name = 'group_1';
         group_1.x( core.render.getCanvasDimensions().width/2 );
@@ -245,7 +284,7 @@ core.test = function(){
         // this.arrangement.get().scale = 1;
 
         setInterval(function(){ group_1.angle( group_1.angle() + 0.025 ); },1000/40);
-    }else if(testNumber == 4){
+    }else if(testNumber == 5){
 
         var group_1 = core.shape.create('group');
         group_1.name = 'group_1';
@@ -286,7 +325,7 @@ core.test = function(){
         },1000/40);
 
         this.render.active(true);
-    }else if(testNumber == 5){
+    }else if(testNumber == 6){
         var dynamicGroup = core.shape.create('group');
         dynamicGroup.name = 'dynamicGroup';
         dynamicGroup.heedCamera = true;
@@ -371,7 +410,7 @@ core.test = function(){
 
         this.render.active(true);
     
-    }else if(testNumber == 6){
+    }else if(testNumber == 7){
         var dynamicGroup = core.shape.create('group');
         dynamicGroup.name = 'dynamicGroup';
         dynamicGroup.heedCamera = true;
@@ -381,6 +420,7 @@ core.test = function(){
             tmp.name = 'topLeft';
             tmp.x(0); tmp.y(0); tmp.width(30); tmp.height(30);
             tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+            tmp.onmousemove = function(x,y,event,shapes){console.log('rectangle::topLeft::onmousemove');};
             dynamicGroup.append(tmp);
 
             var tmp = core.shape.create('rectangle');
@@ -405,6 +445,16 @@ core.test = function(){
             tmp.name = 'centre';
             tmp.x(30); tmp.y(30); tmp.width(440); tmp.height(440);
             tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+            tmp.onmousedown = function(x,y,event,shapes){console.log('rectangle::centre::onmousedown');};
+            tmp.onmouseup = function(x,y,event,shapes){console.log('rectangle::centre::onmouseup');};
+            tmp.onmousemove = function(x,y,event,shapes){console.log('rectangle::centre::onmousemove');};
+            tmp.onmouseenter = function(x,y,event,shapes){console.log('rectangle::centre::onmouseenter');};
+            tmp.onmouseleave = function(x,y,event,shapes){console.log('rectangle::centre::onmouseleave');};
+            tmp.onwheel = function(x,y,event,shapes){console.log('rectangle::centre::onwheel');};
+            tmp.onclick = function(x,y,event,shapes){console.log('rectangle::centre::onclick');};
+            tmp.ondblclick = function(x,y,event,shapes){console.log('rectangle::centre::ondblclick');};
+            tmp.onkeydown = function(x,y,event,shapes){console.log('rectangle::centre::onkeydown');};
+            tmp.onkeyup = function(x,y,event,shapes){console.log('rectangle::centre::onkeyup');};
             dynamicGroup.append(tmp);
 
         var staticGroup = core.shape.create('group');
@@ -433,6 +483,7 @@ core.test = function(){
             ].map(a => a+60);
             tmp.points(points);
             tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.5};
+            tmp.onmousedown = function(x,y,event,shapes){console.log('polygon::polygon_1::onmousedown');};
             staticGroup.append(tmp);
 
 
@@ -456,9 +507,16 @@ core.test = function(){
         //     console.log( core.arrangement.getElementUnderPoint(event.x,event.y) );
         // }
 
-        // core.callback.onmousemove = function(x,y,event,shapes){
-        //     console.log(x,y,event,shapes);
-        // };
+        core.callback.onmousedown   = function(x,y,event,shapes){ shapes.forEach(a => a.onmousedown(x,y,event,shapes)); }
+        core.callback.onmouseup     = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseup(x,y,event,shapes)); }
+        core.callback.onmousemove   = function(x,y,event,shapes){ shapes.forEach(a => a.onmousemove(x,y,event,shapes)); }
+        core.callback.onmouseenter  = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseenter(x,y,event,shapes)); }
+        core.callback.onmouseleave  = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseleave(x,y,event,shapes)); }
+        core.callback.onwheel       = function(x,y,event,shapes){ shapes.forEach(a => a.onwheel(x,y,event,shapes)); }
+        core.callback.onclick       = function(x,y,event,shapes){ shapes.forEach(a => a.onclick(x,y,event,shapes)); }
+        core.callback.ondblclick    = function(x,y,event,shapes){ shapes.forEach(a => a.ondblclick(x,y,event,shapes)); }
+        core.callback.onkeydown     = function(x,y,event,shapes){ shapes.forEach(a => a.onkeydown(x,y,event,shapes)); }
+        core.callback.onkeyup       = function(x,y,event,shapes){ shapes.forEach(a => a.onkeyup(x,y,event,shapes)); }
 
 
         this.render.frame();
