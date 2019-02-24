@@ -1,4 +1,5 @@
 var workspace = {library:{math:{}}};
+
 workspace.library.math.cartesianAngleAdjust = function(x,y,angle){
     function cartesian2polar(x,y){
         var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;

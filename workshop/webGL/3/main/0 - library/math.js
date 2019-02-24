@@ -1,5 +1,4 @@
-var workspace = {library:{math:{}}};
-workspace.library.math.cartesianAngleAdjust = function(x,y,angle){
+this.cartesianAngleAdjust = function(x,y,angle){
     function cartesian2polar(x,y){
         var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
     
@@ -25,40 +24,8 @@ workspace.library.math.cartesianAngleAdjust = function(x,y,angle){
     polar.ang += angle;
     return polar2cartesian( polar.ang, polar.dis );
 };
-workspace.library.math.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
-var GSLS_utilityFunctions = `
-    #define PI 3.141592653589793
-
-    vec2 cartesian2polar(vec2 xy){
-        float dis = pow(pow(xy.x,2.0)+pow(xy.y,2.0),0.5);
-        float ang = 0.0;
-
-        if(xy.x == 0.0){
-            if(xy.y == 0.0){ang = 0.0;}
-            else if(xy.y > 0.0){ang = 0.5*PI;}
-            else{ang = 1.5*PI;}
-        }
-        else if(xy.y == 0.0){
-            if(xy.x >= 0.0){ang = 0.0;}else{ang = PI;}
-        }
-        else if(xy.x >= 0.0){ ang = atan(xy.y/xy.x); }
-        else{ /*if(xy.x < 0.0)*/ ang = atan(xy.y/xy.x) + PI; }
-
-        return vec2(ang,dis);
-    }
-    vec2 polar2cartesian(vec2 ad){
-        return vec2( ad[1]*cos(ad[0]), ad[1]*sin(ad[0]) );
-    }
-    vec2 cartesianAngleAdjust(vec2 xy, float angle){
-        if(angle == 0.0 || mod(angle,PI*2.0) == 0.0){ return xy; }
-
-        vec2 polar = cartesian2polar( xy );
-        polar[0] += angle;
-        return polar2cartesian( polar );
-    }
-`;
-
-workspace.library.math.boundingBoxFromPoints = function(points){
+this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
+this.boundingBoxFromPoints = function(points){
     if(points.length == 0){
         return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
     }
@@ -79,8 +46,7 @@ workspace.library.math.boundingBoxFromPoints = function(points){
         bottomRight:{x:right,y:bottom}
     };
 };
-
-workspace.library.math.detectOverlap = new function(){
+this.detectOverlap = new function(){
     this.boundingBoxes = function(a, b){
         return !(
             (a.bottomRight.y < b.topLeft.y) ||
@@ -155,8 +121,7 @@ workspace.library.math.detectOverlap = new function(){
         return false;
     };
 };
-
-workspace.library.math.getIndexOfSequence = function(array,sequence){
+this.getIndexOfSequence = function(array,sequence){
     var index = 0;
     for(index = 0; index < array.length; index++){
         if( array[index] == sequence[0] ){
@@ -175,8 +140,7 @@ workspace.library.math.getIndexOfSequence = function(array,sequence){
 
     return undefined;
 };
-
-workspace.library.math.getDifferenceOfArrays = function(array_a,array_b){
+this.getDifferenceOfArrays = function(array_a,array_b){
     var out_a = []; var out_b = [];
 
     for(var a = 0; a < array_a.length; a++){
@@ -189,8 +153,7 @@ workspace.library.math.getDifferenceOfArrays = function(array_a,array_b){
 
     return {a:out_a,b:out_b};
 };
-
-workspace.library.math.getAngleOfTwoPoints = function(point_1,point_2){
+this.getAngleOfTwoPoints = function(point_1,point_2){
     var xDelta = point_2.x - point_1.x;
     var yDelta = point_2.y - point_1.y;
     var angle = Math.atan( yDelta/xDelta );
@@ -200,8 +163,7 @@ workspace.library.math.getAngleOfTwoPoints = function(point_1,point_2){
 
     return angle;
 };
-
-workspace.library.math.pathToPolygonGenerator = function(path,thickness){
+this.pathToPolygonGenerator = function(path,thickness){
     var jointData = [];
 
     //parse path
@@ -215,7 +177,7 @@ workspace.library.math.pathToPolygonGenerator = function(path,thickness){
 
             //calculate segment angles
                 if( a != jointData.length-1 ){
-                    var tmp = workspace.library.math.getAngleOfTwoPoints( jointData[a].point, jointData[a+1].point );
+                    var tmp = _canvas_.library.math.getAngleOfTwoPoints( jointData[a].point, jointData[a+1].point );
                     if(jointData[a] != undefined){jointData[a].departAngle = tmp;}
                     if(jointData[a+1] != undefined){jointData[a+1].implimentAngle = tmp;}
                 }
@@ -232,11 +194,16 @@ workspace.library.math.pathToPolygonGenerator = function(path,thickness){
                 var wingWidth = thickness / div;
 
             //wing points
-                var plus =  workspace.library.math.cartesianAngleAdjust(0,  wingWidth, Math.PI/2 + wingAngle);
-                var minus = workspace.library.math.cartesianAngleAdjust(0, -wingWidth, Math.PI/2 + wingAngle);
+                var plus =  _canvas_.library.math.cartesianAngleAdjust(0,  wingWidth, Math.PI/2 + wingAngle);
+                var minus = _canvas_.library.math.cartesianAngleAdjust(0, -wingWidth, Math.PI/2 + wingAngle);
                 outputPoints.push( plus.x+ item.point.x, plus.y+ item.point.y );
                 outputPoints.push( minus.x+item.point.x, minus.y+item.point.y );
         }
 
     return outputPoints;
+};
+this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
+    var mux = (d - start)/(end - start);
+    if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
+    return mux*realLength;
 };

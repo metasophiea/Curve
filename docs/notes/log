@@ -1,4 +1,94 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-02-24
+  - webGL experiment
+    - added tree printing function to arrangement
+    - added 'getElementByAddress' function to arrangement
+    - added glowbox_rect display part
+    - added 'pointsAsXYArray' method of polygon and path shapes (and appropriate
+      arguments to builder)
+    - added sevenSegmentDisplay display part
+    - added sevenSegmentDisplay_static display part
+    - added sixteenSegmentDisplay display part
+    - added sixteenSegmentDisplay_static display part
+    - added level display part
+    - added meter_level display part
+    - added audio_meter_level display part
+    - added in part circuitry
+    - added in audio library
+    - added rastorDisplay display part
+    - added grapher display part
+    - added grapher_static display part
+    - added grapher_periodicWave display part
+    - added grapher_periodicWave_static display part
+    - added grapher_audioScope display part
+    - added grapher_audioScope_static display part
+    - readded adapter (I'm not sure it'll actually be useful though)
+    - fixed getElementsUnderPoint
+    - added slider control part
+
+
+2019-02-23
+  - webGL experiment
+    - turned out alot of the point-conversion code was useless, so that's gone
+    - readded system layer
+    - redid things to be even more like the main system
+    - added interface layer (slowly getting things back together)
+
+
+2019-02-22
+  - webGL experiment
+    - > 2 shoring things up
+    - experimenting with pulling the render judgement out of the shapes, and
+      into the group shape rendering them. Sort of as a prep for clipped render
+      judgement
+    - added clipped render judgement
+    - > 3 putting it together like the main system
+    - added "__canvasPreFix" value, to determine what the system is called
+
+
+2019-02-21
+  - webGL experiment
+    - little bit of cleaning with the image and canvas shapes
+    - added group clipping
+    - rectangle shape was miscalculating its extremities (it had left out the
+      anchor) updated image and canvas shape accordingly (as they were based on
+      the rectangle shape)
+
+  notes
+  - things what I need to add still: non-render calculations for shapes in
+    clipped groups
+
+
+2019-02-20
+  - webGL experiment
+    - updated rectangle shape 
+    - did fps test, things are much much faster now
+    - updated polygon shape
+    - updated path shape
+    - added image shape
+    - added canvas shape (with transparency on, though one could easily make a
+      second version of the shape with transparency turned off)
+
+
+2019-02-19
+  - webGL experiment
+    - added image shape (it was frightfully slow, but it seems you can save
+      buffer locations (so to speak) which speeds things up. Should try and
+      impliment this for other buffers..)
+    - updated point buffer in the image shape, to not update for every render.
+      It works fine, so, I need to do this for the other shapes too.
+    - updated uniform updaters too. Just squeezing as much as I can out of this
+      image shape. It makes the 'updateGLAttributes' function a bit longer
+      though
+    - updated the circle shape in a similar way
+
+
+2019-02-18
+  - webGL experiment
+    - slight improvement to the pathToPolygonGenerator (to reduce the number of
+      for loops from 3 to 2, and other little things)
+
+
 2019-02-16
   - webGL experiment
     - version 4 works! now for clean up

@@ -2,13 +2,13 @@ this.rastorDisplay = function(
     name='rastorDisplay',
     x, y, angle=0, width=60, height=60,
     xCount=8, yCount=8, xGappage=0.1, yGappage=0.1,
-    backing='rgba(50,50,50)', defaultPixelValue='rgba(0,0,0)',
+    backing={r:0.2,g:0.2,b:0.2,a:1}, defaultPixelValue={r:0,g:0,b:0,a:1},
 ){
     //elements 
         //main
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         //backing
-            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backing} });
+            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backing });
             object.append(rect);
         //pixels
             var pixelGroup = interfacePart.builder('group','pixels');
@@ -26,7 +26,7 @@ this.rastorDisplay = function(
                     var rect = interfacePart.builder('rectangle',x+'_'+y,{ 
                         x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
                         width:pixWidth-xGappage,    height:pixHeight-yGappage,
-                        style:{fill:defaultPixelValue},
+                        colour:defaultPixelValue,
                     });
                         
                     temp_pixels.push(rect);
@@ -41,7 +41,7 @@ this.rastorDisplay = function(
         function render(){
             for(var x = 0; x < xCount; x++){
                 for(var y = 0; y < yCount; y++){
-                    pixels[x][y].style.fill = 'rgb('+255*pixelValues[x][y][0]+','+255*pixelValues[x][y][1]+','+255*pixelValues[x][y][2]+')';
+                    pixels[x][y].colour = {r:pixelValues[x][y][0],g:pixelValues[x][y][1],b:pixelValues[x][y][2],a:1};
                 }
             }
         }

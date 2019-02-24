@@ -229,6 +229,13 @@ core.test = function(){
         tmp.height(30);
         tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
         group_2.append(tmp);
+        var tmp = core.shape.create('rectangle');
+        tmp.name = 'rectangle_3';
+        tmp.x(-30); tmp.y(0);
+        tmp.width(30);
+        tmp.height(30);
+        tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+        group_2.append(tmp);
 
 
 
@@ -504,9 +511,9 @@ core.test = function(){
             var s_1 = ( 1 + Math.sin( Math.PI*tick ) );
             var s_2 = ( 1 + Math.sin( Math.PI*0.5 + Math.PI*tick ) );
 
-            // core.viewport.scale( s_1+0.001 );
-            core.viewport.position(s_1*15,s_1*15);
-            // core.viewport.angle(-s_1);
+            core.viewport.scale( 1 + (s_1-0.5) );
+            core.viewport.position(s_1*50,s_1*250);
+            core.viewport.angle(-s_1);
 
             tick+=tickStep;
         },1000/40);
@@ -596,7 +603,7 @@ core.test = function(){
         // console.log( tmp.getAddress() );
 
         // core.viewport.position(100,100);
-        // core.viewport.angle( Math.PI );
+        // core.viewport.angle( Math.PI/3 );
         // core.viewport.scale(1/2);
 
 
