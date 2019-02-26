@@ -26,5 +26,7 @@ The command uses a little JavaScript compiler written in Python3 called Gravity,
 ## Compatibility
 Recently (3/1/2019) I finished my overhaul of the graphical backend of the project, taking out the SVG aspect and replacing it with Core (a custom written Canvas backend). So far it's been pretty happy working on most browsers, but more testing is needed. Safari is still unable to handle WebAudio, so I recommend just sticking with Chrome (and maybe Firefox) for now.
 
+Atop this; I've begun overhauling the Core rendering engine again, this time to use webGL. Things have been going pretty well so far, and I think the program will receive some serious performance boosts when it's all done.
+
 ## Demos
 - [Demo 1](https://curve.metasophiea.com?demo=1) 
