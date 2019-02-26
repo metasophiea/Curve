@@ -1893,7 +1893,7 @@
                                     var scale = 1; this.scale = function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
                         
                             //addressing
-                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '/') + this.name; };
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
                             //group functions
                                 function getChildByName(name){ return children.find(a => a.name == name); }
@@ -2086,7 +2086,7 @@
                                         var adjust = { 
                                             x: point.x*offset.scale + offset.x,
                                             y: point.y*offset.scale + offset.y,
-                                            scale: offset.scale*scale,
+                                            scale: offset.scale * scale,
                                             angle: offset.angle + angle,
                                         };
                         
@@ -2190,7 +2190,7 @@
                                     console.log(prefix+'- \t'+a.type +': '+ a.name);
                                     if(a.type == 'group'){ recursivePrint(a, prefix+'-\t') }
                                 }else if(mode == 'address'){
-                                    console.log(prefix+'/'+a.na.type +':'+ ame);
+                                    console.log(prefix+'/'+a.type +':'+ a.name);
                                     if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
                                 }
                             });
@@ -4247,7 +4247,7 @@
                                 handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
                             
                                 handleURL, backingURL, slotURL,
-                                invisibleHandleStyle = 'rgba(255,0,0,0)',
+                                invisibleHandleStyle = {r:1,g:0,b:0,a:0},
                                 spanURL,
                             
                                 onchange=function(){},
@@ -4258,7 +4258,7 @@
                                         return this.rangeslide(
                                             name, x, y, width, height, angle, interactable,
                                             handleHeight, spanWidth, values, resetValues,
-                                            handleURL, backingURL, slotURL, invisibleHandleStyle, spanURL,
+                                            undefined, undefined, undefined, invisibleHandleStyle, undefined,
                                             onchange, onrelease,
                                         );
                                     }
@@ -4281,7 +4281,7 @@
                                             var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
                                             backingAndSlot.append(slot);
                                         //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                             backingAndSlot.append(backingAndSlotCover);
                             
                                     //span
@@ -4299,12 +4299,12 @@
                                                 handles[handleNames[a]].append(handle);
                                             //invisible handle
                                                 var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, colour:invisibleHandleStyle});
                                                 handles[handleNames[a]].append(invisibleHandle);
                                         }
                             
                                     //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                         object.append(cover);
                             
                                         
@@ -4347,12 +4347,12 @@
                                             values[handle] = a;
                             
                                         //adjust y positions
-                                            handles.start.parameter.y( values.start*height*(1-handleHeight) );
-                                            handles.end.parameter.y( values.end*height*(1-handleHeight) );
+                                            handles.start.y( values.start*height*(1-handleHeight) );
+                                            handles.end.y( values.end*height*(1-handleHeight) );
                             
                                         //adjust span height (with a little bit of padding so the span is under the handles a little)
-                                            span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
-                                            span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
+                                            span.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
+                                            span.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
                             
                                         if(update && object.onchange){object.onchange(values);}
                                     }
@@ -4396,12 +4396,12 @@
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
                                             var offset = backingAndSlot.getOffset();
                                             var delta = {
-                                                x: x - (backingAndSlot.x     + offset.x),
-                                                y: y - (backingAndSlot.y     + offset.y),
-                                                a: 0 - (backingAndSlot.angle + offset.a),
+                                                x: x - (backingAndSlot.x()     + offset.x),
+                                                y: y - (backingAndSlot.y()     + offset.y),
+                                                a: 0 - (backingAndSlot.angle() + offset.angle),
                                             };
                             
-                                        return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                                        return _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
                                     }
                             
                                     //background click
@@ -4442,7 +4442,7 @@
                                             if(grappled){return;}
                             
                                             var move = event.deltaY/100;
-                                            var globalScale = workspace.core.viewport.scale();
+                                            var globalScale = _canvas_.core.viewport.scale();
                                             var val = move/(10*globalScale);
                             
                                             set(values.start-val,'start');
@@ -4457,10 +4457,9 @@
                                             var initialValue = values.start;
                                             var initialPosition = getPositionWithinFromMouse(x,y);
                             
-                                            workspace.system.mouse.mouseInteractionHandler(
+                                            _canvas_.system.mouse.mouseInteractionHandler(
                                                 function(event){
-                                                    var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                                    var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                    var livePosition = getPositionWithinFromMouse(event.x,event.y);
                                                     pan( initialValue+(livePosition-initialPosition) )
                                                     object.onchange(values);
                                                 },
@@ -4473,7 +4472,7 @@
                             
                                     //handle movement
                                         for(var a = 0; a < handleNames.length; a++){
-                                            handles[handleNames[a]].children[1].onmousedown = (function(a){
+                                            handles[handleNames[a]].children()[1].onmousedown = (function(a){
                                                 return function(x,y,event){
                                                     if(!interactable){return;}
                                                     grappled = true;
@@ -4481,10 +4480,9 @@
                                                     var initialValue = values[handleNames[a]];
                                                     var initialPosition = getPositionWithinFromMouse(x,y);
                                                     
-                                                    workspace.system.mouse.mouseInteractionHandler(
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
                                                         function(event){
-                                                            var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                                            var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                            var livePosition = getPositionWithinFromMouse(event.x,event.y);
                                                             set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
                                                             object.onchange(values);
                                                         },
@@ -4534,7 +4532,7 @@
                                             var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), colour:slotStyle});
                                             backingAndSlot.append(slot);
                                         //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:'rgba(0,0,0,0)'});
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                             backingAndSlot.append(backingAndSlotCover);
                                     //handle
                                         var handle = interfacePart.builder('rectangle','handle',{width:width, height:height*handleHeight, colour:handleStyle});
@@ -4543,7 +4541,7 @@
                                         var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height: height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
                                         object.append(invisibleHandle);
                                     //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:'rgba(0,0,0,0)'});
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                         object.append(cover);
                             
                             
@@ -4664,9 +4662,9 @@
                                 name='slidePanel', 
                                 x, y, width=80, height=95, angle=0, interactable=true,
                                 handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
-                                handleStyle = 'rgba(200,200,200,1)',
-                                backingStyle = 'rgba(150,150,150,1)',
-                                slotStyle = 'rgba(50,50,50,1)',
+                                handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                backingStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                slotStyle = {r:0.2,g:0.2,b:0.2,a:1},
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
@@ -4685,7 +4683,6 @@
                                                     onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
                                                 }
                                             );
-                                            // temp.dotFrame = true;
                                             temp.__calculationAngle = angle;
                                             object.append(temp);
                                         }
@@ -4708,7 +4705,7 @@
                                 
                                 handleURL, backingURL, slotURL,
                             
-                                invisibleHandleStyle = 'rgba(255,0,0,0)',
+                                invisibleHandleStyle = {r:1,g:0,b:0,a:0},
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
@@ -4735,16 +4732,16 @@
                                             var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
                                             backingAndSlot.append(slot);
                                         //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                             backingAndSlot.append(backingAndSlotCover);
                                     //handle
                                         var handle = interfacePart.builder('image','handle',{width:width, height:height*handleHeight, url:handleURL});
                                         object.append(handle);
                                     //invisible handle
-                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, style:{fill:invisibleHandleStyle}});
+                                        var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
                                         object.append(invisibleHandle);
                                     //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                         object.append(cover);
                             
                             
@@ -4758,8 +4755,8 @@
                                         if(update && object.onchange != undefined){object.onchange(a);}
                                         
                                         value = a;
-                                        handle.y = a*height*(1-handleHeight);
-                                        invisibleHandle.y = handle.y - ( height*0.01 )/2;
+                                        handle.y( a*height*(1-handleHeight) );
+                                        invisibleHandle.y( handle.y() - ( height*0.01 )/2 );
                             
                                         handle.computeExtremities();
                                         invisibleHandle.computeExtremities();
@@ -4802,7 +4799,7 @@
                                         if(grappled){return;}
                             
                                         var move = event.deltaY/100;
-                                        var globalScale = workspace.core.viewport.scale();
+                                        var globalScale = _canvas_.core.viewport.scale();
                                         set( value + move/(10*globalScale) );
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
@@ -4814,11 +4811,11 @@
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
                                             var offset = backingAndSlot.getOffset();
                                             var delta = {
-                                                x: x - (backingAndSlot.x     + offset.x),
-                                                y: y - (backingAndSlot.y     + offset.y),
-                                                a: 0 - (backingAndSlot.angle + offset.a),
+                                                x: x - (backingAndSlot.x()     + offset.x),
+                                                y: y - (backingAndSlot.y()     + offset.y),
+                                                a: 0 - (backingAndSlot.angle() + offset.angle),
                                             };
-                                            var d = workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                                            var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
                             
                                         //use the distance to calculate the correct value to set the slide to
                                         //taking into account the slide handle's size also
@@ -4835,15 +4832,15 @@
                                         var initialY = currentMousePosition(event);
                                         var mux = height - height*handleHeight;
                             
-                                        workspace.system.mouse.mouseInteractionHandler(
+                                        _canvas_.system.mouse.mouseInteractionHandler(
                                             function(event){
                                                 var numerator = initialY-currentMousePosition(event);
-                                                var divider = workspace.core.viewport.scale();
+                                                var divider = _canvas_.core.viewport.scale();
                                                 set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
                                             },
                                             function(event){
                                                 var numerator = initialY-currentMousePosition(event);
-                                                var divider = workspace.core.viewport.scale();
+                                                var divider = _canvas_.core.viewport.scale();
                                                 object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
                                                 grappled = false;
                                             }
@@ -4865,11 +4862,11 @@
                                 name='rangeslide', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
                                 handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
-                                handleStyle = 'rgba(200,200,200,1)',
-                                backingStyle = 'rgba(150,150,150,1)',
-                                slotStyle = 'rgba(50,50,50,1)',
-                                invisibleHandleStyle = 'rgba(255,0,0,0)',
-                                spanStyle='rgba(200,0,200,0.5)',
+                                handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                backingStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                slotStyle = {r:0.2,g:0.2,b:0.2,a:1},
+                                invisibleHandleStyle = {r:1,g:0,b:0,a:0},
+                                spanStyle={r:0.78,g:0,b:0.78,a:0.5},
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
@@ -4881,20 +4878,19 @@
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     //backing and slot group
                                         var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
-                                        // backingAndSlot.dotFrame = true;
                                         object.append(backingAndSlot);
                                         //backing
-                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
                                             backingAndSlot.append(backing);
                                         //slot
-                                            var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
+                                            var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), colour:slotStyle});
                                             backingAndSlot.append(slot);
                                         //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                             backingAndSlot.append(backingAndSlotCover);
                             
                                     //span
-                                        var span = interfacePart.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, style:{fill:spanStyle} });
+                                        var span = interfacePart.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, colour:spanStyle });
                                         object.append(span);
                             
                                     //handles
@@ -4904,16 +4900,16 @@
                                                 handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
                                                 object.append(handles[handleNames[a]]);
                                             //handle
-                                                var handle = interfacePart.builder('rectangle','handle',{width:width,height:height*handleHeight, style:{fill:handleStyle}});
+                                                var handle = interfacePart.builder('rectangle','handle',{width:width,height:height*handleHeight, colour:handleStyle});
                                                 handles[handleNames[a]].append(handle);
                                             //invisible handle
                                                 var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, colour:invisibleHandleStyle});
                                                 handles[handleNames[a]].append(invisibleHandle);
                                         }
                             
                                     //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                         object.append(cover);
                             
                             
@@ -4956,12 +4952,12 @@
                                             values[handle] = a;
                             
                                         //adjust y positions
-                                            handles.start.parameter.y( values.start*height*(1-handleHeight) );
-                                            handles.end.parameter.y( values.end*height*(1-handleHeight) );
+                                            handles.start.y( values.start*height*(1-handleHeight) );
+                                            handles.end.y( values.end*height*(1-handleHeight) );
                             
                                         //adjust span height (with a little bit of padding so the span is under the handles a little)
-                                            span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
-                                            span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
+                                            span.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
+                                            span.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
                             
                                         if(update && object.onchange){object.onchange(values);}
                                     }
@@ -5005,12 +5001,12 @@
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
                                             var offset = backingAndSlot.getOffset();
                                             var delta = {
-                                                x: x - (backingAndSlot.x     + offset.x),
-                                                y: y - (backingAndSlot.y     + offset.y),
-                                                a: 0 - (backingAndSlot.angle + offset.a),
+                                                x: x - (backingAndSlot.x()     + offset.x),
+                                                y: y - (backingAndSlot.y()     + offset.y),
+                                                a: 0 - (backingAndSlot.angle() + offset.angle),
                                             };
                             
-                                        return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                                        return _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
                                     }
                             
                                     //background click
@@ -5051,7 +5047,7 @@
                                             if(grappled){return;}
                             
                                             var move = event.deltaY/100;
-                                            var globalScale = workspace.core.viewport.scale();
+                                            var globalScale = _canvas_.core.viewport.scale();
                                             var val = move/(10*globalScale);
                             
                                             set(values.start-val,'start');
@@ -5066,10 +5062,9 @@
                                             var initialValue = values.start;
                                             var initialPosition = getPositionWithinFromMouse(x,y);
                             
-                                            workspace.system.mouse.mouseInteractionHandler(
+                                            _canvas_.system.mouse.mouseInteractionHandler(
                                                 function(event){
-                                                    var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                                    var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                                    var livePosition = getPositionWithinFromMouse(event.x,event.y);
                                                     pan( initialValue+(livePosition-initialPosition) )
                                                     object.onchange(values);
                                                 },
@@ -5082,7 +5077,7 @@
                             
                                     //handle movement
                                         for(var a = 0; a < handleNames.length; a++){
-                                            handles[handleNames[a]].children[1].onmousedown = (function(a){
+                                            handles[handleNames[a]].children()[1].onmousedown = (function(a){
                                                 return function(x,y,event){
                                                     if(!interactable){return;}
                                                     grappled = true;
@@ -5090,11 +5085,10 @@
                                                     var initialValue = values[handleNames[a]];
                                                     var initialPosition = getPositionWithinFromMouse(x,y);
                                                     
-                                                    workspace.system.mouse.mouseInteractionHandler(
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
                                                         function(event){
-                                                            var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                                            var livePosition = getPositionWithinFromMouse(point.x,point.y);
-                                                            set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
+                                                            var livePosition = getPositionWithinFromMouse(event.x,event.y);
+                                                            set( initialValue + (livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
                                                             object.onchange(values);
                                                         },
                                                         function(event){
@@ -8241,8 +8235,360 @@
                                 return object;
                             };
                         };
-                        // this.dynamic = new function(){
-                        // };
+                        this.dynamic = new function(){
+                            this.connectionNode_voltage = function(
+                                name='connectionNode_voltage',
+                                x, y, angle=0, width=20, height=20,
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle={r:0.86,g:1,b:0.86,a:1},
+                                glowStyle={r:0.94,g:0.98,b:0.93,a:1},
+                                cable_dimStyle={r:0.32,g:0.96,b:0.43,a:1},
+                                cable_glowStyle={r:0.62,g:0.98,b:0.68,a:1},
+                                onchange=function(value){},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                    });
+                            
+                                //circuitry
+                                    var localValue = 0;
+                            
+                                    object._getLocalValue = function(){ return localValue; };
+                                    object._update = function(a){
+                                        if(a>0){ object.activate(); }
+                                        else{ object.deactivate(); }
+                                        onchange(a);
+                                    }
+                            
+                                    object.set = function(a){
+                                        localValue = a;
+                            
+                                        var val = object.read();
+                                        object._update(val);
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
+                                    };
+                                    object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                            
+                                    object.onconnect = function(instigator){
+                                        if(onconnect){onconnect(instigator);}
+                                        object._update(object.read());
+                                    };
+                                    object.ondisconnect = function(instigator){
+                                        if(ondisconnect){ondisconnect(instigator);}
+                                        object._update(localValue);
+                                    };
+                            
+                                return object;
+                            };
+                            this.cable = function(
+                                name='path', 
+                                x1=0, y1=0, x2=0, y2=0,
+                                dimStyle={r:1,g:0,b:0,a:1},
+                                glowStyle={r:1,g:0.39,b:0.39,a:1},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name);
+                                    //cable shape
+                                        var path = interfacePart.builder('path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:2.5 });
+                                        object.append(path);
+                                
+                                //controls
+                                    object.activate = function(){ path.colour = glowStyle; };
+                                    object.deactivate = function(){ path.colour = dimStyle; };
+                                    object.draw = function(new_x1,new_y1,new_x2,new_y2){
+                                        x1 = (new_x1!=undefined ? new_x1 : x1); 
+                                        y1 = (new_y1!=undefined ? new_y1 : y1);
+                                        x2 = (new_x2!=undefined ? new_x2 : x2); 
+                                        y2 = (new_y2!=undefined ? new_y2 : y2);
+                                        path.points([x1,y1,x2,y2]);
+                                    };
+                            
+                                //identifier
+                                    object._isCable = true;
+                            
+                                return object;
+                            };
+                            this.connectionNode_audio = function(
+                                name='connectionNode_audio',
+                                x, y, angle=0, width=20, height=20, allowConnections=true, allowDisconnections=true,
+                                isAudioOutput=false, audioContext,
+                                dimStyle={r:255/255, g:244/255, b:220/255, a:1},
+                                glowStyle={r:255/255, g:244/255, b:244/255, a:1},
+                                cable_dimStyle={r:247/255, g:146/255, b:84/255, a:1},
+                                cable_glowStyle={r:242/255, g:168/255, b:123/255, a:1},
+                                onconnect=function(){},
+                                ondisconnect=function(){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                    });
+                                    object._direction = isAudioOutput ? 'out' : 'in';
+                            
+                                //circuitry
+                                    object.audioNode = audioContext.createAnalyser();
+                            
+                                    //audio connections
+                                        object.out = function(){return object.audioNode;};
+                                        object.in = function(){return object.audioNode;};
+                            
+                                    object.onconnect = function(instigator){
+                                        if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
+                                        if(onconnect){onconnect(instigator);}
+                                    };
+                                    object.ondisconnect = function(instigator){
+                                        if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
+                                        if(ondisconnect){ondisconnect(instigator);}
+                                    };
+                                
+                                return object;
+                            };
+                            this.connectionNode_data = function(
+                                name='connectionNode_data',
+                                x, y, angle=0, width=20, height=20, 
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle={r:220/255, g:244/255, b:255/255, a:1},
+                                glowStyle={r:244/255, g:244/255, b:255/255, a:1},
+                                cable_dimStyle={r:84/255, g:146/255, b:247/255, a:1},
+                                cable_glowStyle={r:123/255, g:168/255, b:242/255, a:1},
+                                onreceivedata=function(address, data){},
+                                ongivedata=function(address){},
+                                onconnect=function(){},
+                                ondisconnect=function(){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'data',
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                        onconnect, ondisconnect
+                                    });
+                            
+                                //circuitry
+                                    function flash(obj){
+                                        obj.activate();
+                                        setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
+                                        if(obj.getForeignNode()!=undefined){
+                                            obj.getForeignNode().activate();
+                                            setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
+                                        }
+                                    }
+                            
+                                    object.send = function(address,data){
+                                        flash(object);
+                            
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
+                                    };
+                                    object.request = function(address){
+                                        flash(object);
+                            
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
+                                    };
+                            
+                                    object.onreceivedata = onreceivedata;
+                                    object.ongivedata = ongivedata;
+                            
+                                return object;
+                            };
+                            this.connectionNode = function(
+                                name='connectionNode2',
+                                x, y, angle=0, width=20, height=20, type='none', direction='',
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle={r:0.86,g:0.86,b:0.86,a:1},
+                                glowStyle={r:0.95,g:0.95,b:0.95,a:1},
+                                cable_dimStyle={r:0.57,g:0.57,b:0.57,a:1},
+                                cable_glowStyle={r:0.84,g:0.84,b:0.84,a:1},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                //elements
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                        object._connectionNode = true;
+                                        object._type = type;
+                                        object._direction = direction;
+                                    //node
+                                        var rectangle = interfacePart.builder('rectangle','node',{ width:width, height:height, colour:dimStyle });
+                                            object.append(rectangle);
+                            
+                                //network functions
+                                    var foreignNode = undefined;
+                            
+                                    object.isConnected = function(){ return cable != undefined; };
+                                    object.canDisconnect = function(){ return this.allowDisconnections() && (foreignNode!=undefined && foreignNode.allowDisconnections()); };
+                                    object.allowConnections = function(bool){
+                                        if(bool == undefined){return allowConnections;}
+                                        allowConnections = bool;
+                                    };
+                                    object.allowDisconnections = function(bool){
+                                        if(bool == undefined){return allowDisconnections;}
+                                        allowDisconnections = bool;
+                                    };
+                                    object.connectTo = function(new_foreignNode){ 
+                                        if( new_foreignNode == undefined){ return; }
+                                        if( new_foreignNode == this ){ return; }
+                                        if( new_foreignNode._type != this._type ){ return; }
+                                        if( (this._direction == '' || new_foreignNode._direction == '') && this._direction != new_foreignNode._direction){ return; }
+                                        if( this._direction != '' && (new_foreignNode._direction == this._direction) ){ return; }
+                                        if( new_foreignNode == foreignNode ){ return; }
+                            
+                                        this.disconnect();
+                            
+                                        foreignNode = new_foreignNode;
+                                        if(onconnect!=undefined){this.onconnect(true);}
+                                        foreignNode._receiveConnection(this);
+                            
+                                        this._addCable(this);
+                                    };
+                                    object._receiveConnection = function(new_foreignNode){
+                                        this.disconnect();
+                                        foreignNode = new_foreignNode;
+                                        if(onconnect!=undefined){this.onconnect(false);}
+                                    };
+                                    object.disconnect = function(){
+                                        if( foreignNode == undefined ){return;}
+                            
+                                        this._removeCable();
+                                        if(ondisconnect!=undefined){this.ondisconnect(true);}
+                                        foreignNode._receiveDisconnection();
+                                        foreignNode = null;
+                                    };
+                                    object._receiveDisconnection = function(){
+                                        if(ondisconnect!=undefined){this.ondisconnect(false);}
+                                        foreignNode = null;
+                                    };
+                                    object.getForeignNode = function(){ return foreignNode; };
+                            
+                                //mouse interaction
+                                    rectangle.onmousedown = function(x,y,event){
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            undefined,
+                                            function(event){
+                                                var element = _canvas_.core.arrangement.getElementsUnderPoint(event.x,event.y)[0];
+                                                if(element == undefined){return;}
+                                                
+                                                var node = element.parent;
+                                                if( node._connectionNode ){ 
+                                                    if( node.isConnected() && !node.canDisconnect() ){return;}
+                                                    if( object.isConnected() && !object.canDisconnect() ){return;}
+                                                    if( allowConnections && node.allowConnections() ){ object.connectTo(node); }
+                                                }
+                                            }
+                                        );
+                                    };
+                                    rectangle.ondblclick = function(x,y,event){
+                                        if( !(allowDisconnections && foreignNode.allowDisconnections()) ){return;}
+                                        object.disconnect();
+                                    };
+                            
+                                //cabling
+                                    var cable;
+                            
+                                    object._addCable = function(){
+                                        cable = interfacePart.builder('cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+                                        foreignNode._receiveCable(cable);
+                                        _canvas_.system.pane.getMiddlegroundPane(this).append(cable);
+                                        this.draw();
+                                    }
+                                    object._receiveCable = function(new_cable){
+                                        cable = new_cable;
+                                    };
+                                    object._removeCable = function(){
+                                        cable.parent.remove(cable);
+                                        cable = undefined;
+                                        foreignNode._loseCable();
+                                    };
+                                    object._loseCable = function(){
+                                        cable = undefined;
+                                    };
+                                    object.getCablePoint = function(){
+                                        var offset = object.getOffset();
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(
+                                            offset.x + (width*offset.scale)/2,
+                                            offset.y + (height*offset.scale)/2,
+                                            offset.angle
+                                        );
+                                        return _canvas_.core.viewport.adapter.windowPoint2workspacePoint(point.x,point.y);
+                                    };
+                                    object.draw = function(){
+                                        if( cable == undefined ){return;}
+                            
+                                        var pointA = this.getCablePoint();
+                                        var pointB = foreignNode.getCablePoint();
+                            
+                                        cable.draw(pointA.x,pointA.y,pointB.x,pointB.y);
+                                    };
+                            
+                                //graphical
+                                    object.activate = function(){ 
+                                        rectangle.colour = glowStyle;
+                                        if(cable!=undefined){ cable.activate(); }
+                                    }
+                                    object.deactivate = function(){ 
+                                        rectangle.colour = dimStyle;
+                                        if(cable!=undefined){ cable.deactivate(); }
+                                    }
+                            
+                                //callbacks
+                                    object.onconnect = onconnect;
+                                    object.ondisconnect = ondisconnect;
+                            
+                                return object;
+                            };
+                            this.connectionNode_signal = function(
+                                name='connectionNode_signal',
+                                x, y, angle=0, width=20, height=20,
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle={r:1,g:0.86,b:0.95,a:1}, // 'rgb(255, 220, 244)',
+                                glowStyle={r:1,g:0.95,b:0.95,a:1}, // 'rgb(255, 244, 244)',
+                                cable_dimStyle={r:0.96,g:0.32,b:0.57,a:1}, // 'rgb(247, 84, 146)',
+                                cable_glowStyle={r:0.96,g:0.76,b:0.84,a:1}, // 'rgb(247, 195, 215)',
+                                onchange=function(value){},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'signal',
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                    });
+                            
+                                //circuitry
+                                    var localValue = false;
+                            
+                                    object._getLocalValue = function(){ return localValue; };
+                                    object._update = function(){
+                                        var val = object.read();
+                                        if(val){ object.activate(); }
+                                        else{ object.deactivate(); }
+                                        onchange(val);
+                                    }
+                            
+                                    object.set = function(a){
+                                        localValue = a;
+                            
+                                        object._update();
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(); }
+                                    };
+                                    object.read = function(){ return localValue || (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                            
+                                    object.onconnect = function(instigator){
+                                        if(onconnect){onconnect(instigator);}
+                                        object._update();
+                                    };
+                                    object.ondisconnect = function(instigator){
+                                        if(ondisconnect){ondisconnect(instigator);}
+                                        object._update();
+                                    };
+                            
+                                return object;
+                            };
+                        };
                     };
                     this.builder = function(type,name,data){
                         if(!data){data={};}
@@ -8529,31 +8875,31 @@
                                         data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
                                         data.onchange, data.onrelease
                                     );
-                            //         case 'slide_image': return this.collection.control.slide_image(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
-                            //             data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle,
-                            //             data.onchange, data.onrelease
-                            //         );
-                            //         case 'slidePanel': return this.collection.control.slidePanel(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
-                            //             data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
-                            //             data.onchange, data.onrelease
-                            //         );
-                            //         case 'slidePanel_image': return this.collection.control.slidePanel(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
-                            //             data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
-                            //             data.onchange, data.onrelease
-                            //         );
-                            //         case 'rangeslide': return this.collection.control.rangeslide(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
-                            //             data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span,
-                            //             data.onchange, data.onrelease
-                            //         );
-                            //         case 'rangeslide_image': return this.collection.control.rangeslide_image(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
-                            //             data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle, data.spanURL,
-                            //             data.onchange, data.onrelease
-                            //         );
+                                    case 'slide_image': return this.collection.control.slide_image(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
+                                        data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle,
+                                        data.onchange, data.onrelease
+                                    );
+                                    case 'slidePanel': return this.collection.control.slidePanel(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
+                                        data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+                                        data.onchange, data.onrelease
+                                    );
+                                    case 'slidePanel_image': return this.collection.control.slidePanel(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
+                                        data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
+                                        data.onchange, data.onrelease
+                                    );
+                                    case 'rangeslide': return this.collection.control.rangeslide(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
+                                        data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span,
+                                        data.onchange, data.onrelease
+                                    );
+                                    case 'rangeslide_image': return this.collection.control.rangeslide_image(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
+                                        data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle, data.spanURL,
+                                        data.onchange, data.onrelease
+                                    );
                             //     //list
                             //         case 'list': return this.collection.control.list(
                             //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
@@ -8672,36 +9018,36 @@
                             //             data.onpan, data.onchangeviewarea, data.event,
                             //         );
                     
-                            // //dynamic
-                            //     case 'cable': return this.collection.dynamic.cable(
-                            //         name, data.x1, data.y1, data.x2, data.y2,
-                            //         data.style.dim, data.style.glow,
-                            //     );
-                            //     case 'connectionNode': return this.collection.dynamic.connectionNode(
-                            //         name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
-                            //         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-                            //         data.onconnect, data.ondisconnect,
-                            //     );
-                            //     case 'connectionNode_signal': return this.collection.dynamic.connectionNode_signal(
-                            //         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-                            //         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-                            //         data.onchange, data.onconnect, data.ondisconnect,
-                            //     );
-                            //     case 'connectionNode_voltage': return this.collection.dynamic.connectionNode_voltage(
-                            //         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-                            //         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-                            //         data.onchange, data.onconnect, data.ondisconnect,
-                            //     );
-                            //     case 'connectionNode_data': return this.collection.dynamic.connectionNode_data(
-                            //         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-                            //         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-                            //         data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
-                            //     );
-                            //     case 'connectionNode_audio': return this.collection.dynamic.connectionNode_audio(
-                            //         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, workspace.library.audio.context,
-                            //         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-                            //         data.onconnect, data.ondisconnect,
-                            //     );
+                            //dynamic
+                                case 'cable': return this.collection.dynamic.cable(
+                                    name, data.x1, data.y1, data.x2, data.y2,
+                                    data.style.dim, data.style.glow,
+                                );
+                                case 'connectionNode': return this.collection.dynamic.connectionNode(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                                    data.onconnect, data.ondisconnect,
+                                );
+                                case 'connectionNode_signal': return this.collection.dynamic.connectionNode_signal(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                                    data.onchange, data.onconnect, data.ondisconnect,
+                                );
+                                case 'connectionNode_voltage': return this.collection.dynamic.connectionNode_voltage(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                                    data.onchange, data.onconnect, data.ondisconnect,
+                                );
+                                case 'connectionNode_data': return this.collection.dynamic.connectionNode_data(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                                    data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
+                                );
+                                case 'connectionNode_audio': return this.collection.dynamic.connectionNode_audio(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                                    data.onconnect, data.ondisconnect,
+                                );
                         }
                     }
 
@@ -8769,50 +9115,50 @@
             _canvas_.system.pane.mm.append( controlGroup );
             //slide
                 var s_1 = _canvas_.interface.part.builder( 'slide', 'test_slide1', {x:0,y:0} ); controlGroup.append( s_1 );
-            //     var si_1 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image1', {
-            //         x:12.5,y:0,
-            //         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-            //         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-            //         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            //     } ); controlGroup.append( si_1 );
-            //     var sp_1 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel1', {x:25,y:0} ); controlGroup.append( sp_1 );
-            //     var spi_1 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image1', {
-            //         x:107.5,y:0,
-            //         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-            //         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-            //         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            //         overlayURL:'images/units/alpha/glowbox_rect_overlay_1.png',
-            //     } ); controlGroup.append( spi_1 );
-            //     var s_2 = _canvas_.interface.part.builder( 'slide', 'test_slide2', {x:190,y:10,angle:-Math.PI/2} ); controlGroup.append( s_2 );
-            //     var si_2 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image2', {
-            //         x:190,y:22.5,angle:-Math.PI/2,
-            //         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-            //         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-            //         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            //     } ); controlGroup.append( si_2 );
-            //     var sp_2 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel2', {x:287.5,y:80,angle:-Math.PI/2} ); controlGroup.append( sp_2 );
-            //     var spi_2 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image2', {
-            //         x:287.5,y:162.5,angle:-Math.PI/2,
-            //         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-            //         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-            //         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            //     } ); controlGroup.append( spi_2 );
-            //     var r_1 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide1', {x:385,y:0} ); controlGroup.append(r_1);
-            //     var ri_1 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image1', {
-            //         x:397.5,y:0,
-            //         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-            //         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-            //         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            //         spanURL:'images/units/alpha/glowbox_rect_overlay_1.png',
-            //     } ); controlGroup.append(ri_1);
-            //     var r_2 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide2', {x:410,y:10,angle:-Math.PI/2} ); controlGroup.append(r_2);
-            //     var ri_2 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image2', {
-            //         x:410,y:22.5,angle:-Math.PI/2,
-            //         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-            //         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-            //         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            //         spanURL:'images/units/alpha/glowbox_rect_overlay_1.png',
-            //     } ); controlGroup.append(ri_2);
+                var si_1 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image1', {
+                    x:12.5,y:0,
+                    handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+                    backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+                    slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+                } ); controlGroup.append( si_1 );
+                var sp_1 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel1', {x:25,y:0} ); controlGroup.append( sp_1 );
+                var spi_1 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image1', {
+                    x:107.5,y:0,
+                    handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+                    backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+                    slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+                    overlayURL:'http://0.0.0.0:8000/glowbox_rect_overlay_1.png',
+                } ); controlGroup.append( spi_1 );
+                var s_2 = _canvas_.interface.part.builder( 'slide', 'test_slide2', {x:190,y:10,angle:-Math.PI/2} ); controlGroup.append( s_2 );
+                var si_2 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image2', {
+                    x:190,y:22.5,angle:-Math.PI/2,
+                    handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+                    backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+                    slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+                } ); controlGroup.append( si_2 );
+                var sp_2 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel2', {x:287.5,y:80,angle:-Math.PI/2} ); controlGroup.append( sp_2 );
+                var spi_2 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image2', {
+                    x:287.5,y:162.5,angle:-Math.PI/2,
+                    handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+                    backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+                    slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+                } ); controlGroup.append( spi_2 );
+                var r_1 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide1', {x:385,y:0} ); controlGroup.append(r_1);
+                var ri_1 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image1', {
+                    x:397.5,y:0,
+                    handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+                    backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+                    slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+                    spanURL:'http://0.0.0.0:8000/glowbox_rect_overlay_1.png',
+                } ); controlGroup.append(ri_1);
+                var r_2 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide2', {x:410,y:10,angle:-Math.PI/2} ); controlGroup.append(r_2);
+                var ri_2 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image2', {
+                    x:410,y:22.5,angle:-Math.PI/2,
+                    handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+                    backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+                    slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+                    spanURL:'http://0.0.0.0:8000/glowbox_rect_overlay_1.png',
+                } ); controlGroup.append(ri_2);
             // //dial
             //     var dc_1 = _canvas_.interface.part.builder( 'dial_continuous', 'test_dial_continuous1', {x:525,y:20} ); controlGroup.append(dc_1);
             //     var dd_1 = _canvas_.interface.part.builder( 'dial_discrete', 'test_dial_discrete1', {x:560,y:20} ); controlGroup.append(dd_1);
@@ -8961,37 +9307,37 @@
             //     seq.event = function(data){console.log(data);};
             
             
-            // //dynamic
-            //     var dynamicGroup = _canvas_.interface.part.builder( 'group', 'dynamic', { x:10, y:450, angle:0 } );
-            //     _canvas_.system.pane.mm.append( dynamicGroup );
-            //     dynamicGroup.append( _canvas_.interface.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
+            //dynamic
+                var dynamicGroup = _canvas_.interface.part.builder( 'group', 'dynamic', { x:0, y:450, angle:0 } );
+                _canvas_.system.pane.mm.append( dynamicGroup );
+                dynamicGroup.append( _canvas_.interface.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
             
-            //     var cn_reg_0 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode1', { x:25, y:25 } ); dynamicGroup.append( cn_reg_0 );
-            //     var cn_reg_1 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode2', { x:0,  y:75 } ); dynamicGroup.append( cn_reg_1 );
-            //     var cn_reg_2 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode3', { x:50, y:60 } ); dynamicGroup.append( cn_reg_2 );
-            //     var cn_reg_3 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode4', { x:30, y:100 } ); dynamicGroup.append( cn_reg_3 );
-            //     var cn_sig_0 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:125, y:25 } ); dynamicGroup.append( cn_sig_0 );
-            //     var cn_sig_1 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:100, y:75 } ); dynamicGroup.append( cn_sig_1 );
-            //     var cn_sig_2 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:150, y:60 } ); dynamicGroup.append( cn_sig_2 );
-            //     var cn_sig_3 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal4', { x:130, y:100 } ); dynamicGroup.append( cn_sig_3 );
-            //     var cn_vol_0 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage1', { x:225, y:25 } ); dynamicGroup.append( cn_vol_0 ); 
-            //     var cn_vol_1 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage2', { x:200, y:75 } ); dynamicGroup.append( cn_vol_1 ); 
-            //     var cn_vol_2 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage3', { x:250, y:60 } ); dynamicGroup.append( cn_vol_2 ); 
-            //     var cn_vol_3 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage4', { x:230, y:100 } ); dynamicGroup.append( cn_vol_3 ); 
-            //     var cn_dat_0 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:325, y:25 } ); dynamicGroup.append( cn_dat_0 ); 
-            //     var cn_dat_1 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:300, y:75 } ); dynamicGroup.append( cn_dat_1 ); 
-            //     var cn_dat_2 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:350, y:60 } ); dynamicGroup.append( cn_dat_2 ); 
-            //     var cn_dat_3 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data4', { x:320, y:100 } ); dynamicGroup.append( cn_dat_3 ); 
-            //     var cn_aud_0 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ); dynamicGroup.append( cn_aud_0 ); 
-            //     var cn_aud_1 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ); dynamicGroup.append( cn_aud_1 ); 
-            //     var cn_aud_2 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:60 } ); dynamicGroup.append( cn_aud_2 ); 
-            //     var cn_aud_3 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio4', { x:420, y:100, isAudioOutput:true} ); dynamicGroup.append( cn_aud_3 ); 
+                var cn_reg_0 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode1', { x:25, y:25 } ); dynamicGroup.append( cn_reg_0 );
+                var cn_reg_1 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode2', { x:0,  y:75 } ); dynamicGroup.append( cn_reg_1 );
+                var cn_reg_2 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode3', { x:50, y:60 } ); dynamicGroup.append( cn_reg_2 );
+                var cn_reg_3 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode4', { x:30, y:100 } ); dynamicGroup.append( cn_reg_3 );
+                var cn_sig_0 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:125, y:25 } ); dynamicGroup.append( cn_sig_0 );
+                var cn_sig_1 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:100, y:75 } ); dynamicGroup.append( cn_sig_1 );
+                var cn_sig_2 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:150, y:60 } ); dynamicGroup.append( cn_sig_2 );
+                var cn_sig_3 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal4', { x:130, y:100 } ); dynamicGroup.append( cn_sig_3 );
+                var cn_vol_0 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage1', { x:225, y:25 } ); dynamicGroup.append( cn_vol_0 ); 
+                var cn_vol_1 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage2', { x:200, y:75 } ); dynamicGroup.append( cn_vol_1 ); 
+                var cn_vol_2 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage3', { x:250, y:60 } ); dynamicGroup.append( cn_vol_2 ); 
+                var cn_vol_3 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage4', { x:230, y:100 } ); dynamicGroup.append( cn_vol_3 ); 
+                var cn_dat_0 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:325, y:25 } ); dynamicGroup.append( cn_dat_0 ); 
+                var cn_dat_1 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:300, y:75 } ); dynamicGroup.append( cn_dat_1 ); 
+                var cn_dat_2 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:350, y:60 } ); dynamicGroup.append( cn_dat_2 ); 
+                var cn_dat_3 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data4', { x:320, y:100 } ); dynamicGroup.append( cn_dat_3 ); 
+                var cn_aud_0 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ); dynamicGroup.append( cn_aud_0 ); 
+                var cn_aud_1 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ); dynamicGroup.append( cn_aud_1 ); 
+                var cn_aud_2 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:60 } ); dynamicGroup.append( cn_aud_2 ); 
+                var cn_aud_3 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio4', { x:420, y:100, isAudioOutput:true} ); dynamicGroup.append( cn_aud_3 ); 
             
-            //     cn_reg_0.connectTo(cn_reg_1); cn_reg_0.allowConnections(false); cn_reg_0.allowDisconnections(false);
-            //     cn_sig_0.connectTo(cn_sig_1); cn_sig_0.allowConnections(false); cn_sig_0.allowDisconnections(false);
-            //     cn_vol_0.connectTo(cn_vol_1); cn_vol_0.allowConnections(false); cn_vol_0.allowDisconnections(false);
-            //     cn_dat_0.connectTo(cn_dat_1); cn_dat_0.allowConnections(false); cn_dat_0.allowDisconnections(false);
-            //     cn_aud_0.connectTo(cn_aud_1); cn_aud_0.allowConnections(false); cn_aud_0.allowDisconnections(false);
+                cn_reg_0.connectTo(cn_reg_1); cn_reg_0.allowConnections(false); cn_reg_0.allowDisconnections(false);
+                cn_sig_0.connectTo(cn_sig_1); cn_sig_0.allowConnections(false); cn_sig_0.allowDisconnections(false);
+                cn_vol_0.connectTo(cn_vol_1); cn_vol_0.allowConnections(false); cn_vol_0.allowDisconnections(false);
+                cn_dat_0.connectTo(cn_dat_1); cn_dat_0.allowConnections(false); cn_dat_0.allowDisconnections(false);
+                cn_aud_0.connectTo(cn_aud_1); cn_aud_0.allowConnections(false); cn_aud_0.allowDisconnections(false);
             
             
             
@@ -9000,10 +9346,9 @@
             _canvas_.core.render.active(true);
             // _canvas_.core.render.frame();
             
-            //view positioning
-            _canvas_.core.viewport.scale(4);
-            _canvas_.core.viewport.position(0,-1100);
-
+            // //view positioning
+            _canvas_.core.viewport.scale(1);
+            _canvas_.core.viewport.position(0,-300);
 
 
         }

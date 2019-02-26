@@ -4,7 +4,7 @@ this.rangeslide_image = function(
     handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
 
     handleURL, backingURL, slotURL,
-    invisibleHandleStyle = 'rgba(255,0,0,0)',
+    invisibleHandleStyle = {r:1,g:0,b:0,a:0},
     spanURL,
 
     onchange=function(){},
@@ -15,7 +15,7 @@ this.rangeslide_image = function(
             return this.rangeslide(
                 name, x, y, width, height, angle, interactable,
                 handleHeight, spanWidth, values, resetValues,
-                handleURL, backingURL, slotURL, invisibleHandleStyle, spanURL,
+                undefined, undefined, undefined, invisibleHandleStyle, undefined,
                 onchange, onrelease,
             );
         }
@@ -38,7 +38,7 @@ this.rangeslide_image = function(
                 var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
                 backingAndSlot.append(slot);
             //backing and slot cover
-                var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                 backingAndSlot.append(backingAndSlotCover);
 
         //span
@@ -56,12 +56,12 @@ this.rangeslide_image = function(
                     handles[handleNames[a]].append(handle);
                 //invisible handle
                     var invisibleHandleHeight = height*handleHeight + height*0.01;
-                    var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                    var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, colour:invisibleHandleStyle});
                     handles[handleNames[a]].append(invisibleHandle);
             }
 
         //cover
-            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.append(cover);
 
             
@@ -104,12 +104,12 @@ this.rangeslide_image = function(
                 values[handle] = a;
 
             //adjust y positions
-                handles.start.parameter.y( values.start*height*(1-handleHeight) );
-                handles.end.parameter.y( values.end*height*(1-handleHeight) );
+                handles.start.y( values.start*height*(1-handleHeight) );
+                handles.end.y( values.end*height*(1-handleHeight) );
 
             //adjust span height (with a little bit of padding so the span is under the handles a little)
-                span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
-                span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
+                span.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
+                span.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
 
             if(update && object.onchange){object.onchange(values);}
         }
@@ -153,12 +153,12 @@ this.rangeslide_image = function(
             //calculate the distance the click is from the top of the slider (accounting for angle)
                 var offset = backingAndSlot.getOffset();
                 var delta = {
-                    x: x - (backingAndSlot.x     + offset.x),
-                    y: y - (backingAndSlot.y     + offset.y),
-                    a: 0 - (backingAndSlot.angle + offset.a),
+                    x: x - (backingAndSlot.x()     + offset.x),
+                    y: y - (backingAndSlot.y()     + offset.y),
+                    a: 0 - (backingAndSlot.angle() + offset.angle),
                 };
 
-            return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+            return _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
         }
 
         //background click
@@ -199,7 +199,7 @@ this.rangeslide_image = function(
                 if(grappled){return;}
 
                 var move = event.deltaY/100;
-                var globalScale = workspace.core.viewport.scale();
+                var globalScale = _canvas_.core.viewport.scale();
                 var val = move/(10*globalScale);
 
                 set(values.start-val,'start');
@@ -214,10 +214,9 @@ this.rangeslide_image = function(
                 var initialValue = values.start;
                 var initialPosition = getPositionWithinFromMouse(x,y);
 
-                workspace.system.mouse.mouseInteractionHandler(
+                _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
-                        var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                        var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                        var livePosition = getPositionWithinFromMouse(event.x,event.y);
                         pan( initialValue+(livePosition-initialPosition) )
                         object.onchange(values);
                     },
@@ -230,7 +229,7 @@ this.rangeslide_image = function(
 
         //handle movement
             for(var a = 0; a < handleNames.length; a++){
-                handles[handleNames[a]].children[1].onmousedown = (function(a){
+                handles[handleNames[a]].children()[1].onmousedown = (function(a){
                     return function(x,y,event){
                         if(!interactable){return;}
                         grappled = true;
@@ -238,10 +237,9 @@ this.rangeslide_image = function(
                         var initialValue = values[handleNames[a]];
                         var initialPosition = getPositionWithinFromMouse(x,y);
                         
-                        workspace.system.mouse.mouseInteractionHandler(
+                        _canvas_.system.mouse.mouseInteractionHandler(
                             function(event){
-                                var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                                var livePosition = getPositionWithinFromMouse(event.x,event.y);
                                 set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
                                 object.onchange(values);
                             },

@@ -20,7 +20,7 @@ this.group = function(){
             var scale = 1; this.scale = function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
 
     //addressing
-        this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '/') + this.name; };
+        this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
 
     //group functions
         function getChildByName(name){ return children.find(a => a.name == name); }
@@ -213,7 +213,7 @@ this.group = function(){
                 var adjust = { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
-                    scale: offset.scale*scale,
+                    scale: offset.scale * scale,
                     angle: offset.angle + angle,
                 };
 

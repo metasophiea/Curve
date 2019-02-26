@@ -283,31 +283,31 @@ this.builder = function(type,name,data){
                     data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
                     data.onchange, data.onrelease
                 );
-        //         case 'slide_image': return this.collection.control.slide_image(
-        //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
-        //             data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle,
-        //             data.onchange, data.onrelease
-        //         );
-        //         case 'slidePanel': return this.collection.control.slidePanel(
-        //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
-        //             data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
-        //             data.onchange, data.onrelease
-        //         );
-        //         case 'slidePanel_image': return this.collection.control.slidePanel(
-        //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
-        //             data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
-        //             data.onchange, data.onrelease
-        //         );
-        //         case 'rangeslide': return this.collection.control.rangeslide(
-        //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
-        //             data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span,
-        //             data.onchange, data.onrelease
-        //         );
-        //         case 'rangeslide_image': return this.collection.control.rangeslide_image(
-        //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
-        //             data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle, data.spanURL,
-        //             data.onchange, data.onrelease
-        //         );
+                case 'slide_image': return this.collection.control.slide_image(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
+                    data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle,
+                    data.onchange, data.onrelease
+                );
+                case 'slidePanel': return this.collection.control.slidePanel(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
+                    data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+                    data.onchange, data.onrelease
+                );
+                case 'slidePanel_image': return this.collection.control.slidePanel(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
+                    data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
+                    data.onchange, data.onrelease
+                );
+                case 'rangeslide': return this.collection.control.rangeslide(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
+                    data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span,
+                    data.onchange, data.onrelease
+                );
+                case 'rangeslide_image': return this.collection.control.rangeslide_image(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
+                    data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle, data.spanURL,
+                    data.onchange, data.onrelease
+                );
         //     //list
         //         case 'list': return this.collection.control.list(
         //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
@@ -426,35 +426,35 @@ this.builder = function(type,name,data){
         //             data.onpan, data.onchangeviewarea, data.event,
         //         );
 
-        // //dynamic
-        //     case 'cable': return this.collection.dynamic.cable(
-        //         name, data.x1, data.y1, data.x2, data.y2,
-        //         data.style.dim, data.style.glow,
-        //     );
-        //     case 'connectionNode': return this.collection.dynamic.connectionNode(
-        //         name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
-        //         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-        //         data.onconnect, data.ondisconnect,
-        //     );
-        //     case 'connectionNode_signal': return this.collection.dynamic.connectionNode_signal(
-        //         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-        //         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-        //         data.onchange, data.onconnect, data.ondisconnect,
-        //     );
-        //     case 'connectionNode_voltage': return this.collection.dynamic.connectionNode_voltage(
-        //         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-        //         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-        //         data.onchange, data.onconnect, data.ondisconnect,
-        //     );
-        //     case 'connectionNode_data': return this.collection.dynamic.connectionNode_data(
-        //         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-        //         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-        //         data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
-        //     );
-        //     case 'connectionNode_audio': return this.collection.dynamic.connectionNode_audio(
-        //         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, workspace.library.audio.context,
-        //         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-        //         data.onconnect, data.ondisconnect,
-        //     );
+        //dynamic
+            case 'cable': return this.collection.dynamic.cable(
+                name, data.x1, data.y1, data.x2, data.y2,
+                data.style.dim, data.style.glow,
+            );
+            case 'connectionNode': return this.collection.dynamic.connectionNode(
+                name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                data.onconnect, data.ondisconnect,
+            );
+            case 'connectionNode_signal': return this.collection.dynamic.connectionNode_signal(
+                name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                data.onchange, data.onconnect, data.ondisconnect,
+            );
+            case 'connectionNode_voltage': return this.collection.dynamic.connectionNode_voltage(
+                name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                data.onchange, data.onconnect, data.ondisconnect,
+            );
+            case 'connectionNode_data': return this.collection.dynamic.connectionNode_data(
+                name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
+            );
+            case 'connectionNode_audio': return this.collection.dynamic.connectionNode_audio(
+                name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context,
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                data.onconnect, data.ondisconnect,
+            );
     }
 }

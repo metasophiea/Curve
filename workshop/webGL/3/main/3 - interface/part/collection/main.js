@@ -8,7 +8,7 @@ this.collection = new function(){
     this.display = new function(){
         {{include:display/*}} /**/
     };
-    // this.dynamic = new function(){
-    //     {{include:dynamic/*}} /**/
-    // };
+    this.dynamic = new function(){
+        {{include:dynamic/*}} /**/
+    };
 };

@@ -57,50 +57,50 @@ var controlGroup = _canvas_.interface.part.builder( 'group', 'control', { x:10, 
 _canvas_.system.pane.mm.append( controlGroup );
 //slide
     var s_1 = _canvas_.interface.part.builder( 'slide', 'test_slide1', {x:0,y:0} ); controlGroup.append( s_1 );
-//     var si_1 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image1', {
-//         x:12.5,y:0,
-//         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-//         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-//         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-//     } ); controlGroup.append( si_1 );
-//     var sp_1 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel1', {x:25,y:0} ); controlGroup.append( sp_1 );
-//     var spi_1 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image1', {
-//         x:107.5,y:0,
-//         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-//         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-//         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-//         overlayURL:'images/units/alpha/glowbox_rect_overlay_1.png',
-//     } ); controlGroup.append( spi_1 );
-//     var s_2 = _canvas_.interface.part.builder( 'slide', 'test_slide2', {x:190,y:10,angle:-Math.PI/2} ); controlGroup.append( s_2 );
-//     var si_2 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image2', {
-//         x:190,y:22.5,angle:-Math.PI/2,
-//         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-//         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-//         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-//     } ); controlGroup.append( si_2 );
-//     var sp_2 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel2', {x:287.5,y:80,angle:-Math.PI/2} ); controlGroup.append( sp_2 );
-//     var spi_2 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image2', {
-//         x:287.5,y:162.5,angle:-Math.PI/2,
-//         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-//         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-//         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-//     } ); controlGroup.append( spi_2 );
-//     var r_1 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide1', {x:385,y:0} ); controlGroup.append(r_1);
-//     var ri_1 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image1', {
-//         x:397.5,y:0,
-//         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-//         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-//         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-//         spanURL:'images/units/alpha/glowbox_rect_overlay_1.png',
-//     } ); controlGroup.append(ri_1);
-//     var r_2 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide2', {x:410,y:10,angle:-Math.PI/2} ); controlGroup.append(r_2);
-//     var ri_2 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image2', {
-//         x:410,y:22.5,angle:-Math.PI/2,
-//         handleURL:'https://cdn.kingcats-fence.com/wp-content/uploads/2017/12/expanded-metal-1.jpg',
-//         backingURL:'http://www.sydneydesignworld.com.au/wp-content/uploads/2016/03/41-satin-stainless-steel.jpg',
-//         slotURL:'https://img.freepik.com/free-photo/dark-background_1048-3848.jpg?size=338&ext=jpg',
-//         spanURL:'images/units/alpha/glowbox_rect_overlay_1.png',
-//     } ); controlGroup.append(ri_2);
+    var si_1 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image1', {
+        x:12.5,y:0,
+        handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+        backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+        slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+    } ); controlGroup.append( si_1 );
+    var sp_1 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel1', {x:25,y:0} ); controlGroup.append( sp_1 );
+    var spi_1 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image1', {
+        x:107.5,y:0,
+        handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+        backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+        slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+        overlayURL:'http://0.0.0.0:8000/glowbox_rect_overlay_1.png',
+    } ); controlGroup.append( spi_1 );
+    var s_2 = _canvas_.interface.part.builder( 'slide', 'test_slide2', {x:190,y:10,angle:-Math.PI/2} ); controlGroup.append( s_2 );
+    var si_2 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image2', {
+        x:190,y:22.5,angle:-Math.PI/2,
+        handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+        backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+        slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+    } ); controlGroup.append( si_2 );
+    var sp_2 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel2', {x:287.5,y:80,angle:-Math.PI/2} ); controlGroup.append( sp_2 );
+    var spi_2 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image2', {
+        x:287.5,y:162.5,angle:-Math.PI/2,
+        handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+        backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+        slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+    } ); controlGroup.append( spi_2 );
+    var r_1 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide1', {x:385,y:0} ); controlGroup.append(r_1);
+    var ri_1 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image1', {
+        x:397.5,y:0,
+        handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+        backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+        slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+        spanURL:'http://0.0.0.0:8000/glowbox_rect_overlay_1.png',
+    } ); controlGroup.append(ri_1);
+    var r_2 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide2', {x:410,y:10,angle:-Math.PI/2} ); controlGroup.append(r_2);
+    var ri_2 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image2', {
+        x:410,y:22.5,angle:-Math.PI/2,
+        handleURL:'http://0.0.0.0:8000/expanded-metal-1.jpg',
+        backingURL:'http://0.0.0.0:8000/41-satin-stainless-steel.jpg',
+        slotURL:'http://0.0.0.0:8000/dark-background_1048-3848.jpg?size=338&ext=jpg',
+        spanURL:'http://0.0.0.0:8000/glowbox_rect_overlay_1.png',
+    } ); controlGroup.append(ri_2);
 // //dial
 //     var dc_1 = _canvas_.interface.part.builder( 'dial_continuous', 'test_dial_continuous1', {x:525,y:20} ); controlGroup.append(dc_1);
 //     var dd_1 = _canvas_.interface.part.builder( 'dial_discrete', 'test_dial_discrete1', {x:560,y:20} ); controlGroup.append(dd_1);
@@ -249,37 +249,37 @@ _canvas_.system.pane.mm.append( controlGroup );
 //     seq.event = function(data){console.log(data);};
 
 
-// //dynamic
-//     var dynamicGroup = _canvas_.interface.part.builder( 'group', 'dynamic', { x:10, y:450, angle:0 } );
-//     _canvas_.system.pane.mm.append( dynamicGroup );
-//     dynamicGroup.append( _canvas_.interface.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
+//dynamic
+    var dynamicGroup = _canvas_.interface.part.builder( 'group', 'dynamic', { x:0, y:450, angle:0 } );
+    _canvas_.system.pane.mm.append( dynamicGroup );
+    dynamicGroup.append( _canvas_.interface.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
 
-//     var cn_reg_0 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode1', { x:25, y:25 } ); dynamicGroup.append( cn_reg_0 );
-//     var cn_reg_1 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode2', { x:0,  y:75 } ); dynamicGroup.append( cn_reg_1 );
-//     var cn_reg_2 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode3', { x:50, y:60 } ); dynamicGroup.append( cn_reg_2 );
-//     var cn_reg_3 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode4', { x:30, y:100 } ); dynamicGroup.append( cn_reg_3 );
-//     var cn_sig_0 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:125, y:25 } ); dynamicGroup.append( cn_sig_0 );
-//     var cn_sig_1 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:100, y:75 } ); dynamicGroup.append( cn_sig_1 );
-//     var cn_sig_2 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:150, y:60 } ); dynamicGroup.append( cn_sig_2 );
-//     var cn_sig_3 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal4', { x:130, y:100 } ); dynamicGroup.append( cn_sig_3 );
-//     var cn_vol_0 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage1', { x:225, y:25 } ); dynamicGroup.append( cn_vol_0 ); 
-//     var cn_vol_1 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage2', { x:200, y:75 } ); dynamicGroup.append( cn_vol_1 ); 
-//     var cn_vol_2 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage3', { x:250, y:60 } ); dynamicGroup.append( cn_vol_2 ); 
-//     var cn_vol_3 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage4', { x:230, y:100 } ); dynamicGroup.append( cn_vol_3 ); 
-//     var cn_dat_0 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:325, y:25 } ); dynamicGroup.append( cn_dat_0 ); 
-//     var cn_dat_1 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:300, y:75 } ); dynamicGroup.append( cn_dat_1 ); 
-//     var cn_dat_2 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:350, y:60 } ); dynamicGroup.append( cn_dat_2 ); 
-//     var cn_dat_3 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data4', { x:320, y:100 } ); dynamicGroup.append( cn_dat_3 ); 
-//     var cn_aud_0 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ); dynamicGroup.append( cn_aud_0 ); 
-//     var cn_aud_1 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ); dynamicGroup.append( cn_aud_1 ); 
-//     var cn_aud_2 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:60 } ); dynamicGroup.append( cn_aud_2 ); 
-//     var cn_aud_3 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio4', { x:420, y:100, isAudioOutput:true} ); dynamicGroup.append( cn_aud_3 ); 
+    var cn_reg_0 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode1', { x:25, y:25 } ); dynamicGroup.append( cn_reg_0 );
+    var cn_reg_1 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode2', { x:0,  y:75 } ); dynamicGroup.append( cn_reg_1 );
+    var cn_reg_2 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode3', { x:50, y:60 } ); dynamicGroup.append( cn_reg_2 );
+    var cn_reg_3 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode4', { x:30, y:100 } ); dynamicGroup.append( cn_reg_3 );
+    var cn_sig_0 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:125, y:25 } ); dynamicGroup.append( cn_sig_0 );
+    var cn_sig_1 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:100, y:75 } ); dynamicGroup.append( cn_sig_1 );
+    var cn_sig_2 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:150, y:60 } ); dynamicGroup.append( cn_sig_2 );
+    var cn_sig_3 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal4', { x:130, y:100 } ); dynamicGroup.append( cn_sig_3 );
+    var cn_vol_0 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage1', { x:225, y:25 } ); dynamicGroup.append( cn_vol_0 ); 
+    var cn_vol_1 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage2', { x:200, y:75 } ); dynamicGroup.append( cn_vol_1 ); 
+    var cn_vol_2 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage3', { x:250, y:60 } ); dynamicGroup.append( cn_vol_2 ); 
+    var cn_vol_3 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage4', { x:230, y:100 } ); dynamicGroup.append( cn_vol_3 ); 
+    var cn_dat_0 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:325, y:25 } ); dynamicGroup.append( cn_dat_0 ); 
+    var cn_dat_1 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:300, y:75 } ); dynamicGroup.append( cn_dat_1 ); 
+    var cn_dat_2 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:350, y:60 } ); dynamicGroup.append( cn_dat_2 ); 
+    var cn_dat_3 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data4', { x:320, y:100 } ); dynamicGroup.append( cn_dat_3 ); 
+    var cn_aud_0 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ); dynamicGroup.append( cn_aud_0 ); 
+    var cn_aud_1 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ); dynamicGroup.append( cn_aud_1 ); 
+    var cn_aud_2 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:60 } ); dynamicGroup.append( cn_aud_2 ); 
+    var cn_aud_3 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio4', { x:420, y:100, isAudioOutput:true} ); dynamicGroup.append( cn_aud_3 ); 
 
-//     cn_reg_0.connectTo(cn_reg_1); cn_reg_0.allowConnections(false); cn_reg_0.allowDisconnections(false);
-//     cn_sig_0.connectTo(cn_sig_1); cn_sig_0.allowConnections(false); cn_sig_0.allowDisconnections(false);
-//     cn_vol_0.connectTo(cn_vol_1); cn_vol_0.allowConnections(false); cn_vol_0.allowDisconnections(false);
-//     cn_dat_0.connectTo(cn_dat_1); cn_dat_0.allowConnections(false); cn_dat_0.allowDisconnections(false);
-//     cn_aud_0.connectTo(cn_aud_1); cn_aud_0.allowConnections(false); cn_aud_0.allowDisconnections(false);
+    cn_reg_0.connectTo(cn_reg_1); cn_reg_0.allowConnections(false); cn_reg_0.allowDisconnections(false);
+    cn_sig_0.connectTo(cn_sig_1); cn_sig_0.allowConnections(false); cn_sig_0.allowDisconnections(false);
+    cn_vol_0.connectTo(cn_vol_1); cn_vol_0.allowConnections(false); cn_vol_0.allowDisconnections(false);
+    cn_dat_0.connectTo(cn_dat_1); cn_dat_0.allowConnections(false); cn_dat_0.allowDisconnections(false);
+    cn_aud_0.connectTo(cn_aud_1); cn_aud_0.allowConnections(false); cn_aud_0.allowDisconnections(false);
 
 
 
@@ -288,6 +288,6 @@ _canvas_.system.pane.mm.append( controlGroup );
 _canvas_.core.render.active(true);
 // _canvas_.core.render.frame();
 
-//view positioning
-_canvas_.core.viewport.scale(4);
-_canvas_.core.viewport.position(0,-1100);
+// //view positioning
+_canvas_.core.viewport.scale(1);
+_canvas_.core.viewport.position(0,-300);

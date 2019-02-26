@@ -47,7 +47,7 @@ this.arrangement = new function(){
                     console.log(prefix+'- \t'+a.type +': '+ a.name);
                     if(a.type == 'group'){ recursivePrint(a, prefix+'-\t') }
                 }else if(mode == 'address'){
-                    console.log(prefix+'/'+a.na.type +':'+ ame);
+                    console.log(prefix+'/'+a.type +':'+ a.name);
                     if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
                 }
             });

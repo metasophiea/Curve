@@ -5,7 +5,7 @@ this.slide_image = function(
     
     handleURL, backingURL, slotURL,
 
-    invisibleHandleStyle = 'rgba(255,0,0,0)',
+    invisibleHandleStyle = {r:1,g:0,b:0,a:0},
     onchange=function(){},
     onrelease=function(){},
 ){
@@ -32,16 +32,16 @@ this.slide_image = function(
                 var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
                 backingAndSlot.append(slot);
             //backing and slot cover
-                var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                 backingAndSlot.append(backingAndSlotCover);
         //handle
             var handle = interfacePart.builder('image','handle',{width:width, height:height*handleHeight, url:handleURL});
             object.append(handle);
         //invisible handle
-            var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, style:{fill:invisibleHandleStyle}});
+            var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
             object.append(invisibleHandle);
         //cover
-            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.append(cover);
 
 
@@ -55,8 +55,8 @@ this.slide_image = function(
             if(update && object.onchange != undefined){object.onchange(a);}
             
             value = a;
-            handle.y = a*height*(1-handleHeight);
-            invisibleHandle.y = handle.y - ( height*0.01 )/2;
+            handle.y( a*height*(1-handleHeight) );
+            invisibleHandle.y( handle.y() - ( height*0.01 )/2 );
 
             handle.computeExtremities();
             invisibleHandle.computeExtremities();
@@ -99,7 +99,7 @@ this.slide_image = function(
             if(grappled){return;}
 
             var move = event.deltaY/100;
-            var globalScale = workspace.core.viewport.scale();
+            var globalScale = _canvas_.core.viewport.scale();
             set( value + move/(10*globalScale) );
             if(object.onrelease != undefined){object.onrelease(value);}
         };
@@ -111,11 +111,11 @@ this.slide_image = function(
             //calculate the distance the click is from the top of the slider (accounting for angle)
                 var offset = backingAndSlot.getOffset();
                 var delta = {
-                    x: x - (backingAndSlot.x     + offset.x),
-                    y: y - (backingAndSlot.y     + offset.y),
-                    a: 0 - (backingAndSlot.angle + offset.a),
+                    x: x - (backingAndSlot.x()     + offset.x),
+                    y: y - (backingAndSlot.y()     + offset.y),
+                    a: 0 - (backingAndSlot.angle() + offset.angle),
                 };
-                var d = workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+                var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
 
             //use the distance to calculate the correct value to set the slide to
             //taking into account the slide handle's size also
@@ -132,15 +132,15 @@ this.slide_image = function(
             var initialY = currentMousePosition(event);
             var mux = height - height*handleHeight;
 
-            workspace.system.mouse.mouseInteractionHandler(
+            _canvas_.system.mouse.mouseInteractionHandler(
                 function(event){
                     var numerator = initialY-currentMousePosition(event);
-                    var divider = workspace.core.viewport.scale();
+                    var divider = _canvas_.core.viewport.scale();
                     set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
                 },
                 function(event){
                     var numerator = initialY-currentMousePosition(event);
-                    var divider = workspace.core.viewport.scale();
+                    var divider = _canvas_.core.viewport.scale();
                     object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
                     grappled = false;
                 }

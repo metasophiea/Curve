@@ -1,4 +1,24 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-02-26
+  - webGL experiment
+    - added cable
+    - working on adding in the connectionNodes
+      - connectionNode done
+      - connectionNode_signal done
+      - connectionNode_voltage done
+      - connectionNode_data done
+      - connectionNode_audio done
+
+
+2019-02-25
+  - webGL experiment
+    - added slide_image control part
+    - added slidePanel control part
+    - added slidePanel_image control part
+    - added rangeSlide control part
+    - added rangeSlide_image control part
+
+
 2019-02-24
   - webGL experiment
     - added tree printing function to arrangement
@@ -24,7 +44,7 @@
     - added grapher_audioScope_static display part
     - readded adapter (I'm not sure it'll actually be useful though)
     - fixed getElementsUnderPoint
-    - added slider control part
+    - added slide control part
 
 
 2019-02-23

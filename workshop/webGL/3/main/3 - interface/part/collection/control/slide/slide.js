@@ -22,7 +22,7 @@ this.slide = function(
                 var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), colour:slotStyle});
                 backingAndSlot.append(slot);
             //backing and slot cover
-                var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:'rgba(0,0,0,0)'});
+                var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                 backingAndSlot.append(backingAndSlotCover);
         //handle
             var handle = interfacePart.builder('rectangle','handle',{width:width, height:height*handleHeight, colour:handleStyle});
@@ -31,7 +31,7 @@ this.slide = function(
             var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height: height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
             object.append(invisibleHandle);
         //cover
-            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:'rgba(0,0,0,0)'});
+            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.append(cover);
 
 
