@@ -111,12 +111,7 @@ this.connectionNode = function(
         };
         object.getCablePoint = function(){
             var offset = object.getOffset();
-            var point = _canvas_.library.math.cartesianAngleAdjust(
-                offset.x + (width*offset.scale)/2,
-                offset.y + (height*offset.scale)/2,
-                offset.angle
-            );
-            return _canvas_.core.viewport.adapter.windowPoint2workspacePoint(point.x,point.y);
+            return _canvas_.core.viewport.adapter.windowPoint2workspacePoint( offset.x + (width*offset.scale)/2, offset.y + (height*offset.scale)/2 );
         };
         object.draw = function(){
             if( cable == undefined ){return;}

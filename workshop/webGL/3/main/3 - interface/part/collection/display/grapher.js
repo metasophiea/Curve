@@ -3,19 +3,19 @@ this.grapher = function(
     x, y, width=120, height=60, angle=0,
 
     foregroundStyles=[
-        {stroke:{r:0,g:1,b:0,a:1}, lineWidth:0.5, lineJoin:'round'},
-        {stroke:{r:1,g:1,b:0,a:1}, lineWidth:0.5, lineJoin:'round'},
-        {stroke:{r:0,g:1,b:1,a:1}, lineWidth:0.5, lineJoin:'round'},
+        {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
+        {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
+        {colour:{r:0,g:1,b:1,a:1}, thickness:0.25},
     ],
     foregroundTextStyles=[
-        {fill:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-        {fill:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-        {fill:{r:0.39,g:1,b:1,a:1}, size:0.75, font:'Helvetica'},
+        {colour:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+        {colour:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+        {colour:{r:0.39,g:1,b:1,a:1}, size:0.75, font:'Helvetica'},
     ],
 
-    backgroundStyle_stroke={r:0,g:0.39,b:0,a:1},
-    backgroundStyle_lineWidth=0.25,
-    backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
+    backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+    backgroundStyle_thickness=0.25,
+    backgroundTextStyle_colour={r:0,g:0.59,b:0,a:1},
     backgroundTextStyle_size=0.75,
     backgroundTextStyle_font='Helvetica',
 
@@ -61,7 +61,7 @@ this.grapher = function(
 
                         //add line and text to group
                             //lines
-                                var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineWidth,colour:backgroundStyle_stroke} );
+                                var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_thickness,colour:backgroundStyle_colour} );
                                 backgroundGroup.append(path);
                             // //text
                             //     if( horizontalMarkings.printText ){
@@ -91,7 +91,7 @@ this.grapher = function(
 
                         //add line and text to group
                             //lines
-                                var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineWidth,height:height,colour:backgroundStyle_stroke} );
+                                var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_thickness,height:height,colour:backgroundStyle_colour} );
                                 backgroundGroup.append(path);
                         
                             // //text
@@ -151,13 +151,9 @@ this.grapher = function(
                     //create path shape and add it to the group
                         foregroundGroup.append(
                             interfacePart.builder( 'path', 'layer_'+L, { 
-                                points:points, 
-                                style:{
-                                    stroke: foregroundStyles[L].stroke,
-                                    lineWidth: foregroundStyles[L].lineWidth,
-                                    lineJoin: foregroundStyles[L].lineJoin,
-                                    lineCap: foregroundStyles[L].lineJoin,
-                                }
+                                pointsAsXYArray:points, 
+                                colour:foregroundStyles[L].colour,
+                                thickness:foregroundStyles[L].thickness,
                             })
                         );
                 }

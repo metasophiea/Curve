@@ -1,4 +1,55 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-03-02
+  - webGL experiment
+    - fixed rectangle and image anchoring
+    - added new thirdparty code "earcut" for transforming polygon points into a
+      series of triangles
+    - updated polygon shape to use earcut, simplifying point design (and making
+      extremities work again) 
+    - added rectangle, circle and polygon checkboxes
+
+
+2019-03-01
+  - webGL experiment
+    - added some basic checking to the core.shapes code, to check that the
+      shape have the correct structure
+    - finished up on "rectangle with outline" shape
+    - cleaned up rectangle shape a little
+    - added 'looped path' shape
+    - relaced button_rectangle's rectangle shape with the rectangleWithOutline
+      shape
+
+
+2019-02-28
+  - webGL experiment
+    - fixed polygon so it can do more complex shapes now, though also made
+      adding points more complicated too
+    - added angle parameter to the circle shape
+    - working on new "rectangle with outline" shape (I have it working, but it
+      feels inelegant)
+
+
+2019-02-27
+  - webGL experiment
+    - fixed small issue with connectionNode cable placement
+    - added dial parts
+    - working on buttons, seems I'm going to need a "rectangle with outline"
+      shape, and probably a polygon and circle version too
+      - added generic
+      - added rectangle
+      - added polygon
+      - added circle
+      - added image
+    - added list and list_image control parts (scrolling is a bit jumpy for the
+      image version. Not sure why)
+
+  todo
+  - text shape
+  - rectangle with outline shape
+  - polygon with outline shape
+  - circle with outline shape
+
+
 2019-02-26
   - webGL experiment
     - added cable

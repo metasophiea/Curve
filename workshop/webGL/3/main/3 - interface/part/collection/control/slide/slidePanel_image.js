@@ -1,5 +1,5 @@
-this.slidePanel = function(
-    name='slidePanel', 
+this.slidePanel_image = function(
+    name='slidePanel_image', 
     x, y, width=80, height=95, angle=0, interactable=true,
     handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
 
@@ -23,7 +23,6 @@ this.slidePanel = function(
                         onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
                     }
                 );
-                // temp.dotFrame = true;
                 temp.__calculationAngle = angle;
                 object.append(temp);
             }

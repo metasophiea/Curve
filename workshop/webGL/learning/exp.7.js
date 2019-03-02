@@ -118,6 +118,8 @@ var shape = new function(){
                 1,0,
                 1,1,
                 0,1,
+
+                
             ];
             var vertexShaderSource = `
                 //constants

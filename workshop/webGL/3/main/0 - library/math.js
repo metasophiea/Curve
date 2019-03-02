@@ -202,6 +202,19 @@ this.pathToPolygonGenerator = function(path,thickness){
 
     return outputPoints;
 };
+this.loopedPathToPolygonGenerator = function(path,thickness){
+    var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
+    var loopingPath = [];
+
+    loopingPath = loopingPath.concat(joinPoint);
+    for(var a = 2; a < path.length; a+=2){
+        loopingPath = loopingPath.concat( [path[a], path[a+1]] );
+    }
+    loopingPath = loopingPath.concat( [path[0], path[1]] );
+    loopingPath = loopingPath.concat(joinPoint);
+
+    return this.pathToPolygonGenerator(loopingPath,thickness);
+};
 this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
     var mux = (d - start)/(end - start);
     if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }

@@ -289,6 +289,6 @@
 workspace.core.render.active(true);
 workspace.core.viewport.stopMouseScroll(true);
 
-//view positioning
-    workspace.core.viewport.scale(10/2);
-    workspace.core.viewport.position(-650,-290);
+// //view positioning
+//     workspace.core.viewport.scale(10/2);
+//     workspace.core.viewport.position(-650,-290);

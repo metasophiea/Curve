@@ -50,14 +50,8 @@ this.rectangle = function(){
 
             void main(){
                 //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                //(including scale adjust)
-                    vec2 P = point * dimensions * adjust.scale;
-                    P = vec2( P.x - dimensions.x*anchor.x, P.y - dimensions.y*anchor.y );
-                    P = vec2( 
-                        P.x*cos(adjust.angle) + P.y*sin(adjust.angle), 
-                        P.y*cos(adjust.angle) - P.x*sin(adjust.angle)
-                    );
-                    P += adjust.xy;
+                    vec2 P = dimensions * adjust.scale * (point - anchor);
+                    P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
 
                 //convert from unit space to clipspace
                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
@@ -71,22 +65,21 @@ this.rectangle = function(){
                 gl_FragColor = colour;
             }
         `;
-        var pointBuffer;
-        var pointAttributeLocation;
+        var point = { buffer:undefined, attributeLocation:undefined };
         var uniformLocations;
         function updateGLAttributes(context,adjust){
             //buffers
                 //points
-                    if(pointBuffer == undefined){
-                        pointAttributeLocation = context.getAttribLocation(program, "point");
-                        pointBuffer = context.createBuffer();
-                        context.enableVertexAttribArray(pointAttributeLocation);
-                        context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                        context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                    if(point.buffer == undefined){
+                        point.attributeLocation = context.getAttribLocation(program, "point");
+                        point.buffer = context.createBuffer();
+                        context.enableVertexAttribArray(point.attributeLocation);
+                        context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                        context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                     }else{
-                        context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                        context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                        context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                        context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                     }
             
             //uniforms
@@ -112,7 +105,7 @@ this.rectangle = function(){
         }
         var program;
         function activateGLRender(context,adjust){
-            if(program == undefined){ program = core.render.produceProgram('rectangle', vertexShaderSource, fragmentShaderSource); }
+            if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
     
             context.useProgram(program);
             updateGLAttributes(context,adjust);

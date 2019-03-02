@@ -16,6 +16,7 @@ this.circle = function(){
         //attributes pertinent to extremity calculation
             var x = 0;          this.x =      function(a){ if(a==undefined){return x;}      x = a;      computeExtremities(); };
             var y = 0;          this.y =      function(a){ if(a==undefined){return y;}      y = a;      computeExtremities(); };
+            var angle = 0;      this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  computeExtremities(); };
             var radius = 10;    this.radius = function(a){ if(a==undefined){return radius;} radius = a; computeExtremities(); };
             var scale = 1;      this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  computeExtremities(); };
             var detail = 25;    this.detail = function(a){ 
@@ -41,31 +42,31 @@ this.circle = function(){
         var points = []; 
         var pointsChanged = true;
         this.detail(detail);
-        var vertexShaderSource = `
-        //constants
-            attribute vec2 point;
+        var vertexShaderSource = 
+            _canvas_.library.gsls.geometry + `
+            //constants
+                attribute vec2 point;
 
-        //variables
-            struct location{
-                vec2 xy;
-                float scale;
-                float angle;
-            };
-            uniform location adjust;
+            //variables
+                struct location{
+                    vec2 xy;
+                    float scale;
+                    float angle;
+                };
+                uniform location adjust;
 
-            uniform vec2 resolution;
-            uniform float radius;
-            uniform vec2 anchor;
+                uniform vec2 resolution;
+                uniform float radius;
+                uniform vec2 anchor;
 
-        void main(){
-            //adjust points by radius and xy offset
-                vec2 P = point * radius * adjust.scale;
-                P += adjust.xy;  
+            void main(){
+                //adjust points by radius and xy offset
+                    vec2 P = cartesianAngleAdjust(point*radius*adjust.scale, -adjust.angle) + adjust.xy;
 
-            //convert from unit space to clipspace
-                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-        }
-    `;
+                //convert from unit space to clipspace
+                    gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+            }
+        `;
     var fragmentShaderSource = `  
         precision mediump float;
         uniform vec4 colour;
@@ -180,7 +181,7 @@ this.circle = function(){
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
                     scale: offset.scale*scale,
-                    angle: -offset.angle,
+                    angle: -(offset.angle + angle),
                 };
 
             //activate shape render code

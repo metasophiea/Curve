@@ -2,11 +2,11 @@ this.grapher_audioScope = function(
     name='grapher_audioScope',
     x, y, width=120, height=60, angle=0,
 
-    foregroundStyle={stroke:{r:0,g:1,b:0,a:1}, lineWidth:0.5, lineJoin:'round'},
+    foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
     foregroundTextStyle={fill:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
 
-    backgroundStyle_stroke={r:0,g:0.39,b:0,a:1},
-    backgroundStyle_lineWidth=0.25,
+    backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+    backgroundStyle_thickness=0.25,
     backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
     backgroundTextStyle_size=0.1,
     backgroundTextStyle_font='Helvetica',
@@ -38,8 +38,8 @@ this.grapher_audioScope = function(
             var grapher = interfacePart.builder('grapher',name,{
                 x:0, y:0, width:width, height:height,
                 foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                backgroundStyle_stroke:backgroundStyle_stroke, 
-                backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                backgroundStyle_colour:backgroundStyle_colour, 
+                backgroundStyle_thickness:backgroundStyle_thickness,
                 backgroundTextStyle_fill:backgroundTextStyle_fill, 
                 backgroundTextStyle_size:backgroundTextStyle_size,
                 backgroundTextStyle_font:backgroundTextStyle_font,

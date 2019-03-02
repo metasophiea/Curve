@@ -3,19 +3,19 @@ this.grapher_static = function(
     x, y, width=120, height=60, angle=0, resolution=5,
 
     foregroundStyles=[
-        {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-        {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-        {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
+        {colour:'rgba(0,255,0,1)', thickness:0.5},
+        {colour:'rgba(255,255,0,1)', thickness:0.5},
+        {colour:'rgba(0,255,255,1)', thickness:0.5,},
     ],
     foregroundTextStyles=[
-        {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-        {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-        {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
+        {colour:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+        {colour:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+        {colour:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
     ],
 
-    backgroundStyle_stroke='rgba(0,100,0,1)',
-    backgroundStyle_lineWidth=0.25,
-    backgroundTextStyle_fill='rgba(0,150,0,1)',
+    backgroundStyle_colour='rgba(0,100,0,1)',
+    backgroundStyle_thickness=0.25,
+    backgroundTextStyle_colour='rgba(0,150,0,1)',
     backgroundTextStyle_size='7.5pt',
     backgroundTextStyle_font='Helvetica',
 
@@ -53,12 +53,12 @@ this.grapher_static = function(
 
                         //add line and text to group
                             //lines
-                                canvas._.fillStyle = backgroundStyle_stroke;
-                                canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_lineWidth));
+                                canvas._.fillStyle = backgroundStyle_colour;
+                                canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_thickness));
 
                             //text
                                 if( horizontalMarkings.printText ){
-                                    canvas._.fillStyle = backgroundTextStyle_fill;
+                                    canvas._.fillStyle = backgroundTextStyle_colour;
                                     canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
                                     canvas._.fillText(
                                         (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
@@ -82,12 +82,12 @@ this.grapher_static = function(
 
                         //add line and text to group
                             //lines
-                                canvas._.fillStyle = backgroundStyle_stroke;
-                                canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_lineWidth),canvas.$(height));
+                                canvas._.fillStyle = backgroundStyle_colour;
+                                canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_thickness),canvas.$(height));
                         
                             //text
                                 if( verticalMarkings.printText ){
-                                    canvas._.fillStyle = backgroundTextStyle_fill;
+                                    canvas._.fillStyle = backgroundTextStyle_colour;
                                     canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
                                     canvas._.fillText(
                                         (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
@@ -121,8 +121,8 @@ this.grapher_static = function(
                     var layer = foregroundElementsGroup[L];
 
                     //draw path
-                        canvas._.strokeStyle = foregroundStyles[L].stroke;
-                        canvas._.lineWidth = canvas.$(foregroundStyles[L].lineWidth);
+                        canvas._.strokeStyle = foregroundStyles[L].colour;
+                        canvas._.lineWidth = canvas.$(foregroundStyles[L].thickness);
                         canvas._.lineJoin = foregroundStyles[L].lineJoin;
                         canvas._.lineCap = foregroundStyles[L].lineJoin;
                         canvas._.beginPath();

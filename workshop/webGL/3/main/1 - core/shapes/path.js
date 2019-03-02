@@ -18,13 +18,13 @@ this.path = function(){
             var points = []; var pointsChanged = true; 
             function lineGenerator(){ points = _canvas_.library.math.pathToPolygonGenerator( path, thickness ); }
             var path = [];      this.points =  function(a){ if(a==undefined){return path;} path = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
-            var thickness = 1;  this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); };
+            var thickness = 1;  this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
             
             this.pointsAsXYArray = function(a){
                 if(a==undefined){
                     var output = [];
-                    for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
-                    return points;
+                    for(var a = 0; a < path.length; a+=2){ output.push({ x:path[a], y:path[a+1] }); }
+                    return output;
                 }
 
                 var array = [];
@@ -65,23 +65,21 @@ this.path = function(){
                 gl_FragColor = colour;
             }
         `;
-        var pointBuffer;
-        var pointAttributeLocation;
+        var point = { buffer:undefined, attributeLocation:undefined };
         var uniformLocations;
         function updateGLAttributes(context,offset){
             //buffers
                 //points
-                    if(pointBuffer == undefined || pointsChanged){
-                        pointAttributeLocation = context.getAttribLocation(program, "point");
-                        pointBuffer = context.createBuffer();
-                        context.enableVertexAttribArray(pointAttributeLocation);
-                        context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                        context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                    if(point.buffer == undefined || pointsChanged){
+                        point.attributeLocation = context.getAttribLocation(program, "point");
+                        point.buffer = context.createBuffer();
+                        context.enableVertexAttribArray(point.attributeLocation);
+                        context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                        context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                        pointsChanged = false;
                     }else{
-                        context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                        context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                        context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                        context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                     }
 
             //uniforms

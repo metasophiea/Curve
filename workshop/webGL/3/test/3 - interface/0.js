@@ -1,5 +1,5 @@
-_canvas_.system.pane.mm.append( _canvas_.interface.part.builder('image','image_1',{x:160,y:0,width:250,height:250,url:'http://0.0.0.0:8000/mikeandbrian.jpg'}) );
-_canvas_.system.pane.mm.append( _canvas_.interface.part.builder('image','image_2',{x:-50,y:100,width:160,height:215,angle:-0.5,url:'http://0.0.0.0:8000/Dore-munchausen-illustration.jpg'}) );
+_canvas_.system.pane.mm.append( _canvas_.interface.part.builder('image','image_1',{x:160,y:0,width:250,height:250,url:'http://0.0.0.0:8000/testImages/mikeandbrian.jpg'}) );
+_canvas_.system.pane.mm.append( _canvas_.interface.part.builder('image','image_2',{x:-50,y:100,width:160,height:215,angle:-0.5,url:'http://0.0.0.0:8000/testImages/Dore-munchausen-illustration.jpg'}) );
 _canvas_.system.pane.mm.append( _canvas_.interface.part.builder('rectangle','rectangle_1',{x:0,y:0,width:30,height:30,colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}}) );
 _canvas_.system.pane.mm.append( _canvas_.interface.part.builder('rectangle','rectangle_2',{x:50,y:0,width:30,height:30,colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}}) );
 _canvas_.system.pane.mm.append( _canvas_.interface.part.builder('polygon','polygon_1',{points:[ 50,50, 80,50, 80,80, 50,80 ],colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}}) );

@@ -66,14 +66,8 @@ this.image = function(){
                     textureCoordinates = point;
 
                 //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                //(including scale adjust)
-                    vec2 P = point * dimensions * adjust.scale;
-                    P = vec2( P.x - dimensions.x*anchor.x, P.y - dimensions.y*anchor.y );
-                    P = vec2( 
-                        P.x*cos(adjust.angle) + P.y*sin(adjust.angle), 
-                        P.y*cos(adjust.angle) - P.x*sin(adjust.angle)
-                    );
-                    P += adjust.xy;
+                    vec2 P = dimensions * adjust.scale * (point - anchor);
+                    P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
 
                 //convert from unit space to clipspace
                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
@@ -143,7 +137,7 @@ this.image = function(){
         }
         var program;
         function activateGLRender(context,adjust){
-            if(program == undefined){ program = core.render.produceProgram('image', vertexShaderSource, fragmentShaderSource); }
+            if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
             
             if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
 

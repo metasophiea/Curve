@@ -7,6 +7,21 @@ this.shape = new function(){
         {{include:shapes/*}} */
     };
 
+    this.checkShape = function(name,shape){
+        var tmp = new shape();
+
+        if(name == undefined || shape == undefined){ return 'shape or name missing'; }
+        if(tmp.getType() != name){ return 'internal type ('+tmp.getType()+') does not match key ('+name+')';  }
+
+        return '';
+    };
+    this.checkShapes = function(list){
+        for(item in list){
+            var response = this.checkShape(item, list[item]);
+            if(response.length != 0){ console.error('core.shapes error:', item, '::', response); }
+        }
+    };
+
     this.create = function(type){ 
         try{ return new this.library[type](); }
         catch(e){
@@ -15,6 +30,7 @@ this.shape = new function(){
         }
     };
 };
+this.shape.checkShapes(this.shape.library);
 
 this.arrangement = new function(){
     var design = core.shape.create('group');

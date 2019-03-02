@@ -212,6 +212,19 @@
                     
                         return outputPoints;
                     };
+                    this.loopedPathToPolygonGenerator = function(path,thickness){
+                        var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
+                        var loopingPath = [];
+                    
+                        loopingPath = loopingPath.concat(joinPoint);
+                        for(var a = 2; a < path.length; a+=2){
+                            loopingPath = loopingPath.concat( [path[a], path[a+1]] );
+                        }
+                        loopingPath = loopingPath.concat( [path[0], path[1]] );
+                        loopingPath = loopingPath.concat(joinPoint);
+                    
+                        return this.pathToPolygonGenerator(loopingPath,thickness);
+                    };
                     this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
                         var mux = (d - start)/(end - start);
                         if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
@@ -687,8 +700,660 @@
                 };
                 // this.misc = new function(){
                 // };
-                // this.thirdparty = new function(){
-                // };
+                this.thirdparty = new function(){
+                    this.earcut = function(points){
+                        var outputPoints = [];
+                        earcut(points).forEach(function(a){ outputPoints = outputPoints.concat([ points[(a*2)],points[(a*2)+1] ]); });
+                        return outputPoints;
+                    
+                        //https://github.com/mapbox/earcut
+                        function earcut(data, holeIndices, dim) {
+                    
+                            dim = dim || 2;
+                    
+                            var hasHoles = holeIndices && holeIndices.length,
+                                outerLen = hasHoles ? holeIndices[0] * dim : data.length,
+                                outerNode = linkedList(data, 0, outerLen, dim, true),
+                                triangles = [];
+                    
+                            if (!outerNode || outerNode.next === outerNode.prev) return triangles;
+                    
+                            var minX, minY, maxX, maxY, x, y, invSize;
+                    
+                            if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+                    
+                            // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
+                            if (data.length > 80 * dim) {
+                                minX = maxX = data[0];
+                                minY = maxY = data[1];
+                    
+                                for (var i = dim; i < outerLen; i += dim) {
+                                    x = data[i];
+                                    y = data[i + 1];
+                                    if (x < minX) minX = x;
+                                    if (y < minY) minY = y;
+                                    if (x > maxX) maxX = x;
+                                    if (y > maxY) maxY = y;
+                                }
+                    
+                                // minX, minY and invSize are later used to transform coords into integers for z-order calculation
+                                invSize = Math.max(maxX - minX, maxY - minY);
+                                invSize = invSize !== 0 ? 1 / invSize : 0;
+                            }
+                    
+                            earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
+                    
+                            return triangles;
+                        }
+                    
+                        // create a circular doubly linked list from polygon points in the specified winding order
+                        function linkedList(data, start, end, dim, clockwise) {
+                            var i, last;
+                    
+                            if (clockwise === (signedArea(data, start, end, dim) > 0)) {
+                                for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
+                            } else {
+                                for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
+                            }
+                    
+                            if (last && equals(last, last.next)) {
+                                removeNode(last);
+                                last = last.next;
+                            }
+                    
+                            return last;
+                        }
+                    
+                        // eliminate colinear or duplicate points
+                        function filterPoints(start, end) {
+                            if (!start) return start;
+                            if (!end) end = start;
+                    
+                            var p = start,
+                                again;
+                            do {
+                                again = false;
+                    
+                                if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+                                    removeNode(p);
+                                    p = end = p.prev;
+                                    if (p === p.next) break;
+                                    again = true;
+                    
+                                } else {
+                                    p = p.next;
+                                }
+                            } while (again || p !== end);
+                    
+                            return end;
+                        }
+                    
+                        // main ear slicing loop which triangulates a polygon (given as a linked list)
+                        function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
+                            if (!ear) return;
+                    
+                            // interlink polygon nodes in z-order
+                            if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
+                    
+                            var stop = ear,
+                                prev, next;
+                    
+                            // iterate through ears, slicing them one by one
+                            while (ear.prev !== ear.next) {
+                                prev = ear.prev;
+                                next = ear.next;
+                    
+                                if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+                                    // cut off the triangle
+                                    triangles.push(prev.i / dim);
+                                    triangles.push(ear.i / dim);
+                                    triangles.push(next.i / dim);
+                    
+                                    removeNode(ear);
+                    
+                                    // skipping the next vertex leads to less sliver triangles
+                                    ear = next.next;
+                                    stop = next.next;
+                    
+                                    continue;
+                                }
+                    
+                                ear = next;
+                    
+                                // if we looped through the whole remaining polygon and can't find any more ears
+                                if (ear === stop) {
+                                    // try filtering points and slicing again
+                                    if (!pass) {
+                                        earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
+                    
+                                    // if this didn't work, try curing all small self-intersections locally
+                                    } else if (pass === 1) {
+                                        ear = cureLocalIntersections(ear, triangles, dim);
+                                        earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
+                    
+                                    // as a last resort, try splitting the remaining polygon into two
+                                    } else if (pass === 2) {
+                                        splitEarcut(ear, triangles, dim, minX, minY, invSize);
+                                    }
+                    
+                                    break;
+                                }
+                            }
+                        }
+                    
+                        // check whether a polygon node forms a valid ear with adjacent nodes
+                        function isEar(ear) {
+                            var a = ear.prev,
+                                b = ear,
+                                c = ear.next;
+                    
+                            if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+                    
+                            // now make sure we don't have other points inside the potential ear
+                            var p = ear.next.next;
+                    
+                            while (p !== ear.prev) {
+                                if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+                                    area(p.prev, p, p.next) >= 0) return false;
+                                p = p.next;
+                            }
+                    
+                            return true;
+                        }
+                    
+                        function isEarHashed(ear, minX, minY, invSize) {
+                            var a = ear.prev,
+                                b = ear,
+                                c = ear.next;
+                    
+                            if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+                    
+                            // triangle bbox; min & max are calculated like this for speed
+                            var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
+                                minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
+                                maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
+                                maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
+                    
+                            // z-order range for the current triangle bbox;
+                            var minZ = zOrder(minTX, minTY, minX, minY, invSize),
+                                maxZ = zOrder(maxTX, maxTY, minX, minY, invSize);
+                    
+                            var p = ear.prevZ,
+                                n = ear.nextZ;
+                    
+                            // look for points inside the triangle in both directions
+                            while (p && p.z >= minZ && n && n.z <= maxZ) {
+                                if (p !== ear.prev && p !== ear.next &&
+                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+                                    area(p.prev, p, p.next) >= 0) return false;
+                                p = p.prevZ;
+                    
+                                if (n !== ear.prev && n !== ear.next &&
+                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
+                                    area(n.prev, n, n.next) >= 0) return false;
+                                n = n.nextZ;
+                            }
+                    
+                            // look for remaining points in decreasing z-order
+                            while (p && p.z >= minZ) {
+                                if (p !== ear.prev && p !== ear.next &&
+                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+                                    area(p.prev, p, p.next) >= 0) return false;
+                                p = p.prevZ;
+                            }
+                    
+                            // look for remaining points in increasing z-order
+                            while (n && n.z <= maxZ) {
+                                if (n !== ear.prev && n !== ear.next &&
+                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
+                                    area(n.prev, n, n.next) >= 0) return false;
+                                n = n.nextZ;
+                            }
+                    
+                            return true;
+                        }
+                    
+                        // go through all polygon nodes and cure small local self-intersections
+                        function cureLocalIntersections(start, triangles, dim) {
+                            var p = start;
+                            do {
+                                var a = p.prev,
+                                    b = p.next.next;
+                    
+                                if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+                    
+                                    triangles.push(a.i / dim);
+                                    triangles.push(p.i / dim);
+                                    triangles.push(b.i / dim);
+                    
+                                    // remove two nodes involved
+                                    removeNode(p);
+                                    removeNode(p.next);
+                    
+                                    p = start = b;
+                                }
+                                p = p.next;
+                            } while (p !== start);
+                    
+                            return p;
+                        }
+                    
+                        // try splitting polygon into two and triangulate them independently
+                        function splitEarcut(start, triangles, dim, minX, minY, invSize) {
+                            // look for a valid diagonal that divides the polygon into two
+                            var a = start;
+                            do {
+                                var b = a.next.next;
+                                while (b !== a.prev) {
+                                    if (a.i !== b.i && isValidDiagonal(a, b)) {
+                                        // split the polygon in two by the diagonal
+                                        var c = splitPolygon(a, b);
+                    
+                                        // filter colinear points around the cuts
+                                        a = filterPoints(a, a.next);
+                                        c = filterPoints(c, c.next);
+                    
+                                        // run earcut on each half
+                                        earcutLinked(a, triangles, dim, minX, minY, invSize);
+                                        earcutLinked(c, triangles, dim, minX, minY, invSize);
+                                        return;
+                                    }
+                                    b = b.next;
+                                }
+                                a = a.next;
+                            } while (a !== start);
+                        }
+                    
+                        // link every hole into the outer loop, producing a single-ring polygon without holes
+                        function eliminateHoles(data, holeIndices, outerNode, dim) {
+                            var queue = [],
+                                i, len, start, end, list;
+                    
+                            for (i = 0, len = holeIndices.length; i < len; i++) {
+                                start = holeIndices[i] * dim;
+                                end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+                                list = linkedList(data, start, end, dim, false);
+                                if (list === list.next) list.steiner = true;
+                                queue.push(getLeftmost(list));
+                            }
+                    
+                            queue.sort(compareX);
+                    
+                            // process holes from left to right
+                            for (i = 0; i < queue.length; i++) {
+                                eliminateHole(queue[i], outerNode);
+                                outerNode = filterPoints(outerNode, outerNode.next);
+                            }
+                    
+                            return outerNode;
+                        }
+                    
+                        function compareX(a, b) {
+                            return a.x - b.x;
+                        }
+                    
+                        // find a bridge between vertices that connects hole with an outer ring and and link it
+                        function eliminateHole(hole, outerNode) {
+                            outerNode = findHoleBridge(hole, outerNode);
+                            if (outerNode) {
+                                var b = splitPolygon(outerNode, hole);
+                                filterPoints(b, b.next);
+                            }
+                        }
+                    
+                        // David Eberly's algorithm for finding a bridge between hole and outer polygon
+                        function findHoleBridge(hole, outerNode) {
+                            var p = outerNode,
+                                hx = hole.x,
+                                hy = hole.y,
+                                qx = -Infinity,
+                                m;
+                    
+                            // find a segment intersected by a ray from the hole's leftmost point to the left;
+                            // segment's endpoint with lesser x will be potential connection point
+                            do {
+                                if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+                                    var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+                                    if (x <= hx && x > qx) {
+                                        qx = x;
+                                        if (x === hx) {
+                                            if (hy === p.y) return p;
+                                            if (hy === p.next.y) return p.next;
+                                        }
+                                        m = p.x < p.next.x ? p : p.next;
+                                    }
+                                }
+                                p = p.next;
+                            } while (p !== outerNode);
+                    
+                            if (!m) return null;
+                    
+                            if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
+                    
+                            // look for points inside the triangle of hole point, segment intersection and endpoint;
+                            // if there are no points found, we have a valid connection;
+                            // otherwise choose the point of the minimum angle with the ray as connection point
+                    
+                            var stop = m,
+                                mx = m.x,
+                                my = m.y,
+                                tanMin = Infinity,
+                                tan;
+                    
+                            p = m.next;
+                    
+                            while (p !== stop) {
+                                if (hx >= p.x && p.x >= mx && hx !== p.x &&
+                                        pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+                    
+                                    tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
+                    
+                                    if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
+                                        m = p;
+                                        tanMin = tan;
+                                    }
+                                }
+                    
+                                p = p.next;
+                            }
+                    
+                            return m;
+                        }
+                    
+                        // interlink polygon nodes in z-order
+                        function indexCurve(start, minX, minY, invSize) {
+                            var p = start;
+                            do {
+                                if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, invSize);
+                                p.prevZ = p.prev;
+                                p.nextZ = p.next;
+                                p = p.next;
+                            } while (p !== start);
+                    
+                            p.prevZ.nextZ = null;
+                            p.prevZ = null;
+                    
+                            sortLinked(p);
+                        }
+                    
+                        // Simon Tatham's linked list merge sort algorithm
+                        // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+                        function sortLinked(list) {
+                            var i, p, q, e, tail, numMerges, pSize, qSize,
+                                inSize = 1;
+                    
+                            do {
+                                p = list;
+                                list = null;
+                                tail = null;
+                                numMerges = 0;
+                    
+                                while (p) {
+                                    numMerges++;
+                                    q = p;
+                                    pSize = 0;
+                                    for (i = 0; i < inSize; i++) {
+                                        pSize++;
+                                        q = q.nextZ;
+                                        if (!q) break;
+                                    }
+                                    qSize = inSize;
+                    
+                                    while (pSize > 0 || (qSize > 0 && q)) {
+                    
+                                        if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
+                                            e = p;
+                                            p = p.nextZ;
+                                            pSize--;
+                                        } else {
+                                            e = q;
+                                            q = q.nextZ;
+                                            qSize--;
+                                        }
+                    
+                                        if (tail) tail.nextZ = e;
+                                        else list = e;
+                    
+                                        e.prevZ = tail;
+                                        tail = e;
+                                    }
+                    
+                                    p = q;
+                                }
+                    
+                                tail.nextZ = null;
+                                inSize *= 2;
+                    
+                            } while (numMerges > 1);
+                    
+                            return list;
+                        }
+                    
+                        // z-order of a point given coords and inverse of the longer side of data bbox
+                        function zOrder(x, y, minX, minY, invSize) {
+                            // coords are transformed into non-negative 15-bit integer range
+                            x = 32767 * (x - minX) * invSize;
+                            y = 32767 * (y - minY) * invSize;
+                    
+                            x = (x | (x << 8)) & 0x00FF00FF;
+                            x = (x | (x << 4)) & 0x0F0F0F0F;
+                            x = (x | (x << 2)) & 0x33333333;
+                            x = (x | (x << 1)) & 0x55555555;
+                    
+                            y = (y | (y << 8)) & 0x00FF00FF;
+                            y = (y | (y << 4)) & 0x0F0F0F0F;
+                            y = (y | (y << 2)) & 0x33333333;
+                            y = (y | (y << 1)) & 0x55555555;
+                    
+                            return x | (y << 1);
+                        }
+                    
+                        // find the leftmost node of a polygon ring
+                        function getLeftmost(start) {
+                            var p = start,
+                                leftmost = start;
+                            do {
+                                if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
+                                p = p.next;
+                            } while (p !== start);
+                    
+                            return leftmost;
+                        }
+                    
+                        // check if a point lies within a convex triangle
+                        function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
+                            return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
+                                (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
+                                (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
+                        }
+                    
+                        // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+                        function isValidDiagonal(a, b) {
+                            return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
+                                locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
+                        }
+                    
+                        // signed area of a triangle
+                        function area(p, q, r) {
+                            return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+                        }
+                    
+                        // check if two points are equal
+                        function equals(p1, p2) {
+                            return p1.x === p2.x && p1.y === p2.y;
+                        }
+                    
+                        // check if two segments intersect
+                        function intersects(p1, q1, p2, q2) {
+                            if ((equals(p1, p2) && equals(q1, q2)) ||
+                                (equals(p1, q2) && equals(p2, q1))) return true;
+                            return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
+                                area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
+                        }
+                    
+                        // check if a polygon diagonal intersects any polygon segments
+                        function intersectsPolygon(a, b) {
+                            var p = a;
+                            do {
+                                if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
+                                        intersects(p, p.next, a, b)) return true;
+                                p = p.next;
+                            } while (p !== a);
+                    
+                            return false;
+                        }
+                    
+                        // check if a polygon diagonal is locally inside the polygon
+                        function locallyInside(a, b) {
+                            return area(a.prev, a, a.next) < 0 ?
+                                area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
+                                area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
+                        }
+                    
+                        // check if the middle point of a polygon diagonal is inside the polygon
+                        function middleInside(a, b) {
+                            var p = a,
+                                inside = false,
+                                px = (a.x + b.x) / 2,
+                                py = (a.y + b.y) / 2;
+                            do {
+                                if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
+                                        (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
+                                    inside = !inside;
+                                p = p.next;
+                            } while (p !== a);
+                    
+                            return inside;
+                        }
+                    
+                        // link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
+                        // if one belongs to the outer ring and another to a hole, it merges it into a single ring
+                        function splitPolygon(a, b) {
+                            var a2 = new Node(a.i, a.x, a.y),
+                                b2 = new Node(b.i, b.x, b.y),
+                                an = a.next,
+                                bp = b.prev;
+                    
+                            a.next = b;
+                            b.prev = a;
+                    
+                            a2.next = an;
+                            an.prev = a2;
+                    
+                            b2.next = a2;
+                            a2.prev = b2;
+                    
+                            bp.next = b2;
+                            b2.prev = bp;
+                    
+                            return b2;
+                        }
+                    
+                        // create a node and optionally link it with previous one (in a circular doubly linked list)
+                        function insertNode(i, x, y, last) {
+                            var p = new Node(i, x, y);
+                    
+                            if (!last) {
+                                p.prev = p;
+                                p.next = p;
+                    
+                            } else {
+                                p.next = last.next;
+                                p.prev = last;
+                                last.next.prev = p;
+                                last.next = p;
+                            }
+                            return p;
+                        }
+                    
+                        function removeNode(p) {
+                            p.next.prev = p.prev;
+                            p.prev.next = p.next;
+                    
+                            if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+                            if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+                        }
+                    
+                        function Node(i, x, y) {
+                            // vertex index in coordinates array
+                            this.i = i;
+                    
+                            // vertex coordinates
+                            this.x = x;
+                            this.y = y;
+                    
+                            // previous and next vertex nodes in a polygon ring
+                            this.prev = null;
+                            this.next = null;
+                    
+                            // z-order curve value
+                            this.z = null;
+                    
+                            // previous and next nodes in z-order
+                            this.prevZ = null;
+                            this.nextZ = null;
+                    
+                            // indicates whether this is a steiner point
+                            this.steiner = false;
+                        }
+                    
+                        // return a percentage difference between the polygon area and its triangulation area;
+                        // used to verify correctness of triangulation
+                        earcut.deviation = function (data, holeIndices, dim, triangles) {
+                            var hasHoles = holeIndices && holeIndices.length;
+                            var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+                    
+                            var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
+                            if (hasHoles) {
+                                for (var i = 0, len = holeIndices.length; i < len; i++) {
+                                    var start = holeIndices[i] * dim;
+                                    var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+                                    polygonArea -= Math.abs(signedArea(data, start, end, dim));
+                                }
+                            }
+                    
+                            var trianglesArea = 0;
+                            for (i = 0; i < triangles.length; i += 3) {
+                                var a = triangles[i] * dim;
+                                var b = triangles[i + 1] * dim;
+                                var c = triangles[i + 2] * dim;
+                                trianglesArea += Math.abs(
+                                    (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
+                                    (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
+                            }
+                    
+                            return polygonArea === 0 && trianglesArea === 0 ? 0 :
+                                Math.abs((trianglesArea - polygonArea) / polygonArea);
+                        };
+                    
+                        function signedArea(data, start, end, dim) {
+                            var sum = 0;
+                            for (var i = start, j = end - dim; i < end; i += dim) {
+                                sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+                                j = i;
+                            }
+                            return sum;
+                        }
+                    
+                        // turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
+                        earcut.flatten = function (data) {
+                            var dim = data[0][0].length,
+                                result = {vertices: [], holes: [], dimensions: dim},
+                                holeIndex = 0;
+                    
+                            for (var i = 0; i < data.length; i++) {
+                                for (var j = 0; j < data[i].length; j++) {
+                                    for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
+                                }
+                                if (i > 0) {
+                                    holeIndex += data[i - 1].length;
+                                    result.holes.push(holeIndex);
+                                }
+                            }
+                            return result;
+                        };
+                    };
+                };
             };
             _canvas_.core = new function(){
                 var core = this;
@@ -697,6 +1362,167 @@
                 
                 this.shape = new function(){
                     this.library = new function(){
+                        // this.polygon = function(){
+                        //     var self = this;
+                        
+                        //     //attributes 
+                        //         //protected attributes
+                        //             const type = 'polygon'; this.getType = function(){return type;}
+                        
+                        //         //simple attributes
+                        //             this.name = '';
+                        //             this.parent = undefined;
+                        //             this.dotFrame = false;
+                        //             this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                        //             this.ignored = false;
+                        //             this.colour = {r:1,g:0,b:0,a:1};
+                        
+                        //         //attributes pertinent to extremity calculation
+                        //             var pointsChanged = true;
+                        //             var points = []; this.points = function(a){ if(a==undefined){return points;} points = a; this.extremities.isChanged = true; computeExtremities(); pointsChanged = true; };
+                        //             var scale = 1;   this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; computeExtremities(); };
+                        
+                        //             this.pointsAsXYArray = function(a){
+                        //                 if(a==undefined){
+                        //                     var output = [];
+                        //                     for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
+                        //                     return points;
+                        //                 }
+                        
+                        //                 var array = [];
+                        //                 a.forEach(a => array = array.concat([a.x,a.y]));
+                        //                 this.points(array);
+                        //             };
+                            
+                        //     //addressing
+                        //         this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                        
+                        //     //webGL rendering functions
+                        //         var vertexShaderSource = 
+                        //             _canvas_.library.gsls.geometry + `
+                        //             //variables
+                        //                 struct location{
+                        //                     vec2 xy;
+                        //                     float scale;
+                        //                     float angle;
+                        //                 };
+                        //                 uniform location offset;
+                            
+                        //                 attribute vec2 point;
+                        //                 uniform vec2 resolution;
+                            
+                        //             void main(){    
+                        //                 //adjust point by offset
+                        //                     vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
+                            
+                        //                 //convert from unit space to clipspace
+                        //                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                        //             }
+                        //         `;
+                        //         var fragmentShaderSource = `  
+                        //             precision mediump float;
+                        //             uniform vec4 colour;
+                                                                                                
+                        //             void main(){
+                        //                 gl_FragColor = colour;
+                        //             }
+                        //         `;
+                        //         var point = { buffer:undefined, attributeLocation:undefined };
+                        //         var uniformLocations;
+                        //         function updateGLAttributes(context,offset){
+                        //             //buffers
+                        //                 //points
+                        //                     if(point.buffer == undefined || pointsChanged){
+                        //                         point.attributeLocation = context.getAttribLocation(program, "point");
+                        //                         point.buffer = context.createBuffer();
+                        //                         context.enableVertexAttribArray(point.attributeLocation);
+                        //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                        //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                        //                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                        //                         pointsChanged = false;
+                        //                     }else{
+                        //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                        //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                        //                     }
+                        
+                        //             //uniforms
+                        //                 if( uniformLocations == undefined ){
+                        //                     uniformLocations = {
+                        //                         "offset.xy": context.getUniformLocation(program, "offset.xy"),
+                        //                         "offset.scale": context.getUniformLocation(program, "offset.scale"),
+                        //                         "offset.angle": context.getUniformLocation(program, "offset.angle"),
+                        //                         "resolution": context.getUniformLocation(program, "resolution"),
+                        //                         "colour": context.getUniformLocation(program, "colour"),
+                        //                     };
+                        //                 }
+                        
+                        //                 context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
+                        //                 context.uniform1f(uniformLocations["offset.scale"], offset.scale);
+                        //                 context.uniform1f(uniformLocations["offset.angle"], offset.angle);
+                        //                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                        //                 context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+                        //         }
+                        //         var program;
+                        //         function activateGLRender(context,adjust){
+                        //             if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                            
+                        //             context.useProgram(program);
+                        //             updateGLAttributes(context,adjust);
+                        
+                        //             context.drawArrays(context.TRIANGLE_STRIP, 0, points.length/2);
+                        //         }
+                        
+                        //     //extremities
+                        //         function computeExtremities(informParent=true,offset){
+                        //             //get offset from parent
+                        //                 if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                        //             //calculate points based on the offset
+                        //                 self.extremities.points = [];
+                        //                 for(var a = 0; a < points.length; a+=2){
+                        //                     var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                        //                     self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
+                        //                 }
+                        //                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                        
+                        //             //if told to do so, inform parent (if there is one) that extremities have changed
+                        //                 if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                        //         }
+                        //         var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+                        //         this.computeExtremities = function(informParent,offset){
+                        //             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                        //             if(
+                        //                 this.extremities.isChanged ||
+                        //                 oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+                        //             ){
+                        //                 computeExtremities(informParent,offset);
+                        //                 this.extremities.isChanged = false;
+                        //                 oldOffset.x = offset.x;
+                        //                 oldOffset.y = offset.y;
+                        //                 oldOffset.scale = offset.scale;
+                        //                 oldOffset.angle = offset.angle;
+                        //             }
+                        //         };
+                        
+                        //     //lead render
+                        //         function drawDotFrame(){
+                        //             self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                        
+                        //             var tl = self.extremities.boundingBox.topLeft;
+                        //             var br = self.extremities.boundingBox.bottomRight;
+                        //             core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+                        //             core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                        //         }
+                        //         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
+                        //             //activate shape render code
+                        //                 activateGLRender(context,offset);
+                        
+                        //             //if requested; draw dot frame
+                        //                 if(self.dotFrame){drawDotFrame();}
+                        //         };
+                        // };
+                        
                         this.polygon = function(){
                             var self = this;
                         
@@ -762,23 +1588,23 @@
                                         gl_FragColor = colour;
                                     }
                                 `;
-                                var pointBuffer;
-                                var pointAttributeLocation;
+                                var point = { buffer:undefined, attributeLocation:undefined };
+                                var drawingPoints = [];
                                 var uniformLocations;
                                 function updateGLAttributes(context,offset){
                                     //buffers
                                         //points
-                                            if(pointBuffer == undefined || pointsChanged){
-                                                pointAttributeLocation = context.getAttribLocation(program, "point");
-                                                pointBuffer = context.createBuffer();
-                                                context.enableVertexAttribArray(pointAttributeLocation);
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                            if(point.buffer == undefined || pointsChanged){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = _canvas_.library.thirdparty.earcut(points)), context.STATIC_DRAW);
                                                 pointsChanged = false;
                                             }else{
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                             }
                         
                                     //uniforms
@@ -800,11 +1626,12 @@
                                 }
                                 var program;
                                 function activateGLRender(context,adjust){
-                                    if(program == undefined){ program = core.render.produceProgram('polygon', vertexShaderSource, fragmentShaderSource); }
+                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                             
                                     context.useProgram(program);
                                     updateGLAttributes(context,adjust);
-                                    context.drawArrays(context.TRIANGLE_FAN, 0, points.length/2);
+                        
+                                    context.drawArrays(context.TRIANGLES, 0, drawingPoints.length/2);
                                 }
                         
                             //extremities
@@ -857,6 +1684,272 @@
                                         if(self.dotFrame){drawDotFrame();}
                                 };
                         };
+                        this.rectangleWithOutline = function(){
+                            var self = this;
+                        
+                            //attributes 
+                                //protected attributes
+                                    const type = 'rectangleWithOutline'; this.getType = function(){return type;}
+                        
+                                //simple attributes
+                                    this.name = '';
+                                    this.parent = undefined;
+                                    this.dotFrame = false;
+                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.ignored = false;
+                                    this.colour = {r:1,g:0,b:0,a:1};
+                                    this.lineColour = {r:0,g:0,b:0,a:0};
+                        
+                                //attributes pertinent to extremity calculation
+                                    var x = 0;              this.x =         function(a){ if(a==undefined){return x;}         x = a;         this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var y = 0;              this.y =         function(a){ if(a==undefined){return y;}         y = a;         this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}     angle = a;     this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;}    anchor = a;    this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var width = 10;         this.width =     function(a){ if(a==undefined){return width;}     width = a;     this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var height = 10;        this.height =    function(a){ if(a==undefined){return height;}    height = a;    this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}     scale = a;     this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; this.extremities.isChanged = true; this.computeExtremities(); };
+                        
+                            //addressing
+                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                        
+                            //webGL rendering functions
+                                var points = [
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                                    0,0,
+                                    1,1,
+                                    0,1,
+                        
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                                    0,0,
+                                    1,1,
+                                    0,1,
+                        
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                                    0,0,
+                                    1,1,
+                                    0,1,
+                        
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                                    0,0,
+                                    1,1,
+                                    0,1,
+                        
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                                    0,0,
+                                    1,1,
+                                    0,1,
+                                ];
+                                var vertexShaderSource = `
+                                    //index
+                                        attribute lowp float index;
+                                        
+                                    //constants
+                                        attribute vec2 point;
+                        
+                                    //variables
+                                        struct location{
+                                            vec2 xy;
+                                            float scale;
+                                            float angle;
+                                        };
+                                        uniform location adjust;
+                        
+                                        uniform vec2 resolution;
+                                        uniform vec2 dimensions;
+                                        uniform float thickness;
+                                        uniform vec2 anchor;
+                        
+                                        uniform vec4 colour;
+                                        uniform vec4 lineColour;
+                                    
+                                    //varyings
+                                        varying vec4 activeColour;
+                        
+                                    void main(){
+                                        //create triangle
+                                            vec2 P = vec2(0,0);
+                        
+                                            if(index < 6.0){ //body
+                                                P = dimensions * (point * adjust.scale - anchor);
+                                            }else if(index < 12.0){ //outline: top
+                                                P = vec2( dimensions.x + thickness, thickness ) * ((point - vec2(0.0,0.5)) * adjust.scale - anchor) - vec2(thickness/2.0,0.0)*adjust.scale;
+                                            }else if(index < 18.0){ //outline: bottom
+                                                P = vec2( dimensions.x + thickness, thickness ) * ((point - vec2(0.0,-dimensions.y/thickness + 0.5)) * adjust.scale - anchor) - vec2(thickness/2.0,0.0)*adjust.scale;;
+                                            }else if(index < 24.0){ //outline: left
+                                                P = vec2( thickness, dimensions.y - thickness ) * ((point - vec2(0.5,0.0)) * adjust.scale - anchor) + vec2(0.0,thickness/2.0)*adjust.scale;
+                                            }else if(index < 30.0){ //outline: right
+                                                P = vec2( thickness, dimensions.y - thickness ) * ((point - vec2(-dimensions.x/thickness + 0.5,0.0)) * adjust.scale - anchor) + vec2(0.0,thickness/2.0)*adjust.scale;
+                                            }
+                                            
+                                            //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
+                                                P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
+                        
+                                        //select colour
+                                            activeColour = index < 6.0 ? colour : lineColour;
+                        
+                                        //convert from unit space to clipspace
+                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                                    }
+                                `;
+                                var fragmentShaderSource = `  
+                                    precision mediump float;
+                                    varying vec4 activeColour;
+                                                                                                
+                                    void main(){
+                                        gl_FragColor = activeColour;
+                                    }
+                                `;
+                        
+                                var index = { buffer:undefined, attributeLocation:undefined };
+                                var point = { buffer:undefined, attributeLocation:undefined };
+                                var uniformLocations;
+                                function updateGLAttributes(context,adjust){
+                                    //index
+                                        if(index.buffer == undefined){
+                                            index.attributeLocation = context.getAttribLocation(program, "index");
+                                            index.buffer = context.createBuffer();
+                                            context.enableVertexAttribArray(index.attributeLocation);
+                                            context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
+                                            context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
+                                            context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
+                                        }else{
+                                            context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
+                                            context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
+                                        }
+                        
+                                    //buffers
+                                        //points
+                                            if(point.buffer == undefined){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                            }else{
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            }
+                                    
+                                    //uniforms
+                                        if( uniformLocations == undefined ){
+                                            uniformLocations = {
+                                                "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
+                                                "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
+                                                "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
+                                                "resolution": context.getUniformLocation(program, "resolution"),
+                                                "dimensions": context.getUniformLocation(program, "dimensions"),
+                                                "thickness": context.getUniformLocation(program, "thickness"),
+                                                "anchor": context.getUniformLocation(program, "anchor"),
+                                                "colour": context.getUniformLocation(program, "colour"),
+                                                "lineColour": context.getUniformLocation(program, "lineColour"),
+                                            };
+                                        }
+                        
+                                        context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
+                                        context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
+                                        context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
+                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                                        context.uniform2f(uniformLocations["dimensions"], width, height);
+                                        context.uniform1f(uniformLocations["thickness"], thickness);
+                                        context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
+                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+                                        context.uniform4f(uniformLocations["lineColour"], self.lineColour.r, self.lineColour.g, self.lineColour.b, self.lineColour.a);
+                                }
+                                var program;
+                                function activateGLRender(context,adjust){
+                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                            
+                                    context.useProgram(program);
+                                    updateGLAttributes(context,adjust);
+                                    context.drawArrays(context.TRIANGLES, 0, points.length/2);
+                                }
+                        
+                            //extremities
+                                function computeExtremities(informParent=true,offset){
+                                    //get offset from parent
+                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                                    //calculate points based on the offset
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                        var adjusted = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale*scale,
+                                            angle: -(offset.angle + angle),
+                                        };
+                        
+                                        self.extremities.points = [];
+                                        for(var a = 0; a < points.length; a+=2){
+                                            var P = {
+                                                x: adjusted.scale * width * (points[a] - anchor.x), 
+                                                y: adjusted.scale * height * (points[a+1] - anchor.y), 
+                                            };
+                        
+                                            self.extremities.points.push({ 
+                                                x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
+                                                y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
+                                            });
+                                        }
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                                    
+                                    //if told to do so, inform parent (if there is one) that extremities have changed
+                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                }
+                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+                                this.computeExtremities = function(informParent,offset){
+                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                                    if(
+                                        this.extremities.isChanged ||
+                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+                                    ){
+                                        computeExtremities(informParent,offset);
+                                        this.extremities.isChanged = false;
+                                        oldOffset.x = offset.x;
+                                        oldOffset.y = offset.y;
+                                        oldOffset.scale = offset.scale;
+                                        oldOffset.angle = offset.angle;
+                                    }
+                                };
+                        
+                            //lead render
+                                function drawDotFrame(){
+                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                        
+                                    var tl = self.extremities.boundingBox.topLeft;
+                                    var br = self.extremities.boundingBox.bottomRight;
+                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                };
+                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                                    //combine offset with shape's position, angle and scale to produce adjust value for render
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                        var adjust = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale*scale,
+                                            angle: -(offset.angle + angle),
+                                        };
+                        
+                                    //activate shape render code
+                                        activateGLRender(context,adjust);
+                        
+                                    //if requested; draw dot frame
+                                        if(self.dotFrame){drawDotFrame();}
+                                };
+                        };
                         this.circle = function(){
                             var self = this;
                         
@@ -875,6 +1968,7 @@
                                 //attributes pertinent to extremity calculation
                                     var x = 0;          this.x =      function(a){ if(a==undefined){return x;}      x = a;      computeExtremities(); };
                                     var y = 0;          this.y =      function(a){ if(a==undefined){return y;}      y = a;      computeExtremities(); };
+                                    var angle = 0;      this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  computeExtremities(); };
                                     var radius = 10;    this.radius = function(a){ if(a==undefined){return radius;} radius = a; computeExtremities(); };
                                     var scale = 1;      this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  computeExtremities(); };
                                     var detail = 25;    this.detail = function(a){ 
@@ -900,31 +1994,31 @@
                                 var points = []; 
                                 var pointsChanged = true;
                                 this.detail(detail);
-                                var vertexShaderSource = `
-                                //constants
-                                    attribute vec2 point;
+                                var vertexShaderSource = 
+                                    _canvas_.library.gsls.geometry + `
+                                    //constants
+                                        attribute vec2 point;
                         
-                                //variables
-                                    struct location{
-                                        vec2 xy;
-                                        float scale;
-                                        float angle;
-                                    };
-                                    uniform location adjust;
+                                    //variables
+                                        struct location{
+                                            vec2 xy;
+                                            float scale;
+                                            float angle;
+                                        };
+                                        uniform location adjust;
                         
-                                    uniform vec2 resolution;
-                                    uniform float radius;
-                                    uniform vec2 anchor;
+                                        uniform vec2 resolution;
+                                        uniform float radius;
+                                        uniform vec2 anchor;
                         
-                                void main(){
-                                    //adjust points by radius and xy offset
-                                        vec2 P = point * radius * adjust.scale;
-                                        P += adjust.xy;  
+                                    void main(){
+                                        //adjust points by radius and xy offset
+                                            vec2 P = cartesianAngleAdjust(point*radius*adjust.scale, -adjust.angle) + adjust.xy;
                         
-                                    //convert from unit space to clipspace
-                                        gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                                }
-                            `;
+                                        //convert from unit space to clipspace
+                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                                    }
+                                `;
                             var fragmentShaderSource = `  
                                 precision mediump float;
                                 uniform vec4 colour;
@@ -1039,7 +2133,7 @@
                                             x: point.x*offset.scale + offset.x,
                                             y: point.y*offset.scale + offset.y,
                                             scale: offset.scale*scale,
-                                            angle: -offset.angle,
+                                            angle: -(offset.angle + angle),
                                         };
                         
                                     //activate shape render code
@@ -1352,14 +2446,8 @@
                                             textureCoordinates = point;
                         
                                         //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                                        //(including scale adjust)
-                                            vec2 P = point * dimensions * adjust.scale;
-                                            P = vec2( P.x - dimensions.x*anchor.x, P.y - dimensions.y*anchor.y );
-                                            P = vec2( 
-                                                P.x*cos(adjust.angle) + P.y*sin(adjust.angle), 
-                                                P.y*cos(adjust.angle) - P.x*sin(adjust.angle)
-                                            );
-                                            P += adjust.xy;
+                                            vec2 P = dimensions * adjust.scale * (point - anchor);
+                                            P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
                         
                                         //convert from unit space to clipspace
                                             gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
@@ -1429,7 +2517,7 @@
                                 }
                                 var program;
                                 function activateGLRender(context,adjust){
-                                    if(program == undefined){ program = core.render.produceProgram('image', vertexShaderSource, fragmentShaderSource); }
+                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                                     
                                     if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
                         
@@ -1512,12 +2600,12 @@
                                         if(self.dotFrame){drawDotFrame();}
                                 };
                         };
-                        this.path = function(){
+                        this.loopedPath = function(){
                             var self = this;
                         
                             //attributes 
                                 //protected attributes
-                                    const type = 'path'; this.getType = function(){return type;}
+                                    const type = 'loopedPath'; this.getType = function(){return type;}
                         
                                 //simple attributes
                                     this.name = '';
@@ -1530,15 +2618,15 @@
                                 //attributes pertinent to extremity calculation
                                     var scale = 1; this.scale = function(a){ if(a==undefined){return scale;}  scale = a; this.extremities.isChanged=true; this.computeExtremities(); };
                                     var points = []; var pointsChanged = true; 
-                                    function lineGenerator(){ points = _canvas_.library.math.pathToPolygonGenerator( path, thickness ); }
+                                    function lineGenerator(){ points = _canvas_.library.math.loopedPathToPolygonGenerator( path, thickness ); }
                                     var path = [];      this.points =  function(a){ if(a==undefined){return path;} path = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
-                                    var thickness = 1;  this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); };
+                                    var thickness = 1;  this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
                                     
                                     this.pointsAsXYArray = function(a){
                                         if(a==undefined){
                                             var output = [];
-                                            for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
-                                            return points;
+                                            for(var a = 0; a < path.length; a+=2){ output.push({ x:path[a], y:path[a+1] }); }
+                                            return output;
                                         }
                         
                                         var array = [];
@@ -1579,23 +2667,182 @@
                                         gl_FragColor = colour;
                                     }
                                 `;
-                                var pointBuffer;
-                                var pointAttributeLocation;
+                                var point = { buffer:undefined, attributeLocation:undefined };
                                 var uniformLocations;
                                 function updateGLAttributes(context,offset){
                                     //buffers
                                         //points
-                                            if(pointBuffer == undefined || pointsChanged){
-                                                pointAttributeLocation = context.getAttribLocation(program, "point");
-                                                pointBuffer = context.createBuffer();
-                                                context.enableVertexAttribArray(pointAttributeLocation);
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            if(point.buffer == undefined || pointsChanged){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                                 context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                                 pointsChanged = false;
                                             }else{
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            }
+                        
+                                    //uniforms
+                                        if( uniformLocations == undefined ){
+                                            uniformLocations = {
+                                                "offset.xy": context.getUniformLocation(program, "offset.xy"),
+                                                "offset.scale": context.getUniformLocation(program, "offset.scale"),
+                                                "offset.angle": context.getUniformLocation(program, "offset.angle"),
+                                                "resolution": context.getUniformLocation(program, "resolution"),
+                                                "colour": context.getUniformLocation(program, "colour"),
+                                            };
+                                        }
+                        
+                                        context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
+                                        context.uniform1f(uniformLocations["offset.scale"], offset.scale);
+                                        context.uniform1f(uniformLocations["offset.angle"], offset.angle);
+                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+                                }
+                                var program;
+                                function activateGLRender(context,adjust){
+                                    if(program == undefined){ program = core.render.produceProgram('polygon', vertexShaderSource, fragmentShaderSource); }
+                        
+                                    context.useProgram(program);
+                                    updateGLAttributes(context,adjust);
+                                    context.drawArrays(context.TRIANGLE_STRIP, 0, points.length/2);
+                                }
+                        
+                            //extremities
+                                function computeExtremities(informParent=true,offset){
+                                    //get offset from parent
+                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                                    //calculate points based on the offset
+                                        self.extremities.points = [];
+                                        for(var a = 0; a < points.length; a+=2){
+                                            var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                                            self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
+                                        }
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                        
+                                    //if told to do so, inform parent (if there is one) that extremities have changed
+                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                }
+                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+                                this.computeExtremities = function(informParent,offset){
+                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                                    if(
+                                        this.extremities.isChanged ||
+                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+                                    ){
+                                        computeExtremities(informParent,offset);
+                                        this.extremities.isChanged = false;
+                                        oldOffset.x = offset.x;
+                                        oldOffset.y = offset.y;
+                                        oldOffset.scale = offset.scale;
+                                        oldOffset.angle = offset.angle;
+                                    }
+                                };
+                        
+                            //lead render
+                                function drawDotFrame(){
+                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                        
+                                    var tl = self.extremities.boundingBox.topLeft;
+                                    var br = self.extremities.boundingBox.bottomRight;
+                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                }
+                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                                    //activate shape render code
+                                        activateGLRender(context,offset);
+                        
+                                    //if requested; draw dot frame
+                                        if(self.dotFrame){drawDotFrame();}
+                                };
+                        };
+                        this.path = function(){
+                            var self = this;
+                        
+                            //attributes 
+                                //protected attributes
+                                    const type = 'path'; this.getType = function(){return type;}
+                        
+                                //simple attributes
+                                    this.name = '';
+                                    this.parent = undefined;
+                                    this.dotFrame = false;
+                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.ignored = false;
+                                    this.colour = {r:0,g:0,b:0,a:1};
+                        
+                                //attributes pertinent to extremity calculation
+                                    var scale = 1; this.scale = function(a){ if(a==undefined){return scale;}  scale = a; this.extremities.isChanged=true; this.computeExtremities(); };
+                                    var points = []; var pointsChanged = true; 
+                                    function lineGenerator(){ points = _canvas_.library.math.pathToPolygonGenerator( path, thickness ); }
+                                    var path = [];      this.points =  function(a){ if(a==undefined){return path;} path = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
+                                    var thickness = 1;  this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
+                                    
+                                    this.pointsAsXYArray = function(a){
+                                        if(a==undefined){
+                                            var output = [];
+                                            for(var a = 0; a < path.length; a+=2){ output.push({ x:path[a], y:path[a+1] }); }
+                                            return output;
+                                        }
+                        
+                                        var array = [];
+                                        a.forEach(a => array = array.concat([a.x,a.y]));
+                                        this.points(array);
+                                    };
+                                    
+                            //addressing
+                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                        
+                            //webGL rendering functions
+                                var vertexShaderSource = 
+                                    _canvas_.library.gsls.geometry + `
+                                        //variables
+                                            struct location{
+                                                vec2 xy;
+                                                float scale;
+                                                float angle;
+                                            };
+                                            uniform location offset;
+                        
+                                            attribute vec2 point;
+                                            uniform vec2 resolution;
+                        
+                                        void main(){    
+                                            //adjust point by offset
+                                                vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
+                        
+                                            //convert from unit space to clipspace
+                                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                                        }
+                                    `;
+                                var fragmentShaderSource = `  
+                                    precision mediump float;
+                                    uniform vec4 colour;
+                                                                                                
+                                    void main(){
+                                        gl_FragColor = colour;
+                                    }
+                                `;
+                                var point = { buffer:undefined, attributeLocation:undefined };
+                                var uniformLocations;
+                                function updateGLAttributes(context,offset){
+                                    //buffers
+                                        //points
+                                            if(point.buffer == undefined || pointsChanged){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                            }else{
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                             }
                         
                                     //uniforms
@@ -1726,14 +2973,8 @@
                         
                                     void main(){
                                         //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                                        //(including scale adjust)
-                                            vec2 P = point * dimensions * adjust.scale;
-                                            P = vec2( P.x - dimensions.x*anchor.x, P.y - dimensions.y*anchor.y );
-                                            P = vec2( 
-                                                P.x*cos(adjust.angle) + P.y*sin(adjust.angle), 
-                                                P.y*cos(adjust.angle) - P.x*sin(adjust.angle)
-                                            );
-                                            P += adjust.xy;
+                                            vec2 P = dimensions * adjust.scale * (point - anchor);
+                                            P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
                         
                                         //convert from unit space to clipspace
                                             gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
@@ -1747,22 +2988,21 @@
                                         gl_FragColor = colour;
                                     }
                                 `;
-                                var pointBuffer;
-                                var pointAttributeLocation;
+                                var point = { buffer:undefined, attributeLocation:undefined };
                                 var uniformLocations;
                                 function updateGLAttributes(context,adjust){
                                     //buffers
                                         //points
-                                            if(pointBuffer == undefined){
-                                                pointAttributeLocation = context.getAttribLocation(program, "point");
-                                                pointBuffer = context.createBuffer();
-                                                context.enableVertexAttribArray(pointAttributeLocation);
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            if(point.buffer == undefined){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                                 context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                             }else{
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                             }
                                     
                                     //uniforms
@@ -1788,7 +3028,7 @@
                                 }
                                 var program;
                                 function activateGLRender(context,adjust){
-                                    if(program == undefined){ program = core.render.produceProgram('rectangle', vertexShaderSource, fragmentShaderSource); }
+                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                             
                                     context.useProgram(program);
                                     updateGLAttributes(context,adjust);
@@ -2148,6 +3388,21 @@
                         };
                     };
                 
+                    this.checkShape = function(name,shape){
+                        var tmp = new shape();
+                
+                        if(name == undefined || shape == undefined){ return 'shape or name missing'; }
+                        if(tmp.getType() != name){ return 'internal type ('+tmp.getType()+') does not match key ('+name+')';  }
+                
+                        return '';
+                    };
+                    this.checkShapes = function(list){
+                        for(item in list){
+                            var response = this.checkShape(item, list[item]);
+                            if(response.length != 0){ console.error('core.shapes error:', item, '::', response); }
+                        }
+                    };
+                
                     this.create = function(type){ 
                         try{ return new this.library[type](); }
                         catch(e){
@@ -2156,6 +3411,7 @@
                         }
                     };
                 };
+                this.shape.checkShapes(this.shape.library);
                 
                 this.arrangement = new function(){
                     var design = core.shape.create('group');
@@ -4117,7 +5373,23 @@
                                 else{ temp.pointsAsXYArray(pointsAsXYArray); }
                                 return temp;
                             }
-                            this.circle = function( name=null, x=0, y=0, radius=10, ignored=false, colour={r:1,g:0,b:1,a:1} ){
+                            this.rectangleWithOutline = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=0, lineColour={r:0,g:0,b:0,a:0} ){
+                                var temp = _canvas_.core.shape.create('rectangleWithOutline');
+                                temp.name = name;
+                                temp.ignored = ignored;
+                                temp.colour = colour;
+                                temp.lineColour = lineColour;
+                                
+                                temp.x(x); 
+                                temp.y(y);
+                                temp.width(width); 
+                                temp.height(height);
+                                temp.angle(angle);
+                                temp.anchor(anchor);
+                                temp.thickness(thickness);
+                                return temp;
+                            };
+                            this.circle = function( name=null, x=0, y=0, angle=0, radius=10, ignored=false, colour={r:1,g:0,b:1,a:1} ){
                                 var temp = _canvas_.core.shape.create('circle');
                                 temp.name = name;
                                 temp.ignored = ignored;
@@ -4125,6 +5397,7 @@
                                 
                                 temp.x(x);
                                 temp.y(y);
+                                temp.angle(angle);
                                 temp.radius(radius);
                                 return temp;
                             };
@@ -4156,6 +5429,17 @@
                                 temp.imageURL(url);
                                 return temp;
                             };
+                            this.loopedPath = function( name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[] ){
+                                var temp = _canvas_.core.shape.create('loopedPath');
+                                temp.name = name;
+                                temp.ignored = ignored;
+                                temp.colour = colour;
+                                
+                                if(points.length != 0){ temp.points(points); }
+                                else{ temp.pointsAsXYArray(pointsAsXYArray); }
+                                temp.thickness(thickness); 
+                                return temp;
+                            }
                             this.path = function( name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[] ){
                                 var temp = _canvas_.core.shape.create('path');
                                 temp.name = name;
@@ -4193,8 +5477,8 @@
                             }
                         };
                         this.control = new function(){
-                            this.slidePanel = function(
-                                name='slidePanel', 
+                            this.slidePanel_image = function(
+                                name='slidePanel_image', 
                                 x, y, width=80, height=95, angle=0, interactable=true,
                                 handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
                             
@@ -4218,7 +5502,6 @@
                                                     onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
                                                 }
                                             );
-                                            // temp.dotFrame = true;
                                             temp.__calculationAngle = angle;
                                             object.append(temp);
                                         }
@@ -5111,17 +6394,2060 @@
                             
                                 return object;
                             };
+                            this.checkbox_rectangle = function(
+                                name='checkbox_rectangle',
+                                x, y, width=20, height=20, angle=0, interactable=true,
+                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup');
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
+                                        subject.append(backing);
+                                    //check
+                                        var checkrect = interfacePart.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(checkrect);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.colour = backingGlowStyle;
+                                            checkrect.colour = state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0};
+                                        }else{
+                                            backing.colour = backingStyle;
+                                            checkrect.colour = state.checked ? checkStyle : {r:0,g:0,b:0,a:0};
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_image = function(
+                                name='checkbox_image',
+                                x, y, width=20, height=20, angle=0, interactable=true,
+                                uncheckURL, checkURL, checkGlowURL, backingGlowURL,
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:uncheckURL});
+                                        subject.append(backing);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){ 
+                                        if(state.glowing){
+                                            backing.url = state.checked ? checkGlowURL : uncheckGlowURL;
+                                        }else{
+                                            backing.url = state.checked ? checkURL : uncheckURL;
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_ = function(
+                                name='checkbox_',
+                                x, y, angle=0, interactable=true,
+                            
+                                onchange = function(){},
+                            
+                                subject
+                            ){
+                                if(subject == undefined){console.warn('checkbox_ : No subject provided');}
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //subject
+                                        object.append(subject);
+                            
+                                //state
+                                    var state = {
+                                        checked:false,
+                                        glowing:false,
+                                    };
+                            
+                                //methods
+                                    object.get = function(){ return state.checked; };
+                                    object.set = function(value, update=true){
+                                        state.checked = value;
+                                        
+                                        object.updateGraphics(state);
+                                
+                                        if(update&&this.onchange){ this.onchange(value); }
+                                    };
+                                    object.light = function(state){
+                                        if(state == undefined){ return state.glowing; }
+                            
+                                        state.glowing = state;
+                            
+                                        object.updateGraphics(state);
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                                //interactivity
+                                    subject.cover.onclick = function(event){
+                                        if(!interactable){return;}
+                                        object.set(!object.get());
+                                    };
+                                    subject.cover.onmousedown = function(){};
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                            
+                                return object;
+                            };
+                            this.checkbox_polygon = function(
+                                name='checkbox_polygon',
+                                x, y, 
+                                outterPoints=[{x:0,y:4},{x:4,y:0}, {x:16,y:0},{x:20,y:4}, {x:20,y:16},{x:16,y:20},{x:4,y:20},{x:0,y:16}],
+                                innerPoints=[ {x:2,y:4},{x:4,y:2}, {x:16,y:2},{x:18,y:4}, {x:18,y:16},{x:16,y:18}, {x:4,y:18},{x:2,y:16}],
+                                angle=0, interactable=true,
+                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('polygon','backing',{pointsAsXYArray:outterPoints, colour:backingStyle});
+                                        subject.append(backing);
+                                    //check
+                                        var checkpoly = interfacePart.builder('polygon','checkpoly',{pointsAsXYArray:innerPoints, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(checkpoly);
+                                    //cover
+                                        subject.cover = interfacePart.builder('polygon','cover',{pointsAsXYArray:outterPoints, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.colour = backingGlowStyle;
+                                            checkpoly.colour = state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0};
+                                        }else{
+                                            backing.colour = backingStyle;
+                                            checkpoly.colour = state.checked ? checkStyle : {r:0,g:0,b:0,a:0};
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_circle = function(
+                                name='checkbox_circle',
+                                x, y, radius=10, angle=0, interactable=true,
+                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup');
+                                    //backing
+                                        var backing = interfacePart.builder('circle','backing',{radius:radius, colour:backingStyle});
+                                        subject.append(backing);
+                                    //check
+                                        var checkcirc = interfacePart.builder('circle','checkcirc',{radius:radius*0.8, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(checkcirc);
+                                    //cover
+                                        subject.cover = interfacePart.builder('circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.colour = backingGlowStyle;
+                                            checkcirc.colour = state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0};
+                                        }else{
+                                            backing.colour = backingStyle;
+                                            checkcirc.colour = state.checked ? checkStyle : {r:0,g:0,b:0,a:0};
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.dial_continuous_image = function(
+                                name='dial_continuous_image',
+                                x, y, radius=15, angle=0, interactable=true,
+                                value=0, resetValue=-1,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleURL, slotURL, needleURL,
+                                
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //default to non-image version if image links are missing
+                                    if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
+                                        return this.dial_continuous(
+                                            name, x, y, radius, angle, interactable, value, resetValue, startAngle, maxAngle,
+                                            undefined, undefined, undefined,
+                                            onchange, onrelease
+                                        );
+                                    }
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //slot
+                                        var slot = interfacePart.builder('image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
+                                        object.append(slot);
+                            
+                                    //handle
+                                        var handle = interfacePart.builder('image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
+                                        object.append(handle);
+                            
+                                    //needle group
+                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
+                                        object.append(needleGroup);
+                            
+                                        //needle
+                                            var needleWidth = radius/5;
+                                            var needleLength = radius;
+                                            var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
+                                                needleGroup.append(needle);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        value = a;
+                                        needleGroup.angle(startAngle + maxAngle*value);
+                                        handle.angle(startAngle + maxAngle*value);
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var turningSpeed = radius*4;
+                                    
+                                    handle.ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue); 
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                                        
+                                        var move = event.deltaY/100;
+                                        var globalScale = _canvas_.core.viewport.scale();
+                                        set( value - move/(10*globalScale) );
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var value = initialValue;
+                                                var numerator = event.y - initialY;
+                                                var divider = _canvas_.core.viewport.scale();
+                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.dial_continuous = function(
+                                name='dial_continuous',
+                                x, y, radius=15, angle=0, interactable=true,
+                                value=0, resetValue=-1,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleStyle = {r:200/255, g:200/255, b:200/255, a:1},
+                                slotStyle =   {r:50/255,  g:50/255,  b:50/255,  a:1},
+                                needleStyle = {r:250/255, g:100/255, b:100/255, a:1},
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //slot
+                                        var slot = interfacePart.builder('circle','slot',{radius:radius*1.1, colour:slotStyle});
+                                        object.append(slot);
+                            
+                                    //handle
+                                        var handle = interfacePart.builder('circle','handle',{radius:radius, colour:handleStyle});
+                                        object.append(handle);
+                            
+                                    //needle group
+                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
+                                        object.append(needleGroup);
+                            
+                                        //needle
+                                            var needleWidth = radius/5;
+                                            var needleLength = radius;
+                                            var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, colour:needleStyle});
+                                            needleGroup.append(needle);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        value = a;
+                                        needleGroup.angle(startAngle + maxAngle*value);
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var turningSpeed = radius*4;
+                                    
+                                    handle.ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue); 
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                                        
+                                        var move = event.deltaY/100;
+                                        var globalScale = _canvas_.core.viewport.scale();
+                                        set( value - move/(10*globalScale) );
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var value = initialValue;
+                                                var numerator = event.y - initialY;
+                                                var divider = _canvas_.core.viewport.scale();
+                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.dial_discrete_image = function(
+                                name='dial_discrete_image',
+                                x, y, radius=15, angle=0, interactable=true,
+                                value=0, resetValue=0, optionCount=5,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleURL, slotURL, needleURL,
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //dial
+                                        var dial = interfacePart.builder('dial_continuous_image',name,{
+                                            x:0, y:0, radius:radius, angle:0, interactable:interactable,
+                                            startAngle:startAngle, maxAngle:maxAngle,
+                                            handleURL:handleURL, slotURL:slotURL, needleURL:needleURL,
+                                        });
+                                        //clean out built-in interaction
+                                        dial.getChildByName('handle').ondblclick = undefined;
+                                        dial.getChildByName('handle').onwheel = undefined;
+                                        dial.getChildByName('handle').onmousedown = undefined;
+                            
+                                        object.append(dial);
+                                    
+                            
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){ 
+                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        a = Math.round(a);
+                                        value = a;
+                                        dial.set( value/(optionCount-1) );
+                                    };
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var acc = 0;
+                            
+                                    dial.getChildByName('handle').ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue);
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    dial.getChildByName('handle').onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                            
+                                        acc += move;
+                                        if( Math.abs(acc) >= 1 ){
+                                            set( value -1*Math.sign(acc) );
+                                            acc = 0;
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        }
+                                    };
+                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var diff = Math.round( (event.y - initialY)/25 );
+                                                set( initialValue - diff );
+                                                if(object.onchange != undefined){object.onchange(value);}
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.dial_discrete = function(
+                                name='dial_discrete',
+                                x, y, radius=15, angle=0, interactable=true,
+                                value=0, resetValue=0, optionCount=5,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleStyle = {r:200/255, g:200/255, b:200/255, a:1},
+                                slotStyle =   {r:50/255,  g:50/255,  b:50/255,  a:1},
+                                needleStyle = {r:250/255, g:100/255, b:100/255, a:1},
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //dial
+                                        var dial = interfacePart.builder('dial_continuous',name,{
+                                            x:0, y:0, radius:radius, angle:0, interactable:interactable,
+                                            startAngle:startAngle, maxAngle:maxAngle,
+                                            style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
+                                        });
+                                        //clean out built-in interaction
+                                        dial.getChildByName('handle').ondblclick = undefined;
+                                        dial.getChildByName('handle').onwheel = undefined;
+                                        dial.getChildByName('handle').onmousedown = undefined;
+                            
+                                        object.append(dial);
+                                    
+                            
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){ 
+                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        a = Math.round(a);
+                                        value = a;
+                                        dial.set( value/(optionCount-1) );
+                                    };
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var acc = 0;
+                            
+                                    dial.getChildByName('handle').ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue);
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    dial.getChildByName('handle').onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                            
+                                        acc += move;
+                                        if( Math.abs(acc) >= 1 ){
+                                            set( value -1*Math.sign(acc) );
+                                            acc = 0;
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        }
+                                    };
+                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var diff = Math.round( (event.y - initialY)/25 );
+                                                set( initialValue - diff );
+                                                if(object.onchange != undefined){object.onchange(value);}
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.button_circle = function(
+                                name='button_circle',
+                                x, y, radius=15,  angle=0, interactable=true,
+                                text_centre='',
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+                            
+                                backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
+                                backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__off__lineThickness=                     0,
+                                backing__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__up__lineThickness=                      0,
+                                backing__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__press__lineThickness=                   0,
+                                backing__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select__lineThickness=                  0.75,
+                                backing__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select_press__lineThickness=            0.75,
+                                backing__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow__lineThickness=                    0,
+                                backing__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow_press__lineThickness=              0,
+                                backing__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select__lineThickness=             0.75,
+                                backing__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select_press__lineThickness=       0.75,
+                                backing__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover__lineThickness=                   0,
+                                backing__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_press__lineThickness=             0,
+                                backing__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select__lineThickness=            0.75,
+                                backing__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select_press__lineThickness=      0.75,
+                                backing__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow__lineThickness=              0,
+                                backing__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow_press__lineThickness=        0,
+                                backing__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select__lineThickness=       0.75,
+                                backing__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select_press__lineThickness= 0.75,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('circle','backing',{radius:radius, colour:backing__off__colour});
+                                        subject.append(backing);
+                                    //outline
+                                        var outline = interfacePart.builder('path','outline',{ points:[0,radius, radius,0, 0,-radius, -radius,0, 0,radius], thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
+                                        subject.append(outline);
+                                    // //text
+                                    //     var text_centre = interfacePart.builder('text','centre', {
+                                    //         text:text_centre, 
+                                    //         style:{
+                                    //             font:text_font,
+                                    //             testBaseline:text_textBaseline,
+                                    //             fill:text_fill,
+                                    //             stroke:text_stroke,
+                                    //             lineWidth:text_lineWidth,
+                                    //             textAlign:'center',
+                                    //             textBaseline:'middle',
+                                    //         }
+                                    //     });
+                                    //     subject.append(text_centre);
+                                    //cover
+                                        subject.cover = interfacePart.builder('circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.colour = backing__off__colour;
+                                            outline.colour = backing__off__lineColour;
+                                            outline.thickness( backing__off__lineThickness );
+                                            return;
+                                        }
+                            
+                                        var styles = [
+                                            { colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
+                                            { colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
+                                            { colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
+                                            { colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
+                                            { colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
+                                            { colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
+                                            { colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
+                                            { colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
+                                            { colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
+                                            { colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
+                                            { colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
+                                            { colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
+                                            { colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
+                                            { colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
+                                            { colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
+                                            { colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
+                                        ];
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+                                        backing.colour = styles[i].colour;
+                                        outline.colour = styles[i].lineColour;
+                                        outline.thickness( styles[i].lineThickness );
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.button_rectangle = function(
+                                name='button_rectangle',
+                                x, y, width=30, height=20, angle=0, interactable=true,
+                                text_centre='', text_left='', text_right='',
+                                textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
+                                
+                                active=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+                            
+                                backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
+                                backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__off__lineThickness=                     0,
+                                backing__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__up__lineThickness=                      0,
+                                backing__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__press__lineThickness=                   0,
+                                backing__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select__lineThickness=                  0.75,
+                                backing__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select_press__lineThickness=            0.75,
+                                backing__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow__lineThickness=                    0,
+                                backing__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow_press__lineThickness=              0,
+                                backing__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select__lineThickness=             0.75,
+                                backing__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select_press__lineThickness=       0.75,
+                                backing__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover__lineThickness=                   0,
+                                backing__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_press__lineThickness=             0,
+                                backing__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select__lineThickness=            0.75,
+                                backing__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select_press__lineThickness=      0.75,
+                                backing__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow__lineThickness=              0,
+                                backing__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow_press__lineThickness=        0,
+                                backing__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select__lineThickness=       0.75,
+                                backing__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select_press__lineThickness= 0.75,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup');
+                                    //backing
+                                        var backing = interfacePart.builder('rectangleWithOutline','backing',{width:width, height:height, colour:backing__off__colour, thickness:5 });
+                                        subject.append(backing);
+                                    // //text
+                                    //     var text_centre = interfacePart.builder('text','centre', {
+                                    //         x:width/2, 
+                                    //         y:height*textVerticalOffsetMux, 
+                                    //         text:text_centre, 
+                                    //         style:{
+                                    //             font:text_font,
+                                    //             testBaseline:text_textBaseline,
+                                    //             fill:text_fill,
+                                    //             stroke:text_stroke,
+                                    //             lineWidth:text_lineWidth,
+                                    //             textAlign:'center',
+                                    //             textBaseline:'middle',
+                                    //         }
+                                    //     });
+                                    //     subject.append(text_centre);
+                                    //     var text_left = interfacePart.builder('text','left',     {
+                                    //         x:width*textHorizontalOffsetMux, 
+                                    //         y:height*textVerticalOffsetMux, 
+                                    //         text:text_left, 
+                                    //         style:{
+                                    //             font:text_font,
+                                    //             testBaseline:text_textBaseline,
+                                    //             fill:text_fill,
+                                    //             stroke:text_stroke,
+                                    //             lineWidth:text_lineWidth,
+                                    //             textAlign:'left',
+                                    //             textBaseline:'middle',
+                                    //         }
+                                    //     });
+                                    //     subject.append(text_left);
+                                    //     var text_right = interfacePart.builder('text','right',   {
+                                    //         x:width-(width*textHorizontalOffsetMux), 
+                                    //         y:height*textVerticalOffsetMux, 
+                                    //         text:text_right, 
+                                    //         style:{
+                                    //             font:text_font,
+                                    //             testBaseline:text_textBaseline,
+                                    //             fill:text_fill,
+                                    //             stroke:text_stroke,
+                                    //             lineWidth:text_lineWidth,
+                                    //             textAlign:'right',
+                                    //             textBaseline:'middle',
+                                    //         }
+                                    //     });
+                                    //     subject.append(text_right);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0} });
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.colour = backing__off__colour;
+                                            backing.lineColour = backing__off__lineColour;
+                                            backing.thickness( backing__off__lineThickness );
+                                            return;
+                                        }
+                            
+                                        var styles = [
+                                            { colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
+                                            { colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
+                                            { colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
+                                            { colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
+                                            { colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
+                                            { colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
+                                            { colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
+                                            { colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
+                                            { colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
+                                            { colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
+                                            { colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
+                                            { colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
+                                            { colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
+                                            { colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
+                                            { colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
+                                            { colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
+                                        ];
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+                                        backing.colour = styles[i].colour;
+                                        backing.lineColour = styles[i].lineColour;
+                                        backing.thickness( styles[i].lineThickness );
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.button_ = function(
+                                name='',
+                                x, y, angle=0, interactable=true,
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            
+                                subject
+                            ){
+                                if(subject == undefined){console.warn('button_ : No subject provided');}
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //subject
+                                        object.append(subject);
+                            
+                                //state
+                                    object.state = {
+                                        hovering:false,
+                                        glowing:false,
+                                        selected:false,
+                                        pressed:false,
+                                    };
+                            
+                                //control
+                                    object.press = function(event){
+                                        if(!active){return;}
+                            
+                                        if( pressable ){
+                                            if(this.state.pressed){return;}
+                                            this.state.pressed = true;
+                                            if(this.onpress){this.onpress(this, event);}
+                                        }
+                                        
+                                        this.select( !this.select(), event );
+                            
+                                        object.activateGraphicalState(object.state);
+                                    };
+                                    object.release = function(event){
+                                        if(!active || !pressable){return;}
+                            
+                                        if(!this.state.pressed){return;}
+                                        this.state.pressed = false;
+                                        object.activateGraphicalState(object.state);
+                                        if(this.onrelease){this.onrelease(this, event);}
+                                    };
+                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; object.activateGraphicalState(object.state); };
+                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  object.activateGraphicalState(object.state); };
+                                    object.select = function(bool,event,callback=true){ 
+                                        if(!active){return;}
+                            
+                                        if(bool == undefined){return this.state.selected;}
+                                        if(!selectable){return;}
+                                        if(this.state.selected == bool){return;}
+                                        this.state.selected = bool; object.activateGraphicalState(object.state);
+                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                                    object.forceMouseLeave = function(){
+                                        object.state.hovering = false; 
+                                        object.release('forced'); 
+                                        object.activateGraphicalState(object.state); 
+                                        if(object.onleave){object.onleave('forced');}
+                                    };
+                            
+                            
+                            
+                            
+                                //interactivity
+                                    subject.cover.onmouseenter = function(x,y,event){
+                                        object.state.hovering = true;  
+                                        object.activateGraphicalState(object.state);
+                                        if(object.onenter){object.onenter(event);}
+                                        if(event.buttons == 1){subject.cover.onmousedown(event);} 
+                                    };
+                                    subject.cover.onmouseleave = function(x,y,event){ 
+                                        object.state.hovering = false; 
+                                        object.release(event); 
+                                        object.activateGraphicalState(object.state); 
+                                        if(object.onleave){object.onleave(event);}
+                                    };
+                                    subject.cover.onmouseup = function(x,y,event){   if(!interactable){return;} object.release(event); };
+                                    subject.cover.onmousedown = function(x,y,event){ if(!interactable){return;} object.press(event); };
+                                    subject.cover.ondblclick = function(x,y,event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
+                                    
+                            
+                            
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselect = onselect;
+                                    object.ondeselect = ondeselect;
+                            
+                                return object;
+                            };
+                            this.button_polygon = function(
+                                name='button_polygon',
+                                x, y, points=[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}], angle=0, interactable=true,
+                                text_centre='',
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+                            
+                                backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
+                                backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__off__lineThickness=                     0,
+                                backing__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__up__lineThickness=                      0,
+                                backing__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__press__lineThickness=                   0,
+                                backing__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select__lineThickness=                  0.75,
+                                backing__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select_press__lineThickness=            0.75,
+                                backing__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow__lineThickness=                    0,
+                                backing__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow_press__lineThickness=              0,
+                                backing__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select__lineThickness=             0.75,
+                                backing__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select_press__lineThickness=       0.75,
+                                backing__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover__lineThickness=                   0,
+                                backing__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_press__lineThickness=             0,
+                                backing__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select__lineThickness=            0.75,
+                                backing__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select_press__lineThickness=      0.75,
+                                backing__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow__lineThickness=              0,
+                                backing__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow_press__lineThickness=        0,
+                                backing__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select__lineThickness=       0.75,
+                                backing__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select_press__lineThickness= 0.75,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup');
+                                    //backing
+                                        var backing = interfacePart.builder('polygon','backing',{pointsAsXYArray:points, colour:backing__off__colour});
+                                        subject.append(backing);
+                                    //outline
+                                        var outline = interfacePart.builder('path','outline',{ pointsAsXYArray:points.concat([points[0],points[1]]), thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
+                                        subject.append(outline);
+                                    // //text
+                                    //      var avgPoint = workspace.library.math.averagePoint(points);
+                                    //      var text_centre = interfacePart.builder('text','centre', {
+                                    //         x:avgPoint.x, y:avgPoint.y,
+                                    //         text:text_centre, 
+                                    //         style:{
+                                    //             font:text_font,
+                                    //             testBaseline:text_textBaseline,
+                                    //             fill:text_fill,
+                                    //             stroke:text_stroke,
+                                    //             lineWidth:text_lineWidth,
+                                    //             textAlign:'center',
+                                    //             textBaseline:'middle',
+                                    //         }
+                                    //     });
+                                    //     subject.append(text_centre);
+                                    //cover
+                                        subject.cover = interfacePart.builder('polygon','cover',{pointsAsXYArray:points, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.colour = backing__off__colour;
+                                            outline.colour = backing__off__lineColour;
+                                            outline.thickness( backing__off__lineThickness );
+                                            return;
+                                        }
+                            
+                                        var styles = [
+                                            { colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
+                                            { colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
+                                            { colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
+                                            { colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
+                                            { colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
+                                            { colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
+                                            { colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
+                                            { colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
+                                            { colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
+                                            { colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
+                                            { colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
+                                            { colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
+                                            { colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
+                                            { colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
+                                            { colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
+                                            { colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
+                                        ];
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+                                        backing.colour = styles[i].colour;
+                                        outline.colour = styles[i].lineColour;
+                                        outline.thickness( styles[i].lineThickness );
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.button_image = function(
+                                name='button_image',
+                                x, y, width=30, height=20, angle=0, interactable=true,
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                backingURL__off,
+                                backingURL__up,
+                                backingURL__press,
+                                backingURL__select,
+                                backingURL__select_press,
+                                backingURL__glow,
+                                backingURL__glow_press,
+                                backingURL__glow_select,
+                                backingURL__glow_select_press,
+                                backingURL__hover,
+                                backingURL__hover_press,
+                                backingURL__hover_select,
+                                backingURL__hover_select_press,
+                                backingURL__hover_glow,
+                                backingURL__hover_glow_press,
+                                backingURL__hover_glow_select,
+                                backingURL__hover_glow_select_press,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //default to non-image version if image links are missing
+                                    if(
+                                        backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
+                                        backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 
+                                        backingURL__glow_press == undefined ||         backingURL__glow_select == undefined ||          backingURL__glow_select_press == undefined || 
+                                        backingURL__hover == undefined ||              backingURL__hover_press == undefined ||          backingURL__hover_select == undefined ||
+                                        backingURL__hover_select_press == undefined || backingURL__hover_glow == undefined ||           backingURL__hover_glow_press == undefined || 
+                                        backingURL__hover_glow_select == undefined ||  backingURL__hover_glow_select_press == undefined
+                                    ){
+                                        return this.button_rectangle(
+                                            name, x, y, width, height, angle, interactable,
+                                            undefined, undefined, undefined, undefined, undefined,
+                                            active, hoverable, selectable, pressable,
+                                            undefined, undefined, undefined, undefined, undefined,
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined,
+                                            onenter, onleave, onpress, ondblpress, onrelease, onselect, ondeselect
+                                        );
+                                    }
+                            
+                            
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL__off});
+                                        subject.append(backing);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.imageURL(backingURL__off);
+                                            return;
+                                        }
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        backing.imageURL([
+                                            backingURL__up,                     
+                                            backingURL__press,                  
+                                            backingURL__select,                 
+                                            backingURL__select_press,           
+                                            backingURL__glow,                   
+                                            backingURL__glow_press,             
+                                            backingURL__glow_select,            
+                                            backingURL__glow_select_press,      
+                                            backingURL__hover,                  
+                                            backingURL__hover_press,            
+                                            backingURL__hover_select,           
+                                            backingURL__hover_select_press,     
+                                            backingURL__hover_glow,             
+                                            backingURL__hover_glow_press,       
+                                            backingURL__hover_glow_select,      
+                                            backingURL__hover_glow_select_press,
+                                        ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]);
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.list_image = function(
+                                name='list_image', 
+                                x, y, width=50, height=100, angle=0, interactable=true,
+                                list=[],
+                            
+                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                                breakHeightMux=0.0025, breakWidthMux=0.9, 
+                                spacingHeightMux=0.005,
+                                backingURL, breakURL,
+                            
+                                itemURL__off,
+                                itemURL__up,
+                                itemURL__press,
+                                itemURL__select,
+                                itemURL__select_press,
+                                itemURL__glow,
+                                itemURL__glow_press,
+                                itemURL__glow_select,
+                                itemURL__glow_select_press,
+                                itemURL__hover,
+                                itemURL__hover_press,
+                                itemURL__hover_select,
+                                itemURL__hover_select_press,
+                                itemURL__hover_glow,
+                                itemURL__hover_glow_press,
+                                itemURL__hover_glow_select,
+                                itemURL__hover_glow_select_press,
+                            
+                                onenter=function(){},
+                                onleave=function(){},
+                                onpress=function(){},
+                                ondblpress=function(){},
+                                onrelease=function(){},
+                                onselection=function(){},
+                                onpositionchange=function(){},
+                            ){
+                                //state
+                                    var itemArray = [];
+                                    var selectedItems = [];
+                                    var lastNonShiftClicked = 0;
+                                    var position = 0;
+                                    var calculatedListHeight;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                                        object.append(backing);
+                                    //item collection
+                                        var itemCollection = interfacePart.builder('group','itemCollection');
+                                        object.append(itemCollection);
+                                        function refreshList(){
+                                            //clean out all values
+                                                itemArray = [];
+                                                itemCollection.clear();
+                                                selectedItems = [];
+                                                position = 0;
+                                                lastNonShiftClicked = 0;
+                            
+                                            //populate list
+                                                var accumulativeHeight = 0;
+                                                for(var a = 0; a < list.length; a++){
+                                                    if( list[a] == 'space' ){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:0, y:accumulativeHeight,
+                                                            width:width, height:height*spacingHeightMux,
+                                                            colour:{r:0,g:0,b:0,a:0}
+                                                        });
+                            
+                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else if( list[a] == 'break'){
+                                                        var temp = interfacePart.builder('image',''+a,{
+                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*breakWidthMux, height:height*breakHeightMux,
+                                                            url:breakURL
+                                                        });
+                            
+                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else{
+                                                        var temp = interfacePart.builder( 'button_image', ''+a, {
+                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
+                            
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                                            backingURL__off:                     itemURL__off,
+                                                            backingURL__up:                      itemURL__up,
+                                                            backingURL__press:                   itemURL__press,
+                                                            backingURL__select:                  itemURL__select,
+                                                            backingURL__select_press:            itemURL__select_press,
+                                                            backingURL__glow:                    itemURL__glow,
+                                                            backingURL__glow_press:              itemURL__glow_press,
+                                                            backingURL__glow_select:             itemURL__glow_select,
+                                                            backingURL__glow_select_press:       itemURL__glow_select_press,
+                                                            backingURL__hover:                   itemURL__hover,
+                                                            backingURL__hover_press:             itemURL__hover_press,
+                                                            backingURL__hover_select:            itemURL__hover_select,
+                                                            backingURL__hover_select_press:      itemURL__hover_select_press,
+                                                            backingURL__hover_glow:              itemURL__hover_glow,
+                                                            backingURL__hover_glow_press:        itemURL__hover_glow_press,
+                                                            backingURL__hover_glow_select:       itemURL__hover_glow_select,
+                                                            backingURL__hover_glow_select_press: itemURL__hover_glow_select_press,
+                                                        });
+                            
+                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease(a);
+                                                            }
+                                                        }(a);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                            
+                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                        itemArray.push( temp );
+                                                    }
+                                                }
+                            
+                                            return accumulativeHeight - height*itemSpacingMux;
+                                        }
+                                        calculatedListHeight = refreshList();
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.append(cover);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.stencil(stencil);
+                                        object.clipActive(true);
+                            
+                            
+                                //interaction
+                                    cover.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var move = event.deltaY/100;
+                                        object.position( object.position() + move/10 );
+                                        for(var a = 0; a < itemArray.length; a++){
+                                            itemArray[a].forceMouseLeave();
+                                        }
+                                    };
+                                
+                                //controls
+                                    object.position = function(a,update=true){
+                                        if(a == undefined){return position;}
+                                        a = a < 0 ? 0 : a;
+                                        a = a > 1 ? 1 : a;
+                                        position = a;
+                            
+                                        if( calculatedListHeight < height ){return;}
+                                        var movementSpace = calculatedListHeight - height;
+                                        itemCollection.y( -a*movementSpace );
+                                        
+                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
+                                    };
+                                    object.select = function(a,state,event,update=true){
+                                        if(!selectable){return;}
+                            
+                                        //where multi selection is not allowed
+                                            if(!multiSelect){
+                                                //where we want to select an item, which is not already selected
+                                                    if(state && !selectedItems.includes(a) ){
+                                                        //deselect all other items
+                                                            while( selectedItems.length > 0 ){
+                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                selectedItems.shift();
+                                                            }
+                            
+                                                        //select current item
+                                                            selectedItems.push(a);
+                            
+                                                //where we want to deselect an item that is selected
+                                                    }else if(!state && selectedItems.includes(a)){
+                                                        selectedItems = [];
+                                                    }
+                            
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
+                            
+                                        //where multi selection is allowed
+                                            }else{
+                                                //wherer range-selection is to be done
+                                                    if( event != undefined && event.shiftKey ){
+                                                        //gather top and bottom item
+                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                            var min = Math.min(lastNonShiftClicked, a);
+                                                            var max = Math.max(lastNonShiftClicked, a);
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( itemArray[b].name == ''+min ){min = b;}
+                                                                if( itemArray[b].name == ''+max ){max = b;}
+                                                            }
+                            
+                                                        //deselect all outside the range
+                                                            selectedItems = [];
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( b > max || b < min ){
+                                                                    if( itemArray[b].select() ){
+                                                                        itemArray[b].select(false,undefined,false);
+                                                                    }
+                                                                }
+                                                            }
+                            
+                                                        //select those within the range (that aren't already selected)
+                                                            for(var b = min; b <= max; b++){
+                                                                if( !itemArray[b].select() ){
+                                                                    itemArray[b].select(true,undefined,false);
+                                                                    selectedItems.push(b);
+                                                                }
+                                                            }
+                                                //where range-selection is not to be done
+                                                    }else{
+                                                        if(update){ itemArray[a].select(state); }
+                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                                        lastNonShiftClicked = a;
+                                                    }
+                                            }
+                            
+                                        object.onselection(selectedItems);
+                                    };
+                                    object.add = function(item){
+                                        list.push(item);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.remove = function(a){
+                                        list.splice(a,1);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                        refreshList();
+                                    };
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselection = onselection;
+                                    object.onpositionchange = onpositionchange;
+                                    
+                                return object;
+                            };
+                            this.list = function(
+                                name='list', 
+                                x, y, width=50, height=100, angle=0, interactable=true,
+                                list=[],
+                            
+                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                                breakHeightMux=0.0025, breakWidthMux=0.9, 
+                                spacingHeightMux=0.005,
+                                backing_style={r:230/255,g:230/255,b:230/255,a:1}, break_style={r:195/255,g:195/255,b:195/255,a:1},
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+                            
+                                item__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
+                                item__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
+                                item__off__lineThickness=                     0,
+                                item__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
+                                item__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+                                item__up__lineThickness=                      0,
+                                item__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
+                                item__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                item__press__lineThickness=                   0,
+                                item__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
+                                item__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
+                                item__select__lineThickness=                  0.75,
+                                item__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
+                                item__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                item__select_press__lineThickness=            0.75,
+                                item__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
+                                item__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
+                                item__glow__lineThickness=                    0,
+                                item__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
+                                item__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                item__glow_press__lineThickness=              0,
+                                item__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
+                                item__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
+                                item__glow_select__lineThickness=             0.75,
+                                item__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
+                                item__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                item__glow_select_press__lineThickness=       0.75,
+                                item__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
+                                item__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                item__hover__lineThickness=                   0,
+                                item__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
+                                item__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
+                                item__hover_press__lineThickness=             0,
+                                item__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
+                                item__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                item__hover_select__lineThickness=            0.75,
+                                item__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
+                                item__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
+                                item__hover_select_press__lineThickness=      0.75,
+                                item__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
+                                item__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                item__hover_glow__lineThickness=              0,
+                                item__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
+                                item__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
+                                item__hover_glow_press__lineThickness=        0,
+                                item__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
+                                item__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                item__hover_glow_select__lineThickness=       0.75,
+                                item__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
+                                item__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
+                                item__hover_glow_select_press__lineThickness= 0.75,
+                            
+                                onenter=function(){},
+                                onleave=function(){},
+                                onpress=function(){},
+                                ondblpress=function(){},
+                                onrelease=function(){},
+                                onselection=function(){},
+                                onpositionchange=function(){},
+                            ){
+                                //state
+                                    var itemArray = [];
+                                    var selectedItems = [];
+                                    var lastNonShiftClicked = 0;
+                                    var position = 0;
+                                    var calculatedListHeight;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backing_style});
+                                        object.append(backing);
+                                    //item collection
+                                        var itemCollection = interfacePart.builder('group','itemCollection');
+                                        object.append(itemCollection);
+                                        function refreshList(){
+                                            //clean out all values
+                                                itemArray = [];
+                                                itemCollection.clear();
+                                                selectedItems = [];
+                                                position = 0;
+                                                lastNonShiftClicked = 0;
+                            
+                                            //populate list
+                                                var accumulativeHeight = 0;
+                                                for(var a = 0; a < list.length; a++){
+                                                    if( list[a] == 'space' ){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:0, y:accumulativeHeight,
+                                                            width:width, height:height*spacingHeightMux,
+                                                            colour:{r:1,g:0,b:0,a:0},
+                                                        });
+                            
+                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else if( list[a] == 'break'){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*breakWidthMux, height:height*breakHeightMux,
+                                                            colour:break_style
+                                                        });
+                            
+                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else{
+                                                        var temp = interfacePart.builder( 'button_rectangle', ''+a, {
+                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
+                                                            text_left: list[a].text_left,
+                                                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                                                            text_right: list[a].text_right,
+                            
+                                                            textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                                            style:{
+                                                                text_font:text_font,
+                                                                text_textBaseline:text_textBaseline,
+                                                                text_colour:text_colour,
+                            
+                                                                background__off__colour:                            item__off__colour,
+                                                                background__off__lineColour:                        item__off__lineColour,
+                                                                background__off__lineThickness:                     item__off__lineThickness,
+                                                                background__up__colour:                             item__up__colour,
+                                                                background__up__lineColour:                         item__up__lineColour,
+                                                                background__up__lineThickness:                      item__up__lineThickness,
+                                                                background__press__colour:                          item__press__colour,
+                                                                background__press__lineColour:                      item__press__lineColour,
+                                                                background__press__lineThickness:                   item__press__lineThickness,
+                                                                background__select__colour:                         item__select__colour,
+                                                                background__select__lineColour:                     item__select__lineColour,
+                                                                background__select__lineThickness:                  item__select__lineThickness,
+                                                                background__select_press__colour:                   item__select_press__colour,
+                                                                background__select_press__lineColour:               item__select_press__lineColour,
+                                                                background__select_press__lineThickness:            item__select_press__lineThickness,
+                                                                background__glow__colour:                           item__glow__colour,
+                                                                background__glow__lineColour:                       item__glow__lineColour,
+                                                                background__glow__lineThickness:                    item__glow__lineThickness,
+                                                                background__glow_press__colour:                     item__glow_press__colour,
+                                                                background__glow_press__lineColour:                 item__glow_press__lineColour,
+                                                                background__glow_press__lineThickness:              item__glow_press__lineThickness,
+                                                                background__glow_select__colour:                    item__glow_select__colour,
+                                                                background__glow_select__lineColour:                item__glow_select__lineColour,
+                                                                background__glow_select__lineThickness:             item__glow_select__lineThickness,
+                                                                background__glow_select_press__colour:              item__glow_select_press__colour,
+                                                                background__glow_select_press__lineColour:          item__glow_select_press__lineColour,
+                                                                background__glow_select_press__lineThickness:       item__glow_select_press__lineThickness,
+                                                                background__hover__colour:                          item__hover__colour,
+                                                                background__hover__lineColour:                      item__hover__lineColour,
+                                                                background__hover__lineThickness:                   item__hover__lineThickness,
+                                                                background__hover_press__colour:                    item__hover_press__colour,
+                                                                background__hover_press__lineColour:                item__hover_press__lineColour,
+                                                                background__hover_press__lineThickness:             item__hover_press__lineThickness,
+                                                                background__hover_select__colour:                   item__hover_select__colour,
+                                                                background__hover_select__lineColour:               item__hover_select__lineColour,
+                                                                background__hover_select__lineThickness:            item__hover_select__lineThickness,
+                                                                background__hover_select_press__colour:             item__hover_select_press__colour,
+                                                                background__hover_select_press__lineColour:         item__hover_select_press__lineColour,
+                                                                background__hover_select_press__lineThickness:      item__hover_select_press__lineThickness,
+                                                                background__hover_glow__colour:                     item__hover_glow__colour,
+                                                                background__hover_glow__lineColour:                 item__hover_glow__lineColour,
+                                                                background__hover_glow__lineThickness:              item__hover_glow__lineThickness,
+                                                                background__hover_glow_press__colour:               item__hover_glow_press__colour,
+                                                                background__hover_glow_press__lineColour:           item__hover_glow_press__lineColour,
+                                                                background__hover_glow_press__lineThickness:        item__hover_glow_press__lineThickness,
+                                                                background__hover_glow_select__colour:              item__hover_glow_select__colour,
+                                                                background__hover_glow_select__lineColour:          item__hover_glow_select__lineColour,
+                                                                background__hover_glow_select__lineThickness:       item__hover_glow_select__lineThickness,
+                                                                background__hover_glow_select_press__colour:        item__hover_glow_select_press__colour,
+                                                                background__hover_glow_select_press__lineColour:    item__hover_glow_select_press__lineColour,
+                                                                background__hover_glow_select_press__lineThickness: item__hover_glow_select_press__lineThickness,
+                                                            }
+                                                        });
+                            
+                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease(a);
+                                                            }
+                                                        }(a);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                            
+                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                        itemArray.push( temp );
+                                                    }
+                                                }
+                            
+                                            return accumulativeHeight - height*itemSpacingMux;
+                                        }
+                                        calculatedListHeight = refreshList();
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.append(cover);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
+                                        object.stencil(stencil);
+                                        object.clipActive(true);
+                            
+                            
+                                //interaction
+                                    cover.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var move = event.deltaY/100;
+                                        object.position( object.position() + move/10 );
+                                        for(var a = 0; a < itemArray.length; a++){
+                                            itemArray[a].forceMouseLeave();
+                                        }
+                                    };
+                                
+                                //controls
+                                    object.position = function(a,update=true){
+                                        if(a == undefined){return position;}
+                                        a = a < 0 ? 0 : a;
+                                        a = a > 1 ? 1 : a;
+                                        position = a;
+                            
+                                        if( calculatedListHeight < height ){return;}
+                                        var movementSpace = calculatedListHeight - height;
+                                        itemCollection.y( -a*movementSpace );
+                                        
+                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
+                                    };
+                                    object.select = function(a,state,event,update=true){
+                                        if(!selectable){return;}
+                            
+                                        //where multi selection is not allowed
+                                            if(!multiSelect){
+                                                //where we want to select an item, which is not already selected
+                                                    if(state && !selectedItems.includes(a) ){
+                                                        //deselect all other items
+                                                            while( selectedItems.length > 0 ){
+                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                selectedItems.shift();
+                                                            }
+                            
+                                                        //select current item
+                                                            selectedItems.push(a);
+                            
+                                                //where we want to deselect an item that is selected
+                                                    }else if(!state && selectedItems.includes(a)){
+                                                        selectedItems = [];
+                                                    }
+                            
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
+                            
+                                        //where multi selection is allowed
+                                            }else{
+                                                //wherer range-selection is to be done
+                                                    if( event != undefined && event.shiftKey ){
+                                                        //gather top and bottom item
+                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                            var min = Math.min(lastNonShiftClicked, a);
+                                                            var max = Math.max(lastNonShiftClicked, a);
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( itemArray[b].name == ''+min ){min = b;}
+                                                                if( itemArray[b].name == ''+max ){max = b;}
+                                                            }
+                            
+                                                        //deselect all outside the range
+                                                            selectedItems = [];
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( b > max || b < min ){
+                                                                    if( itemArray[b].select() ){
+                                                                        itemArray[b].select(false,undefined,false);
+                                                                    }
+                                                                }
+                                                            }
+                            
+                                                        //select those within the range (that aren't already selected)
+                                                            for(var b = min; b <= max; b++){
+                                                                if( !itemArray[b].select() ){
+                                                                    itemArray[b].select(true,undefined,false);
+                                                                    selectedItems.push(b);
+                                                                }
+                                                            }
+                                                //where range-selection is not to be done
+                                                    }else{
+                                                        if(update){ itemArray[a].select(state); }
+                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                                        lastNonShiftClicked = a;
+                                                    }
+                                            }
+                            
+                                        object.onselection(selectedItems);
+                                    };
+                                    object.add = function(item){
+                                        list.push(item);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.remove = function(a){
+                                        list.splice(a,1);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                        refreshList();
+                                    };
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselection = onselection;
+                                    object.onpositionchange = onpositionchange;
+                                    
+                                return object;
+                            };
                         };
                         this.display = new function(){
                             this.grapher_audioScope = function(
                                 name='grapher_audioScope',
                                 x, y, width=120, height=60, angle=0,
                             
-                                foregroundStyle={stroke:{r:0,g:1,b:0,a:1}, lineWidth:0.5, lineJoin:'round'},
+                                foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
                                 foregroundTextStyle={fill:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
                             
-                                backgroundStyle_stroke={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_lineWidth=0.25,
+                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_thickness=0.25,
                                 backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
                                 backgroundTextStyle_size=0.1,
                                 backgroundTextStyle_font='Helvetica',
@@ -5153,8 +8479,8 @@
                                         var grapher = interfacePart.builder('grapher',name,{
                                             x:0, y:0, width:width, height:height,
                                             foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_stroke:backgroundStyle_stroke, 
-                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                            backgroundStyle_colour:backgroundStyle_colour, 
+                                            backgroundStyle_thickness:backgroundStyle_thickness,
                                             backgroundTextStyle_fill:backgroundTextStyle_fill, 
                                             backgroundTextStyle_size:backgroundTextStyle_size,
                                             backgroundTextStyle_font:backgroundTextStyle_font,
@@ -6329,19 +9655,19 @@
                                 x, y, width=120, height=60, angle=0, resolution=5,
                             
                                 foregroundStyles=[
-                                    {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
+                                    {colour:'rgba(0,255,0,1)', thickness:0.5},
+                                    {colour:'rgba(255,255,0,1)', thickness:0.5},
+                                    {colour:'rgba(0,255,255,1)', thickness:0.5,},
                                 ],
                                 foregroundTextStyles=[
-                                    {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
+                                    {colour:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {colour:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+                                    {colour:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
                                 ],
                             
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundStyle_colour='rgba(0,100,0,1)',
+                                backgroundStyle_thickness=0.25,
+                                backgroundTextStyle_colour='rgba(0,150,0,1)',
                                 backgroundTextStyle_size='7.5pt',
                                 backgroundTextStyle_font='Helvetica',
                             
@@ -6379,12 +9705,12 @@
                             
                                                     //add line and text to group
                                                         //lines
-                                                            canvas._.fillStyle = backgroundStyle_stroke;
-                                                            canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_lineWidth));
+                                                            canvas._.fillStyle = backgroundStyle_colour;
+                                                            canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_thickness));
                             
                                                         //text
                                                             if( horizontalMarkings.printText ){
-                                                                canvas._.fillStyle = backgroundTextStyle_fill;
+                                                                canvas._.fillStyle = backgroundTextStyle_colour;
                                                                 canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
                                                                 canvas._.fillText(
                                                                     (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
@@ -6408,12 +9734,12 @@
                             
                                                     //add line and text to group
                                                         //lines
-                                                            canvas._.fillStyle = backgroundStyle_stroke;
-                                                            canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_lineWidth),canvas.$(height));
+                                                            canvas._.fillStyle = backgroundStyle_colour;
+                                                            canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_thickness),canvas.$(height));
                                                     
                                                         //text
                                                             if( verticalMarkings.printText ){
-                                                                canvas._.fillStyle = backgroundTextStyle_fill;
+                                                                canvas._.fillStyle = backgroundTextStyle_colour;
                                                                 canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
                                                                 canvas._.fillText(
                                                                     (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
@@ -6447,8 +9773,8 @@
                                                 var layer = foregroundElementsGroup[L];
                             
                                                 //draw path
-                                                    canvas._.strokeStyle = foregroundStyles[L].stroke;
-                                                    canvas._.lineWidth = canvas.$(foregroundStyles[L].lineWidth);
+                                                    canvas._.strokeStyle = foregroundStyles[L].colour;
+                                                    canvas._.lineWidth = canvas.$(foregroundStyles[L].thickness);
                                                     canvas._.lineJoin = foregroundStyles[L].lineJoin;
                                                     canvas._.lineCap = foregroundStyles[L].lineJoin;
                                                     canvas._.beginPath();
@@ -6515,11 +9841,11 @@
                                 name='grapher_periodicWave_static',
                                 x, y, width=120, height=60, angle=0,
                             
-                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                foregroundStyle={colour:'rgba(0,255,0,1)', thickness:0.5},
                                 foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
                             
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
+                                backgroundStyle_colour='rgba(0,100,0,1)',
+                                backgroundStyle_thickness=0.25,
                                 backgroundTextStyle_fill='rgba(0,150,0,1)',
                                 backgroundTextStyle_size=0.1,
                                 backgroundTextStyle_font='Helvetica',
@@ -6536,8 +9862,8 @@
                                         var grapher = interfacePart.builder('grapher_static',name,{
                                             x:0, y:0, width:width, height:height,
                                             foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_stroke:backgroundStyle_stroke, 
-                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                            backgroundStyle_colour:backgroundStyle_colour, 
+                                            backgroundStyle_thickness:backgroundStyle_thickness,
                                             backgroundTextStyle_fill:backgroundTextStyle_fill, 
                                             backgroundTextStyle_size:backgroundTextStyle_size,
                                             backgroundTextStyle_font:backgroundTextStyle_font,
@@ -6611,19 +9937,19 @@
                                 x, y, width=120, height=60, angle=0,
                             
                                 foregroundStyles=[
-                                    {stroke:{r:0,g:1,b:0,a:1}, lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:{r:1,g:1,b:0,a:1}, lineWidth:0.5, lineJoin:'round'},
-                                    {stroke:{r:0,g:1,b:1,a:1}, lineWidth:0.5, lineJoin:'round'},
+                                    {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
+                                    {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
+                                    {colour:{r:0,g:1,b:1,a:1}, thickness:0.25},
                                 ],
                                 foregroundTextStyles=[
-                                    {fill:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-                                    {fill:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-                                    {fill:{r:0.39,g:1,b:1,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:0.39,g:1,b:1,a:1}, size:0.75, font:'Helvetica'},
                                 ],
                             
-                                backgroundStyle_stroke={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_lineWidth=0.25,
-                                backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
+                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_thickness=0.25,
+                                backgroundTextStyle_colour={r:0,g:0.59,b:0,a:1},
                                 backgroundTextStyle_size=0.75,
                                 backgroundTextStyle_font='Helvetica',
                             
@@ -6669,7 +9995,7 @@
                             
                                                     //add line and text to group
                                                         //lines
-                                                            var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineWidth,colour:backgroundStyle_stroke} );
+                                                            var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_thickness,colour:backgroundStyle_colour} );
                                                             backgroundGroup.append(path);
                                                         // //text
                                                         //     if( horizontalMarkings.printText ){
@@ -6699,7 +10025,7 @@
                             
                                                     //add line and text to group
                                                         //lines
-                                                            var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineWidth,height:height,colour:backgroundStyle_stroke} );
+                                                            var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_thickness,height:height,colour:backgroundStyle_colour} );
                                                             backgroundGroup.append(path);
                                                     
                                                         // //text
@@ -6759,13 +10085,9 @@
                                                 //create path shape and add it to the group
                                                     foregroundGroup.append(
                                                         interfacePart.builder( 'path', 'layer_'+L, { 
-                                                            points:points, 
-                                                            style:{
-                                                                stroke: foregroundStyles[L].stroke,
-                                                                lineWidth: foregroundStyles[L].lineWidth,
-                                                                lineJoin: foregroundStyles[L].lineJoin,
-                                                                lineCap: foregroundStyles[L].lineJoin,
-                                                            }
+                                                            pointsAsXYArray:points, 
+                                                            colour:foregroundStyles[L].colour,
+                                                            thickness:foregroundStyles[L].thickness,
                                                         })
                                                     );
                                             }
@@ -7061,11 +10383,11 @@
                                 name='grapher_periodicWave',
                                 x, y, width=120, height=60, angle=0,
                             
-                                foregroundStyle={stroke:{r:0,g:1,b:0,a:1}, lineWidth:0.5, lineJoin:'round'},
+                                foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
                                 foregroundTextStyle={fill:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
                             
-                                backgroundStyle_stroke={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_lineWidth=0.25,
+                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_thickness=0.25,
                                 backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
                                 backgroundTextStyle_size=0.1,
                                 backgroundTextStyle_font='Helvetica',
@@ -7082,8 +10404,8 @@
                                         var grapher = interfacePart.builder('grapher',name,{
                                             x:0, y:0, width:width, height:height,
                                             foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_stroke:backgroundStyle_stroke, 
-                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                            backgroundStyle_colour:backgroundStyle_colour, 
+                                            backgroundStyle_thickness:backgroundStyle_thickness,
                                             backgroundTextStyle_fill:backgroundTextStyle_fill, 
                                             backgroundTextStyle_size:backgroundTextStyle_size,
                                             backgroundTextStyle_font:backgroundTextStyle_font,
@@ -8091,11 +11413,11 @@
                                 name='grapher_audioScope_static',
                                 x, y, width=120, height=60, angle=0,
                             
-                                foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
+                                foregroundStyle={colour:'rgba(0,255,0,1)', thickness:0.5},
                                 foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
                             
-                                backgroundStyle_stroke='rgba(0,100,0,1)',
-                                backgroundStyle_lineWidth=0.25,
+                                backgroundStyle_colour='rgba(0,100,0,1)',
+                                backgroundStyle_thickness=0.25,
                                 backgroundTextStyle_fill='rgba(0,150,0,1)',
                                 backgroundTextStyle_size=0.1,
                                 backgroundTextStyle_font='Helvetica',
@@ -8127,8 +11449,8 @@
                                         var grapher = interfacePart.builder('grapher_static',name,{
                                             x:0, y:0, width:width, height:height,
                                             foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_stroke:backgroundStyle_stroke, 
-                                            backgroundStyle_lineWidth:backgroundStyle_lineWidth,
+                                            backgroundStyle_colour:backgroundStyle_colour, 
+                                            backgroundStyle_thickness:backgroundStyle_thickness,
                                             backgroundTextStyle_fill:backgroundTextStyle_fill, 
                                             backgroundTextStyle_size:backgroundTextStyle_size,
                                             backgroundTextStyle_font:backgroundTextStyle_font,
@@ -8506,12 +11828,7 @@
                                     };
                                     object.getCablePoint = function(){
                                         var offset = object.getOffset();
-                                        var point = _canvas_.library.math.cartesianAngleAdjust(
-                                            offset.x + (width*offset.scale)/2,
-                                            offset.y + (height*offset.scale)/2,
-                                            offset.angle
-                                        );
-                                        return _canvas_.core.viewport.adapter.windowPoint2workspacePoint(point.x,point.y);
+                                        return _canvas_.core.viewport.adapter.windowPoint2workspacePoint( offset.x + (width*offset.scale)/2, offset.y + (height*offset.scale)/2 );
                                     };
                                     object.draw = function(){
                                         if( cable == undefined ){return;}
@@ -8597,11 +11914,13 @@
                             //basic
                                 case 'group': return this.collection.basic.group( name, data.x, data.y, data.angle, data.ignored );
                                 case 'rectangle': return this.collection.basic.rectangle( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour );
+                                case 'rectangleWithOutline': return this.collection.basic.rectangleWithOutline( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour, data.thickness, data.lineColour );
                                 case 'image': return this.collection.basic.image( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url );
                                 case 'canvas': return this.collection.basic.canvas( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution );
                                 case 'polygon': return this.collection.basic.polygon( name, data.points, data.ignored, data.colour, data.pointsAsXYArray );
-                                case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.radius, data.ignored, data.colour );
+                                case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.ignored, data.colour );
                                 case 'path': return this.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
+                                case 'loopedPath': return this.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
                         
                             //display
                                 case 'glowbox_rect': return this.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
@@ -8647,226 +11966,226 @@
                                 case 'grapher': return this.collection.display.grapher(
                                     name, data.x, data.y, data.width, data.height, data.angle,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_lineWidth,
-                                    data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                                 case 'grapher_static': return this.collection.display.grapher_static(
                                     name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_lineWidth,
-                                    data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                                 case 'grapher_periodicWave': return this.collection.display.grapher_periodicWave(
                                     name, data.x, data.y, data.width, data.height, data.angle,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_lineWidth,
-                                    data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                                 case 'grapher_periodicWave_static': return this.collection.display.grapher_periodicWave_static(
                                     name, data.x, data.y, data.width, data.height, data.angle,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_lineWidth,
-                                    data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                                 case 'grapher_audioScope': return this.collection.display.grapher_audioScope(
                                     name, data.x, data.y, data.width, data.height, data.angle,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_lineWidth,
-                                    data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                                 case 'grapher_audioScope_static': return this.collection.display.grapher_audioScope_static(
                                     name, data.x, data.y, data.width, data.height, data.angle,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_lineWidth,
-                                    data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                     
                             //control
-                                //button
-                            //         case 'button_': return this.collection.control.button_(
-                            //             name, data.x, data.y, data.angle, data.interactable,
-                            //             data.active, data.hoverable, data.selectable, data.pressable,
+                               //button
+                                    case 'button_': return this.collection.control.button_(
+                                        name, data.x, data.y, data.angle, data.interactable,
+                                        data.active, data.hoverable, data.selectable, data.pressable,
                     
-                            //             data.onenter,
-                            //             data.onleave,
-                            //             data.onpress,
-                            //             data.ondblpress,
-                            //             data.onrelease,
-                            //             data.onselect,
-                            //             data.ondeselect,
+                                        data.onenter,
+                                        data.onleave,
+                                        data.onpress,
+                                        data.ondblpress,
+                                        data.onrelease,
+                                        data.onselect,
+                                        data.ondeselect,
                                         
-                            //             data.subject,
-                            //         );
+                                        data.subject,
+                                    );
                     
-                            //         case 'button_image': return this.collection.control.button_image(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                            //             data.active, data.hoverable, data.selectable, data.pressable,
+                                    case 'button_image': return this.collection.control.button_image(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                        data.active, data.hoverable, data.selectable, data.pressable,
                     
-                            //             data.backingURL__off,
-                            //             data.backingURL__up,
-                            //             data.backingURL__press,
-                            //             data.backingURL__select,
-                            //             data.backingURL__select_press,
-                            //             data.backingURL__glow,
-                            //             data.backingURL__glow_press,
-                            //             data.backingURL__glow_select,
-                            //             data.backingURL__glow_select_press,
-                            //             data.backingURL__hover,
-                            //             data.backingURL__hover_press,
-                            //             data.backingURL__hover_select,
-                            //             data.backingURL__hover_select_press,
-                            //             data.backingURL__hover_glow,
-                            //             data.backingURL__hover_glow_press,
-                            //             data.backingURL__hover_glow_select,
-                            //             data.backingURL__hover_glow_select_press,
+                                        data.backingURL__off,
+                                        data.backingURL__up,
+                                        data.backingURL__press,
+                                        data.backingURL__select,
+                                        data.backingURL__select_press,
+                                        data.backingURL__glow,
+                                        data.backingURL__glow_press,
+                                        data.backingURL__glow_select,
+                                        data.backingURL__glow_select_press,
+                                        data.backingURL__hover,
+                                        data.backingURL__hover_press,
+                                        data.backingURL__hover_select,
+                                        data.backingURL__hover_select_press,
+                                        data.backingURL__hover_glow,
+                                        data.backingURL__hover_glow_press,
+                                        data.backingURL__hover_glow_select,
+                                        data.backingURL__hover_glow_select_press,
                                     
-                            //             data.onenter,
-                            //             data.onleave,
-                            //             data.onpress,
-                            //             data.ondblpress,
-                            //             data.onrelease,
-                            //             data.onselect,
-                            //             data.ondeselect,
-                            //         );
-                            //         case 'button_circle': return this.collection.control.button_circle(
-                            //             name, data.x, data.y, data.r, data.angle, data.interactable,
-                            //             data.text_centre,
-                            //             data.active, data.hoverable, data.selectable, data.pressable,
+                                        data.onenter,
+                                        data.onleave,
+                                        data.onpress,
+                                        data.ondblpress,
+                                        data.onrelease,
+                                        data.onselect,
+                                        data.ondeselect,
+                                    );
+                                    case 'button_circle': return this.collection.control.button_circle(
+                                        name, data.x, data.y, data.r, data.angle, data.interactable,
+                                        data.text_centre,
+                                        data.active, data.hoverable, data.selectable, data.pressable,
                     
-                            //             data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
+                                        data.style.text_font, data.style.text_textBaseline, data.style.text_colour,
                     
-                            //             data.style.background__off__fill,                     data.style.background__off__stroke,                     data.style.background__off__strokeWidth,
-                            //             data.style.background__up__fill,                      data.style.background__up__stroke,                      data.style.background__up__strokeWidth,
-                            //             data.style.background__press__fill,                   data.style.background__press__stroke,                   data.style.background__press__strokeWidth,
-                            //             data.style.background__select__fill,                  data.style.background__select__stroke,                  data.style.background__select__strokeWidth,
-                            //             data.style.background__select_press__fill,            data.style.background__select_press__stroke,            data.style.background__select_press__strokeWidth,
-                            //             data.style.background__glow__fill,                    data.style.background__glow__stroke,                    data.style.background__glow__strokeWidth,
-                            //             data.style.background__glow_press__fill,              data.style.background__glow_press__stroke,              data.style.background__glow_press__strokeWidth,
-                            //             data.style.background__glow_select__fill,             data.style.background__glow_select__stroke,             data.style.background__glow_select__strokeWidth,
-                            //             data.style.background__glow_select_press__fill,       data.style.background__glow_select_press__stroke,       data.style.background__glow_select_press__strokeWidth,
-                            //             data.style.background__hover__fill,                   data.style.background__hover__stroke,                   data.style.background__hover__strokeWidth,
-                            //             data.style.background__hover_press__fill,             data.style.background__hover_press__stroke,             data.style.background__hover_press__strokeWidth,
-                            //             data.style.background__hover_select__fill,            data.style.background__hover_select__stroke,            data.style.background__hover_select__strokeWidth,
-                            //             data.style.background__hover_select_press__fill,      data.style.background__hover_select_press__stroke,      data.style.background__hover_select_press__strokeWidth,
-                            //             data.style.background__hover_glow__fill,              data.style.background__hover_glow__stroke,              data.style.background__hover_glow__strokeWidth,
-                            //             data.style.background__hover_glow_press__fill,        data.style.background__hover_glow_press__stroke,        data.style.background__hover_glow_press__strokeWidth,
-                            //             data.style.background__hover_glow_select__fill,       data.style.background__hover_glow_select__stroke,       data.style.background__hover_glow_select__strokeWidth,
-                            //             data.style.background__hover_glow_select_press__fill, data.style.background__hover_glow_select_press__stroke, data.style.background__hover_glow_select_press__strokeWidth,
+                                        data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+                                        data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+                                        data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+                                        data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+                                        data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+                                        data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+                                        data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+                                        data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+                                        data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+                                        data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+                                        data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+                                        data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+                                        data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+                                        data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+                                        data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+                                        data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+                                        data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
                                     
-                            //             data.onenter,
-                            //             data.onleave,
-                            //             data.onpress,
-                            //             data.ondblpress,
-                            //             data.onrelease,
-                            //             data.onselect,
-                            //             data.ondeselect,
-                            //         );
-                            //         case 'button_polygon': return this.collection.control.button_polygon(
-                            //             name, data.x, data.y, data.points, data.angle, data.interactable,
-                            //             data.text_centre,
-                            //             data.active, data.hoverable, data.selectable, data.pressable,
+                                        data.onenter,
+                                        data.onleave,
+                                        data.onpress,
+                                        data.ondblpress,
+                                        data.onrelease,
+                                        data.onselect,
+                                        data.ondeselect,
+                                    );
+                                    case 'button_polygon': return this.collection.control.button_polygon(
+                                        name, data.x, data.y, data.points, data.angle, data.interactable,
+                                        data.text_centre,
+                                        data.active, data.hoverable, data.selectable, data.pressable,
                     
-                            //             data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
+                                        data.style.text_font, data.style.text_textBaseline, data.style.text_colour,
                     
-                            //             data.style.background__off__fill,                     data.style.background__off__stroke,                     data.style.background__off__strokeWidth,
-                            //             data.style.background__up__fill,                      data.style.background__up__stroke,                      data.style.background__up__strokeWidth,
-                            //             data.style.background__press__fill,                   data.style.background__press__stroke,                   data.style.background__press__strokeWidth,
-                            //             data.style.background__select__fill,                  data.style.background__select__stroke,                  data.style.background__select__strokeWidth,
-                            //             data.style.background__select_press__fill,            data.style.background__select_press__stroke,            data.style.background__select_press__strokeWidth,
-                            //             data.style.background__glow__fill,                    data.style.background__glow__stroke,                    data.style.background__glow__strokeWidth,
-                            //             data.style.background__glow_press__fill,              data.style.background__glow_press__stroke,              data.style.background__glow_press__strokeWidth,
-                            //             data.style.background__glow_select__fill,             data.style.background__glow_select__stroke,             data.style.background__glow_select__strokeWidth,
-                            //             data.style.background__glow_select_press__fill,       data.style.background__glow_select_press__stroke,       data.style.background__glow_select_press__strokeWidth,
-                            //             data.style.background__hover__fill,                   data.style.background__hover__stroke,                   data.style.background__hover__strokeWidth,
-                            //             data.style.background__hover_press__fill,             data.style.background__hover_press__stroke,             data.style.background__hover_press__strokeWidth,
-                            //             data.style.background__hover_select__fill,            data.style.background__hover_select__stroke,            data.style.background__hover_select__strokeWidth,
-                            //             data.style.background__hover_select_press__fill,      data.style.background__hover_select_press__stroke,      data.style.background__hover_select_press__strokeWidth,
-                            //             data.style.background__hover_glow__fill,              data.style.background__hover_glow__stroke,              data.style.background__hover_glow__strokeWidth,
-                            //             data.style.background__hover_glow_press__fill,        data.style.background__hover_glow_press__stroke,        data.style.background__hover_glow_press__strokeWidth,
-                            //             data.style.background__hover_glow_select__fill,       data.style.background__hover_glow_select__stroke,       data.style.background__hover_glow_select__strokeWidth,
-                            //             data.style.background__hover_glow_select_press__fill, data.style.background__hover_glow_select_press__stroke, data.style.background__hover_glow_select_press__strokeWidth,
+                                        data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+                                        data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+                                        data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+                                        data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+                                        data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+                                        data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+                                        data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+                                        data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+                                        data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+                                        data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+                                        data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+                                        data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+                                        data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+                                        data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+                                        data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+                                        data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+                                        data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
                                     
-                            //             data.onenter,
-                            //             data.onleave,
-                            //             data.onpress,
-                            //             data.ondblpress,
-                            //             data.onrelease,
-                            //             data.onselect,
-                            //             data.ondeselect,
-                            //         );
-                            //         case 'button_rectangle': return this.collection.control.button_rectangle(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                            //             data.text_centre, data.text_left, data.text_right,
-                            //             data.textVerticalOffsetMux, data.textHorizontalOffsetMux,
-                            //             data.active, data.hoverable, data.selectable, data.pressable,
+                                        data.onenter,
+                                        data.onleave,
+                                        data.onpress,
+                                        data.ondblpress,
+                                        data.onrelease,
+                                        data.onselect,
+                                        data.ondeselect,
+                                    );
+                                    case 'button_rectangle': return this.collection.control.button_rectangle(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                        data.text_centre, data.text_left, data.text_right,
+                                        data.textVerticalOffsetMux, data.textHorizontalOffsetMux,
+                                        data.active, data.hoverable, data.selectable, data.pressable,
                     
-                            //             data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
+                                        data.style.text_font, data.style.text_textBaseline, data.style.text_colour,
                     
-                            //             data.style.background__off__fill,                     data.style.background__off__stroke,                     data.style.background__off__strokeWidth,
-                            //             data.style.background__up__fill,                      data.style.background__up__stroke,                      data.style.background__up__strokeWidth,
-                            //             data.style.background__press__fill,                   data.style.background__press__stroke,                   data.style.background__press__strokeWidth,
-                            //             data.style.background__select__fill,                  data.style.background__select__stroke,                  data.style.background__select__strokeWidth,
-                            //             data.style.background__select_press__fill,            data.style.background__select_press__stroke,            data.style.background__select_press__strokeWidth,
-                            //             data.style.background__glow__fill,                    data.style.background__glow__stroke,                    data.style.background__glow__strokeWidth,
-                            //             data.style.background__glow_press__fill,              data.style.background__glow_press__stroke,              data.style.background__glow_press__strokeWidth,
-                            //             data.style.background__glow_select__fill,             data.style.background__glow_select__stroke,             data.style.background__glow_select__strokeWidth,
-                            //             data.style.background__glow_select_press__fill,       data.style.background__glow_select_press__stroke,       data.style.background__glow_select_press__strokeWidth,
-                            //             data.style.background__hover__fill,                   data.style.background__hover__stroke,                   data.style.background__hover__strokeWidth,
-                            //             data.style.background__hover_press__fill,             data.style.background__hover_press__stroke,             data.style.background__hover_press__strokeWidth,
-                            //             data.style.background__hover_select__fill,            data.style.background__hover_select__stroke,            data.style.background__hover_select__strokeWidth,
-                            //             data.style.background__hover_select_press__fill,      data.style.background__hover_select_press__stroke,      data.style.background__hover_select_press__strokeWidth,
-                            //             data.style.background__hover_glow__fill,              data.style.background__hover_glow__stroke,              data.style.background__hover_glow__strokeWidth,
-                            //             data.style.background__hover_glow_press__fill,        data.style.background__hover_glow_press__stroke,        data.style.background__hover_glow_press__strokeWidth,
-                            //             data.style.background__hover_glow_select__fill,       data.style.background__hover_glow_select__stroke,       data.style.background__hover_glow_select__strokeWidth,
-                            //             data.style.background__hover_glow_select_press__fill, data.style.background__hover_glow_select_press__stroke, data.style.background__hover_glow_select_press__strokeWidth,
+                                        data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+                                        data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+                                        data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+                                        data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+                                        data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+                                        data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+                                        data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+                                        data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+                                        data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+                                        data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+                                        data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+                                        data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+                                        data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+                                        data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+                                        data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+                                        data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+                                        data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
                                     
-                            //             data.onenter,
-                            //             data.onleave,
-                            //             data.onpress,
-                            //             data.ondblpress,
-                            //             data.onrelease,
-                            //             data.onselect,
-                            //             data.ondeselect,
-                            //         );
-                            //     //dial
-                            //         case 'dial_continuous': return this.collection.control.dial_continuous(
-                            //             name,
-                            //             data.x, data.y, data.r, data.angle, data.interactable,
-                            //             data.value, data.resetValue,
-                            //             data.startAngle, data.maxAngle,
-                            //             data.style.handle, data.style.slot, data.style.needle,
-                            //             data.onchange, data.onrelease
-                            //         );
-                            //         case 'dial_discrete': return this.collection.control.dial_discrete(
-                            //             name,
-                            //             data.x, data.y, data.r, data.angle, data.interactable,
-                            //             data.value, data.resetValue, data.optionCount,
-                            //             data.startAngle, data.maxAngle,
-                            //             data.style.handle, data.style.slot, data.style.needle,
-                            //             data.onchange, data.onrelease
-                            //         );
-                            //         case 'dial_continuous_image': return this.collection.control.dial_continuous_image(
-                            //             name,
-                            //             data.x, data.y, data.r, data.angle, data.interactable,
-                            //             data.value, data.resetValue,
-                            //             data.startAngle, data.maxAngle,
-                            //             data.handleURL, data.slotURL, data.needleURL,
-                            //             data.onchange, data.onrelease
-                            //         );
-                            //         case 'dial_discrete_image': return this.collection.control.dial_discrete_image(
-                            //             name,
-                            //             data.x, data.y, data.r, data.angle, data.interactable,
-                            //             data.value, data.resetValue, data.optionCount,
-                            //             data.startAngle, data.maxAngle,
-                            //             data.handleURL, data.slotURL, data.needleURL,
-                            //             data.onchange, data.onrelease
-                            //         );
+                                        data.onenter,
+                                        data.onleave,
+                                        data.onpress,
+                                        data.ondblpress,
+                                        data.onrelease,
+                                        data.onselect,
+                                        data.ondeselect,
+                                    );
+                                //dial
+                                    case 'dial_continuous': return this.collection.control.dial_continuous(
+                                        name,
+                                        data.x, data.y, data.r, data.angle, data.interactable,
+                                        data.value, data.resetValue,
+                                        data.startAngle, data.maxAngle,
+                                        data.style.handle, data.style.slot, data.style.needle,
+                                        data.onchange, data.onrelease
+                                    );
+                                    case 'dial_discrete': return this.collection.control.dial_discrete(
+                                        name,
+                                        data.x, data.y, data.r, data.angle, data.interactable,
+                                        data.value, data.resetValue, data.optionCount,
+                                        data.startAngle, data.maxAngle,
+                                        data.style.handle, data.style.slot, data.style.needle,
+                                        data.onchange, data.onrelease
+                                    );
+                                    case 'dial_continuous_image': return this.collection.control.dial_continuous_image(
+                                        name,
+                                        data.x, data.y, data.r, data.angle, data.interactable,
+                                        data.value, data.resetValue,
+                                        data.startAngle, data.maxAngle,
+                                        data.handleURL, data.slotURL, data.needleURL,
+                                        data.onchange, data.onrelease
+                                    );
+                                    case 'dial_discrete_image': return this.collection.control.dial_discrete_image(
+                                        name,
+                                        data.x, data.y, data.r, data.angle, data.interactable,
+                                        data.value, data.resetValue, data.optionCount,
+                                        data.startAngle, data.maxAngle,
+                                        data.handleURL, data.slotURL, data.needleURL,
+                                        data.onchange, data.onrelease
+                                    );
                                 //slide
                                     case 'slide': return this.collection.control.slide(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
@@ -8883,7 +12202,7 @@
                                         data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
                                         data.onchange, data.onrelease
                                     );
-                                    case 'slidePanel_image': return this.collection.control.slidePanel(
+                                    case 'slidePanel_image': return this.collection.control.slidePanel_image(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
                                         data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
                                         data.onchange, data.onrelease
@@ -8898,94 +12217,94 @@
                                         data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle, data.spanURL,
                                         data.onchange, data.onrelease
                                     );
-                            //     //list
-                            //         case 'list': return this.collection.control.list(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
-                            //             data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
-                            //             data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
+                                //list
+                                    case 'list': return this.collection.control.list(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
+                                        data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
+                                        data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
                     
-                            //             data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
-                            //             data.breakHeightMux, data.breakWidthMux, 
-                            //             data.spacingHeightMux,
+                                        data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
+                                        data.breakHeightMux, data.breakWidthMux, 
+                                        data.spacingHeightMux,
                     
-                            //             data.style.backing, data.style.break,
-                            //             data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
-                            //             data.style.item__off__fill,                     data.style.item__off__stroke,                     data.style.item__off__strokeWidth,
-                            //             data.style.item__up__fill,                      data.style.item__up__stroke,                      data.style.item__up__strokeWidth,
-                            //             data.style.item__press__fill,                   data.style.item__press__stroke,                   data.style.item__press__strokeWidth,
-                            //             data.style.item__select__fill,                  data.style.item__select__stroke,                  data.style.item__select__strokeWidth,
-                            //             data.style.item__select_press__fill,            data.style.item__select_press__stroke,            data.style.item__select_press__strokeWidth,
-                            //             data.style.item__glow__fill,                    data.style.item__glow__stroke,                    data.style.item__glow__strokeWidth,
-                            //             data.style.item__glow_press__fill,              data.style.item__glow_press__stroke,              data.style.item__glow_press__strokeWidth,
-                            //             data.style.item__glow_select__fill,             data.style.item__glow_select__stroke,             data.style.item__glow_select__strokeWidth,
-                            //             data.style.item__glow_select_press__fill,       data.style.item__glow_select_press__stroke,       data.style.item__glow_select_press__strokeWidth,
-                            //             data.style.item__hover__fill,                   data.style.item__hover__stroke,                   data.style.item__hover__strokeWidth,
-                            //             data.style.item__hover_press__fill,             data.style.item__hover_press__stroke,             data.style.item__hover_press__strokeWidth,
-                            //             data.style.item__hover_select__fill,            data.style.item__hover_select__stroke,            data.style.item__hover_select__strokeWidth,
-                            //             data.style.item__hover_select_press__fill,      data.style.item__hover_select_press__stroke,      data.style.item__hover_select_press__strokeWidth,
-                            //             data.style.item__hover_glow__fill,              data.style.item__hover_glow__stroke,              data.style.item__hover_glow__strokeWidth,
-                            //             data.style.item__hover_glow_press__fill,        data.style.item__hover_glow_press__stroke,        data.style.item__hover_glow_press__strokeWidth,
-                            //             data.style.item__hover_glow_select__fill,       data.style.item__hover_glow_select__stroke,       data.style.item__hover_glow_select__strokeWidth,
-                            //             data.style.item__hover_glow_select_press__fill, data.style.item__hover_glow_select_press__stroke, data.style.item__hover_glow_select_press__strokeWidth,
+                                        data.style.backing, data.style.break,
+                                        data.style.text_font, data.style.text_textBaseline, data.style.text_colour,
+                                        data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+                                        data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+                                        data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+                                        data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+                                        data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+                                        data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+                                        data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+                                        data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+                                        data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+                                        data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+                                        data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+                                        data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+                                        data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+                                        data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+                                        data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+                                        data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+                                        data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
                                     
-                            //             data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
-                            //         );
-                            //         case 'list_image': return this.collection.control.list_image(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
-                            //             data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
-                            //             data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
+                                        data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
+                                    );
+                                    case 'list_image': return this.collection.control.list_image(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
+                                        data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
+                                        data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
                     
-                            //             data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
-                            //             data.breakHeightMux, data.breakWidthMux, 
-                            //             data.spacingHeightMux,
+                                        data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
+                                        data.breakHeightMux, data.breakWidthMux, 
+                                        data.spacingHeightMux,
                     
-                            //             data.backingURL, data.breakURL,
+                                        data.backingURL, data.breakURL,
                     
-                            //             data.itemURL__off,
-                            //             data.itemURL__up,
-                            //             data.itemURL__press,
-                            //             data.itemURL__select,
-                            //             data.itemURL__select_press,
-                            //             data.itemURL__glow,
-                            //             data.itemURL__glow_press,
-                            //             data.itemURL__glow_select,
-                            //             data.itemURL__glow_select_press,
-                            //             data.itemURL__hover,
-                            //             data.itemURL__hover_press,
-                            //             data.itemURL__hover_select,
-                            //             data.itemURL__hover_select_press,
-                            //             data.itemURL__hover_glow,
-                            //             data.itemURL__hover_glow_press,
-                            //             data.itemURL__hover_glow_select,
-                            //             data.itemURL__hover_glow_select_press,
+                                        data.itemURL__off,
+                                        data.itemURL__up,
+                                        data.itemURL__press,
+                                        data.itemURL__select,
+                                        data.itemURL__select_press,
+                                        data.itemURL__glow,
+                                        data.itemURL__glow_press,
+                                        data.itemURL__glow_select,
+                                        data.itemURL__glow_select_press,
+                                        data.itemURL__hover,
+                                        data.itemURL__hover_press,
+                                        data.itemURL__hover_select,
+                                        data.itemURL__hover_select_press,
+                                        data.itemURL__hover_glow,
+                                        data.itemURL__hover_glow_press,
+                                        data.itemURL__hover_glow_select,
+                                        data.itemURL__hover_glow_select_press,
                                     
-                            //             data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
-                            //         );
-                            //     //checkbox
-                            //         case 'checkbox_': return this.collection.control.checkbox_(
-                            //             name, data.x, data.y, data.angle, data.interactable,
-                            //             data.onchange, data.subject,
-                            //         );
-                            //         case 'checkbox_circle': return this.collection.control.checkbox_circle(
-                            //             name, data.x, data.y, data.r, data.angle, data.interactable,
-                            //             data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
-                            //             data.onchange,
-                            //         );
+                                        data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
+                                    );
+                                //checkbox
+                                    case 'checkbox_': return this.collection.control.checkbox_(
+                                        name, data.x, data.y, data.angle, data.interactable,
+                                        data.onchange, data.subject,
+                                    );
+                                    case 'checkbox_circle': return this.collection.control.checkbox_circle(
+                                        name, data.x, data.y, data.radius, data.angle, data.interactable,
+                                        data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                                        data.onchange,
+                                    );
                             //         case 'checkbox_image': return this.collection.control.checkbox_image(
                             //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
                             //             data.uncheckURL, data.checkURL,
                             //             data.onchange,
                             //         );
-                            //         case 'checkbox_polygon': return this.collection.control.checkbox_polygon(
-                            //             name, data.x, data.y, data.outterPoints, data.innerPoints, data.angle, data.interactable,
-                            //             data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
-                            //             data.onchange,
-                            //         );
-                            //         case 'checkbox_rect': case 'checkbox_rectangle': return this.collection.control.checkbox_rectangle(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                            //             data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
-                            //             data.onchange,
-                            //         );
+                                    case 'checkbox_polygon': return this.collection.control.checkbox_polygon(
+                                        name, data.x, data.y, data.outterPoints, data.innerPoints, data.angle, data.interactable,
+                                        data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                                        data.onchange,
+                                    );
+                                    case 'checkbox_rect': case 'checkbox_rectangle': return this.collection.control.checkbox_rectangle(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                        data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                                        data.onchange,
+                                    );
                             //     //other
                             //         case 'rastorgrid': return this.collection.control.rastorgrid(
                             //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.xCount, data.yCount,
